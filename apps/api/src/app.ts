@@ -35,6 +35,7 @@ import {
 } from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
 import type { DocEngine } from "./lib/doc-engine/engine.js";
+import type { AutoDocFillEngine } from "./lib/auto-doc-fill/engine.js";
 import type { JobQueue } from "./pipeline/jobs.js";
 import type { Notifier } from "./lib/notifications/notifier.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
@@ -54,6 +55,7 @@ import { contractRelationsRoutes } from "./modules/contract-relations/routes.js"
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
 import { defaultPeopleRoutes } from "./modules/contract-types/default-people.js";
 import { autoDocsRoutes } from "./modules/auto-docs/routes.js";
+import { autoDocGenerationRoutes } from "./modules/auto-docs/generations.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
 import { activityRoutes } from "./modules/activity/routes.js";
@@ -148,6 +150,8 @@ export interface AppDeps {
    * documented Aspose-class swap-in a swap rather than a rewrite.
    */
   docEngine: DocEngine;
+  /** TECH-028: fills Word templates in a bounded operation before storage. */
+  fillEngine: AutoDocFillEngine;
   /**
    * The background pipeline (TECH-007), as the API sees it: a queue it
    * asks for a derivation after an upload commits. Injected like the
@@ -213,6 +217,7 @@ declare module "fastify" {
     resolveMailer: MailerResolver;
     storage: StorageAdapter;
     docEngine: DocEngine;
+    fillEngine: AutoDocFillEngine;
     jobs: JobQueue;
     resolveSigningProvider: SigningResolver;
     resolveAiProvider: AiResolver;
@@ -234,6 +239,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("resolveMailer", deps.resolveMailer);
   app.decorate("storage", deps.storage);
   app.decorate("docEngine", deps.docEngine);
+  app.decorate("fillEngine", deps.fillEngine);
   app.decorate("jobs", deps.jobs);
   app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
   app.decorate("resolveAiProvider", deps.resolveAiProvider);
@@ -488,6 +494,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(aiFieldPromptRoutes, { prefix: "/api/v1" });
   await app.register(signerErasureRoutes, { prefix: "/api/v1" });
   await app.register(autoDocsRoutes, { prefix: "/api/v1" });
+  await app.register(autoDocGenerationRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
   await app.register(defaultPeopleRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });

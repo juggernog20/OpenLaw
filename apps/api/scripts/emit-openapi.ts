@@ -12,6 +12,7 @@ import { createDb } from "@openlaw/db";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildApp } from "../src/app.js";
+import { createFakeAutoDocFillEngine } from "../src/lib/auto-doc-fill/fake.js";
 import { createUnconfiguredMailer } from "../src/lib/mailer.js";
 import { createLocalStorage } from "../src/lib/storage/local.js";
 import { createFakeDocEngine } from "../src/lib/doc-engine/fake.js";
@@ -35,6 +36,7 @@ const app = await buildApp(
       Promise.resolve({ source: "unset", from: null, mailer: createUnconfiguredMailer() }),
     storage: createLocalStorage({ root: join(tmpdir(), "openlaw-openapi-emit-never-written") }),
     docEngine: createFakeDocEngine(),
+    fillEngine: createFakeAutoDocFillEngine(),
     jobs,
     resolveSigningProvider: createUnconfiguredSigningResolver(),
     resolveAiProvider: createUnconfiguredAiResolver(),

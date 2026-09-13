@@ -882,6 +882,372 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auto-docs/{id}/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Open the published form for Generation, Member+ */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              autoDoc: {
+                id: string;
+                name: string;
+                description: string | null;
+              };
+              pair: {
+                documentVersionId: string;
+                formVersionId: string;
+              };
+              fields: {
+                slug: string;
+                label: string;
+                help: string | null;
+                /** @enum {string} */
+                fieldType:
+                  | "text"
+                  | "long_text"
+                  | "number"
+                  | "currency"
+                  | "date"
+                  | "boolean"
+                  | "single_select"
+                  | "multi_select"
+                  | "entity";
+                options: string[] | null;
+                required: boolean;
+                displayOrder: number;
+                placeholder: boolean;
+                catalogFieldId: string | null;
+                contractAttribute:
+                  | (
+                      | "title"
+                      | "primary_counterparty_name"
+                      | "entity_id"
+                      | "owning_department_id"
+                      | "region"
+                      | "value"
+                      | "effective_date"
+                      | "expiry_date"
+                      | "term_type"
+                    )
+                  | null;
+              }[];
+              entities: {
+                id: string;
+                name: string;
+              }[];
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/generations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List this Auto-Doc's Generations, Member+ */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              generations: {
+                id: string;
+                autoDocId: string;
+                autoDocName: string;
+                documentVersionId: string;
+                formVersionId: string;
+                documentVersionNumber: number;
+                formVersionNumber: number;
+                generatedBy: string;
+                person: {
+                  id: string;
+                  displayName: string;
+                };
+                answers: {
+                  [key: string]: string | number | boolean | string[];
+                };
+                /** @enum {string} */
+                state: "pending" | "ready" | "failed";
+                hasDocx: boolean;
+                failure: {
+                  code: string;
+                  detail: string;
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    /** Generate a Word file from the submitted live pair, Member+ */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json": {
+            documentVersionId: string;
+            formVersionId: string;
+            answers: {
+              [key: string]: (string | number | boolean | string[]) | null;
+            };
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              generation: {
+                id: string;
+                autoDocId: string;
+                autoDocName: string;
+                documentVersionId: string;
+                formVersionId: string;
+                documentVersionNumber: number;
+                formVersionNumber: number;
+                generatedBy: string;
+                person: {
+                  id: string;
+                  displayName: string;
+                };
+                answers: {
+                  [key: string]: string | number | boolean | string[];
+                };
+                /** @enum {string} */
+                state: "pending" | "ready" | "failed";
+                hasDocx: boolean;
+                failure: {
+                  code: string;
+                  detail: string;
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              };
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/generations/{generationId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read a Generation and its output state, Member+ */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          generationId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              generation: {
+                id: string;
+                autoDocId: string;
+                autoDocName: string;
+                documentVersionId: string;
+                formVersionId: string;
+                documentVersionNumber: number;
+                formVersionNumber: number;
+                generatedBy: string;
+                person: {
+                  id: string;
+                  displayName: string;
+                };
+                answers: {
+                  [key: string]: string | number | boolean | string[];
+                };
+                /** @enum {string} */
+                state: "pending" | "ready" | "failed";
+                hasDocx: boolean;
+                failure: {
+                  code: string;
+                  detail: string;
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+              };
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/generations/{generationId}/docx": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Download a Generation's Word output, Member+ */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          generationId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": string;
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types": {
     parameters: {
       query?: never;

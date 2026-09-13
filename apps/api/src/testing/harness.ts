@@ -219,6 +219,8 @@ export interface TestHarness {
    * suite, and the fake satisfies the same shape.
    */
   docEngine: DocEngine;
+  /** A deterministic fill driver whose output exposes inputs at the HTTP download seam. */
+  fillEngine: import("../lib/auto-doc-fill/fake.js").FakeAutoDocFillEngine;
   /**
    * The real background pipeline (TECH-007), running in this process
    * against this container's Postgres: the real pg-boss queue, and the
@@ -230,8 +232,8 @@ export interface TestHarness {
    * testing decision, and the reason the queue is on Postgres in the
    * first place: there is nothing extra to stand up.
    *
-   * Only the doc engine is faked, and only because booting LibreOffice
-   * for every API suite would buy nothing an API test can assert.
+   * The doc engine and Auto-Doc fill engine use deterministic drivers.
+   * Their real implementations have separate contract and Word fixture suites.
    */
   pipeline: Pipeline;
   /**
@@ -366,6 +368,8 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     const { storage, root: storageRoot, cleanup } = await createTestStorage();
     cleanupStorage = cleanup;
     const docEngine = createFakeDocEngine();
+    const { createFakeAutoDocFillEngine } = await import("../lib/auto-doc-fill/fake.js");
+    const fillEngine = createFakeAutoDocFillEngine();
     const jobLog: JobLogLine[] = [];
     // The production resolver over the fake driver: the stored row and
     // the "is anything configured" decision are production code, and
@@ -477,6 +481,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       resolveMailer,
       storage,
       docEngine,
+      fillEngine,
       jobs: pipeline,
       resolveSigningProvider,
       resolveAiProvider,
@@ -495,6 +500,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       storage,
       storageRoot,
       docEngine,
+      fillEngine,
       pipeline: runningPipeline,
       notifier,
       jobLog,

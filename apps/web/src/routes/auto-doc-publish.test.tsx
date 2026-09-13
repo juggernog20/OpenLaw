@@ -5,6 +5,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
 import { json, problem, renderAt, stubApi } from "../testing/helpers";
+import { formatLongDateTime } from "../lib/format";
 import type { paths } from "@openlaw/api-client";
 
 type RecordAnswer =
@@ -86,6 +87,7 @@ it("writes each Clause operator, offers the field's options, and saves maps in t
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
       if (call.url.pathname.endsWith("/form-versions")) {
@@ -144,6 +146,7 @@ it("renders all Publish gaps, pins the chosen pair, and offers the lifecycle con
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
       if (call.url.pathname.endsWith("/form-versions/diff"))
@@ -224,6 +227,7 @@ it("saves audience and target Type settings and applies all list filters", async
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") {
         if (call.method === "PATCH") {
@@ -271,6 +275,7 @@ it("keeps line breaks while typing an is-one-of rule for a text field", async ()
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
       if (call.url.pathname.endsWith("/form-versions")) {
@@ -302,6 +307,7 @@ it("drops unknown state and audience filters from a copied list URL", async () =
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs") {
         searches.push(call.url.searchParams);
@@ -331,6 +337,7 @@ it("restores a clean editor when Legal reverts an edit to the first of two Claus
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
       return undefined;
@@ -353,6 +360,7 @@ it("holds the selected forms steady while their comparison is loading", async ()
   stubApi({
     signedIn: member,
     extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, record());
       if (call.url.pathname.endsWith("/form-versions/diff"))
@@ -380,4 +388,54 @@ it("holds the selected forms steady while their comparison is loading", async ()
   expect(to).toBeEnabled();
   await user.selectOptions(from, "form2");
   expect(from).toHaveValue("form2");
+});
+
+it("shows each Generation's person, pair, time, output, and failure on the Auto-Doc", async () => {
+  const base = {
+    autoDocId: "nda",
+    autoDocName: "Publish NDA",
+    documentVersionId: "file1",
+    formVersionId: "form2",
+    documentVersionNumber: 1,
+    formVersionNumber: 2,
+    generatedBy: "member",
+    person: { id: "member", displayName: "Legal" },
+    answers: {},
+    createdAt: date,
+    updatedAt: date,
+  };
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, record());
+      if (call.url.pathname.endsWith("/generations"))
+        return json(200, {
+          generations: [
+            { ...base, id: "ready", state: "ready", hasDocx: true, failure: null },
+            {
+              ...base,
+              id: "failed",
+              state: "failed",
+              hasDocx: false,
+              failure: { code: "fill_failed", detail: "The Word fill timed out. Try again." },
+            },
+          ],
+        });
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  const list = await screen.findByRole("region", { name: "Generations" });
+  expect(within(list).getByRole("link", { name: "Ready · Legal" })).toHaveAttribute(
+    "href",
+    "/auto-docs/nda/generations/ready",
+  );
+  expect(within(list).getAllByText("File version 1, form version 2")).toHaveLength(2);
+  expect(within(list).getAllByTitle(formatLongDateTime(date))[0]).toHaveAttribute("datetime", date);
+  expect(within(list).getByRole("link", { name: "Download Word" })).toHaveAttribute(
+    "href",
+    "/api/v1/auto-docs/nda/generations/ready/docx",
+  );
+  expect(within(list).getByText("The Word fill timed out. Try again.")).toBeVisible();
 });

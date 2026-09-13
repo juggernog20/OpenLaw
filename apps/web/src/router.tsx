@@ -24,6 +24,8 @@ import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
 import { EntitiesPage, entitiesLoader, entitiesShouldRevalidate } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { AutoDocsPage, autoDocsLoader } from "./routes/auto-docs";
+import { AutoDocGeneratePage, autoDocGenerateLoader } from "./routes/auto-doc-generate";
+import { AutoDocGenerationPage, autoDocGenerationLoader } from "./routes/auto-doc-generation";
 import { AutoDocRecordPage, autoDocRecordLoader } from "./routes/auto-doc-record";
 import { KnowledgePage, knowledgeLoader } from "./routes/knowledge";
 import { KnowledgeRecordPage, knowledgeRecordLoader } from "./routes/knowledge-record";
@@ -354,6 +356,28 @@ export const routes: RouteObject[] = [
     element: (
       <KeyedByParam name="id">
         <AutoDocRecordPage />
+      </KeyedByParam>
+    ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/auto-docs/:id/generate",
+    loader: autoDocGenerateLoader,
+    element: (
+      <KeyedByParam name="id">
+        <AutoDocGeneratePage />
+      </KeyedByParam>
+    ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/auto-docs/:id/generations/:generationId",
+    loader: autoDocGenerationLoader,
+    element: (
+      <KeyedByParam name="generationId">
+        <AutoDocGenerationPage />
       </KeyedByParam>
     ),
     errorElement: <RouteErrorPage />,

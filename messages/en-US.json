@@ -107,6 +107,9 @@
   "activity.autoDoc.formSaved": {
     "defaultMessage": "{actor} saved a form version for {name}"
   },
+  "activity.autoDoc.generated": {
+    "defaultMessage": "{actor} generated {name} from file version {fileVersion} and form version {formVersion}"
+  },
   "activity.autoDoc.published": {
     "defaultMessage": "{actor} published {name}"
   },
@@ -1154,6 +1157,12 @@
   "autoDocs.alwaysInclude": {
     "defaultMessage": "Always include"
   },
+  "autoDocs.answerRequired": {
+    "defaultMessage": "Required"
+  },
+  "autoDocs.answers": {
+    "defaultMessage": "Answers"
+  },
   "autoDocs.applyFilters": {
     "defaultMessage": "Apply filters"
   },
@@ -1172,11 +1181,17 @@
   "autoDocs.audienceName": {
     "defaultMessage": "{audience, select, legal_only {Legal only} selected {Selected} other {Everyone}}"
   },
+  "autoDocs.backToAutoDoc": {
+    "defaultMessage": "Back to Auto-Doc"
+  },
   "autoDocs.catalogFields": {
     "defaultMessage": "Catalog Fields"
   },
   "autoDocs.changeValues": {
     "defaultMessage": "{before} → {after}"
+  },
+  "autoDocs.chooseAnswer": {
+    "defaultMessage": "Choose an answer"
   },
   "autoDocs.chooseVersion": {
     "defaultMessage": "Choose a version"
@@ -1208,8 +1223,14 @@
   "autoDocs.diffFailed": {
     "defaultMessage": "Could not compare these forms. Try again."
   },
+  "autoDocs.directiveHelp": {
+    "defaultMessage": "Format values in Word with {upper}, {date}, or {currency}."
+  },
   "autoDocs.download": {
     "defaultMessage": "Download"
+  },
+  "autoDocs.downloadWord": {
+    "defaultMessage": "Download Word"
   },
   "autoDocs.empty": {
     "defaultMessage": "Create an Auto-Doc to start with a Word template."
@@ -1250,6 +1271,9 @@
   "autoDocs.fileVersionNumber": {
     "defaultMessage": "File version {number}"
   },
+  "autoDocs.fillAnswerFirst": {
+    "defaultMessage": "Fill \"{label}\" first."
+  },
   "autoDocs.form": {
     "defaultMessage": "Form"
   },
@@ -1276,6 +1300,30 @@
   },
   "autoDocs.formVersions": {
     "defaultMessage": "Form versions"
+  },
+  "autoDocs.generate": {
+    "defaultMessage": "Generate"
+  },
+  "autoDocs.generateNamed": {
+    "defaultMessage": "Generate {name}"
+  },
+  "autoDocs.generating": {
+    "defaultMessage": "Generating your document…"
+  },
+  "autoDocs.generation": {
+    "defaultMessage": "Generation"
+  },
+  "autoDocs.generationFailedRequest": {
+    "defaultMessage": "Could not generate this document. Your answers are kept here. Try again."
+  },
+  "autoDocs.generationPair": {
+    "defaultMessage": "File version {fileVersion}, form version {formVersion}"
+  },
+  "autoDocs.generationState": {
+    "defaultMessage": "{state, select, pending {Pending} ready {Ready} other {Failed}}"
+  },
+  "autoDocs.generations": {
+    "defaultMessage": "Generations"
   },
   "autoDocs.includeBlock": {
     "defaultMessage": "Include this Block"
@@ -1322,6 +1370,9 @@
   "autoDocs.noFormChanges": {
     "defaultMessage": "These form versions have no structural changes."
   },
+  "autoDocs.noGenerations": {
+    "defaultMessage": "No Generations yet."
+  },
   "autoDocs.noLivePair": {
     "defaultMessage": "No file and form pair is published."
   },
@@ -1358,6 +1409,12 @@
   "autoDocs.orphanHelp": {
     "defaultMessage": "This field no longer has a Placeholder in the template."
   },
+  "autoDocs.previousAnswers": {
+    "defaultMessage": "Previous answers"
+  },
+  "autoDocs.previousAnswersHelp": {
+    "defaultMessage": "These answers no longer fit the current form. They are kept here so you can copy them into the new fields."
+  },
   "autoDocs.publication": {
     "defaultMessage": "Publication"
   },
@@ -1372,6 +1429,9 @@
   },
   "autoDocs.restore": {
     "defaultMessage": "Restore"
+  },
+  "autoDocs.reviewCurrentForm": {
+    "defaultMessage": "Review current form"
   },
   "autoDocs.ruleField": {
     "defaultMessage": "Form field"
@@ -1718,6 +1778,9 @@
   "common.clear": {
     "defaultMessage": "Clear"
   },
+  "common.no": {
+    "defaultMessage": "No"
+  },
   "common.remove": {
     "defaultMessage": "Remove"
   },
@@ -1729,6 +1792,9 @@
   },
   "common.showMore": {
     "defaultMessage": "Show more"
+  },
+  "common.yes": {
+    "defaultMessage": "Yes"
   },
   "confidential.marker": {
     "defaultMessage": "Confidential"

@@ -2925,6 +2925,19 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
     changes: changesFrom,
   },
+  "auto_doc.generated": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.generated",
+      defaultMessage:
+        "{actor} generated {name} from file version {fileVersion} and form version {formVersion}",
+    }),
+    values: (intl, payload) => ({
+      name: text(payload, "name") ?? thingName(intl, payload),
+      fileVersion: wholeCount(payload, "documentVersionNumber") || "?",
+      formVersion: wholeCount(payload, "formVersionNumber") || "?",
+    }),
+  },
   "auto_doc.published": {
     icon: Globe,
     message: defineMessage({

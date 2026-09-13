@@ -1248,6 +1248,16 @@ type KnowledgePayloads = {
  * narrator cannot read — the compiler is the only place to catch either.
  */
 type AutoDocPayloads = {
+  "auto_doc.generated": {
+    name: string;
+    generationId: string;
+    documentVersionId: string;
+    formVersionId: string;
+    documentVersionNumber: number;
+    formVersionNumber: number;
+    personId: string;
+    personName: string;
+  };
   "auto_doc.created": { name: string };
   "auto_doc.updated": { name: string; changed: ChangedFields };
   "auto_doc.published": { name: string; documentVersionId: string; formVersionId: string };
