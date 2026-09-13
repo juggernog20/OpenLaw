@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-007: ready downloads and captured mail follow the Generation's accepted formats. */
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { autoDocGenerations, eq, orgSettings, sql } from "@openlaw/db";
 import { startPipeline, type Pipeline } from "../../pipeline/pg-boss.js";
@@ -114,6 +115,11 @@ async function startWorker() {
       log: { info() {}, warn() {}, error() {} },
     },
   });
+}
+/** DOC-012 mints a fresh key for each attempt, so what a retry left
+ * behind is read from the Generation's directory rather than one key. */
+async function storedBlobs(generationId: string) {
+  return readdir(join(h.storageRoot, "auto-doc-generations", generationId)).catch(() => []);
 }
 async function delivered(id: string, generationId: string, emailState = "sent") {
   await startWorker();
@@ -299,6 +305,8 @@ it("keeps Word after a terminal PDF failure and retries the same Generation", as
   } finally {
     h.docEngine.convertToPdf = convert;
   }
+  const replaced = await storedBlobs(generation.id);
+  expect(replaced).toHaveLength(1);
   const retry = await h.app.inject({
     method: "POST",
     url: `/api/v1/auto-docs/${id}/generations/${generation.id}/retry`,
@@ -311,6 +319,12 @@ it("keeps Word after a terminal PDF failure and retries the same Generation", as
     state: "ready",
     hasPdf: true,
   });
+  // The attempt this retry replaced left no blob behind.
+  expect(await storedBlobs(generation.id)).toEqual(
+    expect.arrayContaining([expect.stringMatching(/\.pdf$/)]),
+  );
+  expect(await storedBlobs(generation.id)).not.toContain(replaced[0]);
+  expect(await storedBlobs(generation.id)).toHaveLength(2);
 });
 
 it("records a permanent SMTP refusal and permits a successful retry", async () => {

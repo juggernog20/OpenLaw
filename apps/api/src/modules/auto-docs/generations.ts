@@ -407,8 +407,26 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: "legal_only",
           payload: { name: autoDoc!.name, generationId: old.id },
         });
-        return { generation: generation!, file, form };
+        return {
+          generation: generation!,
+          file,
+          form,
+          superseded: [old.docxFileRef, old.pdfFileRef],
+        };
       });
+      // The retry mints fresh keys (DOC-012), so the output of the
+      // attempt it replaced is referenced by nothing from here on. The
+      // removal is best effort, for the display rendition's reason. An
+      // orphan is harmless, and failing to tidy one up must not refuse a
+      // retry the row has already recorded.
+      for (const fileRef of accepted.superseded)
+        if (fileRef)
+          await app.storage.delete(fileRef).catch((error: unknown) => {
+            request.log.warn(
+              { err: error, fileRef },
+              "could not remove the output of a replaced Generation attempt",
+            );
+          });
       await fillGeneration(
         app,
         request.log,
