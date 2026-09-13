@@ -393,6 +393,7 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
     expect(links.map((link) => link.textContent)).toEqual([
       "Home",
       "Inbox",
+      "My Tasks",
       "Matters",
       "Contracts",
       "Documents",
