@@ -52,9 +52,14 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await added.getByLabel("Slug", { exact: true }).fill("jurisdiction");
   await added.getByLabel("Slug", { exact: true }).press("Enter");
   await expect(fields.getByText("jurisdiction · Text", { exact: true })).toBeVisible();
-  await added.getByRole("combobox", { name: "Type", exact: true }).selectOption("single_select");
-  await added.getByLabel("Options", { exact: true }).fill("US\nUK");
-  await added.getByLabel("Options", { exact: true }).blur();
+  await added.getByLabel("Label", { exact: true }).fill("Jurisdiction");
+  await added.getByLabel("Label", { exact: true }).press("Enter");
+  const jurisdiction = page.getByRole("region", { name: "Jurisdiction", exact: true });
+  await jurisdiction
+    .getByRole("combobox", { name: "Type", exact: true })
+    .selectOption("single_select");
+  await jurisdiction.getByLabel("Options", { exact: true }).fill("US\nUK");
+  await jurisdiction.getByLabel("Options", { exact: true }).blur();
   await expect(fields.getByText("jurisdiction · Single select", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Edit the rule for arbitration", exact: true }).click();
   const rule = page.getByRole("region", { name: "arbitration", exact: true });

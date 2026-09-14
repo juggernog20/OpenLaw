@@ -60,7 +60,11 @@ test("Legal edits Assignment rules and claims an unassigned generated Contract f
   await page.getByLabel("Signing date", { exact: true }).fill("2026-10-01");
   await page.getByRole("button", { name: "Generate", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Generation", exact: true })).toBeVisible();
-  const contractPath = (await page.getByRole("link", { name, exact: true }).getAttribute("href"))!;
+  // The sub-bar's breadcrumb also carries the name; the Contract link is in the body.
+  const contractPath = (await page
+    .getByRole("main")
+    .getByRole("link", { name, exact: true })
+    .getAttribute("href"))!;
   await page.goto("/inbox?tab=unassigned-contracts");
   const row = page.getByRole("row").filter({ has: page.getByRole("link", { name, exact: true }) });
   await expect(row).toBeVisible();

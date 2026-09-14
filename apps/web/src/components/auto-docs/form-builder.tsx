@@ -6,7 +6,7 @@
  * commit here writes one form version (ADO-004); there is no Save form
  * and no dirty state.
  */
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
@@ -83,27 +83,58 @@ export function FormBuilder({
   const orphaned = fields.filter((field) => record.orphanedFields.includes(field.slug));
   const fileNumber = record.template?.versions[0]?.versionNumber ?? 0;
 
-  function commitDefinition(key: string, next: Definition): Promise<CommitOutcome> {
-    return commits.commit(
-      key,
-      () =>
-        api.POST("/api/v1/auto-docs/{id}/form-versions", {
-          params: { path: { id: record.autoDoc.id } },
-          body: { fields: next.fields.map(fieldInput), clauseRules: next.clauseRules },
-        }),
-      onSaved,
-    );
+  // Every commit writes the whole definition, so two commits in flight
+  // would race and the second would carry the first's stale fields. They
+  // queue instead, and each derives its definition from the newest
+  // saved record when its turn comes, not from the render that asked.
+  const latest = useRef(record);
+  useEffect(() => {
+    latest.current = record;
+  }, [record]);
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  function commitDefinition(
+    key: string,
+    produce: (current: Definition) => Definition,
+  ): Promise<CommitOutcome> {
+    const turn = queue.current.then(() => {
+      const current = latest.current.formVersion?.definition ?? { fields: [], clauseRules: [] };
+      const next = produce(current);
+      return commits.commit(
+        key,
+        () =>
+          api.POST("/api/v1/auto-docs/{id}/form-versions", {
+            params: { path: { id: record.autoDoc.id } },
+            body: { fields: next.fields.map(fieldInput), clauseRules: next.clauseRules },
+          }),
+        (saved) => {
+          latest.current = saved;
+          onSaved(saved);
+        },
+      );
+    });
+    queue.current = turn.catch(() => undefined);
+    return turn;
   }
-  const replaceField = (slug: string, patch: Partial<AutoDocField>) =>
-    fields.map((field) => (field.slug === slug ? { ...field, ...patch } : field));
+  const replaceField =
+    (slug: string, patch: Partial<AutoDocField>) =>
+    (current: Definition): Definition => ({
+      fields: current.fields.map((field) => (field.slug === slug ? { ...field, ...patch } : field)),
+      clauseRules:
+        patch.slug && patch.slug !== slug
+          ? current.clauseRules.map((rule) =>
+              rule.fieldSlug === slug ? { ...rule, fieldSlug: patch.slug! } : rule,
+            )
+          : current.clauseRules,
+    });
 
   async function addField() {
     let number = 1;
     while (fields.some((field) => field.slug === `field_${number}`)) number++;
     const slug = `field_${number}`;
-    const outcome = await commitDefinition("add", {
+    const outcome = await commitDefinition("add", (current) => ({
+      clauseRules: current.clauseRules,
       fields: [
-        ...fields,
+        ...current.fields,
         {
           slug,
           label: intl.formatMessage({ id: "autoDocs.newField", defaultMessage: "New field" }),
@@ -117,16 +148,15 @@ export function FormBuilder({
           contractAttribute: null,
         },
       ],
-      clauseRules: rules,
-    });
+    }));
     if (outcome.ok) onSelect({ kind: "field", slug });
   }
   async function removeField(field: AutoDocField) {
     setRemoving(null);
-    const outcome = await commitDefinition(`row:${field.slug}`, {
-      fields: fields.filter((row) => row.slug !== field.slug),
-      clauseRules: rules.filter((rule) => rule.fieldSlug !== field.slug),
-    });
+    const outcome = await commitDefinition(`row:${field.slug}`, (current) => ({
+      fields: current.fields.filter((row) => row.slug !== field.slug),
+      clauseRules: current.clauseRules.filter((rule) => rule.fieldSlug !== field.slug),
+    }));
     if (outcome.ok && selected?.kind === "field" && selected.slug === field.slug) onSelect(null);
   }
   function requestRemove(field: AutoDocField) {
@@ -210,10 +240,7 @@ export function FormBuilder({
           archived
             ? undefined
             : (row, label) =>
-                void commitDefinition(rowKey(row.slug), {
-                  fields: replaceField(row.slug, { label }),
-                  clauseRules: rules,
-                })
+                void commitDefinition(rowKey(row.slug), replaceField(row.slug, { label }))
         }
         rowClassName={(row) =>
           selected?.kind === "field" && selected.slug === row.slug ? "bg-control" : undefined
@@ -272,10 +299,12 @@ export function FormBuilder({
                     { label: row.displayName, position, total },
                   ),
                 onMove: (from, to) => {
-                  const next = [...fields];
-                  const [moved] = next.splice(from, 1);
-                  next.splice(to, 0, moved!);
-                  void commitDefinition("order", { fields: next, clauseRules: rules });
+                  void commitDefinition("order", (current) => {
+                    const next = [...current.fields];
+                    const [moved] = next.splice(from, 1);
+                    next.splice(to, 0, moved!);
+                    return { fields: next, clauseRules: current.clauseRules };
+                  });
                 },
               }
         }
@@ -368,17 +397,7 @@ export function FormBuilder({
           disabled={archived}
           commits={commits}
           onCommit={(key, patch) =>
-            commitDefinition(key, {
-              fields: replaceField(selectedField.slug, patch),
-              clauseRules:
-                patch.slug && patch.slug !== selectedField.slug
-                  ? rules.map((rule) =>
-                      rule.fieldSlug === selectedField.slug
-                        ? { ...rule, fieldSlug: patch.slug! }
-                        : rule,
-                    )
-                  : rules,
-            }).then((outcome) => {
+            commitDefinition(key, replaceField(selectedField.slug, patch)).then((outcome) => {
               if (outcome.ok && patch.slug && patch.slug !== selectedField.slug)
                 onSelect({ kind: "field", slug: patch.slug });
               return outcome;
@@ -397,14 +416,16 @@ export function FormBuilder({
           disabled={archived}
           commits={commits}
           onCommit={(next) =>
-            commitDefinition(`block:${selectedBlock}`, {
-              fields,
+            commitDefinition(`block:${selectedBlock}`, (current) => ({
+              fields: current.fields,
               clauseRules: next
-                ? rules.some((rule) => rule.blockName === selectedBlock)
-                  ? rules.map((rule) => (rule.blockName === selectedBlock ? next : rule))
-                  : [...rules, next]
-                : rules.filter((rule) => rule.blockName !== selectedBlock),
-            })
+                ? current.clauseRules.some((rule) => rule.blockName === selectedBlock)
+                  ? current.clauseRules.map((rule) =>
+                      rule.blockName === selectedBlock ? next : rule,
+                    )
+                  : [...current.clauseRules, next]
+                : current.clauseRules.filter((rule) => rule.blockName !== selectedBlock),
+            }))
           }
         />
       )}
