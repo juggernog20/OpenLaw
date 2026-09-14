@@ -8,15 +8,21 @@ Sign in as a Legal Team Member or Administrator, open **Auto-Docs**, and create 
 
 ## Mark a Placeholder
 
-Type a name in double braces where the answer goes, for example `{{counterparty_name}}`. Use lowercase letters, digits, and underscores, and start with a letter. Type it anywhere in the document, including headers, footers, and footnotes. The first upload creates one text form field for each new Placeholder, in document order. Edit the field's label, type, and help from its card.
+Type a name in double braces where the answer goes, for example `{{counterparty_name}}`. Start the name with a lowercase letter, then use lowercase letters, digits, and underscores. Keep it to 120 characters. Type a Placeholder anywhere in the document, including headers, footers, and footnotes. Each new Placeholder gets its own form field on upload, in document order. Edit the field's label, type, and help from its card.
 
-Format a value with a directive after a bar:
+## Format a value
+
+Add one directive after a bar to say how the answer prints. A Placeholder takes one directive, not two.
 
 - `{{name|upper}}` prints the answer in capitals.
-- `{{signing_date|date:DD/MM/YYYY}}` prints a date answer in that pattern.
-- `{{amount|currency:USD}}` prints a currency answer with its symbol and separators.
+- `{{signing_date|date:DD/MM/YYYY}}` prints a date answer in that pattern. The three patterns are `YYYY-MM-DD`, `DD/MM/YYYY`, and `MMMM D, YYYY`.
+- `{{amount|currency:USD}}` prints the answer with that currency's symbol and separators. Use a three-letter currency code.
 
-The form field's type must match the directive. Publish refuses a mismatch and names it.
+A directive also decides the new field's type. A date directive creates a date field, a currency directive creates a currency field, and every other new Placeholder creates a text field. Two directives that disagree on one name create a text field, and Publish then names the gap.
+
+`upper` prints any answer, so it asks nothing of the field. A date directive needs a date field. A currency directive needs a currency or a number field. Publish refuses a field that cannot print its directive and names it.
+
+An upload is refused when a name is not a valid slug, when a directive is not one of the three above, or when a currency code is not one OpenLaw knows. The refusal quotes the text to fix.
 
 ## Mark a Block
 
