@@ -49,7 +49,7 @@ import type { SortDirection } from "@openlaw/shared";
 import {
   shownColumns,
   tableMinWidth,
-  type ColumnCatalogue,
+  type TableCatalogue,
   type ColumnDef,
   type Layout,
 } from "../../lib/list-views";
@@ -132,7 +132,7 @@ export function ManagedTable<Row>({
   foot,
   actionsColumn,
 }: Readonly<{
-  catalogue: ColumnCatalogue<Row>;
+  catalogue: TableCatalogue<Row>;
   layout: Layout;
   rows: readonly Row[];
   rowKey: (row: Row) => string;

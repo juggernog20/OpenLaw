@@ -20,6 +20,7 @@ const ROLES = {
   operator: "Deployment operator",
 };
 const DESCRIPTIONS = {
+  "auto-docs": "Write templates and build forms for document generation.",
   start: "Find your way around, sign in, and make OpenLaw yours.",
   portal: "Ask Legal for help and follow your Requests.",
   "working-with-legal": "Share context, collaborate, and keep work moving.",

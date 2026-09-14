@@ -45,6 +45,7 @@ const SECTION_ICONS: Record<string, LucideIcon> = {
   portal: MessageSquare,
   "working-with-legal": Users,
   contracts: FileText,
+  "auto-docs": FileText,
   matters: BriefcaseBusiness,
   documents: Files,
   entities: Building2,

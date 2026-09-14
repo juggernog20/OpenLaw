@@ -111,37 +111,73 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
           import.meta.url,
         ),
       );
-    await page.getByLabel("Word template", { exact: true }).setInputFiles(fixture(1));
-    await page.getByRole("button", { name: "Upload template", exact: true }).click();
-    const counterparty = page.getByRole("group", { name: "counterparty_name", exact: true });
-    await expect(counterparty).toBeVisible();
-    await counterparty.getByRole("checkbox", { name: "Required", exact: true }).check();
+    async function upload(version: number) {
+      await page.getByRole("button", { name: "Upload version", exact: true }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("Word template", { exact: true }).setInputFiles(fixture(version));
+      await dialog.getByRole("button", { name: "Upload", exact: true }).click();
+      await expect(dialog.getByRole("status")).toContainText(`File version ${version}`);
+      await dialog.getByRole("button", { name: "Close", exact: true }).click();
+    }
+    async function publish() {
+      await page.getByRole("button", { name: "Publish", exact: true }).first().click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByRole("button", { name: "Publish", exact: true }).click();
+      await expect(dialog).toHaveCount(0);
+    }
+    await page.getByRole("link", { name: "Form", exact: true }).click();
+    await upload(1);
+    const fields = page.getByRole("region", { name: "Fields", exact: true });
+    await fields.getByRole("button", { name: "Edit Counterparty name", exact: true }).click();
+    const counterparty = page.getByRole("region", { name: "Counterparty name", exact: true });
+    await counterparty.getByRole("checkbox", { name: "Required", exact: true }).click();
+    await expect(
+      counterparty.getByRole("checkbox", { name: "Required", exact: true }),
+    ).toBeChecked();
     await counterparty
       .getByRole("combobox", { name: "Map to", exact: true })
       .selectOption("attribute:primary_counterparty_name");
+    await expect(
+      fields.getByText("counterparty_name · Text · Primary Counterparty name", { exact: true }),
+    ).toBeVisible();
     async function addField(slug: string, label: string, fieldType: string) {
-      await page.getByRole("button", { name: "Add field", exact: true }).click();
-      await page.getByLabel("Slug", { exact: true }).last().fill(slug);
-      const field = page.getByRole("group", { name: slug, exact: true });
-      await field.getByLabel("Label", { exact: true }).fill(label);
+      await fields.getByRole("button", { name: "Add field", exact: true }).click();
+      const fresh = page.getByRole("region", { name: "New field", exact: true });
+      await fresh.getByLabel("Slug", { exact: true }).fill(slug);
+      await fresh.getByLabel("Slug", { exact: true }).press("Enter");
+      await expect(fields.getByText(`${slug} · Text`, { exact: true })).toBeVisible();
+      await fresh.getByLabel("Label", { exact: true }).fill(label);
+      await fresh.getByLabel("Label", { exact: true }).press("Enter");
+      const field = page.getByRole("region", { name: label, exact: true });
+      await expect(field).toBeVisible();
       await field.getByRole("combobox", { name: "Type", exact: true }).selectOption(fieldType);
+      await expect(field.getByRole("combobox", { name: "Type", exact: true })).toHaveValue(
+        fieldType,
+      );
       return field;
     }
     const jurisdiction = await addField("jurisdiction", "Jurisdiction", "single_select");
-    await jurisdiction
-      .getByLabel("Options, one per line", { exact: true })
-      .fill("United States\nUnited Kingdom");
+    await jurisdiction.getByLabel("Options", { exact: true }).fill("United States\nUnited Kingdom");
+    await jurisdiction.getByLabel("Options", { exact: true }).blur();
+    await expect(fields.getByText("jurisdiction · Single select", { exact: true })).toBeVisible();
     const signingEntity = await addField("signing_entity", "Signing Entity", "entity");
     await signingEntity
       .getByRole("combobox", { name: "Map to", exact: true })
       .selectOption("attribute:entity_id");
+    await expect(
+      fields.getByText("signing_entity · Entity · Our Entity", { exact: true }),
+    ).toBeVisible();
     const owningDepartment = await addField("owning_department", "Owning department", "text");
     await owningDepartment
       .getByRole("combobox", { name: "Map to", exact: true })
       .selectOption("attribute:owning_department_id");
-    const clause = page.getByRole("group", { name: "arbitration", exact: true });
+    await expect(
+      fields.getByText("owning_department · Text · Owning department", { exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Edit the rule for arbitration", exact: true }).click();
+    const clause = page.getByRole("region", { name: "arbitration", exact: true });
     await clause
-      .getByRole("combobox", { name: "Include this Block", exact: true })
+      .getByRole("combobox", { name: "Include", exact: true })
       .selectOption("conditional");
     await clause
       .getByRole("combobox", { name: "Form field", exact: true })
@@ -150,52 +186,62 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     await clause
       .getByRole("combobox", { name: "Value", exact: true })
       .selectOption("United States");
-    await page.getByRole("button", { name: "Save form", exact: true }).click();
     await expect(
-      page
-        .getByRole("region", { name: "Form versions", exact: true })
-        .getByText("Form version 2", { exact: true }),
+      page.getByText("Included when Jurisdiction equals United States", { exact: true }),
     ).toBeVisible();
-    const assignment = page.getByRole("region", { name: "Assignment rules", exact: true });
-    await assignment.getByRole("button", { name: "Add rule", exact: true }).click();
-    const rule = assignment.getByRole("group", { name: "Assignment rule 1", exact: true });
-    await rule
-      .getByRole("combobox", { name: "Form field", exact: true })
-      .selectOption("jurisdiction");
-    await rule.getByRole("combobox", { name: "Operator", exact: true }).selectOption("equals");
-    await rule.getByRole("combobox", { name: "Value", exact: true }).selectOption("United States");
-    await rule
-      .getByRole("combobox", { name: "Legal Owner", exact: true })
-      .selectOption(personIds[0]!);
-    await assignment.getByRole("button", { name: "Save assignment", exact: true }).click();
-    await expect(assignment.getByText("Assignment settings saved.", { exact: true })).toBeVisible();
-    const settings = page.getByRole("region", { name: "Settings", exact: true });
-    await settings
-      .getByRole("combobox", { name: "Audience", exact: true })
-      .selectOption("selected");
-    await settings
-      .getByRole("listbox", { name: "Selected Departments", exact: true })
-      .selectOption(departmentIds[0]!);
-    await settings
+    await page.getByRole("link", { name: "Settings", exact: true }).click();
+    const creation = page.getByRole("region", { name: "Contract creation", exact: true });
+    await creation
       .getByRole("combobox", { name: "Target Contract Type", exact: true })
       .selectOption(contractTypeId);
-    await settings
+    await creation
       .getByLabel("Title pattern", { exact: true })
       .fill(`${name} - {{counterparty_name}}`);
-    await settings.getByRole("combobox", { name: "Formats", exact: true }).selectOption("both");
-    await settings
-      .getByRole("combobox", { name: "Acknowledgement frequency", exact: true })
-      .selectOption("every_use");
-    await settings
-      .getByRole("checkbox", { name: "Use the organization's acknowledgement text", exact: true })
-      .uncheck();
-    await settings
-      .getByRole("textbox", { name: "Acknowledgement text", exact: true })
-      .fill("Do not edit the generated NDA. Ask Legal for changes.");
-    await settings.getByRole("button", { name: "Save settings", exact: true }).click();
-    await page.getByRole("button", { name: "Publish", exact: true }).click();
+    await creation.getByLabel("Title pattern", { exact: true }).press("Enter");
+    const assignment = page.getByRole("region", { name: "Assignment rules", exact: true });
+    await assignment.getByRole("button", { name: "Add rule", exact: true }).click();
+    const ruleDialog = page.getByRole("dialog");
+    await ruleDialog
+      .getByRole("combobox", { name: "Form field", exact: true })
+      .selectOption("jurisdiction");
+    await ruleDialog
+      .getByRole("combobox", { name: "Operator", exact: true })
+      .selectOption("equals");
+    await ruleDialog
+      .getByRole("combobox", { name: "Value", exact: true })
+      .selectOption("United States");
+    await ruleDialog
+      .getByRole("combobox", { name: "Legal Owner", exact: true })
+      .selectOption(personIds[0]!);
+    await ruleDialog.getByRole("button", { name: "Save", exact: true }).click();
     await expect(
-      page.getByText("Live: file version 1 and form version 2.", { exact: true }),
+      assignment.getByText("Jurisdiction equals United States", { exact: true }),
+    ).toBeVisible();
+    const reach = page.getByRole("region", { name: "Reach", exact: true });
+    await reach.getByRole("combobox", { name: "Audience", exact: true }).selectOption("selected");
+    await reach
+      .getByRole("listbox", { name: "Departments", exact: true })
+      .selectOption(departmentIds[0]!);
+    await page
+      .getByRole("region", { name: "Output", exact: true })
+      .getByRole("combobox", { name: "Formats", exact: true })
+      .selectOption("both");
+    const acknowledgement = page.getByRole("region", { name: "Acknowledgement", exact: true });
+    await acknowledgement
+      .getByRole("combobox", { name: "Frequency", exact: true })
+      .selectOption("every_use");
+    await acknowledgement.getByRole("radio", { name: "Custom text", exact: true }).check();
+    const ackText = acknowledgement.getByRole("textbox", {
+      name: "Acknowledgement text",
+      exact: true,
+    });
+    await ackText.fill("Do not edit the generated NDA. Ask Legal for changes.");
+    await ackText.blur();
+    await expect(acknowledgement.getByText("Saved", { exact: true }).last()).toBeVisible();
+    await publish();
+    await page.getByRole("link", { name: "Overview", exact: true }).click();
+    await expect(
+      page.getByText(/^Live since .*: file version 1, form version \d+\.$/),
     ).toBeVisible();
     expect(await reportAxeViolations(page, testInfo, "M35-published-Auto-Doc")).toEqual([]);
 
@@ -318,24 +364,25 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
 
     await openForm(portal);
     await answer("Stale supplier", "United States");
-    await page.goto(autoDocUrl);
-    await page.getByLabel("Word template", { exact: true }).setInputFiles(fixture(2));
-    await page.getByRole("button", { name: "Upload template", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Open version 2", exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Compare forms", exact: true }).click();
-    await expect(
-      page
-        .getByRole("region", { name: "Version comparisons", exact: true })
-        .getByText(/Added confidentiality_period/),
-    ).toBeVisible();
+    await page.goto(`${autoDocUrl}/form`);
+    await upload(2);
+    await expect(page.getByText("File version 2", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Compare versions", exact: true }).click();
+    await expect(page.getByRole("dialog").getByText(/Added confidentiality_period/)).toBeVisible();
+    await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
     await page.getByRole("link", { name: "Compare files", exact: true }).click();
     await expect(page.getByRole("region", { name: "Compared document", exact: true })).toBeVisible({
       timeout: 180_000,
     });
     await page.getByRole("link", { name: "Close comparison", exact: true }).click();
-    await page.getByRole("button", { name: "Publish", exact: true }).click();
+    await page.getByRole("button", { name: "Auto-Doc actions", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Publish new pair", exact: true }).click();
+    const republish = page.getByRole("dialog");
+    await republish.getByRole("button", { name: "Publish", exact: true }).click();
+    await expect(republish).toHaveCount(0);
+    await page.getByRole("link", { name: "Overview", exact: true }).click();
     await expect(
-      page.getByText("Live: file version 2 and form version 3.", { exact: true }),
+      page.getByText(/^Live since .*: file version 2, form version \d+\.$/),
     ).toBeVisible();
     const staleSubmission = portal.waitForResponse(
       (response) =>
@@ -366,9 +413,11 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     const finalGeneration = (await finalResponse.json()).generation;
     expect(finalGeneration).toMatchObject({
       documentVersionNumber: 2,
-      formVersionNumber: 3,
       answers: { counterparty_name: "Stale supplier", confidentiality_period: "24 months" },
     });
+    // Every builder commit wrote a form version, so the number is not
+    // fixed; what matters is that the re-upload's form went live.
+    expect(finalGeneration.formVersionNumber).toBeGreaterThan(first.formVersionNumber);
     expect(finalGeneration.createdContract).not.toBeNull();
     expect(await reportAxeViolations(portal, testInfo, "M35-final-Generation")).toEqual([]);
     await testInfo.attach("M35 final Generation", {

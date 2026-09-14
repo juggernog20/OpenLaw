@@ -27,38 +27,53 @@ test("Legal targets a Contract Type and generates its draft Contract with a prim
   await page.getByRole("textbox", { name: "Name", exact: true }).fill(name);
   await page.getByRole("button", { name: "Create", exact: true }).click();
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
-  await page
+  await page.getByRole("link", { name: "Form", exact: true }).click();
+  await page.getByRole("button", { name: "Upload version", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog
     .getByLabel("Word template", { exact: true })
     .setInputFiles(
       fileURLToPath(
         new URL("../../apps/api/src/testing/fixtures/auto-docs/directives.docx", import.meta.url),
       ),
     );
-  await page.getByRole("button", { name: "Upload template", exact: true }).click();
-  const counterparty = page.getByRole("group", { name: "counterparty_name", exact: true });
-  await counterparty
+  await dialog.getByRole("button", { name: "Upload", exact: true }).click();
+  await expect(dialog.getByRole("status")).toContainText("File version 1");
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  const fields = page.getByRole("region", { name: "Fields", exact: true });
+  await fields.getByRole("button", { name: "Edit Counterparty name", exact: true }).click();
+  await page
+    .getByRole("region", { name: "Counterparty name", exact: true })
     .getByRole("combobox", { name: "Map to", exact: true })
     .selectOption("attribute:primary_counterparty_name");
-  const amount = page.getByRole("group", { name: "amount", exact: true });
+  await expect(
+    fields.getByText("counterparty_name · Text · Primary Counterparty name", { exact: true }),
+  ).toBeVisible();
+  await fields.getByRole("button", { name: "Edit Amount", exact: true }).click();
+  const amount = page.getByRole("region", { name: "Amount", exact: true });
   await amount
     .getByRole("combobox", { name: "Map to", exact: true })
     .selectOption("attribute:value");
-  await amount.getByRole("combobox", { name: "Value currency", exact: true }).selectOption("USD");
-  await amount
-    .getByRole("combobox", { name: "Value cadence", exact: true })
-    .selectOption("annually");
-  await page.getByRole("button", { name: "Save form", exact: true }).click();
-  await expect(page.getByText("Form saved.", { exact: true })).toBeVisible();
-  const settings = page.getByRole("region", { name: "Settings", exact: true });
-  await settings
+  await amount.getByRole("combobox", { name: "Currency", exact: true }).selectOption("USD");
+  await amount.getByRole("combobox", { name: "Cadence", exact: true }).selectOption("annually");
+  await expect(amount.getByRole("combobox", { name: "Cadence", exact: true })).toHaveValue(
+    "annually",
+  );
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  const creation = page.getByRole("region", { name: "Contract creation", exact: true });
+  await creation
     .getByRole("combobox", { name: "Target Contract Type", exact: true })
     .selectOption(type.id);
-  await settings.getByLabel("Title pattern", { exact: true }).fill("NDA - {{counterparty_name}}");
-  await settings.getByRole("combobox", { name: "Formats", exact: true }).selectOption("docx");
-  await settings.getByRole("button", { name: "Save settings", exact: true }).click();
-  await expect(settings.getByText("Settings saved.", { exact: true })).toBeVisible();
+  await creation.getByLabel("Title pattern", { exact: true }).fill("NDA - {{counterparty_name}}");
+  await creation.getByLabel("Title pattern", { exact: true }).press("Enter");
+  await expect(creation.getByText("Saved", { exact: true }).first()).toBeVisible();
+  await page
+    .getByRole("region", { name: "Output", exact: true })
+    .getByRole("combobox", { name: "Formats", exact: true })
+    .selectOption("docx");
   expect(await reportAxeViolations(page, testInfo, "Auto-Doc-Contract-settings")).toEqual([]);
   await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("link", { name: "Generate", exact: true }).click();
   const counterpartyName = `Acme Target ${Date.now()}`;
   await page.getByLabel("Counterparty name", { exact: true }).fill(counterpartyName);

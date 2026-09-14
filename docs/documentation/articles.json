@@ -22,6 +22,10 @@
       "title": "Matters"
     },
     {
+      "id": "auto-docs",
+      "title": "Auto-Docs"
+    },
+    {
       "id": "documents",
       "title": "Documents"
     },
@@ -774,6 +778,19 @@
       "priority": "P1",
       "contexts": ["settings.approver-groups"],
       "status": "review"
+    },
+    {
+      "id": "auto-doc-template",
+      "title": "Write an Auto-Doc template",
+      "section": "auto-docs",
+      "kind": "how-to",
+      "coverage": ["C56"],
+      "ownerTask": "DOC-028",
+      "audiences": ["legal_team_member", "administrator"],
+      "destinations": ["staff-help", "formal"],
+      "priority": "P1",
+      "contexts": ["auto-docs.template"],
+      "status": "draft"
     }
   ]
 }

@@ -915,6 +915,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auto-docs/{id}/template/{versionId}/reading": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Member+ reads one file version as paragraphs with its Placeholders and Blocks typed (DES-087) */
+    get: operations["readAutoDocTemplate"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auto-docs/{id}/generate": {
     parameters: {
       query?: never;
@@ -3533,6 +3550,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/inbox/unassigned-contracts/assignees": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listUnassignedContractAssignees"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/inbox/unassigned-contracts/{number}/claim": {
     parameters: {
       query?: never;
@@ -3543,6 +3576,22 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["claimUnassignedContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/inbox/unassigned-contracts/{number}/assign": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["assignUnassignedContract"];
     delete?: never;
     options?: never;
     head?: never;
@@ -11348,6 +11397,71 @@ export interface operations {
               createdAt: string;
             }[];
             orphanedFields: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readAutoDocTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            versionId: string;
+            versionNumber: number;
+            parts: {
+              name: string;
+              /** @enum {string} */
+              kind: "body" | "header" | "footer" | "footnotes" | "endnotes";
+              paragraphs: (
+                | {
+                    /** @enum {string} */
+                    kind: "text";
+                    text: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "placeholder";
+                    text: string;
+                    name: string;
+                    directive: string | null;
+                    hasField: boolean;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "block_open";
+                    name: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "block_close";
+                    name: string;
+                  }
+              )[][];
+            }[];
           };
         };
       };
@@ -20172,6 +20286,40 @@ export interface operations {
       };
     };
   };
+  listUnassignedContractAssignees: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            people: {
+              id: string;
+              displayName: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   claimUnassignedContract: {
     parameters: {
       query?: never;
@@ -20184,6 +20332,47 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": Record<string, never>;
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            number: number;
+            title: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  assignUnassignedContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          legalOwnerId: string;
+        };
       };
     };
     responses: {

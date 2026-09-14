@@ -20,7 +20,7 @@
 
 import { useIntl, FormattedMessage } from "react-intl";
 import { ChevronDown, ChevronUp, Columns3 } from "lucide-react";
-import type { ColumnCatalogue, Layout } from "../../lib/list-views";
+import type { TableCatalogue, Layout } from "../../lib/list-views";
 import { builtInLayout } from "../../lib/list-views";
 import { Button } from "../ui/button";
 import {
@@ -38,7 +38,7 @@ export function ColumnMenu<Row>({
   layout,
   onLayoutChange,
 }: Readonly<{
-  catalogue: ColumnCatalogue<Row>;
+  catalogue: TableCatalogue<Row>;
   layout: Layout;
   onLayoutChange: (next: Layout) => void;
 }>) {

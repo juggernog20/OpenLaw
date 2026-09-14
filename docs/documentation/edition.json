@@ -236,6 +236,10 @@
       {
         "id": "approver-groups",
         "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c"
+      },
+      {
+        "id": "auto-doc-template",
+        "contentSha256": "ffc5a86dc97209d8aa9554b87fe762802f03c571ce6c4ddd63d4be089e8c19dc"
       }
     ]
   }

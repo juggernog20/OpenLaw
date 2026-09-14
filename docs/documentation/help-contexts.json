@@ -321,6 +321,12 @@
       "contexts": ["notifications", "errors", "reference", "support"],
       "surface": "both",
       "pilotEntry": false
+    },
+    {
+      "routes": ["/auto-docs", "/auto-docs/:id/:tab?"],
+      "contexts": ["auto-docs.template"],
+      "surface": "staff",
+      "pilotEntry": false
     }
   ]
 }

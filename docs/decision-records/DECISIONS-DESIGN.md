@@ -4864,6 +4864,91 @@ Generate again opens the current published form. Compatible saved answers are pr
 
 The dialog follows the existing focus trap and return-focus behavior. All pickers have visible labels, errors use the existing alert treatment, and pending work disables repeat submission. Validate the new controls with route tests and axe in both shells.
 
+## DES-087: The Auto-Doc record is a doc builder — the template beside its form — inside a four-section record page (extends DES-032, DES-021, DES-017, DES-022, DES-054, DES-055, DES-071; amends the M35 editor)
+
+- **Status:** Accepted. Blair chose this shape from five HTML mocks on 2026-09-14.
+- **Date:** 2026-09-14
+
+### Context
+
+M35 (#848 to #856) built the Auto-Doc record without a mock and without a DES record. It shipped as one scroll of nine cards: Publication, Template, Form, Settings, Assignment rules, Generations, Version comparisons, Form versions, plus a Clauses sub-card. Each form field is a bordered fieldset with its own legend, six controls, and three buttons. The page carries 24 explanatory paragraphs and four separate Save buttons, each with its own dirty state. Blair's verdict on 2026-09-14: "the form is complicated, there are way too many subtitles."
+
+The requirements have not changed. ADO-002 through ADO-010 still say what the page must let a Member+ do: upload file versions and see what detection found, keep one form field per Placeholder and edit, map, order, and add fields, write one Clause rule per Block, pin a live pair, set reach, acknowledgement, output, and Contract creation, write Assignment rules, and read Generations. This record keeps every one of those and throws the layout away.
+
+Five directions were mocked as static HTML on the app's tokens and put side by side: a routed record page with table rows and dialogs; the template drawn beside its form; one page of collapsed summary cards; a settings-style rail of parts with readiness marks; and a list beside a sticky properties panel. Blair picked the second: "a true doc builder style, and it keeps the source material next to the builder." The other four are recorded under Alternatives.
+
+### Decision
+
+**1. The Auto-Doc is a DES-032 record page.** The sub-bar carries the breadcrumb (Auto-Docs), the name as the title with DES-017 rename in place, and a state pill: Draft on `status-neutral`, Published on `status-success`, Archived on `status-onhold`. The sub-bar's primary action is **Generate** when published and **Publish** otherwise (clause 4). The DES-055 overflow menu holds Copy link, Unpublish (published only), and Archive or Restore. The activity bar keeps the History applet. The section strip is **Overview / Form / Settings / Generations**, each its own URL: `/auto-docs/:id`, `/form`, `/settings`, `/generations`.
+
+**2. Overview is two cards: About and Publication.**
+
+- **About** is DES-022's identity card: the description as a DES-017 commit-on-blur textarea, and one 12px caption with who created the Auto-Doc and when.
+- **Publication** states the live pair in one line: "Live since May 3: file version 2, form version 5." or "Not published." When a newer file or form version exists than the live one, a `status-warning` line names it: "File version 3 and form version 6 are newer than the live pair." Nothing else. The version selects live in the Publish dialog (clause 4).
+
+**3. Form is the builder: the template on the left, the form on the right.** The section is two panes that wrap to a stack when the slot is narrow (DES-012, intrinsic wrap).
+
+- **The template pane** is a card whose header names the current file: filename, "File version N" as a `status-neutral` pill, and the detection summary as a 12px caption ("5 Placeholders, 2 Blocks"). Header actions are **Upload version** and, when two or more versions exist, **Compare** (DES-071). Earlier versions sit under one DES-054 disclosure at the card's foot, "Earlier versions", closed by default; each row has Open (the shared Document reader) and Download.
+- **The pane's body is the template reading**: the file's text, paragraph by paragraph, with every Placeholder drawn as a chip and every Block drawn as a bracketed span. It is a reading, not a rendering: paragraphs, line breaks, and bold keep; tables flatten to their paragraphs; headers, footers, and footnotes follow the body under their part name. The true page is one Open away. A Placeholder chip is `status-info` (paired bg and fg, `rounded-chip`, 12px) and prints the brace text as written, directive included. A Placeholder with no form field prints on `status-danger` instead. A Block is a left rule in `status-success-fg` with an 11px `status-success-fg` tag above its first paragraph: the Block name and its rule in words ("arbitration · when Jurisdiction equals United States", "non_compete · always"). A Block whose text is in the file but which no saved form version knows yet reads "always", because ADO-002 says a Block with no rule is included.
+- **The template pane is a picker.** Clicking a Placeholder chip selects its form field on the right and scrolls it into view; clicking a Block tag selects its Clause row. The selected chip takes a 2px `accent` outline, the same outline DES-011 gives focus. Keyboard: chips and tags are buttons in document order.
+- **The form pane** is two DES-021 table cards, **Fields** and **Clauses**, and, under them, the **field card** for the selected field. Fields rows carry the grip (display order is real, ADO-003), the label as the name cell with its slug, type, and map as one 12px caption ("counterparty_name · Text · Primary Counterparty name"), and the trailing pencil. A row is selected by its pencil, by clicking its name, or from the template pane; the selected row takes a `bg-control` wash. An orphaned field (ADO-003) prints a `status-danger` caption, "No Placeholder in file version N", and the card header carries the count chip "N orphaned" on `status-danger-bg`. **Add field** in the header adds a row and selects it. Clauses rows are one per Block detected in the current file, the Block name as the name cell and the rule as the caption ("Always included", "Included when Jurisdiction equals United States"); a rule that names a Block the file lacks prints "Not in file version N" on `status-danger`. Clauses has no Add, because Blocks come from the file (ADO-002).
+- **The field card** is a settings card titled with the selected field's label. Its controls are DES-017 per-field commits through `useFieldCommit`, each with its own micro-state: Label, Slug (11px caption: "Must match the Placeholder in the file."), Type, Options (one per line, for the two select types), Help, Map to, and under a Value map, Currency and Cadence, then Required. Its foot prints the usage caption ("Used by 1 Clause rule") and **Remove**. A selected Clause row swaps the card for the rule card: Include (Always, or When a rule matches), then Form field, Operator, and Value. Nothing is immutable and nothing is disabled; a refusal prints beside the control that caused it.
+- **There is no Save form button and no dirty state.** ADO-004 says each save writes a new form version; here each commit is that save. A field-card commit, a reorder, a rule change, an add, and a removal each write one form version. Removal of a field whose Placeholder is still in the file runs a DES-020 guard modal, because Publish will then refuse; removal of an orphaned or non-document field does not. Form versions are listed nowhere on the page; they are the options in the Publish dialog and the Compare dialog.
+- **Compare versions** is a Fields card-header action that opens a dialog with the from and to selects and the structural change list ADO-004 describes.
+- **Upload version** opens a dialog because detection can refuse. After upload it reports what changed before it closes: Placeholders found, Blocks found, form fields created for new Placeholders, and form fields now orphaned. A refusal quotes the offending text as ADO-002 requires, in the dialog, and the file input stays. On close the template pane reads the new version and the Fields card reads the new form version. The two paragraphs about brace syntax and directives leave the page; a Help article (DES-073), "Write an Auto-Doc template", takes them, and the template pane's foot links to it once.
+
+**4. Publish is a dialog, opened from the sub-bar.** It names the pair that will go live, defaulting to the newest file version and the newest form version, each in a select for the case where an earlier one is wanted. A refusal (ADO-004) lists every gap inside the dialog, above the confirm. On success the dialog closes, the pill turns Published, and the Publication card reads the new pair. Unpublish, Archive, and Restore are single acts in the overflow menu with no dialog; the pill and the Publication card answer them.
+
+**5. Settings is four cards on DES-017's per-field commit, with no Save buttons.** Each control commits on change or blur with its own micro-state beside it. Cards in order:
+
+- **Reach**: Audience (Legal only, Selected, Everyone). Under Selected, the People and Departments multi-selects appear beneath it, with one 11px caption under Departments: "A person named here, or in a Department named here, sees this Auto-Doc in the Portal."
+- **Acknowledgement**: Frequency (None, Every use, Once per Auto-Doc, Once across Auto-Docs). Under any frequency but None, a Text control: a radio pair, "Organization's text" showing the org text read-only, or "Custom text" with the textarea. One caption under the textarea: "Changing the text asks everyone to acknowledge it again."
+- **Output**: Formats (Word, PDF, Word and PDF) and Cover note, with its Markdown preview under the textarea when non-empty. One caption: "Sent in the email with the files."
+- **Contract creation**: Target Contract Type. When one is set, the card continues with Title pattern (caption: "Form field slugs in double braces. Blank uses the mapped title or the Auto-Doc name."), Our Entity (From the form, or a fixed Entity), Default Legal Owner, and **Assignment rules** as a DES-021 table inside the card: the grip, the rule sentence as the name cell ("Jurisdiction equals United States"), the Legal Owner as the caption, the pencil, and remove. The pencil and Add rule open the rule card's controls in a DES-021 dialog with a Legal Owner select added, because this card has no side pane. When no Contract Type is set, the card is the one select and a caption: "Without a target, a Generation's file stays on the Generation until it is Filed."
+
+The Portal configuration warnings that ADO-008's addendum describes render as `status-warning` lines on the card they concern, not in a block of their own.
+
+**6. Generations is one table card.** Each row: the person and time as the name cell, the pair as its caption, a state pill, the Word and PDF download links as they become ready, the created Contract's link, the email outcome, and the trailing **File** button (DES-086) and, on a failed row, **Retry**. Empty prints "No Generations yet." Polling stays as built.
+
+**7. Copy.** The record loses its 24 explanatory paragraphs. Each one becomes a dialog caption, a Help article line, or nothing. No card carries a paragraph under its title. Every heading is a card title or a dialog title; there are no legends, no h3 sub-cards, and no per-row headings. Captions are 11px or 12px `text-secondary` and one sentence.
+
+**8. Generate and Generation pages take the sub-bar.** The breadcrumb reads Auto-Docs / the Auto-Doc name; the title is "Generate" or "Generation". The body stays as DES-086 built it, in one card. Nothing else changes on those two pages or in the Portal (DES-085).
+
+### Recorded normalization points
+
+1. The Type caption prints the type's display name ("Single select"), never the enum value.
+2. The rule sentence uses the field's label, never its slug, and the option's text, never its index. The Block tag in the template pane uses the Block name as written in the file, because that is what the reader sees in Word.
+3. The template reading uses Inter, not a serif and not the reserved mono, at `text-md`. The mock drew it in a serif to say "this is the document"; DES-006 has no second typeface and this record does not add one. The card border and the paragraph rhythm carry that meaning instead.
+4. Dark and Warm draw the pills and the chips with the same status families as Light; no theme-specific fork.
+
+### Alternatives considered
+
+- **A routed record page with table rows and dialogs, no template pane** (mock A). Rejected by Blair. It is the Contract record's anatomy and reads well, but the reader matches slugs to braces from memory. The template pane is what makes orphans and missing Blocks visible without a caption.
+- **One page of collapsed summary cards** (mock C). Rejected. It fixes the scroll and the copy but not the editor; the form is still a table you edit blind.
+- **A settings-style rail of parts with readiness marks** (mock D). Rejected. The readiness marks are good and the Publish dialog keeps them (its refusal list is the same information); the rail itself is a second navigation beside the section strip, and DES-032 clause 6 says no.
+- **A list beside a sticky properties panel, no dialogs** (mock E). Half kept. The Form section's field card is that panel; the template pane took the space that mock gave to chips on the row.
+- **Keep the explicit Save form with per-field commits everywhere else.** Rejected. One editing model per page. A form version per commit is finer audit, and ADO-004 already makes form versions cheap snapshots. The cost is a longer version list, which clause 3 hides from the page.
+- **Render the real page (the PDF rendition) in the template pane and overlay chips.** Rejected. Placeholder positions on a rendered page are not known to the API; the text scan is. A reading the API can annotate beats a picture it cannot.
+- **A wizard for first setup.** Rejected. An Auto-Doc is edited many times after it is created; a wizard optimizes the one visit that matters least.
+
+### Rationale
+
+Every requirement stays. What changes is that the person building the form sees the document the form fills, and the record otherwise looks like every other record in the app. The Save buttons go because DES-017 already decided they go. The paragraphs go because the controls, named plainly, say what they do, and the template pane says the rest by pointing.
+
+### Consequences
+
+**API.** One new read, `GET /api/v1/auto-docs/:id/template/:versionId/reading`, answers the template reading: the file's parts in order, each a list of paragraphs, each paragraph a list of segments typed `text`, `placeholder` (name, directive, and whether a form field of that slug exists in the newest form version), `block_open`, or `block_close` (name). It reuses `templateTextParts` and `scanTemplateText` in `apps/api/src/lib/auto-doc-template.ts`, which already produce the text and the token offsets; the route only splits on paragraphs and joins the form. Nothing is stored. The form-version write moves from one Save to each commit; `POST /form-versions` already takes the whole definition, so no change there.
+
+**Web.** `auto-doc-record.tsx` is rewritten on `RecordTabs`, `PageSubBar`, `ListEditor` (table variant), `SettingsCard`, and `useFieldCommit`. New components: the template reading pane, the field card, the rule card, the Publish dialog, and the upload dialog. `publication-cards.tsx`, `assignment-editor.tsx`, and `clauses-editor.tsx` are replaced. `rule-value-input.tsx`, `generations.tsx`, `filings.tsx`, and `form-control.tsx` stay. Route tests 49, 50, 53, and 54 and the M35 demo journey are rewritten against the new labels. One Help article is added. The M35 addenda on ADO-003, ADO-004, and ADO-006 gain a line pointing here.
+
+**Mocks.** The five HTML mocks were throwaway and are not checked in. The next `designs/auto-docs.pen` frame, if one is drawn, follows this record.
+
+### Built addendum (2026-09-14, #874)
+
+The record ships as written, with three things decided at the keyboard. The name renames in place from the sub-bar's title. A published Auto-Doc keeps Generate as its primary action and offers **Publish new pair** in the overflow menu, so a newer file or form can go live without unpublishing first; the Publication card's own Publish button appears only when a newer version exists. The Clause rule commits the moment Include switches to a rule, with the first field and a default value, so the row says "when" at once; a typed value then commits when focus leaves the rule.
+
+`SettingsCard` became a named region (`role="region"` labelled by its title) so a card can be addressed by name; every settings pane inherits that. `ListEditor` gained an optional Add (the Clauses table has none) and a per-row class hook for the builder's selected-row wash. The template guide is a draft Help article (`auto-doc-template`, DOC-028, #875) published to the development edition; the pane's foot links to it.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4954,6 +5039,7 @@ The dialog follows the existing focus trap and return-focus behavior. All picker
 | DES-084 | The Business User first run is a Portal wizard                                                                                                                       | Accepted                                                                                                   |
 | DES-085 | The Portal Auto-Docs destination leads from acknowledgement to a generated file                                                                                      | Accepted                                                                                                   |
 | DES-086 | File generated output from history or the generation form                                                                                                            | Accepted                                                                                                   |
+| DES-087 | The Auto-Doc record is a doc builder: the template beside its form, inside a four-section record page                                                                | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

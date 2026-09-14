@@ -86,6 +86,7 @@ export function documentationIcon(section) {
     portal: "M21 11a8 8 0 0 1-8 8H7l-5 3V7a5 5 0 0 1 5-5h9a5 5 0 0 1 5 5v4ZM7 7h9M7 12h6",
     "working-with-legal":
       "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21v-2a6 6 0 0 1 12 0v2M17 3a4 4 0 0 1 0 8m1 4a5 5 0 0 1 4 4v2",
+    "auto-docs": "M14 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14V7l-5-5Zm0 0v6h5M7 12h8M7 16h5",
     contracts: "M14 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14V7l-5-5Zm0 0v6h5M7 12h8M7 16h5",
     matters: "M8 7V4h8v3M3 7h18v14H3V7Zm0 6a25 25 0 0 0 18 0M10 12h4v4h-4v-4Z",
     documents: "M8 3h13v15H8V3ZM4 7H2v15h13v-2",

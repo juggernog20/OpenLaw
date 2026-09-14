@@ -111,7 +111,7 @@ it("submits typed answers and the loaded pair, then offers the Word download", a
     },
   });
   renderAt("/auto-docs/nda/generate");
-  await screen.findByRole("heading", { name: "Generate NDA" });
+  await screen.findByRole("heading", { name: "Generate" });
   await user.type(screen.getByLabelText("Counterparty"), "Acme");
   await user.type(screen.getByLabelText("Amount"), "1234.56");
   await user.selectOptions(screen.getByLabelText("Agreed"), "false");
@@ -152,7 +152,7 @@ it("enforces required fields and keeps answers after a stale-pair refusal", asyn
     },
   });
   renderAt("/auto-docs/nda/generate");
-  await screen.findByRole("heading", { name: "Generate NDA" });
+  await screen.findByRole("heading", { name: "Generate" });
   await user.click(screen.getByRole("button", { name: "Generate" }));
   expect(attempts).toBe(0);
   await user.type(screen.getByLabelText("Counterparty"), "Keep this answer");
@@ -212,7 +212,7 @@ it("keeps removed and retyped answers visible when reviewing a changed form", as
     },
   });
   renderAt("/auto-docs/nda/generate");
-  await screen.findByRole("heading", { name: "Generate NDA" });
+  await screen.findByRole("heading", { name: "Generate" });
   await user.type(screen.getByLabelText("Counterparty"), "Keep Acme's name");
   await user.type(screen.getByLabelText("Amount"), "1234.56");
   await user.selectOptions(screen.getByLabelText("Agreed"), "true");
@@ -259,7 +259,7 @@ it("requires a date pick before submitting a required date answer", async () => 
     },
   });
   renderAt("/auto-docs/nda/generate");
-  await screen.findByRole("heading", { name: "Generate NDA" });
+  await screen.findByRole("heading", { name: "Generate" });
   await user.click(screen.getByRole("button", { name: "Generate" }));
   expect(await screen.findByRole("alert")).toHaveTextContent('Fill "Signing date" first.');
   expect(posted).toBeUndefined();
@@ -335,7 +335,7 @@ it("lets a Member name a Business Owner and links the generated Contract on conf
     },
   });
   renderAt("/auto-docs/nda/generate");
-  await screen.findByRole("heading", { name: "Generate NDA" });
+  await screen.findByRole("heading", { name: "Generate" });
   await user.type(screen.getByLabelText("Counterparty"), "Acme");
   await user.selectOptions(screen.getByLabelText("Agreed"), "false");
   await user.selectOptions(screen.getByLabelText("Business Owner"), "owner");
