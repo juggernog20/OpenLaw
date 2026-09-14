@@ -52,6 +52,7 @@ export function DatePicker({
   id,
   value,
   disabled,
+  describedBy,
   onChange,
   onRevert,
 }: Readonly<{
@@ -59,6 +60,7 @@ export function DatePicker({
   /** A bare `YYYY-MM-DD`, or empty when nothing is recorded. */
   value: string;
   disabled?: boolean;
+  describedBy?: string;
   onChange: (next: string) => void;
   /** Escape on the closed trigger — a refused pick still showing. */
   onRevert?: () => void;
@@ -80,6 +82,7 @@ export function DatePicker({
           type="button"
           id={triggerId}
           disabled={disabled}
+          aria-describedby={describedBy}
           className={cn(CONTROL_CLASS, "inline-flex items-center justify-start gap-2 text-start", {
             "text-muted": value === "",
           })}

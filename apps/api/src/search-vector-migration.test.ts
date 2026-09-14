@@ -252,16 +252,16 @@ async function sourceRows(
   // additions beside M25's own generated vector.
   const withoutLaterEntityColumns = migrated
     ? sql.raw(
-        " - 'search_vector' - 'shares_authorized' - 'shares_issued' - 'par_value' - 'par_value_currency' - 'custom_fields' - 'is_confidential'",
+        " - 'search_vector' - 'shares_authorized' - 'shares_issued' - 'par_value' - 'par_value_currency' - 'custom_fields' - 'is_confidential' - 'portal_listed'",
       )
     : sql.raw("");
   const withoutLaterContractColumns = migrated
     ? sql.raw(
-        " - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields' - 'created_by' - 'owning_department' - 'region'",
+        " - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields' - 'created_by' - 'owning_department_id' - 'region' - 'created_by_generation_id'",
       )
     : sql.raw("");
   const withoutLaterDocumentColumns = migrated
-    ? sql.raw(" - 'search_vector' - 'entity_id' - 'knowledge_item_id'")
+    ? sql.raw(" - 'search_vector' - 'entity_id' - 'knowledge_item_id' - 'auto_doc_id'")
     : sql.raw("");
   const withoutLaterRequestColumns = migrated
     ? sql.raw(" - 'search_vector' - 'assignee_id' - 'expected_by' - 'title'")

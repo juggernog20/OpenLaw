@@ -188,6 +188,8 @@ interface TaxonomyRoutesBase<
    * fallback, never the name an Administrator happened to type.
    */
   protectedSlug?: string;
+  /** SET-010 Departments retain references when archived. */
+  archiveKeepsReferences?: boolean;
   /** The mount's own columns on the row, the PATCH body, and the
    * `updated` payload. Omitted, the mount is the plain taxonomy the
    * three type tables are. */
@@ -653,14 +655,16 @@ export function taxonomyRoutes<
         preHandler: requireRole("administrator"),
         schema: {
           operationId: `archive${config.idSingular}`,
-          summary: config.usage
-            ? `Archive ${aNoun} (SET-003 guarded): a type still used by ` +
-              `${config.recordNoun.plural} requires a reassignment target, ` +
-              `which takes them; nothing is deleted` +
-              (protectedClause ? `; ${protectedClause}` : "")
-            : `Archive ${aNoun} (SET-003 guarded): it leaves pickers ` +
-              "and the default list; nothing is deleted" +
-              (protectedClause ? `; ${protectedClause}` : ""),
+          summary: config.archiveKeepsReferences
+            ? `Archive ${aNoun}; it leaves pickers and retains every reference`
+            : config.usage
+              ? `Archive ${aNoun} (SET-003 guarded): a type still used by ` +
+                `${config.recordNoun.plural} requires a reassignment target, ` +
+                `which takes them; nothing is deleted` +
+                (protectedClause ? `; ${protectedClause}` : "")
+              : `Archive ${aNoun} (SET-003 guarded): it leaves pickers ` +
+                "and the default list; nothing is deleted" +
+                (protectedClause ? `; ${protectedClause}` : ""),
           tags: [config.tag],
           params: z.object({ id: z.string() }),
           body: z.object({ reassignToId: z.string().optional() }),
@@ -669,6 +673,9 @@ export function taxonomyRoutes<
       },
       async (request) => {
         const { reassignToId } = request.body;
+        if (config.archiveKeepsReferences && reassignToId !== undefined) {
+          throw httpError(400, `Archiving ${aNoun} keeps its references.`);
+        }
         const row = await app.db.transaction(async (tx) => {
           const target = await lockedType(tx, request.params.id);
           if (isProtected(target)) {
@@ -699,7 +706,7 @@ export function taxonomyRoutes<
           // the record routes lock the same row before writing their
           // type column, serializing creation of new references.
           const inUseCount = (await usageCounts(tx, [target.id])).get(target.id) ?? 0;
-          if (inUseCount > 0 && !reassignTo) {
+          if (inUseCount > 0 && !reassignTo && !config.archiveKeepsReferences) {
             throw httpError(
               409,
               `This ${noun} is used by ${inUsePhrase(inUseCount)}. ` +
@@ -823,7 +830,9 @@ export function taxonomyRoutes<
             throw httpError(
               409,
               `This ${noun} is used by ${inUsePhrase(inUseCount)} and can't be ` +
-                "deleted. Archive it with a reassignment target instead.",
+                (config.archiveKeepsReferences
+                  ? "deleted. Archive it to retain the references."
+                  : "deleted. Archive it with a reassignment target instead."),
             );
           }
           await tx.delete(table).where(eq(table.id, target.id));

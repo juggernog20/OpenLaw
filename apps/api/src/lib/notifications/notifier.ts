@@ -77,6 +77,7 @@ import { publishLiveEvents } from "../live-events.js";
 import {
   contractRecordAudience,
   CONTRACT_ENTITY,
+  PORTAL_SHARED_EVENTS,
   ENTITY_ENTITY,
   entityReachedBy,
   inboxAudience,
@@ -156,6 +157,20 @@ export interface OwnerAssignedEvent {
   /** The new Owner — the whole audience of this event. Clearing the
    * Owner hands the record to nobody, so the route raises nothing. */
   ownerId: string;
+}
+
+/** NOT-009 names the generated Contract, its Auto-Doc, and its generator. */
+export interface ContractGeneratedEvent extends Omit<OwnerAssignedEvent, "ownerId"> {
+  /** Null emits contract.generated_unassigned to every live Member+; otherwise only this Owner. */
+  ownerId: string | null;
+  autoDocId: string;
+  autoDocName: string;
+  generationId: string;
+}
+
+/** CTR-026 addresses the person added to the Contract team. */
+export interface ContractTeamAddedEvent extends Omit<OwnerAssignedEvent, "ownerId"> {
+  userId: string;
 }
 
 /** What one task assignment tells its assignee (CTR-017). */
@@ -521,7 +536,11 @@ export interface Notifier {
    * previous one.
    */
   requestAssigned(tx: NotifyingTransaction, event: RequestAssignedEvent): Promise<void>;
+  /** CTR-026 group 1 tells the added person. Adding yourself is silent. */
+  contractTeamAdded(tx: NotifyingTransaction, event: ContractTeamAddedEvent): Promise<void>;
   ownerAssigned(tx: NotifyingTransaction, event: OwnerAssignedEvent): Promise<void>;
+  /** NOT-009: tell the selected Legal Owner, or all live Member+ when unassigned. */
+  contractGenerated(tx: NotifyingTransaction, event: ContractGeneratedEvent): Promise<void>;
 
   /**
    * A task on a contract has been given to somebody (CTR-017) — group 1,
@@ -871,11 +890,7 @@ async function fanOut(
         (eventType === "comment.posted" || eventType === "comment.mentioned") &&
         narrowing.tier === "full_thread" &&
         !byUser.get(person.id)?.payload.taskId;
-      if (
-        !sharedComment &&
-        !["contract.status_changed", "document.added", "document.version_added"].includes(eventType)
-      )
-        reachable.delete(person.id);
+      if (!sharedComment && !PORTAL_SHARED_EVENTS.includes(eventType)) reachable.delete(person.id);
     }
   }
 
@@ -1425,6 +1440,54 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             },
           },
         ],
+      );
+    },
+
+    async contractTeamAdded(
+      tx: NotifyingTransaction,
+      event: ContractTeamAddedEvent,
+    ): Promise<void> {
+      await fanOut(
+        tx,
+        "contract.team_added",
+        { type: CONTRACT_ENTITY, id: event.contractId },
+        event.actorId,
+        [
+          {
+            userId: event.userId,
+            payload: {
+              contractNumber: event.contractNumber,
+              contractTitle: event.contractTitle,
+              actorId: event.actorId,
+              actorName: event.actorName,
+            },
+          },
+        ],
+      );
+    },
+
+    async contractGenerated(
+      tx: NotifyingTransaction,
+      event: ContractGeneratedEvent,
+    ): Promise<void> {
+      const audience = event.ownerId ? [event.ownerId] : await inboxAudience(tx);
+      await fanOut(
+        tx,
+        event.ownerId ? "contract.generated" : "contract.generated_unassigned",
+        { type: CONTRACT_ENTITY, id: event.contractId },
+        event.actorId,
+        audience.map((userId) => ({
+          userId,
+          payload: {
+            contractNumber: event.contractNumber,
+            contractTitle: event.contractTitle,
+            actorId: event.actorId,
+            actorName: event.actorName,
+            autoDocId: event.autoDocId,
+            autoDocName: event.autoDocName,
+            generationId: event.generationId,
+          },
+        })),
       );
     },
 

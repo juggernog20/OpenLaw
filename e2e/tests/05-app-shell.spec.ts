@@ -37,7 +37,7 @@ test.describe("application shell", () => {
     // The shared registry puts My Tasks between Inbox and Matters.
     const nav = page.getByRole("navigation");
     const links = nav.getByRole("link");
-    await expect(links).toHaveCount(8);
+    await expect(links).toHaveCount(9);
     await expect(links.first()).toContainText("Home");
     await expect(links.first()).toHaveAttribute("aria-current", "page");
     await expect(links.nth(1)).toContainText("Inbox");
@@ -48,6 +48,8 @@ test.describe("application shell", () => {
     await expect(links.nth(5)).toContainText("Documents");
     await expect(links.nth(6)).toContainText("Entities");
     await expect(links.nth(7)).toContainText("Knowledge");
+    await expect(links.nth(8)).toContainText("Auto-Docs");
+    await expect(links.nth(8)).toHaveAttribute("href", "/auto-docs");
 
     // Sub-bar carries the page title as the page's single h1.
     await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();

@@ -19,6 +19,7 @@ import { useLoaderData, useRevalidator } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
+import { AVATAR_BYTE_LIMIT, AVATAR_TYPES } from "../lib/avatar";
 import { formatShortDate } from "../lib/format";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
@@ -54,10 +55,6 @@ export async function settingsProfileLoader() {
     passwordChangedAt: credential ? new Date(credential.updatedAt).toISOString() : null,
   };
 }
-
-/** JPG or PNG, 1 MB max (ST1); matches the API's cap on the data: URI. */
-const AVATAR_BYTE_LIMIT = 1024 * 1024;
-const AVATAR_TYPES = ["image/png", "image/jpeg"];
 
 function RoleLabel({ role }: Readonly<{ role: Role }>) {
   return <FormattedMessage {...ROLE_MESSAGES[role]} />;

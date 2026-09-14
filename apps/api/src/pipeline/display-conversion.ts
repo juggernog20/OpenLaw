@@ -125,9 +125,10 @@ async function writeRendition(
   deps: DerivationDeps,
   versionId: string,
   row: { state: "ready" | "failed"; fileRef: string | null; byteSize: number | null },
+  db: Executor = deps.db,
 ): Promise<boolean> {
   try {
-    await deps.db
+    await db
       .insert(documentVersionRenditions)
       .values({ versionId, ...row })
       .onConflictDoUpdate({
@@ -190,47 +191,39 @@ async function convertAndStore(
   format: string,
 ): Promise<string | null> {
   const source = await deps.storage.get(sourceRef);
-  let fileRef: string;
+  let fileRef: string | undefined;
   let byteSize = 0;
   try {
     const pdf = await deps.docEngine.convertToPdf(source, format);
-    // Counted on the way past, in one pass, exactly as the upload counts
-    // what a person sent. It is what the preview's `content-length` is
-    // set from — the storage adapter answers a reference, never a size.
-    async function* metered(bytes: AsyncIterable<Buffer | string>): AsyncGenerator<Buffer> {
-      for await (const chunk of bytes) {
-        // A stream in binary mode yields buffers, which are passed
-        // straight through — copying every chunk of a hundred-page
-        // rendition to count it would double the work for nothing. A
-        // driver that yields strings is converted rather than trusted.
-        const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-        byteSize += buffer.byteLength;
-        yield buffer;
+    try {
+      async function* metered(bytes: AsyncIterable<Buffer | string>): AsyncGenerator<Buffer> {
+        for await (const chunk of bytes) {
+          const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+          byteSize += buffer.byteLength;
+          yield buffer;
+        }
       }
+      return await deps.db.transaction(async (tx) => {
+        const [version] = await tx.select({ id: documentVersions.id }).from(documentVersions)
+          .where(eq(documentVersions.id, versionId)).for("update");
+        if (!version) return null;
+        const [existing] = await tx.select().from(documentVersionRenditions)
+          .where(eq(documentVersionRenditions.versionId, versionId));
+        if (existing?.state === "ready" && existing.fileRef) return existing.fileRef;
+        fileRef = await deps.storage.put(renditionKey(versionId), Readable.from(metered(pdf)));
+        await writeRendition(deps, versionId, { state: "ready", fileRef, byteSize }, tx);
+        deps.log.info({ versionId, format, byteSize }, "converted a document version for display");
+        return fileRef;
+      });
+    } finally {
+      pdf.destroy();
     }
-    fileRef = await deps.storage.put(renditionKey(versionId), Readable.from(metered(pdf)));
+  } catch (error) {
+    if (fileRef) await forget(deps, fileRef);
+    throw error;
   } finally {
     source.destroy();
   }
-
-  try {
-    const recorded = await writeRendition(deps, versionId, { state: "ready", fileRef, byteSize });
-    if (!recorded) {
-      // The version was erased mid-job. Nothing references this blob and
-      // nothing ever will.
-      await forget(deps, fileRef);
-      return null;
-    }
-  } catch (error) {
-    // The row could not be written for a reason that is not an erasure.
-    // The job will be retried and will convert into a fresh key, so this
-    // blob is already unreferenced.
-    await forget(deps, fileRef);
-    throw error;
-  }
-
-  deps.log.info({ versionId, format, byteSize }, "converted a document version for display");
-  return fileRef;
 }
 
 /**

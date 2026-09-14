@@ -15,7 +15,7 @@
  * types only, an archived target still reads as itself and is flagged,
  * the basics are locked and never in the Attach menu, the menu follows
  * the target as it is picked, the API's own strand refusal reaches the
- * screen, and a `user` or `entity` row takes no required box (#400).
+ * screen, and a `user` row takes no required box (#400).
  */
 
 import { describe, expect, it } from "vitest";
@@ -332,12 +332,6 @@ describe("the form definition (ST14's right card)", () => {
     expect(screen.getByRole("checkbox", { name: "Title required" })).toBeInTheDocument();
   });
 
-  /**
-   * INT-002's M20/11 addendum (#400). The portal offers a requester no
-   * rows for a `user` or an `entity`, so a required one is a question
-   * nobody can answer. The editor locks the box rather than letting the
-   * rule arrive as a save that fails.
-   */
   it("locks the required box on a user field, and says why", async () => {
     openEditor(editorApi(newCalls(), review(), undefined, ATTACHED_WITH_REFERENCE));
     await screen.findByText("Form fields");
@@ -347,13 +341,40 @@ describe("the form definition (ST14's right card)", () => {
     expect(box).toHaveAttribute("data-state", "unchecked");
     const reason = screen.getByText(
       "Business owner can be on the form, but it can't be required. " +
-        "A requester picks no person and no entity in the portal.",
+        "A requester cannot pick a person in the Portal.",
     );
     // The reason is the box's own description, so a reader that lands
     // on the box hears why it is shut rather than meeting a bare
     // disabled control.
     expect(box).toHaveAttribute("aria-describedby", reason.id);
     expect(reason.id).not.toBe("");
+  });
+
+  it("lets an Entity Field be required", async () => {
+    const calls = newCalls();
+    const signer = {
+      ...ATTACHED[0]!,
+      fieldId: "f-entity",
+      slug: "signing_entity",
+      displayName: "Signing Entity",
+      fieldType: "entity",
+    };
+    const base = editorApi(calls, review(), undefined, [signer]);
+    openEditor((call) => {
+      if (
+        call.method === "PATCH" &&
+        call.url.pathname === "/api/v1/request-types/r2/fields/f-entity"
+      ) {
+        calls.patches.push(call.body);
+        return json(200, { attachedField: { ...signer, isRequired: true } });
+      }
+      return base(call);
+    });
+    const box = await screen.findByRole("checkbox", { name: "Signing Entity required" });
+    expect(box).toBeEnabled();
+    await userEvent.setup().click(box);
+    await waitFor(() => expect(box).toBeChecked());
+    expect(calls.patches).toEqual([{ isRequired: true }]);
   });
 
   it("leaves the row itself a row: it still detaches and still reorders", async () => {

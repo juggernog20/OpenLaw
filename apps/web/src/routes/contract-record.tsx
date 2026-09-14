@@ -210,6 +210,7 @@ import {
   type ContractDocument,
 } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
+import { DepartmentPicker } from "../components/department-picker";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { subscribeLiveEvents } from "../lib/events";
 import { problem as readProblem } from "../lib/problem";
@@ -438,6 +439,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
     contractTypes: options?.data?.contractTypes ?? [],
     contractStatuses: options?.data?.contractStatuses ?? [],
     users: options?.data?.users ?? [],
+    departments: options?.data?.departments ?? [],
     /** The live approver-group templates the Approvals section's apply
      * picker offers (M14/4, CTR-012). Member+ only, like the rest of
      * the options answer: a read-only viewer applies nothing. */
@@ -456,7 +458,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
 /** The fields that commit as free text (DES-017); the Owner, our
  * signing entity, the type, the status, priority, and risk have their
  * own selects, and the counterparties have their own routes. */
-type TextFieldKey = "title" | "description" | "owningDepartment" | "region";
+type TextFieldKey = "title" | "description" | "region";
 /**
  * The four term fields that commit as typed text (CTR-006, DES-017):
  * two calendar dates and two counts. The term type is the fifth, and it
@@ -479,6 +481,7 @@ type FieldKey =
   | "termType"
   | "managerId"
   | "businessOwnerId"
+  | "owningDepartmentId"
   | "entityId"
   | "counterparties"
   | "contractTypeId"
@@ -500,7 +503,6 @@ function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
   return {
     title: row.title,
     description: row.description ?? "",
-    owningDepartment: row.owningDepartment ?? "",
     region: row.region ?? "",
   };
 }
@@ -677,6 +679,7 @@ function ContractRecord() {
     contractTypes,
     contractStatuses,
     users,
+    departments,
     approverGroups,
     entities,
     relations: loadedRelations,
@@ -1546,12 +1549,7 @@ function ContractRecord() {
     adoptSaved(row);
     setAttached(data.fields);
     setRefs(data.customFieldRefs);
-    if (
-      key === "title" ||
-      key === "description" ||
-      key === "owningDepartment" ||
-      key === "region"
-    ) {
+    if (key === "title" || key === "description" || key === "region") {
       setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
     }
     // A term-type commit re-seeds all four term inputs: it clears the
@@ -2381,40 +2379,55 @@ function ContractRecord() {
                       {unverifiedMarker("contract_type")}
                       {confirmationControl("contract_type")}
                     </div>
-                    {(["owningDepartment", "region"] as const).map((key) => (
-                      <div key={key} className="flex flex-col gap-1.5">
-                        <Label htmlFor={`contract-${key}`}>
-                          {key === "owningDepartment" ? (
-                            <FormattedMessage
-                              id="contracts.form.owningDepartment"
-                              defaultMessage="Owning department"
-                            />
-                          ) : (
-                            <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
-                          )}
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id={`contract-${key}`}
-                            value={drafts[key]}
-                            maxLength={MAX_CONTRACT_CLASSIFICATION_LENGTH}
-                            disabled={frozen}
-                            onChange={(event) =>
-                              setDrafts((current) => ({ ...current, [key]: event.target.value }))
-                            }
-                            onBlur={() => commitText(key)}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") commitText(key);
-                              if (event.key === "Escape") revertText(key);
-                            }}
-                          />
-                          <StatusNote
-                            status={fieldStatus[key] ?? "idle"}
-                            detail={fieldError[key]}
-                          />
-                        </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-owningDepartment">
+                        <FormattedMessage
+                          id="contracts.form.owningDepartment"
+                          defaultMessage="Owning department"
+                        />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <DepartmentPicker
+                          id="contract-owningDepartment"
+                          value={saved.owningDepartmentId}
+                          currentName={saved.owningDepartment}
+                          options={departments}
+                          disabled={frozen}
+                          onChange={(owningDepartmentId) =>
+                            void commit("owningDepartmentId", { owningDepartmentId })
+                          }
+                        />
+                        <StatusNote
+                          status={fieldStatus.owningDepartmentId ?? "idle"}
+                          detail={fieldError.owningDepartmentId}
+                        />
                       </div>
-                    ))}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-region">
+                        <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="contract-region"
+                          value={drafts.region}
+                          maxLength={MAX_CONTRACT_CLASSIFICATION_LENGTH}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            setDrafts((current) => ({ ...current, region: event.target.value }))
+                          }
+                          onBlur={() => commitText("region")}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") commitText("region");
+                            if (event.key === "Escape") revertText("region");
+                          }}
+                        />
+                        <StatusNote
+                          status={fieldStatus.region ?? "idle"}
+                          detail={fieldError.region}
+                        />
+                      </div>
+                    </div>
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-business-owner">
                         <FormattedMessage

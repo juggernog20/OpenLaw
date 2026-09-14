@@ -540,6 +540,15 @@ The Contract page revalidates while a run is pending and keeps typed drafts. Ret
 - **Migration** — Copy existing Contract custom values into these attributes, remove their duplicate values and Contract Type attachments, and remove the old classification keys from active AI review state. Preserve historical evidence. Existing Request answers still carry into the attributes at Contract conversion. The original submissions remain intact. Catalog definitions remain available where needed by Requests and other modules, including the shared Region Field on Matters and Entities; Contracts Settings excludes these two slugs and refuses attaching them to a Contract Type.
 - **Consequences** — Demo Contracts seed the built-in attributes. No department or region vocabulary is hard-coded into application controls. These are business classification, with no AI extraction prompt and no authorization effect. This amends CTR-016 and DES-032 for the two former seeded Fields.
 
+### CTR-025 API change in M35/1, 2026-09-13
+
+Before the M34 first release, Contract create and update requests replace the text
+`owningDepartment` input with nullable `owningDepartmentId`. The id must name a
+live Department. The old input is rejected by the strict request schema. Deploy
+the matching API and web images together; clients must use the regenerated API
+schema. Responses retain `owningDepartment` as the current display name and add
+`owningDepartmentId`. Existing stored names migrate to Department references.
+
 ## CTR-026 — A Contract Type carries default people, added to every new Contract of that Type
 
 - **Status** — Accepted
@@ -549,3 +558,18 @@ The Contract page revalidates while a run is pending and keeps typed drafts. Ret
 - **Rationale** — The Type already decides Fields and approvals; it is the natural place to decide who is on every NDA. One row, one meaning, is DD-023's rule and needs no new role.
 - **Alternatives considered** — Default people on the Auto-Doc only: Procurement wants every NDA, not only the generated ones. A per-entry role or placement: DD-023 removed the tags a placement would need.
 - **Consequences** — `contract_type_default_people` in SCHEMA.md. The Type editor gains a People card. `createContract` applies the list after the creator and Business Owner rows. Matter Types get nothing here; the Matter equivalent waits for an ask.
+
+### CTR-026 built, M35/4
+
+Contract Types now store ordered default people. The Administrator's People card
+adds, removes, and reorders them. Archived users stay visible in the list and are
+skipped during creation. The list is copied after the creator and Business Owner
+memberships, with duplicates ignored. Direct creation, Request conversion, and
+renewal vehicles use the same creation function. A later list edit leaves existing
+Contract teams unchanged.
+
+Each default or manual Contract team addition records `contract.team_added` and
+uses the notification catalog's `assigned_to_you` group. The notification and
+membership share a transaction. Business Users receive the Portal link; Member+
+receive the app link. Portal team additions and Task assignee additions use the
+same write. The existing actor exclusion and channel preferences still apply.

@@ -23,13 +23,13 @@ import {
   type MyRequestFieldRefs,
   type RequestStatus,
 } from "../lib/requests";
-import { currentUser, useSignOut } from "../lib/session";
+import { currentUserFor, useSignOut } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { PortalBackLink } from "../components/portal/back-link";
 import { PortalRecordShell } from "../components/portal/record-shell";
 
-export async function portalRequestLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
+export async function portalRequestLoader({ params, request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   const number = Number(params.number);
   if (!Number.isInteger(number) || number < 1) return redirect("/portal");
@@ -320,6 +320,10 @@ const BANNER_COPY = {
  * not a value anybody can read — and an id that resolves to nothing
  * falls back to the id, because a Request that holds one must go on
  * showing that it holds something.
+ *
+ * An Entity is the one case where the miss is a rule rather than a gap:
+ * ENT-010 stops naming an Entity the moment it turns Confidential, so
+ * the row says it holds a withheld Entity instead of printing the id.
  */
 function renderValue(
   intl: IntlShape,
@@ -344,8 +348,16 @@ function renderValue(
       return Array.isArray(value) ? intl.formatList(value, { type: "conjunction" }) : String(value);
     case "user":
       return refs.users.find((person) => person.id === value)?.displayName ?? String(value);
-    case "entity":
-      return refs.entities.find((row) => row.id === value)?.legalName ?? String(value);
+    case "entity": {
+      const named = refs.entities.find((row) => row.id === value);
+      return named ? (
+        named.legalName
+      ) : (
+        <span className="text-muted">
+          <FormattedMessage id="entities.restricted" defaultMessage="Restricted Entity" />
+        </span>
+      );
+    }
     case "long_text":
       return <span className="whitespace-pre-line">{String(value)}</span>;
     default:

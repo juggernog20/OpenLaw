@@ -287,7 +287,9 @@ async function bell(fixture: { email: string }): Promise<BellItem[]> {
 /** The items on one person's bell about one record, oldest first — the
  * order the events happened in. */
 async function bellFor(fixture: { email: string }, contract: ContractRow): Promise<BellItem[]> {
-  const items = (await bell(fixture)).filter((row) => row.entityId === contract.id);
+  const items = (await bell(fixture)).filter(
+    (row) => row.entityId === contract.id && row.eventType !== "contract.team_added",
+  );
   return items.reverse();
 }
 
@@ -321,7 +323,9 @@ const recordRowsFor = async (
   fixture: { email: string },
   contract: ContractRow,
 ): Promise<Notification[]> =>
-  (await rowsFor(fixture)).filter((row) => row.entityId === contract.id);
+  (await rowsFor(fixture)).filter(
+    (row) => row.entityId === contract.id && row.eventType !== "contract.team_added",
+  );
 
 /**
  * The whole of group 2's email promise, asserted in both directions.
@@ -344,7 +348,13 @@ async function owesNoEmail(fixture: { email: string }, contract: ContractRow): P
     expect(row.emailedAt).toBeNull();
   }
   expect(
-    harness.mailer.messagesTo(fixture.email).filter((m) => m.text.includes(contract.title)),
+    harness.mailer
+      .messagesTo(fixture.email)
+      .filter(
+        (m) =>
+          m.text.includes(contract.title) &&
+          m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
+      ),
   ).toEqual([]);
 }
 

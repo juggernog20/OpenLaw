@@ -46,6 +46,7 @@ import { join } from "node:path";
 import { createDb } from "@openlaw/db";
 import type { AppDeps } from "../app.js";
 import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
+import { createFakeAutoDocFillEngine } from "../lib/auto-doc-fill/fake.js";
 import { createLocalStorage } from "../lib/storage/local.js";
 import { createUnconfiguredSigningResolver } from "../lib/signing/resolver.js";
 import { createFakeAiProvider } from "../lib/ai/fake.js";
@@ -105,6 +106,7 @@ export function testDeps(overrides: Partial<AppDeps> = {}): AppDeps {
     resolveMailer: fixedMailerResolver(new CapturingMailer()),
     storage: createLocalStorage({ root: UNWRITTEN_STORAGE_ROOT }),
     docEngine: createFakeDocEngine(),
+    fillEngine: createFakeAutoDocFillEngine(),
     jobs,
     resolveSigningProvider: createUnconfiguredSigningResolver(),
     resolveAiProvider: () => Promise.resolve(ai),

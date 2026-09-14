@@ -47,8 +47,10 @@ import { contractTypes } from "./contract-types.js";
 // read inside `references(() => …)`, which Drizzle resolves after both
 // modules have finished loading, so neither file touches the other's
 // bindings while it is still evaluating.
+import { autoDocGenerationOrigins } from "./auto-docs.js";
 import { documents } from "./documents.js";
 import { entities } from "./entities.js";
+import { departments } from "./departments.js";
 import type { CustomFieldValue } from "./fields.js";
 import type { AiUnverifiedMap } from "@openlaw/shared";
 import { searchVector, uuidPk } from "./helpers.js";
@@ -112,7 +114,7 @@ export const contracts = pgTable(
     createdBy: text("created_by").references(() => users.id),
     /** DD-021: NULL means unassigned, at direct creation or after an explicit clear. */
     businessOwnerId: text("business_owner_id").references(() => users.id),
-    owningDepartment: text("owning_department"),
+    owningDepartmentId: text("owning_department_id").references(() => departments.id),
     region: text("region"),
     /** CTR-011's our side of the contract: which of our own Entities
      * signs it. NULL until known — a contract is often recorded before
@@ -201,6 +203,11 @@ export const contracts = pgTable(
      * never cascades to or from a linked record (CTR-018), so no other
      * table reads this column. */
     isConfidential: boolean("is_confidential").notNull().default(false),
+    /** Null on direct creation and Request conversion. */
+    createdByGenerationId: text("created_by_generation_id").references(
+      (): AnyPgColumn => autoDocGenerationOrigins.id,
+      { onDelete: "set null" },
+    ),
     /**
      * CTR-014's primary document: which of this contract's documents is
      * the instrument (M11/4). Everything else on the record is a loose
@@ -307,6 +314,8 @@ export const contracts = pgTable(
     // check every contract for one naming it as its instrument, and
     // without an index that check is a sequential scan of `contracts`.
     index("contracts_primary_document_idx").on(table.primaryDocumentId),
+    // M35/12: distinct Filings may create multiple Contracts from one Generation.
+    index("contracts_created_by_generation_idx").on(table.createdByGenerationId),
     // "What sits under this contract" — the read M17's hierarchy
     // breadcrumb and relations panel ride, and the walk the cycle guard
     // already makes on every parent write.

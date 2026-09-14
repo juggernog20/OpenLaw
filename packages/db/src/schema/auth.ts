@@ -19,6 +19,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
+import { departments } from "./departments.js";
 
 export const USER_ROLES = ["administrator", "legal_team_member", "business_user"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
@@ -33,6 +34,11 @@ export const users = pgTable(
     id: uuidPk(),
     email: text("email").notNull(),
     displayName: text("display_name").notNull(),
+    departmentId: text("department_id").references(() => departments.id),
+    // NULL means the Business User has not completed the Portal first run (SET-011).
+    portalOnboardingCompletedAt: timestamp("portal_onboarding_completed_at", {
+      withTimezone: true,
+    }),
     role: text("role", { enum: USER_ROLES }).notNull().default("business_user"),
     // UI theme preference (#44): follows the user across browsers.
     theme: text("theme", { enum: THEMES }).notNull().default("light"),

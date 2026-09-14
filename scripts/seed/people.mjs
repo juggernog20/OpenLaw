@@ -181,6 +181,26 @@ export async function provisionEveryone(admin, log) {
   return people;
 }
 
+/**
+ * Walks one Business User through the Portal first run (SET-011).
+ *
+ * Without this every seeded Business User opens the Portal on the
+ * wizard, and the populated screens the seed exists to show are one
+ * redirect away. It picks a Department the way the person would, so the
+ * demo instance also has people spread across the Departments.
+ */
+export async function completeFirstRun(session, random) {
+  const { body } = await session.get("/api/v1/portal/onboarding");
+  if (body.completedAt) return;
+  const live = body.departments ?? [];
+  if (live.length > 0 && !live.some((department) => department.id === body.departmentId)) {
+    await session.patch("/api/v1/portal/onboarding/department", {
+      departmentId: random.pick(live).id,
+    });
+  }
+  await session.post("/api/v1/portal/onboarding/complete");
+}
+
 /** Everyone who can be a Matter Manager or Contract Owner (Member+). */
 export function memberPlus(people) {
   return [...people.values()].filter(

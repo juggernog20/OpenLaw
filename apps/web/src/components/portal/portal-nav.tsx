@@ -2,7 +2,7 @@
 
 /** Persistent Portal destinations, shared by lists and records (DES-078). */
 
-import { BriefcaseBusiness, Inbox, Signature } from "lucide-react";
+import { BriefcaseBusiness, FileText, Inbox, Signature } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { Link, matchPath, useLocation } from "react-router";
 import { cn } from "../../lib/utils";
@@ -25,6 +25,12 @@ const destinations = [
     matches: ["/portal/matters/*"],
     icon: BriefcaseBusiness,
     label: defineMessage({ id: "portal.navigation.matters", defaultMessage: "Matters" }),
+  },
+  {
+    to: "/portal/auto-docs",
+    matches: ["/portal/auto-docs/*"],
+    icon: FileText,
+    label: defineMessage({ id: "portal.navigation.autoDocs", defaultMessage: "Auto-Docs" }),
   },
 ];
 

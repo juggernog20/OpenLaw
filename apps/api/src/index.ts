@@ -19,6 +19,7 @@ import {
   PREVIOUS_SECRET_KEY_VARIABLE,
 } from "@openlaw/db";
 import { buildApp } from "./app.js";
+import { createAutoDocFillEngine } from "./lib/auto-doc-fill/real.js";
 import { createMailerResolver } from "./lib/mailer.js";
 import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
 import { createStorageFromEnv } from "./lib/storage/config.js";
@@ -258,6 +259,7 @@ const app = await buildApp(
     storage,
     docEngine,
     jobs,
+    fillEngine: createAutoDocFillEngine(),
     resolveSigningProvider,
     resolveAiProvider,
     notifier,

@@ -12,7 +12,14 @@ import {
   type Page,
 } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, ensureMemberInert, signInAs, sweepOrSay } from "./helpers.js";
+import {
+  ADMIN,
+  completePortalFirstRun,
+  ensureAdminExists,
+  ensureMemberInert,
+  signInAs,
+  sweepOrSay,
+} from "./helpers.js";
 import { extractLink, waitForMailTo } from "./mailpit.js";
 
 test.setTimeout(240_000);
@@ -54,6 +61,8 @@ async function enterPortalByMagicLink(
 
   const mail = await waitForMailTo(api, REQUESTER, /^Sign in to OpenLaw$/);
   await page.goto(extractLink(mail.text, "/api/auth/magic-link/verify"));
+  await expect(page).toHaveURL(/\/portal\/onboarding$/);
+  await completePortalFirstRun(page);
   await expect(page).toHaveURL(/\/portal$/);
   return page;
 }

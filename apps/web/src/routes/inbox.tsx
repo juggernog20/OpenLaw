@@ -7,11 +7,14 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { INBOX_SORT_KEYS, type InboxSortKey } from "@openlaw/shared";
 import {
   redirect,
+  Link,
+  useLocation,
   useLoaderData,
   useNavigate,
   useNavigation,
   type LoaderFunctionArgs,
 } from "react-router";
+import { UnassignedContractsPanel } from "../components/unassigned-contracts";
 import { api } from "../lib/api";
 import { useListReadGuard } from "../lib/list-read-guard";
 import { resolveTimeZone } from "../lib/format";
@@ -82,13 +85,17 @@ export async function inboxLoader(args?: LoaderFunctionArgs) {
   const params = args && new URL(args.request.url).searchParams;
   if (params?.get("includeTriaged") === "true" && !params.has("status") && !params.has("filters"))
     layout = { ...layout, filters: {} };
-  const [list, options] = await Promise.all([
+  const [list, options, unassigned] = await Promise.all([
     api.GET("/api/v1/requests", { params: { query: listQuery(layout) } }),
     api.GET("/api/v1/requests/filter-options"),
+    api.GET("/api/v1/inbox/unassigned-contracts"),
   ]);
-  if (!list.data || !options.data) throw new Error("The Inbox could not be read.");
+  if (!list.data || !options.data || !unassigned.data)
+    throw new Error("The Inbox could not be read.");
   return {
     user,
+    unassigned: unassigned.data,
+    activeTab: params?.get("tab") === "unassigned-contracts" ? "unassigned-contracts" : "requests",
     requests: list.data.requests,
     total: list.data.total,
     nextCursor: list.data.nextCursor,
@@ -103,6 +110,16 @@ export function InboxPage() {
   const loaded = useLoaderData<typeof inboxLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [unassigned, setUnassigned] = useState(loaded.unassigned);
+  const assignmentTab = loaded.activeTab === "unassigned-contracts";
+  function tabHref(tab: string) {
+    const params = new URLSearchParams(location.search);
+    if (tab === "requests") params.delete("tab");
+    else params.set("tab", tab);
+    return { pathname: "/inbox", search: params.toString() };
+  }
+
   const [rows, setRows] = useState<InboxRow[]>(loaded.requests);
   const [total, setTotal] = useState(loaded.total ?? loaded.requests.length);
   const [cursor, setCursor] = useState<string | null>(loaded.nextCursor);
@@ -123,6 +140,7 @@ export function InboxPage() {
     previousLoad.current = loaded;
     if (previous === loaded || !shouldAdoptLoader(loaded)) return;
     setRows(loaded.requests);
+    setUnassigned(loaded.unassigned);
     setCursor(loaded.nextCursor);
     setTotal(loaded.total ?? loaded.requests.length);
     setLayout((current) =>
@@ -285,7 +303,13 @@ export function InboxPage() {
         <PageSubBar
           title={<FormattedMessage id="inbox.title" defaultMessage="Inbox" />}
           subtitle={
-            rows.length < total ? (
+            assignmentTab ? (
+              <FormattedMessage
+                id="inbox.unassignedCount"
+                defaultMessage="{count, plural, one {# unassigned Contract} other {# unassigned Contracts}}"
+                values={{ count: unassigned.total }}
+              />
+            ) : rows.length < total ? (
               <FormattedMessage
                 id="inbox.filteredCount"
                 defaultMessage="{shown} of {total, plural, one {# request} other {# requests}}"
@@ -299,84 +323,120 @@ export function InboxPage() {
               />
             )
           }
-          actions={tableControls}
+          actions={assignmentTab ? undefined : tableControls}
         />
       }
     >
       <PageTitle title={intl.formatMessage({ id: "inbox.title", defaultMessage: "Inbox" })} />
       <div className="flex flex-col gap-3">
-        <RecordFilterBar
-          definitions={definitions}
-          values={layout.filters}
-          busy={busy}
-          error={listError}
-          onChange={(filters) => void commit({ ...layout, filters })}
-        />
-        {rows.length === 0 ? (
-          <EmptyInbox
-            awaitingOnly={
-              JSON.stringify(filterQuery(layout.filters, INBOX_FILTER_KEYS)) ===
-              JSON.stringify({ status: "new" })
-            }
-          />
-        ) : (
-          <ManagedTable
-            catalogue={CATALOGUE}
-            actionsColumn={{
-              label: intl.formatMessage({ id: "inbox.column.actions", defaultMessage: "Actions" }),
-              width: 128,
-              pinned: true,
-              render: (row) => (
-                <InboxAssignAction
-                  row={row}
-                  onAssigned={(updated) =>
-                    setRows((current) =>
-                      current.map((item) =>
-                        item.id === updated.id ? { ...item, assignee: updated.assignee } : item,
-                      ),
-                    )
-                  }
+        <nav
+          aria-label={intl.formatMessage({ id: "inbox.tabs", defaultMessage: "Inbox tabs" })}
+          className="flex gap-1 border-b border-border-default"
+        >
+          {(["requests", "unassigned-contracts"] as const).map((tab) => (
+            <Link
+              key={tab}
+              to={tabHref(tab)}
+              aria-current={loaded.activeTab === tab ? "page" : undefined}
+              className={`px-4 py-3 text-sm ${loaded.activeTab === tab ? "border-b-2 border-accent font-semibold text-primary" : "text-muted hover:text-primary"}`}
+            >
+              {tab === "requests" ? (
+                <FormattedMessage
+                  id="inbox.requestsTab"
+                  defaultMessage="Requests ({count})"
+                  values={{ count: total }}
                 />
-              ),
-            }}
-            layout={layout}
-            rows={rows}
-            rowKey={(row) => row.id}
-            onLayoutChange={(next) => void commit(next)}
-            focusRowKey={appended?.from}
-            foot={
-              <>
-                {!layout.sort && (
-                  <p className="text-xs text-muted">
-                    <FormattedMessage
-                      id="inbox.ordering"
-                      defaultMessage="Ordered by urgency, then age"
-                    />
-                  </p>
-                )}
-                {pageError && (
-                  <p role="alert" className="text-xs text-status-danger-fg">
-                    {pageError}
-                  </p>
-                )}
-                {cursor !== null && (
-                  <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
-                    <FormattedMessage id="inbox.more" defaultMessage="Show more" />
-                  </Button>
-                )}
-              </>
-            }
-          />
-        )}
-        <p aria-live="polite" className="sr-only">
-          {appended && (
-            <FormattedMessage
-              id="inbox.moreAdded"
-              defaultMessage="{count, plural, one {# more request} other {# more requests}}. {total} shown."
-              values={{ count: appended.count, total: rows.length }}
+              ) : (
+                <FormattedMessage
+                  id="inbox.unassignedTab"
+                  defaultMessage="Unassigned contracts ({count})"
+                  values={{ count: unassigned.total }}
+                />
+              )}
+            </Link>
+          ))}
+        </nav>
+        {assignmentTab ? (
+          <UnassignedContractsPanel queue={unassigned} onChange={setUnassigned} />
+        ) : (
+          <>
+            <RecordFilterBar
+              definitions={definitions}
+              values={layout.filters}
+              busy={busy}
+              error={listError}
+              onChange={(filters) => void commit({ ...layout, filters })}
             />
-          )}
-        </p>
+            {rows.length === 0 ? (
+              <EmptyInbox
+                awaitingOnly={
+                  JSON.stringify(filterQuery(layout.filters, INBOX_FILTER_KEYS)) ===
+                  JSON.stringify({ status: "new" })
+                }
+              />
+            ) : (
+              <ManagedTable
+                catalogue={CATALOGUE}
+                actionsColumn={{
+                  label: intl.formatMessage({
+                    id: "inbox.column.actions",
+                    defaultMessage: "Actions",
+                  }),
+                  width: 128,
+                  pinned: true,
+                  render: (row) => (
+                    <InboxAssignAction
+                      row={row}
+                      onAssigned={(updated) =>
+                        setRows((current) =>
+                          current.map((item) =>
+                            item.id === updated.id ? { ...item, assignee: updated.assignee } : item,
+                          ),
+                        )
+                      }
+                    />
+                  ),
+                }}
+                layout={layout}
+                rows={rows}
+                rowKey={(row) => row.id}
+                onLayoutChange={(next) => void commit(next)}
+                focusRowKey={appended?.from}
+                foot={
+                  <>
+                    {!layout.sort && (
+                      <p className="text-xs text-muted">
+                        <FormattedMessage
+                          id="inbox.ordering"
+                          defaultMessage="Ordered by urgency, then age"
+                        />
+                      </p>
+                    )}
+                    {pageError && (
+                      <p role="alert" className="text-xs text-status-danger-fg">
+                        {pageError}
+                      </p>
+                    )}
+                    {cursor !== null && (
+                      <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
+                        <FormattedMessage id="inbox.more" defaultMessage="Show more" />
+                      </Button>
+                    )}
+                  </>
+                }
+              />
+            )}
+            <p aria-live="polite" className="sr-only">
+              {appended && (
+                <FormattedMessage
+                  id="inbox.moreAdded"
+                  defaultMessage="{count, plural, one {# more request} other {# more requests}}. {total} shown."
+                  values={{ count: appended.count, total: rows.length }}
+                />
+              )}
+            </p>
+          </>
+        )}
       </div>
     </AppShell>
   );

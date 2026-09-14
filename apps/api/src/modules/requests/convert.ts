@@ -71,11 +71,12 @@
  * anywhere leaves the conversation exactly where the requester left it.
  */
 
+import { departmentByName } from "../departments/references.js";
+
 import { reserveConversionAnalysis } from "../../pipeline/conversion-analysis.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
-  contractCounterparties,
   contractKeyDates,
   contractTypeFields,
   contractTypes,
@@ -92,7 +93,7 @@ import {
 import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { CounterpartyNameSchema, findOrCreateCounterparty } from "../../lib/counterparty-link.js";
+import { CounterpartyNameSchema, linkPrimaryCounterparty } from "../../lib/counterparty-link.js";
 import { acceptedConversionProvenance } from "./conversion-draft.js";
 import { matters, contracts } from "@openlaw/db";
 import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
@@ -314,14 +315,14 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             const customFields = { ...carried, ...(answers ?? {}) };
             const born =
               target.module === "contract"
-                ? await createContract(tx, {
+                ? await createContract(tx, app.notifier, {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
-                    owningDepartment:
-                      typeof row.customFields.owning_department === "string"
-                        ? row.customFields.owning_department
-                        : null,
+                    owningDepartmentId: await departmentByName(
+                      tx,
+                      row.customFields.owning_department,
+                    ),
                     region:
                       typeof row.customFields.region === "string" ? row.customFields.region : null,
                     description:
@@ -538,42 +539,6 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
-
-/**
- * Puts the named organization on a newborn contract as its primary
- * (CTR-011). The contract has no parties yet, so the first-party rule
- * the add route applies holds by construction, and the entry is the
- * add route's own, `created` included.
- */
-async function linkPrimaryCounterparty(
-  tx: Transaction,
-  input: {
-    contract: { id: string; number: number; title: string };
-    name: string;
-    actorId: string;
-  },
-): Promise<void> {
-  const { counterparty: party, born } = await findOrCreateCounterparty(tx, input.name);
-  await tx.insert(contractCounterparties).values({
-    contractId: input.contract.id,
-    counterpartyId: party.id,
-    isPrimary: true,
-  });
-  await recordActivity(tx, {
-    entityType: "contract",
-    entityId: input.contract.id,
-    actorId: input.actorId,
-    action: "contract.counterparty_added",
-    visibility: RECORD_ACTIVITY_TIER,
-    payload: {
-      number: input.contract.number,
-      title: input.contract.title,
-      counterparty: party.name,
-      isPrimary: true,
-      created: born,
-    },
-  });
-}
 
 /**
  * One "Needed by" key date on either record, narrated the way the key

@@ -65,7 +65,7 @@ const MESSAGES = defineMessages({
   requiredLocked: {
     id: "settings.requestTypeEditor.requiredLocked",
     defaultMessage:
-      "{name} can be on the form, but it can't be required. A requester picks no person and no entity in the portal.",
+      "{name} can be on the form, but it can't be required. A requester cannot pick a person in the Portal.",
   },
   detach: { id: "settings.requestTypeEditor.detach", defaultMessage: "Detach {name}" },
   detached: { id: "settings.requestTypeEditor.detached", defaultMessage: "{name} detached." },
@@ -94,20 +94,9 @@ const MESSAGES = defineMessages({
   },
 });
 
-/**
- * The one field rule that is the portal's (INT-002's M20/11 addendum,
- * #400): a `user` or `entity` field may sit on a request form and may
- * never be required on one. The portal draws both controls empty on
- * purpose — a requester reads neither the staff directory nor the
- * Entity registry (DD-013, DD-016) — so a required one is a question
- * nobody who can reach the form is able to answer.
- *
- * The box is locked here so the rule reads as a rule, rather than as a
- * save that fails. The API refuses the same write, which is the real
- * guard.
- */
+/** Person Fields stay optional because Portal forms have no staff directory picker (INT-002). */
 const REQUIRED_RULE: EditorRequiredRule = {
-  fieldTypes: ["user", "entity"],
+  fieldTypes: ["user"],
   reason: MESSAGES.requiredLocked,
 };
 

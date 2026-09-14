@@ -51,6 +51,7 @@ import {
   ArrowRightLeft,
   Bell,
   BookOpen,
+  FileText,
   Building2,
   CalendarClock,
   CalendarPlus,
@@ -350,7 +351,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // provider. A key with no arm reads as itself, which is the
       // honest rendering for one this build no longer writes.
       defaultMessage:
-        "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} " +
+        "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} " +
         "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +
@@ -361,8 +362,8 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
-        "stage {Stage} moduleScope {Scope} isRequired {Required} " +
-        "targetModule {Target} targetType {Target type} turnaroundDays {Target turnaround (business days)} " +
+        "stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} " +
+        "targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
@@ -384,6 +385,9 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "registrationId {Registration} recurrenceMonths {Repeat every (months)} " +
         "nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} " +
         "audience {Audience} url {Address} target {Target} " +
+        "audienceUsers {Selected people} audienceDepartments {Selected Departments} " +
+        "acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} " +
+        "autoDocAcknowledgementText {Default acknowledgement text} " +
         "other {{key}}}",
     },
     { key },
@@ -412,6 +416,7 @@ const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
  * before that was true still reads through the same lookup. */
 const REFERENCE_KEYS = new Set([
   "assigneeId",
+  "targetContractTypeId",
   "matterId",
   "registrationId",
   "linkedUser",
@@ -449,8 +454,27 @@ function changeValue(
   // KNW-004's audience is a stored slug, so the feed says "Everyone"
   // where the column says `everyone`. The label helper knows only the
   // two values the column admits; anything else reads as itself.
+  if (key === "audience" && value === "selected")
+    return intl.formatMessage({
+      id: "activity.autoDoc.audienceSelected",
+      defaultMessage: "Selected",
+    });
   if (key === "audience" && (value === "legal_only" || value === "everyone")) {
     return knowledgeAudienceLabel(intl, value);
+  }
+  // ADO-008's frequency is a stored slug, so the feed says "Every use"
+  // where the column says `every_use`. Its `other` arm covers a value
+  // this build no longer has.
+  if (key === "acknowledgementFrequency") {
+    return intl.formatMessage(
+      {
+        id: "activity.autoDoc.acknowledgementFrequency",
+        defaultMessage:
+          "{frequency, select, none {None} every_use {Every use} " +
+          "once_per_auto_doc {Once per Auto-Doc} once {Once across Auto-Docs} other {{frequency}}}",
+      },
+      { frequency: value as string },
+    );
   }
   if (key === "kind") {
     return intl.formatMessage(
@@ -520,6 +544,10 @@ function changeValue(
         defaultMessage: "Usual audience",
       });
     }
+    // An empty list is an unset side, and reads as one. `formatList`
+    // answers the empty string, which would leave the row reading
+    // "Default people:  → Casey Counsel".
+    if (value.length === 0) return notSet(intl);
     return intl.formatList(
       value.map((item) => changeValue(intl, key, item, context)),
       { type: "conjunction" },
@@ -1030,7 +1058,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   renamed: defineMessage({
     id: "activity.taxonomy.renamed",
@@ -1039,7 +1067,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   updated: defineMessage({
     id: "activity.taxonomy.updated",
@@ -1048,7 +1076,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   reordered: defineMessage({
     id: "activity.taxonomy.reordered",
@@ -1057,7 +1085,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} list",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} list",
   }),
   archived: defineMessage({
     id: "activity.taxonomy.archived",
@@ -1066,7 +1094,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   restored: defineMessage({
     id: "activity.taxonomy.restored",
@@ -1075,7 +1103,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   deleted: defineMessage({
     id: "activity.taxonomy.deleted",
@@ -1084,7 +1112,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
 } as const;
 
@@ -1224,7 +1252,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: FilePlus2,
     message: defineMessage({
       id: "activity.contract.created",
-      defaultMessage: "{actor} created this contract",
+      defaultMessage:
+        "{source, select, auto_doc {{actor} created this contract from Auto-Doc {autoDoc} (Generation {generation})} other {{actor} created this contract}}",
+    }),
+    values: (_intl, payload) => ({
+      source: text(payload, "autoDocName") && text(payload, "generationId") ? "auto_doc" : "other",
+      autoDoc: text(payload, "autoDocName") ?? "",
+      generation: text(payload, "generationId") ?? "",
     }),
   },
   // The other half of the conversion's narration (DD-017, #420). It sits
@@ -1959,14 +1993,15 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.document.created",
       defaultMessage:
-        "{atRoot, select, true {{actor} uploaded {title}} " +
-        "other {{actor} uploaded {title} into {folder}}}",
+        "{generated, select, true {{actor} added generated {title}} other {{atRoot, select, true {{actor} uploaded {title}} " +
+        "other {{actor} uploaded {title} into {folder}}}}}",
     }),
     values: (intl, payload) => {
       const folder = text(payload, "folderName");
       return {
         title: named(intl, payload, "title"),
         atRoot: folder === null ? "true" : "false",
+        generated: text(payload, "generatedFromGenerationId") ? "true" : "false",
         // Never read when `atRoot` is true, and never left undefined: an
         // ICU argument a locale still names has to resolve to something.
         folder: folder ?? "",
@@ -2375,6 +2410,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ email: named(intl, payload, "email") }),
   },
+  "user.department_set": {
+    icon: UserCog,
+    message: defineMessage({
+      id: "activity.user.departmentSet",
+      defaultMessage: "{actor} changed the Department of {email} from {from} to {to}",
+    }),
+    values: (intl, payload) => ({
+      email: named(intl, payload, "email"),
+      from: text(payload, "from") ?? notSet(intl),
+      to: text(payload, "to") ?? notSet(intl),
+    }),
+  },
   "user.role_changed": {
     icon: UserCog,
     message: defineMessage({
@@ -2687,6 +2734,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("officer_role", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("department", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("knowledge_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes
@@ -2844,6 +2892,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
   },
+  "entity.portal_listed_set": {
+    icon: Building2,
+    message: defineMessage({
+      id: "activity.entity.portalListedSet",
+      defaultMessage:
+        "{listed, select, true {{actor} made {name} Portal-listed} other {{actor} removed {name} from Portal pickers}}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      listed: payload.to === true ? "true" : "false",
+    }),
+  },
   "entity.updated": {
     icon: PencilLine,
     message: defineMessage({
@@ -2879,6 +2939,126 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ name: knowledgeItemNamed(intl, payload) }),
     changes: (intl, payload, context) => directChange(intl, payload, "knowledgeType", context),
+  },
+  "auto_doc.generation_retried": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.generationRetried",
+      defaultMessage: "{actor} retried a Generation of {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.autoDoc.updated",
+      defaultMessage: "{actor} changed {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+    changes: changesFrom,
+  },
+  "auto_doc.acknowledged": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.acknowledged",
+      defaultMessage: "{actor} acknowledged {name}{hasWords, select, yes {: {words}} other {}}",
+    }),
+    values: (intl, payload) => ({
+      name: text(payload, "name") ?? thingName(intl, payload),
+      words: text(payload, "text") ?? "",
+      hasWords: text(payload, "text") ? "yes" : "no",
+    }),
+  },
+  "auto_doc.filed": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.filed",
+      defaultMessage:
+        "{actor} filed {name} to {kind, select, matter {Matter} other {Contract}} #{number}: {title}",
+    }),
+    values: (intl, payload) => ({
+      name: text(payload, "name") ?? thingName(intl, payload),
+      kind: text(payload, "targetKind") ?? "contract",
+      number: wholeCount(payload, "targetNumber") || "?",
+      title: named(intl, payload, "targetTitle"),
+    }),
+  },
+  "auto_doc.generated": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.generated",
+      defaultMessage:
+        "{actor} generated {name} from file version {fileVersion} and form version {formVersion}",
+    }),
+    values: (intl, payload) => ({
+      name: text(payload, "name") ?? thingName(intl, payload),
+      fileVersion: wholeCount(payload, "documentVersionNumber") || "?",
+      formVersion: wholeCount(payload, "formVersionNumber") || "?",
+    }),
+  },
+  "auto_doc.published": {
+    icon: Globe,
+    message: defineMessage({
+      id: "activity.autoDoc.published",
+      defaultMessage: "{actor} published {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.unpublished": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.autoDoc.unpublished",
+      defaultMessage: "{actor} unpublished {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.hard_deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.autoDoc.hardDeleted",
+      defaultMessage: "{actor} permanently deleted an Auto-Doc, {versionCount, plural, one {# template version} other {# template versions}}, and {generationCount, plural, one {# Generation} other {# Generations}}",
+    }),
+    values: (_intl, payload) => ({ versionCount: wholeCount(payload, "versionCount"), generationCount: wholeCount(payload, "generationCount") }),
+  },
+  "auto_doc.archived": {
+    icon: Archive,
+    message: defineMessage({
+      id: "activity.autoDoc.archived",
+      defaultMessage: "{actor} archived {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.restored": {
+    icon: ArchiveRestore,
+    message: defineMessage({
+      id: "activity.autoDoc.restored",
+      defaultMessage: "{actor} restored {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.created": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.created",
+      defaultMessage: "{actor} created {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.template_uploaded": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.templateUploaded",
+      defaultMessage: "{actor} uploaded a template for {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
+  },
+  "auto_doc.form_saved": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.autoDoc.formSaved",
+      defaultMessage: "{actor} saved a form version for {name}",
+    }),
+    values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
   },
   "knowledge_item.created": {
     icon: BookOpen,

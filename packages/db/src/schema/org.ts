@@ -15,6 +15,9 @@ import { uuidPk } from "./helpers.js";
 export const AUTH_MODES = ["built_in", "oidc"] as const;
 export type AuthMode = (typeof AUTH_MODES)[number];
 
+export const DEFAULT_AUTO_DOC_ACKNOWLEDGEMENT_TEXT =
+  "I agree not to edit the generated document. I will contact Legal if changes are needed.";
+
 export const orgSettings = pgTable(
   "org_settings",
   {
@@ -28,6 +31,9 @@ export const orgSettings = pgTable(
      * grants portal access only once an Administrator opens a domain.
      */
     allowedEmailDomains: jsonb("allowed_email_domains").$type<string[]>().notNull().default([]),
+    autoDocAcknowledgementText: text("auto_doc_acknowledgement_text")
+      .notNull()
+      .default(DEFAULT_AUTO_DOC_ACKNOWLEDGEMENT_TEXT),
     /** Org identity (SET-001 General pane). Empty until an Administrator names the org. */
     name: text("name").notNull().default(""),
     /** The org logo as a data: URI; NULL until one is uploaded. */

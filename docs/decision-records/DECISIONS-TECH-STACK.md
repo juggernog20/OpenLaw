@@ -512,6 +512,10 @@ API providers only: forces a SaaS mail account on regulated self-hosters.
 
 The SET-004 wizard surface this decision named (deferred at M2, where env vars carried SMTP alone) shipped: the wizard's email step saves a relay URL + from-address to the `org_settings` singleton, mirroring the `SMTP_URL`/`SMTP_FROM` shape — one mental model, two carriers. The mailer is resolved at send time, env-else-database (the TECH-014 read-on-every-decision pattern), so a save applies to the very next send with no restart. **Precedence: environment wins.** A set `SMTP_URL` pins the instance — database values are ignored entirely and saves are refused. This is a safety property, not a convenience: the dev/E2E overlay pins Mailpit via env, and a database-saved real relay must never beat it, or test mail leaks to real inboxes. The relay URL is write-only through the API (it embeds the credential) and stored plaintext for v1 — at-rest encryption is a flagged follow-up shared with the TECH-008 SSO client secret. _(2026-08-16, #259: **superseded by TECH-022** — `org_settings.smtp_url` is now sealed at rest with the rest of them. Nothing else about the resolution changes: the environment still wins, and a save still applies to the next send.)_
 
+### M35/8 delivery addendum, #851
+
+The mail message accepts buffered attachments with a filename and MIME type. Generation mail uses paired HTML and text, the organization name and OpenLaw branding, the recipient's name, and the Auto-Doc name. Both bodies consume the shared KNW-001 Markdown parser. HTML escapes text and attributes and emits only the fixed tags; relative cover-note links resolve against the application URL. Mailer resolution still happens at send time.
+
 ## TECH-012: AI providers — three protocol adapters, provider presets, custom option
 
 - **Status:** Accepted
@@ -1336,7 +1340,7 @@ update the approval record when a guide changes or completes verification.
 
 ## TECH-028: The Auto-Doc fill engine runs in the API process; the sidecar renders the PDF
 
-- **Status:** Accepted as a default pick, routed from the Auto-Docs grill; confirm at spec
+- **Status:** Accepted, confirmed by the M35/7 spec and implementation
 - **Date:** 2026-09-13
 
 ### Context
@@ -1351,6 +1355,22 @@ Nothing in the codebase writes a `.docx`. TECH-010's sidecar converts Office to 
 - **Formatting directives** are implemented in the value resolver: date format, currency, upper case. Nothing else.
 - **PDF** is the existing `/convert` operation on the filled `.docx`, through the `DocEngine` seam, as a derivation.
 - **Bounds:** the template is under the shared upload ceiling; the fill has a timeout; a failed fill marks the Generation `failed` (ADO-007) and never leaves a partial file.
+
+### Built in M35/7
+
+The injected `AutoDocFillEngine` has a deterministic fake for route tests. The real driver uses docxtemplater 3.69 and pizzip 3.2 in an API worker thread, with a ten-second deadline that terminates the worker and a 256 MiB heap limit. Packages above 32 MiB expanded are refused before rendering to leave room for XML and token allocation. Storage receives only the completed package. The renderer uses the scanner's Word part list, including endnotes, and translates its tokens into Boolean sections before rendering. It leaves unrelated XML parts alone.
+
+Detection records each slug and directive pair, so a fresh Placeholder that carries `date:` arrives as a date field and one that carries `currency:` arrives as a currency field. Publication refuses a pair whose form field cannot print its directive, which keeps the mismatch out of the fill. The fixed syntax is `{{name|upper}}`, `{{date|date:YYYY-MM-DD}}`, `{{date|date:DD/MM/YYYY}}`, `{{date|date:MMMM D, YYYY}}`, and `{{amount|currency:USD}}`. Currency directives accept supported three-letter codes. Auto-Doc currency answers are numeric amounts, as Clause conditions require; the directive chooses the printed currency. This differs from a catalog currency Field, which stores a code. Date formatting uses UTC calendar dates and currency formatting uses English separators. The author chooses the directive in Word.
+
+Fixture tests cover split runs, kept and omitted Blocks, directives, document structure, malformed files, and timeout. The configuration uses the library's documented [custom parser and delimiter options](https://docxtemplater.com/docs/configuration/) and [Boolean sections](https://docxtemplater.com/docs/tag-types/).
+
+### Built in M35/8
+
+The pipeline accepts Generation id and attempt as a separate derivation input. The existing sidecar conversion writes a fresh PDF key. The worker marks it ready only for the current pending attempt, then sends the allowed formats. The queue uses the existing conversion deadline and retry policy. Permanent source errors and SMTP 5xx replies stop retries; temporary errors retry before a controlled failure is saved. Boot and scheduled sweeps recover rows whose queue ask did not arrive. Database updates compare the attempt so an old job cannot overwrite a Member's retry.
+
+### Built in M35/9
+
+A targeted Value map stores `valueCurrency` and `valueCadence` in the form snapshot. Publication requires both. The numeric answer is a major-unit amount; Contract creation rounds it to the chosen currency's minor units and enforces the existing safe-integer range. This does not change catalog currency Fields, which continue to store currency codes. The generated Contract's primary Word Version owns a copied blob under its Document/Version key, independent of Generation retries and delivery output retention.
 
 ### Alternatives considered
 
@@ -1394,4 +1414,4 @@ One runtime dependency pair in `apps/api`. A `FakeFillEngine` beside `FakeDocEng
 | TECH-025 | A record applet's third web mount becomes configuration                       | Accepted                  |
 | TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                  |
 | TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026 |
-| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted, default pick    |
+| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted                  |

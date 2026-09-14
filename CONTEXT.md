@@ -69,7 +69,7 @@ A condition on an Auto-Doc's form, written in the form editor, that decides whet
 _Avoid_: conditional, trigger, if-statement, formula
 
 **Filing**:
-Member+ adding a Generation's output to an existing Matter or Contract as a Document, or creating a new Contract from it, after the Generation happened. The Generation keeps its own copy and points at where it was filed [DD-022].
+Adding a Generation's output to an existing Matter or Contract as a new Document, or creating a new Contract from it. Member+ may File to reached records and may choose a destination on the Generation form. Business Users may File to records they hold a team row on in the Portal. Each Filing makes a separate Document; the Generation keeps its own copy and its Filing history [DD-022, ADO-005].
 _Avoid_: attaching, moving, linking, converting (that is the Request act)
 
 **Generation**:
@@ -85,15 +85,15 @@ An ordered condition on one Auto-Doc form field that names the Legal Owner of a 
 _Avoid_: routing rule, owner rule, workflow
 
 **Unassigned contract**:
-A Contract a Generation created that no Assignment rule matched, so it has no Legal Owner. It waits on the Inbox's Unassigned contracts tab until a Member+ claims it [ADO-006].
+A Contract a Generation created that has no Legal Owner, including when no Assignment rule matched and no default supplied one. It waits on the Inbox's Unassigned contracts tab until a Member+ claims it [ADO-006].
 _Avoid_: orphan contract, pending contract, triage item
 
 **Auto-Doc audience**:
-Who reaches a published Auto-Doc in the Portal: **Legal only**, **Selected** (named users and Departments), or **Everyone**. Member+ reach every Auto-Doc in the app whatever the audience [ADO-009].
+Who reaches an Auto-Doc in the Portal: **Legal only**, **Selected** (named users and Departments), or **Everyone**. New use requires a published Live pair; the person's own Generation history survives Unpublish or Archive but still requires audience reach. Member+ reach every Auto-Doc in the app whatever the audience [ADO-009, ADO-010].
 _Avoid_: visibility, permissions, sharing
 
 **Acknowledgement**:
-The statement a Business User must accept before using an Auto-Doc, with an org-wide default text overridable per Auto-Doc, at a per-Auto-Doc frequency of every use, once per Auto-Doc, or once. Editing the text resets it. Member+ never acknowledge [ADO-008].
+The statement a Business User must accept before using an Auto-Doc, with an org-wide default text overridable per Auto-Doc, at a per-Auto-Doc frequency of every use, once per Auto-Doc, or once across the organization. An Auto-Doc may also require none. Editing the text resets it. Member+ never acknowledge [ADO-008].
 _Avoid_: consent, attestation, terms, disclaimer
 
 ### Parties
@@ -394,7 +394,7 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 - A **Contract** may hold typed links to other **Contracts** — `renews`, `amends`, or the symmetric `related` — each read from both directions, from the same single row [CTR-015]
 - A **Contract** holds many **Approval Requests**, each naming one approver; at most one of them is pending per approver [CTR-012]
 - An **Auto-Doc** owns exactly one template **Document** (a DOC-001 chain) and many form versions; Publish pins one of each as the **Live pair** [ADO-001, ADO-004]
-- An **Auto-Doc** may target one **Contract Type**; a **Generation** of a targeted Auto-Doc creates exactly one **Contract** in `draft` [ADO-005]
+- An **Auto-Doc** may target one **Contract Type**; a **Generation** of a targeted Auto-Doc automatically creates one **Contract** in `draft`; later Filings may create additional Contracts [ADO-005]
 - A **Generation** cites one Live pair, belongs to one person, and may be **Filed** to many Matters or Contracts, each Filing one Document [ADO-005]
 - A **Contract Type** carries many **Default people**, each copied to the team of every new Contract of that Type [CTR-026]
 - A **user** belongs to at most one **Department**; a **Contract** may have one Department as its Owning department [SET-010, CTR-025]

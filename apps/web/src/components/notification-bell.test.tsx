@@ -974,3 +974,36 @@ describe("the notification centre", () => {
     expect(within(centre).queryByText(/hidden|restricted|of 2/i)).not.toBeInTheDocument();
   });
 });
+
+it.each([
+  { eventType: "contract.generated", ending: "and you are its Legal Owner" },
+  { eventType: "contract.generated_unassigned", ending: "; it needs a Legal Owner" },
+])("names the Auto-Doc and generator for $eventType", async ({ eventType, ending }) => {
+  const user = userEvent.setup();
+  bellApi({
+    unread: 1,
+    pages: {
+      first: {
+        notifications: [
+          item(1, {
+            eventType,
+            payload: {
+              contractNumber: 41,
+              contractTitle: "Supplier contract",
+              actorName: "Bao Business",
+              autoDocName: "Supplier NDA",
+              generationId: "generation",
+            },
+          }),
+        ],
+        nextCursor: null,
+      },
+    },
+  });
+  renderAt("/");
+  await user.click(await bell("1 unread"));
+  const link = await screen.findByRole("link", {
+    name: new RegExp(`Bao Business generated.*Supplier contract.*Supplier NDA.*${ending}`),
+  });
+  expect(link).toHaveAttribute("href", "/contracts/41");
+});

@@ -4805,6 +4805,65 @@ DD-026 governs these permissions at the server. Documents and Comments retain th
 
 ---
 
+## DES-084: The Business User first run is a Portal wizard
+
+- **Status:** Accepted
+- **Date:** 2026-09-13
+- **Context:** SET-011 gives Business Users a first run before the Portal home. It collects the Department used by Auto-Doc audiences and introduces the Portal destinations.
+- **Decision:** `/portal/onboarding` uses the Portal's canvas, raised cards, typography, narrow content column, brand, and Sign out control. The header and content fit narrow screens. The wizard title is "We need to learn a little about you". The Portal navigation appears after completion.
+
+The steps are Department, name and photo, theme, notifications, and a short tour. Department appears only when live Departments exist. It has a labelled native selector, requires a live choice, and has Continue without Skip. An Administrator's live assignment is selected initially. A failed write leaves the saved choice visible and explains the refusal beside the control. An archived assignment must be replaced when live choices exist. Back permits corrections during the first run.
+
+Every later step has Continue and Skip, with Finish on the tour. Name and photo reuse the Profile settings routes, with a labelled name input and a labelled JPG/PNG file input capped at 1 MB. Theme offers the three named themes as radio controls and applies a successful preference immediately. Notifications reuse the Portal settings switch grid and its event groups. Each field reports its own save state. Navigation waits for an active save; a failed optional change can be retried or skipped.
+
+The tour introduces Requests, Contracts, Matters, and Auto-Docs in four short paragraphs. Its Auto-Docs stop is text until the destination ships. Each step is a named region, its heading receives focus when the step changes, and a visible progress line names the current step and total. Controls have persistent labels; save errors are announced. The accessibility sweep covers every step.
+
+A refusal on Finish shows a visible explanation and returns the person to Department when fresh live choices remain. An empty refreshed list keeps the tour and Finish available. Completing the tour opens the Portal home. SET-011 defines the lifecycle and persistence rules behind these transitions.
+
+**Trade-off:** One step per card gives each heading and refusal a clear focus target, at the cost of more navigation. A single long form was rejected because its optional Profile controls would compete with the Department selector. SET-011 owns the prerequisite and Skip rules.
+
+## DES-085: The Portal Auto-Docs destination leads from acknowledgement to a generated file
+
+- **Status:** Accepted under M35/11, #854
+- **Date:** 2026-09-14
+
+### Decision
+
+Auto-Docs is the fourth destination in the persistent Portal navigation. The destination has an available Auto-Docs list and a person's own Generation history. Each Auto-Doc shows its name and purpose. Each Generation names its Auto-Doc, date, state, and generated files. History uses pages of 50 with a Show more control. An empty library explains that Legal has not made an Auto-Doc available. An empty history explains that generated files will appear here.
+
+Opening an Auto-Doc starts with its acknowledgement when required. Show the exact configured text, a labelled checkbox, and an Acknowledge and continue button. The checkbox starts clear. The acknowledgement screen has a heading that receives focus. Member+ go straight to the form. The acknowledgement is a separate step so a long form cannot hide the words the person is asked to accept.
+
+The form uses the same labelled field controls as the app. It shows only the Entity names the Portal picker can read, and a fixed Entity removes those pickers. Required fields are identified in text and enforced on submission. A changed publication, withdrawn Auto-Doc, or changed acknowledgement leaves the answers in place with a named refusal. Reviewing the current form keeps answers for fields that still exist. A configuration that Legal must fix uses a plain unavailability message in the Portal. The app's Auto-Doc record names the actual configuration problem for its authors.
+
+The confirmation shows each download when its format is ready and states the email outcome. It labels these files as generated. A created Contract links to the Portal Contract record. Generate again from these answers opens the current form with the person's saved answers and applies today's acknowledgement requirement. The confirmation polls while output or email is pending and offers a retry of a failed read without discarding its last result.
+
+The available list, retained Generation history, and Generate again link follow ADO-009's audience rules and ADO-010's lifecycle rules. An unavailable Auto-Doc has no Generate again link.
+
+All four screens use PortalShell, the existing controls and theme tokens, named regions, visible error messages, and keyboard focus. The axe sweep covers the list, acknowledgement, form, and confirmation.
+
+### Consequences
+
+The Portal adds routes for Auto-Docs, a gated form, and a Generation. The authoring record explains published-form Assignment gaps and fixed Entities that the Portal cannot use. Auto-Docs settings hold the org acknowledgement text. The first-run tour describes the available Auto-Docs destination. Finish completes onboarding and opens the Portal home, where the persistent navigation reaches Auto-Docs.
+
+Maintaining four screens requires the Form draft to survive the separate acknowledgement step. Pending output and email require polling, cancellation, and retention of the last successful result. Heading focus must follow transitions between acknowledgement and Form. An inline acknowledgement checkbox beside Generate was rejected because it gives the statement less attention and crowds the Form fields.
+
+## DES-086: File generated output from history or the generation form
+
+- **Status:** Accepted under M35/12, #855
+- **Date:** 2026-09-14
+
+### Decision
+
+A Generation offers **File** beside its allowed downloads, in Member history and the Portal confirmation. The control opens a labelled dialog showing an existing Matter or Contract picker, the allowed output format, and the Generation's previous Filings. A search narrows the available records; each choice names the record kind, number, and title. Member+ can choose **New Contract** and its Type. The Portal presents only existing team records.
+
+The Member generation form has an optional Filing destination using the same picker. Its default is no Filing. Confirmation shows when Filing is still preparing, its completed destination, or an actionable failure while downloads remain available. Each completed Filing links to its destination in the current shell; an unreachable destination has no identifying title or link. A deleted Document is shown as deleted in Filing history.
+
+Generate again opens the current published form. Compatible saved answers are prefilled; removed or incompatible answers are named in **Previous answers**, with saved Entity display names. The person reviews the new form before generating. Acknowledgement, publication, and reach continue to gate new Generations.
+
+**Trade-off:** A dialog keeps the destination and refusal beside the Generation being Filed, but requires a focus trap and focus restoration. A separate page was rejected because it would separate those controls from the Generation's downloads and previous Filings. ADO-005 owns the destination and record-ownership rules.
+
+The dialog follows the existing focus trap and return-focus behavior. All pickers have visible labels, errors use the existing alert treatment, and pending work disables repeat submission. Validate the new controls with route tests and axe in both shells.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4892,6 +4951,9 @@ DD-026 governs these permissions at the server. Documents and Comments retain th
 | DES-081 | One Documents section for Portal Contracts and Matters                                                                                                               | Accepted                                                                                                   |
 | DES-082 | One theme colour for placeholders                                                                                                                                    | Accepted                                                                                                   |
 | DES-083 | Portal record values are read-only; the Team applet can add members                                                                                                  | Accepted                                                                                                   |
+| DES-084 | The Business User first run is a Portal wizard                                                                                                                       | Accepted                                                                                                   |
+| DES-085 | The Portal Auto-Docs destination leads from acknowledgement to a generated file                                                                                      | Accepted                                                                                                   |
+| DES-086 | File generated output from history or the generation form                                                                                                            | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

@@ -107,6 +107,20 @@ const COLUMNS: ColumnDef<RegistryEntityRow>[] = [
     ),
   },
   {
+    key: "portalListed",
+    header: <FormattedMessage id="entities.portalListed" defaultMessage="Portal-listed" />,
+    label: (intl) =>
+      intl.formatMessage({ id: "entities.portalListed", defaultMessage: "Portal-listed" }),
+    defaultWidth: 128,
+    minWidth: 100,
+    render: (row) =>
+      row.portalListed ? (
+        <FormattedMessage id="entities.portalListed.yes" defaultMessage="Yes" />
+      ) : (
+        <FormattedMessage id="entities.portalListed.no" defaultMessage="No" />
+      ),
+  },
+  {
     key: "nextObligation",
     header: (
       <FormattedMessage id="entities.list.column.nextObligation" defaultMessage="Next obligation" />
@@ -155,6 +169,7 @@ export const ENTITIES_CATALOGUE: ColumnCatalogue<RegistryEntityRow> = {
     "jurisdiction",
     "registrationNumber",
     "status",
+    "portalListed",
     "nextObligation",
   ],
   flexColumnKey: "legalName",

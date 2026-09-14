@@ -101,6 +101,8 @@ function ownerReference(intl: IntlShape, result: Extract<SearchResult, { kind: "
       return matterReference(intl, result.ownerNumber!);
     case "entity":
       return searchKindLabel(intl, "entity");
+    case "auto_doc":
+      return intl.formatMessage({ id: "search.autoDoc", defaultMessage: "Auto-Doc" });
     case "knowledge_item":
       return searchKindLabel(intl, "knowledge_item");
   }
@@ -114,6 +116,8 @@ function ownerRoute(owner: DocumentOwner): string {
       return "matters";
     case "entity":
       return "entities";
+    case "auto_doc":
+      return "auto-docs";
     case "knowledge_item":
       return "knowledge";
   }
@@ -127,6 +131,7 @@ function OwnerIcon({ owner }: Readonly<{ owner: DocumentOwner }>) {
       return <BriefcaseBusiness size={16} aria-hidden="true" />;
     case "entity":
       return <Landmark size={16} aria-hidden="true" />;
+    case "auto_doc":
     case "knowledge_item":
       return <BookOpen size={16} aria-hidden="true" />;
   }
@@ -162,8 +167,8 @@ export function searchResultPath(result: SearchResult, query: string): string {
       });
       return result.ownerKind === "entity"
         ? `/entities/${encodeURIComponent(result.ownerId)}/documents?${params.toString()}`
-        : result.ownerKind === "knowledge_item"
-          ? `/knowledge/${encodeURIComponent(result.ownerId)}?${params.toString()}`
+        : result.ownerKind === "knowledge_item" || result.ownerKind === "auto_doc"
+          ? `/${ownerRoute(result.ownerKind)}/${encodeURIComponent(result.ownerId)}?${params.toString()}`
           : `/${ownerRoute(result.ownerKind)}/${String(result.ownerNumber)}/documents?${params.toString()}`;
     }
   }

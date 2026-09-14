@@ -39,6 +39,7 @@ import { StatusNote } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Switch } from "../components/ui/switch";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { DocPanel } from "../components/documents/doc-panel";
 import { RecordContext } from "../components/record-context";
@@ -161,7 +162,8 @@ type FieldKey =
   | "entityTypeId"
   | "status"
   | "formedOn"
-  | "isConfidential";
+  | "isConfidential"
+  | "portalListed";
 
 type EntityRecordData = Exclude<
   ReturnType<typeof useLoaderData<typeof entityRecordLoader>>,
@@ -650,6 +652,63 @@ function EntityRecord() {
                         />
                       </Button>
                     ) : null}
+                  </div>
+                </section>
+                <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+                  <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
+                    <h2 className="text-base font-semibold">
+                      <FormattedMessage id="entities.record.portal.title" defaultMessage="Portal" />
+                    </h2>
+                  </header>
+                  <div className="flex flex-col gap-2 p-4">
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        id="entity-portal-listed"
+                        checked={saved.portalListed}
+                        disabled={
+                          frozen ||
+                          loaded.user.role !== "administrator" ||
+                          (saved.isConfidential && !saved.portalListed)
+                        }
+                        aria-describedby="entity-portal-listed-help"
+                        onCheckedChange={(portalListed) =>
+                          void commit("portalListed", { portalListed })
+                        }
+                      />
+                      <Label htmlFor="entity-portal-listed">
+                        <FormattedMessage
+                          id="entities.portalListed"
+                          defaultMessage="Portal-listed"
+                        />
+                      </Label>
+                      <StatusNote
+                        status={commits.status.portalListed ?? "idle"}
+                        detail={commits.error.portalListed}
+                      />
+                    </div>
+                    <p id="entity-portal-listed-help" className="text-sm text-muted">
+                      {frozen ? (
+                        <FormattedMessage
+                          id="entities.portalListed.archived"
+                          defaultMessage="Archived Entities stay out of Portal pickers."
+                        />
+                      ) : loaded.user.role !== "administrator" ? (
+                        <FormattedMessage
+                          id="entities.portalListed.adminOnly"
+                          defaultMessage="Only an Administrator can change Portal-listed."
+                        />
+                      ) : saved.isConfidential ? (
+                        <FormattedMessage
+                          id="entities.portalListed.confidential"
+                          defaultMessage="Confidential Entities stay out of Portal pickers."
+                        />
+                      ) : (
+                        <FormattedMessage
+                          id="entities.portalListed.help"
+                          defaultMessage="Business Users can pick this Entity by name on Portal forms."
+                        />
+                      )}
+                    </p>
                   </div>
                 </section>
                 <ShareCapitalCard

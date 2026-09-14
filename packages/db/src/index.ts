@@ -15,6 +15,7 @@ import { guardMigrationJournal } from "./migration-journal.js";
 import * as activitySchema from "./schema/activity.js";
 import * as aiConnectorSchema from "./schema/ai-connector.js";
 import * as approverGroupsSchema from "./schema/approver-groups.js";
+import * as autoDocsSchema from "./schema/auto-docs.js";
 import * as authSchema from "./schema/auth.js";
 import * as commentsSchema from "./schema/comments.js";
 import * as commentAttachmentsSchema from "./schema/comment-attachments.js";
@@ -28,9 +29,11 @@ import * as contractTasksSchema from "./schema/contract-tasks.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
+import * as contractDefaultPeopleSchema from "./schema/contract-type-default-people.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
 import * as contractsSchema from "./schema/contracts.js";
 import * as counterpartiesSchema from "./schema/counterparties.js";
+import * as departmentsSchema from "./schema/departments.js";
 import * as documentFoldersSchema from "./schema/document-folders.js";
 import * as documentComparisonsSchema from "./schema/document-comparisons.js";
 import * as documentRenditionSchema from "./schema/document-rendition.js";
@@ -73,6 +76,7 @@ export * from "./schema/activity.js";
 export * from "./schema/ai-connector.js";
 export * from "./schema/approver-groups.js";
 export * from "./schema/auth.js";
+export * from "./schema/auto-docs.js";
 export * from "./schema/comments.js";
 export * from "./schema/comment-attachments.js";
 export * from "./schema/contract-approvals.js";
@@ -86,8 +90,10 @@ export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
 export * from "./schema/contract-type-fields.js";
 export * from "./schema/contract-types.js";
+export * from "./schema/contract-type-default-people.js";
 export * from "./schema/contracts.js";
 export * from "./schema/counterparties.js";
+export * from "./schema/departments.js";
 export * from "./schema/document-folders.js";
 export * from "./schema/document-comparisons.js";
 export * from "./schema/document-rendition.js";
@@ -132,6 +138,7 @@ export const schema = {
   ...aiConnectorSchema,
   ...approverGroupsSchema,
   ...authSchema,
+  ...autoDocsSchema,
   ...commentsSchema,
   ...commentAttachmentsSchema,
   ...contractApprovalsSchema,
@@ -145,8 +152,10 @@ export const schema = {
   ...contractTeamSchema,
   ...contractTypeFieldsSchema,
   ...contractTypesSchema,
+  ...contractDefaultPeopleSchema,
   ...contractsSchema,
   ...counterpartiesSchema,
+  ...departmentsSchema,
   ...documentFoldersSchema,
   ...documentComparisonsSchema,
   ...documentRenditionSchema,

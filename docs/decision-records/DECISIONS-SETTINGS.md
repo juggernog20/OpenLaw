@@ -218,13 +218,21 @@ model uses the existing connector save and Activity path.
 
 ## SET-011: the Business User first run in the Portal
 
-- **Status:** Accepted; **mandatory before M34 Release** (FUTURE-FEATURES row)
+- **Status:** Accepted; ~~**mandatory before M34 Release**~~ **shipped in M35/2 (#845)** (FUTURE-FEATURES obligation closed 2026-09-14)
 - **Date:** 2026-09-13
 - **Decision:** A Business User's first sign-in lands on a Portal wizard, "We need to learn a little about you", before the Portal home. Steps: **Department** (required when the Departments list is non-empty, otherwise skipped), display name and photo, theme, notification preferences, and a short tour of Requests, Contracts, Matters, and Auto-Docs. Every step except Department is skippable, SET-004's own shape. Finishing stamps `users.portal_onboarding_completed_at`; the wizard never opens again. A Business User who signed in before this shipped meets it once. Staff keep Settings → Profile and never see it.
 - **Rationale:** Business Users are created at first magic-link sign-in with nothing but an email address. Department drives Auto-Doc reach (ADO-009), so it must be asked at the door; the rest is the existing per-user settings gathered in one place.
 - **Alternatives:** Administrator sets every Business User's Department by hand: unworkable past a dozen people. Blocking every step: SET-004 chose skippable and nothing here argues otherwise.
 - **Consequences:** One Portal route and one `users` column. The existing `theme`, `image`, `display_name`, and notification preferences are reused. This is a Portal design record's to lay out (DES).
 - **Source:** Blair, Auto-Docs grill, 2026-09-13.
+
+**Trade-off:** The wizard delays the first visit to the Portal, but collects the Department before audience checks depend on it. Asking on the Portal home would leave that prerequisite incomplete. Optional steps stay skippable to limit the delay.
+
+### SET-011 implementation, 2026-09-13
+
+Every Portal route checks the current user's completion state before its page loader runs, including deep links and unknown Portal addresses. An unfinished Business User goes to the wizard. Finishing validates Department against the current list and stamps the user once, then opens the Portal home. If the list changed during the wizard, a named refusal returns the person to Department with fresh live choices, or leaves Finish available on the tour when no choices remain. Reloading an unfinished wizard reads the saved settings. Completed users go home from the wizard URL; staff go to Settings → Profile and retain ordinary Portal access.
+
+- **Consequences:** SET-011's completion stamp is independent of the instance setup wizard. Existing Business Users start with no stamp and complete this first run once. Department changes remain audited under SET-010; later Department changes belong to an Administrator.
 
 ## Index of decisions
 

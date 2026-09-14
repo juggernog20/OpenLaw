@@ -612,3 +612,5 @@ export {
 /** Built-in Contract classification, outside the type's configurable Fields. */
 export const CONTRACT_OVERVIEW_FIELD_SLUGS: readonly string[] = ["owning_department", "region"];
 export const MAX_CONTRACT_CLASSIFICATION_LENGTH = 200;
+
+export { parseKnowledgeMarkdown, type MarkdownBlock, type MarkdownInline } from "./markdown.js";

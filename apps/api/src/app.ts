@@ -35,6 +35,7 @@ import {
 } from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
 import type { DocEngine } from "./lib/doc-engine/engine.js";
+import type { AutoDocFillEngine } from "./lib/auto-doc-fill/engine.js";
 import type { JobQueue } from "./pipeline/jobs.js";
 import type { Notifier } from "./lib/notifications/notifier.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
@@ -52,6 +53,11 @@ import { contractTasksRoutes } from "./modules/contract-tasks/routes.js";
 import { contractEnvelopesRoutes } from "./modules/contract-envelopes/routes.js";
 import { contractRelationsRoutes } from "./modules/contract-relations/routes.js";
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
+import { defaultPeopleRoutes } from "./modules/contract-types/default-people.js";
+import { autoDocFilingRoutes } from "./modules/auto-docs/filing-routes.js";
+import { autoDocErasureRoutes } from "./modules/auto-docs/erasure.js";
+import { autoDocsRoutes } from "./modules/auto-docs/routes.js";
+import { autoDocGenerationRoutes } from "./modules/auto-docs/generations.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
 import { activityRoutes } from "./modules/activity/routes.js";
@@ -68,6 +74,7 @@ import { entityLinkedRecordsRoutes } from "./modules/entities/linked-records.js"
 import { entityTypesRoutes } from "./modules/entity-types/routes.js";
 import { entityAttachedFieldsRoutes } from "./modules/entity-types/attached-fields.js";
 import { matterTypesRoutes } from "./modules/matter-types/routes.js";
+import { departmentsRoutes } from "./modules/departments/routes.js";
 import { officerRolesRoutes } from "./modules/officer-roles/routes.js";
 import { matterAttachedFieldsRoutes } from "./modules/matter-types/attached-fields.js";
 import { matterStatusesRoutes } from "./modules/matter-statuses/routes.js";
@@ -90,6 +97,9 @@ import { portalMatterRoutes } from "./modules/portal/matters.js";
 import { portalRecordWorkRoutes } from "./modules/portal/record-work.js";
 import { portalDocumentRoutes } from "./modules/portal/documents.js";
 import { portalAppletRoutes } from "./modules/portal/applets.js";
+import { portalOnboardingRoutes } from "./modules/portal/onboarding.js";
+import { portalAutoDocRoutes } from "./modules/portal/auto-docs.js";
+import { portalEntityRoutes } from "./modules/portal/entities.js";
 import { portalRoutes } from "./modules/portal/routes.js";
 import { conversionDraftRoutes } from "./modules/requests/conversion-draft.js";
 import { requestConvertRoutes } from "./modules/requests/convert.js";
@@ -97,6 +107,7 @@ import { requestDeclineRoutes } from "./modules/requests/decline.js";
 import { requestDetailRoutes } from "./modules/requests/request-detail.js";
 import { requestAssignmentRoutes } from "./modules/requests/assignment.js";
 import { requestInboxRoutes } from "./modules/requests/inbox.js";
+import { unassignedContractsRoutes } from "./modules/requests/unassigned-contracts.js";
 import { requestResolveRoutes } from "./modules/requests/resolve.js";
 import { requestsRoutes } from "./modules/requests/routes.js";
 import { listViewsRoutes } from "./modules/list-views/routes.js";
@@ -143,6 +154,8 @@ export interface AppDeps {
    * documented Aspose-class swap-in a swap rather than a rewrite.
    */
   docEngine: DocEngine;
+  /** TECH-028: fills Word templates in a bounded operation before storage. */
+  fillEngine: AutoDocFillEngine;
   /**
    * The background pipeline (TECH-007), as the API sees it: a queue it
    * asks for a derivation after an upload commits. Injected like the
@@ -208,6 +221,7 @@ declare module "fastify" {
     resolveMailer: MailerResolver;
     storage: StorageAdapter;
     docEngine: DocEngine;
+    fillEngine: AutoDocFillEngine;
     jobs: JobQueue;
     resolveSigningProvider: SigningResolver;
     resolveAiProvider: AiResolver;
@@ -229,6 +243,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("resolveMailer", deps.resolveMailer);
   app.decorate("storage", deps.storage);
   app.decorate("docEngine", deps.docEngine);
+  app.decorate("fillEngine", deps.fillEngine);
   app.decorate("jobs", deps.jobs);
   app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
   app.decorate("resolveAiProvider", deps.resolveAiProvider);
@@ -482,9 +497,15 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(aiConnectorRoutes, { prefix: "/api/v1" });
   await app.register(aiFieldPromptRoutes, { prefix: "/api/v1" });
   await app.register(signerErasureRoutes, { prefix: "/api/v1" });
+  await app.register(autoDocsRoutes, { prefix: "/api/v1" });
+  await app.register(autoDocErasureRoutes, { prefix: "/api/v1" });
+  await app.register(autoDocGenerationRoutes, { prefix: "/api/v1" });
+  await app.register(autoDocFilingRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
+  await app.register(defaultPeopleRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterTypesRoutes, { prefix: "/api/v1" });
+  await app.register(departmentsRoutes, { prefix: "/api/v1" });
   await app.register(matterAttachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterStatusesRoutes, { prefix: "/api/v1" });
   await app.register(mattersRoutes, { prefix: "/api/v1" });
@@ -496,6 +517,9 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(requestTypeFieldsRoutes, { prefix: "/api/v1" });
   await app.register(intakeLinksRoutes, { prefix: "/api/v1" });
   await app.register(portalRoutes, { prefix: "/api/v1" });
+  await app.register(portalOnboardingRoutes, { prefix: "/api/v1" });
+  await app.register(portalAutoDocRoutes, { prefix: "/api/v1" });
+  await app.register(portalEntityRoutes, { prefix: "/api/v1" });
   await app.register(portalContractRoutes, { prefix: "/api/v1" });
   await app.register(portalRecordWorkRoutes, { prefix: "/api/v1" });
   await app.register(portalDocumentRoutes, { prefix: "/api/v1" });
@@ -504,6 +528,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(requestsRoutes, { prefix: "/api/v1" });
   await app.register(requestAssignmentRoutes, { prefix: "/api/v1" });
   await app.register(requestInboxRoutes, { prefix: "/api/v1" });
+  await app.register(unassignedContractsRoutes, { prefix: "/api/v1" });
   await app.register(requestDetailRoutes, { prefix: "/api/v1" });
   await app.register(requestDeclineRoutes, { prefix: "/api/v1" });
   await app.register(requestResolveRoutes, { prefix: "/api/v1" });

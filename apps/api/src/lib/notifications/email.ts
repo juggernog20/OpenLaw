@@ -95,6 +95,19 @@ export function origin(baseUrl: string): string {
   return baseUrl.slice(0, end);
 }
 
+/** Text on its way into an HTML part, with the five characters that
+ * would otherwise end the text and start markup. Every template that
+ * writes HTML escapes through this one function, so a part added later
+ * cannot quietly use a weaker rule. */
+export function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 /** The deep link one notification points at: the record itself. */
 export function recordLink(baseUrl: string, contractNumber: number): string {
   return `${origin(baseUrl)}/contracts/${contractNumber}`;
@@ -391,6 +404,39 @@ function contractMail(
           "You can approve or reject it, with a note, on the record.",
         ].join("\n"),
       };
+    case "contract.team_added":
+      return {
+        to,
+        subject: `You were added to ${contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          `${who} added you to the team on ${contractTitle}.`,
+          "",
+          link,
+        ].join("\n"),
+      };
+    case "contract.generated":
+    case "contract.generated_unassigned": {
+      const autoDoc = detail(notification, "autoDocName") ?? "an Auto-Doc";
+      const assigned = notification.eventType === "contract.generated";
+      return {
+        to,
+        subject: assigned
+          ? `Generated Contract assigned to you: ${contractTitle}`
+          : `Unassigned generated Contract: ${contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          `${who} generated ${contractTitle} from ${autoDoc}.`,
+          assigned
+            ? "You are the Owner of this Contract."
+            : "This Contract needs an Owner. Claim it in the Inbox.",
+          "",
+          link,
+        ].join("\n"),
+      };
+    }
     case "contract.owner_assigned":
       return {
         to,

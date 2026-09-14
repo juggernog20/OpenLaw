@@ -32,15 +32,20 @@
  *   takes, and callers want different ones. This answers the row it
  *   wrote plus the two display names it had to read anyway.
  *
+ * The team it is born with is the creator's provenance row, the
+ * Business Owner's row where the caller named one, and CTR-026's
+ * default people from the type, in that order and deduplicated. Each
+ * default person's row narrates and notifies (NOT-009); the two rows
+ * above it are part of `contract.created`.
+ *
  * What a contract is **not** born with is as much the decision as what
- * it is. No Owner unless the caller names one, no team beyond the
- * creator's provenance row, no status but the draft seed, and no
- * Confidential flag unless the caller asks for one. CTR-015's
- * no-inheritance stance, applied at birth, and the same rule the M16
- * successor obeys: a routed renewal never copies its predecessor's
- * Owner. The Owner a caller names is a choice the acting person made in
- * the create dialog, or the converting person at INT-002's conversion
- * (CTR-004 focus-group addendum, 2026-09-09).
+ * it is. No Owner unless the caller names one, no status but the draft
+ * seed, and no Confidential flag unless the caller asks for one.
+ * CTR-015's no-inheritance stance, applied at birth, and the same rule
+ * the M16 successor obeys: a routed renewal never copies its
+ * predecessor's Owner. The Owner a caller names is a choice the acting
+ * person made in the create dialog, or the converting person at
+ * INT-002's conversion (CTR-004 focus-group addendum, 2026-09-09).
  *
  * **Risk is never born and priority is born only where a caller holds
  * one** (MTR-012, M21/9). Risk is legal's assessment of how bad it
@@ -52,6 +57,10 @@
  * ordinary create still starts on the column's own `medium` default.
  */
 
+import { addContractTeamMember } from "../../lib/contract-team.js";
+import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
+import { lockedDepartment } from "../departments/references.js";
+
 import {
   and,
   asc,
@@ -60,6 +69,7 @@ import {
   contractStatuses,
   contractTeam,
   contractTypeFields,
+  contractTypeDefaultPeople,
   contractTypes,
   counterparties,
   desc,
@@ -68,11 +78,11 @@ import {
   isNull,
   sql,
   type Contract,
+  type AutoDocContractSnapshot,
   type ContractStage,
   type CustomFieldValue,
   type Matter,
   type SeverityLevel,
-  type Transaction,
   users,
 } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -119,9 +129,11 @@ export interface CreateContractInput {
   /** Who is creating it: the CTR-004 creator row and the actor on every
    * entry this write narrates. */
   actorId: string;
+  /** Trusted Auto-Doc provenance and facts resolved by the Generation path. */
+  autoDoc?: { id: string; generationId: string; facts: AutoDocContractSnapshot };
   title: string;
   description?: string | null;
-  owningDepartment?: string | null | undefined;
+  owningDepartmentId?: string | null | undefined;
   region?: string | null | undefined;
   contractTypeId: string;
   /** The type's fields, keyed by slug. Only the hard-required ones have
@@ -213,7 +225,8 @@ function businessFactsOf(predecessor: Contract) {
 }
 
 export async function createContract(
-  tx: Transaction,
+  tx: NotifyingTransaction,
+  notifier: Notifier,
   input: CreateContractInput,
 ): Promise<CreatedContract> {
   const { actorId, title, contractTypeId, renewal, matter } = input;
@@ -306,13 +319,15 @@ export async function createContract(
     managerId = person.id;
   }
 
+  if (input.owningDepartmentId) await lockedDepartment(tx, input.owningDepartmentId);
+
   const isConfidential = input.isConfidential ?? false;
   const [row] = await tx
     .insert(contracts)
     .values({
       title: title.trim(),
       description: input.description?.trim() || null,
-      owningDepartment: input.owningDepartment?.trim() || null,
+      owningDepartmentId: input.owningDepartmentId ?? null,
       region: input.region?.trim() || null,
       contractTypeId: contractType.id,
       statusId: draft.id,
@@ -327,6 +342,18 @@ export async function createContract(
       // honestly is (MTR-012).
       ...(input.priority ? { priority: input.priority } : {}),
       ...(copied ?? {}),
+      ...(input.autoDoc
+        ? {
+            createdByGenerationId: input.autoDoc.generationId,
+            entityId: input.autoDoc.facts.entityId,
+            effectiveDate: input.autoDoc.facts.effectiveDate,
+            expiryDate: input.autoDoc.facts.expiryDate,
+            termType: input.autoDoc.facts.termType,
+            valueAmount: input.autoDoc.facts.value?.amount ?? null,
+            valueCurrency: input.autoDoc.facts.value?.currency ?? null,
+            valueCadence: input.autoDoc.facts.value?.cadence ?? null,
+          }
+        : {}),
     })
     .returning();
   // Provenance, written once and never again (CTR-004): who made this
@@ -358,8 +385,35 @@ export async function createContract(
       // not the values: the M9 viewer narrates what was filled, and the
       // values are on the record to be read.
       customFields: Object.keys(customFields).sort((a, b) => a.localeCompare(b)),
+      ...(input.autoDoc
+        ? {
+            autoDocId: input.autoDoc.id,
+            autoDocName: input.autoDoc.facts.autoDocName,
+            generationId: input.autoDoc.generationId,
+          }
+        : {}),
     },
   });
+  const [actor] = await tx
+    .select({ id: users.id, displayName: users.displayName })
+    .from(users)
+    .where(eq(users.id, actorId));
+  if (!actor) throw httpError(400, "The creator must be a person.");
+  const defaults = await tx
+    .select({ id: contractTypeDefaultPeople.userId })
+    .from(contractTypeDefaultPeople)
+    .where(eq(contractTypeDefaultPeople.contractTypeId, contractTypeId))
+    .orderBy(asc(contractTypeDefaultPeople.displayOrder), asc(contractTypeDefaultPeople.userId));
+  for (const { id } of defaults) {
+    const [person] = await tx
+      .select({ id: users.id, displayName: users.displayName, archivedAt: users.archivedAt })
+      .from(users)
+      .where(eq(users.id, id))
+      .for("update");
+    if (person && !person.archivedAt)
+      await addContractTeamMember(tx, notifier, row!, actor, person);
+  }
+
   // A record born walled off gets its own entry beside the creation one.
   // DD-014 wants every set of the flag accountable by actor and
   // timestamp, and an Administrator reading the audit log should find it

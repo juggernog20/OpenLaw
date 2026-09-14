@@ -60,6 +60,7 @@ describe("app shell chrome", () => {
       "Documents",
       "Entities",
       "Knowledge",
+      "Auto-Docs",
     ]);
     expect(links[0]).toHaveAttribute("aria-current", "page");
     expect(links[1]).not.toHaveAttribute("aria-current");

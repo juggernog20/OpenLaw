@@ -735,10 +735,8 @@ describe("the request detail", () => {
 });
 
 describe("the two field types that name a row", () => {
-  // The portal's pickers offer a requester no people and no entities,
-  // so any id in a `user` or `entity` field arrived against the API —
-  // and the seam holds it to the contract record's rule: the id must
-  // name a live row, or the value is one nothing could ever render.
+  // Entity choices come from the Portal list. Optional person ids still
+  // have no picker and must name a live person when sent through the API.
   let userSlug: string;
   let entitySlug: string;
   let liveEntityId: string;
@@ -773,6 +771,13 @@ describe("the two field types that name a row", () => {
     }
 
     liveEntityId = await createEntity("Orion Cloud Holdings LLC");
+    const listed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${liveEntityId}`,
+      cookies: adminCookies,
+      payload: { portalListed: true },
+    });
+    expect(listed.statusCode, listed.body).toBe(200);
   });
 
   async function createEntity(legalName: string): Promise<string> {
@@ -815,7 +820,7 @@ describe("the two field types that name a row", () => {
     const res = await submit(ndaBody({ [entitySlug]: "00000000-0000-0000-0000-000000000000" }));
     expect(res.statusCode, res.body).toBe(400);
     expect(res.json().detail).toContain("Contracting entity");
-    expect(res.json().detail).toContain("live entity");
+    expect(res.json().detail).toContain("Portal-listed Entity");
   });
 
   it("refuses an archived entity — nothing new points at what has left", async () => {
@@ -830,7 +835,7 @@ describe("the two field types that name a row", () => {
 
     const res = await submit(ndaBody({ [entitySlug]: archivedId }));
     expect(res.statusCode, res.body).toBe(400);
-    expect(res.json().detail).toContain("live entity");
+    expect(res.json().detail).toContain("Portal-listed Entity");
   });
 
   it("accepts live references and stores them keyed by slug", async () => {

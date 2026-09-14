@@ -71,7 +71,8 @@ export const GROUP_COPY: Record<
     }),
     detail: defineMessage({
       id: "settings.notifications.group.assigned.detail",
-      defaultMessage: "Assignments, tasks, mentions, and approval requests addressed to you.",
+      defaultMessage:
+        "Assignments, generated Contracts where you are the Legal Owner, Contract team additions, tasks, mentions, and approval requests addressed to you.",
     }),
   },
   activity_on_your_records: {
@@ -102,7 +103,7 @@ export const GROUP_COPY: Record<
     }),
     detail: defineMessage({
       id: "settings.notifications.group.requests.detail",
-      defaultMessage: "New intake requests arriving in the Inbox.",
+      defaultMessage: "New Requests and Unassigned contracts arriving in the Inbox.",
     }),
   },
   knowledge: {

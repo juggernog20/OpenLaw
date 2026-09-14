@@ -275,6 +275,9 @@ export interface ApiState {
     image?: string | null;
     /** Defaults to null (browser-detected) — only the timezone tests set it. */
     timezone?: string | null;
+    departmentId?: string | null;
+    /** Most route fixtures represent a person who already completed the first run. */
+    portalOnboardingCompletedAt?: string | null;
     /** Defaults to false — only the two-factor tests set it. */
     twoFactorEnabled?: boolean;
     /** Defaults to true (a credential account exists) — SSO-only tests unset it. */
@@ -356,6 +359,8 @@ export function stubApi(state: ApiState) {
   return stubFetch((call) => {
     const fromExtra = state.extra?.(call);
     if (fromExtra) return fromExtra;
+    if (call.url.pathname === "/api/v1/inbox/unassigned-contracts" && call.method === "GET")
+      return json(200, { total: 0, contracts: [], nextCursor: null });
     if (call.url.pathname === "/api/v1/me" && call.method === "GET") {
       return state.signedIn
         ? json(200, {
@@ -369,6 +374,11 @@ export function stubApi(state: ApiState) {
               theme: state.signedIn.theme ?? "light",
               image: state.signedIn.image ?? null,
               timezone: state.signedIn.timezone ?? null,
+              departmentId: state.signedIn.departmentId ?? null,
+              portalOnboardingCompletedAt:
+                state.signedIn.portalOnboardingCompletedAt === undefined
+                  ? "2026-09-01T00:00:00.000Z"
+                  : state.signedIn.portalOnboardingCompletedAt,
             },
             session: { id: "sess-1", expiresAt: new Date(Date.now() + 60_000).toISOString() },
           })

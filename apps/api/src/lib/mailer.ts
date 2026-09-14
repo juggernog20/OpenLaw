@@ -15,6 +15,8 @@ export interface MailMessage {
   subject: string;
   text: string;
   html?: string;
+  headers?: Record<string, string>;
+  attachments?: { filename: string; content: Buffer; contentType: string }[];
 }
 
 export interface Mailer {

@@ -71,6 +71,7 @@ interface Submissions {
 function portalForm(
   state: {
     fields?: FormField[];
+    entities?: { id: string; name: string }[];
     intakeLinks?: { id: string; label: string; url: string; displayOrder: number }[];
     submit?: (call: StubCall) => Response;
     /** How the attachment upload answers, by the file's name. Anything
@@ -80,6 +81,9 @@ function portalForm(
   submissions: Submissions,
 ) {
   return (call: StubCall) => {
+    if (call.url.pathname === "/api/v1/portal/entities" && call.method === "GET") {
+      return json(200, { entities: state.entities ?? [] });
+    }
     if (
       /^\/api\/v1\/requests\/\d+\/attachments$/.test(call.url.pathname) &&
       call.method === "POST"
@@ -452,5 +456,51 @@ describe("an out-of-scope attached field", () => {
     expect((submissions.bodies[0] as { customFields: unknown }).customFields).toEqual({
       counterparty: "Orion Cloud",
     });
+  });
+});
+
+describe("Portal-listed Entity picker", () => {
+  const SIGNER: FormField = {
+    ...PAPER_SIDE,
+    fieldId: "f-entity",
+    slug: "signing_entity",
+    displayName: "Signing Entity",
+    fieldType: "entity",
+    options: null,
+    isRequired: true,
+  };
+
+  it("offers names and submits the selected id for a required Entity Field", async () => {
+    const submissions = openForm({
+      fields: [COUNTERPARTY, SIGNER],
+      entities: [{ id: "e-operating", name: "Aldgate Operating Ltd" }],
+    });
+    const user = userEvent.setup();
+    await fillComplete(user);
+    const picker = screen.getByRole("combobox", { name: /Signing Entity/ });
+    expect(picker).toHaveAttribute("aria-required", "true");
+    await user.selectOptions(picker, "Aldgate Operating Ltd");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+    expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+    expect(submissions.bodies[0]).toMatchObject({
+      customFields: { signing_entity: "e-operating" },
+    });
+  });
+
+  it("keeps the entered form when the Entity becomes unavailable before Submit", async () => {
+    const submissions = openForm({
+      fields: [COUNTERPARTY, SIGNER],
+      entities: [{ id: "e-stale", name: "Aldgate Operating Ltd" }],
+      submit: () => problem(400, "Signing Entity: choose a Portal-listed Entity from the list."),
+    });
+    const user = userEvent.setup();
+    await fillComplete(user);
+    await user.selectOptions(screen.getByRole("combobox", { name: /Signing Entity/ }), "e-stale");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+    expect(
+      await screen.findByText("Signing Entity: choose a Portal-listed Entity from the list."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Title/)).toHaveValue("MSA renewal with Orion Cloud");
+    expect(submissions.bodies).toHaveLength(1);
   });
 });

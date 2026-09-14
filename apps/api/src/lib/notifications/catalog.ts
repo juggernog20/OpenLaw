@@ -123,7 +123,10 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   // Group 1 — assigned to you. The mention is here rather than in
   // group 2 because a mention is done *to* you: somebody addressed a
   // question to you by name (settled in the M18 spec's grill).
+  "contract.team_added": "assigned_to_you",
   "contract.owner_assigned": "assigned_to_you",
+  "contract.generated": "assigned_to_you",
+  "contract.generated_unassigned": "new_requests",
   "contract.task_assigned": "assigned_to_you",
   "matter.task_assigned": "assigned_to_you",
   "approval.requested": "assigned_to_you",

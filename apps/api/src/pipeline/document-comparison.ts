@@ -13,6 +13,7 @@
 
 import { Readable } from "node:stream";
 import {
+  type Executor,
   alias,
   and,
   documentComparisons,
@@ -79,8 +80,9 @@ async function finishComparison(
   comparisonId: string,
   model: ChangeModel,
   redlineFileRef: string | null,
+  db: Executor = deps.db,
 ): Promise<boolean> {
-  const updated = await deps.db
+  const updated = await db
     .update(documentComparisons)
     .set({
       state: "ready",
@@ -199,12 +201,14 @@ export async function compareDocumentVersions(
     newer = await deps.storage.get(comparison.toFileRef);
     const answer = await deps.docEngine.compare(older, fromFormat, newer, toFormat);
     const redline = await collect(answer);
-    fileRef = await deps.storage.put(comparisonStorageKey(comparisonId), Readable.from([redline]));
     const model = parseTrackedChangesDocx(redline);
-    if (!(await finishComparison(deps, comparisonId, model, fileRef))) {
-      await forget(deps, fileRef);
-      return;
-    }
+    await deps.db.transaction(async (tx) => {
+      const [held] = await tx.select({ state: documentComparisons.state }).from(documentComparisons)
+        .where(eq(documentComparisons.id, comparisonId)).for("update");
+      if (!held || held.state !== "pending") return;
+      fileRef = await deps.storage.put(comparisonStorageKey(comparisonId), Readable.from([redline]));
+      await finishComparison(deps, comparisonId, model, fileRef, tx);
+    });
   } catch (error) {
     if (fileRef) await forget(deps, fileRef);
     throw error;

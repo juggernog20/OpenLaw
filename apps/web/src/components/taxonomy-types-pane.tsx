@@ -168,8 +168,10 @@ function ArchiveTypeDialog<Row extends TaxonomyPaneRow>({
   onOpenChange,
   onArchived,
   onArchivedCloseFocus,
+  archiveKeepsReferences = false,
 }: Readonly<{
   target: Row;
+  archiveKeepsReferences?: boolean;
   /** Reassignment candidates: every live type but the target. */
   liveTypes: Row[];
   api: TaxonomyPaneApi<Row>;
@@ -188,7 +190,7 @@ function ArchiveTypeDialog<Row extends TaxonomyPaneRow>({
   // In-use rows need a reassignment target; with no other live type the
   // form can never pass, so say why instead of letting native
   // validation refuse a select whose only option is empty.
-  const blocked = target.inUseCount > 0 && candidates.length === 0;
+  const blocked = !archiveKeepsReferences && target.inUseCount > 0 && candidates.length === 0;
 
   async function submit(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -237,29 +239,33 @@ function ArchiveTypeDialog<Row extends TaxonomyPaneRow>({
               />
             </p>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="reassignToId">
-              <FormattedMessage {...messages.reassignLabel} values={{ count: target.inUseCount }} />
-            </Label>
-            {/* The affordance is always drawn (ST8); with nothing to
-                move it waits disabled, and the SET-003 requirement arms
-                once records exist (the record milestone). */}
-            <select
-              id="reassignToId"
-              name="reassignToId"
-              defaultValue=""
-              disabled={target.inUseCount === 0 || blocked}
-              required={target.inUseCount > 0 && !blocked}
-              className="h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50"
-            >
-              <option value="">{intl.formatMessage(messages.reassignNone)}</option>
-              {candidates.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!archiveKeepsReferences && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="reassignToId">
+                <FormattedMessage
+                  {...messages.reassignLabel}
+                  values={{ count: target.inUseCount }}
+                />
+              </Label>
+              {/* SET-003 requires reassignment for these taxonomies when records use them.
+                Taxonomies that keep references on archive omit this control. */}
+              <select
+                id="reassignToId"
+                name="reassignToId"
+                defaultValue=""
+                disabled={target.inUseCount === 0 || blocked}
+                required={target.inUseCount > 0 && !blocked}
+                className="h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50"
+              >
+                <option value="">{intl.formatMessage(messages.reassignNone)}</option>
+                {candidates.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <p className="flex items-center gap-1.5 text-xs text-muted">
             <History size={16} aria-hidden="true" />
             <FormattedMessage {...messages.auditNote} />
@@ -290,6 +296,7 @@ function ArchiveTypeDialog<Row extends TaxonomyPaneRow>({
 
 export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>({
   initialRows,
+  archiveKeepsReferences = false,
   tabs,
   editor,
   protectedRow,
@@ -298,6 +305,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   messages,
 }: Readonly<{
   initialRows: Row[];
+  archiveKeepsReferences?: boolean;
   /** The module's section head (title + tab strip). */
   tabs: ReactNode;
   /** Each row's editor screen and label; omit for modules without one. */
@@ -554,6 +562,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
       </div>
       {archiveTarget && (
         <ArchiveTypeDialog
+          archiveKeepsReferences={archiveKeepsReferences}
           target={archiveTarget}
           liveTypes={live}
           api={api}

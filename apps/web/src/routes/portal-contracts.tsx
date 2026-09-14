@@ -8,7 +8,7 @@ import {
   CONTRACT_STAGES,
 } from "@openlaw/shared";
 import { api } from "../lib/api";
-import { currentUser } from "../lib/session";
+import { currentUserFor } from "../lib/session";
 import type { Layout } from "../lib/list-views";
 import { portalListLayout, portalListQuery } from "../lib/portal-lists";
 import { stageLabel } from "../lib/contracts";
@@ -37,7 +37,7 @@ async function read(layout: Layout, cursor?: number) {
     : undefined;
 }
 export async function portalContractsLoader(args: LoaderFunctionArgs) {
-  const user = await currentUser();
+  const user = await currentUserFor(args.request);
   if (!user) return redirect("/portal/enter");
   const layout = portalListLayout(
     catalogue,

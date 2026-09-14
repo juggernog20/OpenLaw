@@ -10,6 +10,15 @@
  * comment there for why the screen must remount when its record does.
  */
 
+import { SettingsAutoDocsPage, settingsAutoDocsLoader } from "./routes/settings-auto-docs";
+import {
+  PortalAutoDocsPage,
+  portalAutoDocsLoader,
+  PortalAutoDocGeneratePage,
+  portalAutoDocGenerateLoader,
+  PortalAutoDocGenerationPage,
+  portalAutoDocGenerationLoader,
+} from "./routes/portal-auto-docs";
 import { PortalMattersPage, portalMattersLoader } from "./routes/portal-matters";
 import { PortalMatterPage, portalMatterLoader } from "./routes/portal-matter";
 import { Fragment, type ReactNode } from "react";
@@ -23,6 +32,10 @@ import { MattersPage, mattersLoader } from "./routes/matters";
 import { MatterRecordPage, matterRecordLoader } from "./routes/matter-record";
 import { EntitiesPage, entitiesLoader, entitiesShouldRevalidate } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
+import { AutoDocsPage, autoDocsLoader } from "./routes/auto-docs";
+import { AutoDocGeneratePage, autoDocGenerateLoader } from "./routes/auto-doc-generate";
+import { AutoDocGenerationPage, autoDocGenerationLoader } from "./routes/auto-doc-generation";
+import { AutoDocRecordPage, autoDocRecordLoader } from "./routes/auto-doc-record";
 import { KnowledgePage, knowledgeLoader } from "./routes/knowledge";
 import { KnowledgeRecordPage, knowledgeRecordLoader } from "./routes/knowledge-record";
 import { RouteErrorPage } from "./routes/error-page";
@@ -45,6 +58,8 @@ import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request"
 import { PortalContractsPage, portalContractsLoader } from "./routes/portal-contracts";
 import { PortalContractPage, portalContractLoader } from "./routes/portal-contract";
 import { PortalKnowledgePage, portalKnowledgeLoader } from "./routes/portal-knowledge";
+import { guardPortalLoader } from "./lib/portal-onboarding";
+import { PortalOnboardingPage, portalOnboardingLoader } from "./routes/portal-onboarding";
 import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
 import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
 import { SetPasswordPage } from "./routes/set-password";
@@ -132,6 +147,7 @@ import {
 } from "./routes/settings-request-type-editor";
 import { SettingsIntakeLinksPage, settingsIntakeLinksLoader } from "./routes/settings-intake-links";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
+import { SettingsDepartmentsPage, settingsDepartmentsLoader } from "./routes/settings-departments";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
   SettingsAuthenticationPage,
@@ -337,6 +353,46 @@ export const routes: RouteObject[] = [
     hydrateFallbackElement: <></>,
   },
   {
+    path: "/auto-docs",
+    loader: autoDocsLoader,
+    element: <AutoDocsPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/auto-docs/:id",
+    loader: autoDocRecordLoader,
+    element: (
+      <KeyedByParam name="id">
+        <AutoDocRecordPage />
+      </KeyedByParam>
+    ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/auto-docs/:id/generate",
+    loader: autoDocGenerateLoader,
+    element: (
+      <KeyedByParam name="id">
+        <AutoDocGeneratePage />
+      </KeyedByParam>
+    ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    path: "/auto-docs/:id/generations/:generationId",
+    loader: autoDocGenerationLoader,
+    element: (
+      <KeyedByParam name="generationId">
+        <AutoDocGenerationPage />
+      </KeyedByParam>
+    ),
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
     path: "/knowledge",
     loader: knowledgeLoader,
     element: <KnowledgePage />,
@@ -390,6 +446,11 @@ export const routes: RouteObject[] = [
       // role gate stands behind them.
       { path: "general", loader: settingsGeneralLoader, element: <SettingsGeneralPage /> },
       { path: "users", loader: settingsUsersLoader, element: <SettingsUsersPage /> },
+      {
+        path: "departments",
+        loader: settingsDepartmentsLoader,
+        element: <SettingsDepartmentsPage />,
+      },
       {
         path: "authentication",
         loader: settingsAuthenticationLoader,
@@ -539,6 +600,7 @@ export const routes: RouteObject[] = [
         loader: settingsRemindersLoader,
         element: <SettingsRemindersPage />,
       },
+      { path: "auto-docs", loader: settingsAutoDocsLoader, element: <SettingsAutoDocsPage /> },
       // #245: the Integrations section, E-signature its first pane
       // (SET-007, superseding CTR-013's Contracts-tab placement).
       { path: "integrations", loader: settingsIntegrationsIndexLoader, element: <></> },
@@ -582,6 +644,27 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
     children: [
+      { path: "auto-docs", loader: portalAutoDocsLoader, element: <PortalAutoDocsPage /> },
+      {
+        path: "auto-docs/:id/generate",
+        loader: portalAutoDocGenerateLoader,
+        element: (
+          <KeyedByParam name="id">
+            <PortalAutoDocGeneratePage />
+          </KeyedByParam>
+        ),
+      },
+      {
+        path: "auto-docs/:id/generations/:generationId",
+        loader: portalAutoDocGenerationLoader,
+        element: (
+          <KeyedByParam name="id">
+            <KeyedByParam name="generationId">
+              <PortalAutoDocGenerationPage />
+            </KeyedByParam>
+          </KeyedByParam>
+        ),
+      },
       { index: true, loader: portalHomeLoader, element: <PortalHomePage /> },
       { path: "contracts", loader: portalContractsLoader, element: <PortalContractsPage /> },
       { path: "matters", loader: portalMattersLoader, element: <PortalMattersPage /> },
@@ -607,6 +690,7 @@ export const routes: RouteObject[] = [
       // signed-out costume, so the emailed link, the dead-link page, and
       // the sign-out redirect all name one place.
       { path: "enter", loader: portalEntryLoader, element: <PortalEntryPage /> },
+      { path: "onboarding", loader: portalOnboardingLoader, element: <PortalOnboardingPage /> },
       // The lightweight settings surface NOT-001 promised a business
       // user (M20/9): NOT-002's group 5 and nothing else, reached from
       // the gear in the portal header.
@@ -647,7 +731,7 @@ export const routes: RouteObject[] = [
       },
       // A portal address nothing answers to, in the portal's own chrome.
       { path: "*", loader: portalNotFoundLoader, element: <PortalNotFoundPage /> },
-    ],
+    ].map((route) => ({ ...route, loader: guardPortalLoader(route.loader) })),
   },
   {
     // Any other address. Without this the router hands an unmatched URL

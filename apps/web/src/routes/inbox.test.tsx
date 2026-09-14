@@ -388,7 +388,7 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
     stubApi({ signedIn: MEMBER, extra: inboxApi([]).handler });
     renderAt("/inbox");
 
-    const nav = await screen.findByRole("navigation");
+    const nav = await screen.findByRole("navigation", { name: "Primary" });
     const links = within(nav).getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual([
       "Home",
@@ -399,6 +399,7 @@ describe("who the Inbox is for (INT-006, DD-013)", () => {
       "Documents",
       "Entities",
       "Knowledge",
+      "Auto-Docs",
     ]);
     expect(links[1]).toHaveAttribute("aria-current", "page");
   });
@@ -539,4 +540,84 @@ describe("Inbox filters and views", () => {
     expect(asked.at(-1)?.searchParams.has("sort")).toBe(false);
     expect(screen.getByRole("button", { name: /^Default view/ })).toBeInTheDocument();
   });
+});
+
+it("shows both tab counts and claims a generated Contract out of the unassigned queue", async () => {
+  const user = userEvent.setup();
+  let claimed = false;
+  const queue = {
+    id: "generated",
+    number: 81,
+    title: "Generated supplier NDA",
+    createdAt: "2026-09-14T00:00:00Z",
+    autoDoc: { id: "nda", name: "Supplier NDA" },
+    generator: { id: "buyer", displayName: "Bao Business" },
+  };
+  const requests = inboxApi([inboxRow()]);
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/inbox/unassigned-contracts")
+        return json(200, {
+          contracts: claimed ? [] : [queue],
+          total: claimed ? 0 : 1,
+          nextCursor: null,
+        });
+      if (call.url.pathname.endsWith("/81/claim")) {
+        claimed = true;
+        return json(200, queue);
+      }
+      return requests.handler(call);
+    },
+  });
+  const { router } = renderAt("/inbox");
+  expect(await screen.findByRole("link", { name: "Requests (1)" })).toBeInTheDocument();
+  await user.click(screen.getByRole("link", { name: "Unassigned contracts (1)" }));
+  await screen.findByRole("link", { name: "Generated supplier NDA" });
+  expect(router.state.location.search).toContain("tab=unassigned-contracts");
+  expect(screen.getByText("Bao Business")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Claim" }));
+  await waitFor(() =>
+    expect(screen.queryByRole("link", { name: "Generated supplier NDA" })).not.toBeInTheDocument(),
+  );
+  expect(screen.getByRole("link", { name: "Unassigned contracts (0)" })).toBeInTheDocument();
+  await user.click(screen.getByRole("link", { name: "Requests (1)" }));
+  expect(await screen.findByRole("table")).toBeInTheDocument();
+});
+
+it("refreshes the unassigned queue and reports a Claim conflict", async () => {
+  const user = userEvent.setup();
+  let claimedElsewhere = false;
+  const queue = {
+    id: "generated",
+    number: 81,
+    title: "Claimed elsewhere",
+    createdAt: "2026-09-14T00:00:00Z",
+    autoDoc: { id: "nda", name: "Supplier NDA" },
+    generator: { id: "buyer", displayName: "Bao Business" },
+  };
+  const requests = inboxApi([]);
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/inbox/unassigned-contracts")
+        return json(200, {
+          contracts: claimedElsewhere ? [] : [queue],
+          total: claimedElsewhere ? 0 : 1,
+          nextCursor: null,
+        });
+      if (call.url.pathname.endsWith("/81/claim")) {
+        claimedElsewhere = true;
+        return problem(409, "This Contract already has a Legal Owner.");
+      }
+      return requests.handler(call);
+    },
+  });
+  renderAt("/inbox?tab=unassigned-contracts");
+  await user.click(await screen.findByRole("button", { name: "Claim" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "This Contract already has a Legal Owner.",
+  );
+  expect(screen.getByRole("link", { name: "Unassigned contracts (0)" })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Claimed elsewhere" })).not.toBeInTheDocument();
 });

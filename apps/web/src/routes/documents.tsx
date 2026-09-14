@@ -140,7 +140,8 @@ function layoutFromSearch(base: Layout, search: string): { layout: Layout; fromU
     owner === "contract" ||
     owner === "matter" ||
     owner === "entity" ||
-    owner === "knowledge_item"
+    owner === "knowledge_item" ||
+    owner === "auto_doc"
   )
     filters.owner = owner;
   const record = params.get("record") ?? "";
@@ -328,12 +329,14 @@ function DocumentsPageState() {
       documentRecordReference(String(next.record ?? ""), filters.owner || undefined)?.entityType;
     if (
       (next.owner && recordOwner && next.owner !== recordOwner) ||
-      (!next.owner && filters.owner === "knowledge_item" && recordOwner === "knowledge_item")
+      (!next.owner &&
+        (filters.owner === "knowledge_item" || filters.owner === "auto_doc") &&
+        recordOwner === filters.owner)
     ) {
       delete next.record;
       delete next.folder;
-    } else if (recordOwner === "knowledge_item") {
-      next.owner = "knowledge_item";
+    } else if (recordOwner === "knowledge_item" || recordOwner === "auto_doc") {
+      next.owner = recordOwner;
       delete next.folder;
     }
     if (!next.record) delete next.folder;
@@ -567,7 +570,8 @@ function DocumentsPageState() {
                 loaded.canManage &&
                 !busy &&
                 row.archivedAt === null &&
-                row.owner.kind !== "knowledge_item",
+                row.owner.kind !== "knowledge_item" &&
+                row.owner.kind !== "auto_doc",
               onStart: documentDrag.start,
               onEnd: documentDrag.clear,
             }}

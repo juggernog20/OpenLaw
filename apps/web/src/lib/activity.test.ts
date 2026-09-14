@@ -115,6 +115,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "user.other_sessions_revoked": {},
   "user.two_factor_enrolled": {},
   "user.two_factor_disabled": {},
+  "user.department_set": {
+    email: "casey@example.com",
+    from: null,
+    to: "Sales",
+    fromId: null,
+    toId: "d1",
+  },
   "user.role_changed": {
     email: "sam@example.com",
     from: "contributor",
@@ -156,6 +163,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "knowledge_type.archived": TAXONOMY_ARCHIVE,
   "knowledge_type.restored": TAXONOMY_NAMED,
   "knowledge_type.deleted": TAXONOMY_NAMED,
+  "department.created": TAXONOMY_NAMED,
+  "department.renamed": TAXONOMY_RENAME,
+  "department.updated": TAXONOMY_UPDATE,
+  "department.reordered": { order: ["sales", "finance"] },
+  "department.archived": TAXONOMY_ARCHIVE,
+  "department.restored": TAXONOMY_NAMED,
+  "department.deleted": TAXONOMY_NAMED,
   "officer_role.created": TAXONOMY_NAMED,
   "officer_role.renamed": TAXONOMY_RENAME,
   "officer_role.updated": TAXONOMY_UPDATE,
@@ -367,6 +381,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
 
   // Entity registry
   "entity.created": { legalName: "Helix Labs GmbH", entityType: "GmbH", status: "active" },
+  "entity.portal_listed_set": { legalName: "Helix Labs GmbH", from: false, to: true },
   "entity.updated": {
     legalName: "Helix Labs GmbH",
     changed: { jurisdiction: { from: "DE", to: "AT" } },
@@ -378,6 +393,57 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     from: "Playbook",
     to: "Article",
   },
+  "auto_doc.generation_retried": { name: "NDA", generationId: "generation" },
+  "auto_doc.updated": {
+    name: "Supplier NDA",
+    changed: { audience: { from: "legal_only", to: "everyone" } },
+  },
+  "auto_doc.published": {
+    name: "Supplier NDA",
+    documentVersionId: "file1",
+    formVersionId: "form1",
+  },
+  "auto_doc.acknowledged": {
+    name: "Supplier NDA",
+    text: "Do not edit.",
+    textHash: "a".repeat(64),
+    frequency: "once",
+    acknowledgementId: "ack1",
+  },
+  "auto_doc.filed": {
+    name: "Approved NDA",
+    generationId: "g",
+    filingId: "f",
+    documentId: "d",
+    targetKind: "contract",
+    targetNumber: 42,
+    targetTitle: "Acme NDA",
+  },
+  "auto_doc.generated": {
+    name: "Supplier NDA",
+    generationId: "generation1",
+    documentVersionId: "file1",
+    formVersionId: "form2",
+    documentVersionNumber: 1,
+    formVersionNumber: 2,
+    personId: "member",
+    personName: "Legal",
+  },
+  "auto_doc.unpublished": {
+    name: "Supplier NDA",
+    documentVersionId: "file1",
+    formVersionId: "form1",
+  },
+  "auto_doc.archived": { name: "Supplier NDA", documentVersionId: "file1", formVersionId: "form1" },
+  "auto_doc.restored": { name: "Supplier NDA", documentVersionId: "file1", formVersionId: "form1" },
+  "auto_doc.created": { name: "Supplier NDA" },
+  "auto_doc.template_uploaded": {
+    name: "Supplier NDA",
+    documentId: "doc",
+    versionId: "v1",
+    versionNumber: 1,
+  },
+  "auto_doc.form_saved": { name: "Supplier NDA", formVersionId: "form1", versionNumber: 1 },
   "knowledge_item.created": {
     title: "Contract review playbook",
     knowledgeType: "Playbook",
@@ -984,6 +1050,22 @@ it("names a Key date's selected recipients and the usual audience", () => {
   ).toEqual([{ label: "Reminder recipients", from: "Usual audience", to: "Casey Counsel" }]);
 });
 
+it("names a Contract Type's default people, in the order the card holds them", () => {
+  const entry: NarratableEntry = {
+    action: "contract_type.updated",
+    actor: ACTOR,
+    payload: {
+      slug: "nda",
+      changed: { defaultPeople: { from: [], to: ["Casey Counsel", "Dana Procurement"] } },
+    },
+  };
+  // The audit log has no picker to read an id back from, so the payload
+  // carries the names the Administrator saw (CTR-026).
+  expect(narrateActivity(intl, entry).changes).toEqual([
+    { label: "Default people", from: "Not set", to: "Casey Counsel and Dana Procurement" },
+  ]);
+});
+
 describe("the record's own id-valued and slug-valued changes", () => {
   it("names a Task's assignee from the mount's reference names, and the id when nothing names it", () => {
     const entry: NarratableEntry = {
@@ -1262,6 +1344,17 @@ describe("the sentences a reader gets", () => {
     );
   });
 
+  it("reads an empty Department as Not set in the user assignment audit", () => {
+    expect(
+      narrate("user.department_set", { email: "sam@example.com", from: null, to: "Sales" })
+        .sentence,
+    ).toBe("Nadia Counsel changed the Department of sam@example.com from Not set to Sales");
+    expect(
+      narrate("user.department_set", { email: "sam@example.com", from: "Sales", to: null })
+        .sentence,
+    ).toBe("Nadia Counsel changed the Department of sam@example.com from Sales to Not set");
+  });
+
   it("reads a role change in the words the Users pane uses", () => {
     const narration = narrate("user.role_changed", SAMPLE_PAYLOADS["user.role_changed"]);
     expect(narration.sentence).toBe("Nadia Counsel changed the role of sam@example.com");
@@ -1387,4 +1480,80 @@ it("uses the generic Field label for older Matter confirmations without a slug",
   expect(narrate("matter.field_confirmed", { number: 41, title: "Matter" }).sentence).toContain(
     "a field",
   );
+});
+
+it.each(["auto_doc.created", "auto_doc.template_uploaded", "auto_doc.form_saved"])(
+  "names the Auto-Doc in %s",
+  (action) => {
+    const result = narrateActivity(intl, {
+      action,
+      actor: ACTOR,
+      payload: { name: "Supplier NDA" },
+    });
+    expect(result.sentence).toContain("Supplier NDA");
+  },
+);
+
+it("names an Auto-Doc's selected audience and target Contract Type in History", () => {
+  expect(
+    narrate("auto_doc.updated", {
+      name: "Supplier NDA",
+      changed: {
+        audience: { from: "legal_only", to: "selected" },
+        targetContractType: { from: null, to: "Supplier NDA Type" },
+      },
+    }).changes,
+  ).toEqual([
+    { label: "Audience", from: "Legal Only", to: "Selected" },
+    { label: "Target Contract Type", from: "Not set", to: "Supplier NDA Type" },
+  ]);
+  expect(
+    narrate("auto_doc.updated", {
+      name: "Supplier NDA",
+      changed: {
+        audienceUsers: { from: null, to: "Buyer" },
+        audienceDepartments: { from: "Sales", to: "Sales, Finance" },
+        acknowledgementFrequency: { from: "once_per_auto_doc", to: "every_use" },
+        acknowledgementText: { from: null, to: "Do not edit." },
+      },
+    }).changes,
+  ).toEqual([
+    { label: "Selected people", from: "Not set", to: "Buyer" },
+    { label: "Selected Departments", from: "Sales", to: "Sales, Finance" },
+    { label: "Acknowledgement frequency", from: "Once per Auto-Doc", to: "Every use" },
+    { label: "Acknowledgement text", from: "Not set", to: "Do not edit." },
+  ]);
+  expect(
+    narrate("org_settings.updated", {
+      field: "autoDocAcknowledgementText",
+      old: "Do not edit.",
+      new: "Ask Legal first.",
+    }).changes,
+  ).toEqual([
+    { label: "Default acknowledgement text", from: "Do not edit.", to: "Ask Legal first." },
+  ]);
+  expect(
+    narrateActivity(
+      intl,
+      {
+        action: "auto_doc.updated",
+        actor: ACTOR,
+        payload: {
+          name: "Supplier NDA",
+          changed: { targetContractTypeId: { from: null, to: "type-1" } },
+        },
+      },
+      { referenceNames: { "type-1": "Supplier NDA Type" } },
+    ).changes,
+  ).toEqual([{ label: "Target Contract Type", from: "Not set", to: "Supplier NDA Type" }]);
+});
+
+it("names the Auto-Doc and Generation in the Contract's creation entry", () => {
+  const sentence = narrate("contract.created", {
+    autoDocId: "nda",
+    autoDocName: "Approved NDA",
+    generationId: "generation-7",
+  }).sentence;
+  expect(sentence).toContain("Approved NDA");
+  expect(sentence).toContain("generation-7");
 });

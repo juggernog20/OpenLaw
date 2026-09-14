@@ -80,6 +80,12 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 - **Alternatives considered** — One version of the whole Auto-Doc per Publish: simpler, but the diff of a form edit would be buried in a file compare. Form edits live at once: two Generations five minutes apart could differ with no version to cite.
 - **Consequences** — `auto_doc_form_versions` with a jsonb snapshot; `auto_docs.published_document_version_id` and `published_form_version_id`; `auto_doc_generations` cite both. The Activity verbs `auto_doc.published` and `auto_doc.unpublished` carry the pair.
 
+**M35/5 built addendum (#848):** Member+ has the Auto-Docs list, draft creation, template uploads, and the nine-type form editor. Migration 0120 adds the fifth Document owner and immutable JSON form snapshots. Each file Version holds detection metadata; a field's Placeholder provenance survives later uploads to drive the editor's orphan cue. History uses the shared activity feed, and file previews use the shared Document reader. Clause rules, maps, structural diffs, and Publish follow in M35/6.
+
+**M35/6 built addendum (#849):** Each form snapshot also holds its maps and Clause rules. The editor offers one row per detected Block and each select field's options. It refuses a rule for an absent Block when saving. Publish checks the chosen file and form together and names every missing Placeholder, Block, field, or option in one refusal. Structural form comparisons report field and rule changes. File comparisons open the shared Comparison view.
+
+Member+ can Publish a new pair, Unpublish, Archive, and Restore through separate audited routes. Later uploads and form saves keep the live pair. Migration 0121 adds publication and audience settings, the target Contract Type, and deferred checks on both version owners. Settings edits record before and after. The list searches by name and filters by state, audience, and target Type, with archived records hidden by default. Portal audience enforcement follows in M35/11.
+
 ## ADO-005 — Destinations: a Contract Type target creates a draft Contract; anything can be Filed afterwards
 
 - **Status** — Accepted
@@ -90,10 +96,30 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
   - **The created Contract takes its shape from the form** through ADO-003's maps: title from a **title pattern** in the Auto-Doc's settings (`NDA – {{counterparty_name}}`), primary Counterparty matched by name or created (as Request conversion does), our Entity from the form or the fixed setting, catalog Fields and built-in attributes from their maps. **Business Owner is the generating Business User**, which under DD-023 also adds their team row and so gives them the Contract in the Portal. Member+ generating in the app may name a Business Owner or leave it empty. **Legal Owner is assigned by ADO-006.** Default people on the Type (CTR-026) are applied as on any creation path.
   - **A non-targeted Generation's output lives on the Generation.** It is not a Document. Legal opens and downloads it from the Auto-Doc's Generations list; the person who generated it has it in the Portal (ADO-009).
   - **Filing** adds a Generation's output to an existing Matter or Contract as a Document, Version 1, or creates a new Contract from it. Member+ may File to any record they reach, and may pick the destination on the form itself when generating in the app. A Business User may File from the Portal to a Contract or Matter they hold a team row on, under DD-024's own upload rule. The Generation keeps its copy and records where it was Filed. A Generation may be Filed to several records; each Filing is one Document.
-  - **Generation bypasses the Inbox.** No Request is created. The Contract's Activity feed opens with `contract.created` naming the Auto-Doc and the Generation.
+  - ~~**Generation bypasses the Inbox.**~~ No Request is created. A generated Contract without a Legal Owner appears on the Inbox's Unassigned contracts tab (ADO-006). The Contract's Activity feed opens with `contract.created` naming the Auto-Doc and the Generation.
 - **Rationale** — The target shape is one the team already reads. Creating the Contract in the Generation's transaction means no Contract can exist without the Generation that explains it. Keeping standalone outputs off the Document model spares a one-shot letter version chains and folders it never needs. Filing afterwards is how a board resolution reaches "Q4 2026 board meeting" without Legal predicting it at design time.
 - **Alternatives considered** — Always create a Contract: a letter is not a Contract. A "creates a Contract" flag with the Type chosen at Generation: the Type's policy would be unknown when the form is designed. A Request per Generation for triage: a second record for one fact, and path 7 already gave the person their document.
 - **Consequences** — `auto_docs.target_contract_type_id`, `title_pattern`, `fixed_entity_id`, `auto_doc_filings`. `createContract` gains an Auto-Doc creation path beside direct creation and conversion. CTR-014's first-upload-takes-primary rule is satisfied by construction.
+
+### Built in M35/9
+
+Target settings add an optional title pattern and fixed Entity. Publication checks every title Placeholder against the saved form. Without a pattern, the mapped title takes precedence over the Auto-Doc name. Entity answers are optional on targeted forms; a fixed Entity supplies them without a picker. Settings changes record before and after.
+
+All nine built-in maps and attached catalog Fields carry through the shared Contract creation path. A Value map includes an explicit currency and cadence; its numeric answer is an amount in major units, converted to the currency's minor units when the Contract is created. Catalog maps carry only to Fields attached to the target Type and obey their existing validation and requiredness.
+
+The accepted Generation saves its resolved Contract facts for retry. After Word fill succeeds, one transaction writes the draft Contract, its primary Document and Version, the Generation links, default people, and Activity. The Document holds its own stored copy, so retrying delivery cannot remove its file. A retry of a Generation that already created a Contract keeps that original Document and creates no second Contract. A failed fill or Contract transaction leaves no partial Contract.
+
+The first Contract Activity entry names the Auto-Doc and Generation. Member+ can name a Business Owner; the shared Generation function names a generating Business User as Business Owner and adds their team row. The Portal entry point and its audience and acknowledgement checks follow in M35/11. Legal Owner assignment follows in M35/10. Filing follows in M35/12.
+
+### Built in M35/12
+
+A Filing copies an allowed Generation output into a fresh Document and Version 1. Word is the default when allowed; a PDF-only Generation files its PDF. The automatic Contract destination still uses Word as specified above. Existing record reach, the archive freeze, and the Portal team upload rule apply at commit. The first Member+ Filing takes an empty primary designation; Business User Filings remain supporting Documents.
+
+Member+ may choose a Contract Type when Filing an already generated output to a new Contract. This later Filing uses the original answers and Form maps with the current target Type, Entity, Assignment, and default people validation through the shared creation path. It is separate from the one automatic Contract created at Generation: each new-Contract Filing records its own provenance, and retry never creates it again. The automatic Generation links remain unchanged.
+
+A destination chosen on the Member generation form is saved in the acceptance transaction. Word Filing completes after fill; PDF Filing is fulfilled by the delivery worker when conversion finishes, with the saved Filing id preventing duplicate copies. Reach is checked again. A Filing failure leaves the Generation's output intact and lets the person choose a destination again. Every Filing writes `auto_doc.filed` and the ordinary `document.created` action, with generated provenance; existing upload narration is unchanged. History remains after Document erasure. Filing targets and their Activity are visible only through the reader's current destination reach.
+
+**Trade-off:** Filing adds a destination choice after Generation. That extra step keeps output separate from record ownership and prevents an automatic Filing to an unintended record. The optional destination on the Member form avoids repeating the choice when it is already known.
 
 ## ADO-006 — Assignment rules choose the Legal Owner; an unmatched Generation waits on the Inbox as an Unassigned contract
 
@@ -102,12 +128,18 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 - **Context** — A generated Contract has no legal work waiting, but it does have an expiry to watch and CTR-004 wants one accountable person. The right person varies: our Entity A's counsel, or the lawyer for jurisdiction B. Blair, 2026-09-13: "we need to think about how the legal team member gets assigned." `contracts.manager_id` is already nullable, and SCHEMA.md already reads null as "unassigned, surfaced in triage".
 - **Decision** —
   - **An Auto-Doc holds an ordered list of Assignment rules.** Each names one condition on one form field, with the ADO-002 rule grammar, and one Member+ as Legal Owner. The first matching rule wins. An optional default Legal Owner closes the list.
-  - **A Generation no rule matches creates the Contract with no Legal Owner.** It appears on the **Inbox** under a second tab, **Unassigned contracts**, beside the Requests. Any Member+ claims it in one act, which writes `contract.manager_set` and clears it from the tab. Assigning the Legal Owner from the Contract record clears it the same way.
-  - **Until claimed**, the expiry and notice reminders that would go to the Legal Owner go to every Member+ through the existing unassigned handling, which the spec verifies.
+  - **A Generation for which no rule matches creates the Contract with no Legal Owner.** It appears on the **Inbox** under a second tab, **Unassigned contracts**, beside the Requests. Any Member+ claims it in one act, which records the existing `contract.updated` Owner change and uses the `contract.owner_assigned` notification and clears it from the tab. Assigning the Legal Owner from the Contract record clears it the same way.
+  - **Until claimed**, the expiry and notice reminders that would go to the Legal Owner go to every Member+ through the generated-Contract fallback. After Claim, those term reminders go to its Legal Owner. Named Key dates retain their team and recipient settings.
   - INT-007's "the Inbox lists exactly the Requests whose fate is undecided" is amended: the Inbox lists undecided Requests and unowned generated Contracts. The glossary entry for Inbox is updated.
 - **Rationale** — Rules cover the common case with no queue. The queue covers the case nobody wrote a rule for, in the one place the team already looks for work nobody owns. Nothing is silently defaulted to whoever published the template.
 - **Alternatives considered** — Always the Auto-Doc's publisher: wrong for a multi-jurisdiction team. Always a queue: a click on every NDA. A Contracts list filter and a dashboard tile instead of the Inbox: hides the work from the surface built for it.
 - **Consequences** — `auto_doc_assignment_rules`. The Inbox read gains a second projection over `contracts where manager_id is null and created_by_generation_id is not null`. NOT-009 adds the Generation notification.
+
+### Implementation note (2026-09-14, M35/10)
+
+Assignment settings are edited in place and audited. Rule ids survive edits and reordering. Save checks the latest Form; Publish and Generate check the chosen Form so a removed field cannot accidentally satisfy `is not`. A Generation saves its selected Legal Owner with its Contract facts, retaining the routing decision on retry. If the selected Owner has been archived or demoted when Generate accepts the answers, the saved Owner is null and the Contract waits in the Inbox. That first matching rule does not fall through to a different person. An Owner who becomes unavailable after acceptance is still refused by the shared Contract creation check; retry retains the accepted facts.
+
+The existing Owner Activity is `contract.updated` with `changed.owner`; `contract.manager_set` was an incorrect name in this decision. Claim uses that same Activity and the existing assignment notification, including its self-notification exclusion. The morning round previously addressed the Owner and team without an unassigned fallback; M35/10 adds the fallback for generated Contracts' expiry and notice reminders, leaving other Contract and Key-date audiences intact.
 
 ## ADO-007 — Output and delivery: `.docx` and `.pdf` per Auto-Doc, on screen and by email, with Generation states
 
@@ -123,6 +155,14 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 - **Alternatives considered** — Email only: a lost email needs a Request to Legal. A plain-text email: rejected by Blair; the layer already exists.
 - **Consequences** — `auto_doc_generations.state`, `docx_file_ref`, `pdf_file_ref`, `email_sent_at`, `email_failure`. The rendition pipeline gains a Generation input beside Document Versions.
 
+**M35/7 built addendum (#850):** Member+ opens the live form and submits its pair ids with typed answers. A changed pair or non-published Auto-Doc returns a named refusal, with answers kept in the form. Migration 0122 adds Generations and deferred checks that both versions belong to the same Auto-Doc, including after reparenting. The pending row and `auto_doc.generated` entry commit before the bounded Word fill. A complete output is stored under `auto-doc-generations/<id>/<fresh id>.docx`, DOC-012's never-overwrite key, then the Generation becomes ready. Fill failures keep their reason and no output. The confirmation and the Auto-Doc's Generations list show the person, pair, time, state, and available download. PDF, formats, email, and retry remain M35/8.
+
+**M35/8 built addendum (#851):** Formats and the Markdown cover note are audited Auto-Doc settings. Each new Generation copies them, the answers, and the Entity names printed in the file. Later settings edits do not change that Generation's downloads or retry. Member+ can retry a failed Generation from its list. Retry keeps the saved pair and answers, increments the attempt, and writes new output keys. A ready Generation cannot be retried.
+
+The Word download appears after fill when its saved formats allow Word. The delivery worker produces the PDF through `DocEngine.convertToPdf`, then sends the requested attachments through the resolved mailer. Email state is `pending`, `sent`, `failed`, or `unconfigured`, with a sent time or controlled failure detail. Unconfigured SMTP leaves the Generation ready and displays the not-sent reason. A terminal or exhausted PDF or email failure makes it failed and retryable. Duplicate jobs lock the Generation before email and skip a recorded outcome. As with other SMTP delivery, an acceptance by the relay followed by a database failure can cause a duplicate on recovery.
+
+Migration 0123 preserves older Word-only Generations with `formats = docx` and `email_state = not_requested`. It adds checks for the requested ready files and the email outcome. New submissions explicitly request email and copy today's formats, whose Auto-Doc default is both. The boot and scheduled recovery sweeps requeue saved work. A pending fill with no Word output after five minutes becomes failed so Legal can retry an interrupted request.
+
 ## ADO-008 — Acknowledgement before use, by Business Users, at a configurable frequency
 
 - **Status** — Accepted
@@ -131,12 +171,14 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 - **Decision** —
   - **The acknowledgement text has an org-wide default** in Auto-Docs settings and **may be overridden per Auto-Doc**. An Auto-Doc may also require no acknowledgement.
   - **Business Users must acknowledge; Member+ never do.**
-  - **Frequency is a per-Auto-Doc setting** with three values: `every_use`, `once_per_auto_doc` (per person), `once` (per person, org-wide). Default `once_per_auto_doc`.
+  - **Frequency is a per-Auto-Doc setting** with three acknowledgement schedules (plus `none` to disable it): `every_use`, `once_per_auto_doc` (per person), `once` (per person, org-wide). Default `once_per_auto_doc`.
   - **Editing the text resets** every standing acknowledgement of it: the person agreed to different words.
   - **Every acknowledgement is an Activity entry** with the exact text shown, the Auto-Doc, and the person, at `admin_only` visibility, and a row that the frequency check reads.
 - **Rationale** — A single text with per-template override is the configurable-with-seeded-default pattern this repo prefers. Recording the words shown is what makes the acknowledgement worth anything later.
 - **Alternatives considered** — One global text and frequency: too coarse for "you may not edit this" beside "this is a template, not advice". A checkbox with no record: not an acknowledgement.
 - **Consequences** — `auto_doc_acknowledgements`; `auto_docs.acknowledgement_text`, `acknowledgement_frequency`; `org_settings.auto_doc_acknowledgement_text`. The Activity verb `auto_doc.acknowledged`.
+
+**M35/11 built addendum (#854):** Portal audience is rechecked for the published list, acknowledgement, form, acceptance, owned history and downloads. Every-use acknowledgements are consumed atomically with acceptance; rejected submissions do not consume them. Text edits revoke earlier matching Acknowledgements, so restoring old text still requires a new acknowledgement. Member+ bypasses acknowledgement. Existing Generations remain readable after Unpublish or Archive as ADO-010 requires, while audience revocation removes access. An Entity fixed for a targeted Auto-Doc must remain Portal-listed, live and non-Confidential for Business User use; Legal sees the specific configuration warning and the Portal asks the person to contact Legal. Saved Assignment rules that name fields absent from the Live Form receive the same author warning and Portal refusal.
 
 ## ADO-009 — Reach: Legal only, selected people and Departments, or everyone; the Portal lists an Auto-Doc and the person's own Generations
 
@@ -166,6 +208,8 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 - **Rationale** — Two chains that keep everything is what makes Unpublish safe; the Portal gate reading state on every request is what makes it immediate. Ten to thirty Auto-Docs do not need a tree.
 - **Alternatives considered** — Administrator-only Publish, or a named approver: a queue between a 2-to-10-person team and its own templates. Folders (KNW-003): copy later if a list ever hurts.
 - **Consequences** — `auto_docs.state`, `published_at`, `archived_at`. Verbs `auto_doc.created`, `auto_doc.published`, `auto_doc.unpublished`, `auto_doc.archived`, `auto_doc.restored`, `auto_doc.generated`, `auto_doc.filed`, `auto_doc.acknowledged`.
+
+**M35/13 reconciliation (2026-09-14, #856):** ADO-005's earlier Inbox-bypass wording is superseded by the Unassigned contracts tab built in M35/10 (#853). No Request is created. ADO-009's lifecycle check distinguishes new use from owned history: Unpublish and Archive stop new Generations while preserving historical reads and Filing under current audience reach, as ADO-010 requires. Assignment configuration warnings appear for Legal-only Auto-Docs too. A failed Generation retains its saved Filing destination for retry but no longer presents the Filing as pending.
 
 ## ADO-011 — Signature: a Generation is download-only; the created Contract takes the ordinary pipeline
 

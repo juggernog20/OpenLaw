@@ -7,7 +7,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { loadPortalWork } from "../lib/portal-records";
 import { PortalRecordWork } from "../components/portal/record-work";
 import { api } from "../lib/api";
-import { currentUser, useSignOut } from "../lib/session";
+import { currentUserFor, useSignOut } from "../lib/session";
 import {
   contractReference,
   formatContractValue,
@@ -19,8 +19,8 @@ import { PortalRecordShell } from "../components/portal/record-shell";
 import { PageTitle } from "../components/page-title";
 import { UnverifiedMarker } from "../components/contracts/ai-analysis-card";
 
-export async function portalContractLoader({ params }: LoaderFunctionArgs) {
-  const user = await currentUser();
+export async function portalContractLoader({ params, request }: LoaderFunctionArgs) {
+  const user = await currentUserFor(request);
   if (!user) return redirect("/portal/enter");
   const number = Number(params.number);
   if (!Number.isInteger(number) || number < 1) return { user, contract: null };

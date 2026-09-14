@@ -10,6 +10,7 @@ import {
   entities,
   eq,
   isNull,
+  autoDocs,
   knowledgeItems,
   matters,
   type Executor,
@@ -67,6 +68,7 @@ export async function authorizedAttachment(
       .leftJoin(matters, eq(documents.matterId, matters.id))
       .leftJoin(entities, eq(documents.entityId, entities.id))
       .leftJoin(knowledgeItems, eq(documents.knowledgeItemId, knowledgeItems.id))
+      .leftJoin(autoDocs, eq(documents.autoDocId, autoDocs.id))
       .where(
         and(
           eq(documentVersions.id, file.versionId),

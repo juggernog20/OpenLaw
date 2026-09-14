@@ -11,6 +11,7 @@ const BUSINESS = {
   displayName: "Business User",
   role: "business_user",
   theme: "light",
+  portalOnboardingCompletedAt: "2026-09-01T00:00:00.000Z",
 };
 afterEach(() => {
   delete document.documentElement.dataset.theme;

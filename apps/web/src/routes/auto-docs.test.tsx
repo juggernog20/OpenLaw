@@ -1,0 +1,291 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/** ADO-001–004 through the destination, record, and form editor routes. */
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { expect, it } from "vitest";
+import type { AutoDocAnswer } from "../lib/auto-docs";
+type Definition = NonNullable<AutoDocAnswer["formVersion"]>["definition"];
+import { destinationsFor } from "../components/shell/destinations";
+import { json, problem, renderAt, stubApi } from "../testing/helpers";
+
+const member = {
+  id: "member",
+  email: "legal@example.com",
+  displayName: "Legal",
+  role: "legal_team_member",
+};
+const autoDoc: AutoDocAnswer["autoDoc"] = {
+  id: "nda",
+  name: "Supplier NDA",
+  description: "For suppliers",
+  state: "draft",
+  templateDocumentId: "template",
+  audience: "legal_only",
+  acknowledgementText: null,
+  acknowledgementFrequency: "once_per_auto_doc",
+  targetContractTypeId: null,
+  titlePattern: null,
+  fixedEntityId: null,
+  defaultLegalOwnerId: null,
+  formats: "both",
+  coverNote: null,
+  publishedDocumentVersionId: null,
+  publishedFormVersionId: null,
+  publishedAt: null,
+  archivedAt: null,
+  createdAt: "2026-09-13T00:00:00Z",
+  updatedAt: "2026-09-13T00:00:00Z",
+};
+const initialFields: Definition["fields"] = [
+  {
+    slug: "counterparty_name",
+    label: "Counterparty name",
+    help: null,
+    fieldType: "text",
+    options: null,
+    required: false,
+    displayOrder: 0,
+    placeholder: true,
+    catalogFieldId: null,
+    contractAttribute: null,
+  },
+  {
+    slug: "signing_date",
+    label: "Signing date",
+    help: null,
+    fieldType: "text",
+    options: null,
+    required: false,
+    displayOrder: 1,
+    placeholder: true,
+    catalogFieldId: null,
+    contractAttribute: null,
+  },
+];
+function record(): AutoDocAnswer & { formVersion: NonNullable<AutoDocAnswer["formVersion"]> } {
+  const formVersion = {
+    id: "form1",
+    versionNumber: 1,
+    definition: { fields: initialFields, clauseRules: [] },
+    createdBy: member.id,
+    createdAt: autoDoc.createdAt,
+  };
+  return {
+    autoDoc,
+    audienceUserIds: [],
+    audienceDepartmentIds: [],
+    defaultAcknowledgementText: "Do not edit.",
+    portalWarnings: [],
+    assignmentRules: [],
+    template: {
+      id: "template",
+      title: "NDA.docx",
+      versions: [
+        {
+          id: "v1",
+          versionNumber: 1,
+          originalFilename: "NDA.docx",
+          byteSize: 100,
+          createdAt: autoDoc.createdAt,
+        },
+      ],
+    },
+    detection: { placeholders: ["counterparty_name"], blocks: [] },
+    formVersion,
+    formVersions: [formVersion],
+    orphanedFields: ["signing_date"],
+  };
+}
+
+it("lists Auto-Docs and creates a draft from name and description", async () => {
+  const user = userEvent.setup();
+  const creates: unknown[] = [];
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
+      if (call.url.pathname === "/api/v1/auto-docs") {
+        if (call.method === "POST") {
+          creates.push(call.body);
+          return json(201, { autoDoc });
+        }
+        return json(200, { autoDocs: [autoDoc] });
+      }
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, record());
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs");
+  expect(await screen.findByRole("link", { name: "Supplier NDA" })).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Create Auto-Doc" }));
+  await user.type(screen.getByRole("textbox", { name: "Name" }), "Supplier NDA");
+  await user.type(screen.getByRole("textbox", { name: "Description" }), "For suppliers");
+  await user.click(screen.getByRole("button", { name: "Create" }));
+  await screen.findByRole("heading", { name: "Supplier NDA" });
+  expect(creates).toEqual([{ name: "Supplier NDA", description: "For suppliers" }]);
+});
+
+it("edits fields, preserves the orphan cue, and shows saved form versions and upload refusals", async () => {
+  const user = userEvent.setup();
+  const saves: Array<Definition> = [];
+  let current = record();
+  let invalidReply = false;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
+      if (call.url.pathname.endsWith("/form-versions")) {
+        const body = call.body as Definition;
+        saves.push(body);
+        const next = { ...current.formVersion, id: "form2", versionNumber: 2, definition: body };
+        current = { ...current, formVersion: next, formVersions: [next, ...current.formVersions] };
+        return json(201, current);
+      }
+      if (call.url.pathname.endsWith("/template"))
+        return invalidReply
+          ? json(201, {})
+          : problem(400, 'Unclosed Block: "{{#block arbitration}}"');
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  await screen.findByRole("heading", { name: "Supplier NDA" });
+  expect(screen.getByText("1 orphaned field")).toBeVisible();
+  expect(screen.getByText("This field no longer has a Placeholder in the template.")).toBeVisible();
+  const date = screen.getByRole("group", { name: "signing_date" });
+  await user.selectOptions(within(date).getByLabelText("Type"), "date");
+  await user.clear(within(date).getByLabelText("Label"));
+  await user.type(within(date).getByLabelText("Label"), "Date agreed");
+  await user.type(within(date).getByLabelText("Help text"), "Confirm with Legal");
+  await user.click(within(date).getByLabelText("Required"));
+  await user.click(within(date).getByRole("button", { name: "Move up" }));
+  await user.click(screen.getByRole("button", { name: "Add field" }));
+  const added = screen.getByRole("group", { name: "field_1" });
+  await user.clear(within(added).getByLabelText("Slug"));
+  await user.type(within(added).getByLabelText("Slug"), "review_path");
+  await user.selectOptions(within(added).getByLabelText("Type"), "single_select");
+  await user.type(within(added).getByLabelText("Options, one per line"), "Standard{enter}Legal");
+  expect(within(added).queryByRole("option", { name: "User" })).not.toBeInTheDocument();
+  await user.click(
+    within(screen.getByRole("group", { name: "counterparty_name" })).getByRole("button", {
+      name: "Remove field",
+    }),
+  );
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  await waitFor(() => expect(saves).toHaveLength(1));
+  expect(saves[0]?.fields.map((f) => f.slug)).toEqual(["signing_date", "review_path"]);
+  expect(saves[0]?.fields[0]).toMatchObject({
+    fieldType: "date",
+    label: "Date agreed",
+    help: "Confirm with Legal",
+    required: true,
+  });
+  expect(saves[0]?.fields[1]?.options).toEqual(["Standard", "Legal"]);
+  expect(
+    await within(screen.getByRole("region", { name: "Form versions" })).findByText(
+      "Form version 2",
+    ),
+  ).toBeVisible();
+  expect(
+    within(screen.getByRole("region", { name: "Form versions" })).getByText("Form version 1"),
+  ).toBeVisible();
+  await user.upload(
+    screen.getByLabelText("Word template"),
+    new File(["word"], "broken.docx", {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }),
+  );
+  await user.click(screen.getByRole("button", { name: "Upload template" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    'Unclosed Block: "{{#block arbitration}}"',
+  );
+  invalidReply = true;
+  await user.click(screen.getByRole("button", { name: "Upload template" }));
+  await waitFor(() =>
+    expect(screen.getByRole("alert")).toHaveTextContent("The upload response could not be read."),
+  );
+  expect(
+    within(screen.getByRole("region", { name: "Form versions" })).getByText("Form version 2"),
+  ).toBeVisible();
+});
+
+it("drops blank option lines and names the rule when a save cannot be sent", async () => {
+  const user = userEvent.setup();
+  const saves: Array<Definition> = [];
+  let current = record();
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
+      if (call.url.pathname.endsWith("/form-versions")) {
+        const body = call.body as Definition;
+        saves.push(body);
+        const next = { ...current.formVersion, id: "form2", versionNumber: 2, definition: body };
+        current = { ...current, formVersion: next, formVersions: [next, ...current.formVersions] };
+        return json(201, current);
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  await screen.findByRole("heading", { name: "Supplier NDA" });
+
+  // Two fields left on the same slug never reach the seam.
+  const date = screen.getByRole("group", { name: "signing_date" });
+  await user.clear(within(date).getByLabelText("Slug"));
+  await user.type(within(date).getByLabelText("Slug"), "counterparty_name");
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Each form field needs a distinct slug.",
+  );
+  expect(saves).toHaveLength(0);
+
+  await user.clear(within(date).getByLabelText("Slug"));
+  await user.type(within(date).getByLabelText("Slug"), "review_path");
+  await user.selectOptions(within(date).getByLabelText("Type"), "single_select");
+  const options = within(date).getByLabelText("Options, one per line");
+  await user.type(options, "Standard{enter}Standard");
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Give each select field distinct, non-empty options.",
+  );
+  expect(saves).toHaveLength(0);
+
+  // A trailing newline is typing, not an empty option.
+  await user.clear(options);
+  await user.type(options, "Standard{enter}Legal{enter}");
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  await waitFor(() => expect(saves).toHaveLength(1));
+  expect(saves[0]?.fields.find((f) => f.slug === "review_path")?.options).toEqual([
+    "Standard",
+    "Legal",
+  ]);
+});
+
+it("reserves the destination and app routes for Member+", async () => {
+  expect(destinationsFor("legal_team_member").map((d) => d.id)).toContain("auto-docs");
+  expect(destinationsFor("business_user").map((d) => d.id)).not.toContain("auto-docs");
+  const calls: string[] = [];
+  stubApi({
+    signedIn: { ...member, role: "business_user" },
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
+      calls.push(call.url.pathname);
+      return undefined;
+    },
+  });
+  const { router } = renderAt("/auto-docs/nda");
+  await waitFor(() => expect(router.state.location.pathname).not.toBe("/auto-docs/nda"));
+  expect(calls).not.toContain("/api/v1/auto-docs/nda");
+});

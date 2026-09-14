@@ -92,13 +92,13 @@ export interface AppendedVersion {
   /**
    * How the file was made, and which two rounds it compares.
    *
-   * The three move together and the database enforces it: a
-   * `generated_redline` is `generated` and names both operands, and
-   * every other kind is `uploaded` and names neither. They are typed
-   * separately here, so a caller can spell an invalid combination and
-   * only learn of it when the check constraint refuses the insert.
+   * A generated redline names both comparison operands. An Auto-Doc's
+   * original primary Version is generated, draft_ours, and names its
+   * Generation. Other Versions are uploaded. Database constraints
+   * enforce these combinations and the Generation's ownership links.
    */
   source: DocumentVersionSource;
+  generatedFromGenerationId?: string | null;
   comparedFromVersionId: string | null;
   comparedToVersionId: string | null;
   /** What changed in this round, or NULL when nobody wrote one. */
@@ -130,6 +130,7 @@ export async function insertDocumentVersion(
     fileRef: row.fileRef,
     kind: row.kind,
     source: row.source,
+    generatedFromGenerationId: row.generatedFromGenerationId ?? null,
     comparedFromVersionId: row.comparedFromVersionId,
     comparedToVersionId: row.comparedToVersionId,
     note: row.note,

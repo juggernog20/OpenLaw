@@ -22,6 +22,7 @@ import {
   inArray,
   isNotNull,
   isNull,
+  autoDocs,
   knowledgeItems,
   lt,
   matters,
@@ -128,11 +129,14 @@ const RepositoryQuerySchema = z
         message: "Folder requires a record filter.",
       });
     }
-    if (query.folder !== undefined && query.owner === "knowledge_item") {
+    if (
+      query.folder !== undefined &&
+      (query.owner === "knowledge_item" || query.owner === "auto_doc")
+    ) {
       context.addIssue({
         code: "custom",
         path: ["folder"],
-        message: "Knowledge item Documents do not have Document folders.",
+        message: "Knowledge item and Auto-Doc Documents do not have Document folders.",
       });
     }
   });
@@ -235,6 +239,7 @@ function boundaryValue(expression: SQL, cursor: string, scope: SQL | undefined):
     left join ${matters} on ${matters.id} = ${documents.matterId}
     left join ${entities} on ${entities.id} = ${documents.entityId}
     left join ${knowledgeItems} on ${knowledgeItems.id} = ${documents.knowledgeItemId}
+    left join ${autoDocs} on ${autoDocs.id} = ${documents.autoDocId}
     where ${and(eq(documents.id, cursor), scope)}
     limit 1
   )`;
@@ -265,6 +270,7 @@ function recordPredicate(reference: string | undefined, owner?: DocumentOwner): 
     return or(
       sql`${documentOwnerSql("entity").documentOwnerId} = ${parsed.id}`,
       sql`${documentOwnerSql("knowledge_item").documentOwnerId} = ${parsed.id}`,
+      sql`${documentOwnerSql("auto_doc").documentOwnerId} = ${parsed.id}`,
     );
   }
   return "id" in parsed
@@ -313,6 +319,8 @@ function selectRepository(db: Db) {
       matterTitle: matters.title,
       entityId: documents.entityId,
       entityTitle: entities.legalName,
+      autoDocId: documents.autoDocId,
+      autoDocTitle: autoDocs.name,
       knowledgeItemId: documents.knowledgeItemId,
       knowledgeItemTitle: knowledgeItems.title,
       folderId: documentFolders.id,
@@ -342,7 +350,8 @@ function selectRepository(db: Db) {
     .leftJoin(contracts, eq(contracts.id, documents.contractId))
     .leftJoin(matters, eq(matters.id, documents.matterId))
     .leftJoin(entities, eq(entities.id, documents.entityId))
-    .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId));
+    .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
+    .leftJoin(autoDocs, eq(autoDocs.id, documents.autoDocId));
 }
 
 type RepositoryDbRow = Awaited<ReturnType<typeof selectRepository>>[number];
@@ -352,6 +361,7 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
     contract: row.contractId,
     matter: row.matterId,
     entity: row.entityId,
+    auto_doc: row.autoDocId,
     knowledge_item: row.knowledgeItemId,
   });
   let ownerNumber: number | null;
@@ -368,6 +378,10 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
     case "entity":
       ownerNumber = null;
       ownerTitle = row.entityTitle;
+      break;
+    case "auto_doc":
+      ownerNumber = null;
+      ownerTitle = row.autoDocTitle;
       break;
     case "knowledge_item":
       ownerNumber = null;
@@ -449,6 +463,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
           .leftJoin(matters, eq(matters.id, documents.matterId))
           .leftJoin(entities, eq(entities.id, documents.entityId))
           .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
+          .leftJoin(autoDocs, eq(autoDocs.id, documents.autoDocId))
           .where(scope)
           .orderBy(recordKind, recordNumber);
       const repositoryCounterparties = () =>
@@ -468,6 +483,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
           .leftJoin(matters, eq(matters.id, documents.matterId))
           .leftJoin(entities, eq(entities.id, documents.entityId))
           .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
+          .leftJoin(autoDocs, eq(autoDocs.id, documents.autoDocId))
           .where(scope)
           .orderBy(counterparties.name, counterparties.id);
       const repositoryUploaders = () =>
@@ -488,6 +504,7 @@ export const documentRepositoryRoutes: FastifyPluginAsyncZod = async (app) => {
           .leftJoin(matters, eq(matters.id, documents.matterId))
           .leftJoin(entities, eq(entities.id, documents.entityId))
           .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
+          .leftJoin(autoDocs, eq(autoDocs.id, documents.autoDocId))
           .where(scope)
           .orderBy(users.displayName, users.id);
 

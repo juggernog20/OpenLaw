@@ -14,10 +14,10 @@
  * affordance on the page.
  */
 
-import { redirect, useLoaderData, Link } from "react-router";
+import { redirect, useLoaderData, Link, type LoaderFunctionArgs } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
-import { currentUser } from "../lib/session";
+import { currentUserFor } from "../lib/session";
 import { AuthLayout } from "./auth-layout";
 import { MagicLinkRequest } from "../components/magic-link-request";
 import { PageTitle } from "../components/page-title";
@@ -28,9 +28,9 @@ const TITLES = defineMessages({
   entry: { id: "portal.entry.title", defaultMessage: "Legal portal" },
 });
 
-export async function portalEntryLoader() {
+export async function portalEntryLoader({ request }: LoaderFunctionArgs) {
   // A session holder has no business on the door: send them inside.
-  if (await currentUser()) return redirect("/portal");
+  if (await currentUserFor(request)) return redirect("/portal");
   const { data, response } = await api.GET("/api/v1/auth/methods");
   if (!data) throw new Error(`The sign-in methods could not be read (${response.status}).`);
   return { methods: data };
