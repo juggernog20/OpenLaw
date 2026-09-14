@@ -20,7 +20,7 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await page.getByRole("button", { name: "Create", exact: true }).click();
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   const recordUrl = page.url();
-  await page.getByRole("link", { name: "Form", exact: true }).click();
+  await page.getByRole("link", { name: /^Form/ }).click();
   const fixture = (file: string) =>
     fileURLToPath(
       new URL(`../../apps/api/src/testing/fixtures/auto-docs/${file}.docx`, import.meta.url),
@@ -76,8 +76,13 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await expect(page.getByRole("link", { name: "Generate", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Overview", exact: true }).click();
   await expect(page.getByText(/^Live since .*: file version 1, form version \d+\.$/)).toBeVisible();
-  await page.getByRole("link", { name: "Form", exact: true }).click();
+  await page.getByRole("link", { name: /^Form/ }).click();
   await page.getByRole("button", { name: "Compare versions", exact: true }).click();
+  // Every commit wrote a version; the first form is the one without the field.
+  await page
+    .getByRole("dialog")
+    .getByRole("combobox", { name: "From", exact: true })
+    .selectOption({ label: "Form version 1" });
   await expect(
     page.getByRole("dialog").getByText("Added jurisdiction", { exact: false }),
   ).toBeVisible();
@@ -95,7 +100,8 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
   await page.getByRole("button", { name: "Edit the rule for arbitration", exact: true }).click();
   await rule.getByRole("combobox", { name: "Include", exact: true }).selectOption("always");
-  await expect(page.getByText("Always included", { exact: true })).toBeVisible();
+  // A Block the file lacks and no rule names has no row to keep.
+  await expect(page.getByText("Not in file version 2", { exact: true })).toHaveCount(0);
   await menu.click();
   await page.getByRole("menuitem", { name: "Publish new pair", exact: true }).click();
   dialog = page.getByRole("dialog");
@@ -103,7 +109,7 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await expect(dialog).toHaveCount(0);
   await page.getByRole("link", { name: "Overview", exact: true }).click();
   await expect(page.getByText(/^Live since .*: file version 2, form version \d+\.$/)).toBeVisible();
-  await page.getByRole("link", { name: "Form", exact: true }).click();
+  await page.getByRole("link", { name: /^Form/ }).click();
   await expect(page.getByRole("link", { name: "Compare files", exact: true })).toHaveAttribute(
     "href",
     /\/documents\/[^/]+\/compare\?from=.+&to=.+/,
@@ -116,7 +122,7 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await expect(page).toHaveURL(new RegExp(`^${recordUrl.replaceAll("/", "\\/")}(\\/form)?$`));
   await menu.click();
   await page.getByRole("menuitem", { name: "Unpublish", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Publish", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Publish", exact: true }).first()).toBeVisible();
   await menu.click();
   await page.getByRole("menuitem", { name: "Archive", exact: true }).click();
   await expect(page.getByText("Archived", { exact: true }).first()).toBeVisible();
@@ -126,5 +132,5 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await page.goto(recordUrl);
   await menu.click();
   await page.getByRole("menuitem", { name: "Restore", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Publish", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Publish", exact: true }).first()).toBeVisible();
 });

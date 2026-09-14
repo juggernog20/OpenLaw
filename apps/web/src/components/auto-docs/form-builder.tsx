@@ -177,7 +177,9 @@ export function FormBuilder({
   const ruleNames = [...new Set([...blocks, ...rules.map((rule) => rule.blockName)])];
   const selectedField =
     selected?.kind === "field" ? fields.find((field) => field.slug === selected.slug) : undefined;
-  const selectedBlock = selected?.kind === "block" ? selected.name : undefined;
+  // A Block the file lacks and no rule names has no row, so it has no card.
+  const selectedBlock =
+    selected?.kind === "block" && ruleNames.includes(selected.name) ? selected.name : undefined;
 
   const selectButton = (label: string, onClick: () => void) => (
     <Button variant="ghost" size="sm" className="px-1.5" aria-label={label} onClick={onClick}>
