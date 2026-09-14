@@ -28,6 +28,7 @@ import { RecordNotFoundPage } from "./not-found";
 type Answer =
   paths["/api/v1/auto-docs/{id}"]["get"]["responses"][200]["content"]["application/json"];
 type Field = NonNullable<Answer["formVersion"]>["definition"]["fields"][number];
+import { CurrencySelect } from "../components/currency-select";
 import { ClausesEditor, FieldMap } from "../components/auto-docs/clauses-editor";
 import { AutoDocGenerations } from "../components/auto-docs/generations";
 import {
@@ -180,6 +181,8 @@ function AutoDocRecord({
       placeholder: field.placeholder,
       catalogFieldId: field.catalogFieldId,
       contractAttribute: field.contractAttribute,
+      valueCurrency: field.valueCurrency ?? null,
+      valueCadence: field.valueCadence ?? null,
     }));
   const dirty =
     JSON.stringify(comparable(fields)) !== JSON.stringify(comparable(drafts(saved))) ||
@@ -249,6 +252,8 @@ function AutoDocRecord({
             options: optionsOf(field),
             catalogFieldId: field.catalogFieldId,
             contractAttribute: field.contractAttribute,
+            valueCurrency: field.valueCurrency ?? null,
+            valueCadence: field.valueCadence ?? null,
           })),
           clauseRules: rules,
         },
@@ -597,6 +602,65 @@ function AutoDocRecord({
                     options={options}
                     onChange={(map) => update(field.key, map)}
                   />
+                  {field.contractAttribute === "value" && (
+                    <div className="grid gap-3 @lg/page:grid-cols-2">
+                      <label className="block space-y-1">
+                        <span>
+                          <FormattedMessage
+                            id="autoDocs.valueCurrency"
+                            defaultMessage="Value currency"
+                          />
+                        </span>
+                        <CurrencySelect
+                          value={field.valueCurrency ?? ""}
+                          onValueChange={(valueCurrency) =>
+                            update(field.key, { valueCurrency: valueCurrency || null })
+                          }
+                        />
+                      </label>
+                      <label className="block space-y-1">
+                        <span>
+                          <FormattedMessage
+                            id="autoDocs.valueCadence"
+                            defaultMessage="Value cadence"
+                          />
+                        </span>
+                        <select
+                          className={CONTROL_CLASS}
+                          value={field.valueCadence ?? ""}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            if (
+                              value === "" ||
+                              value === "one_time" ||
+                              value === "monthly" ||
+                              value === "annually"
+                            )
+                              update(field.key, { valueCadence: value || null });
+                          }}
+                        >
+                          <option value="">
+                            {intl.formatMessage({
+                              id: "autoDocs.chooseCadence",
+                              defaultMessage: "Choose a cadence",
+                            })}
+                          </option>
+                          {(["one_time", "monthly", "annually"] as const).map((cadence) => (
+                            <option key={cadence} value={cadence}>
+                              {intl.formatMessage(
+                                {
+                                  id: "autoDocs.cadenceName",
+                                  defaultMessage:
+                                    "{cadence, select, one_time {One time} monthly {Monthly} other {Annually}}",
+                                },
+                                { cadence },
+                              )}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"

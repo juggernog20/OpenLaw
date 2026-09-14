@@ -1506,3 +1506,13 @@ it("names an Auto-Doc's selected audience and target Contract Type in History", 
     ).changes,
   ).toEqual([{ label: "Target Contract Type", from: "Not set", to: "Supplier NDA Type" }]);
 });
+
+it("names the Auto-Doc and Generation in the Contract's creation entry", () => {
+  const sentence = narrate("contract.created", {
+    autoDocId: "nda",
+    autoDocName: "Approved NDA",
+    generationId: "generation-7",
+  }).sentence;
+  expect(sentence).toContain("Approved NDA");
+  expect(sentence).toContain("generation-7");
+});

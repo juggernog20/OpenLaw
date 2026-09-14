@@ -1368,6 +1368,10 @@ Fixture tests cover split runs, kept and omitted Blocks, directives, document st
 
 The pipeline accepts Generation id and attempt as a separate derivation input. The existing sidecar conversion writes a fresh PDF key. The worker marks it ready only for the current pending attempt, then sends the allowed formats. The queue uses the existing conversion deadline and retry policy. Permanent source errors and SMTP 5xx replies stop retries; temporary errors retry before a controlled failure is saved. Boot and scheduled sweeps recover rows whose queue ask did not arrive. Database updates compare the attempt so an old job cannot overwrite a Member's retry.
 
+### Built in M35/9
+
+A targeted Value map stores `valueCurrency` and `valueCadence` in the form snapshot. Publication requires both. The numeric answer is a major-unit amount; Contract creation rounds it to the chosen currency's minor units and enforces the existing safe-integer range. This does not change catalog currency Fields, which continue to store currency codes. The generated Contract's primary Word Version owns a copied blob under its Document/Version key, independent of Generation retries and delivery output retention.
+
 ### Alternatives considered
 
 - **`docx-templates`** (MIT): drives conditionals with JavaScript expressions inside the file, which ADO-002 rejected on purpose.

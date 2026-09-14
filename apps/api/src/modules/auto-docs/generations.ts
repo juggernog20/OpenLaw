@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-004 and ADO-007: accept one live pair, then fill and store a Generation's own output. */
+import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import { buffer } from "node:stream/consumers";
 import {
@@ -10,6 +11,8 @@ import {
   autoDocGenerations,
   autoDocFormVersions,
   autoDocs,
+  contracts,
+  type CustomFieldValue,
   documentVersions,
   users,
   entities,
@@ -24,18 +27,26 @@ import {
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { uuidv7 } from "uuidv7";
 import { z } from "zod";
-import { requireRole } from "../../auth/guards.js";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { AUTO_DOC_SLUG } from "../../lib/auto-doc-template.js";
 import { AutoDocFillError } from "../../lib/auto-doc-fill/engine.js";
 import { entityReachScope } from "../../lib/entity-access.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
-import { attachmentDisposition, withStoredBlob } from "../../lib/uploads.js";
+import { HttpError, httpError, problemResponse } from "../../lib/problem.js";
+import { contractTeamScope } from "../../lib/contract-access.js";
+import { attachmentDisposition, withStoredBlobs } from "../../lib/uploads.js";
 import { validateGenerationAnswers } from "./answers.js";
 import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import type { AppDeps } from "../../app.js";
 import type { FastifyBaseLogger } from "fastify";
 import type { AutoDocGeneration, AutoDocFormDefinition } from "@openlaw/db";
+import { createGeneratedContract } from "./create-contract.js";
+import { generationDefinition, prepareContractDestination } from "./contract-destination.js";
+import {
+  requestDerivations,
+  versionStorageKey,
+  type AppendedVersion,
+} from "../../lib/document-versions.js";
 import { AutoDocFieldRow } from "./routes.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -69,6 +80,9 @@ const GenerationRow = z.object({
   state: z.enum(AUTO_DOC_GENERATION_STATES),
   hasDocx: z.boolean(),
   hasPdf: z.boolean(),
+  createdContract: z
+    .object({ id: z.string(), number: z.number().int(), title: z.string() })
+    .nullable(),
   formats: z.enum(AUTO_DOC_FORMATS),
   emailState: z.enum(AUTO_DOC_EMAIL_STATES),
   emailSentAt: z.iso.datetime().nullable(),
@@ -110,11 +124,12 @@ async function livePair(tx: Transaction, id: string, submitted?: z.infer<typeof 
   return { autoDoc, file, form, pair: { documentVersionId: file.id, formVersionId: form.id } };
 }
 
-function generationQuery(db: Executor) {
+function generationQuery(db: Executor, user: AuthenticatedUser) {
   return db
     .select({
       generation: autoDocGenerations,
       autoDocName: autoDocs.name,
+      createdContract: { id: contracts.id, number: contracts.number, title: contracts.title },
       person: { id: users.id, displayName: users.displayName },
       documentVersionNumber: documentVersions.versionNumber,
       formVersionNumber: autoDocFormVersions.versionNumber,
@@ -122,6 +137,10 @@ function generationQuery(db: Executor) {
     .from(autoDocGenerations)
     .innerJoin(autoDocs, eq(autoDocs.id, autoDocGenerations.autoDocId))
     .innerJoin(users, eq(users.id, autoDocGenerations.generatedBy))
+    .leftJoin(
+      contracts,
+      and(eq(contracts.id, autoDocGenerations.createdContractId), contractTeamScope(db, user)),
+    )
     .innerJoin(documentVersions, eq(documentVersions.id, autoDocGenerations.documentVersionId))
     .innerJoin(autoDocFormVersions, eq(autoDocFormVersions.id, autoDocGenerations.formVersionId));
 }
@@ -130,6 +149,7 @@ function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[number]) 
   return {
     ...generation,
     autoDocName: row.autoDocName,
+    createdContract: row.createdContract,
     person: row.person,
     documentVersionNumber: row.documentVersionNumber,
     formVersionNumber: row.formVersionNumber,
@@ -140,16 +160,22 @@ function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[number]) 
     updatedAt: generation.updatedAt.toISOString(),
   };
 }
-async function readGeneration(db: Executor, id: string, generationId: string) {
-  const [row] = await generationQuery(db).where(
+async function readGeneration(
+  db: Executor,
+  user: AuthenticatedUser,
+  id: string,
+  generationId: string,
+) {
+  const [row] = await generationQuery(db, user).where(
     and(eq(autoDocGenerations.id, generationId), eq(autoDocGenerations.autoDocId, id)),
   );
   if (!row) throw httpError(404, "No Generation exists with this id on this Auto-Doc.");
   return row;
 }
 
+type GenerationDeps = Pick<AppDeps, "db" | "storage" | "fillEngine" | "jobs" | "notifier">;
 async function fillGeneration(
-  app: Pick<AppDeps, "db" | "storage" | "fillEngine" | "jobs">,
+  app: GenerationDeps,
   log: FastifyBaseLogger,
   generation: AutoDocGeneration,
   definition: AutoDocFormDefinition,
@@ -160,6 +186,8 @@ async function fillGeneration(
     eq(autoDocGenerations.attempt, generation.attempt),
     eq(autoDocGenerations.state, "pending"),
   );
+  let stage: "fill" | "contract" = "fill";
+  let primary: AppendedVersion | undefined;
   try {
     const template = await buffer(await app.storage.get(sourceRef));
     const output = await app.fillEngine.fill({
@@ -172,30 +200,69 @@ async function fillGeneration(
       generationDocxKey(generation.id),
       Readable.from([output]),
     );
-    await withStoredBlob(app.storage, log, fileRef, async () => {
-      const written = await app.db
-        .update(autoDocGenerations)
-        .set({
-          state: generation.formats === "docx" ? "ready" : "pending",
-          docxFileRef: fileRef,
-          updatedAt: new Date(),
-        })
-        .where(current)
-        .returning({ id: autoDocGenerations.id });
-      if (!written.length) throw new AutoDocFillError("This fill attempt has been replaced.");
+    const stored = [fileRef];
+    await withStoredBlobs(app.storage, log, stored, async () => {
+      await app.notifier.notifying(async (tx) => {
+        const [held] = await tx.select().from(autoDocGenerations).where(current).for("update");
+        if (!held) throw new AutoDocFillError("This fill attempt has been replaced.");
+        if (held.contractSnapshot && !held.createdContractId) {
+          stage = "contract";
+          const documentId = uuidv7();
+          const versionId = uuidv7();
+          const copy = await app.storage.put(
+            versionStorageKey(documentId, versionId),
+            Readable.from([output]),
+          );
+          stored.push(copy);
+          primary = {
+            documentId,
+            versionId,
+            versionNumber: 1,
+            fileRef: copy,
+            kind: "draft_ours",
+            source: "generated",
+            generatedFromGenerationId: generation.id,
+            comparedFromVersionId: null,
+            comparedToVersionId: null,
+            note: null,
+            originalFilename: `${held.contractSnapshot.autoDocName}.docx`,
+            mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            byteSize: output.length,
+            checksumSha256: createHash("sha256").update(output).digest("hex"),
+            createdBy: generation.generatedBy,
+          };
+        }
+        const links = primary ? await createGeneratedContract(tx, app.notifier, held, primary) : {};
+        await tx
+          .update(autoDocGenerations)
+          .set({
+            ...links,
+            state: generation.formats === "docx" ? "ready" : "pending",
+            docxFileRef: fileRef,
+            updatedAt: new Date(),
+          })
+          .where(current);
+      });
     });
   } catch (error) {
-    log.warn({ err: error, generationId: generation.id }, "Auto-Doc fill failed");
+    log.warn({ err: error, generationId: generation.id }, "Auto-Doc Generation failed");
     const detail =
-      error instanceof AutoDocFillError
+      error instanceof AutoDocFillError || (error instanceof HttpError && error.statusCode < 500)
         ? error.message
-        : "The Word document could not be generated. Try again.";
+        : stage === "fill"
+          ? "The Word document could not be generated. Try again."
+          : "The Contract could not be created. Retry this Generation.";
     await app.db
       .update(autoDocGenerations)
-      .set({ state: "failed", failure: { code: "fill_failed", detail }, updatedAt: new Date() })
+      .set({
+        state: "failed",
+        failure: { code: stage === "fill" ? "fill_failed" : "contract_failed", detail },
+        updatedAt: new Date(),
+      })
       .where(current);
     return;
   }
+  if (primary) await requestDerivations(app.jobs, log, primary);
   try {
     await boundedQueueAsk(app.jobs.requestGenerationDelivery(generation.id, generation.attempt));
   } catch (error) {
@@ -204,6 +271,80 @@ async function fillGeneration(
       "Generation delivery remains owed; the sweep will ask again",
     );
   }
+}
+
+export interface GenerationSubmission {
+  documentVersionId: string;
+  formVersionId: string;
+  answers: Record<string, CustomFieldValue | null>;
+  businessOwnerId?: string | null;
+}
+
+/** The route enforces audience and acknowledgement before calling this shared Generation path. */
+export async function generateAutoDoc(
+  app: GenerationDeps,
+  log: FastifyBaseLogger,
+  user: AuthenticatedUser,
+  id: string,
+  submission: GenerationSubmission,
+) {
+  const accepted = await app.db.transaction(async (tx) => {
+    const live = await livePair(tx, id, submission);
+    const definition = generationDefinition(live.autoDoc, live.form.definition);
+    const raw = { ...submission.answers };
+    if (live.autoDoc.targetContractTypeId && live.autoDoc.fixedEntityId)
+      for (const field of definition.fields)
+        if (field.fieldType === "entity") raw[field.slug] = live.autoDoc.fixedEntityId;
+    const { answers, displayValues } = await validateGenerationAnswers(tx, user, definition, raw);
+    const contractSnapshot = await prepareContractDestination(
+      tx,
+      user,
+      live.autoDoc,
+      definition,
+      answers,
+      displayValues,
+      submission.businessOwnerId,
+    );
+    const [generation] = await tx
+      .insert(autoDocGenerations)
+      .values({
+        autoDocId: live.autoDoc.id,
+        ...live.pair,
+        generatedBy: user.id,
+        answers,
+        displayValues,
+        contractSnapshot,
+        formats: live.autoDoc.formats,
+        coverNote: live.autoDoc.coverNote,
+        emailState: "pending",
+      })
+      .returning();
+    await recordActivity(tx, {
+      entityType: "auto_doc",
+      entityId: live.autoDoc.id,
+      actorId: user.id,
+      action: "auto_doc.generated",
+      visibility: "legal_only",
+      payload: {
+        name: live.autoDoc.name,
+        generationId: generation!.id,
+        ...live.pair,
+        documentVersionNumber: live.file.versionNumber,
+        formVersionNumber: live.form.versionNumber,
+        personId: user.id,
+        personName: user.displayName,
+      },
+    });
+    return { ...live, generation: generation! };
+  });
+  await fillGeneration(
+    app,
+    log,
+    accepted.generation,
+    accepted.form.definition,
+    accepted.file.fileRef,
+  );
+  return toGeneration(await readGeneration(app.db, user, id, accepted.generation.id));
 }
 
 export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -221,10 +362,13 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
               id: z.string(),
               name: z.string(),
               description: z.string().nullable(),
+              targetContractTypeId: z.string().nullable(),
+              fixedEntityId: z.string().nullable(),
             }),
             pair: Pair,
             fields: z.array(AutoDocFieldRow),
             entities: z.array(z.object({ id: z.string(), name: z.string() })),
+            businessOwners: z.array(z.object({ id: z.string(), name: z.string() })),
           }),
           default: problemResponse,
         },
@@ -233,22 +377,40 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) =>
       app.db.transaction(async (tx) => {
         const { autoDoc, pair, form } = await livePair(tx, request.params.id);
-        const options = form.definition.fields.some((field) => field.fieldType === "entity")
-          ? await tx
-              .select({ id: entities.id, name: entities.legalName })
-              .from(entities)
-              .where(and(isNull(entities.archivedAt), entityReachScope(tx, request.user)))
-              .orderBy(asc(entities.legalName))
-          : [];
+        const definition = generationDefinition(autoDoc, form.definition);
+        const fixed = autoDoc.targetContractTypeId && autoDoc.fixedEntityId;
+        const options =
+          !fixed && definition.fields.some((field) => field.fieldType === "entity")
+            ? await tx
+                .select({ id: entities.id, name: entities.legalName })
+                .from(entities)
+                .where(and(isNull(entities.archivedAt), entityReachScope(tx, request.user)))
+                .orderBy(asc(entities.legalName))
+            : [];
         return {
-          autoDoc: { id: autoDoc.id, name: autoDoc.name, description: autoDoc.description },
+          autoDoc: {
+            id: autoDoc.id,
+            name: autoDoc.name,
+            description: autoDoc.description,
+            targetContractTypeId: autoDoc.targetContractTypeId,
+            fixedEntityId: autoDoc.fixedEntityId,
+          },
           pair,
-          fields: form.definition.fields.map((field) => ({
-            ...field,
-            catalogFieldId: field.catalogFieldId ?? null,
-            contractAttribute: field.contractAttribute ?? null,
-          })),
+          fields: definition.fields
+            .filter((field) => !fixed || field.fieldType !== "entity")
+            .map((field) => ({
+              ...field,
+              catalogFieldId: field.catalogFieldId ?? null,
+              contractAttribute: field.contractAttribute ?? null,
+            })),
           entities: options,
+          businessOwners: autoDoc.targetContractTypeId
+            ? await tx
+                .select({ id: users.id, name: users.displayName })
+                .from(users)
+                .where(isNull(users.archivedAt))
+                .orderBy(asc(users.displayName))
+            : [],
         };
       }),
   );
@@ -263,63 +425,21 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
         params: Params,
         body: Pair.extend({
           answers: z.record(z.string().regex(AUTO_DOC_SLUG), Value.nullable()),
+          businessOwnerId: z.string().min(1).nullable().optional(),
         }).strict(),
         response: { 201: Envelope, default: problemResponse },
       },
     },
-    async (request, reply) => {
-      const accepted = await app.db.transaction(async (tx) => {
-        const live = await livePair(tx, request.params.id, request.body);
-        const { answers, displayValues } = await validateGenerationAnswers(
-          tx,
+    async (request, reply) =>
+      reply.code(201).send({
+        generation: await generateAutoDoc(
+          app,
+          request.log,
           request.user,
-          live.form.definition,
-          request.body.answers,
-        );
-        const [generation] = await tx
-          .insert(autoDocGenerations)
-          .values({
-            autoDocId: live.autoDoc.id,
-            ...live.pair,
-            generatedBy: request.user.id,
-            answers,
-            displayValues,
-            formats: live.autoDoc.formats,
-            coverNote: live.autoDoc.coverNote,
-            emailState: "pending",
-          })
-          .returning();
-        await recordActivity(tx, {
-          entityType: "auto_doc",
-          entityId: live.autoDoc.id,
-          actorId: request.user.id,
-          action: "auto_doc.generated",
-          visibility: "legal_only",
-          payload: {
-            name: live.autoDoc.name,
-            generationId: generation!.id,
-            ...live.pair,
-            documentVersionNumber: live.file.versionNumber,
-            formVersionNumber: live.form.versionNumber,
-            personId: request.user.id,
-            personName: request.user.displayName,
-          },
-        });
-        return { ...live, generation: generation!, displayValues };
-      });
-      await fillGeneration(
-        app,
-        request.log,
-        accepted.generation,
-        accepted.form.definition,
-        accepted.file.fileRef,
-      );
-      return reply.code(201).send({
-        generation: toGeneration(
-          await readGeneration(app.db, request.params.id, accepted.generation.id),
+          request.params.id,
+          request.body,
         ),
-      });
-    },
+      }),
   );
 
   app.post(
@@ -436,7 +556,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
       );
       return {
         generation: toGeneration(
-          await readGeneration(app.db, request.params.id, accepted.generation.id),
+          await readGeneration(app.db, request.user, request.params.id, accepted.generation.id),
         ),
       };
     },
@@ -464,7 +584,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!autoDoc) throw httpError(404, "No Auto-Doc exists with this id.");
       return {
         generations: (
-          await generationQuery(app.db)
+          await generationQuery(app.db, request.user)
             .where(eq(autoDocGenerations.autoDocId, request.params.id))
             .orderBy(desc(autoDocGenerations.createdAt), desc(autoDocGenerations.id))
         ).map(toGeneration),
@@ -485,7 +605,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => ({
       generation: toGeneration(
-        await readGeneration(app.db, request.params.id, request.params.generationId),
+        await readGeneration(app.db, request.user, request.params.id, request.params.generationId),
       ),
     }),
   );
@@ -511,7 +631,12 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
       async (request, reply) => {
-        const row = await readGeneration(app.db, request.params.id, request.params.generationId);
+        const row = await readGeneration(
+          app.db,
+          request.user,
+          request.params.id,
+          request.params.generationId,
+        );
         if (row.generation.formats !== "both" && row.generation.formats !== format)
           throw httpError(
             403,

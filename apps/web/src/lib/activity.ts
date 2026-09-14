@@ -1235,7 +1235,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: FilePlus2,
     message: defineMessage({
       id: "activity.contract.created",
-      defaultMessage: "{actor} created this contract",
+      defaultMessage:
+        "{source, select, auto_doc {{actor} created this contract from Auto-Doc {autoDoc} (Generation {generation})} other {{actor} created this contract}}",
+    }),
+    values: (_intl, payload) => ({
+      source: text(payload, "autoDocName") && text(payload, "generationId") ? "auto_doc" : "other",
+      autoDoc: text(payload, "autoDocName") ?? "",
+      generation: text(payload, "generationId") ?? "",
     }),
   },
   // The other half of the conversion's narration (DD-017, #420). It sits

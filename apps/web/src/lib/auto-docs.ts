@@ -69,6 +69,8 @@ const Field = z.object({
   placeholder: z.boolean(),
   catalogFieldId: z.string().nullable(),
   contractAttribute: autoDocContractAttributes.nullable(),
+  valueCurrency: z.string().nullable().optional(),
+  valueCadence: z.enum(["one_time", "monthly", "annually"]).nullable().optional(),
 });
 const FormVersion = z.object({
   id: z.string(),
@@ -88,6 +90,8 @@ export const autoDocUploadAnswer = z.object({
     templateDocumentId: z.string().nullable(),
     audience: autoDocAudiences,
     targetContractTypeId: z.string().nullable(),
+    titlePattern: z.string().nullable(),
+    fixedEntityId: z.string().nullable(),
     publishedDocumentVersionId: z.string().nullable(),
     publishedFormVersionId: z.string().nullable(),
     publishedAt: z.string().nullable(),

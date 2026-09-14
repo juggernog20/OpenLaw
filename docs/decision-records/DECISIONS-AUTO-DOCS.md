@@ -101,6 +101,16 @@ Member+ can Publish a new pair, Unpublish, Archive, and Restore through separate
 - **Alternatives considered** — Always create a Contract: a letter is not a Contract. A "creates a Contract" flag with the Type chosen at Generation: the Type's policy would be unknown when the form is designed. A Request per Generation for triage: a second record for one fact, and path 7 already gave the person their document.
 - **Consequences** — `auto_docs.target_contract_type_id`, `title_pattern`, `fixed_entity_id`, `auto_doc_filings`. `createContract` gains an Auto-Doc creation path beside direct creation and conversion. CTR-014's first-upload-takes-primary rule is satisfied by construction.
 
+### Built in M35/9
+
+Target settings add an optional title pattern and fixed Entity. Publication checks every title Placeholder against the saved form. Without a pattern, the mapped title takes precedence over the Auto-Doc name. Entity answers are optional on targeted forms; a fixed Entity supplies them without a picker. Settings changes record before and after.
+
+All nine built-in maps and attached catalog Fields carry through the shared Contract creation path. A Value map includes an explicit currency and cadence; its numeric answer is an amount in major units, converted to the currency's minor units when the Contract is created. Catalog maps carry only to Fields attached to the target Type and obey their existing validation and requiredness.
+
+The accepted Generation saves its resolved Contract facts for retry. After Word fill succeeds, one transaction writes the draft Contract, its primary Document and Version, the Generation links, default people, and Activity. The Document holds its own stored copy, so retrying delivery cannot remove its file. A retry of a Generation that already created a Contract keeps that original Document and creates no second Contract. A failed fill or Contract transaction leaves no partial Contract.
+
+The first Contract Activity entry names the Auto-Doc and Generation. Member+ can name a Business Owner; the shared Generation function names a generating Business User as Business Owner and adds their team row. The Portal entry point and its audience and acknowledgement checks follow in M35/11. Legal Owner assignment follows in M35/10. Filing follows in M35/12.
+
 ## ADO-006 — Assignment rules choose the Legal Owner; an unmatched Generation waits on the Inbox as an Unassigned contract
 
 - **Status** — Accepted

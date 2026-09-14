@@ -6,10 +6,12 @@ import { Readable } from "node:stream";
 import { uuidv7 } from "uuidv7";
 import {
   AUTO_DOC_FIELD_TYPES,
+  VALUE_CADENCES,
   AUTO_DOC_AUDIENCES,
   AUTO_DOC_FORMATS,
   AUTO_DOC_CONTRACT_ATTRIBUTES,
   contractTypes,
+  entities,
   fields as catalogFields,
   and,
   inArray,
@@ -56,6 +58,8 @@ import {
   latestForm,
 } from "./forms.js";
 
+import { entityReachScope } from "../../lib/entity-access.js";
+import { contractPublicationGaps } from "./contract-destination.js";
 import { escapeLikePattern } from "../../lib/like.js";
 import { diffForms, FormChange } from "./form-diff.js";
 import type { ChangedFields } from "@openlaw/shared";
@@ -72,6 +76,8 @@ const AutoDocRow = z.object({
   templateDocumentId: z.string().nullable(),
   audience: z.enum(AUTO_DOC_AUDIENCES),
   targetContractTypeId: z.string().nullable(),
+  titlePattern: z.string().nullable(),
+  fixedEntityId: z.string().nullable(),
   publishedDocumentVersionId: z.string().nullable(),
   publishedFormVersionId: z.string().nullable(),
   publishedAt: z.iso.datetime().nullable(),
@@ -90,6 +96,8 @@ export const AutoDocFieldRow = z.object({
   placeholder: z.boolean(),
   catalogFieldId: z.string().nullable(),
   contractAttribute: z.enum(AUTO_DOC_CONTRACT_ATTRIBUTES).nullable(),
+  valueCurrency: z.string().nullable().optional(),
+  valueCadence: z.enum(VALUE_CADENCES).nullable().optional(),
 });
 const FormVersion = z.object({
   id: z.string(),
@@ -226,12 +234,13 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
               z.object({ id: z.string(), displayName: z.string(), fieldType: z.string() }),
             ),
             contractTypes: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            entities: z.array(z.object({ id: z.string(), name: z.string() })),
           }),
           default: problemResponse,
         },
       },
     },
-    async () => {
+    async (request) => {
       const [fields, types] = await Promise.all([
         app.db
           .select({
@@ -253,7 +262,12 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(isNull(contractTypes.archivedAt))
           .orderBy(asc(contractTypes.displayName)),
       ]);
-      return { catalogFields: fields, contractTypes: types };
+      const choices = await app.db
+        .select({ id: entities.id, name: entities.legalName })
+        .from(entities)
+        .where(and(isNull(entities.archivedAt), entityReachScope(app.db, request.user)))
+        .orderBy(asc(entities.legalName));
+      return { catalogFields: fields, contractTypes: types, entities: choices };
     },
   );
 
@@ -273,6 +287,8 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           formats: z.enum(AUTO_DOC_FORMATS).optional(),
           coverNote: z.string().trim().max(10_000).nullable().optional(),
           targetContractTypeId: z.string().min(1).nullable().optional(),
+          titlePattern: z.string().trim().max(2000).nullable().optional(),
+          fixedEntityId: z.string().min(1).nullable().optional(),
         }),
         response: { 200: RecordEnvelope, default: problemResponse },
       },
@@ -284,6 +300,9 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         // same way, so the two routes cannot leave "" beside null.
         const patch = {
           ...request.body,
+          ...(request.body.titlePattern === undefined
+            ? {}
+            : { titlePattern: request.body.titlePattern || null }),
           ...(request.body.coverNote === undefined
             ? {}
             : { coverNote: request.body.coverNote || null }),
@@ -304,12 +323,28 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
             .for("share");
           if (!type) throw httpError(400, "Choose a live Contract Type as the target.");
         }
+        if (patch.fixedEntityId && patch.fixedEntityId !== row.fixedEntityId) {
+          const [entity] = await tx
+            .select({ id: entities.id })
+            .from(entities)
+            .where(
+              and(
+                eq(entities.id, patch.fixedEntityId),
+                isNull(entities.archivedAt),
+                entityReachScope(tx, request.user),
+              ),
+            )
+            .for("share");
+          if (!entity) throw httpError(400, "Choose a live Entity you can access.");
+        }
         const changed: ChangedFields = {};
         for (const key of [
           "name",
           "description",
           "audience",
           "targetContractTypeId",
+          "titlePattern",
+          "fixedEntityId",
           "formats",
           "coverNote",
         ] as const) {
@@ -335,6 +370,21 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
             to: nameFor(patch.targetContractTypeId),
           };
           delete changed.targetContractTypeId;
+        }
+        if (changed.fixedEntityId) {
+          const ids = [row.fixedEntityId, patch.fixedEntityId].filter((id): id is string =>
+            Boolean(id),
+          );
+          const names = ids.length
+            ? await tx
+                .select({ id: entities.id, name: entities.legalName })
+                .from(entities)
+                .where(inArray(entities.id, ids))
+            : [];
+          const name = (id: string | null | undefined) =>
+            id ? (names.find((entity) => entity.id === id)?.name ?? id) : null;
+          changed.fixedEntity = { from: name(row.fixedEntityId), to: name(patch.fixedEntityId) };
+          delete changed.fixedEntityId;
         }
         if (!Object.keys(changed).length) return;
         await tx
@@ -444,7 +494,10 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(eq(autoDocTemplateScans.documentVersionId, file.id));
         if (!scan)
           throw httpError(409, "Upload a detected Word template before publishing this Auto-Doc.");
-        const gaps = publicationGaps(form.definition, scan.detection);
+        const gaps = [
+          ...publicationGaps(form.definition, scan.detection),
+          ...contractPublicationGaps(row, form.definition),
+        ];
         if (gaps.length) throw httpError(409, `This pair cannot be published. ${gaps.join(" ")}`);
         await validateMaps(tx, form.definition);
         await tx

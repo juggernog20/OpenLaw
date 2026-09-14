@@ -47,6 +47,7 @@ import { contractTypes } from "./contract-types.js";
 // read inside `references(() => …)`, which Drizzle resolves after both
 // modules have finished loading, so neither file touches the other's
 // bindings while it is still evaluating.
+import { autoDocGenerations } from "./auto-docs.js";
 import { documents } from "./documents.js";
 import { entities } from "./entities.js";
 import { departments } from "./departments.js";
@@ -228,6 +229,11 @@ export const contracts = pgTable(
     // cycle — a contract names its primary document, and a document
     // names its owning contract — and TypeScript cannot infer a type
     // that depends on itself.
+    /** Null on direct creation and Request conversion. */
+    createdByGenerationId: text("created_by_generation_id").references(
+      (): AnyPgColumn => autoDocGenerations.id,
+      { onDelete: "set null" },
+    ),
     primaryDocumentId: text("primary_document_id").references((): AnyPgColumn => documents.id, {
       onDelete: "set null",
     }),
@@ -307,6 +313,7 @@ export const contracts = pgTable(
     // DOC-010's hard delete: removing a document row makes Postgres
     // check every contract for one naming it as its instrument, and
     // without an index that check is a sequential scan of `contracts`.
+    uniqueIndex("contracts_created_by_generation_idx").on(table.createdByGenerationId),
     index("contracts_primary_document_idx").on(table.primaryDocumentId),
     // "What sits under this contract" — the read M17's hierarchy
     // breadcrumb and relations panel ride, and the walk the cycle guard

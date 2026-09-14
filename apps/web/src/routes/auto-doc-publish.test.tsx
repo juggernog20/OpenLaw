@@ -47,6 +47,8 @@ function record(): RecordAnswer {
       state: "draft",
       audience: "legal_only",
       targetContractTypeId: null,
+      titlePattern: null,
+      fixedEntityId: null,
       formats: "both",
       coverNote: null,
       templateDocumentId: "template",
@@ -75,6 +77,7 @@ function record(): RecordAnswer {
   };
 }
 const options = {
+  entities: [{ id: "entity", name: "Example Subsidiary" }],
   catalogFields: [{ id: "catalog", displayName: "Contract reference", fieldType: "text" }],
   contractTypes: [{ id: "type", displayName: "NDA" }],
 };
@@ -251,6 +254,9 @@ it("saves audience, target Type, formats, and cover note, then applies list filt
   const settings = screen.getByRole("region", { name: "Settings" });
   await user.selectOptions(within(settings).getByLabelText("Audience"), "everyone");
   await user.selectOptions(within(settings).getByLabelText("Target Contract Type"), "type");
+  await user.click(within(settings).getByLabelText("Title pattern"));
+  await user.paste("NDA {{jurisdiction}}");
+  await user.selectOptions(within(settings).getByLabelText("Fixed Entity"), "entity");
   await user.selectOptions(within(settings).getByLabelText("Formats"), "pdf");
   await user.type(within(settings).getByLabelText("Cover note"), "Please **review** this.");
   expect(within(settings).getByText("review")).toBeVisible();
@@ -260,6 +266,8 @@ it("saves audience, target Type, formats, and cover note, then applies list filt
     {
       audience: "everyone",
       targetContractTypeId: "type",
+      titlePattern: "NDA {{jurisdiction}}",
+      fixedEntityId: "entity",
       formats: "pdf",
       coverNote: "Please **review** this.",
     },
@@ -409,6 +417,7 @@ it("shows Generation history and retries a failed fill", async () => {
     autoDocId: "nda",
     autoDocName: "Publish NDA",
     formats: "docx",
+    createdContract: null,
     hasPdf: false,
     emailState: "not_requested",
     emailSentAt: null,
@@ -470,4 +479,53 @@ it("shows Generation history and retries a failed fill", async () => {
     expect(within(list).getAllByRole("link", { name: "Download Word" })).toHaveLength(2),
   );
   expect(within(list).queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+});
+
+it("saves the currency and cadence of a Contract Value map", async () => {
+  const user = userEvent.setup();
+  const current = record();
+  current.formVersion!.definition.fields[0]!.fieldType = "currency";
+  current.formVersion!.definition.fields[0]!.options = null;
+  current.formVersion!.definition.fields[0]!.valueCurrency = "AED";
+  let saved: unknown;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
+      if (call.url.pathname.endsWith("/form-versions")) {
+        saved = call.body;
+        const fields = (call.body as NonNullable<RecordAnswer["formVersion"]>["definition"]).fields;
+        current.formVersion!.definition.fields = current.formVersion!.definition.fields.map(
+          (field, index) => ({ ...field, ...fields[index] }),
+        );
+        return json(201, current);
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  await screen.findByRole("heading", { name: "Publish NDA" });
+  const field = screen.getByRole("group", { name: "jurisdiction" });
+  await user.selectOptions(within(field).getByLabelText("Map to"), "attribute:value");
+  expect(within(field).getByLabelText("Value currency")).toHaveValue("AED");
+  await user.selectOptions(within(field).getByLabelText("Value cadence"), "annually");
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  await waitFor(() =>
+    expect(saved).toMatchObject({
+      fields: [
+        expect.objectContaining({
+          contractAttribute: "value",
+          valueCurrency: "AED",
+          valueCadence: "annually",
+        }),
+      ],
+    }),
+  );
+  await user.selectOptions(within(field).getByLabelText("Value cadence"), "");
+  await user.click(screen.getByRole("button", { name: "Save form" }));
+  await waitFor(() =>
+    expect(saved).toMatchObject({ fields: [expect.objectContaining({ valueCadence: null })] }),
+  );
 });

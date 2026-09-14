@@ -42,7 +42,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
-import { autoDocs } from "./auto-docs.js";
+import { autoDocs, autoDocGenerations } from "./auto-docs.js";
 import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
@@ -301,10 +301,12 @@ export const documentVersions = pgTable(
      * read what the old one wrote. */
     fileRef: text("file_ref").notNull(),
     kind: text("kind", { enum: DOCUMENT_VERSION_KINDS }).notNull(),
-    /** Whether a person supplied the bytes or OpenLaw derived them.
-     * Generated means exactly one thing in this chain: a tracked-changes
-     * export with both comparison operands recorded below. */
+    /** Generated output names its comparison operands or its Auto-Doc Generation. */
     source: text("source", { enum: DOCUMENT_VERSION_SOURCES }).notNull().default("uploaded"),
+    /** Null on uploads and redlines; otherwise the Generation that produced Version 1. */
+    generatedFromGenerationId: text("generated_from_generation_id").references(
+      (): AnyPgColumn => autoDocGenerations.id,
+    ),
     /** The older operand behind a generated redline. NULL on an
      * uploaded round. */
     comparedFromVersionId: text("compared_from_version_id").references(
@@ -358,6 +360,7 @@ export const documentVersions = pgTable(
     index("document_versions_compared_to_idx")
       .on(table.comparedToVersionId)
       .where(sql`${table.comparedToVersionId} IS NOT NULL`),
+    index("document_versions_generation_idx").on(table.generatedFromGenerationId),
     check("document_versions_number_check", sql`${table.versionNumber} >= 1`),
     check("document_versions_byte_size_check", sql`${table.byteSize} >= 0`),
     // Exactly 64 lowercase hex characters. The column's whole value is
@@ -376,9 +379,11 @@ export const documentVersions = pgTable(
     check(
       "document_versions_generated_provenance_check",
       sql`(
-        (${table.kind} = 'generated_redline' and ${table.source} = 'generated' and ${table.comparedFromVersionId} is not null and ${table.comparedToVersionId} is not null)
+        (${table.kind} = 'generated_redline' and ${table.source} = 'generated' and ${table.comparedFromVersionId} is not null and ${table.comparedToVersionId} is not null and ${table.generatedFromGenerationId} is null)
         or
-        (${table.kind} <> 'generated_redline' and ${table.source} = 'uploaded' and ${table.comparedFromVersionId} is null and ${table.comparedToVersionId} is null)
+        (${table.kind} = 'draft_ours' and ${table.source} = 'generated' and ${table.versionNumber} = 1 and ${table.generatedFromGenerationId} is not null and ${table.comparedFromVersionId} is null and ${table.comparedToVersionId} is null)
+        or
+        (${table.kind} <> 'generated_redline' and ${table.source} = 'uploaded' and ${table.comparedFromVersionId} is null and ${table.comparedToVersionId} is null and ${table.generatedFromGenerationId} is null)
       )`,
     ),
   ],

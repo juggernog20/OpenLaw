@@ -19,7 +19,13 @@ const member = {
   role: "legal_team_member",
 };
 const form: Form = {
-  autoDoc: { id: "nda", name: "NDA", description: "Fill the approved NDA." },
+  autoDoc: {
+    id: "nda",
+    name: "NDA",
+    description: "Fill the approved NDA.",
+    targetContractTypeId: null,
+    fixedEntityId: null,
+  },
   pair: { documentVersionId: "file1", formVersionId: "form2" },
   fields: [
     {
@@ -60,6 +66,7 @@ const form: Form = {
     },
   ],
   entities: [],
+  businessOwners: [],
 };
 const generation: Generation = {
   id: "generation1",
@@ -75,6 +82,7 @@ const generation: Generation = {
   hasDocx: true,
   hasPdf: false,
   formats: "docx",
+  createdContract: null,
   emailState: "sent",
   emailSentAt: "2026-09-14T00:00:00Z",
   emailFailure: null,
@@ -292,4 +300,40 @@ it("offers Word during PDF conversion, then adds PDF and the email outcome", asy
     await screen.findByRole("link", { name: "Download PDF" }, { timeout: 5000 }),
   ).toHaveAttribute("href", "/api/v1/auto-docs/nda/generations/generation1/pdf");
   expect(screen.getByText(/SMTP is not configured/)).toBeVisible();
+});
+
+it("lets a Member name a Business Owner and links the generated Contract on confirmation", async () => {
+  const user = userEvent.setup();
+  let submitted: unknown;
+  const created = {
+    ...generation,
+    createdContract: { id: "contract", number: 27, title: "NDA Acme" },
+  };
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generate"))
+        return json(200, {
+          ...form,
+          autoDoc: { ...form.autoDoc, targetContractTypeId: "nda-type" },
+          businessOwners: [{ id: "owner", name: "Casey Buyer" }],
+        });
+      if (call.url.pathname.endsWith("/generations") && call.method === "POST") {
+        submitted = call.body;
+        return json(201, { generation: created });
+      }
+      if (call.url.pathname.endsWith("/generations/generation1"))
+        return json(200, { generation: created });
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda/generate");
+  await screen.findByRole("heading", { name: "Generate NDA" });
+  await user.type(screen.getByLabelText("Counterparty"), "Acme");
+  await user.selectOptions(screen.getByLabelText("Agreed"), "false");
+  await user.selectOptions(screen.getByLabelText("Business Owner"), "owner");
+  await user.click(screen.getByRole("button", { name: "Generate" }));
+  await screen.findByRole("heading", { name: "Generation" });
+  expect(submitted).toMatchObject({ businessOwnerId: "owner" });
+  expect(screen.getByRole("link", { name: "NDA Acme" })).toHaveAttribute("href", "/contracts/27");
 });

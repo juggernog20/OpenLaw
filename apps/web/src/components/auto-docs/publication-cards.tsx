@@ -208,6 +208,8 @@ export function AutoDocSettings({
   const intl = useIntl();
   const [audience, setAudience] = useState(record.autoDoc.audience);
   const [target, setTarget] = useState(record.autoDoc.targetContractTypeId ?? "");
+  const [titlePattern, setTitlePattern] = useState(record.autoDoc.titlePattern ?? "");
+  const [fixedEntityId, setFixedEntityId] = useState(record.autoDoc.fixedEntityId ?? "");
   const [formats, setFormats] = useState(record.autoDoc.formats);
   const [coverNote, setCoverNote] = useState(record.autoDoc.coverNote ?? "");
   const [busy, setBusy] = useState(false);
@@ -231,6 +233,8 @@ export function AutoDocSettings({
               body: {
                 audience,
                 targetContractTypeId: target || null,
+                titlePattern: titlePattern || null,
+                fixedEntityId: fixedEntityId || null,
                 formats,
                 coverNote: coverNote || null,
               },
@@ -309,6 +313,61 @@ export function AutoDocSettings({
               ))}
             </select>
           </label>
+          {target && (
+            <>
+              <div className="space-y-1">
+                <label className="block space-y-1">
+                  <span>
+                    <FormattedMessage id="autoDocs.titlePattern" defaultMessage="Title pattern" />
+                  </span>
+                  <input
+                    className={CONTROL_CLASS}
+                    value={titlePattern}
+                    maxLength={2000}
+                    onChange={(event) => setTitlePattern(event.target.value)}
+                    aria-describedby="auto-doc-title-pattern-help"
+                  />
+                </label>
+                <p id="auto-doc-title-pattern-help" className="text-sm text-muted">
+                  <FormattedMessage
+                    id="autoDocs.titlePatternHelp"
+                    defaultMessage="Use form field slugs in double braces. Leave blank to use the mapped title or Auto-Doc name."
+                  />
+                </p>
+              </div>
+              <label className="block space-y-1">
+                <span>
+                  <FormattedMessage id="autoDocs.fixedEntity" defaultMessage="Fixed Entity" />
+                </span>
+                <select
+                  className={CONTROL_CLASS}
+                  value={fixedEntityId}
+                  onChange={(event) => setFixedEntityId(event.target.value)}
+                >
+                  <option value="">
+                    {intl.formatMessage({
+                      id: "autoDocs.noFixedEntity",
+                      defaultMessage: "Use the form's Entity answer",
+                    })}
+                  </option>
+                  {fixedEntityId &&
+                    !options.entities.some((entity) => entity.id === fixedEntityId) && (
+                      <option value={fixedEntityId}>
+                        {intl.formatMessage({
+                          id: "autoDocs.unavailableEntity",
+                          defaultMessage: "Unavailable Entity",
+                        })}
+                      </option>
+                    )}
+                  {options.entities.map((entity) => (
+                    <option key={entity.id} value={entity.id}>
+                      {entity.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
           <label className="block space-y-1">
             <span>
               <FormattedMessage id="autoDocs.formats" defaultMessage="Formats" />
