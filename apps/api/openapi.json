@@ -13039,6 +13039,157 @@
         }
       }
     },
+    "/api/v1/auto-docs/{id}/template/{versionId}/reading": {
+      "get": {
+        "operationId": "readAutoDocTemplate",
+        "summary": "Member+ reads one file version as paragraphs with its Placeholders and Blocks typed (DES-087)",
+        "tags": ["auto-docs"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "versionId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "versionId": {
+                      "type": "string"
+                    },
+                    "versionNumber": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "parts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": ["body", "header", "footer", "footnotes", "endnotes"]
+                          },
+                          "paragraphs": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["text"]
+                                      },
+                                      "text": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["kind", "text"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["placeholder"]
+                                      },
+                                      "text": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "directive": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "hasField": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["kind", "text", "name", "directive", "hasField"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["block_open"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["kind", "name"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["block_close"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["kind", "name"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "required": ["name", "kind", "paragraphs"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["versionId", "versionNumber", "parts"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auto-docs/{id}/generate": {
       "get": {
         "summary": "Open the published form for Generation, Member+",

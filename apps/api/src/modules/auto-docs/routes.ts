@@ -3,6 +3,7 @@
 /** ADO-001–004: Legal maintains Auto-Docs and their two version chains. */
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
+import { buffer } from "node:stream/consumers";
 import { uuidv7 } from "uuidv7";
 import {
   AUTO_DOC_FIELD_TYPES,
@@ -67,6 +68,7 @@ import { entityReachScope } from "../../lib/entity-access.js";
 import { contractPublicationGaps } from "./contract-destination.js";
 import { escapeLikePattern } from "../../lib/like.js";
 import { diffForms, FormChange } from "./form-diff.js";
+import { readTemplate } from "../../lib/auto-doc-reading.js";
 import type { ChangedFields } from "@openlaw/shared";
 
 import {
@@ -159,6 +161,29 @@ const RecordEnvelope = z.object({
   formVersion: FormVersion.nullable(),
   formVersions: z.array(FormVersion),
   orphanedFields: z.array(z.string()),
+});
+const ReadingSegment = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("text"), text: z.string() }),
+  z.object({
+    kind: z.literal("placeholder"),
+    text: z.string(),
+    name: z.string(),
+    directive: z.string().nullable(),
+    hasField: z.boolean(),
+  }),
+  z.object({ kind: z.literal("block_open"), name: z.string() }),
+  z.object({ kind: z.literal("block_close"), name: z.string() }),
+]);
+const Reading = z.object({
+  versionId: z.string(),
+  versionNumber: z.number().int().positive(),
+  parts: z.array(
+    z.object({
+      name: z.string(),
+      kind: z.enum(["body", "header", "footer", "footnotes", "endnotes"]),
+      paragraphs: z.array(z.array(ReadingSegment)),
+    }),
+  ),
 });
 const UploadBody = z.any().meta({
   type: "object",
@@ -1057,6 +1082,43 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
       });
       return reply.status(201).send(await snapshot(request.params.id));
+    },
+  );
+  app.get(
+    "/auto-docs/:id/template/:versionId/reading",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "readAutoDocTemplate",
+        summary:
+          "Member+ reads one file version as paragraphs with its Placeholders and Blocks typed (DES-087)",
+        tags: ["auto-docs"],
+        params: z.object({ id: z.string(), versionId: z.string() }),
+        response: { 200: Reading, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const row = await readAutoDoc(app.db, request.params.id);
+      const [version] = row.templateDocumentId
+        ? await app.db
+            .select()
+            .from(documentVersions)
+            .where(
+              and(
+                eq(documentVersions.id, request.params.versionId),
+                eq(documentVersions.documentId, row.templateDocumentId),
+              ),
+            )
+        : [];
+      if (!version) throw httpError(404, "No file version of this Auto-Doc has this id.");
+      const form = await latestForm(app.db, row.id);
+      const slugs = new Set((form?.definition.fields ?? []).map((field) => field.slug));
+      const bytes = await buffer(await app.storage.get(version.fileRef));
+      return {
+        versionId: version.id,
+        versionNumber: version.versionNumber,
+        parts: readTemplate(bytes, slugs),
+      };
     },
   );
 };
