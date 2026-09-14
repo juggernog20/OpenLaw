@@ -403,6 +403,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     documentVersionId: "file1",
     formVersionId: "form1",
   },
+  "auto_doc.acknowledged": {
+    name: "Supplier NDA",
+    text: "Do not edit.",
+    textHash: "a".repeat(64),
+    frequency: "once",
+    acknowledgementId: "ack1",
+  },
   "auto_doc.generated": {
     name: "Supplier NDA",
     generationId: "generation1",

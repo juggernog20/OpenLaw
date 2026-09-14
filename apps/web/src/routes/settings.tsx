@@ -33,6 +33,7 @@ import {
   ChevronDown,
   ChevronRight,
   FilePen,
+  FileText,
   Inbox,
   KeyRound,
   LibraryBig,
@@ -224,6 +225,12 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/knowledge/types",
       icon: LibraryBig,
       label: defineMessage({ id: "settings.section.knowledge", defaultMessage: "Knowledge" }),
+    },
+    {
+      id: "auto-docs",
+      path: "/settings/auto-docs",
+      icon: FileText,
+      label: defineMessage({ id: "settings.section.autoDocs", defaultMessage: "Auto-Docs" }),
     },
     // The Organization half of Notifications (#322, NOT-004): the one
     // reminder-offset list, which is org policy rather than anybody's

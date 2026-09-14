@@ -8,6 +8,9 @@ import {
   AUTO_DOC_FIELD_TYPES,
   VALUE_CADENCES,
   AUTO_DOC_AUDIENCES,
+  AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES,
+  departments,
+  orgSettings,
   AUTO_DOC_FORMATS,
   AUTO_DOC_CONTRACT_ATTRIBUTES,
   contractTypes,
@@ -74,6 +77,16 @@ import {
   readAssignmentRules,
   requireLegalOwner,
 } from "./assignment.js";
+import {
+  AcknowledgementText,
+  PortalSettingsShape,
+  acknowledgementWords,
+  applyPortalSettings,
+  portalWarnings,
+  readAudience,
+  revokeAcknowledgements,
+  textHash,
+} from "./portal-policy.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const Params = z.object({ id: z.string() });
@@ -86,6 +99,8 @@ const AutoDocRow = z.object({
   state: z.enum(AUTO_DOC_STATES),
   templateDocumentId: z.string().nullable(),
   audience: z.enum(AUTO_DOC_AUDIENCES),
+  acknowledgementText: z.string().nullable(),
+  acknowledgementFrequency: z.enum(AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES),
   targetContractTypeId: z.string().nullable(),
   titlePattern: z.string().nullable(),
   fixedEntityId: z.string().nullable(),
@@ -134,6 +149,10 @@ const Template = z.object({
 });
 const RecordEnvelope = z.object({
   autoDoc: AutoDocRow,
+  audienceUserIds: z.array(z.string()),
+  audienceDepartmentIds: z.array(z.string()),
+  defaultAcknowledgementText: z.string(),
+  portalWarnings: z.array(z.string()),
   assignmentRules: z.array(AssignmentRuleRow),
   template: Template.nullable(),
   detection: Detection,
@@ -202,6 +221,9 @@ async function recordView(db: Executor, id: string) {
   const detection = scan?.detection ?? { placeholders: [], blocks: [] };
   return {
     autoDoc: rowView(row),
+    ...(await readAudience(db, id)),
+    defaultAcknowledgementText: (await acknowledgementWords(db, row)).defaultText,
+    portalWarnings: await portalWarnings(db, row),
     assignmentRules: await readAssignmentRules(db, id),
     template: document
       ? {
@@ -235,6 +257,63 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
       accessMode: "read only",
     });
 
+  const Settings = z.object({ acknowledgementText: AcknowledgementText });
+  app.get(
+    "/auto-docs/settings",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "getAutoDocSettings",
+        tags: ["auto-docs"],
+        response: { 200: Settings, default: problemResponse },
+      },
+    },
+    async () => {
+      const [row] = await app.db
+        .select({ acknowledgementText: orgSettings.autoDocAcknowledgementText })
+        .from(orgSettings);
+      if (!row) throw httpError(500, "The organisation settings could not be read.");
+      return row;
+    },
+  );
+  app.put(
+    "/auto-docs/settings",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "saveAutoDocSettings",
+        tags: ["auto-docs"],
+        body: Settings.strict(),
+        response: { 200: Settings, default: problemResponse },
+      },
+    },
+    async (request) =>
+      app.db.transaction(async (tx) => {
+        const [row] = await tx.select().from(orgSettings).for("update");
+        if (!row) throw httpError(500, "The organisation settings could not be read.");
+        const next = request.body.acknowledgementText;
+        if (row.autoDocAcknowledgementText !== next) {
+          await revokeAcknowledgements(tx, textHash(row.autoDocAcknowledgementText));
+          await tx
+            .update(orgSettings)
+            .set({ autoDocAcknowledgementText: next, updatedAt: new Date() })
+            .where(eq(orgSettings.id, row.id));
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "org_settings.updated",
+            visibility: "admin_only",
+            payload: {
+              field: "autoDocAcknowledgementText",
+              old: row.autoDocAcknowledgementText,
+              new: next,
+            },
+          });
+        }
+        return { acknowledgementText: next };
+      }),
+  );
+
   app.get(
     "/auto-docs/options",
     {
@@ -250,6 +329,8 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
             contractTypes: z.array(z.object({ id: z.string(), displayName: z.string() })),
             entities: z.array(z.object({ id: z.string(), name: z.string() })),
             legalOwners: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            audienceUsers: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            departments: z.array(z.object({ id: z.string(), displayName: z.string() })),
           }),
           default: problemResponse,
         },
@@ -287,6 +368,16 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         contractTypes: types,
         entities: choices,
         legalOwners: await legalOwnerChoices(app.db),
+        audienceUsers: await app.db
+          .select({ id: users.id, displayName: users.displayName })
+          .from(users)
+          .where(isNull(users.archivedAt))
+          .orderBy(asc(users.displayName), asc(users.id)),
+        departments: await app.db
+          .select({ id: departments.id, displayName: departments.displayName })
+          .from(departments)
+          .where(isNull(departments.archivedAt))
+          .orderBy(asc(departments.displayName), asc(departments.id)),
       };
     },
   );
@@ -419,6 +510,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         params: Params,
         body: z.strictObject({
           name: z.string().trim().min(1).max(200).optional(),
+          ...PortalSettingsShape,
           description: z.string().trim().max(4000).nullable().optional(),
           audience: z.enum(AUTO_DOC_AUDIENCES).optional(),
           formats: z.enum(AUTO_DOC_FORMATS).optional(),
@@ -435,8 +527,11 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         const row = await editable(tx, request.params.id);
         // Creation stores a blank description as null; an edit reads the
         // same way, so the two routes cannot leave "" beside null.
+        const settings = { ...request.body };
+        delete settings.audienceUserIds;
+        delete settings.audienceDepartmentIds;
         const patch = {
-          ...request.body,
+          ...settings,
           ...(request.body.titlePattern === undefined
             ? {}
             : { titlePattern: request.body.titlePattern || null }),
@@ -523,6 +618,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           changed.fixedEntity = { from: name(row.fixedEntityId), to: name(patch.fixedEntityId) };
           delete changed.fixedEntityId;
         }
+        await applyPortalSettings(tx, row, request.body, patch, changed);
         if (!Object.keys(changed).length) return;
         await tx
           .update(autoDocs)

@@ -36,13 +36,19 @@ export function generationWaiting(generation: AutoDocGeneration): boolean {
     (generation.state === "ready" && generation.emailState === "pending")
   );
 }
-export function GenerationDownload({ generation }: { generation: AutoDocGeneration }) {
+export function GenerationDownload({
+  generation,
+  portal = false,
+}: {
+  generation: AutoDocGeneration;
+  portal?: boolean;
+}) {
   return (
     <div className="flex flex-wrap gap-4">
       {generation.hasDocx && generation.formats !== "pdf" && (
         <a
           className="text-link hover:underline"
-          href={`/api/v1/auto-docs/${generation.autoDocId}/generations/${generation.id}/docx`}
+          href={`/api/v1/${portal ? "portal/" : ""}auto-docs/${generation.autoDocId}/generations/${generation.id}/docx`}
         >
           <FormattedMessage id="autoDocs.downloadWord" defaultMessage="Download Word" />
         </a>
@@ -50,7 +56,7 @@ export function GenerationDownload({ generation }: { generation: AutoDocGenerati
       {generation.hasPdf && generation.formats !== "docx" && (
         <a
           className="text-link hover:underline"
-          href={`/api/v1/auto-docs/${generation.autoDocId}/generations/${generation.id}/pdf`}
+          href={`/api/v1/${portal ? "portal/" : ""}auto-docs/${generation.autoDocId}/generations/${generation.id}/pdf`}
         >
           <FormattedMessage id="autoDocs.downloadPdf" defaultMessage="Download PDF" />
         </a>
@@ -58,7 +64,13 @@ export function GenerationDownload({ generation }: { generation: AutoDocGenerati
     </div>
   );
 }
-export function GenerationContract({ generation }: { generation: AutoDocGeneration }) {
+export function GenerationContract({
+  generation,
+  portal = false,
+}: {
+  generation: AutoDocGeneration;
+  portal?: boolean;
+}) {
   const contract = generation.createdContract;
   if (!contract) return null;
   return (
@@ -68,7 +80,10 @@ export function GenerationContract({ generation }: { generation: AutoDocGenerati
         defaultMessage="Created Contract: {contract}"
         values={{
           contract: (
-            <Link className="text-link hover:underline" to={`/contracts/${contract.number}`}>
+            <Link
+              className="text-link hover:underline"
+              to={`${portal ? "/portal" : ""}/contracts/${contract.number}`}
+            >
               {contract.title}
             </Link>
           ),

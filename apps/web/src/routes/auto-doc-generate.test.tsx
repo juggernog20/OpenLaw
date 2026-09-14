@@ -259,6 +259,9 @@ it("requires a date pick before submitting a required date answer", async () => 
   await user.click(screen.getByRole("button", { name: "Generate" }));
   expect(await screen.findByRole("alert")).toHaveTextContent('Fill "Signing date" first.');
   expect(posted).toBeUndefined();
+  expect(screen.getByRole("button", { name: "Signing date" })).toHaveAccessibleDescription(
+    "Required",
+  );
   await pickDate(user, "Signing date", "2026-09-14");
   await user.click(screen.getByRole("button", { name: "Generate" }));
   await waitFor(() => expect(posted).toEqual({ ...form.pair, answers: { amount: "2026-09-14" } }));

@@ -38,7 +38,7 @@ import { attachmentDisposition, withStoredBlobs } from "../../lib/uploads.js";
 import { validateGenerationAnswers } from "./answers.js";
 import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import type { AppDeps } from "../../app.js";
-import type { FastifyBaseLogger } from "fastify";
+import type { FastifyBaseLogger, FastifyReply } from "fastify";
 import type { AutoDocGeneration, AutoDocFormDefinition } from "@openlaw/db";
 import { createGeneratedContract } from "./create-contract.js";
 import { generationDefinition, prepareContractDestination } from "./contract-destination.js";
@@ -58,15 +58,18 @@ function generationDocxKey(generationId: string): string {
 }
 const Params = z.object({ id: z.string() });
 const GenerationParams = Params.extend({ generationId: z.string() });
-const Pair = z.object({ documentVersionId: z.string().min(1), formVersionId: z.string().min(1) });
-const Value = z.union([
+export const Pair = z.object({
+  documentVersionId: z.string().min(1),
+  formVersionId: z.string().min(1),
+});
+export const Value = z.union([
   z.string().max(10_000),
   z.number().finite(),
   z.boolean(),
   z.array(z.string().max(200)).max(1000),
 ]);
 const Answers = z.record(z.string().regex(AUTO_DOC_SLUG), Value);
-const GenerationRow = z.object({
+export const GenerationRow = z.object({
   id: z.string(),
   autoDocId: z.string(),
   autoDocName: z.string(),
@@ -91,9 +94,9 @@ const GenerationRow = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
-const Envelope = z.object({ generation: GenerationRow });
+export const Envelope = z.object({ generation: GenerationRow });
 
-async function livePair(tx: Transaction, id: string, submitted?: z.infer<typeof Pair>) {
+export async function livePair(tx: Transaction, id: string, submitted?: z.infer<typeof Pair>) {
   const [autoDoc] = await tx.select().from(autoDocs).where(eq(autoDocs.id, id)).for("share");
   if (!autoDoc) throw httpError(404, "No Auto-Doc exists with this id.");
   if (autoDoc.state !== "published")
@@ -124,7 +127,7 @@ async function livePair(tx: Transaction, id: string, submitted?: z.infer<typeof 
   return { autoDoc, file, form, pair: { documentVersionId: file.id, formVersionId: form.id } };
 }
 
-function generationQuery(db: Executor, user: AuthenticatedUser) {
+export function generationQuery(db: Executor, user: AuthenticatedUser) {
   return db
     .select({
       generation: autoDocGenerations,
@@ -144,7 +147,7 @@ function generationQuery(db: Executor, user: AuthenticatedUser) {
     .innerJoin(documentVersions, eq(documentVersions.id, autoDocGenerations.documentVersionId))
     .innerJoin(autoDocFormVersions, eq(autoDocFormVersions.id, autoDocGenerations.formVersionId));
 }
-function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[number]) {
+export function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[number]) {
   const { docxFileRef, pdfFileRef, ...generation } = row.generation;
   return {
     ...generation,
@@ -160,7 +163,7 @@ function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[number]) 
     updatedAt: generation.updatedAt.toISOString(),
   };
 }
-async function readGeneration(
+export async function readGeneration(
   db: Executor,
   user: AuthenticatedUser,
   id: string,
@@ -283,15 +286,17 @@ export interface GenerationSubmission {
   businessOwnerId?: string | null;
 }
 
-/** The route enforces audience and acknowledgement before calling this shared Generation path. */
+/** Portal policy runs in the acceptance transaction, before consuming the submitted pair. */
 export async function generateAutoDoc(
   app: GenerationDeps,
   log: FastifyBaseLogger,
   user: AuthenticatedUser,
   id: string,
   submission: GenerationSubmission,
+  authorise?: (tx: Transaction) => Promise<void>,
 ) {
   const accepted = await app.db.transaction(async (tx) => {
+    await authorise?.(tx);
     const live = await livePair(tx, id, submission);
     const definition = generationDefinition(live.autoDoc, live.form.definition);
     const raw = { ...submission.answers };
@@ -640,29 +645,39 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
           request.params.id,
           request.params.generationId,
         );
-        if (row.generation.formats !== "both" && row.generation.formats !== format)
-          throw httpError(
-            403,
-            `This Generation does not allow ${format === "docx" ? "Word" : "PDF"} downloads.`,
-          );
-        const fileRef = format === "docx" ? row.generation.docxFileRef : row.generation.pdfFileRef;
-        if (!fileRef)
-          throw httpError(
-            409,
-            row.generation.failure?.detail ??
-              `The ${format === "docx" ? "Word document" : "PDF"} is not ready yet.`,
-          );
-        return reply
-          .header(
-            "content-type",
-            format === "docx"
-              ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              : "application/pdf",
-          )
-          .header("content-disposition", attachmentDisposition(`${row.autoDocName}.${format}`))
-          .header("x-content-type-options", "nosniff")
-          .header("cache-control", "private, no-store")
-          .send(await app.storage.get(fileRef));
+        return downloadGeneration(app, reply, row, format);
       },
     );
 };
+
+/** Both destinations enforce reach before handing the owned output to this download path. */
+export async function downloadGeneration(
+  app: Pick<AppDeps, "storage">,
+  reply: FastifyReply,
+  row: Awaited<ReturnType<typeof readGeneration>>,
+  format: "docx" | "pdf",
+) {
+  if (row.generation.formats !== "both" && row.generation.formats !== format)
+    throw httpError(
+      403,
+      `This Generation does not allow ${format === "docx" ? "Word" : "PDF"} downloads.`,
+    );
+  const fileRef = format === "docx" ? row.generation.docxFileRef : row.generation.pdfFileRef;
+  if (!fileRef)
+    throw httpError(
+      409,
+      row.generation.failure?.detail ??
+        `The ${format === "docx" ? "Word document" : "PDF"} is not ready yet.`,
+    );
+  return reply
+    .header(
+      "content-type",
+      format === "docx"
+        ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        : "application/pdf",
+    )
+    .header("content-disposition", attachmentDisposition(`${row.autoDocName}.${format}`))
+    .header("x-content-type-options", "nosniff")
+    .header("cache-control", "private, no-store")
+    .send(await app.storage.get(fileRef));
+}

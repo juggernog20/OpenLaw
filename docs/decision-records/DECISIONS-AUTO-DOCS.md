@@ -168,6 +168,8 @@ Migration 0123 preserves older Word-only Generations with `formats = docx` and `
 - **Alternatives considered** — One global text and frequency: too coarse for "you may not edit this" beside "this is a template, not advice". A checkbox with no record: not an acknowledgement.
 - **Consequences** — `auto_doc_acknowledgements`; `auto_docs.acknowledgement_text`, `acknowledgement_frequency`; `org_settings.auto_doc_acknowledgement_text`. The Activity verb `auto_doc.acknowledged`.
 
+**M35/11 built addendum (#854):** Portal audience is rechecked for the published list, acknowledgement, form, acceptance, owned history and downloads. Every-use acknowledgements are consumed atomically with acceptance; rejected submissions do not consume them. Text edits revoke earlier matching Acknowledgements, so restoring old text still requires a new acknowledgement. Member+ bypasses acknowledgement. Existing Generations remain readable after Unpublish or Archive as ADO-010 requires, while audience revocation removes access. An Entity fixed for a targeted Auto-Doc must remain Portal-listed, live and non-Confidential for Business User use; Legal sees the specific configuration warning and the Portal asks the person to contact Legal. Saved Assignment rules that name fields absent from the Live Form receive the same author warning and Portal refusal.
+
 ## ADO-009 — Reach: Legal only, selected people and Departments, or everyone; the Portal lists an Auto-Doc and the person's own Generations
 
 - **Status** — Accepted

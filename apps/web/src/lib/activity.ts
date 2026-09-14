@@ -2939,6 +2939,18 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
     changes: changesFrom,
   },
+  "auto_doc.acknowledged": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.acknowledged",
+      defaultMessage: "{actor} acknowledged {name}{hasWords, select, yes {: {words}} other {}}",
+    }),
+    values: (intl, payload) => ({
+      name: text(payload, "name") ?? thingName(intl, payload),
+      words: text(payload, "text") ?? "",
+      hasWords: text(payload, "text") ? "yes" : "no",
+    }),
+  },
   "auto_doc.generated": {
     icon: FileText,
     message: defineMessage({

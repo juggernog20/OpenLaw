@@ -46,6 +46,8 @@ function record(): RecordAnswer {
       description: null,
       state: "draft",
       audience: "legal_only",
+      acknowledgementText: null,
+      acknowledgementFrequency: "once_per_auto_doc",
       targetContractTypeId: null,
       titlePattern: null,
       fixedEntityId: null,
@@ -75,10 +77,16 @@ function record(): RecordAnswer {
     formVersion,
     formVersions: [formVersion, { ...formVersion, id: "form1", versionNumber: 1 }],
     orphanedFields: [],
+    audienceUserIds: [],
+    audienceDepartmentIds: [],
+    defaultAcknowledgementText: "Do not edit.",
+    portalWarnings: [],
     assignmentRules: [],
   };
 }
 const options = {
+  audienceUsers: [{ id: "buyer", displayName: "Buyer" }],
+  departments: [{ id: "sales", displayName: "Sales" }],
   legalOwners: [
     { id: "member", displayName: "Legal" },
     { id: "other", displayName: "Other Legal" },
@@ -271,6 +279,10 @@ it("saves audience, target Type, formats, and cover note, then applies list filt
   expect(edits).toEqual([
     {
       audience: "everyone",
+      audienceUserIds: [],
+      audienceDepartmentIds: [],
+      acknowledgementText: null,
+      acknowledgementFrequency: "once_per_auto_doc",
       targetContractTypeId: "type",
       titlePattern: "NDA {{jurisdiction}}",
       fixedEntityId: "entity",
@@ -613,6 +625,51 @@ it("edits ordered Assignment rules with every operator and an optional default L
     expect(saves.at(-1)).toMatchObject({
       rules: [{ id: "rule-0", legalOwnerId: "other" }],
       defaultLegalOwnerId: null,
+    }),
+  );
+});
+
+it("saves selected people and Departments with the acknowledgement override and frequency", async () => {
+  let saved: unknown;
+  const current = record();
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+      if (call.url.pathname === "/api/v1/auto-docs/nda") {
+        if (call.method === "PATCH") {
+          saved = call.body;
+          return json(200, current);
+        }
+        return json(200, current);
+      }
+      return undefined;
+    },
+  });
+  const user = userEvent.setup();
+  renderAt("/auto-docs/nda");
+  await screen.findByRole("heading", { name: "Settings" });
+  await user.selectOptions(screen.getByRole("combobox", { name: "Audience" }), "selected");
+  await user.selectOptions(screen.getByRole("listbox", { name: "Selected people" }), "buyer");
+  await user.selectOptions(screen.getByRole("listbox", { name: "Selected Departments" }), "sales");
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Acknowledgement frequency" }),
+    "every_use",
+  );
+  await user.click(
+    screen.getByRole("checkbox", { name: "Use the organisation's acknowledgement text" }),
+  );
+  await user.clear(screen.getByLabelText("Acknowledgement text"));
+  await user.type(screen.getByLabelText("Acknowledgement text"), "Ask Legal before changes.");
+  await user.click(screen.getByRole("button", { name: "Save settings" }));
+  await waitFor(() =>
+    expect(saved).toMatchObject({
+      audience: "selected",
+      audienceUserIds: ["buyer"],
+      audienceDepartmentIds: ["sales"],
+      acknowledgementFrequency: "every_use",
+      acknowledgementText: "Ask Legal before changes.",
     }),
   );
 });

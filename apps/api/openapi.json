@@ -5083,6 +5083,97 @@
         }
       }
     },
+    "/api/v1/auto-docs/settings": {
+      "get": {
+        "operationId": "getAutoDocSettings",
+        "tags": ["auto-docs"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "acknowledgementText": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    }
+                  },
+                  "required": ["acknowledgementText"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveAutoDocSettings",
+        "tags": ["auto-docs"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "acknowledgementText": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10000
+                  }
+                },
+                "required": ["acknowledgementText"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "acknowledgementText": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    }
+                  },
+                  "required": ["acknowledgementText"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auto-docs/options": {
       "get": {
         "operationId": "getAutoDocOptions",
@@ -5161,9 +5252,48 @@
                         "required": ["id", "displayName"],
                         "additionalProperties": false
                       }
+                    },
+                    "audienceUsers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "departments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["catalogFields", "contractTypes", "entities", "legalOwners"],
+                  "required": [
+                    "catalogFields",
+                    "contractTypes",
+                    "entities",
+                    "legalOwners",
+                    "audienceUsers",
+                    "departments"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -5325,6 +5455,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -5387,6 +5524,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -5399,6 +5538,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -5969,6 +6129,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -6010,6 +6174,38 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200
+                  },
+                  "audienceUserIds": {
+                    "maxItems": 500,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "audienceDepartmentIds": {
+                    "maxItems": 500,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "acknowledgementText": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acknowledgementFrequency": {
+                    "type": "string",
+                    "enum": ["none", "every_use", "once_per_auto_doc", "once"]
                   },
                   "description": {
                     "anyOf": [
@@ -6128,6 +6324,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -6190,6 +6393,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -6202,6 +6407,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -6772,6 +6998,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -6848,6 +7078,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -6910,6 +7147,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -6922,6 +7161,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -7492,6 +7752,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -7685,6 +7949,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -7747,6 +8018,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -7759,6 +8032,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -8329,6 +8623,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -8419,6 +8717,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -8481,6 +8786,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -8493,6 +8800,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -9063,6 +9391,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -9153,6 +9485,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -9215,6 +9554,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -9227,6 +9568,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -9797,6 +10159,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -9887,6 +10253,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -9949,6 +10322,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -9961,6 +10336,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -10531,6 +10927,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -10639,6 +11039,13 @@
                             "type": "string",
                             "enum": ["legal_only", "selected", "everyone"]
                           },
+                          "acknowledgementText": {
+                            "type": ["string", "null"]
+                          },
+                          "acknowledgementFrequency": {
+                            "type": "string",
+                            "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                          },
                           "targetContractTypeId": {
                             "type": ["string", "null"]
                           },
@@ -10701,6 +11108,8 @@
                           "state",
                           "templateDocumentId",
                           "audience",
+                          "acknowledgementText",
+                          "acknowledgementFrequency",
                           "targetContractTypeId",
                           "titlePattern",
                           "fixedEntityId",
@@ -10806,6 +11215,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -10868,6 +11284,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -10971,6 +11389,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -11033,6 +11458,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -11045,6 +11472,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -11615,6 +12063,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -11884,6 +12336,13 @@
                           "type": "string",
                           "enum": ["legal_only", "selected", "everyone"]
                         },
+                        "acknowledgementText": {
+                          "type": ["string", "null"]
+                        },
+                        "acknowledgementFrequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -11946,6 +12405,8 @@
                         "state",
                         "templateDocumentId",
                         "audience",
+                        "acknowledgementText",
+                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -11958,6 +12419,27 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "audienceUserIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "audienceDepartmentIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "defaultAcknowledgementText": {
+                      "type": "string"
+                    },
+                    "portalWarnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "assignmentRules": {
                       "type": "array",
@@ -12528,6 +13010,10 @@
                   },
                   "required": [
                     "autoDoc",
+                    "audienceUserIds",
+                    "audienceDepartmentIds",
+                    "defaultAcknowledgementText",
+                    "portalWarnings",
                     "assignmentRules",
                     "template",
                     "detection",
@@ -29392,6 +29878,1320 @@
                   },
                   "required": ["completedAt"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/auto-docs": {
+      "get": {
+        "operationId": "listPortalAutoDocs",
+        "tags": ["portal"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "autoDocs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "formats": {
+                            "type": "string",
+                            "enum": ["docx", "pdf", "both"]
+                          },
+                          "createsContract": {
+                            "type": "boolean"
+                          },
+                          "availability": {
+                            "type": "object",
+                            "properties": {
+                              "ready": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": ["string", "null"]
+                              }
+                            },
+                            "required": ["ready", "message"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "description",
+                          "formats",
+                          "createsContract",
+                          "availability"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["autoDocs"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/auto-docs/{id}/generate": {
+      "get": {
+        "operationId": "getPortalAutoDocForm",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "query",
+            "name": "acknowledgementId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "autoDoc": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "createsContract": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["id", "name", "description", "formats", "createsContract"],
+                      "additionalProperties": false
+                    },
+                    "acknowledgement": {
+                      "type": "object",
+                      "properties": {
+                        "frequency": {
+                          "type": "string",
+                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
+                        },
+                        "required": {
+                          "type": "boolean"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "textHash": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["frequency", "required", "text", "textHash"],
+                      "additionalProperties": false
+                    },
+                    "availability": {
+                      "type": "object",
+                      "properties": {
+                        "ready": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": ["ready", "message"],
+                      "additionalProperties": false
+                    },
+                    "form": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "pair": {
+                              "type": "object",
+                              "properties": {
+                                "documentVersionId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "formVersionId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "required": ["documentVersionId", "formVersionId"],
+                              "additionalProperties": false
+                            },
+                            "fields": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "slug": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "help": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "fieldType": {
+                                    "type": "string",
+                                    "enum": [
+                                      "text",
+                                      "long_text",
+                                      "number",
+                                      "currency",
+                                      "date",
+                                      "boolean",
+                                      "single_select",
+                                      "multi_select",
+                                      "entity"
+                                    ]
+                                  },
+                                  "options": {
+                                    "anyOf": [
+                                      {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "required": {
+                                    "type": "boolean"
+                                  },
+                                  "displayOrder": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "placeholder": {
+                                    "type": "boolean"
+                                  },
+                                  "catalogFieldId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "contractAttribute": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "title",
+                                          "primary_counterparty_name",
+                                          "entity_id",
+                                          "owning_department_id",
+                                          "region",
+                                          "value",
+                                          "effective_date",
+                                          "expiry_date",
+                                          "term_type"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "valueCurrency": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "valueCadence": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": ["one_time", "monthly", "annually"]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "slug",
+                                  "label",
+                                  "help",
+                                  "fieldType",
+                                  "options",
+                                  "required",
+                                  "displayOrder",
+                                  "placeholder",
+                                  "catalogFieldId",
+                                  "contractAttribute"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "entities": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["id", "name"],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": ["pair", "fields", "entities"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["autoDoc", "acknowledgement", "availability", "form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/auto-docs/{id}/acknowledgements": {
+      "post": {
+        "operationId": "acknowledgePortalAutoDoc",
+        "tags": ["portal"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "textHash": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": ["textHash"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "acknowledgementId": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["acknowledgementId"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/auto-docs/{id}/generations": {
+      "post": {
+        "operationId": "generatePortalAutoDoc",
+        "tags": ["portal"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "documentVersionId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "formVersionId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "answers": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 10000
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "maxItems": 1000,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "acknowledgementId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": ["documentVersionId", "formVersionId", "answers"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "generation": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "autoDocId": {
+                          "type": "string"
+                        },
+                        "autoDocName": {
+                          "type": "string"
+                        },
+                        "documentVersionId": {
+                          "type": "string"
+                        },
+                        "formVersionId": {
+                          "type": "string"
+                        },
+                        "documentVersionNumber": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "formVersionNumber": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "generatedBy": {
+                          "type": "string"
+                        },
+                        "person": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["id", "displayName"],
+                          "additionalProperties": false
+                        },
+                        "answers": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 10000
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "maxItems": 1000,
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": ["pending", "ready", "failed"]
+                        },
+                        "hasDocx": {
+                          "type": "boolean"
+                        },
+                        "hasPdf": {
+                          "type": "boolean"
+                        },
+                        "createdContract": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "number": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "title": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "number", "title"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "emailState": {
+                          "type": "string",
+                          "enum": ["not_requested", "pending", "sent", "failed", "unconfigured"]
+                        },
+                        "emailSentAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "emailFailure": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["code", "detail"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["code", "detail"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "autoDocId",
+                        "autoDocName",
+                        "documentVersionId",
+                        "formVersionId",
+                        "documentVersionNumber",
+                        "formVersionNumber",
+                        "generatedBy",
+                        "person",
+                        "answers",
+                        "state",
+                        "hasDocx",
+                        "hasPdf",
+                        "createdContract",
+                        "formats",
+                        "emailState",
+                        "emailSentAt",
+                        "emailFailure",
+                        "failure",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["generation"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/auto-doc-generations": {
+      "get": {
+        "operationId": "listPortalAutoDocGenerations",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "query",
+            "name": "before",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "generations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "autoDocId": {
+                            "type": "string"
+                          },
+                          "autoDocName": {
+                            "type": "string"
+                          },
+                          "documentVersionId": {
+                            "type": "string"
+                          },
+                          "formVersionId": {
+                            "type": "string"
+                          },
+                          "documentVersionNumber": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "formVersionNumber": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "generatedBy": {
+                            "type": "string"
+                          },
+                          "person": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          },
+                          "answers": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                            },
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "maxLength": 10000
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "maxItems": 1000,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "maxLength": 200
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "state": {
+                            "type": "string",
+                            "enum": ["pending", "ready", "failed"]
+                          },
+                          "hasDocx": {
+                            "type": "boolean"
+                          },
+                          "hasPdf": {
+                            "type": "boolean"
+                          },
+                          "createdContract": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "number": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["id", "number", "title"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "formats": {
+                            "type": "string",
+                            "enum": ["docx", "pdf", "both"]
+                          },
+                          "emailState": {
+                            "type": "string",
+                            "enum": ["not_requested", "pending", "sent", "failed", "unconfigured"]
+                          },
+                          "emailSentAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "emailFailure": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "detail": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["code", "detail"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "failure": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "detail": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["code", "detail"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "autoDocId",
+                          "autoDocName",
+                          "documentVersionId",
+                          "formVersionId",
+                          "documentVersionNumber",
+                          "formVersionNumber",
+                          "generatedBy",
+                          "person",
+                          "answers",
+                          "state",
+                          "hasDocx",
+                          "hasPdf",
+                          "createdContract",
+                          "formats",
+                          "emailState",
+                          "emailSentAt",
+                          "emailFailure",
+                          "failure",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["generations", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/auto-docs/{id}/generations/{generationId}": {
+      "get": {
+        "operationId": "getPortalAutoDocGeneration",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "generationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "generation": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "autoDocId": {
+                          "type": "string"
+                        },
+                        "autoDocName": {
+                          "type": "string"
+                        },
+                        "documentVersionId": {
+                          "type": "string"
+                        },
+                        "formVersionId": {
+                          "type": "string"
+                        },
+                        "documentVersionNumber": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "formVersionNumber": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "generatedBy": {
+                          "type": "string"
+                        },
+                        "person": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["id", "displayName"],
+                          "additionalProperties": false
+                        },
+                        "answers": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 10000
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "maxItems": 1000,
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": ["pending", "ready", "failed"]
+                        },
+                        "hasDocx": {
+                          "type": "boolean"
+                        },
+                        "hasPdf": {
+                          "type": "boolean"
+                        },
+                        "createdContract": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "number": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "title": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "number", "title"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "emailState": {
+                          "type": "string",
+                          "enum": ["not_requested", "pending", "sent", "failed", "unconfigured"]
+                        },
+                        "emailSentAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "emailFailure": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["code", "detail"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "failure": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "detail": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["code", "detail"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "autoDocId",
+                        "autoDocName",
+                        "documentVersionId",
+                        "formVersionId",
+                        "documentVersionNumber",
+                        "formVersionNumber",
+                        "generatedBy",
+                        "person",
+                        "answers",
+                        "state",
+                        "hasDocx",
+                        "hasPdf",
+                        "createdContract",
+                        "formats",
+                        "emailState",
+                        "emailSentAt",
+                        "emailFailure",
+                        "failure",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "canGenerate": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["generation", "canGenerate"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/auto-docs/{id}/generations/{generationId}/docx": {
+      "get": {
+        "operationId": "downloadPortalAutoDocWord",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "generationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/auto-docs/{id}/generations/{generationId}/pdf": {
+      "get": {
+        "operationId": "downloadPortalAutoDocPdf",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "generationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }

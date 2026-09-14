@@ -22,6 +22,8 @@ const autoDoc: AutoDocAnswer["autoDoc"] = {
   state: "draft",
   templateDocumentId: "template",
   audience: "legal_only",
+  acknowledgementText: null,
+  acknowledgementFrequency: "once_per_auto_doc",
   targetContractTypeId: null,
   titlePattern: null,
   fixedEntityId: null,
@@ -71,6 +73,10 @@ function record(): AutoDocAnswer & { formVersion: NonNullable<AutoDocAnswer["for
   };
   return {
     autoDoc,
+    audienceUserIds: [],
+    audienceDepartmentIds: [],
+    defaultAcknowledgementText: "Do not edit.",
+    portalWarnings: [],
     assignmentRules: [],
     template: {
       id: "template",

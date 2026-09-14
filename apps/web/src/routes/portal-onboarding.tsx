@@ -395,7 +395,7 @@ export function PortalOnboardingPage() {
                 <p className="text-sm text-muted">
                   <FormattedMessage
                     id="portal.onboarding.tour.autoDocs.detail"
-                    defaultMessage="Auto-Docs will let you fill in a form to generate a Document from a template Legal has prepared."
+                    defaultMessage="Fill in a form to generate a document from an Auto-Doc prepared by Legal."
                   />
                 </p>
               </div>

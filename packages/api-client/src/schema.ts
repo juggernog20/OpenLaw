@@ -711,6 +711,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auto-docs/settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAutoDocSettings"];
+    put: operations["saveAutoDocSettings"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auto-docs/options": {
     parameters: {
       query?: never;
@@ -2800,6 +2816,134 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["completePortalOnboarding"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPortalAutoDocs"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs/{id}/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPortalAutoDocForm"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs/{id}/acknowledgements": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["acknowledgePortalAutoDoc"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs/{id}/generations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["generatePortalAutoDoc"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-doc-generations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPortalAutoDocGenerations"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs/{id}/generations/{generationId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPortalAutoDocGeneration"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs/{id}/generations/{generationId}/docx": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["downloadPortalAutoDocWord"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs/{id}/generations/{generationId}/pdf": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["downloadPortalAutoDocPdf"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -8890,6 +9034,74 @@ export interface operations {
       };
     };
   };
+  getAutoDocSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            acknowledgementText: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  saveAutoDocSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          acknowledgementText: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            acknowledgementText: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getAutoDocOptions: {
     parameters: {
       query?: never;
@@ -8920,6 +9132,14 @@ export interface operations {
               name: string;
             }[];
             legalOwners: {
+              id: string;
+              displayName: string;
+            }[];
+            audienceUsers: {
+              id: string;
+              displayName: string;
+            }[];
+            departments: {
               id: string;
               displayName: string;
             }[];
@@ -8981,6 +9201,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -8994,6 +9217,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -9168,6 +9395,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -9181,6 +9411,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -9338,6 +9572,11 @@ export interface operations {
       content: {
         "application/json": {
           name?: string;
+          audienceUserIds?: string[];
+          audienceDepartmentIds?: string[];
+          acknowledgementText?: string | null;
+          /** @enum {string} */
+          acknowledgementFrequency?: "none" | "every_use" | "once_per_auto_doc" | "once";
           description?: string | null;
           /** @enum {string} */
           audience?: "legal_only" | "selected" | "everyone";
@@ -9370,6 +9609,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -9383,6 +9625,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -9614,6 +9860,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -9627,6 +9876,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -9805,6 +10058,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -9818,6 +10074,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -9996,6 +10256,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10009,6 +10272,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -10187,6 +10454,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10200,6 +10470,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -10377,6 +10651,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10439,6 +10716,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10503,6 +10783,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10516,6 +10799,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -10742,6 +11029,9 @@ export interface operations {
               templateDocumentId: string | null;
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
+              acknowledgementText: string | null;
+              /** @enum {string} */
+              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10755,6 +11045,10 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            audienceUserIds: string[];
+            audienceDepartmentIds: string[];
+            defaultAcknowledgementText: string;
+            portalWarnings: string[];
             assignmentRules: {
               fieldSlug: string;
               /** @enum {string} */
@@ -16943,6 +17237,490 @@ export interface operations {
             /** Format: date-time */
             completedAt: string;
           };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalAutoDocs: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDocs: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              createsContract: boolean;
+              availability: {
+                ready: boolean;
+                message: string | null;
+              };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getPortalAutoDocForm: {
+    parameters: {
+      query?: {
+        acknowledgementId?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDoc: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              createsContract: boolean;
+            };
+            acknowledgement: {
+              /** @enum {string} */
+              frequency: "none" | "every_use" | "once_per_auto_doc" | "once";
+              required: boolean;
+              text: string;
+              textHash: string;
+            };
+            availability: {
+              ready: boolean;
+              message: string | null;
+            };
+            form: {
+              pair: {
+                documentVersionId: string;
+                formVersionId: string;
+              };
+              fields: {
+                slug: string;
+                label: string;
+                help: string | null;
+                /** @enum {string} */
+                fieldType:
+                  | "text"
+                  | "long_text"
+                  | "number"
+                  | "currency"
+                  | "date"
+                  | "boolean"
+                  | "single_select"
+                  | "multi_select"
+                  | "entity";
+                options: string[] | null;
+                required: boolean;
+                displayOrder: number;
+                placeholder: boolean;
+                catalogFieldId: string | null;
+                contractAttribute:
+                  | (
+                      | "title"
+                      | "primary_counterparty_name"
+                      | "entity_id"
+                      | "owning_department_id"
+                      | "region"
+                      | "value"
+                      | "effective_date"
+                      | "expiry_date"
+                      | "term_type"
+                    )
+                  | null;
+                valueCurrency?: string | null;
+                valueCadence?: ("one_time" | "monthly" | "annually") | null;
+              }[];
+              entities: {
+                id: string;
+                name: string;
+              }[];
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  acknowledgePortalAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          textHash: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            acknowledgementId: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  generatePortalAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          documentVersionId: string;
+          formVersionId: string;
+          answers: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
+          /** Format: uuid */
+          acknowledgementId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            generation: {
+              id: string;
+              autoDocId: string;
+              autoDocName: string;
+              documentVersionId: string;
+              formVersionId: string;
+              documentVersionNumber: number;
+              formVersionNumber: number;
+              generatedBy: string;
+              person: {
+                id: string;
+                displayName: string;
+              };
+              answers: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              hasDocx: boolean;
+              hasPdf: boolean;
+              createdContract: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              /** @enum {string} */
+              emailState: "not_requested" | "pending" | "sent" | "failed" | "unconfigured";
+              emailSentAt: string | null;
+              emailFailure: {
+                code: string;
+                detail: string;
+              } | null;
+              failure: {
+                code: string;
+                detail: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalAutoDocGenerations: {
+    parameters: {
+      query?: {
+        before?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            generations: {
+              id: string;
+              autoDocId: string;
+              autoDocName: string;
+              documentVersionId: string;
+              formVersionId: string;
+              documentVersionNumber: number;
+              formVersionNumber: number;
+              generatedBy: string;
+              person: {
+                id: string;
+                displayName: string;
+              };
+              answers: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              hasDocx: boolean;
+              hasPdf: boolean;
+              createdContract: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              /** @enum {string} */
+              emailState: "not_requested" | "pending" | "sent" | "failed" | "unconfigured";
+              emailSentAt: string | null;
+              emailFailure: {
+                code: string;
+                detail: string;
+              } | null;
+              failure: {
+                code: string;
+                detail: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getPortalAutoDocGeneration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        generationId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            generation: {
+              id: string;
+              autoDocId: string;
+              autoDocName: string;
+              documentVersionId: string;
+              formVersionId: string;
+              documentVersionNumber: number;
+              formVersionNumber: number;
+              generatedBy: string;
+              person: {
+                id: string;
+                displayName: string;
+              };
+              answers: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed";
+              hasDocx: boolean;
+              hasPdf: boolean;
+              createdContract: {
+                id: string;
+                number: number;
+                title: string;
+              } | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              /** @enum {string} */
+              emailState: "not_requested" | "pending" | "sent" | "failed" | "unconfigured";
+              emailSentAt: string | null;
+              emailFailure: {
+                code: string;
+                detail: string;
+              } | null;
+              failure: {
+                code: string;
+                detail: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            canGenerate: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadPortalAutoDocWord: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        generationId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadPortalAutoDocPdf: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        generationId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
         };
       };
       /** @description Problem details (RFC 9457) */

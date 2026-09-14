@@ -9,12 +9,14 @@ import {
   index,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
   type AnyPgColumn,
   type PgTableExtraConfigValue,
 } from "drizzle-orm/pg-core";
+import { departments } from "./departments.js";
 import { users } from "./auth.js";
 import { contracts, type TermType, type ValueCadence } from "./contracts.js";
 import { entities } from "./entities.js";
@@ -23,6 +25,12 @@ import { documents, documentVersions } from "./documents.js";
 import { FIELD_TYPES, type FieldType, type CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 
+export const AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES = [
+  "none",
+  "every_use",
+  "once_per_auto_doc",
+  "once",
+] as const;
 export const AUTO_DOC_FORMATS = ["docx", "pdf", "both"] as const;
 export const AUTO_DOC_EMAIL_STATES = [
   "not_requested",
@@ -113,6 +121,13 @@ export const autoDocs = pgTable(
       onDelete: "set null",
     }),
     state: text("state", { enum: AUTO_DOC_STATES }).notNull().default("draft"),
+    /** Null uses the org acknowledgement text. */
+    acknowledgementText: text("acknowledgement_text"),
+    acknowledgementFrequency: text("acknowledgement_frequency", {
+      enum: AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES,
+    })
+      .notNull()
+      .default("once_per_auto_doc"),
     audience: text("audience", { enum: AUTO_DOC_AUDIENCES }).notNull().default("legal_only"),
     /** Null means this Auto-Doc has no target Contract Type. */
     targetContractTypeId: text("target_contract_type_id").references(() => contractTypes.id, {
@@ -145,6 +160,10 @@ export const autoDocs = pgTable(
       columns: [table.publishedFormVersionId],
       foreignColumns: [autoDocFormVersions.id],
     }),
+    check(
+      "auto_docs_acknowledgement_frequency_check",
+      sql`${table.acknowledgementFrequency} in ('none', 'every_use', 'once_per_auto_doc', 'once')`,
+    ),
     check("auto_docs_formats_check", sql`${table.formats} in ('docx', 'pdf', 'both')`),
     check("auto_docs_state_check", sql`${table.state} in ('draft', 'published', 'archived')`),
     check(
@@ -353,6 +372,71 @@ export const autoDocAssignmentRules = pgTable(
     check(
       "auto_doc_assignment_rules_operator_check",
       sql`${table.operator} in ('equals', 'is_one_of', 'is_set', 'is_not')`,
+    ),
+  ],
+);
+
+/** ADO-009: direct people and live Department membership grant the selected audience. */
+export const autoDocAudienceUsers = pgTable(
+  "auto_doc_audience_users",
+  {
+    autoDocId: text("auto_doc_id")
+      .notNull()
+      .references(() => autoDocs.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.autoDocId, table.userId] })],
+);
+export const autoDocAudienceDepartments = pgTable(
+  "auto_doc_audience_departments",
+  {
+    autoDocId: text("auto_doc_id")
+      .notNull()
+      .references(() => autoDocs.id, { onDelete: "cascade" }),
+    departmentId: text("department_id")
+      .notNull()
+      .references(() => departments.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.autoDocId, table.departmentId] })],
+);
+
+/** ADO-008: standing Acknowledgements and consumed every-use Acknowledgements retain their text hash. */
+export const autoDocAcknowledgements = pgTable(
+  "auto_doc_acknowledgements",
+  {
+    id: uuidPk(),
+    /** Null gives a once acknowledgement org-wide scope. */
+    autoDocId: text("auto_doc_id").references(() => autoDocs.id),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    frequency: text("frequency", { enum: ["every_use", "once_per_auto_doc", "once"] }).notNull(),
+    textHash: text("text_hash").notNull(),
+    acknowledgedAt: timestamp("acknowledged_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Null until an every-use acknowledgement accepts one Generation. */
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    /** Null while the words have not been superseded, including after a later text reversion. */
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("auto_doc_acknowledgements_person_idx").on(table.userId, table.autoDocId, table.textHash),
+    index("auto_doc_acknowledgements_text_idx")
+      .on(table.textHash)
+      .where(sql`${table.revokedAt} is null`),
+    check(
+      "auto_doc_acknowledgements_frequency_check",
+      sql`${table.frequency} in ('every_use', 'once_per_auto_doc', 'once')`,
+    ),
+    check(
+      "auto_doc_acknowledgements_scope_check",
+      sql`(${table.autoDocId} is null) = (${table.frequency} = 'once')`,
+    ),
+    check("auto_doc_acknowledgements_hash_check", sql`${table.textHash} ~ '^[a-f0-9]{64}$'`),
+    check(
+      "auto_doc_acknowledgements_consumed_check",
+      sql`${table.consumedAt} is null or ${table.frequency} = 'every_use'`,
     ),
   ],
 );
