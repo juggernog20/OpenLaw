@@ -507,6 +507,29 @@ it("requires an explicit currency and cadence before publishing a targeted Value
   expect(refused.json().detail).toContain("currency and cadence");
 });
 
+it("refuses a built-in map no answer of that form field can fill", async () => {
+  const prepared = await prepare();
+  const detail = await h.app.inject({ url: `/api/v1/auto-docs/${prepared.id}`, cookies });
+  const definition = detail.json().formVersion.definition;
+  const fields = definition.fields.map((field: Record<string, unknown>) => {
+    const editable = Object.fromEntries(
+      Object.entries(field).filter(([key]) => key !== "displayOrder" && key !== "placeholder"),
+    );
+    if (field.contractAttribute === "region") return { ...editable, fieldType: "boolean" };
+    if (field.contractAttribute === "value") return { ...editable, fieldType: "long_text" };
+    return editable;
+  });
+  const saved = await post(`/auto-docs/${prepared.id}/form-versions`, { ...definition, fields });
+  expect(saved.statusCode, saved.body).toBe(201);
+  const refused = await post(`/auto-docs/${prepared.id}/publish`, {
+    ...prepared.pair,
+    formVersionId: saved.json().formVersion.id,
+  });
+  expect(refused.statusCode, refused.body).toBe(409);
+  expect(refused.json().detail).toContain('The "region" map needs a text answer.');
+  expect(refused.json().detail).toContain("The Value map needs a number answer.");
+});
+
 it("hides the Contract link when its current title is outside the reader's audience", async () => {
   const outsider = await provisionUser(h.app.auth, {
     email: "generation-reader@example.com",

@@ -18,6 +18,7 @@ import {
   type AutoDoc,
   type AutoDocContractSnapshot,
   type AutoDocFormDefinition,
+  type AutoDocFormField,
   type CustomFieldValue,
   type Transaction,
 } from "@openlaw/db";
@@ -34,6 +35,22 @@ import {
 } from "../../lib/custom-fields.js";
 import { generationEntityScope } from "./answers.js";
 import { httpError } from "../../lib/problem.js";
+
+/**
+ * Which answers each built-in destination can read. The Value map takes
+ * the number a currency or number field gives; every other attribute
+ * reads a string. The resolver below refuses the rest anyway, but it
+ * refuses them at Generation, where the person filling the form cannot
+ * act on the answer. Publish is where the person who drew the map is.
+ */
+const NUMERIC_ANSWERS: AutoDocFormField["fieldType"][] = ["currency", "number"];
+const TEXT_ANSWERS: AutoDocFormField["fieldType"][] = [
+  "text",
+  "long_text",
+  "single_select",
+  "date",
+  "entity",
+];
 
 const titleTokens = /\{\{([^{}]*)\}\}/g;
 export function contractPublicationGaps(
@@ -58,12 +75,18 @@ export function contractPublicationGaps(
     if (destination && destinations.has(destination))
       gaps.push(`Map only one form field to "${destination}".`);
     if (destination) destinations.add(destination);
-    if (
-      field.contractAttribute === "value" &&
-      (!CurrencySchema.safeParse(field.valueCurrency).success ||
-        !VALUE_CADENCES.includes(field.valueCadence!))
-    )
-      gaps.push(`Choose the currency and cadence for the Value map on "${field.label}".`);
+    if (field.contractAttribute === "value") {
+      if (
+        !CurrencySchema.safeParse(field.valueCurrency).success ||
+        !VALUE_CADENCES.includes(field.valueCadence!)
+      )
+        gaps.push(`Choose the currency and cadence for the Value map on "${field.label}".`);
+      if (!NUMERIC_ANSWERS.includes(field.fieldType))
+        gaps.push(`The Value map needs a number answer. "${field.label}" gives another kind.`);
+    } else if (field.contractAttribute && !TEXT_ANSWERS.includes(field.fieldType))
+      gaps.push(
+        `The "${field.contractAttribute}" map needs a text answer. "${field.label}" gives another kind.`,
+      );
   }
   return gaps;
 }

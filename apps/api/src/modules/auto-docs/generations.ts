@@ -200,6 +200,9 @@ async function fillGeneration(
       generationDocxKey(generation.id),
       Readable.from([output]),
     );
+    // The cleanup list stays the live array rather than a copy of it.
+    // The Contract Document's own blob is pushed below, after this call
+    // has taken the list, and a rollback has to remove that one too.
     const stored = [fileRef];
     await withStoredBlobs(app.storage, log, stored, async () => {
       await app.notifier.notifying(async (tx) => {
