@@ -60,7 +60,11 @@ export function RuleValueInput({
           {[...new Set([...choices, ...stored])].map((option) => (
             <option key={option} value={option}>
               {choices.includes(option)
-                ? option
+                ? field?.fieldType === "boolean"
+                  ? option === "true"
+                    ? intl.formatMessage({ id: "common.yes", defaultMessage: "Yes" })
+                    : intl.formatMessage({ id: "common.no", defaultMessage: "No" })
+                  : option
                 : intl.formatMessage(
                     { id: "autoDocs.missingRuleOption", defaultMessage: "{value} (missing)" },
                     { value: option },

@@ -4818,9 +4818,9 @@ Every later step has Continue and Skip, with Finish on the tour. Name and photo 
 
 The tour introduces Requests, Contracts, Matters, and Auto-Docs in four short paragraphs. Its Auto-Docs stop is text until the destination ships. Each step is a named region, its heading receives focus when the step changes, and a visible progress line names the current step and total. Controls have persistent labels; save errors are announced. The accessibility sweep covers every step.
 
-A refusal on Finish returns the person to Department with fresh choices and a visible explanation. Completing the tour opens the Portal home. SET-011 defines the lifecycle and persistence rules behind these transitions.
+A refusal on Finish shows a visible explanation and returns the person to Department when fresh live choices remain. An empty refreshed list keeps the tour and Finish available. Completing the tour opens the Portal home. SET-011 defines the lifecycle and persistence rules behind these transitions.
 
-**Trade-off:** The wizard delays the first visit to the Portal, but collects the Department before audience checks depend on it. Asking on the Portal home would leave that prerequisite incomplete. Optional steps stay skippable to limit the delay.
+**Trade-off:** One step per card gives each heading and refusal a clear focus target, at the cost of more navigation. A single long form was rejected because its optional Profile controls would compete with the Department selector. SET-011 owns the prerequisite and Skip rules.
 
 ## DES-085: The Portal Auto-Docs destination leads from acknowledgement to a generated file
 
@@ -4860,7 +4860,7 @@ The Member generation form has an optional Filing destination using the same pic
 
 Generate again opens the current published form. Compatible saved answers are prefilled; removed or incompatible answers are named in **Previous answers**, with saved Entity display names. The person reviews the new form before generating. Acknowledgement, publication, and reach continue to gate new Generations.
 
-**Trade-off:** Filing adds a destination choice after Generation. That extra step keeps output separate from record ownership and prevents an automatic Filing to an unintended record. The optional destination on the Member form avoids repeating the choice when it is already known.
+**Trade-off:** A dialog keeps the destination and refusal beside the Generation being Filed, but requires a focus trap and focus restoration. A separate page was rejected because it would separate those controls from the Generation's downloads and previous Filings. ADO-005 owns the destination and record-ownership rules.
 
 The dialog follows the existing focus trap and return-focus behavior. All pickers have visible labels, errors use the existing alert treatment, and pending work disables repeat submission. Validate the new controls with route tests and axe in both shells.
 

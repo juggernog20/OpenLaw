@@ -119,6 +119,8 @@ Member+ may choose a Contract Type when Filing an already generated output to a 
 
 A destination chosen on the Member generation form is saved in the acceptance transaction. Word Filing completes after fill; PDF Filing is fulfilled by the delivery worker when conversion finishes, with the saved Filing id preventing duplicate copies. Reach is checked again. A Filing failure leaves the Generation's output intact and lets the person choose a destination again. Every Filing writes `auto_doc.filed` and the ordinary `document.created` action, with generated provenance; existing upload narration is unchanged. History remains after Document erasure. Filing targets and their Activity are visible only through the reader's current destination reach.
 
+**Trade-off:** Filing adds a destination choice after Generation. That extra step keeps output separate from record ownership and prevents an automatic Filing to an unintended record. The optional destination on the Member form avoids repeating the choice when it is already known.
+
 ## ADO-006 — Assignment rules choose the Legal Owner; an unmatched Generation waits on the Inbox as an Unassigned contract
 
 - **Status** — Accepted
