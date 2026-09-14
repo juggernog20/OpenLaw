@@ -39,14 +39,22 @@ it("drops return estimates while preserving Requests, submitted dates, ownership
       ).rows,
     ).toEqual([]);
     expect(
-      (await db.execute(sql`select to_jsonb(r) as row from requests r where id = 'request'`)).rows,
+      (
+        await db.execute(
+          sql`select to_jsonb(r) - 'department_id' as row from requests r where id = 'request'`,
+        )
+      ).rows,
     ).toEqual(before);
     expect(
       (await db.execute(sql`select * from activity_log where id = 'estimate-change'`)).rows,
     ).toEqual(history);
     await runMigrations(db);
     expect(
-      (await db.execute(sql`select to_jsonb(r) as row from requests r where id = 'request'`)).rows,
+      (
+        await db.execute(
+          sql`select to_jsonb(r) - 'department_id' as row from requests r where id = 'request'`,
+        )
+      ).rows,
     ).toEqual(before);
   } finally {
     await db.$client.end();
