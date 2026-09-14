@@ -434,6 +434,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     documentVersionId: "file1",
     formVersionId: "form1",
   },
+  "auto_doc.hard_deleted": { generationCount: 2, versionCount: 3 },
   "auto_doc.archived": { name: "Supplier NDA", documentVersionId: "file1", formVersionId: "form1" },
   "auto_doc.restored": { name: "Supplier NDA", documentVersionId: "file1", formVersionId: "form1" },
   "auto_doc.created": { name: "Supplier NDA" },

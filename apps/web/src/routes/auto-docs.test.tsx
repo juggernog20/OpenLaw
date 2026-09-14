@@ -150,6 +150,7 @@ it("applies chip filters, preserves search, and restores filters through browser
   });
   const { router } = renderAt("/auto-docs?q=Supplier&state=published");
   expect(await screen.findByRole("button", { name: "State: Published" })).toBeVisible();
+  await waitFor(() => expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled());
   await user.click(screen.getByRole("button", { name: /^Filter/ }));
   await user.click(
     within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
@@ -165,6 +166,7 @@ it("applies chip filters, preserves search, and restores filters through browser
     audience: "everyone",
   });
 
+  await waitFor(() => expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled());
   await user.click(screen.getByRole("button", { name: /^Filter/ }));
   await user.click(
     within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
@@ -184,12 +186,18 @@ it("applies chip filters, preserves search, and restores filters through browser
       targetContractTypeId: "nda-type",
     }),
   );
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Remove State filter" })).toBeEnabled(),
+  );
   await user.click(screen.getByRole("button", { name: "Remove State filter" }));
   await waitFor(() => expect(queries.at(-1)!.has("state")).toBe(false));
   expect(screen.getByRole("button", { name: "Audience: Everyone" })).toBeVisible();
+  await waitFor(() => expect(screen.getByRole("button", { name: "Clear all" })).toBeEnabled());
   await user.click(screen.getByRole("button", { name: "Clear all" }));
   await waitFor(() => expect(Object.fromEntries(queries.at(-1)!)).toEqual({ q: "Agreement" }));
-  expect(screen.queryByRole("button", { name: "Audience: Everyone" })).not.toBeInTheDocument();
+  await waitFor(() =>
+    expect(screen.queryByRole("button", { name: "Audience: Everyone" })).not.toBeInTheDocument(),
+  );
   await router.navigate(-1);
   expect(await screen.findByRole("button", { name: "Audience: Everyone" })).toBeVisible();
   expect(screen.getByRole("button", { name: "Target Contract Type: NDA" })).toBeVisible();

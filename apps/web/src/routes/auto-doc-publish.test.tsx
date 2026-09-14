@@ -371,6 +371,7 @@ it("commits each setting on its own, then applies list filters", async () => {
     ["Audience", "Everyone"],
     ["Target Contract Type", options.contractTypes[0]!.displayName],
   ]) {
+    await waitFor(() => expect(screen.getByRole("button", { name: /^Filter/ })).toBeEnabled());
     await user.click(screen.getByRole("button", { name: /^Filter/ }));
     const menu = screen.getByRole("dialog", { name: "Filter" });
     await user.click(within(menu).getByRole("button", { name: label }));
@@ -720,6 +721,7 @@ it("commits selected people and Departments and the acknowledgement override one
 it("refreshes Assignment values after saving sibling settings without overwriting the refreshed record", async () => {
   const user = userEvent.setup();
   let current = record();
+  current.autoDoc.targetContractTypeId = "type";
   current.formVersion!.definition.fields[0] = {
     ...current.formVersion!.definition.fields[0]!,
     fieldType: "text",

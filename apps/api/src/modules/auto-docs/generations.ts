@@ -221,7 +221,10 @@ async function fillGeneration(
       await app.notifier.notifying(async (tx) => {
         const [held] = await tx.select().from(autoDocGenerations).where(current).for("update");
         if (!held) throw new AutoDocFillError("This fill attempt has been replaced.");
-        const fileRef = await app.storage.put(generationDocxKey(generation.id), Readable.from([output]));
+        const fileRef = await app.storage.put(
+          generationDocxKey(generation.id),
+          Readable.from([output]),
+        );
         stored.push(fileRef);
         if (held.contractSnapshot && !held.createdContractId) {
           stage = "contract";

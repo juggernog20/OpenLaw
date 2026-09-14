@@ -203,10 +203,16 @@ export async function compareDocumentVersions(
     const redline = await collect(answer);
     const model = parseTrackedChangesDocx(redline);
     await deps.db.transaction(async (tx) => {
-      const [held] = await tx.select({ state: documentComparisons.state }).from(documentComparisons)
-        .where(eq(documentComparisons.id, comparisonId)).for("update");
+      const [held] = await tx
+        .select({ state: documentComparisons.state })
+        .from(documentComparisons)
+        .where(eq(documentComparisons.id, comparisonId))
+        .for("update");
       if (!held || held.state !== "pending") return;
-      fileRef = await deps.storage.put(comparisonStorageKey(comparisonId), Readable.from([redline]));
+      fileRef = await deps.storage.put(
+        comparisonStorageKey(comparisonId),
+        Readable.from([redline]),
+      );
       await finishComparison(deps, comparisonId, model, fileRef, tx);
     });
   } catch (error) {

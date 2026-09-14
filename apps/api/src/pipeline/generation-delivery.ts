@@ -67,15 +67,20 @@ export async function handleGenerationDelivery(
           const pdf = await deps.docEngine.convertToPdf(word, "docx");
           try {
             await deps.db.transaction(async (tx) => {
-              const [held] = await tx.select().from(autoDocGenerations)
+              const [held] = await tx
+                .select()
+                .from(autoDocGenerations)
                 .where(and(current, eq(autoDocGenerations.state, "pending")))
                 .for("update");
               if (!held || held.pdfFileRef) return;
               fileRef = await deps.storage.put(
-                `auto-doc-generations/${generation.id}/${uuidv7()}.pdf`, Readable.from(pdf),
+                `auto-doc-generations/${generation.id}/${uuidv7()}.pdf`,
+                Readable.from(pdf),
               );
-              await tx.update(autoDocGenerations)
-                .set({ pdfFileRef: fileRef, state: "ready", updatedAt: new Date() }).where(current);
+              await tx
+                .update(autoDocGenerations)
+                .set({ pdfFileRef: fileRef, state: "ready", updatedAt: new Date() })
+                .where(current);
             });
           } finally {
             pdf.destroy();

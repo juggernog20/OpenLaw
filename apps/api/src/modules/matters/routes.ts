@@ -897,14 +897,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return next;
       });
-      return reply
-        .status(201)
-        .send({
-          matter: {
-            ...toRow(created),
-            department: await departmentName(app.db, created.row.departmentId),
-          },
-        });
+      return reply.status(201).send({
+        matter: {
+          ...toRow(created),
+          department: await departmentName(app.db, created.row.departmentId),
+        },
+      });
     },
   );
 

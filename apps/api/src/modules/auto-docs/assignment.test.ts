@@ -343,13 +343,29 @@ it("lists only reachable live unassigned generated Contracts and claims them wit
     changed: { owner: { from: null, to: "Assignment first" } },
   });
   expect((await read()).json().total).toBe(1);
+  const choices = await h.app.inject({
+    url: "/api/v1/inbox/unassigned-contracts/assignees",
+    cookies: legalCookies,
+  });
+  expect(choices.statusCode, choices.body).toBe(200);
+  expect(
+    choices
+      .json()
+      .people.map((person: { id: string }) => person.id)
+      .sort(),
+  ).toEqual([adminId, firstId, secondId].sort());
   const assigned = await h.app.inject({
-    method: "PATCH",
-    url: `/api/v1/contracts/${elsewhere.row.number}`,
-    cookies,
-    payload: { managerId: secondId },
+    method: "POST",
+    url: `/api/v1/inbox/unassigned-contracts/${elsewhere.row.number}/assign`,
+    cookies: legalCookies,
+    payload: { legalOwnerId: secondId },
   });
   expect(assigned.statusCode, assigned.body).toBe(200);
+  const [assignedRow] = await h.db
+    .select()
+    .from(contracts)
+    .where(eq(contracts.id, elsewhere.row.id));
+  expect(assignedRow!.managerId).toBe(secondId);
   expect((await read()).json().total).toBe(0);
   const duplicate = await h.app.inject({
     method: "POST",

@@ -204,10 +204,15 @@ async function convertAndStore(
         }
       }
       return await deps.db.transaction(async (tx) => {
-        const [version] = await tx.select({ id: documentVersions.id }).from(documentVersions)
-          .where(eq(documentVersions.id, versionId)).for("update");
+        const [version] = await tx
+          .select({ id: documentVersions.id })
+          .from(documentVersions)
+          .where(eq(documentVersions.id, versionId))
+          .for("update");
         if (!version) return null;
-        const [existing] = await tx.select().from(documentVersionRenditions)
+        const [existing] = await tx
+          .select()
+          .from(documentVersionRenditions)
           .where(eq(documentVersionRenditions.versionId, versionId));
         if (existing?.state === "ready" && existing.fileRef) return existing.fileRef;
         fileRef = await deps.storage.put(renditionKey(versionId), Readable.from(metered(pdf)));
