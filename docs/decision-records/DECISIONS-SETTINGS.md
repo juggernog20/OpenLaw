@@ -218,7 +218,7 @@ model uses the existing connector save and Activity path.
 
 ## SET-011: the Business User first run in the Portal
 
-- **Status:** Accepted; **mandatory before M34 Release** (FUTURE-FEATURES row)
+- **Status:** Accepted; ~~**mandatory before M34 Release**~~ **shipped in M35/2 (#845)** (FUTURE-FEATURES obligation closed 2026-09-14)
 - **Date:** 2026-09-13
 - **Decision:** A Business User's first sign-in lands on a Portal wizard, "We need to learn a little about you", before the Portal home. Steps: **Department** (required when the Departments list is non-empty, otherwise skipped), display name and photo, theme, notification preferences, and a short tour of Requests, Contracts, Matters, and Auto-Docs. Every step except Department is skippable, SET-004's own shape. Finishing stamps `users.portal_onboarding_completed_at`; the wizard never opens again. A Business User who signed in before this shipped meets it once. Staff keep Settings → Profile and never see it.
 - **Rationale:** Business Users are created at first magic-link sign-in with nothing but an email address. Department drives Auto-Doc reach (ADO-009), so it must be asked at the door; the rest is the existing per-user settings gathered in one place.

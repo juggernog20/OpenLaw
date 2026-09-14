@@ -224,7 +224,6 @@ export async function applyPortalSettings(
   }
 }
 export async function portalWarnings(db: Executor, autoDoc: AutoDoc) {
-  if (autoDoc.audience === "legal_only") return [];
   const [published] = autoDoc.publishedFormVersionId
     ? await db
         .select()
@@ -238,7 +237,7 @@ export async function portalWarnings(db: Executor, autoDoc: AutoDoc) {
       : [];
   if (warnings.length)
     warnings.push(
-      "Publish a Form that matches the saved Assignment rules before Business Users generate this Auto-Doc.",
+      "Publish a Form that matches the saved Assignment rules before generating this Auto-Doc.",
     );
   if (autoDoc.targetContractTypeId) {
     const [type] = await db
@@ -247,11 +246,8 @@ export async function portalWarnings(db: Executor, autoDoc: AutoDoc) {
       .where(
         and(eq(contractTypes.id, autoDoc.targetContractTypeId), isNull(contractTypes.archivedAt)),
       );
-    if (!type)
-      warnings.push(
-        "Choose a live target Contract Type before Business Users generate this Auto-Doc.",
-      );
-    if (autoDoc.fixedEntityId) {
+    if (!type) warnings.push("Choose a live target Contract Type before generating this Auto-Doc.");
+    if (autoDoc.fixedEntityId && autoDoc.audience !== "legal_only") {
       const [entity] = await db
         .select({ id: entities.id })
         .from(entities)

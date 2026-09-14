@@ -164,7 +164,10 @@ export function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[nu
       label,
       fieldType,
     })),
-    filingPending: generation.requestedFiling !== null && generation.filingFailure === null,
+    filingPending:
+      generation.state !== "failed" &&
+      generation.requestedFiling !== null &&
+      generation.filingFailure === null,
     createdContract: row.createdContract,
     person: row.person,
     documentVersionNumber: row.documentVersionNumber,

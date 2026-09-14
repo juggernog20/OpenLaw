@@ -937,7 +937,7 @@ The `draft`, `active`, and `expired` seed rows are system-protected (no hard-del
 
 Source: **DD-007**, **DD-014**, **DOC-001**, **DOC-007**, **DOC-008**, **ADO-001**
 
-Logical document record. No workflow. **Every document has exactly one owning record** (Matter, Contract, Entity, Knowledge Item, or Auto-Doc) per **DOC-008** and **ADO-001** — no standalone documents (revises DD-007's stand-alone clause). Access follows the owning record's access rules; there is no `document_team`. Files live in the version chain (`document_versions`), never on this record. The Auto-Doc owner arm is planned for M35 and is not built yet.
+Logical document record. No workflow. **Every document has exactly one owning record** (Matter, Contract, Entity, Knowledge Item, or Auto-Doc) per **DOC-008** and **ADO-001** — no standalone documents (revises DD-007's stand-alone clause). Access follows the owning record's access rules; there is no `document_team`. Files live in the version chain (`document_versions`), never on this record. The Auto-Doc owner arm shipped in M35/5, migration 0120.
 
 | Column                     | Type        | Notes                                                                                                                                                                                                                                                                                                                                                                            |
 | -------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -948,7 +948,7 @@ Logical document record. No workflow. **Every document has exactly one owning re
 | `contract_id`              | UUID        | FK → `contracts.id`, nullable                                                                                                                                                                                                                                                                                                                                                    |
 | `entity_id`                | UUID        | FK → `entities.id`, nullable per **ENT-005**/**DOC-008**                                                                                                                                                                                                                                                                                                                         |
 | `knowledge_item_id`        | UUID        | FK → `knowledge_items.id`, nullable per **KNW-001**/**DOC-008**                                                                                                                                                                                                                                                                                                                  |
-| `auto_doc_id`              | UUID        | FK → `auto_docs.id`, nullable; planned fifth owner arm per **ADO-001**, unique when non-null so an Auto-Doc owns one template Document                                                                                                                                                                                                                                           |
+| `auto_doc_id`              | UUID        | FK → `auto_docs.id`, nullable; fifth owner arm per **ADO-001**, unique when non-null so an Auto-Doc owns one template Document                                                                                                                                                                                                                                                   |
 | `folder_id`                | UUID        | FK → `document_folders.id`, nullable per **DOC-006**; the folder must belong to the same owning record as the document                                                                                                                                                                                                                                                           |
 | `executed_version_id`      | UUID        | FK → `document_versions.id`, nullable per **DOC-001**, `ON DELETE SET NULL` — the CTR-014 executed pin; default target for previews/exports/AI analysis. Set and cleared explicitly, never inferred from a version's `kind`. The same-document invariant is enforced at write time rather than by a composite FK, which could not carry the plain `SET NULL` hard deletion needs |
 | `is_confidential`          | boolean     | per **DD-014** (meaningful via the owning record's access; never cascades per CTR-018)                                                                                                                                                                                                                                                                                           |
@@ -1306,7 +1306,7 @@ How many views one person may hold on one surface is bounded in the API (`MAX_LI
 
 ### `auto_docs` and its tables
 
-Source: **ADO-001–010**, grilled 2026-09-13. M35/5 (#848, migration 0120) builds the record identity, template ownership, detection metadata, and immutable form snapshots below. M35/6, migration 0121, adds publication, maps, rules, audience, and the target Type. M35/8, migration 0123, adds delivery settings and outcomes. M35/9, migration 0124, adds title and Entity settings and Contract provenance. M35/10, migration 0125, adds ordered Assignment rules and the nullable default Legal Owner. Audience allowlists remain the intended shape for the following M35 tasks.
+Source: **ADO-001–011**, grilled 2026-09-13. M35/5 (#848, migration 0120) builds the record identity, template ownership, detection metadata, and immutable form snapshots below. M35/6, migration 0121, adds publication, maps, rules, audience, and the target Type. M35/7, migration 0122, adds the Generation record and its version ownership checks. M35/8, migration 0123, adds delivery settings and outcomes. M35/9, migration 0124, adds title and Entity settings and Contract provenance. M35/10, migration 0125, adds ordered Assignment rules and the nullable default Legal Owner. M35/11, migration 0126, adds audience allowlists and Acknowledgement records. M35/12, migration 0127, adds Filings and saved Filing destinations. All tables below are built.
 
 `auto_docs`: `id`; not-null `name`; nullable `description`; `state` with CHECK `draft | published | archived` (default `draft`); `audience` with CHECK `legal_only | selected | everyone` (default `legal_only`); nullable `target_contract_type_id` FK → `contract_types.id` `ON DELETE SET NULL`; nullable `title_pattern`; nullable `fixed_entity_id` FK → `entities.id`; nullable `template_document_id` FK → `documents.id` (the one owned template Document); nullable `published_document_version_id` FK → `document_versions.id` and `published_form_version_id` FK → `auto_doc_form_versions.id`, both set or both null (the **live pair**); `formats` with CHECK `docx | pdf | both` (default `both`); nullable Markdown `cover_note`; nullable `acknowledgement_text` (null = the org default from `org_settings.auto_doc_acknowledgement_text`); `acknowledgement_frequency` with CHECK `none | every_use | once_per_auto_doc | once` (default `once_per_auto_doc`); nullable `default_legal_owner_id` FK → `users.id`; `created_by`, `updated_by`; timestamps; nullable `published_at`, `archived_at`.
 
@@ -1352,25 +1352,25 @@ Generation `created_contract_id` and `created_document_id` are nullable unique F
 
 ### `departments`
 
-Source: **SET-010**, **CTR-025** (amended 2026-09-13)
+Source: **SET-010**, **SET-011**, **CTR-025** (amended 2026-09-13). Built in M35/1–2, migrations 0116–0117.
 
-MTR-001 taxonomy machinery: `id`, `slug`, `display_name`, `display_order`, `archived_at`, timestamps. Administrator-managed under Settings → Organization → Departments. `users.department_id` nullable FK; `contracts.owning_department_id` nullable FK replaces the free-text `owning_department` (migration creates one row per distinct existing value and links). `users.portal_onboarding_completed_at` (SET-011) is the first-run stamp.
+MTR-001 taxonomy machinery: `id`, `slug`, `display_name`, `display_order`, `archived_at`, timestamps. Administrator-managed under Settings → Organization → Departments. `users.department_id` nullable FK; `contracts.owning_department_id` nullable FK replaces the free-text `owning_department` (migration creates one row per distinct existing value and links). `users.portal_onboarding_completed_at` (SET-011) is the first-run stamp. First run requires a live Department when choices exist; completing or skipping the remaining optional steps stores the stamp once.
 
 ---
 
 ### `contract_type_default_people`
 
-Source: **CTR-026**
+Source: **CTR-026**. Built in M35/4, migration 0119.
 
-(`contract_type_id`, `user_id`, `display_order`, `created_at`), compound PK on the first two columns. `display_order` stores the People card order. Copied to `contract_team` on every creation of a Contract of that Type, deduplicated; archived users skipped. No role column: DD-023.
+(`contract_type_id`, `user_id`, `display_order`, `created_at`), compound PK on the first two columns. `display_order` stores the People card order. Copied to `contract_team` on every creation of a Contract of that Type, deduplicated; archived users skipped. Direct creation, Request conversion, targeted Generation, and new-Contract Filing use the shared creation routine. No role column: DD-023.
 
 ---
 
 ### `entities.portal_listed`
 
-Source: **ENT-010**, **DD-027**
+Source: **ENT-010**, **DD-027**. Built in M35/3, migration 0118.
 
-Boolean, not null, default false. Setting true on a Confidential Entity is refused. A later Confidential mark may retain the flag, but the Entity stays out of every Portal picker. The Portal Entity read returns `id`, `name` for live, non-Confidential, Portal-listed Entities only.
+Boolean, not null, default false. Only an Administrator may set or clear it. Setting true on a Confidential Entity is refused. A later Confidential mark may retain the flag, but the Entity stays out of every Portal picker. The Portal Entity read returns `id`, `name` for live, non-Confidential, Portal-listed Entities only.
 
 ---
 

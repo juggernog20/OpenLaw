@@ -41,7 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 7 is under way. M33 closed the first run; M35 Auto-Docs is next and lands before M34 Release closes.** Then, for the record: **M32 added Redline compare to the Document chain.** A reader opens a stored Comparison of two Versions, reads its change model in the compare screen, and moves through the change pane. Word pairs run through the existing doc-engine sidecar and export once per pair as a Generated redline with both operands on the chain. Other pairs use extracted text and state that formatting and export are unavailable. **M31 ships AI Contract analysis.** One runtime BYO-key connector supports Anthropic Messages, OpenAI-compatible chat completions, and Gemini through presets or a custom endpoint. An executed primary Document automatically queues extraction against the seven core targets plus prompted catalog Fields; the evidence-checked writer preserves human values, marks every AI write unverified, and carries that marker onto derived deadline surfaces until a person confirms. The Contract record revalidates from the completion frame, so another open browser sees the run and its writes land without a refresh. **M30 makes the open record live.** One `GET /api/events` connection per signed-in tab carries prompts, never payloads, and Postgres `LISTEN`/`NOTIFY` fans them out across the API and the worker. The bell, an open comment thread, an open Activity feed, the Approvals & signing card, the Envelope row, and the Home Inbox count re-read their existing routes when a frame names them, so a live update passes the same reach and tier gates as a page load. The 60-second bell poll is gone. **M29 makes Home the personal state summary and completes the daily briefing.** A Member+ user lands on pending Approvals, assigned Tasks, approaching Dates, Entity Obligations, the Inbox, managed Contracts, and managed Matters. The morning email carries its six cross-module sections, and one daily bell summary opens Home. Reporting remains deferred as a destination.
+**M35 Auto-Docs has landed; M34 Release is next.** Legal publishes a Word template and form as one Live pair, and selected Business Users generate documents through the Portal. Generations deliver Word and PDF, create draft Contracts with their default people and assigned Legal Owner, and can be Filed to reached records. Departments and the Portal first run complete SET-011's pre-launch obligation. M33 closed the app first run. Then, for the record: **M32 added Redline compare to the Document chain.** A reader opens a stored Comparison of two Versions, reads its change model in the compare screen, and moves through the change pane. Word pairs run through the existing doc-engine sidecar and export once per pair as a Generated redline with both operands on the chain. Other pairs use extracted text and state that formatting and export are unavailable. **M31 ships AI Contract analysis.** One runtime BYO-key connector supports Anthropic Messages, OpenAI-compatible chat completions, and Gemini through presets or a custom endpoint. An executed primary Document automatically queues extraction against the seven core targets plus prompted catalog Fields; the evidence-checked writer preserves human values, marks every AI write unverified, and carries that marker onto derived deadline surfaces until a person confirms. The Contract record revalidates from the completion frame, so another open browser sees the run and its writes land without a refresh. **M30 makes the open record live.** One `GET /api/events` connection per signed-in tab carries prompts, never payloads, and Postgres `LISTEN`/`NOTIFY` fans them out across the API and the worker. The bell, an open comment thread, an open Activity feed, the Approvals & signing card, the Envelope row, and the Home Inbox count re-read their existing routes when a frame names them, so a live update passes the same reach and tier gates as a page load. The 60-second bell poll is gone. **M29 makes Home the personal state summary and completes the daily briefing.** A Member+ user lands on pending Approvals, assigned Tasks, approaching Dates, Entity Obligations, the Inbox, managed Contracts, and managed Matters. The morning email carries its six cross-module sections, and one daily bell summary opens Home. Reporting remains deferred as a destination.
 
 **Arc 6 is complete: M28 gives the legal team's know-how a file-first Knowledge destination and a requester-facing route out of Intake.** A dropped file creates one draft Knowledge Item with its Document pinned as primary. Member+ publishes it, marks it portal-readable, and an Administrator places it on the portal home as an internal deflection link. The portal article reads the primary Document first and optional Markdown guidance last. Nested Knowledge Folders organize items without adding Document folders, the managed list and search cover both item text and owned paper, the Documents repository gains its fourth owner, and the morning briefing gains its Knowledge section. **M27 turns the Entity registry into the corporate record.** A subsidiary now carries Officers, Registrations, Holdings, Obligations, statutory Documents, and query-derived Contract and Matter roll-ups. The Entities destination opens on the compliance calendar, with the DES-046 registry and the ownership chart beside it; the DD-014 gate reaches every view and reference. M27 also extends the M26 Documents destination to Entity-owned Documents. **M26 makes the legal file layer browsable from one Documents destination.** A reader can start with a Counterparty, format, Version kind, date, uploader, or owning-record filter, then open the matching current Version on its Contract or Matter without knowing that owner first. Recent means recently uploaded, and the flat managed list carries saved views while DD-014 removes unreachable rows and filter options before paging. **M25 opened Arc 6 with one global search across the records and the words inside their paper.** Pressing `/` opens the ranked, viewer-scoped answer; a Document hit names its owning record and opens the matching Version with the PDF find bar already filled. Stored generated vectors keep record edits and extracted text indexed in the same write, while DD-014's existing reach predicates stay ahead of ranking and paging. **Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill Matter defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
 the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
@@ -672,27 +672,30 @@ leaves a coherent product; none of them is optional in the sense that we intend 
     that don't exist, which the no-stubbed-demos rule forbids
   - _Decisions:_ SET-004, SET-008 · _Issues:_ #697–#702 · _Parent:_ #696
 
-- [ ] **M35 — Auto-Docs**
+- [x] **M35 — Auto-Docs**
       _Demo:_ Legal uploads an NDA template with `{{counterparty_name}}` in it, publishes the form OpenLaw
       detected, and opens it to Sales. An account executive signs in to the Portal, acknowledges the
       no-edits statement, fills the form, and has the finished `.docx` and `.pdf` on screen and in their
       inbox. A draft Contract is on the Contracts list with the executive as Business Owner, Procurement as
-      its Owning department, and the jurisdiction's lawyer as Legal Owner; an NDA no rule matched waits on the Inbox's
+      its Owning department and on its team, and the jurisdiction's lawyer as Legal Owner; an NDA no rule matched waits on the Inbox's
       Unassigned contracts tab. Legal re-uploads the template, sees the Word compare and the form diff, and
-      publishes the new pair.
+      publishes the new pair. A submission on the old pair is refused with answers retained and succeeds after reloading.
       Numbered ahead of M34 in the arc order but lands before Release closes: the Departments list and the
-      Business User first run (M35/1) are SET-011's pre-launch obligation.
-  - Departments in Organization settings, on the user, and as the Contract's Owning department; the
-    Business User first run in the Portal
-  - The Auto-Docs destination: template upload with Placeholder and Block detection, the form editor with
-    Clause rules, maps to catalog Fields and Contract attributes, Assignment rules, audience, and
-    acknowledgement; the two chains and Publish as one live pair
-  - The fill engine in the API process behind a fake, the PDF through the existing sidecar, the branded
-    email with the files attached, and Generation states
-  - Generation from the app and the Portal: the draft Contract with its primary Document and default
-    people, Filing to a Matter or Contract, the person's own Generations in the Portal, and the
-    Inbox's Unassigned contracts tab
-  - Portal-listed Entities and the Business User Entity picker on request and Auto-Doc forms
+      Business User first run (M35/1–2) are SET-011's pre-launch obligation.
+      _Built:_ [#843](https://github.com/juggernog20/OpenLaw/issues/843), tasks #844–#856.
+      The complete Compose journey is [`57-auto-doc-demo.spec.ts`](../e2e/tests/57-auto-doc-demo.spec.ts),
+      including Mailpit attachments, claiming an Unassigned contract, and stale-pair recovery.
+  - [x] Departments in Organization settings, on the user, and as the Contract's Owning department; the
+        Business User first run in the Portal
+  - [x] The Auto-Docs destination: template upload with Placeholder and Block detection, the form editor with
+        Clause rules, maps to catalog Fields and Contract attributes, Assignment rules, audience, and
+        acknowledgement; the two chains and Publish as one live pair
+  - [x] The fill engine in the API process behind a fake, the PDF through the existing sidecar, the branded
+        email with the files attached, and Generation states
+  - [x] Generation from the app and the Portal: the draft Contract with its primary Document and default
+        people, Filing to a Matter or Contract, the person's own Generations in the Portal, and the
+        Inbox's Unassigned contracts tab
+  - [x] Portal-listed Entities and the Business User Entity picker on request and Auto-Doc forms
   - _Decisions:_ DD-022, DD-027, ADO-001 to ADO-011, CTR-025, CTR-026, NOT-009, SET-010, SET-011,
     ENT-010, TECH-028
 

@@ -570,3 +570,55 @@ it("binds generated Versions to their Filing owner and preserves history after D
     target: { kind: "matter", number: target.number },
   });
 });
+
+it("stops calling a failed Generation's saved Filing pending while retaining its retry destination", async () => {
+  const prepared = await prepare();
+  const target = await destination("matter");
+  h.fillEngine.failure = new Error("The fill worker stopped.");
+  try {
+    const made = await post(
+      `/auto-docs/${prepared.id}/generations`,
+      {
+        ...prepared.pair,
+        answers: { counterparty_name: "Interrupted supplier" },
+        filing: { destination: { kind: "matter", number: target.number } },
+      },
+      member,
+    );
+    expect(made.statusCode, made.body).toBe(201);
+    const generation = made.json().generation;
+    expect(generation).toMatchObject({ state: "failed", filingPending: false });
+    h.fillEngine.failure = null;
+    const retried = await post(
+      `/auto-docs/${prepared.id}/generations/${generation.id}/retry`,
+      {},
+      member,
+    );
+    expect(retried.statusCode, retried.body).toBe(200);
+    expect(retried.json().generation).toMatchObject({
+      id: generation.id,
+      hasDocx: true,
+      filingPending: false,
+      filingFailure: null,
+    });
+    const history = await get(
+      `/auto-docs/${prepared.id}/generations/${generation.id}/filings`,
+      member,
+    );
+    expect(history.statusCode, history.body).toBe(200);
+    expect(history.json().filings).toEqual([
+      expect.objectContaining({
+        generationId: generation.id,
+        format: "docx",
+        target: expect.objectContaining({ kind: "matter", number: target.number }),
+      }),
+    ]);
+    const paper = await get(`/matters/${target.number}/documents`, member);
+    expect(paper.statusCode, paper.body).toBe(200);
+    expect(paper.json().documents).toEqual([
+      expect.objectContaining({ id: history.json().filings[0].documentId }),
+    ]);
+  } finally {
+    h.fillEngine.failure = null;
+  }
+});

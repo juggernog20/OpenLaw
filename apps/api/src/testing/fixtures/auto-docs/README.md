@@ -12,3 +12,4 @@ Read each document body for its case. Open the checked-in `.docx` files in tests
 - `parts`: styles, numbering, a table, and fixed headers and footers.
 - `parts-markers`: the same package with Placeholders in its header, footer, and endnotes.
 - `unclosed-brace`, `unclosed-block`, `invalid-slug`, `unopened-block`: upload refusals.
+- Use `demo-nda-v1` for the complete M35 demo, then upload `demo-nda-v2` to add a confidentiality-period Placeholder while retaining the arbitration Block.
