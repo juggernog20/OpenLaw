@@ -650,11 +650,14 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         oneAtATime,
         async (jobs: JobWithMetadata<GenerationDeliveryJob>[]) => {
           for (const job of jobs)
-            await handleGenerationDelivery(handlers, {
-              ...job.data,
-              retryCount: job.retryCount,
-              retryLimit: job.retryLimit,
-            });
+            await handleGenerationDelivery(
+              { ...handlers, jobs: queue },
+              {
+                ...job.data,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+            );
         },
       );
       await sweepGenerationDeliveries(handlers, queue, sweeping.signal);

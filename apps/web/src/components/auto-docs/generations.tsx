@@ -7,6 +7,7 @@ import { Link, useRevalidator } from "react-router";
 import { formatFullDate, formatLongDateTime } from "../../lib/format";
 import { api } from "../../lib/api";
 import { Button } from "../ui/button";
+import { GenerationFiling } from "./filings";
 import type { AutoDocGeneration } from "../../lib/auto-docs";
 
 export function GenerationState({ state }: { state: AutoDocGeneration["state"] }) {
@@ -32,6 +33,7 @@ export function GenerationPair({ generation }: { generation: AutoDocGeneration }
 }
 export function generationWaiting(generation: AutoDocGeneration): boolean {
   return (
+    generation.filingPending ||
     generation.state === "pending" ||
     (generation.state === "ready" && generation.emailState === "pending")
   );
@@ -192,6 +194,13 @@ export function AutoDocGenerations({ generations }: { generations: AutoDocGenera
               <GenerationContract generation={generation} />
               <GenerationDownload generation={generation} />
               <GenerationEmail generation={generation} />
+              <GenerationFiling generation={generation} />
+              <Link
+                className="text-link hover:underline"
+                to={`/auto-docs/${generation.autoDocId}/generate?from=${generation.id}`}
+              >
+                <FormattedMessage id="autoDocs.generateAgain" defaultMessage="Generate again" />
+              </Link>
               {generation.state === "failed" && (
                 <Button
                   variant="secondary"

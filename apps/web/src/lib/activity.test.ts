@@ -410,6 +410,15 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     frequency: "once",
     acknowledgementId: "ack1",
   },
+  "auto_doc.filed": {
+    name: "Approved NDA",
+    generationId: "g",
+    filingId: "f",
+    documentId: "d",
+    targetKind: "contract",
+    targetNumber: 42,
+    targetTitle: "Acme NDA",
+  },
   "auto_doc.generated": {
     name: "Supplier NDA",
     generationId: "generation1",

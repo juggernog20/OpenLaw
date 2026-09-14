@@ -11,6 +11,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { formatLongDateTime } from "../lib/format";
+import { GenerationFiling } from "../components/auto-docs/filings";
 import { api } from "../lib/api";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
@@ -89,6 +90,13 @@ export function AutoDocGenerationPage() {
             <GenerationContract generation={generation} />
             <GenerationDownload generation={generation} />
             <GenerationEmail generation={generation} />
+            <GenerationFiling generation={generation} showHistory />
+            <Link
+              className="text-link hover:underline"
+              to={`/auto-docs/${id}/generate?from=${generation.id}`}
+            >
+              <FormattedMessage id="autoDocs.generateAgain" defaultMessage="Generate again" />
+            </Link>
           </section>
         )}
       </div>

@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-005: write the generated Contract and primary Document in the Generation transaction. */
-import { contracts, documents, entities, eq, users, type AutoDocGeneration } from "@openlaw/db";
+import {
+  entities,
+  eq,
+  users,
+  type AutoDocGeneration,
+  type AutoDocContractSnapshot,
+} from "@openlaw/db";
 import { linkPrimaryCounterparty } from "../../lib/counterparty-link.js";
-import { insertDocumentVersion, type AppendedVersion } from "../../lib/document-versions.js";
+import { type AppendedVersion } from "../../lib/document-versions.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
 import { httpError } from "../../lib/problem.js";
+import { addGeneratedDocument } from "./filed-document.js";
 import { createContract } from "../contracts/create.js";
 
 /** The caller owns the Generation transaction and the stored Word copy. */
@@ -14,8 +21,10 @@ export async function createGeneratedContract(
   notifier: Notifier,
   generation: AutoDocGeneration,
   version: AppendedVersion,
+  destination?: { facts: AutoDocContractSnapshot; actorId: string },
 ) {
-  const facts = generation.contractSnapshot!;
+  const facts = destination?.facts ?? generation.contractSnapshot!;
+  const actorId = destination?.actorId ?? generation.generatedBy;
   for (const id of facts.entityId ? [facts.entityId] : []) {
     const [entity] = await tx
       .select({ archivedAt: entities.archivedAt })
@@ -35,7 +44,7 @@ export async function createGeneratedContract(
       throw httpError(400, "The Business Owner is no longer available.");
   }
   const born = await createContract(tx, notifier, {
-    actorId: generation.generatedBy,
+    actorId,
     title: facts.title,
     contractTypeId: facts.contractTypeId,
     businessOwnerId: facts.businessOwnerId,
@@ -45,34 +54,30 @@ export async function createGeneratedContract(
     customFields: facts.customFields,
     autoDoc: { id: generation.autoDocId, generationId: generation.id, facts },
   });
-  await tx.insert(documents).values({
-    id: version.documentId,
-    contractId: born.row.id,
+  const [person] = await tx
+    .select({ displayName: users.displayName })
+    .from(users)
+    .where(eq(users.id, actorId));
+  await addGeneratedDocument(tx, notifier, {
+    target: { kind: "contract", id: born.row.id },
+    version,
     title: facts.autoDocName,
-    createdBy: generation.generatedBy,
+    actor: { id: actorId, displayName: person!.displayName },
+    takePrimary: true,
   });
-  await insertDocumentVersion(tx, version);
-  await tx
-    .update(contracts)
-    .set({ primaryDocumentId: version.documentId })
-    .where(eq(contracts.id, born.row.id));
   if (facts.primaryCounterpartyName)
     await linkPrimaryCounterparty(tx, {
       contract: born.row,
       name: facts.primaryCounterpartyName,
-      actorId: generation.generatedBy,
+      actorId,
     });
-  const [generator] = await tx
-    .select({ displayName: users.displayName })
-    .from(users)
-    .where(eq(users.id, generation.generatedBy));
   await notifier.contractGenerated(tx, {
     contractId: born.row.id,
     contractNumber: born.row.number,
     contractTitle: born.row.title,
     ownerId: born.row.managerId,
-    actorId: generation.generatedBy,
-    actorName: generator!.displayName,
+    actorId,
+    actorName: person!.displayName,
     autoDocId: generation.autoDocId,
     autoDocName: facts.autoDocName,
     generationId: generation.id,

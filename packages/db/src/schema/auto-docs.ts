@@ -3,6 +3,7 @@
 /** ADO-001 and ADO-004: one Auto-Doc, one template chain, immutable form snapshots. */
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   foreignKey,
   integer,
@@ -16,6 +17,7 @@ import {
   type AnyPgColumn,
   type PgTableExtraConfigValue,
 } from "drizzle-orm/pg-core";
+import { matters } from "./matters.js";
 import { departments } from "./departments.js";
 import { users } from "./auth.js";
 import { contracts, type TermType, type ValueCadence } from "./contracts.js";
@@ -238,6 +240,12 @@ export const autoDocTemplateScans = pgTable(
   ],
 );
 
+export interface AutoDocFilingRequest {
+  id: string;
+  destination: { kind: "matter" | "contract"; number: number };
+  format: "docx" | "pdf";
+}
+
 export const AUTO_DOC_GENERATION_STATES = ["pending", "ready", "failed"] as const;
 export const autoDocGenerations = pgTable(
   "auto_doc_generations",
@@ -260,6 +268,9 @@ export const autoDocGenerations = pgTable(
     createdDocumentId: text("created_document_id").references((): AnyPgColumn => documents.id, {
       onDelete: "set null",
     }),
+    /** Accepted with the answers; the delivery worker fulfils it once the chosen format is ready. */
+    requestedFiling: jsonb("requested_filing").$type<AutoDocFilingRequest>(),
+    filingFailure: jsonb("filing_failure").$type<{ code: string; detail: string }>(),
     answers: jsonb("answers").$type<Record<string, CustomFieldValue>>().notNull(),
     formats: text("formats", { enum: AUTO_DOC_FORMATS }).notNull().default("docx"),
     /** Saved at submission; null means this Generation has no cover note. */
@@ -438,5 +449,43 @@ export const autoDocAcknowledgements = pgTable(
       "auto_doc_acknowledgements_consumed_check",
       sql`${table.consumedAt} is null or ${table.frequency} = 'every_use'`,
     ),
+  ],
+);
+
+/** Each Filing retains its history when an Administrator erases the copied Document. */
+export const autoDocFilings = pgTable(
+  "auto_doc_filings",
+  {
+    id: uuidPk(),
+    generationId: text("generation_id")
+      .notNull()
+      .references(() => autoDocGenerations.id),
+    contractId: text("contract_id").references((): AnyPgColumn => contracts.id),
+    matterId: text("matter_id").references(() => matters.id),
+    documentId: text("document_id").references((): AnyPgColumn => documents.id, {
+      onDelete: "set null",
+    }),
+    createdContract: boolean("created_contract").notNull().default(false),
+    format: text("format", { enum: ["docx", "pdf"] }).notNull(),
+    filedBy: text("filed_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("auto_doc_filings_generation_idx").on(table.generationId, table.createdAt),
+    uniqueIndex("auto_doc_filings_document_idx").on(table.documentId),
+    uniqueIndex("auto_doc_filings_contract_birth_idx")
+      .on(table.contractId)
+      .where(sql`${table.createdContract}`),
+    check(
+      "auto_doc_filings_owner_check",
+      sql`num_nonnulls(${table.contractId}, ${table.matterId}) = 1`,
+    ),
+    check(
+      "auto_doc_filings_birth_check",
+      sql`not ${table.createdContract} or ${table.contractId} is not null`,
+    ),
+    check("auto_doc_filings_format_check", sql`${table.format} in ('docx', 'pdf')`),
   ],
 );

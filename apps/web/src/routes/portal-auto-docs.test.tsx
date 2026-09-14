@@ -57,6 +57,10 @@ const form = {
   ],
 };
 const generation = {
+  answerFields: form.fields,
+  displayValues: { entity: "Original Company" },
+  filingPending: false,
+  filingFailure: null,
   id: "gen1",
   autoDocId: "nda",
   autoDocName: "Approved NDA",
@@ -273,9 +277,79 @@ it("Generate again drops a saved Entity the current form cannot show and names i
   expect(await screen.findByRole("textbox", { name: "Counterparty" })).toHaveValue("Acme");
   expect(screen.getByRole("combobox", { name: "Entity" })).toHaveValue("");
   expect(screen.getByRole("heading", { name: "Previous answers" })).toBeInTheDocument();
-  expect(screen.getByText("gone")).toBeInTheDocument();
+  expect(screen.getByText("Original Company")).toBeInTheDocument();
+  expect(screen.queryByText("gone")).not.toBeInTheDocument();
   await user.selectOptions(screen.getByRole("combobox", { name: "Entity" }), "entity1");
   await user.click(screen.getByRole("button", { name: "Generate" }));
   await screen.findByRole("heading", { name: "Your generated document", level: 1 });
   expect(posted).toMatchObject({ answers: { counterparty: "Acme", entity: "entity1" } });
+});
+
+it("names removed answers and drops an old text answer when the current field is boolean", async () => {
+  const current = {
+    ...form,
+    fields: [
+      { ...form.fields[0], slug: "agreed", label: "Agreed", fieldType: "boolean", required: false },
+    ],
+  };
+  stubApi({
+    signedIn: person,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generate"))
+        return json(200, {
+          autoDoc,
+          availability,
+          acknowledgement: { ...acknowledgement, required: false },
+          form: current,
+        });
+      if (call.url.pathname.endsWith("/generations/gen1"))
+        return json(200, {
+          generation: {
+            ...generation,
+            answers: { retired: "Former answer", agreed: "yes", entity: "entity1" },
+            answerFields: [
+              { slug: "retired", label: "Retired field", fieldType: "text" },
+              { slug: "agreed", label: "Old agreement", fieldType: "text" },
+              { slug: "entity", label: "Former Entity", fieldType: "entity" },
+            ],
+            displayValues: { entity: "Original Company" },
+          },
+        });
+      return undefined;
+    },
+  });
+  renderAt("/portal/auto-docs/nda/generate?from=gen1");
+  await screen.findByRole("heading", { name: "Generate Approved NDA" });
+  expect(screen.getByLabelText("Agreed")).toHaveValue("");
+  expect(screen.getByText(/Retired field/)).toBeInTheDocument();
+  expect(screen.getByText(/Former answer/)).toBeInTheDocument();
+  expect(screen.getByText(/Original Company/)).toBeInTheDocument();
+  expect(screen.queryByText("entity1")).not.toBeInTheDocument();
+});
+
+it("drops an answer absent from the saved Form instead of guessing its previous type", async () => {
+  stubApi({
+    signedIn: person,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generate"))
+        return json(200, {
+          autoDoc,
+          availability,
+          acknowledgement: { ...acknowledgement, required: false },
+          form,
+        });
+      if (call.url.pathname.endsWith("/generations/gen1"))
+        return json(200, {
+          generation: {
+            ...generation,
+            answerFields: [],
+            answers: { counterparty: "Unrecorded type" },
+          },
+        });
+      return undefined;
+    },
+  });
+  renderAt("/portal/auto-docs/nda/generate?from=gen1");
+  expect(await screen.findByRole("textbox", { name: "Counterparty" })).toHaveValue("");
+  expect(screen.getByText("Unrecorded type")).toBeInTheDocument();
 });

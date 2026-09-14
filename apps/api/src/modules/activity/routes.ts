@@ -67,13 +67,18 @@ import {
   eq,
   inArray,
   autoDocs,
+  contracts,
   knowledgeItems,
   matters,
   sql,
   users,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
-import { confidentialDocumentEntryScope, contractAudience } from "../../lib/contract-access.js";
+import {
+  confidentialDocumentEntryScope,
+  contractAudience,
+  contractTeamScope,
+} from "../../lib/contract-access.js";
 import { matterAudience, matterTeamScope } from "../../lib/matter-access.js";
 import { entityAudience } from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -273,6 +278,12 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
             // the document's title, and a redacted row would still say
             // that something happened.
             confidentialDocumentEntryScope(audience),
+            sql`(${activityLog.action} <> 'auto_doc.filed' or
+              (${activityLog.payload}->>'targetKind' = 'contract' and exists (
+                select 1 from ${contracts} where ${contracts.number}::text = ${activityLog.payload}->>'targetNumber' and ${contractTeamScope(app.db, request.user)}
+              )) or (${activityLog.payload}->>'targetKind' = 'matter' and exists (
+                select 1 from ${matters} where ${matters.number}::text = ${activityLog.payload}->>'targetNumber' and ${matterTeamScope(app.db, request.user)}
+              )))`,
             before,
           ),
         )

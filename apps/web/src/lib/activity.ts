@@ -1993,14 +1993,15 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.document.created",
       defaultMessage:
-        "{atRoot, select, true {{actor} uploaded {title}} " +
-        "other {{actor} uploaded {title} into {folder}}}",
+        "{generated, select, true {{actor} added generated {title}} other {{atRoot, select, true {{actor} uploaded {title}} " +
+        "other {{actor} uploaded {title} into {folder}}}}}",
     }),
     values: (intl, payload) => {
       const folder = text(payload, "folderName");
       return {
         title: named(intl, payload, "title"),
         atRoot: folder === null ? "true" : "false",
+        generated: text(payload, "generatedFromGenerationId") ? "true" : "false",
         // Never read when `atRoot` is true, and never left undefined: an
         // ICU argument a locale still names has to resolve to something.
         folder: folder ?? "",
@@ -2966,6 +2967,20 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       name: text(payload, "name") ?? thingName(intl, payload),
       words: text(payload, "text") ?? "",
       hasWords: text(payload, "text") ? "yes" : "no",
+    }),
+  },
+  "auto_doc.filed": {
+    icon: FileText,
+    message: defineMessage({
+      id: "activity.autoDoc.filed",
+      defaultMessage:
+        "{actor} filed {name} to {kind, select, matter {Matter} other {Contract}} #{number}: {title}",
+    }),
+    values: (intl, payload) => ({
+      name: text(payload, "name") ?? thingName(intl, payload),
+      kind: text(payload, "targetKind") ?? "contract",
+      number: wholeCount(payload, "targetNumber") || "?",
+      title: named(intl, payload, "targetTitle"),
     }),
   },
   "auto_doc.generated": {
