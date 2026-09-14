@@ -360,7 +360,7 @@ export const routes: RouteObject[] = [
     hydrateFallbackElement: <></>,
   },
   {
-    path: "/auto-docs/:id",
+    path: "/auto-docs/:id/:tab?",
     loader: autoDocRecordLoader,
     element: (
       <KeyedByParam name="id">

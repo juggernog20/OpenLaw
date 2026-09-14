@@ -1154,17 +1154,29 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "autoDocs.about": {
+    "defaultMessage": "About"
+  },
+  "autoDocs.acknowledgement": {
+    "defaultMessage": "Acknowledgement"
+  },
+  "autoDocs.acknowledgementCaption": {
+    "defaultMessage": "Changing the text asks everyone to acknowledge it again."
+  },
   "autoDocs.acknowledgementFrequency": {
-    "defaultMessage": "Acknowledgement frequency"
+    "defaultMessage": "Frequency"
   },
   "autoDocs.acknowledgementFrequencyName": {
     "defaultMessage": "{frequency, select, none {None} every_use {Every use} once_per_auto_doc {Once per Auto-Doc} other {Once across Auto-Docs}}"
   },
-  "autoDocs.acknowledgementHelp": {
-    "defaultMessage": "Business Users acknowledge this statement before generating. Editing the text requires them to acknowledge it again. Administrators and Legal Team Members never acknowledge."
-  },
   "autoDocs.acknowledgementText": {
+    "defaultMessage": "Text"
+  },
+  "autoDocs.acknowledgementTextField": {
     "defaultMessage": "Acknowledgement text"
+  },
+  "autoDocs.actions": {
+    "defaultMessage": "Auto-Doc actions"
   },
   "autoDocs.addField": {
     "defaultMessage": "Add field"
@@ -1179,7 +1191,10 @@
     "defaultMessage": "All target Contract Types"
   },
   "autoDocs.alwaysInclude": {
-    "defaultMessage": "Always include"
+    "defaultMessage": "Always"
+  },
+  "autoDocs.alwaysIncluded": {
+    "defaultMessage": "Always included"
   },
   "autoDocs.answerRequired": {
     "defaultMessage": "Required"
@@ -1199,29 +1214,11 @@
   "autoDocs.assignmentAdd": {
     "defaultMessage": "Add rule"
   },
-  "autoDocs.assignmentHelp": {
-    "defaultMessage": "For generated Contracts, the first matching rule chooses the Legal Owner. If no rule matches, the default applies. Without either, the Contract waits in the Inbox to be claimed."
-  },
-  "autoDocs.assignmentMoveDown": {
-    "defaultMessage": "Move down"
-  },
-  "autoDocs.assignmentMoveUp": {
-    "defaultMessage": "Move up"
-  },
-  "autoDocs.assignmentRefused": {
-    "defaultMessage": "Assignment settings could not be saved."
-  },
-  "autoDocs.assignmentRemove": {
-    "defaultMessage": "Remove rule"
-  },
-  "autoDocs.assignmentRuleNumber": {
-    "defaultMessage": "Assignment rule {number}"
+  "autoDocs.assignmentCaption": {
+    "defaultMessage": "The first matching rule names the Legal Owner. Without a match or a default, the Contract waits on the Inbox."
   },
   "autoDocs.assignmentRules": {
     "defaultMessage": "Assignment rules"
-  },
-  "autoDocs.assignmentSaved": {
-    "defaultMessage": "Assignment settings saved."
   },
   "autoDocs.attributeName": {
     "defaultMessage": "{attribute, select, title {Title} primary_counterparty_name {Primary Counterparty name} entity_id {Our Entity} owning_department_id {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}"
@@ -1230,16 +1227,31 @@
     "defaultMessage": "Audience"
   },
   "autoDocs.audienceDepartments": {
-    "defaultMessage": "Selected Departments"
+    "defaultMessage": "Departments"
   },
   "autoDocs.audienceName": {
     "defaultMessage": "{audience, select, legal_only {Legal only} selected {Selected} other {Everyone}}"
   },
   "autoDocs.audiencePeople": {
-    "defaultMessage": "Selected people"
+    "defaultMessage": "People"
   },
   "autoDocs.backToAutoDoc": {
-    "defaultMessage": "Back to Auto-Doc"
+    "defaultMessage": "Auto-Doc"
+  },
+  "autoDocs.blockAlways": {
+    "defaultMessage": "always"
+  },
+  "autoDocs.blockCount": {
+    "defaultMessage": "{count, plural, one {# Block} other {# Blocks}}"
+  },
+  "autoDocs.blockEnd": {
+    "defaultMessage": "end {name}"
+  },
+  "autoDocs.blockTag": {
+    "defaultMessage": "Block {name}"
+  },
+  "autoDocs.blockWhen": {
+    "defaultMessage": "when {rule}"
   },
   "autoDocs.cadenceName": {
     "defaultMessage": "{cadence, select, one_time {One time} monthly {Monthly} other {Annually}}"
@@ -1262,26 +1274,32 @@
   "autoDocs.chooseFilingType": {
     "defaultMessage": "Choose a Contract Type"
   },
-  "autoDocs.chooseVersion": {
-    "defaultMessage": "Choose a version"
-  },
   "autoDocs.clauses": {
     "defaultMessage": "Clauses"
+  },
+  "autoDocs.clausesHelp": {
+    "defaultMessage": "A Block with no rule is always included."
   },
   "autoDocs.compareFiles": {
     "defaultMessage": "Compare files"
   },
-  "autoDocs.compareForms": {
-    "defaultMessage": "Compare forms"
+  "autoDocs.compareVersions": {
+    "defaultMessage": "Compare versions"
   },
   "autoDocs.contractAttributes": {
     "defaultMessage": "Contract attributes"
   },
+  "autoDocs.contractCreation": {
+    "defaultMessage": "Contract creation"
+  },
+  "autoDocs.copyLink": {
+    "defaultMessage": "Copy link"
+  },
   "autoDocs.coverNote": {
     "defaultMessage": "Cover note"
   },
-  "autoDocs.coverNoteHelp": {
-    "defaultMessage": "Optional Markdown included in the email with the generated files."
+  "autoDocs.coverNoteCaption": {
+    "defaultMessage": "Sent in the email with the files. Markdown."
   },
   "autoDocs.create": {
     "defaultMessage": "Create Auto-Doc"
@@ -1292,11 +1310,14 @@
   "autoDocs.createSubmit": {
     "defaultMessage": "Create"
   },
+  "autoDocs.createdCaption": {
+    "defaultMessage": "Created {date}."
+  },
   "autoDocs.createdContract": {
     "defaultMessage": "Created Contract: {contract}"
   },
-  "autoDocs.defaultAcknowledgement": {
-    "defaultMessage": "Use the organization's acknowledgement text"
+  "autoDocs.customAcknowledgement": {
+    "defaultMessage": "Custom text"
   },
   "autoDocs.defaultLegalOwner": {
     "defaultMessage": "Default Legal Owner"
@@ -1304,11 +1325,11 @@
   "autoDocs.description": {
     "defaultMessage": "Description"
   },
+  "autoDocs.detectionSummary": {
+    "defaultMessage": "{placeholders, plural, one {# Placeholder} other {# Placeholders}}, {blocks, plural, one {# Block} other {# Blocks}}"
+  },
   "autoDocs.diffFailed": {
     "defaultMessage": "Could not compare these forms. Try again."
-  },
-  "autoDocs.directiveHelp": {
-    "defaultMessage": "Format values in Word with {upper}, {date}, or {currency}."
   },
   "autoDocs.download": {
     "defaultMessage": "Download"
@@ -1318,6 +1339,21 @@
   },
   "autoDocs.downloadWord": {
     "defaultMessage": "Download Word"
+  },
+  "autoDocs.earlierVersions": {
+    "defaultMessage": "Earlier versions ({count})"
+  },
+  "autoDocs.editAssignmentRule": {
+    "defaultMessage": "Edit rule {number}"
+  },
+  "autoDocs.editAssignmentRuleTitle": {
+    "defaultMessage": "Edit rule"
+  },
+  "autoDocs.editField": {
+    "defaultMessage": "Edit {label}"
+  },
+  "autoDocs.editRule": {
+    "defaultMessage": "Edit the rule for {name}"
   },
   "autoDocs.emailNotSent": {
     "defaultMessage": "Email not sent"
@@ -1331,6 +1367,12 @@
   "autoDocs.empty": {
     "defaultMessage": "Create an Auto-Doc to start with a Word template."
   },
+  "autoDocs.entityFromForm": {
+    "defaultMessage": "From the form"
+  },
+  "autoDocs.fieldCount": {
+    "defaultMessage": "{count, plural, one {# field} other {# fields}}"
+  },
   "autoDocs.fieldHelp": {
     "defaultMessage": "Help text"
   },
@@ -1338,7 +1380,7 @@
     "defaultMessage": "Label"
   },
   "autoDocs.fieldOptions": {
-    "defaultMessage": "Options, one per line"
+    "defaultMessage": "Options"
   },
   "autoDocs.fieldRequired": {
     "defaultMessage": "Required"
@@ -1352,14 +1394,17 @@
   "autoDocs.fieldTypeName": {
     "defaultMessage": "{type, select, text {Text} long_text {Long text} number {Number} currency {Currency} date {Date} boolean {Boolean} single_select {Single select} multi_select {Multi select} other {Entity}}"
   },
+  "autoDocs.fieldUsage": {
+    "defaultMessage": "{clauses, plural, =0 {} one {Used by # Clause rule} other {Used by # Clause rules}}{both, select, true {, } other {}}{assignments, plural, =0 {} one {Used by # Assignment rule} other {Used by # Assignment rules}}{none, select, true {Used by no rule} other {}}"
+  },
+  "autoDocs.fields": {
+    "defaultMessage": "Fields"
+  },
+  "autoDocs.fieldsHelp": {
+    "defaultMessage": "Drag to reorder. Each change saves a new form version."
+  },
   "autoDocs.file": {
     "defaultMessage": "File"
-  },
-  "autoDocs.fileDiffFrom": {
-    "defaultMessage": "Compare file from"
-  },
-  "autoDocs.fileDiffTo": {
-    "defaultMessage": "Compare file to"
   },
   "autoDocs.fileNamed": {
     "defaultMessage": "File {name}"
@@ -1371,7 +1416,7 @@
     "defaultMessage": "File to a record"
   },
   "autoDocs.fileToPublish": {
-    "defaultMessage": "File version to publish"
+    "defaultMessage": "File version"
   },
   "autoDocs.fileVersionLabel": {
     "defaultMessage": "File version {number} · {filename}"
@@ -1422,34 +1467,22 @@
     "defaultMessage": "Fill \"{label}\" first."
   },
   "autoDocs.fixedEntity": {
-    "defaultMessage": "Fixed Entity"
-  },
-  "autoDocs.form": {
-    "defaultMessage": "Form"
+    "defaultMessage": "Our Entity"
   },
   "autoDocs.formChange": {
     "defaultMessage": "{kind, select, added {Added {name}} removed {Removed {name}} retyped {Retyped {name}} relabelled {Relabelled {name}} reordered {Reordered {name}} mapped {Map changed: {name}} rules_changed {Clause rule changed: {name}} other {Field settings changed: {name}}}"
   },
   "autoDocs.formDiffFrom": {
-    "defaultMessage": "Compare form from"
+    "defaultMessage": "From"
   },
   "autoDocs.formDiffTo": {
-    "defaultMessage": "Compare form to"
-  },
-  "autoDocs.formSaved": {
-    "defaultMessage": "Form saved."
+    "defaultMessage": "To"
   },
   "autoDocs.formToPublish": {
-    "defaultMessage": "Form version to publish"
+    "defaultMessage": "Form version"
   },
   "autoDocs.formVersion": {
     "defaultMessage": "Form version {number}"
-  },
-  "autoDocs.formVersionDetails": {
-    "defaultMessage": "{date} · {count, plural, one {# field} other {# fields}}"
-  },
-  "autoDocs.formVersions": {
-    "defaultMessage": "Form versions"
   },
   "autoDocs.formatName": {
     "defaultMessage": "{format, select, docx {Word} pdf {PDF} other {Word and PDF}}"
@@ -1478,6 +1511,9 @@
   "autoDocs.generation": {
     "defaultMessage": "Generation"
   },
+  "autoDocs.generationCount": {
+    "defaultMessage": "{count, plural, one {# Generation} other {# Generations}}"
+  },
   "autoDocs.generationFailedRequest": {
     "defaultMessage": "Could not generate this document. Your answers are kept here. Try again."
   },
@@ -1490,8 +1526,14 @@
   "autoDocs.generations": {
     "defaultMessage": "Generations"
   },
+  "autoDocs.gripLabel": {
+    "defaultMessage": "Reorder {label}, {position} of {total}"
+  },
   "autoDocs.includeBlock": {
-    "defaultMessage": "Include this Block"
+    "defaultMessage": "Include"
+  },
+  "autoDocs.includedWhen": {
+    "defaultMessage": "Included when {rule}"
   },
   "autoDocs.invalidUploadReply": {
     "defaultMessage": "The upload response could not be read. Reload this Auto-Doc to check its saved template."
@@ -1502,8 +1544,11 @@
   "autoDocs.lifecycleFailed": {
     "defaultMessage": "Could not change this Auto-Doc's state. Try again."
   },
-  "autoDocs.livePair": {
-    "defaultMessage": "Live: file version {file} and form version {form}."
+  "autoDocs.linkCopied": {
+    "defaultMessage": "Link copied"
+  },
+  "autoDocs.liveSince": {
+    "defaultMessage": "Live since {date}: file version {file}, form version {form}."
   },
   "autoDocs.liveStates": {
     "defaultMessage": "Draft and published"
@@ -1511,8 +1556,14 @@
   "autoDocs.mapTo": {
     "defaultMessage": "Map to"
   },
-  "autoDocs.missingBlock": {
-    "defaultMessage": "This Block is missing from the current template. Remove its rule or choose an earlier file version when publishing."
+  "autoDocs.missingBlockCaption": {
+    "defaultMessage": "The current file has no Block with this name. Remove the rule or publish an earlier file version."
+  },
+  "autoDocs.missingBlockCount": {
+    "defaultMessage": "{count, plural, one {# missing} other {# missing}}"
+  },
+  "autoDocs.missingBlockRow": {
+    "defaultMessage": "Not in file version {number}"
   },
   "autoDocs.missingRuleField": {
     "defaultMessage": "{slug} (missing)"
@@ -1520,44 +1571,47 @@
   "autoDocs.missingRuleOption": {
     "defaultMessage": "{value} (missing)"
   },
-  "autoDocs.moveDown": {
-    "defaultMessage": "Move down"
-  },
-  "autoDocs.moveUp": {
-    "defaultMessage": "Move up"
-  },
   "autoDocs.name": {
     "defaultMessage": "Name"
   },
   "autoDocs.newField": {
     "defaultMessage": "New field"
   },
+  "autoDocs.newerThanLive": {
+    "defaultMessage": "{both, select, true {File version {file} and form version {form} are} file {File version {file} is} other {Form version {form} is}} newer than the live pair."
+  },
   "autoDocs.noBlocks": {
-    "defaultMessage": "This template has no Blocks."
+    "defaultMessage": "This file has no Blocks."
   },
   "autoDocs.noBusinessOwner": {
     "defaultMessage": "Leave unassigned"
   },
   "autoDocs.noDefaultOwner": {
-    "defaultMessage": "None — leave unassigned"
+    "defaultMessage": "None, leave unassigned"
   },
-  "autoDocs.noFixedEntity": {
-    "defaultMessage": "Use the form's Entity answer"
+  "autoDocs.noFileYet": {
+    "defaultMessage": "No file uploaded"
   },
   "autoDocs.noFormChanges": {
     "defaultMessage": "These form versions have no structural changes."
   },
+  "autoDocs.noFormYet": {
+    "defaultMessage": "No form yet"
+  },
   "autoDocs.noGenerations": {
     "defaultMessage": "No Generations yet."
-  },
-  "autoDocs.noLivePair": {
-    "defaultMessage": "No file and form pair is published."
   },
   "autoDocs.noMap": {
     "defaultMessage": "No map"
   },
+  "autoDocs.noTargetCaption": {
+    "defaultMessage": "Without a target, a Generation's file stays on the Generation until it is Filed."
+  },
   "autoDocs.noTargetType": {
     "defaultMessage": "No target Contract Type"
+  },
+  "autoDocs.noTemplate": {
+    "defaultMessage": "Upload a Word file to start the form."
   },
   "autoDocs.noValue": {
     "defaultMessage": "None"
@@ -1568,26 +1622,41 @@
   "autoDocs.notFoundBody": {
     "defaultMessage": "This Auto-Doc does not exist, or you cannot open it."
   },
-  "autoDocs.openFailed": {
-    "defaultMessage": "Could not open this file version. Please try again."
+  "autoDocs.notPublished": {
+    "defaultMessage": "{state, select, archived {Archived.} other {Not published.}}"
   },
-  "autoDocs.openVersion": {
-    "defaultMessage": "Open version {number}"
+  "autoDocs.open": {
+    "defaultMessage": "Open"
+  },
+  "autoDocs.openFailed": {
+    "defaultMessage": "Could not open this file version. Try again."
   },
   "autoDocs.operator": {
     "defaultMessage": "Operator"
   },
+  "autoDocs.optionsCaption": {
+    "defaultMessage": "One per line."
+  },
   "autoDocs.optionsRefused": {
-    "defaultMessage": "Give each select field distinct, non-empty options."
+    "defaultMessage": "Give the field distinct, non-empty options."
+  },
+  "autoDocs.orgAcknowledgement": {
+    "defaultMessage": "Organization's text"
   },
   "autoDocs.orphanCount": {
-    "defaultMessage": "{count, plural, one {# orphaned field} other {# orphaned fields}}"
+    "defaultMessage": "{count, plural, one {# orphaned} other {# orphaned}}"
   },
-  "autoDocs.orphanHelp": {
-    "defaultMessage": "This field no longer has a Placeholder in the template."
+  "autoDocs.orphanRow": {
+    "defaultMessage": "No Placeholder in file version {number}"
+  },
+  "autoDocs.output": {
+    "defaultMessage": "Output"
   },
   "autoDocs.outputFormat": {
     "defaultMessage": "{format, select, pdf {PDF} other {Word}}"
+  },
+  "autoDocs.placeholderChip": {
+    "defaultMessage": "{hasField, select, true {Placeholder {name}} other {Placeholder {name}, no form field}}"
   },
   "autoDocs.previousAnswers": {
     "defaultMessage": "Previous answers"
@@ -1601,11 +1670,38 @@
   "autoDocs.publish": {
     "defaultMessage": "Publish"
   },
-  "autoDocs.publishHelp": {
-    "defaultMessage": "Choose the file and saved form to publish together. Later edits leave this pair unchanged until you publish again."
+  "autoDocs.publishCaption": {
+    "defaultMessage": "Later edits leave this pair unchanged until you publish again."
   },
-  "autoDocs.removeField": {
-    "defaultMessage": "Remove field"
+  "autoDocs.publishNewPair": {
+    "defaultMessage": "Publish new pair"
+  },
+  "autoDocs.reach": {
+    "defaultMessage": "Reach"
+  },
+  "autoDocs.readingPart": {
+    "defaultMessage": "{kind, select, body {Body} header {Header} footer {Footer} footnotes {Footnotes} other {Endnotes}}"
+  },
+  "autoDocs.readingUnavailable": {
+    "defaultMessage": "The file could not be read. Open it to see the page."
+  },
+  "autoDocs.removeAssignmentRule": {
+    "defaultMessage": "Remove rule {number}"
+  },
+  "autoDocs.removeFieldGuard": {
+    "defaultMessage": "The file still holds the Placeholder {placeholder}. Publish will refuse until the file changes or the field is back."
+  },
+  "autoDocs.removeFieldNamed": {
+    "defaultMessage": "Remove {label}"
+  },
+  "autoDocs.removeFieldTitle": {
+    "defaultMessage": "Remove {label}?"
+  },
+  "autoDocs.rename": {
+    "defaultMessage": "Rename"
+  },
+  "autoDocs.renameField": {
+    "defaultMessage": "Rename {label}"
   },
   "autoDocs.requiredAnswer": {
     "defaultMessage": "Required"
@@ -1622,8 +1718,14 @@
   "autoDocs.reviewCurrentForm": {
     "defaultMessage": "Review current form"
   },
+  "autoDocs.ruleCount": {
+    "defaultMessage": "{count, plural, one {# rule} other {# rules}}"
+  },
   "autoDocs.ruleField": {
     "defaultMessage": "Form field"
+  },
+  "autoDocs.ruleGrip": {
+    "defaultMessage": "Reorder rule {position} of {total}"
   },
   "autoDocs.ruleListRefused": {
     "defaultMessage": "Enter one value per line, using numbers for a number or currency field."
@@ -1634,20 +1736,8 @@
   "autoDocs.ruleValue": {
     "defaultMessage": "Value"
   },
-  "autoDocs.saveAssignment": {
-    "defaultMessage": "Save assignment"
-  },
-  "autoDocs.saveBeforePublish": {
-    "defaultMessage": "Save your form changes before publishing."
-  },
-  "autoDocs.saveBeforeUpload": {
-    "defaultMessage": "Save your form changes before uploading another template."
-  },
-  "autoDocs.saveFailed": {
-    "defaultMessage": "Could not save the form. Please try again."
-  },
-  "autoDocs.saveForm": {
-    "defaultMessage": "Save form"
+  "autoDocs.ruleWords": {
+    "defaultMessage": "{operator, select, equals {{label} equals {value}} is_one_of {{label} is one of {value}} is_set {{label} is set} other {{label} is not {value}}}"
   },
   "autoDocs.saveSettings": {
     "defaultMessage": "Save settings"
@@ -1658,11 +1748,14 @@
   "autoDocs.searchFilingDestinations": {
     "defaultMessage": "Search Matters and Contracts"
   },
-  "autoDocs.selectedAudienceHelp": {
-    "defaultMessage": "A person can use this Auto-Doc when selected directly or through their live Department. Legal can always use it in the app."
+  "autoDocs.sections": {
+    "defaultMessage": "Auto-Doc sections"
   },
-  "autoDocs.settings": {
-    "defaultMessage": "Settings"
+  "autoDocs.selectedAudienceCaption": {
+    "defaultMessage": "A person named here, or in a Department named here, sees this Auto-Doc in the Portal."
+  },
+  "autoDocs.selectedRow": {
+    "defaultMessage": "Selected"
   },
   "autoDocs.settingsFailed": {
     "defaultMessage": "Could not save these settings. Try again."
@@ -1670,8 +1763,11 @@
   "autoDocs.settingsSaved": {
     "defaultMessage": "Settings saved."
   },
-  "autoDocs.slugsRefused": {
-    "defaultMessage": "Each form field needs a distinct slug."
+  "autoDocs.slugCaption": {
+    "defaultMessage": "Must match the Placeholder in the file."
+  },
+  "autoDocs.slugRefused": {
+    "defaultMessage": "Use lowercase letters, digits, and underscores, unique on this form."
   },
   "autoDocs.state": {
     "defaultMessage": "{state, select, draft {Draft} published {Published} other {Archived}}"
@@ -1679,20 +1775,35 @@
   "autoDocs.stateFilter": {
     "defaultMessage": "State"
   },
+  "autoDocs.tab.form": {
+    "defaultMessage": "Form"
+  },
+  "autoDocs.tab.generations": {
+    "defaultMessage": "Generations"
+  },
+  "autoDocs.tab.overview": {
+    "defaultMessage": "Overview"
+  },
+  "autoDocs.tab.settings": {
+    "defaultMessage": "Settings"
+  },
   "autoDocs.targetType": {
     "defaultMessage": "Target Contract Type"
   },
   "autoDocs.template": {
     "defaultMessage": "Template"
   },
-  "autoDocs.templateHelp": {
-    "defaultMessage": "Use double braces for Placeholders, such as {example}. Each upload adds a file version."
+  "autoDocs.templateHelpLink": {
+    "defaultMessage": "How to write an Auto-Doc template"
   },
   "autoDocs.titlePattern": {
     "defaultMessage": "Title pattern"
   },
-  "autoDocs.titlePatternHelp": {
-    "defaultMessage": "Use form field slugs in double braces. Leave blank to use the mapped title or Auto-Doc name."
+  "autoDocs.titlePatternCaption": {
+    "defaultMessage": "Form field slugs in double braces. Blank uses the mapped title or the Auto-Doc name."
+  },
+  "autoDocs.unavailableCatalogField": {
+    "defaultMessage": "Unavailable catalog Field"
   },
   "autoDocs.unavailableDepartment": {
     "defaultMessage": "Archived Department"
@@ -1703,35 +1814,35 @@
   "autoDocs.unavailableLegalOwner": {
     "defaultMessage": "Unavailable Legal Owner"
   },
-  "autoDocs.unavailableMap": {
-    "defaultMessage": "Unavailable catalog Field"
-  },
   "autoDocs.unavailablePerson": {
     "defaultMessage": "Unavailable person"
   },
   "autoDocs.unpublish": {
     "defaultMessage": "Unpublish"
   },
+  "autoDocs.upload": {
+    "defaultMessage": "Upload"
+  },
+  "autoDocs.uploadCaption": {
+    "defaultMessage": "Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place."
+  },
   "autoDocs.uploadFailed": {
-    "defaultMessage": "Could not upload the template. Please try again."
+    "defaultMessage": "Could not upload the template. Try again."
   },
-  "autoDocs.uploadTemplate": {
-    "defaultMessage": "Upload template"
+  "autoDocs.uploadReport": {
+    "defaultMessage": "File version {number}: {placeholders, plural, one {# Placeholder} other {# Placeholders}}, {blocks, plural, one {# Block} other {# Blocks}}. {created, plural, =0 {No new form fields.} one {# form field created.} other {# form fields created.}} {orphaned, plural, =0 {} one {# field has no Placeholder now.} other {# fields have no Placeholder now.}}"
   },
-  "autoDocs.uploaded": {
-    "defaultMessage": "Template uploaded."
+  "autoDocs.uploadVersion": {
+    "defaultMessage": "Upload version"
   },
   "autoDocs.valueCadence": {
-    "defaultMessage": "Value cadence"
+    "defaultMessage": "Cadence"
   },
   "autoDocs.valueCurrency": {
-    "defaultMessage": "Value currency"
-  },
-  "autoDocs.versionDiffs": {
-    "defaultMessage": "Version comparisons"
+    "defaultMessage": "Currency"
   },
   "autoDocs.whenRuleMatches": {
-    "defaultMessage": "When a Clause rule matches"
+    "defaultMessage": "When a rule matches"
   },
   "autoDocs.wordTemplate": {
     "defaultMessage": "Word template"
@@ -2000,6 +2111,9 @@
   "common.clear": {
     "defaultMessage": "Clear"
   },
+  "common.close": {
+    "defaultMessage": "Close"
+  },
   "common.no": {
     "defaultMessage": "No"
   },
@@ -2008,6 +2122,9 @@
   },
   "common.retry": {
     "defaultMessage": "Try again"
+  },
+  "common.save": {
+    "defaultMessage": "Save"
   },
   "common.search": {
     "defaultMessage": "Search"

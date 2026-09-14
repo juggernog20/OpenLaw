@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Legal completes rules and maps, compares versions, and publishes one pair. */
+/** DES-087: the builder's rules, maps, and Publish; the settings cards; the Generations table. */
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
@@ -10,6 +10,7 @@ import type { paths } from "@openlaw/api-client";
 
 type RecordAnswer =
   paths["/api/v1/auto-docs/{id}"]["get"]["responses"][200]["content"]["application/json"];
+type Definition = NonNullable<RecordAnswer["formVersion"]>["definition"];
 const member = {
   id: "member",
   email: "legal@example.com",
@@ -18,7 +19,7 @@ const member = {
 };
 const date = "2026-09-13T00:00:00Z";
 function record(): RecordAnswer {
-  const fields: NonNullable<RecordAnswer["formVersion"]>["definition"]["fields"] = [
+  const fields: Definition["fields"] = [
     {
       slug: "jurisdiction",
       label: "Jurisdiction",
@@ -95,69 +96,124 @@ const options = {
   catalogFields: [{ id: "catalog", displayName: "Contract reference", fieldType: "text" }],
   contractTypes: [{ id: "type", displayName: "NDA" }],
 };
-
-it("writes each Clause operator, offers the field's options, and saves maps in the same form", async () => {
-  const user = userEvent.setup();
-  let current = record();
-  const saves: Array<{
-    fields: Array<{ catalogFieldId?: string | null; contractAttribute?: string | null }>;
-    clauseRules: Array<{ operator: string; value: unknown }>;
-  }> = [];
-  stubApi({
-    signedIn: member,
-    extra: (call) => {
-      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
-      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
-      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
-      if (call.url.pathname.endsWith("/form-versions")) {
-        const body = call.body as NonNullable<RecordAnswer["formVersion"]>["definition"];
-        saves.push(body);
-        const version = {
-          ...current.formVersion!,
-          id: `form${saves.length + 2}`,
-          versionNumber: saves.length + 2,
-          definition: body,
-        };
-        current = {
-          ...current,
-          formVersion: version,
-          formVersions: [version, ...current.formVersions],
-        };
-        return json(201, current);
-      }
-      return undefined;
+const reading = (hasField = true) => ({
+  versionId: "file2",
+  versionNumber: 2,
+  parts: [
+    {
+      name: "word/document.xml",
+      kind: "body",
+      paragraphs: [
+        [
+          { kind: "text", text: "Governed by " },
+          {
+            kind: "placeholder",
+            text: "{{jurisdiction}}",
+            name: "jurisdiction",
+            directive: null,
+            hasField,
+          },
+          { kind: "text", text: "." },
+        ],
+        [
+          { kind: "block_open", name: "arbitration" },
+          { kind: "text", text: "Disputes go to arbitration." },
+          { kind: "block_close", name: "arbitration" },
+        ],
+      ],
     },
-  });
-  renderAt("/auto-docs/nda");
-  await screen.findByRole("heading", { name: "Publish NDA" });
-  const clause = screen.getByRole("group", { name: "arbitration" });
-  await user.selectOptions(within(clause).getByLabelText("Include this Block"), "conditional");
-  await user.selectOptions(within(clause).getByLabelText("Form field"), "jurisdiction");
-  const formField = screen.getByRole("group", { name: "jurisdiction" });
-  await user.selectOptions(within(formField).getByLabelText("Map to"), "catalog:catalog");
-  for (const operator of ["equals", "is_one_of", "is_set", "is_not"]) {
-    await user.selectOptions(within(clause).getByLabelText("Operator"), operator);
-    if (operator !== "is_set") {
-      const value = within(clause).getByLabelText("Value");
-      expect(within(value).getByRole("option", { name: "US" })).toBeInTheDocument();
-      await user.selectOptions(value, operator === "is_one_of" ? ["US", "UK"] : "US");
+  ],
+});
+
+/** The record stub every builder test starts from; `current` is the record the seam holds. */
+function builderStub(state: { current: RecordAnswer; saves: Definition[] }) {
+  return (call: { url: URL; method: string; body?: unknown }) => {
+    if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+    if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+    if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, state.current);
+    if (call.url.pathname.endsWith("/reading")) return json(200, reading());
+    if (call.url.pathname.endsWith("/form-versions")) {
+      const body = call.body as Definition;
+      state.saves.push(body);
+      const version = {
+        ...state.current.formVersion!,
+        id: `form${state.saves.length + 2}`,
+        versionNumber: state.saves.length + 2,
+        definition: {
+          fields: body.fields.map((field, displayOrder) => ({
+            ...field,
+            displayOrder,
+            placeholder: state.current.detection.placeholders.includes(field.slug),
+          })),
+          clauseRules: body.clauseRules,
+        },
+      };
+      state.current = {
+        ...state.current,
+        formVersion: version,
+        formVersions: [version, ...state.current.formVersions],
+      };
+      return json(201, state.current);
     }
-    await user.click(screen.getByRole("button", { name: "Save form" }));
-    await waitFor(() => expect(saves.at(-1)?.clauseRules[0]?.operator).toBe(operator));
-  }
-  expect(saves[0]?.fields[0]).toMatchObject({ catalogFieldId: "catalog", contractAttribute: null });
-  expect(saves[1]?.clauseRules[0]?.value).toEqual(["US", "UK"]);
-  await user.selectOptions(within(formField).getByLabelText("Map to"), "attribute:title");
-  await user.click(screen.getByRole("button", { name: "Save form" }));
+    return undefined;
+  };
+}
+
+it("selects a field from its Placeholder chip, maps it, and writes each Clause operator as its own form version", async () => {
+  const user = userEvent.setup();
+  const state = { current: record(), saves: [] as Definition[] };
+  stubApi({ signedIn: member, extra: builderStub(state) });
+  renderAt("/auto-docs/nda/form");
+  await screen.findByRole("heading", { name: "Publish NDA" });
+  await user.click(screen.getByRole("button", { name: "Placeholder jurisdiction" }));
+  const card = screen.getByRole("region", { name: "Jurisdiction" });
+  await user.selectOptions(within(card).getByLabelText("Map to"), "catalog:catalog");
+  await waitFor(() => expect(state.saves).toHaveLength(1));
+  expect(state.saves[0]?.fields[0]).toMatchObject({
+    catalogFieldId: "catalog",
+    contractAttribute: null,
+  });
+  await user.click(screen.getByRole("button", { name: "Edit the rule for arbitration" }));
+  const rule = screen.getByRole("region", { name: "arbitration" });
+  await user.selectOptions(within(rule).getByLabelText("Include"), "conditional");
   await waitFor(() =>
-    expect(saves.at(-1)?.fields[0]).toMatchObject({
+    expect(state.saves.at(-1)?.clauseRules[0]).toMatchObject({
+      blockName: "arbitration",
+      operator: "equals",
+    }),
+  );
+  for (const operator of ["is_one_of", "is_set", "is_not"]) {
+    await user.selectOptions(within(rule).getByLabelText("Operator"), operator);
+    await waitFor(() => expect(state.saves.at(-1)?.clauseRules[0]?.operator).toBe(operator));
+    if (operator === "is_one_of") {
+      const value = within(rule).getByLabelText("Value");
+      expect(within(value).getByRole("option", { name: "US" })).toBeInTheDocument();
+      await user.selectOptions(value, ["US", "UK"]);
+      await waitFor(() => expect(state.saves.at(-1)?.clauseRules[0]?.value).toEqual(["US", "UK"]));
+    }
+  }
+  expect(screen.getByText("Included when Jurisdiction is not US")).toBeVisible();
+  // One selection at a time: the rule card replaced the field card.
+  expect(screen.queryByRole("region", { name: "Jurisdiction" })).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Edit Jurisdiction" }));
+  await user.selectOptions(
+    within(screen.getByRole("region", { name: "Jurisdiction" })).getByLabelText("Map to"),
+    "attribute:title",
+  );
+  await waitFor(() =>
+    expect(state.saves.at(-1)?.fields[0]).toMatchObject({
       catalogFieldId: null,
       contractAttribute: "title",
     }),
   );
+  expect(
+    within(screen.getByRole("region", { name: "Fields" })).getByText(
+      "jurisdiction · Single select · Title",
+    ),
+  ).toBeVisible();
 });
 
-it("renders all Publish gaps, pins the chosen pair, and offers the lifecycle controls and structural diff", async () => {
+it("publishes from a dialog that lists every gap, then unpublishes, archives, and restores from the menu", async () => {
   const user = userEvent.setup();
   let current = record();
   let refuse = true;
@@ -168,6 +224,7 @@ it("renders all Publish gaps, pins the chosen pair, and offers the lifecycle con
       if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
+      if (call.url.pathname.endsWith("/reading")) return json(200, reading());
       if (call.url.pathname.endsWith("/form-versions/diff"))
         return json(200, {
           changes: [
@@ -205,40 +262,55 @@ it("renders all Publish gaps, pins the chosen pair, and offers the lifecycle con
   });
   renderAt("/auto-docs/nda");
   await screen.findByRole("heading", { name: "Publish NDA" });
-  await user.selectOptions(screen.getByLabelText("File version to publish"), "file1");
-  await user.selectOptions(screen.getByLabelText("Form version to publish"), "form1");
-  await user.click(screen.getByRole("button", { name: "Publish" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent('"counterparty_name"');
-  expect(screen.getByRole("alert")).toHaveTextContent('"missing"');
-  expect(screen.getByRole("alert")).toHaveTextContent('"CA"');
+  // The sub-bar's Publish and the Publication card's both open the dialog.
+  await user.click(screen.getAllByRole("button", { name: "Publish" })[0]!);
+  const dialog = screen.getByRole("dialog");
+  expect(within(dialog).getByLabelText("File version")).toHaveValue("file2");
+  expect(within(dialog).getByLabelText("Form version")).toHaveValue("form2");
+  await user.selectOptions(within(dialog).getByLabelText("File version"), "file1");
+  await user.selectOptions(within(dialog).getByLabelText("Form version"), "form1");
+  await user.click(within(dialog).getByRole("button", { name: "Publish" }));
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent('"counterparty_name"');
+  expect(within(dialog).getByRole("alert")).toHaveTextContent('"missing"');
+  expect(within(dialog).getByRole("alert")).toHaveTextContent('"CA"');
   refuse = false;
-  await user.click(screen.getByRole("button", { name: "Publish" }));
-  await screen.findByRole("button", { name: "Unpublish" });
+  await user.click(within(dialog).getByRole("button", { name: "Publish" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   expect(publishes.at(-1)).toEqual({ documentVersionId: "file1", formVersionId: "form1" });
-  expect(screen.getByText("Live: file version 1 and form version 1.")).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Compare forms" }));
+  expect(
+    screen.getByText("Live since Sep 13, 2026: file version 1, form version 1."),
+  ).toBeVisible();
+  expect(
+    screen.getByText("File version 2 and form version 2 are newer than the live pair."),
+  ).toBeVisible();
+  expect(screen.getByRole("link", { name: "Generate" })).toHaveAttribute(
+    "href",
+    "/auto-docs/nda/generate",
+  );
+  await user.click(screen.getByRole("link", { name: "Form" }));
+  await user.click(await screen.findByRole("button", { name: "Compare versions" }));
   expect(await screen.findByText(/Retyped jurisdiction/)).toBeVisible();
   expect(screen.getByText(/Clause rule changed: arbitration/)).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Close" }));
   expect(screen.getByRole("link", { name: "Compare files" })).toHaveAttribute(
     "href",
     "/documents/template/compare?from=file1&to=file2",
   );
-  // The Comparison seam refuses a newer-first pair, so picking the two
-  // file versions the other way round still links to the ordered pair.
-  await user.selectOptions(screen.getByLabelText("Compare file from"), "file2");
-  await user.selectOptions(screen.getByLabelText("Compare file to"), "file1");
-  expect(screen.getByRole("link", { name: "Compare files" })).toHaveAttribute(
-    "href",
-    "/documents/template/compare?from=file1&to=file2",
+  const menu = () => screen.getByRole("button", { name: "Auto-Doc actions" });
+  await user.click(menu());
+  await user.click(await screen.findByRole("menuitem", { name: "Unpublish" }));
+  await screen.findByRole("button", { name: "Publish" });
+  await user.click(menu());
+  await user.click(await screen.findByRole("menuitem", { name: "Archive" }));
+  await waitFor(() =>
+    expect(screen.queryByRole("button", { name: "Publish" })).not.toBeInTheDocument(),
   );
-  for (const action of ["Unpublish", "Archive", "Restore"]) {
-    await user.click(screen.getByRole("button", { name: action }));
-    if (action === "Archive") await screen.findByRole("button", { name: "Restore" });
-    else await screen.findByRole("button", { name: "Publish" });
-  }
+  await user.click(menu());
+  await user.click(await screen.findByRole("menuitem", { name: "Restore" }));
+  await screen.findByRole("button", { name: "Publish" });
 });
 
-it("saves audience, target Type, formats, and cover note, then applies list filters", async () => {
+it("commits each setting on its own, then applies list filters", async () => {
   const user = userEvent.setup();
   let current = record();
   const edits: unknown[] = [];
@@ -250,7 +322,7 @@ it("saves audience, target Type, formats, and cover note, then applies list filt
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") {
         if (call.method === "PATCH") {
-          const body = call.body as { audience: "everyone"; targetContractTypeId: string };
+          const body = call.body as Partial<RecordAnswer["autoDoc"]>;
           edits.push(body);
           current = { ...current, autoDoc: { ...current.autoDoc, ...body } };
         }
@@ -263,34 +335,34 @@ it("saves audience, target Type, formats, and cover note, then applies list filt
       return undefined;
     },
   });
-  renderAt("/auto-docs/nda");
+  renderAt("/auto-docs/nda/settings");
   await screen.findByRole("heading", { name: "Publish NDA" });
-  const settings = screen.getByRole("region", { name: "Settings" });
-  await user.selectOptions(within(settings).getByLabelText("Audience"), "everyone");
-  await user.selectOptions(within(settings).getByLabelText("Target Contract Type"), "type");
-  await user.click(within(settings).getByLabelText("Title pattern"));
+  const reach = screen.getByRole("region", { name: "Reach" });
+  await user.selectOptions(within(reach).getByLabelText("Audience"), "everyone");
+  await waitFor(() => expect(edits).toEqual([{ audience: "everyone" }]));
+  const creation = screen.getByRole("region", { name: "Contract creation" });
+  expect(
+    within(creation).getByText(
+      "Without a target, a Generation's file stays on the Generation until it is Filed.",
+    ),
+  ).toBeVisible();
+  await user.selectOptions(within(creation).getByLabelText("Target Contract Type"), "type");
+  await waitFor(() => expect(edits).toHaveLength(2));
+  await user.click(within(creation).getByLabelText("Title pattern"));
   await user.paste("NDA {{jurisdiction}}");
-  await user.selectOptions(within(settings).getByLabelText("Fixed Entity"), "entity");
-  await user.selectOptions(within(settings).getByLabelText("Formats"), "pdf");
-  await user.type(within(settings).getByLabelText("Cover note"), "Please **review** this.");
-  expect(within(settings).getByText("review")).toBeVisible();
-  await user.click(within(settings).getByRole("button", { name: "Save settings" }));
-  await screen.findByText("Settings saved.");
-  expect(edits).toEqual([
-    {
-      audience: "everyone",
-      audienceUserIds: [],
-      audienceDepartmentIds: [],
-      acknowledgementText: null,
-      acknowledgementFrequency: "once_per_auto_doc",
-      targetContractTypeId: "type",
-      titlePattern: "NDA {{jurisdiction}}",
-      fixedEntityId: "entity",
-      formats: "pdf",
-      coverNote: "Please **review** this.",
-    },
-  ]);
-  await user.click(screen.getAllByRole("link", { name: "Auto-Docs" }).at(-1)!);
+  await user.tab();
+  await waitFor(() => expect(edits.at(-1)).toEqual({ titlePattern: "NDA {{jurisdiction}}" }));
+  await user.selectOptions(within(creation).getByLabelText("Our Entity"), "entity");
+  await waitFor(() => expect(edits.at(-1)).toEqual({ fixedEntityId: "entity" }));
+  const output = screen.getByRole("region", { name: "Output" });
+  await user.selectOptions(within(output).getByLabelText("Formats"), "pdf");
+  await waitFor(() => expect(edits.at(-1)).toEqual({ formats: "pdf" }));
+  await user.type(within(output).getByLabelText("Cover note"), "Please **review** this.");
+  expect(within(output).getByText("review")).toBeVisible();
+  await user.tab();
+  await waitFor(() => expect(edits.at(-1)).toEqual({ coverNote: "Please **review** this." }));
+  expect(screen.queryByRole("button", { name: "Save settings" })).not.toBeInTheDocument();
+  await user.click(screen.getAllByRole("link", { name: "Auto-Docs" })[0]!);
   await screen.findByRole("button", { name: "Apply filters" });
   await user.type(screen.getByRole("searchbox", { name: "Search Auto-Docs" }), "NDA");
   await user.selectOptions(screen.getByLabelText("State"), "archived");
@@ -306,38 +378,30 @@ it("saves audience, target Type, formats, and cover note, then applies list filt
   });
 });
 
-it("keeps line breaks while typing an is-one-of rule for a text field", async () => {
+it("commits a typed is-one-of rule value when focus leaves the rule", async () => {
   const user = userEvent.setup();
-  const current = record();
-  const values: unknown[] = [];
-  stubApi({
-    signedIn: member,
-    extra: (call) => {
-      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
-      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
-      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
-      if (call.url.pathname.endsWith("/form-versions")) {
-        const definition = call.body as NonNullable<RecordAnswer["formVersion"]>["definition"];
-        values.push(definition.clauseRules[0]?.value);
-        return json(201, { ...current, formVersion: { ...current.formVersion, definition } });
-      }
-      return undefined;
-    },
-  });
-  renderAt("/auto-docs/nda");
+  const state = { current: record(), saves: [] as Definition[] };
+  state.current.formVersion!.definition.fields[0] = {
+    ...state.current.formVersion!.definition.fields[0]!,
+    fieldType: "text",
+    options: null,
+  };
+  stubApi({ signedIn: member, extra: builderStub(state) });
+  renderAt("/auto-docs/nda/form");
   await screen.findByRole("heading", { name: "Publish NDA" });
-  await user.selectOptions(
-    within(screen.getByRole("group", { name: "jurisdiction" })).getByLabelText("Type"),
-    "text",
-  );
-  const clause = screen.getByRole("group", { name: "arbitration" });
-  await user.selectOptions(within(clause).getByLabelText("Include this Block"), "conditional");
-  await user.selectOptions(within(clause).getByLabelText("Operator"), "is_one_of");
-  const input = within(clause).getByLabelText("Value");
+  await user.click(screen.getByRole("button", { name: "Edit the rule for arbitration" }));
+  const rule = screen.getByRole("region", { name: "arbitration" });
+  await user.selectOptions(within(rule).getByLabelText("Include"), "conditional");
+  await waitFor(() => expect(state.saves).toHaveLength(1));
+  await user.selectOptions(within(rule).getByLabelText("Operator"), "is_one_of");
+  const input = within(rule).getByLabelText("Value");
   await user.type(input, "United States{enter}United Kingdom{enter}");
   expect(input).toHaveValue("United States\nUnited Kingdom\n");
-  await user.click(screen.getByRole("button", { name: "Save form" }));
-  await waitFor(() => expect(values).toEqual([["United States", "United Kingdom"]]));
+  expect(state.saves).toHaveLength(1);
+  await user.tab();
+  await waitFor(() =>
+    expect(state.saves.at(-1)?.clauseRules[0]?.value).toEqual(["United States", "United Kingdom"]),
+  );
 });
 
 it("drops unknown state and audience filters from a copied list URL", async () => {
@@ -362,70 +426,41 @@ it("drops unknown state and audience filters from a copied list URL", async () =
   expect(screen.getByLabelText("Audience")).toHaveValue("");
 });
 
-it("restores a clean editor when Legal reverts an edit to the first of two Clause rules", async () => {
-  const user = userEvent.setup();
-  const current = record();
-  current.detection.blocks.push("notice");
-  current.formVersion!.definition.clauseRules = ["arbitration", "notice"].map((blockName) => ({
-    blockName,
-    fieldSlug: "jurisdiction",
-    operator: "equals",
-    value: "US",
-  }));
-  stubApi({
-    signedIn: member,
-    extra: (call) => {
-      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
-      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
-      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
-      return undefined;
-    },
-  });
-  renderAt("/auto-docs/nda");
+it("draws a rule on the Block tag and marks a Block the file no longer holds", async () => {
+  const state = { current: record(), saves: [] as Definition[] };
+  state.current.formVersion!.definition.clauseRules = ["arbitration", "notice"].map(
+    (blockName) => ({
+      blockName,
+      fieldSlug: "jurisdiction",
+      operator: "equals",
+      value: "US",
+    }),
+  );
+  stubApi({ signedIn: member, extra: builderStub(state) });
+  renderAt("/auto-docs/nda/form");
   await screen.findByRole("heading", { name: "Publish NDA" });
-  const publish = screen.getByRole("button", { name: "Publish" });
-  expect(publish).toBeEnabled();
-  const clause = screen.getByRole("group", { name: "arbitration" });
-  await user.selectOptions(within(clause).getByLabelText("Operator"), "is_not");
-  expect(publish).toBeDisabled();
-  await user.selectOptions(within(clause).getByLabelText("Operator"), "equals");
-  expect(publish).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Block arbitration" })).toHaveTextContent(
+    "arbitration · when Jurisdiction equals US",
+  );
+  const clauses = screen.getByRole("region", { name: "Clauses" });
+  expect(within(clauses).getByText("1 missing")).toBeVisible();
+  expect(within(clauses).getByText("Not in file version 2")).toBeVisible();
+  expect(within(clauses).getAllByText("Included when Jurisdiction equals US")).toHaveLength(2);
 });
 
-it("holds the selected forms steady while their comparison is loading", async () => {
-  const user = userEvent.setup();
-  let release: (() => void) | undefined;
+it("redirects a section the record does not have to the bare address", async () => {
   stubApi({
     signedIn: member,
     extra: (call) => {
       if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, record());
-      if (call.url.pathname.endsWith("/form-versions/diff"))
-        return new Promise<Response>((resolve) => {
-          release = () => resolve(json(200, { changes: [] }));
-        });
       return undefined;
     },
   });
-  renderAt("/auto-docs/nda");
-  await screen.findByRole("heading", { name: "Publish NDA" });
-  const from = screen.getByLabelText("Compare form from");
-  const to = screen.getByLabelText("Compare form to");
-  await user.click(screen.getByRole("button", { name: "Compare forms" }));
-  await waitFor(() => expect(release).toBeDefined());
-  try {
-    expect(from).toBeDisabled();
-    expect(to).toBeDisabled();
-    await user.selectOptions(from, "form2");
-    expect(from).toHaveValue("form1");
-  } finally {
-    release?.();
-  }
-  await waitFor(() => expect(from).toBeEnabled());
-  expect(to).toBeEnabled();
-  await user.selectOptions(from, "form2");
-  expect(from).toHaveValue("form2");
+  const { router } = renderAt("/auto-docs/nda/paperwork");
+  await waitFor(() => expect(router.state.location.pathname).toBe("/auto-docs/nda"));
+  await screen.findByRole("region", { name: "About" });
 });
 
 it("shows Generation history and retries a failed fill", async () => {
@@ -479,9 +514,9 @@ it("shows Generation history and retries a failed fill", async () => {
       return undefined;
     },
   });
-  renderAt("/auto-docs/nda");
+  renderAt("/auto-docs/nda/generations");
   const list = await screen.findByRole("region", { name: "Generations" });
-  expect(within(list).getByRole("link", { name: "Ready · Legal" })).toHaveAttribute(
+  expect(within(list).getAllByRole("link", { name: "Legal" })[0]).toHaveAttribute(
     "href",
     "/auto-docs/nda/generations/ready",
   );
@@ -508,56 +543,37 @@ it("shows Generation history and retries a failed fill", async () => {
 
 it("saves the currency and cadence of a Contract Value map", async () => {
   const user = userEvent.setup();
-  const current = record();
-  current.formVersion!.definition.fields[0]!.fieldType = "currency";
-  current.formVersion!.definition.fields[0]!.options = null;
-  current.formVersion!.definition.fields[0]!.valueCurrency = "AED";
-  let saved: unknown;
-  stubApi({
-    signedIn: member,
-    extra: (call) => {
-      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
-      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
-      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
-      if (call.url.pathname.endsWith("/form-versions")) {
-        saved = call.body;
-        const fields = (call.body as NonNullable<RecordAnswer["formVersion"]>["definition"]).fields;
-        current.formVersion!.definition.fields = current.formVersion!.definition.fields.map(
-          (field, index) => ({ ...field, ...fields[index] }),
-        );
-        return json(201, current);
-      }
-      return undefined;
-    },
-  });
-  renderAt("/auto-docs/nda");
+  const state = { current: record(), saves: [] as Definition[] };
+  state.current.formVersion!.definition.fields[0] = {
+    ...state.current.formVersion!.definition.fields[0]!,
+    fieldType: "currency",
+    options: null,
+    valueCurrency: "AED",
+  };
+  stubApi({ signedIn: member, extra: builderStub(state) });
+  renderAt("/auto-docs/nda/form");
   await screen.findByRole("heading", { name: "Publish NDA" });
-  const field = screen.getByRole("group", { name: "jurisdiction" });
-  await user.selectOptions(within(field).getByLabelText("Map to"), "attribute:value");
-  expect(within(field).getByLabelText("Value currency")).toHaveValue("AED");
-  await user.selectOptions(within(field).getByLabelText("Value cadence"), "annually");
-  await user.click(screen.getByRole("button", { name: "Save form" }));
+  await user.click(screen.getByRole("button", { name: "Edit Jurisdiction" }));
+  const card = screen.getByRole("region", { name: "Jurisdiction" });
+  await user.selectOptions(within(card).getByLabelText("Map to"), "attribute:value");
+  await waitFor(() => expect(state.saves).toHaveLength(1));
+  expect(within(card).getByLabelText("Currency")).toHaveValue("AED");
+  await user.selectOptions(within(card).getByLabelText("Cadence"), "annually");
   await waitFor(() =>
-    expect(saved).toMatchObject({
-      fields: [
-        expect.objectContaining({
-          contractAttribute: "value",
-          valueCurrency: "AED",
-          valueCadence: "annually",
-        }),
-      ],
+    expect(state.saves.at(-1)?.fields[0]).toMatchObject({
+      contractAttribute: "value",
+      valueCurrency: "AED",
+      valueCadence: "annually",
     }),
   );
-  await user.selectOptions(within(field).getByLabelText("Value cadence"), "");
-  await user.click(screen.getByRole("button", { name: "Save form" }));
-  await waitFor(() =>
-    expect(saved).toMatchObject({ fields: [expect.objectContaining({ valueCadence: null })] }),
-  );
+  await user.selectOptions(within(card).getByLabelText("Cadence"), "");
+  await waitFor(() => expect(state.saves.at(-1)?.fields[0]).toMatchObject({ valueCadence: null }));
 });
 
-it("edits ordered Assignment rules with every operator and an optional default Legal Owner", async () => {
+it("edits ordered Assignment rules in a dialog with every operator and an optional default Legal Owner", async () => {
   const user = userEvent.setup();
   let current = record();
+  current.autoDoc.targetContractTypeId = "type";
   let nextRuleId = 0;
   const saves: Array<{
     rules: Array<{
@@ -592,53 +608,59 @@ it("edits ordered Assignment rules with every operator and an optional default L
       return undefined;
     },
   });
-  renderAt("/auto-docs/nda");
+  renderAt("/auto-docs/nda/settings");
   const editor = within(await screen.findByRole("region", { name: "Assignment rules" }));
   await user.click(editor.getByRole("button", { name: "Add rule" }));
-  for (const operator of ["equals", "is_one_of", "is_set", "is_not"]) {
-    const rule = within(editor.getByRole("group", { name: "Assignment rule 1" }));
-    await user.selectOptions(rule.getByLabelText("Operator"), operator);
+  let dialog = screen.getByRole("dialog");
+  await user.selectOptions(within(dialog).getByLabelText("Value"), "US");
+  await user.selectOptions(within(dialog).getByLabelText("Legal Owner"), "other");
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(saves).toHaveLength(1));
+  expect(saves[0]?.rules[0]).toMatchObject({
+    operator: "equals",
+    value: "US",
+    legalOwnerId: "other",
+  });
+  expect(editor.getByText("Jurisdiction equals US")).toBeVisible();
+  for (const operator of ["is_one_of", "is_set", "is_not"]) {
+    await user.click(editor.getByRole("button", { name: "Edit rule 1" }));
+    dialog = screen.getByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("Operator"), operator);
     if (operator !== "is_set")
       await user.selectOptions(
-        rule.getByLabelText("Value"),
+        within(dialog).getByLabelText("Value"),
         operator === "is_one_of" ? ["US", "UK"] : "US",
       );
-    await user.selectOptions(rule.getByLabelText("Legal Owner"), "other");
-    await user.click(editor.getByRole("button", { name: "Save assignment" }));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
     await waitFor(() => expect(saves.at(-1)?.rules[0]?.operator).toBe(operator));
   }
   expect(saves[1]?.rules[0]?.value).toEqual(["US", "UK"]);
   expect(saves[2]?.rules[0]?.value).toBeNull();
   await user.click(editor.getByRole("button", { name: "Add rule" }));
-  await user.click(
-    within(editor.getByRole("group", { name: "Assignment rule 2" })).getByRole("button", {
-      name: "Move up",
-    }),
-  );
-  await user.selectOptions(editor.getByLabelText("Default Legal Owner"), "member");
-  await user.click(editor.getByRole("button", { name: "Save assignment" }));
+  dialog = screen.getByRole("dialog");
+  await user.selectOptions(within(dialog).getByLabelText("Legal Owner"), "member");
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(saves.at(-1)?.rules).toHaveLength(2));
+  editor.getByRole("button", { name: "Reorder rule 2 of 2" }).focus();
+  await user.keyboard("{ArrowUp}");
   await waitFor(() =>
     expect(saves.at(-1)?.rules.map((rule) => rule.legalOwnerId)).toEqual(["member", "other"]),
   );
-  expect(saves.at(-1)?.defaultLegalOwnerId).toBe("member");
-  await user.click(
-    within(editor.getByRole("group", { name: "Assignment rule 1" })).getByRole("button", {
-      name: "Remove rule",
-    }),
-  );
-  await user.selectOptions(editor.getByLabelText("Default Legal Owner"), "");
-  await user.click(editor.getByRole("button", { name: "Save assignment" }));
+  await user.selectOptions(screen.getByLabelText("Default Legal Owner"), "member");
+  await waitFor(() => expect(saves.at(-1)?.defaultLegalOwnerId).toBe("member"));
+  await user.click(editor.getByRole("button", { name: "Remove rule 1" }));
   await waitFor(() =>
-    expect(saves.at(-1)).toMatchObject({
-      rules: [{ id: "rule-0", legalOwnerId: "other" }],
-      defaultLegalOwnerId: null,
-    }),
+    expect(saves.at(-1)?.rules).toEqual([
+      expect.objectContaining({ id: "rule-0", legalOwnerId: "other" }),
+    ]),
   );
+  await user.selectOptions(screen.getByLabelText("Default Legal Owner"), "");
+  await waitFor(() => expect(saves.at(-1)?.defaultLegalOwnerId).toBeNull());
 });
 
-it("saves selected people and Departments with the acknowledgement override and frequency", async () => {
-  let saved: unknown;
-  const current = record();
+it("commits selected people and Departments and the acknowledgement override one control at a time", async () => {
+  const edits: unknown[] = [];
+  let current = record();
   stubApi({
     signedIn: member,
     extra: (call) => {
@@ -646,8 +668,16 @@ it("saves selected people and Departments with the acknowledgement override and 
       if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
       if (call.url.pathname === "/api/v1/auto-docs/nda") {
         if (call.method === "PATCH") {
-          saved = call.body;
-          return json(200, current);
+          const body = call.body as Record<string, unknown>;
+          edits.push(body);
+          current = {
+            ...current,
+            autoDoc: { ...current.autoDoc, ...body },
+            audienceUserIds:
+              (body.audienceUserIds as string[] | undefined) ?? current.audienceUserIds,
+            audienceDepartmentIds:
+              (body.audienceDepartmentIds as string[] | undefined) ?? current.audienceDepartmentIds,
+          };
         }
         return json(200, current);
       }
@@ -655,86 +685,26 @@ it("saves selected people and Departments with the acknowledgement override and 
     },
   });
   const user = userEvent.setup();
-  renderAt("/auto-docs/nda");
-  await screen.findByRole("heading", { name: "Settings" });
+  renderAt("/auto-docs/nda/settings");
+  await screen.findByRole("region", { name: "Reach" });
   await user.selectOptions(screen.getByRole("combobox", { name: "Audience" }), "selected");
-  await user.selectOptions(screen.getByRole("listbox", { name: "Selected people" }), "buyer");
-  await user.selectOptions(screen.getByRole("listbox", { name: "Selected Departments" }), "sales");
-  await user.selectOptions(
-    screen.getByRole("combobox", { name: "Acknowledgement frequency" }),
-    "every_use",
-  );
-  await user.click(
-    screen.getByRole("checkbox", { name: "Use the organization's acknowledgement text" }),
-  );
-  await user.clear(screen.getByLabelText("Acknowledgement text"));
-  await user.type(screen.getByLabelText("Acknowledgement text"), "Ask Legal before changes.");
-  await user.click(screen.getByRole("button", { name: "Save settings" }));
+  await user.selectOptions(await screen.findByRole("listbox", { name: "People" }), "buyer");
+  await user.selectOptions(screen.getByRole("listbox", { name: "Departments" }), "sales");
+  await user.selectOptions(screen.getByRole("combobox", { name: "Frequency" }), "every_use");
+  await user.click(screen.getByRole("radio", { name: "Custom text" }));
+  const text = await screen.findByRole("textbox", { name: "Acknowledgement text" });
+  expect(text).toHaveValue("Do not edit.");
+  await user.clear(text);
+  await user.type(text, "Ask Legal before changes.");
+  await user.tab();
   await waitFor(() =>
-    expect(saved).toMatchObject({
-      audience: "selected",
-      audienceUserIds: ["buyer"],
-      audienceDepartmentIds: ["sales"],
-      acknowledgementFrequency: "every_use",
-      acknowledgementText: "Ask Legal before changes.",
-    }),
+    expect(edits).toEqual([
+      { audience: "selected" },
+      { audienceUserIds: ["buyer"] },
+      { audienceDepartmentIds: ["sales"] },
+      { acknowledgementFrequency: "every_use" },
+      { acknowledgementText: "Do not edit." },
+      { acknowledgementText: "Ask Legal before changes." },
+    ]),
   );
-});
-
-it("refreshes Assignment values after saving sibling settings without overwriting the refreshed record", async () => {
-  const user = userEvent.setup();
-  let current = record();
-  current.formVersion!.definition.fields[0] = {
-    ...current.formVersion!.definition.fields[0]!,
-    fieldType: "text",
-    options: null,
-  };
-  current.assignmentRules = [
-    {
-      id: "rule",
-      fieldSlug: "jurisdiction",
-      operator: "equals",
-      value: "old",
-      legalOwnerId: "member",
-      displayOrder: 0,
-    },
-  ];
-  let saved: unknown;
-  stubApi({
-    signedIn: member,
-    extra: (call) => {
-      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
-      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
-      if (call.url.pathname === "/api/v1/auto-docs/nda") {
-        if (call.method === "PATCH")
-          current = {
-            ...current,
-            autoDoc: { ...current.autoDoc, defaultLegalOwnerId: "other" },
-            assignmentRules: [
-              { ...current.assignmentRules[0]!, value: "refreshed", legalOwnerId: "other" },
-            ],
-          };
-        return json(200, current);
-      }
-      if (call.url.pathname.endsWith("/assignment-rules")) {
-        saved = call.body;
-        return json(200, current);
-      }
-      return undefined;
-    },
-  });
-  renderAt("/auto-docs/nda");
-  const editor = within(await screen.findByRole("region", { name: "Assignment rules" }));
-  expect(editor.getByLabelText("Value")).toHaveValue("old");
-  await user.click(screen.getByRole("button", { name: "Save settings" }));
-  await waitFor(() => expect(editor.getByLabelText("Default Legal Owner")).toHaveValue("other"));
-  expect(editor.getByLabelText("Value")).toHaveValue("refreshed");
-  await user.click(editor.getByRole("button", { name: "Save assignment" }));
-  await waitFor(() =>
-    expect(saved).toMatchObject({
-      defaultLegalOwnerId: "other",
-      rules: [{ value: "refreshed", legalOwnerId: "other" }],
-    }),
-  );
-  expect(await screen.findByText("Assignment settings saved.")).toBeVisible();
 });

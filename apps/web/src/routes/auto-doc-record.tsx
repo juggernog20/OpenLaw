@@ -1,54 +1,99 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** ADO-002–004: one template Document and immutable form snapshots. */
-import { useState } from "react";
-import { z } from "zod";
-import { formatRelativeOrShort } from "../lib/format";
-import { FormattedMessage, useIntl } from "react-intl";
-import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import type { paths } from "@openlaw/api-client";
+/**
+ * The Auto-Doc record (DES-087): a DES-032 record page whose Form
+ * section is the builder, the template drawn beside the form that
+ * fills it. ADO-002 through ADO-010 say what the page must let a
+ * Member+ do; this file routes the four sections and owns the record's
+ * own acts (rename, Publish, Unpublish, Archive, Restore).
+ */
+import { useEffect, useRef, useState } from "react";
 import {
-  autoDocFieldTypes,
-  autoDocUploadAnswer,
-  type AutoDocOptions,
-  type AutoDocClauseRule,
+  Archive,
+  ArchiveRestore,
+  ChevronRight,
+  FileText,
+  Link2,
+  MoreHorizontal,
+  Send,
+  Undo2,
+} from "lucide-react";
+import { FormattedMessage, useIntl } from "react-intl";
+import {
+  Link,
+  redirect,
+  useLoaderData,
+  useNavigate,
+  useParams,
+  type LoaderFunctionArgs,
+} from "react-router";
+import {
+  AUTO_DOC_RECORD_TABS,
+  type AutoDocAnswer,
   type AutoDocGeneration,
+  type AutoDocOptions,
+  type AutoDocReading,
+  type AutoDocRecordTab,
 } from "../lib/auto-docs";
 import { api } from "../lib/api";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
+import { useFieldCommit } from "../lib/field-commit";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
+import { previousComparableVersion, type ContractDocument } from "../lib/documents";
 import { useActivityApplet } from "../components/activity/activity-applet";
 import { RecordApplets } from "../components/shell/record-applets";
+import { RecordTabs } from "../components/shell/record-tabs";
 import { DocPanel } from "../components/documents/doc-panel";
-import { previousComparableVersion, type ContractDocument } from "../lib/documents";
 import { AppShell } from "../components/shell/app-shell";
 import { PageTitle } from "../components/page-title";
+import { StatusNote } from "../components/status-note";
 import { Button } from "../components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
+import { Input } from "../components/ui/input";
+import { AboutCard, PublicationCard } from "../components/auto-docs/overview";
+import { TemplatePane } from "../components/auto-docs/template-pane";
+import { FormBuilder, type BuilderSelection } from "../components/auto-docs/form-builder";
+import { SettingsCards } from "../components/auto-docs/settings-cards";
+import { AutoDocGenerations } from "../components/auto-docs/generations";
+import { PublishDialog } from "../components/auto-docs/publish-dialog";
+import { UploadDialog } from "../components/auto-docs/upload-dialog";
+import { CompareFormsDialog } from "../components/auto-docs/compare-dialog";
 import { RecordNotFoundPage } from "./not-found";
 
-type Answer =
-  paths["/api/v1/auto-docs/{id}"]["get"]["responses"][200]["content"]["application/json"];
-type Field = NonNullable<Answer["formVersion"]>["definition"]["fields"][number];
-import { CurrencySelect } from "../components/currency-select";
-import { AssignmentEditor } from "../components/auto-docs/assignment-editor";
-import { ClausesEditor, FieldMap } from "../components/auto-docs/clauses-editor";
-import { AutoDocGenerations } from "../components/auto-docs/generations";
-import {
-  PublicationCard,
-  AutoDocSettings,
-  AutoDocVersionDiff,
-} from "../components/auto-docs/publication-cards";
+const STATE_PILL: Record<AutoDocAnswer["autoDoc"]["state"], string> = {
+  draft: "bg-status-neutral-bg text-status-neutral-fg",
+  published: "bg-status-success-bg text-status-success-fg",
+  archived: "bg-status-onhold-bg text-status-onhold-fg",
+};
 
-const FIELD_TYPES = autoDocFieldTypes.options;
+async function readReading(record: AutoDocAnswer): Promise<AutoDocReading | null> {
+  const version = record.template?.versions[0];
+  if (!version) return null;
+  const answer = await api
+    .GET("/api/v1/auto-docs/{id}/template/{versionId}/reading", {
+      params: { path: { id: record.autoDoc.id, versionId: version.id } },
+    })
+    .catch(() => undefined);
+  return answer?.data ?? null;
+}
 
 export async function autoDocRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/portal");
+  const id = params.id!;
+  // A section the record does not have redirects to the bare address
+  // (DES-032 clause 2): the record exists and only the section does not.
+  if (params.tab && !(AUTO_DOC_RECORD_TABS as readonly string[]).includes(params.tab))
+    return redirect(`/auto-docs/${id}`);
   const [result, options, generations] = await Promise.all([
-    api.GET("/api/v1/auto-docs/{id}", { params: { path: { id: params.id! } } }),
+    api.GET("/api/v1/auto-docs/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/auto-docs/options"),
-    api.GET("/api/v1/auto-docs/{id}/generations", { params: { path: { id: params.id! } } }),
+    api.GET("/api/v1/auto-docs/{id}/generations", { params: { path: { id } } }),
   ]);
   if (result.response.status === 404) return { user, notFound: true as const };
   if (!result.data) throw new Error("The Auto-Doc could not be read.");
@@ -59,7 +104,7 @@ export async function autoDocRecordLoader({ params, request }: LoaderFunctionArg
   let landing: { document: ContractDocument; versionId: string } | null = null;
   if (query.get("doc") === result.data.template?.id && versionId) {
     const paper = await api
-      .GET("/api/v1/auto-docs/{id}/documents", { params: { path: { id: params.id! } } })
+      .GET("/api/v1/auto-docs/{id}/documents", { params: { path: { id } } })
       .catch(() => undefined);
     const document = paper?.data?.documents[0];
     if (document?.versions.some((version) => version.id === versionId))
@@ -70,6 +115,7 @@ export async function autoDocRecordLoader({ params, request }: LoaderFunctionArg
     record: result.data,
     options: options.data,
     generations: generations.data.generations,
+    reading: await readReading(result.data),
     landing,
     find: query.get("find"),
   };
@@ -98,7 +144,9 @@ export function AutoDocRecordPage() {
     );
   return (
     <AutoDocRecord
+      key={loaded.record.autoDoc.id}
       initial={loaded.record}
+      initialReading={loaded.reading}
       options={loaded.options}
       generations={loaded.generations}
       user={loaded.user}
@@ -110,13 +158,15 @@ export function AutoDocRecordPage() {
 
 function AutoDocRecord({
   initial,
+  initialReading,
   options,
   generations,
   user,
   landing,
   find,
 }: {
-  initial: Answer;
+  initial: AutoDocAnswer;
+  initialReading: AutoDocReading | null;
   options: AutoDocOptions;
   generations: AutoDocGeneration[];
   landing: { document: ContractDocument; versionId: string } | null;
@@ -124,8 +174,21 @@ function AutoDocRecord({
   user: Awaited<ReturnType<typeof requireUser>>;
 }) {
   const intl = useIntl();
+  const navigate = useNavigate();
   const signOut = useSignOut("/auth/login");
+  const tab = (useParams().tab ?? "overview") as AutoDocRecordTab;
   const [saved, setSaved] = useState(initial);
+  const [reading, setReading] = useState(initialReading);
+  const [selection, setSelection] = useState<BuilderSelection>(null);
+  const [dialog, setDialog] = useState<"publish" | "upload" | "compare" | null>(null);
+  const [reading_, setReadingDoc] = useState(landing);
+  const [covered, setCovered] = useState(false);
+  const [error, setError] = useState<string>();
+  const [actionBusy, setActionBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const commits = useFieldCommit<"name">();
+  const [renaming, setRenaming] = useState(false);
+  const [nameDraft, setNameDraft] = useState(saved.autoDoc.name);
   const history = useActivityApplet({
     entityType: "auto_doc",
     entityId: initial.autoDoc.id,
@@ -133,661 +196,346 @@ function AutoDocRecord({
       options.contractTypes.map((type) => [type.id, type.displayName]),
     ),
   });
-  const [reading, setReading] = useState(landing);
-  const [covered, setCovered] = useState(false);
-  const openVersion = reading?.document.versions.find(
-    (version) => version.id === reading.versionId,
+  const archived = saved.autoDoc.state === "archived";
+  const published = saved.autoDoc.state === "published";
+
+  // The reading follows the newest file version and the newest form
+  // version: an upload changes the paragraphs, a form commit changes
+  // which Placeholders have a field.
+  const readingKey = `${saved.template?.versions[0]?.id ?? ""}:${saved.formVersion?.id ?? ""}`;
+  const loadedKey = useRef(readingKey);
+  useEffect(() => {
+    if (loadedKey.current === readingKey) return;
+    loadedKey.current = readingKey;
+    let stale = false;
+    void readReading(saved).then((next) => {
+      if (!stale) setReading(next);
+    });
+    return () => {
+      stale = true;
+    };
+  }, [readingKey, saved]);
+
+  const openVersion = reading_?.document.versions.find(
+    (version) => version.id === reading_.versionId,
   );
   async function openTemplate(versionId: string) {
     const answer = await api
-      .GET("/api/v1/auto-docs/{id}/documents", { params: { path: { id: initial.autoDoc.id } } })
+      .GET("/api/v1/auto-docs/{id}/documents", { params: { path: { id: saved.autoDoc.id } } })
       .catch(() => undefined);
     const document = answer?.data?.documents[0];
     if (document?.versions.some((version) => version.id === versionId))
-      setReading({ document, versionId });
+      setReadingDoc({ document, versionId });
     else
       setError(
         intl.formatMessage({
           id: "autoDocs.openFailed",
-          defaultMessage: "Could not open this file version. Please try again.",
+          defaultMessage: "Could not open this file version. Try again.",
         }),
       );
   }
-
-  // Stable row keys let Legal edit a slug without losing keyboard focus.
-  const drafts = (record: Answer) =>
-    (record.formVersion?.definition.fields ?? []).map((field, index) => ({
-      ...field,
-      catalogFieldId: field.catalogFieldId ?? null,
-      contractAttribute: field.contractAttribute ?? null,
-      key: `saved-${index}`,
-      optionText: field.options?.join("\n") ?? "",
-    }));
-  const [fields, setFields] = useState(() => drafts(initial));
-  const [rules, setRules] = useState<AutoDocClauseRule[]>(
-    initial.formVersion?.definition.clauseRules ?? [],
-  );
-  const [nextKey, setNextKey] = useState(1);
-  const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-  const [notice, setNotice] = useState<string>();
-  const archived = saved.autoDoc.state === "archived";
-  const comparable = (rows: typeof fields) =>
-    rows.map((field) => ({
-      slug: field.slug,
-      label: field.label,
-      help: field.help,
-      fieldType: field.fieldType,
-      optionText: field.optionText,
-      required: field.required,
-      placeholder: field.placeholder,
-      catalogFieldId: field.catalogFieldId,
-      contractAttribute: field.contractAttribute,
-      valueCurrency: field.valueCurrency ?? null,
-      valueCadence: field.valueCadence ?? null,
-    }));
-  const dirty =
-    JSON.stringify(comparable(fields)) !== JSON.stringify(comparable(drafts(saved))) ||
-    JSON.stringify(rules) !== JSON.stringify(saved.formVersion?.definition.clauseRules ?? []);
-
-  const orphaned = fields.filter(
-    (field) => field.placeholder && !saved.detection.placeholders.includes(field.slug),
-  );
-  /** The options textarea is one option per line, so a blank line is typing, not an option. */
-  function optionsOf(field: (typeof fields)[number]) {
-    if (field.fieldType !== "single_select" && field.fieldType !== "multi_select") return null;
-    return field.optionText
-      .split("\n")
-      .map((option) => option.trim())
-      .filter((option) => option.length > 0);
-  }
-  function update(key: string, patch: Partial<(typeof fields)[number]>) {
-    setFields((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
-  }
-  function moved(index: number, delta: number) {
-    setFields((rows) => {
-      const next = [...rows];
-      [next[index], next[index + delta]] = [next[index + delta]!, next[index]!];
-      return next;
-    });
-  }
-  function accept(record: Answer) {
-    setSaved(record);
-    setFields(drafts(record));
-    setRules(record.formVersion?.definition.clauseRules ?? []);
-  }
-  async function save() {
-    // The seam refuses a duplicate slug and an empty or repeated option, but it
-    // answers with a problem detail that names no field. Say the rule here.
-    const refusal = fields.some((field) => {
-      const options = optionsOf(field);
-      return options !== null && (options.length === 0 || new Set(options).size !== options.length);
-    })
-      ? intl.formatMessage({
-          id: "autoDocs.optionsRefused",
-          defaultMessage: "Give each select field distinct, non-empty options.",
-        })
-      : new Set(fields.map((field) => field.slug)).size !== fields.length
-        ? intl.formatMessage({
-            id: "autoDocs.slugsRefused",
-            defaultMessage: "Each form field needs a distinct slug.",
-          })
-        : undefined;
-    if (refusal) {
-      setNotice(undefined);
-      setError(refusal);
-      return;
-    }
-    setBusy(true);
+  async function act(action: "unpublish" | "archive" | "restore") {
+    setActionBusy(true);
     setError(undefined);
-    setNotice(undefined);
     const result = await api
-      .POST("/api/v1/auto-docs/{id}/form-versions", {
+      .POST(`/api/v1/auto-docs/{id}/${action}`, {
         params: { path: { id: saved.autoDoc.id } },
-        body: {
-          fields: fields.map((field) => ({
-            slug: field.slug,
-            label: field.label,
-            help: field.help || null,
-            fieldType: field.fieldType,
-            required: field.required,
-            options: optionsOf(field),
-            catalogFieldId: field.catalogFieldId,
-            contractAttribute: field.contractAttribute,
-            valueCurrency: field.valueCurrency ?? null,
-            valueCadence: field.valueCadence ?? null,
-          })),
-          clauseRules: rules,
-        },
+        body: {},
       })
       .catch(() => undefined);
-    setBusy(false);
-    if (result?.data) {
-      accept(result.data);
-      setNotice(intl.formatMessage({ id: "autoDocs.formSaved", defaultMessage: "Form saved." }));
-    } else
+    setActionBusy(false);
+    if (result?.data) setSaved(result.data);
+    else
       setError(
         result?.error?.detail ??
           intl.formatMessage({
-            id: "autoDocs.saveFailed",
-            defaultMessage: "Could not save the form. Please try again.",
+            id: "autoDocs.lifecycleFailed",
+            defaultMessage: "Could not change this Auto-Doc's state. Try again.",
           }),
       );
   }
-  async function upload() {
-    if (!file || dirty) return;
-    setBusy(true);
-    setError(undefined);
-    setNotice(undefined);
-    const body = new FormData();
-    body.append("file", file);
+  async function copyLink() {
     try {
-      const response = await fetch(
-        `/api/v1/auto-docs/${encodeURIComponent(saved.autoDoc.id)}/template`,
-        { method: "POST", credentials: "same-origin", body },
+      await navigator.clipboard.writeText(
+        new URL(`/auto-docs/${saved.autoDoc.id}`, window.location.origin).toString(),
       );
-      const result: unknown = await response.json();
-      if (!response.ok) {
-        const refusal = z.object({ detail: z.string() }).safeParse(result);
-        setError(
-          refusal.success
-            ? refusal.data.detail
-            : intl.formatMessage({
-                id: "autoDocs.uploadFailed",
-                defaultMessage: "Could not upload the template. Please try again.",
-              }),
-        );
-        return;
-      }
-      const parsed = autoDocUploadAnswer.safeParse(result);
-      if (!parsed.success) {
-        setError(
-          intl.formatMessage({
-            id: "autoDocs.invalidUploadReply",
-            defaultMessage:
-              "The upload response could not be read. Reload this Auto-Doc to check its saved template.",
-          }),
-        );
-        return;
-      }
-      accept(parsed.data);
-      setFile(null);
-      setNotice(
-        intl.formatMessage({ id: "autoDocs.uploaded", defaultMessage: "Template uploaded." }),
-      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError(
-        intl.formatMessage({
-          id: "autoDocs.uploadFailed",
-          defaultMessage: "Could not upload the template. Please try again.",
-        }),
-      );
-    } finally {
-      setBusy(false);
+      setCopied(false);
     }
   }
+  function commitName() {
+    setRenaming(false);
+    commits.commitText("name", {
+      draft: nameDraft,
+      saved: saved.autoDoc.name,
+      required: true,
+      reset: setNameDraft,
+      send: (name) =>
+        commits.commit(
+          "name",
+          () =>
+            api.PATCH("/api/v1/auto-docs/{id}", {
+              params: { path: { id: saved.autoDoc.id } },
+              body: { name },
+            }),
+          setSaved,
+        ),
+    });
+  }
+  function selectFromTemplate(next: BuilderSelection) {
+    setSelection(next);
+    if (tab !== "form") void navigate(`/auto-docs/${saved.autoDoc.id}/form`);
+  }
+
+  const base = `/auto-docs/${saved.autoDoc.id}`;
   return (
     <AppShell
       user={user}
       onSignOut={() => void signOut()}
       flush
       recordScope={{ entityType: "auto_doc", entityId: saved.autoDoc.id }}
-    >
-      <PageTitle title={saved.autoDoc.name} />
-      <RecordApplets
-        applets={[history]}
-        contentCovered={covered && Boolean(reading)}
-        layer={
-          reading && openVersion ? (
-            <DocPanel
-              documentId={reading.document.id}
-              title={reading.document.title}
-              version={openVersion}
-              previousVersion={previousComparableVersion(reading.document, openVersion)}
-              initialFind={find}
-              onClose={() => setReading(null)}
-              onDockedChange={(docked) => setCovered(!docked)}
-            />
-          ) : undefined
-        }
-      >
-        <div className="mx-auto h-full w-full max-w-5xl space-y-6 overflow-y-auto p-6">
-          <Link className="text-link hover:underline" to="/auto-docs">
-            <FormattedMessage id="nav.autoDocs" defaultMessage="Auto-Docs" />
-          </Link>
-          <header>
-            <h1 className="text-xl font-semibold">{saved.autoDoc.name}</h1>
-            <p className="text-sm text-muted">
+      subbar={
+        <>
+          <section
+            aria-labelledby="page-title"
+            className="flex h-(--height-subbar) items-center gap-2 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
+          >
+            <Link to="/auto-docs" className="text-link hover:underline">
+              <FormattedMessage id="nav.autoDocs" defaultMessage="Auto-Docs" />
+            </Link>
+            <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
+            <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
+            {renaming ? (
+              <Input
+                id="auto-doc-name"
+                autoFocus
+                aria-label={intl.formatMessage({ id: "autoDocs.name", defaultMessage: "Name" })}
+                className="h-7 w-80 max-w-full"
+                maxLength={200}
+                value={nameDraft}
+                onChange={(event) => setNameDraft(event.target.value)}
+                onBlur={commitName}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") commitName();
+                  if (event.key === "Escape") {
+                    setNameDraft(saved.autoDoc.name);
+                    setRenaming(false);
+                  }
+                }}
+              />
+            ) : (
+              <h1 id="page-title" className="truncate text-md font-semibold">
+                {archived ? (
+                  saved.autoDoc.name
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNameDraft(saved.autoDoc.name);
+                      setRenaming(true);
+                    }}
+                    className="truncate rounded-chip text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                    title={intl.formatMessage({ id: "autoDocs.rename", defaultMessage: "Rename" })}
+                  >
+                    {saved.autoDoc.name}
+                  </button>
+                )}
+              </h1>
+            )}
+            <StatusNote status={commits.status.name ?? "idle"} detail={commits.error.name} />
+            <span
+              className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${STATE_PILL[saved.autoDoc.state]}`}
+            >
               <FormattedMessage
                 id="autoDocs.state"
                 defaultMessage="{state, select, draft {Draft} published {Published} other {Archived}}"
                 values={{ state: saved.autoDoc.state }}
               />
-            </p>
-            {saved.autoDoc.description && (
-              <p className="mt-2 text-muted">{saved.autoDoc.description}</p>
-            )}
-          </header>
-          {saved.autoDoc.state === "published" && (
-            <Link
-              className="inline-block text-link hover:underline"
-              to={`/auto-docs/${saved.autoDoc.id}/generate`}
-            >
-              <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
-            </Link>
-          )}
-          {error && (
-            <p role="alert" className="text-sm text-status-danger-fg">
-              {error}
-            </p>
-          )}
-          <p role="status" className="text-sm text-muted">
-            {notice}
-          </p>
-          <PublicationCard
-            key={`publication-${saved.formVersion?.id}-${saved.template?.versions[0]?.id}`}
-            record={saved}
-            dirty={dirty}
-            onSaved={setSaved}
-          />
-          <section
-            aria-labelledby="auto-doc-template-title"
-            className="space-y-4 rounded-card border border-border-default bg-raised p-6"
-          >
-            <h2 id="auto-doc-template-title" className="text-lg font-semibold">
-              <FormattedMessage id="autoDocs.template" defaultMessage="Template" />
-            </h2>
-            <form
-              className="flex flex-wrap items-end gap-3"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void upload();
-              }}
-            >
-              <label className="block space-y-1">
-                <span>
-                  <FormattedMessage id="autoDocs.wordTemplate" defaultMessage="Word template" />
-                </span>
-                <input
-                  key={saved.template?.versions[0]?.id ?? "empty"}
-                  disabled={busy || archived}
-                  type="file"
-                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  className={CONTROL_CLASS}
-                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                />
-              </label>
-              <Button type="submit" disabled={!file || busy || archived || dirty}>
-                <FormattedMessage id="autoDocs.uploadTemplate" defaultMessage="Upload template" />
-              </Button>
-            </form>
-            <p className="text-sm text-muted">
-              <FormattedMessage
-                id="autoDocs.templateHelp"
-                defaultMessage="Use double braces for Placeholders, such as {example}. Each upload adds a file version."
-                values={{ example: "{{counterparty_name}}" }}
+            </span>
+            <div className="ms-auto flex shrink-0 items-center gap-2">
+              <StatusNote
+                status={actionBusy ? "saving" : error ? "error" : "idle"}
+                detail={error}
               />
-            </p>
-            <p className="text-sm text-muted">
-              <FormattedMessage
-                id="autoDocs.directiveHelp"
-                defaultMessage="Format values in Word with {upper}, {date}, or {currency}."
-                values={{
-                  upper: "{{name|upper}}",
-                  date: "{{date|date:DD/MM/YYYY}}",
-                  currency: "{{amount|currency:USD}}",
-                }}
-              />
-            </p>
-            {dirty && (
-              <p className="text-sm text-muted">
-                <FormattedMessage
-                  id="autoDocs.saveBeforeUpload"
-                  defaultMessage="Save your form changes before uploading another template."
-                />
-              </p>
-            )}
-            <ul className="space-y-2">
-              {saved.template?.versions.map((version) => (
-                <li key={version.id} className="flex flex-wrap justify-between gap-2 text-sm">
-                  <span>
-                    <FormattedMessage
-                      id="autoDocs.fileVersionLabel"
-                      defaultMessage="File version {number} · {filename}"
-                      values={{ number: version.versionNumber, filename: version.originalFilename }}
-                    />
-                  </span>
-                  <Button
-                    type="button"
-                    variant="link"
-                    onClick={() => void openTemplate(version.id)}
-                  >
-                    <FormattedMessage
-                      id="autoDocs.openVersion"
-                      defaultMessage="Open version {number}"
-                      values={{ number: version.versionNumber }}
-                    />
-                  </Button>
-                  <a
-                    className="text-link hover:underline"
-                    href={`/api/v1/documents/${encodeURIComponent(saved.template!.id)}/versions/${encodeURIComponent(version.id)}/download`}
-                  >
-                    <FormattedMessage id="autoDocs.download" defaultMessage="Download" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section
-            aria-labelledby="auto-doc-form-title"
-            className="space-y-4 rounded-card border border-border-default bg-raised p-6"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="auto-doc-form-title" className="text-lg font-semibold">
-                <FormattedMessage id="autoDocs.form" defaultMessage="Form" />
-              </h2>
-              {orphaned.length > 0 && (
-                <span className="text-sm font-medium text-status-danger-fg">
-                  <FormattedMessage
-                    id="autoDocs.orphanCount"
-                    defaultMessage="{count, plural, one {# orphaned field} other {# orphaned fields}}"
-                    values={{ count: orphaned.length }}
-                  />
+              {copied && (
+                <span role="status" className="text-xs text-muted">
+                  <FormattedMessage id="autoDocs.linkCopied" defaultMessage="Link copied" />
                 </span>
               )}
-            </div>
-            <form
-              className="space-y-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void save();
-              }}
-            >
-              {fields.map((field, index) => (
-                <fieldset
-                  disabled={busy || archived}
-                  key={field.key}
-                  className={`space-y-3 rounded-card border p-4 ${orphaned.includes(field) ? "border-status-danger-fg" : "border-border-default"}`}
-                >
-                  <legend className="px-1 font-medium">
-                    {field.slug ||
-                      intl.formatMessage({ id: "autoDocs.newField", defaultMessage: "New field" })}
-                  </legend>
-                  {orphaned.includes(field) && (
-                    <p className="text-sm text-status-danger-fg">
-                      <FormattedMessage
-                        id="autoDocs.orphanHelp"
-                        defaultMessage="This field no longer has a Placeholder in the template."
-                      />
-                    </p>
-                  )}
-                  <div className="grid gap-3 @lg/page:grid-cols-2">
-                    <label className="block space-y-1">
-                      <span>
-                        <FormattedMessage id="autoDocs.fieldSlug" defaultMessage="Slug" />
-                      </span>
-                      <input
-                        required
-                        pattern="[a-z][a-z0-9_]*"
-                        maxLength={120}
-                        className={CONTROL_CLASS}
-                        value={field.slug}
-                        onChange={(event) => update(field.key, { slug: event.target.value })}
-                      />
-                    </label>
-                    <label className="block space-y-1">
-                      <span>
-                        <FormattedMessage id="autoDocs.fieldLabel" defaultMessage="Label" />
-                      </span>
-                      <input
-                        required
-                        maxLength={200}
-                        className={CONTROL_CLASS}
-                        value={field.label}
-                        onChange={(event) => update(field.key, { label: event.target.value })}
-                      />
-                    </label>
-                    <label className="block space-y-1">
-                      <span>
-                        <FormattedMessage id="autoDocs.fieldType" defaultMessage="Type" />
-                      </span>
-                      <select
-                        className={CONTROL_CLASS}
-                        value={field.fieldType}
-                        onChange={(event) =>
-                          update(field.key, { fieldType: event.target.value as Field["fieldType"] })
-                        }
-                      >
-                        {FIELD_TYPES.map((type) => (
-                          <option key={type} value={type}>
-                            {intl.formatMessage(
-                              {
-                                id: "autoDocs.fieldTypeName",
-                                defaultMessage:
-                                  "{type, select, text {Text} long_text {Long text} number {Number} currency {Currency} date {Date} boolean {Boolean} single_select {Single select} multi_select {Multi select} other {Entity}}",
-                              },
-                              { type },
-                            )}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="block space-y-1">
-                      <span>
-                        <FormattedMessage id="autoDocs.fieldHelp" defaultMessage="Help text" />
-                      </span>
-                      <input
-                        maxLength={4000}
-                        className={CONTROL_CLASS}
-                        value={field.help ?? ""}
-                        onChange={(event) => update(field.key, { help: event.target.value })}
-                      />
-                    </label>
-                  </div>
-                  {(field.fieldType === "single_select" || field.fieldType === "multi_select") && (
-                    <label className="block space-y-1">
-                      <span>
+              {published ? (
+                <Button asChild>
+                  <Link to={`${base}/generate`}>
+                    <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
+                  </Link>
+                </Button>
+              ) : (
+                !archived && (
+                  <Button
+                    disabled={!saved.template?.versions.length || !saved.formVersion}
+                    onClick={() => setDialog("publish")}
+                  >
+                    <FormattedMessage id="autoDocs.publish" defaultMessage="Publish" />
+                  </Button>
+                )
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={actionBusy}
+                    aria-label={intl.formatMessage({
+                      id: "autoDocs.actions",
+                      defaultMessage: "Auto-Doc actions",
+                    })}
+                  >
+                    <MoreHorizontal size={16} aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => void copyLink()}>
+                    <Link2 size={16} aria-hidden="true" />
+                    <FormattedMessage id="autoDocs.copyLink" defaultMessage="Copy link" />
+                  </DropdownMenuItem>
+                  {published && (
+                    <>
+                      <DropdownMenuItem onSelect={() => setDialog("publish")}>
+                        <Send size={16} aria-hidden="true" />
                         <FormattedMessage
-                          id="autoDocs.fieldOptions"
-                          defaultMessage="Options, one per line"
+                          id="autoDocs.publishNewPair"
+                          defaultMessage="Publish new pair"
                         />
-                      </span>
-                      <textarea
-                        required
-                        className={TEXTAREA_CLASS}
-                        value={field.optionText}
-                        onChange={(event) => update(field.key, { optionText: event.target.value })}
-                      />
-                    </label>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => void act("unpublish")}>
+                        <Undo2 size={16} aria-hidden="true" />
+                        <FormattedMessage id="autoDocs.unpublish" defaultMessage="Unpublish" />
+                      </DropdownMenuItem>
+                    </>
                   )}
-                  <FieldMap
-                    field={field}
-                    options={options}
-                    onChange={(map) => update(field.key, map)}
-                  />
-                  {field.contractAttribute === "value" && (
-                    <div className="grid gap-3 @lg/page:grid-cols-2">
-                      <label className="block space-y-1">
-                        <span>
-                          <FormattedMessage
-                            id="autoDocs.valueCurrency"
-                            defaultMessage="Value currency"
-                          />
-                        </span>
-                        <CurrencySelect
-                          value={field.valueCurrency ?? ""}
-                          onValueChange={(valueCurrency) =>
-                            update(field.key, { valueCurrency: valueCurrency || null })
-                          }
-                        />
-                      </label>
-                      <label className="block space-y-1">
-                        <span>
-                          <FormattedMessage
-                            id="autoDocs.valueCadence"
-                            defaultMessage="Value cadence"
-                          />
-                        </span>
-                        <select
-                          className={CONTROL_CLASS}
-                          value={field.valueCadence ?? ""}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            if (
-                              value === "" ||
-                              value === "one_time" ||
-                              value === "monthly" ||
-                              value === "annually"
-                            )
-                              update(field.key, { valueCadence: value || null });
-                          }}
-                        >
-                          <option value="">
-                            {intl.formatMessage({
-                              id: "autoDocs.chooseCadence",
-                              defaultMessage: "Choose a cadence",
-                            })}
-                          </option>
-                          {(["one_time", "monthly", "annually"] as const).map((cadence) => (
-                            <option key={cadence} value={cadence}>
-                              {intl.formatMessage(
-                                {
-                                  id: "autoDocs.cadenceName",
-                                  defaultMessage:
-                                    "{cadence, select, one_time {One time} monthly {Monthly} other {Annually}}",
-                                },
-                                { cadence },
-                              )}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
+                  {archived ? (
+                    <DropdownMenuItem onSelect={() => void act("restore")}>
+                      <ArchiveRestore size={16} aria-hidden="true" />
+                      <FormattedMessage id="autoDocs.restore" defaultMessage="Restore" />
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem onSelect={() => void act("archive")}>
+                      <Archive size={16} aria-hidden="true" />
+                      <FormattedMessage id="autoDocs.archive" defaultMessage="Archive" />
+                    </DropdownMenuItem>
                   )}
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={field.required}
-                      onChange={(event) => update(field.key, { required: event.target.checked })}
-                    />
-                    <FormattedMessage id="autoDocs.fieldRequired" defaultMessage="Required" />
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={index === 0}
-                      onClick={() => moved(index, -1)}
-                    >
-                      <FormattedMessage id="autoDocs.moveUp" defaultMessage="Move up" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={index === fields.length - 1}
-                      onClick={() => moved(index, 1)}
-                    >
-                      <FormattedMessage id="autoDocs.moveDown" defaultMessage="Move down" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() =>
-                        setFields((rows) => rows.filter((row) => row.key !== field.key))
-                      }
-                    >
-                      <FormattedMessage id="autoDocs.removeField" defaultMessage="Remove field" />
-                    </Button>
-                  </div>
-                </fieldset>
-              ))}
-              <ClausesEditor
-                blocks={saved.detection.blocks}
-                fields={fields.map((field) => ({ ...field, options: optionsOf(field) }))}
-                rules={rules}
-                disabled={busy || archived}
-                onChange={setRules}
-              />
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={busy || archived}
-                  onClick={() => {
-                    let number = nextKey;
-                    while (fields.some((field) => field.slug === `field_${number}`)) number++;
-                    setFields((rows) => [
-                      ...rows,
-                      {
-                        key: `new-${number}`,
-                        slug: `field_${number}`,
-                        label: intl.formatMessage({
-                          id: "autoDocs.newField",
-                          defaultMessage: "New field",
-                        }),
-                        help: null,
-                        fieldType: "text",
-                        options: null,
-                        optionText: "",
-                        required: false,
-                        displayOrder: rows.length,
-                        placeholder: false,
-                        catalogFieldId: null,
-                        contractAttribute: null,
-                      },
-                    ]);
-                    setNextKey(number + 1);
-                  }}
-                >
-                  <FormattedMessage id="autoDocs.addField" defaultMessage="Add field" />
-                </Button>
-                <Button type="submit" disabled={busy || archived}>
-                  <FormattedMessage id="autoDocs.saveForm" defaultMessage="Save form" />
-                </Button>
-              </div>
-            </form>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </section>
-          <AutoDocSettings record={saved} options={options} onSaved={setSaved} />
-          <AssignmentEditor record={saved} options={options} onSaved={setSaved} />
-          <AutoDocGenerations generations={generations} />
-          <AutoDocVersionDiff
-            key={`diff-${saved.formVersion?.id}-${saved.template?.versions[0]?.id}`}
-            record={saved}
+          <RecordTabs
+            label={intl.formatMessage({
+              id: "autoDocs.sections",
+              defaultMessage: "Auto-Doc sections",
+            })}
+            tabs={[
+              {
+                to: base,
+                end: true,
+                label: <FormattedMessage id="autoDocs.tab.overview" defaultMessage="Overview" />,
+              },
+              {
+                to: `${base}/form`,
+                label: <FormattedMessage id="autoDocs.tab.form" defaultMessage="Form" />,
+                count: saved.orphanedFields.length,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "autoDocs.orphanCount",
+                    defaultMessage: "{count, plural, one {# orphaned} other {# orphaned}}",
+                  },
+                  { count: saved.orphanedFields.length },
+                ),
+              },
+              {
+                to: `${base}/settings`,
+                label: <FormattedMessage id="autoDocs.tab.settings" defaultMessage="Settings" />,
+              },
+              {
+                to: `${base}/generations`,
+                label: (
+                  <FormattedMessage id="autoDocs.tab.generations" defaultMessage="Generations" />
+                ),
+                count: generations.length,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "autoDocs.generationCount",
+                    defaultMessage: "{count, plural, one {# Generation} other {# Generations}}",
+                  },
+                  { count: generations.length },
+                ),
+              },
+            ]}
           />
-          <section
-            aria-labelledby="auto-doc-versions-title"
-            className="space-y-3 rounded-card border border-border-default bg-raised p-6"
-          >
-            <h2 id="auto-doc-versions-title" className="text-lg font-semibold">
-              <FormattedMessage id="autoDocs.formVersions" defaultMessage="Form versions" />
-            </h2>
-            <ul className="space-y-2">
-              {saved.formVersions.map((version) => (
-                <li key={version.id} className="flex flex-wrap justify-between gap-2 text-sm">
-                  <span>
-                    <FormattedMessage
-                      id="autoDocs.formVersion"
-                      defaultMessage="Form version {number}"
-                      values={{ number: version.versionNumber }}
-                    />
-                  </span>
-                  <span className="text-muted">
-                    <FormattedMessage
-                      id="autoDocs.formVersionDetails"
-                      defaultMessage="{date} · {count, plural, one {# field} other {# fields}}"
-                      values={{
-                        date: formatRelativeOrShort(version.createdAt, { locale: intl.locale }),
-                        count: version.definition.fields.length,
-                      }}
-                    />
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
+        </>
+      }
+    >
+      <PageTitle title={saved.autoDoc.name} />
+      <RecordApplets
+        applets={[history]}
+        contentCovered={covered && Boolean(reading_)}
+        layer={
+          reading_ && openVersion ? (
+            <DocPanel
+              documentId={reading_.document.id}
+              title={reading_.document.title}
+              version={openVersion}
+              previousVersion={previousComparableVersion(reading_.document, openVersion)}
+              initialFind={find}
+              onClose={() => setReadingDoc(null)}
+              onDockedChange={(docked) => setCovered(!docked)}
+            />
+          ) : undefined
+        }
+      >
+        <div className="h-full w-full overflow-y-auto px-page-x py-page-y">
+          {tab === "overview" && (
+            <div className="flex flex-col gap-4">
+              <AboutCard record={saved} onSaved={setSaved} />
+              <PublicationCard record={saved} onPublish={() => setDialog("publish")} />
+            </div>
+          )}
+          {tab === "form" && (
+            <div className="flex flex-wrap items-start gap-4">
+              <TemplatePane
+                record={saved}
+                reading={reading}
+                selected={selection}
+                onSelectField={(slug) => selectFromTemplate({ kind: "field", slug })}
+                onSelectBlock={(name) => selectFromTemplate({ kind: "block", name })}
+                onUpload={() => setDialog("upload")}
+                onOpenVersion={(versionId) => void openTemplate(versionId)}
+              />
+              <FormBuilder
+                record={saved}
+                options={options}
+                selected={selection}
+                onSelect={setSelection}
+                onSaved={setSaved}
+                onCompare={() => setDialog("compare")}
+              />
+            </div>
+          )}
+          {tab === "settings" && (
+            <SettingsCards record={saved} options={options} onSaved={setSaved} />
+          )}
+          {tab === "generations" && <AutoDocGenerations generations={generations} />}
         </div>
       </RecordApplets>
+      {dialog === "publish" && (
+        <PublishDialog record={saved} onSaved={setSaved} onClose={() => setDialog(null)} />
+      )}
+      {dialog === "upload" && (
+        <UploadDialog record={saved} onSaved={setSaved} onClose={() => setDialog(null)} />
+      )}
+      {dialog === "compare" && (
+        <CompareFormsDialog record={saved} onClose={() => setDialog(null)} />
+      )}
     </AppShell>
   );
 }

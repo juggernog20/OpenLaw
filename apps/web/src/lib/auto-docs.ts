@@ -18,6 +18,12 @@ export type AutoDocField = NonNullable<
 export type AutoDocClauseRule = NonNullable<
   AutoDocAnswer["formVersion"]
 >["definition"]["clauseRules"][number];
+/** DES-087: one file version as paragraphs of typed segments. */
+export type AutoDocReading =
+  paths["/api/v1/auto-docs/{id}/template/{versionId}/reading"]["get"]["responses"][200]["content"]["application/json"];
+export type AutoDocAssignmentRule = AutoDocAnswer["assignmentRules"][number];
+export const AUTO_DOC_RECORD_TABS = ["overview", "form", "settings", "generations"] as const;
+export type AutoDocRecordTab = (typeof AUTO_DOC_RECORD_TABS)[number];
 
 type UploadAnswer =
   paths["/api/v1/auto-docs/{id}/template"]["post"]["responses"][201]["content"]["application/json"];

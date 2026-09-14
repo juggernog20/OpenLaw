@@ -3,7 +3,7 @@
 /** ADO-004 and ADO-007: keep answers beside a refusal until the person reviews the current pair. */
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
+import { redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import {
   previousAnswerText,
   previousGenerationForm,
@@ -19,6 +19,7 @@ import { AppShell } from "../components/shell/app-shell";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
 import { FormControl, type Draft } from "../components/auto-docs/form-control";
+import { AutoDocSubBar } from "../components/auto-docs/sub-bar";
 
 export async function autoDocGenerateLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
@@ -145,13 +146,19 @@ export function AutoDocGeneratePage() {
     } else setError(result?.error?.detail ?? failed());
   }
   return (
-    <AppShell user={loaded.user} onSignOut={() => void signOut()}>
+    <AppShell
+      user={loaded.user}
+      onSignOut={() => void signOut()}
+      subbar={
+        <AutoDocSubBar
+          id={loaded.id}
+          name={form?.autoDoc.name ?? null}
+          title={intl.formatMessage({ id: "autoDocs.generate", defaultMessage: "Generate" })}
+        />
+      }
+    >
       <PageTitle title={title} />
       <div className="mx-auto w-full max-w-2xl space-y-6">
-        <Link className="text-link hover:underline" to={`/auto-docs/${loaded.id}`}>
-          <FormattedMessage id="autoDocs.backToAutoDoc" defaultMessage="Back to Auto-Doc" />
-        </Link>
-        <h1 className="text-xl font-semibold">{title}</h1>
         {form?.autoDoc.description && <p className="text-muted">{form.autoDoc.description}</p>}
         {error && (
           <div className="space-y-3">

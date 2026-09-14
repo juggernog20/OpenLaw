@@ -7,9 +7,15 @@ import { Link, useRevalidator } from "react-router";
 import { formatFullDate, formatLongDateTime } from "../../lib/format";
 import { api } from "../../lib/api";
 import { Button } from "../ui/button";
+import { SettingsCard } from "../settings-card";
 import { GenerationFiling } from "./filings";
 import type { AutoDocGeneration } from "../../lib/auto-docs";
 
+const STATE_PILL: Record<AutoDocGeneration["state"], string> = {
+  pending: "bg-status-neutral-bg text-status-neutral-fg",
+  ready: "bg-status-success-bg text-status-success-fg",
+  failed: "bg-status-danger-bg text-status-danger-fg",
+};
 export function GenerationState({ state }: { state: AutoDocGeneration["state"] }) {
   return (
     <FormattedMessage
@@ -151,43 +157,78 @@ export function AutoDocGenerations({ generations }: { generations: AutoDocGenera
   }
 
   return (
-    <section
-      aria-labelledby="auto-doc-generations-title"
-      className="space-y-4 rounded-card border border-border-default bg-raised p-6"
+    <SettingsCard
+      region
+      title={<FormattedMessage id="autoDocs.generations" defaultMessage="Generations" />}
+      actions={
+        <span className="text-sm text-muted">
+          <FormattedMessage
+            id="autoDocs.generationCount"
+            defaultMessage="{count, plural, one {# Generation} other {# Generations}}"
+            values={{ count: generations.length }}
+          />
+        </span>
+      }
+      flush
+      className="max-w-none"
     >
-      <h2 id="auto-doc-generations-title" className="text-lg font-semibold">
-        <FormattedMessage id="autoDocs.generations" defaultMessage="Generations" />
-      </h2>
       {error && (
-        <p role="alert" className="text-sm text-status-danger-fg">
+        <p role="alert" className="px-4 pt-3 text-sm text-status-danger-fg">
           {error}
         </p>
       )}
       {generations.length === 0 ? (
-        <p className="text-sm text-muted">
+        <p className="px-4 py-3 text-sm text-muted">
           <FormattedMessage id="autoDocs.noGenerations" defaultMessage="No Generations yet." />
         </p>
       ) : (
-        <ul className="divide-y divide-border-default">
+        <ul>
           {generations.map((generation) => (
-            <li key={generation.id} className="space-y-2 py-3 text-sm">
-              <div className="flex flex-wrap justify-between gap-3">
+            <li
+              key={generation.id}
+              className="flex flex-col gap-2 border-b border-border-muted px-4 py-3 text-sm last:border-b-0"
+            >
+              <div className="flex flex-wrap items-center gap-3">
                 <Link
-                  className="text-link hover:underline"
+                  className="font-medium text-primary hover:underline"
                   to={`/auto-docs/${generation.autoDocId}/generations/${generation.id}`}
                 >
-                  <GenerationState state={generation.state} /> · {generation.person.displayName}
+                  {generation.person.displayName}
                 </Link>
+                <span
+                  className={`rounded-pill px-2 py-0.5 text-xs font-medium ${STATE_PILL[generation.state]}`}
+                >
+                  <GenerationState state={generation.state} />
+                </span>
                 <time
                   dateTime={generation.createdAt}
                   title={formatLongDateTime(generation.createdAt)}
+                  className="text-muted"
                 >
                   {formatFullDate(generation.createdAt)}
                 </time>
+                <span className="text-muted">
+                  <GenerationPair generation={generation} />
+                </span>
+                <span className="ms-auto flex items-center gap-2">
+                  <Link
+                    className="text-link hover:underline"
+                    to={`/auto-docs/${generation.autoDocId}/generate?from=${generation.id}`}
+                  >
+                    <FormattedMessage id="autoDocs.generateAgain" defaultMessage="Generate again" />
+                  </Link>
+                  {generation.state === "failed" && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={retrying !== null}
+                      onClick={() => void retry(generation)}
+                    >
+                      <FormattedMessage id="autoDocs.retry" defaultMessage="Retry" />
+                    </Button>
+                  )}
+                </span>
               </div>
-              <p className="text-muted">
-                <GenerationPair generation={generation} />
-              </p>
               {generation.failure && (
                 <p className="text-status-danger-fg">{generation.failure.detail}</p>
               )}
@@ -195,25 +236,10 @@ export function AutoDocGenerations({ generations }: { generations: AutoDocGenera
               <GenerationDownload generation={generation} />
               <GenerationEmail generation={generation} />
               <GenerationFiling generation={generation} />
-              <Link
-                className="text-link hover:underline"
-                to={`/auto-docs/${generation.autoDocId}/generate?from=${generation.id}`}
-              >
-                <FormattedMessage id="autoDocs.generateAgain" defaultMessage="Generate again" />
-              </Link>
-              {generation.state === "failed" && (
-                <Button
-                  variant="secondary"
-                  disabled={retrying !== null}
-                  onClick={() => void retry(generation)}
-                >
-                  <FormattedMessage id="autoDocs.retry" defaultMessage="Retry" />
-                </Button>
-              )}
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </SettingsCard>
   );
 }

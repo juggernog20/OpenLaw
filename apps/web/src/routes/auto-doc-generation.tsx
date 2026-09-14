@@ -16,6 +16,7 @@ import { api } from "../lib/api";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
+import { AutoDocSubBar } from "../components/auto-docs/sub-bar";
 import { PageTitle } from "../components/page-title";
 import {
   GenerationContract,
@@ -52,13 +53,13 @@ export function AutoDocGenerationPage() {
   }, [waiting, revalidate]);
   const title = intl.formatMessage({ id: "autoDocs.generation", defaultMessage: "Generation" });
   return (
-    <AppShell user={user} onSignOut={() => void signOut()}>
+    <AppShell
+      user={user}
+      onSignOut={() => void signOut()}
+      subbar={<AutoDocSubBar id={id} name={generation?.autoDocName ?? null} title={title} />}
+    >
       <PageTitle title={title} />
       <div className="mx-auto w-full max-w-2xl space-y-6">
-        <Link className="text-link hover:underline" to={`/auto-docs/${id}`}>
-          <FormattedMessage id="autoDocs.backToAutoDoc" defaultMessage="Back to Auto-Doc" />
-        </Link>
-        <h1 className="text-xl font-semibold">{title}</h1>
         {refusal && (
           <p role="alert" className="text-status-danger-fg">
             {refusal}
