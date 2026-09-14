@@ -546,3 +546,107 @@ it.each(["archived", "demoted"])(
     }
   },
 );
+
+it("assigns a queued Contract to a colleague, with the assigning actor in history and notification", async () => {
+  const prepared = await prepare();
+  await publish(prepared);
+  const { row } = await generate(prepared, "US");
+  const options = await h.app.inject({
+    url: "/api/v1/inbox/unassigned-contracts/assignees",
+    cookies: legalCookies,
+  });
+  expect(options.statusCode, options.body).toBe(200);
+  expect(options.json().people.map((person: { id: string }) => person.id)).toEqual(
+    expect.arrayContaining([firstId, secondId, adminId]),
+  );
+  expect(options.json().people.map((person: { id: string }) => person.id)).not.toContain(
+    businessId,
+  );
+  const assign = (legalOwnerId: string, jar = legalCookies) =>
+    h.app.inject({
+      method: "POST",
+      url: `/api/v1/inbox/unassigned-contracts/${row.number}/assign`,
+      cookies: jar,
+      payload: { legalOwnerId },
+    });
+  expect((await assign(secondId, businessCookies)).statusCode).toBe(403);
+  expect((await assign(businessId)).statusCode).toBe(400);
+  expect((await assign("missing-user")).statusCode).toBe(400);
+  await h.db.update(users).set({ archivedAt: new Date() }).where(eq(users.id, secondId));
+  try {
+    expect((await assign(secondId)).statusCode).toBe(400);
+    const unavailable = await h.app.inject({
+      url: "/api/v1/inbox/unassigned-contracts/assignees",
+      cookies: legalCookies,
+    });
+    expect(unavailable.json().people.map((person: { id: string }) => person.id)).not.toContain(
+      secondId,
+    );
+  } finally {
+    await h.db.update(users).set({ archivedAt: null }).where(eq(users.id, secondId));
+  }
+  const assigned = await assign(secondId);
+  expect(assigned.statusCode, assigned.body).toBe(200);
+  const [updated] = await h.db.select().from(contracts).where(eq(contracts.id, row.id));
+  expect(updated!.managerId).toBe(secondId);
+  const events = await h.db
+    .select()
+    .from(activityLog)
+    .where(and(eq(activityLog.entityId, row.id), eq(activityLog.action, "contract.updated")));
+  expect(events.at(-1)).toMatchObject({
+    actorId: firstId,
+    payload: { changed: { owner: { from: null, to: "Assignment second" } } },
+  });
+  const notices = await h.db
+    .select()
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.entityId, row.id),
+        eq(notifications.eventType, "contract.owner_assigned"),
+      ),
+    );
+  expect(notices).toHaveLength(1);
+  expect(notices[0]).toMatchObject({
+    userId: secondId,
+    payload: { actorId: firstId, actorName: "Assignment first" },
+  });
+  expect((await assign(firstId)).statusCode).toBe(409);
+  const queue = await h.app.inject({
+    url: "/api/v1/inbox/unassigned-contracts",
+    cookies: legalCookies,
+  });
+  expect(queue.json().contracts.map((contract: { id: string }) => contract.id)).not.toContain(
+    row.id,
+  );
+});
+
+it("protects confidential and archived contracts and serializes competing assignments", async () => {
+  const prepared = await prepare();
+  await publish(prepared);
+  const { row } = await generate(prepared, "US");
+  const assign = (legalOwnerId: string) =>
+    h.app.inject({
+      method: "POST",
+      url: `/api/v1/inbox/unassigned-contracts/${row.number}/assign`,
+      cookies: legalCookies,
+      payload: { legalOwnerId },
+    });
+  await h.db.update(contracts).set({ isConfidential: true }).where(eq(contracts.id, row.id));
+  expect((await assign(secondId)).statusCode).toBe(404);
+  await h.db
+    .update(contracts)
+    .set({ isConfidential: false, archivedAt: new Date() })
+    .where(eq(contracts.id, row.id));
+  expect((await assign(secondId)).statusCode).toBe(404);
+  await h.db.update(contracts).set({ archivedAt: null }).where(eq(contracts.id, row.id));
+  const replies = await Promise.all([assign(firstId), assign(secondId)]);
+  expect(replies.map((reply) => reply.statusCode).sort()).toEqual([200, 409]);
+  const events = await h.db
+    .select()
+    .from(activityLog)
+    .where(and(eq(activityLog.entityId, row.id), eq(activityLog.action, "contract.updated")));
+  expect(
+    events.filter((event) => Object.hasOwn(event.payload.changed as object, "owner")),
+  ).toHaveLength(1);
+});

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** ADO-006: Legal configures Assignment and claims a generated Contract in the browser. */
+/** ADO-006: Legal configures Assignment and assigns a generated Contract in the browser. */
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs } from "./helpers.js";
@@ -8,7 +8,7 @@ import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs } from "./helpe
 test.setTimeout(120_000);
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
 
-test("Legal edits Assignment rules and claims an unassigned generated Contract from the Inbox", async ({
+test("Legal edits Assignment rules and assigns an unassigned generated Contract from the Inbox", async ({
   page,
 }, testInfo) => {
   await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
@@ -73,7 +73,15 @@ test("Legal edits Assignment rules and claims an unassigned generated Contract f
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
-  await row.getByRole("button", { name: "Claim", exact: true }).click();
+  await row.getByRole("button", { name: /^Assign / }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("radio", { name: ADMIN.displayName, exact: true })
+    .check();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Save assignment", exact: true })
+    .click();
   await expect(row).toHaveCount(0);
   const queue = await page.request.get("/api/v1/inbox/unassigned-contracts");
   expect(
