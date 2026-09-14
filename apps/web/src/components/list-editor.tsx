@@ -68,13 +68,19 @@ export interface ListEditorProps<Row extends ListEditorRow> {
   count: ReactNode;
   /** An optional caption before the count (e.g. the pane's scope note). */
   headerCaption?: ReactNode;
-  addLabel: ReactNode;
-  /** Opens the pane's creation surface — the inline `addRow` or a dialog. */
-  onAdd: () => void;
+  addLabel?: ReactNode;
+  /** Opens the pane's creation surface — the inline `addRow` or a dialog.
+   * Absent on a list whose rows come from elsewhere (DES-087's Clauses:
+   * a Block is detected from the file, never added by hand). */
+  onAdd?: () => void;
   /** The help caption below the card (DES-020's two non-obvious behaviors). */
   help: ReactNode;
   /** An optional column-header strip above the rows (DES-021 tables). */
   columnsHeader?: ReactNode;
+  /** Draws the card as a named landmark; see `SettingsCard`'s `region`. */
+  region?: boolean;
+  /** An optional class per row: DES-087's builder washes the selected row. */
+  rowClassName?: (row: Row) => string | undefined;
   /** Per-row save state, keyed by row id; drives the row's StatusNote. */
   rowStatus: Record<string, FieldStatus>;
   rowError: Record<string, string | undefined>;
@@ -137,6 +143,8 @@ export function ListEditor<Row extends ListEditorRow>({
   onAdd,
   help,
   columnsHeader,
+  region,
+  rowClassName,
   rowStatus,
   rowError,
   renameLabel,
@@ -303,6 +311,7 @@ export function ListEditor<Row extends ListEditorRow>({
       <SettingsCard
         title={title}
         flush
+        region={region}
         actions={
           <div className="flex items-center gap-3">
             {headerCaption && (
@@ -323,10 +332,12 @@ export function ListEditor<Row extends ListEditorRow>({
             )}
             <span className="text-sm whitespace-nowrap text-muted">{count}</span>
             {reorder && <StatusNote status={reorder.status} detail={reorder.detail} />}
-            <Button size="sm" className="px-3 whitespace-nowrap" disabled={busy} onClick={onAdd}>
-              <Plus size={16} aria-hidden="true" />
-              {addLabel}
-            </Button>
+            {onAdd && (
+              <Button size="sm" className="px-3 whitespace-nowrap" disabled={busy} onClick={onAdd}>
+                <Plus size={16} aria-hidden="true" />
+                {addLabel}
+              </Button>
+            )}
           </div>
         }
       >
@@ -348,7 +359,7 @@ export function ListEditor<Row extends ListEditorRow>({
               }}
               onDragOver={reorder && ((event) => event.preventDefault())}
               onDrop={reorder && ((event) => drop(event, index))}
-              className={`flex ${rowCaption ? "h-13" : "h-11"} items-center border-b border-border-muted pe-3`}
+              className={`flex ${rowCaption ? "h-13" : "h-11"} items-center border-b border-border-muted pe-3 ${rowClassName?.(row) ?? ""}`}
             >
               {reorder && (
                 <span className="flex w-9 shrink-0 justify-center">

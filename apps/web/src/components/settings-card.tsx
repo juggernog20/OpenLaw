@@ -24,6 +24,7 @@ export function SettingsCard({
   collapsible = false,
   defaultOpen = true,
   flush = false,
+  region = false,
   className,
   children,
 }: Readonly<{
@@ -36,15 +37,24 @@ export function SettingsCard({
   defaultOpen?: boolean;
   /** Edge-to-edge body for content that owns its gutters (tables). */
   flush?: boolean;
+  /** Draws the card as a named landmark (`role="region"`, labelled by its
+   * title). Opt-in: DES-087's builder addresses its cards by name; a
+   * settings pane whose title repeats a control's label must not. */
+  region?: boolean;
   className?: string;
   children: ReactNode;
 }>) {
   const [open, setOpen] = useState(defaultOpen);
   const bodyId = useId();
+  const titleId = useId();
   const shown = !collapsible || open;
   const Chevron = open ? ChevronDown : ChevronRight;
   return (
-    <Card className={cn("w-full max-w-(--width-settings-card)", className)}>
+    <Card
+      role={region ? "region" : undefined}
+      aria-labelledby={region ? titleId : undefined}
+      className={cn("w-full max-w-(--width-settings-card)", className)}
+    >
       <div
         className={cn(
           "flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4",
@@ -63,7 +73,7 @@ export function SettingsCard({
           // The heading wraps the button rather than sitting inside it:
           // a button may not contain heading content, and a reader that
           // walks the page by its headings needs this one to stay one.
-          <h2 className="flex-1 text-base font-semibold">
+          <h2 id={titleId} className="flex-1 text-base font-semibold">
             <button
               type="button"
               aria-expanded={open}
@@ -76,7 +86,9 @@ export function SettingsCard({
             </button>
           </h2>
         ) : (
-          <h2 className="text-base font-semibold">{title}</h2>
+          <h2 id={titleId} className="text-base font-semibold">
+            {title}
+          </h2>
         )}
         {actions}
       </div>
