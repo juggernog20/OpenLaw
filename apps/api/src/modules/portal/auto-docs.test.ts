@@ -473,38 +473,43 @@ it("warns Legal about a private fixed Entity, then generates a targeted Contract
   expect(spoof.statusCode).toBe(400);
 });
 
-it("reports a draft/live Assignment gap to Legal and a usable refusal to the Business User", async () => {
-  const type = await post("/contract-types", { displayName: "Assignment gap NDA" });
-  expect(type.statusCode).toBe(201);
-  const prepared = await prepare("none", { targetContractTypeId: type.json().contractType.id });
-  const draft = await post(`/auto-docs/${prepared.id}/form-versions`, {
-    fields: [
-      { slug: "counterparty_name", label: "Counterparty", fieldType: "text" },
-      { slug: "signing_date", label: "Signing date", fieldType: "date" },
-      { slug: "new_region", label: "New region", fieldType: "text" },
-    ],
-  });
-  expect(draft.statusCode).toBe(201);
-  const [legal] = await h.db.select().from(users).where(eq(users.email, TEST_ADMIN.email));
-  const rules = await h.app.inject({
-    method: "PUT",
-    url: `/api/v1/auto-docs/${prepared.id}/assignment-rules`,
-    cookies: admin,
-    payload: {
-      defaultLegalOwnerId: null,
-      rules: [
-        { fieldSlug: "new_region", operator: "is_set", value: null, legalOwnerId: legal!.id },
+it.each(["everyone", "legal_only"])(
+  "reports a draft/live Assignment gap for the %s audience",
+  async (audience) => {
+    const type = await post("/contract-types", { displayName: "Assignment gap NDA" });
+    expect(type.statusCode).toBe(201);
+    const prepared = await prepare("none", { targetContractTypeId: type.json().contractType.id });
+    expect((await patch(prepared.id, { audience })).statusCode).toBe(200);
+    const draft = await post(`/auto-docs/${prepared.id}/form-versions`, {
+      fields: [
+        { slug: "counterparty_name", label: "Counterparty", fieldType: "text" },
+        { slug: "signing_date", label: "Signing date", fieldType: "date" },
+        { slug: "new_region", label: "New region", fieldType: "text" },
       ],
-    },
-  });
-  expect(rules.statusCode, rules.body).toBe(200);
-  expect(rules.json().portalWarnings.join(" ")).toContain("Publish a Form");
-  const shown = await formFor(prepared.id);
-  expect(shown.json().availability.ready).toBe(false);
-  expect(shown.body).not.toContain("new_region");
-  expect((await patch(prepared.id, { targetContractTypeId: null })).statusCode).toBe(200);
-  expect((await formFor(prepared.id)).json().availability.ready).toBe(true);
-});
+    });
+    expect(draft.statusCode).toBe(201);
+    const [legal] = await h.db.select().from(users).where(eq(users.email, TEST_ADMIN.email));
+    const rules = await h.app.inject({
+      method: "PUT",
+      url: `/api/v1/auto-docs/${prepared.id}/assignment-rules`,
+      cookies: admin,
+      payload: {
+        defaultLegalOwnerId: null,
+        rules: [
+          { fieldSlug: "new_region", operator: "is_set", value: null, legalOwnerId: legal!.id },
+        ],
+      },
+    });
+    expect(rules.statusCode, rules.body).toBe(200);
+    expect(rules.json().portalWarnings.join(" ")).toContain("Publish a Form");
+    if (audience === "legal_only") return;
+    const shown = await formFor(prepared.id);
+    expect(shown.json().availability.ready).toBe(false);
+    expect(shown.body).not.toContain("new_region");
+    expect((await patch(prepared.id, { targetContractTypeId: null })).statusCode).toBe(200);
+    expect((await formFor(prepared.id)).json().availability.ready).toBe(true);
+  },
+);
 
 it("pages owned Generation history without gaps or duplicates", async () => {
   const prepared = await prepare();

@@ -173,6 +173,8 @@ The Entity-type taxonomy mount counts every referencing Entity, including archiv
 
 ### Built addendum (2026-09-13, M35/3, #846)
 
+**M35/13 reconciliation (2026-09-14, #856):** The M35/3 ticket amendment (#846, commit `99d9c62c`) narrowed the earlier ~~Member+~~ Portal-listed writer to **Administrator only**. ENT-010 and DD-027 reflect that accepted amendment; ordinary Member+ Entity editing does not grant the Portal-listed write.
+
 The Entity Overview commits Portal-listed through `PATCH /entities/:id`. Only an Administrator may set or clear it, including a write that repeats its current value. A change records `entity.portal_listed_set` in the same transaction. The registry list includes a Portal-listed column. Archived and Confidential Entities retain the stored flag but stay out of `GET /portal/entities`, which returns only id and name in name order.
 
 The request form uses that read through the shared Field control. Entity Fields may be required; person Fields remain optional. The submission locks each selected Entity and checks the same Portal predicate before committing. The predicate and picker loader are shared for Auto-Doc forms. Existing Request references stop naming an Entity if it later becomes Confidential.
