@@ -3,7 +3,12 @@
 /** DES-087: the template reading route over real Postgres and storage. */
 import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { signInCookies, startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
+import {
+  signInCookies,
+  startHarness,
+  TEST_ADMIN,
+  type TestHarness,
+} from "../../testing/harness.js";
 
 let h: TestHarness;
 let cookies: Record<string, string>;
