@@ -20,7 +20,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { contractTeamScope, reachesLockedContract } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { requireLegalOwner } from "../auto-docs/assignment.js";
+import { legalOwnerChoices, requireLegalOwner } from "../auto-docs/assignment.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const Row = z.object({
@@ -99,67 +99,91 @@ export const unassignedContractsRoutes: FastifyPluginAsyncZod = async (app) => {
       ),
   );
 
-  app.post(
-    "/inbox/unassigned-contracts/:number/claim",
+  app.get(
+    "/inbox/unassigned-contracts/assignees",
     {
       preHandler: requireMember,
       schema: {
-        operationId: "claimUnassignedContract",
+        operationId: "listUnassignedContractAssignees",
         tags: ["inbox"],
-        params: z.object({ number: z.coerce.number().int().positive() }),
-        body: z.strictObject({}),
         response: {
-          200: z.object({ id: z.string(), number: z.number().int(), title: z.string() }),
+          200: z.object({ people: z.array(z.object({ id: z.string(), displayName: z.string() })) }),
           default: problemResponse,
         },
       },
     },
-    async (request) =>
-      app.notifier.notifying(async (tx) => {
-        const [row] = await tx
-          .select()
-          .from(contracts)
-          .where(
-            and(
-              eq(contracts.number, request.params.number),
-              isNull(contracts.archivedAt),
-              contractTeamScope(tx, request.user),
-            ),
-          )
-          .for("update");
-        if (
-          !row ||
-          !row.createdByGenerationId ||
-          !(await reachesLockedContract(tx, request.user, row))
-        )
-          throw httpError(404, "No generated Contract is available with this number.");
-        if (row.managerId) throw httpError(409, "This Contract already has a Legal Owner.");
-        const owner = await requireLegalOwner(tx, request.user.id);
-        await tx
-          .update(contracts)
-          .set({ managerId: owner.id, updatedAt: new Date() })
-          .where(eq(contracts.id, row.id));
-        await recordActivity(tx, {
-          entityType: "contract",
-          entityId: row.id,
-          actorId: owner.id,
-          action: "contract.updated",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            number: row.number,
-            title: row.title,
-            changed: { owner: { from: null, to: owner.displayName } },
-          },
-        });
-        await app.notifier.ownerAssigned(tx, {
-          contractId: row.id,
-          contractNumber: row.number,
-          contractTitle: row.title,
-          actorId: owner.id,
-          actorName: owner.displayName,
-          ownerId: owner.id,
-        });
-        return { id: row.id, number: row.number, title: row.title };
-      }),
+    async () => ({ people: await legalOwnerChoices(app.db) }),
   );
+
+  for (const action of ["claim", "assign"] as const) {
+    app.post(
+      `/inbox/unassigned-contracts/:number/${action}`,
+      {
+        preHandler: requireMember,
+        schema: {
+          operationId: action === "claim" ? "claimUnassignedContract" : "assignUnassignedContract",
+          tags: ["inbox"],
+          params: z.object({ number: z.coerce.number().int().positive() }),
+          body:
+            action === "claim"
+              ? z.strictObject({})
+              : z.strictObject({ legalOwnerId: z.string().min(1) }),
+          response: {
+            200: z.object({ id: z.string(), number: z.number().int(), title: z.string() }),
+            default: problemResponse,
+          },
+        },
+      },
+      async (request) =>
+        app.notifier.notifying(async (tx) => {
+          const [row] = await tx
+            .select()
+            .from(contracts)
+            .where(
+              and(
+                eq(contracts.number, request.params.number),
+                isNull(contracts.archivedAt),
+                contractTeamScope(tx, request.user),
+              ),
+            )
+            .for("update");
+          if (
+            !row ||
+            !row.createdByGenerationId ||
+            !(await reachesLockedContract(tx, request.user, row))
+          )
+            throw httpError(404, "No generated Contract is available with this number.");
+          if (row.managerId) throw httpError(409, "This Contract already has a Legal Owner.");
+          const owner = await requireLegalOwner(
+            tx,
+            "legalOwnerId" in request.body ? request.body.legalOwnerId : request.user.id,
+          );
+          await tx
+            .update(contracts)
+            .set({ managerId: owner.id, updatedAt: new Date() })
+            .where(eq(contracts.id, row.id));
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: row.id,
+            actorId: request.user.id,
+            action: "contract.updated",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: row.number,
+              title: row.title,
+              changed: { owner: { from: null, to: owner.displayName } },
+            },
+          });
+          await app.notifier.ownerAssigned(tx, {
+            contractId: row.id,
+            contractNumber: row.number,
+            contractTitle: row.title,
+            actorId: request.user.id,
+            actorName: request.user.displayName,
+            ownerId: owner.id,
+          });
+          return { id: row.id, number: row.number, title: row.title };
+        }),
+    );
+  }
 };

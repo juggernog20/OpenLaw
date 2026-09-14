@@ -363,13 +363,21 @@ it("commits each setting on its own, then applies list filters", async () => {
   await waitFor(() => expect(edits.at(-1)).toEqual({ coverNote: "Please **review** this." }));
   expect(screen.queryByRole("button", { name: "Save settings" })).not.toBeInTheDocument();
   await user.click(screen.getAllByRole("link", { name: "Auto-Docs" })[0]!);
-  await screen.findByRole("button", { name: "Apply filters" });
-  await user.type(screen.getByRole("searchbox", { name: "Search Auto-Docs" }), "NDA");
-  await user.selectOptions(screen.getByLabelText("State"), "archived");
-  await user.selectOptions(screen.getByLabelText("Audience"), "everyone");
-  await user.selectOptions(screen.getByLabelText("Target Contract Type"), "type");
-  await user.click(screen.getByRole("button", { name: "Apply filters" }));
-  await waitFor(() => expect(searches.at(-1)?.get("state")).toBe("archived"));
+  await screen.findByRole("button", { name: "Filter" });
+  await user.type(screen.getByRole("searchbox", { name: "Search Auto-Docs" }), "NDA{enter}");
+  await waitFor(() => expect(searches.at(-1)?.get("q")).toBe("NDA"));
+  for (const [label, choice] of [
+    ["State", "Archived"],
+    ["Audience", "Everyone"],
+    ["Target Contract Type", options.contractTypes[0]!.displayName],
+  ]) {
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    const menu = screen.getByRole("dialog", { name: "Filter" });
+    await user.click(within(menu).getByRole("button", { name: label }));
+    await user.click(within(menu).getByRole("radio", { name: choice }));
+    await user.click(within(menu).getByRole("button", { name: "Apply" }));
+    await screen.findByRole("button", { name: `${label}: ${choice}` });
+  }
   expect(Object.fromEntries(searches.at(-1)!)).toEqual({
     q: "NDA",
     state: "archived",
@@ -419,11 +427,11 @@ it("drops unknown state and audience filters from a copied list URL", async () =
     },
   });
   renderAt("/auto-docs?state=obsolete&audience=unknown");
-  await screen.findByRole("button", { name: "Apply filters" });
+  await screen.findByRole("button", { name: "Filter" });
   expect(searches[0]?.has("state")).toBe(false);
   expect(searches[0]?.has("audience")).toBe(false);
-  expect(screen.getByLabelText("State")).toHaveValue("");
-  expect(screen.getByLabelText("Audience")).toHaveValue("");
+  expect(screen.queryByRole("button", { name: "Remove State filter" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Remove Audience filter" })).not.toBeInTheDocument();
 });
 
 it("draws a rule on the Block tag and marks a Block the file no longer holds", async () => {

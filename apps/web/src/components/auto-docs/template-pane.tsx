@@ -118,103 +118,103 @@ export function TemplatePane({
   }
 
   return (
-    <Card className="flex min-w-0 flex-1 flex-col">
-      <div className="flex min-h-section-header flex-wrap items-center gap-2 rounded-t-card border-b border-border-default bg-section-header px-4 py-1.5">
-        <h2 className="truncate text-base font-semibold">
-          {current?.originalFilename ?? (
-            <FormattedMessage id="autoDocs.template" defaultMessage="Template" />
-          )}
-        </h2>
-        {current && (
-          <span className="rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
-            <FormattedMessage
-              id="autoDocs.fileVersionNumber"
-              defaultMessage="File version {number}"
-              values={{ number: current.versionNumber }}
-            />
-          </span>
-        )}
-        {current && (
-          <span className="text-sm text-muted">
-            <FormattedMessage
-              id="autoDocs.detectionSummary"
-              defaultMessage="{placeholders, plural, one {# Placeholder} other {# Placeholders}}, {blocks, plural, one {# Block} other {# Blocks}}"
-              values={{
-                placeholders: record.detection.placeholders.length,
-                blocks: record.detection.blocks.length,
-              }}
-            />
-          </span>
-        )}
-        <span className="ms-auto flex items-center gap-2">
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <Card className="flex min-w-0 flex-col">
+        <div className="flex min-h-section-header flex-wrap items-center gap-2 rounded-t-card border-b border-border-default bg-section-header px-4 py-1.5">
+          <h2 className="truncate text-base font-semibold">
+            {current?.originalFilename ?? (
+              <FormattedMessage id="autoDocs.template" defaultMessage="Template" />
+            )}
+          </h2>
           {current && (
-            <Button variant="link" size="sm" onClick={() => onOpenVersion(current.id)}>
-              <FormattedMessage id="autoDocs.open" defaultMessage="Open" />
-            </Button>
+            <span className="rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
+              <FormattedMessage
+                id="autoDocs.fileVersionNumber"
+                defaultMessage="File version {number}"
+                values={{ number: current.versionNumber }}
+              />
+            </span>
           )}
-          {record.template && versions.length > 1 && (
-            <Button asChild variant="secondary" size="sm">
-              <Link to={documentComparisonPath(record.template.id, versions[1]!.id, current!.id)}>
-                <FormattedMessage id="autoDocs.compareFiles" defaultMessage="Compare files" />
-              </Link>
-            </Button>
+          {current && (
+            <span className="text-sm text-muted">
+              <FormattedMessage
+                id="autoDocs.detectionSummary"
+                defaultMessage="{placeholders, plural, one {# Placeholder} other {# Placeholders}}, {blocks, plural, one {# Block} other {# Blocks}}"
+                values={{
+                  placeholders: record.detection.placeholders.length,
+                  blocks: record.detection.blocks.length,
+                }}
+              />
+            </span>
           )}
-          {!archived && (
-            <Button variant="secondary" size="sm" onClick={onUpload}>
-              <Upload size={16} aria-hidden="true" />
-              <FormattedMessage id="autoDocs.uploadVersion" defaultMessage="Upload version" />
-            </Button>
+          <span className="ms-auto flex items-center gap-2">
+            {current && (
+              <Button variant="secondary" size="sm" onClick={() => onOpenVersion(current.id)}>
+                <FormattedMessage id="autoDocs.open" defaultMessage="Open" />
+              </Button>
+            )}
+            {record.template && versions.length > 1 && (
+              <Button asChild variant="secondary" size="sm">
+                <Link to={documentComparisonPath(record.template.id, versions[1]!.id, current!.id)}>
+                  <FormattedMessage id="autoDocs.compareFiles" defaultMessage="Compare files" />
+                </Link>
+              </Button>
+            )}
+            {!archived && (
+              <Button variant="secondary" size="sm" onClick={onUpload}>
+                <Upload size={16} aria-hidden="true" />
+                <FormattedMessage id="autoDocs.uploadVersion" defaultMessage="Upload version" />
+              </Button>
+            )}
+          </span>
+        </div>
+        <div className="flex-1 p-6">
+          {!current ? (
+            <p className="text-sm text-muted">
+              <FormattedMessage
+                id="autoDocs.noTemplate"
+                defaultMessage="Upload a Word file to start the form."
+              />
+            </p>
+          ) : !reading ? (
+            <p className="text-sm text-muted">
+              <FormattedMessage
+                id="autoDocs.readingUnavailable"
+                defaultMessage="The file could not be read. Open it to see the page."
+              />
+            </p>
+          ) : (
+            <div className="flex flex-col gap-5">
+              {reading.parts.map((part) => (
+                <section key={part.name} aria-label={partLabel(part.kind, intl)}>
+                  {part.kind !== "body" && (
+                    <p className="mb-2 text-xs font-semibold text-muted">
+                      {partLabel(part.kind, intl)}
+                    </p>
+                  )}
+                  <div className="flex flex-col gap-3 text-md leading-relaxed">
+                    {part.paragraphs.map((paragraph, index) => {
+                      const opens = paragraph.some((segment) => segment.kind === "block_open");
+                      const closes = paragraph.some((segment) => segment.kind === "block_close");
+                      return (
+                        <p
+                          key={index}
+                          className={cn(
+                            (opens || closes) && "border-s-2 border-status-success-fg ps-3",
+                          )}
+                        >
+                          {paragraph.map(chip)}
+                        </p>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
           )}
-        </span>
-      </div>
-      <div className="flex-1 p-6">
-        {!current ? (
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="autoDocs.noTemplate"
-              defaultMessage="Upload a Word file to start the form."
-            />
-          </p>
-        ) : !reading ? (
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="autoDocs.readingUnavailable"
-              defaultMessage="The file could not be read. Open it to see the page."
-            />
-          </p>
-        ) : (
-          <div className="flex flex-col gap-5">
-            {reading.parts.map((part) => (
-              <section key={part.name} aria-label={partLabel(part.kind, intl)}>
-                {part.kind !== "body" && (
-                  <p className="mb-2 text-xs font-semibold text-muted">
-                    {partLabel(part.kind, intl)}
-                  </p>
-                )}
-                <div className="flex flex-col gap-3 text-md leading-relaxed">
-                  {part.paragraphs.map((paragraph, index) => {
-                    const opens = paragraph.some((segment) => segment.kind === "block_open");
-                    const closes = paragraph.some((segment) => segment.kind === "block_close");
-                    return (
-                      <p
-                        key={index}
-                        className={cn(
-                          (opens || closes) && "border-s-2 border-status-success-fg ps-3",
-                        )}
-                      >
-                        {paragraph.map(chip)}
-                      </p>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="flex flex-col gap-2 border-t border-border-default px-4 py-2 text-sm">
+        </div>
         {earlier.length > 0 && (
-          <div>
+          <div className="border-t border-border-default px-4 py-2 text-sm">
             <button
               type="button"
               aria-expanded={earlierOpen}
@@ -262,14 +262,14 @@ export function TemplatePane({
             )}
           </div>
         )}
-        <Link to="/help/auto-doc-template" className="text-link hover:underline">
-          <FormattedMessage
-            id="autoDocs.templateHelpLink"
-            defaultMessage="How to write an Auto-Doc template"
-          />
-        </Link>
-      </div>
-    </Card>
+      </Card>
+      <Link to="/help/auto-doc-template" className="self-start text-sm text-link hover:underline">
+        <FormattedMessage
+          id="autoDocs.templateHelpLink"
+          defaultMessage="How to write an Auto-Doc template"
+        />
+      </Link>
+    </div>
   );
 }
 

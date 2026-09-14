@@ -72,8 +72,7 @@ export interface ColumnDef<Row> {
 }
 
 /** Everything one surface can draw, and how it draws by default. */
-export interface ColumnCatalogue<Row> {
-  surface: ListViewSurface;
+export interface TableCatalogue<Row> {
   columns: ColumnDef<Row>[];
   /** The built-in layout's columns, in order. Code rather than a seeded
    * row, so nobody starts with views to delete (DD-019 clause 7). */
@@ -82,6 +81,11 @@ export interface ColumnCatalogue<Row> {
    * width" hands the spare space back to. The column whose content is
    * longest and least predictable — Title on contracts. */
   flexColumnKey: string;
+}
+
+/** A table whose layouts can be saved for a server-backed surface. */
+export interface ColumnCatalogue<Row> extends TableCatalogue<Row> {
+  surface: ListViewSurface;
 }
 
 /** One column as a layout holds it. */
@@ -129,7 +133,7 @@ export interface SavedView {
 }
 
 /** The layout a surface draws when no view is active. */
-export function builtInLayout<Row>(catalogue: ColumnCatalogue<Row>): Layout {
+export function builtInLayout<Row>(catalogue: TableCatalogue<Row>): Layout {
   return {
     columns: catalogue.defaultColumnKeys.flatMap((key) => {
       const column = catalogue.columns.find((candidate) => candidate.key === key);
@@ -159,7 +163,7 @@ export function builtInLayout<Row>(catalogue: ColumnCatalogue<Row>): Layout {
  * and the reader should get their view with the Title restored rather than
  * an error page.
  */
-export function resolveLayout<Row>(catalogue: ColumnCatalogue<Row>, stored: StoredLayout): Layout {
+export function resolveLayout<Row>(catalogue: TableCatalogue<Row>, stored: StoredLayout): Layout {
   const seen = new Set<string>();
   const columns: LayoutColumn[] = [];
   for (const column of stored.columns) {
@@ -225,7 +229,7 @@ export function sameLayout(a: Layout, b: Layout): boolean {
  * absorbing the card's spare space instead.
  */
 export function shownColumns<Row>(
-  catalogue: ColumnCatalogue<Row>,
+  catalogue: TableCatalogue<Row>,
   layout: Layout,
 ): { def: ColumnDef<Row>; width: number; flex: boolean }[] {
   return layout.columns.flatMap((column) => {
@@ -253,7 +257,7 @@ export function shownColumns<Row>(
  * one column carrying the record's name collapses to its longest word.
  * With it the card scrolls sideways instead.
  */
-export function tableMinWidth<Row>(catalogue: ColumnCatalogue<Row>, layout: Layout): number {
+export function tableMinWidth<Row>(catalogue: TableCatalogue<Row>, layout: Layout): number {
   return shownColumns(catalogue, layout).reduce(
     (total, { def, width, flex }) => total + (flex ? def.minWidth : width),
     0,

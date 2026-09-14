@@ -22,6 +22,10 @@
       "title": "Matters"
     },
     {
+      "id": "auto-docs",
+      "title": "Auto-Docs"
+    },
+    {
       "id": "documents",
       "title": "Documents"
     },
@@ -778,7 +782,7 @@
     {
       "id": "auto-doc-template",
       "title": "Write an Auto-Doc template",
-      "section": "contracts",
+      "section": "auto-docs",
       "kind": "how-to",
       "coverage": ["C56"],
       "ownerTask": "DOC-028",

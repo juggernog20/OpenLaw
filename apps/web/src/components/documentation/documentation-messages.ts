@@ -49,6 +49,10 @@ export const M = defineMessages({
     id: "docs.collection.working",
     defaultMessage: "Share context, collaborate, and keep work moving.",
   },
+  autoDocsDescription: {
+    id: "docs.autoDocsDescription",
+    defaultMessage: "Write templates and build forms for document generation.",
+  },
   contractsDescription: {
     id: "docs.collection.contracts",
     defaultMessage: "Take a Contract from first draft to signature and renewal.",
@@ -161,6 +165,7 @@ export const ROLES = {
   operator: M.operator,
 };
 export const DESCRIPTIONS = {
+  "auto-docs": M.autoDocsDescription,
   start: M.startDescription,
   portal: M.portalDescription,
   "working-with-legal": M.workingDescription,

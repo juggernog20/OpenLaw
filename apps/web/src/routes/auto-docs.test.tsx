@@ -128,6 +128,165 @@ it("lists Auto-Docs and creates a draft from name and description", async () => 
   expect(creates).toEqual([{ name: "Supplier NDA", description: "For suppliers" }]);
 });
 
+it("applies chip filters, preserves search, and restores filters through browser history", async () => {
+  const user = userEvent.setup();
+  const queries: URLSearchParams[] = [];
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, {
+          catalogFields: [],
+          contractTypes: [{ id: "nda-type", displayName: "NDA" }],
+          entities: [],
+          legalOwners: [],
+        });
+      if (call.url.pathname === "/api/v1/auto-docs") {
+        queries.push(call.url.searchParams);
+        return json(200, { autoDocs: [autoDoc] });
+      }
+      return undefined;
+    },
+  });
+  const { router } = renderAt("/auto-docs?q=Supplier&state=published");
+  expect(await screen.findByRole("button", { name: "State: Published" })).toBeVisible();
+  await user.click(screen.getByRole("button", { name: /^Filter/ }));
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+      name: "Audience",
+    }),
+  );
+  await user.click(screen.getByRole("radio", { name: "Everyone" }));
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+  expect(await screen.findByRole("button", { name: "Audience: Everyone" })).toBeVisible();
+  expect(Object.fromEntries(queries.at(-1)!)).toMatchObject({
+    q: "Supplier",
+    state: "published",
+    audience: "everyone",
+  });
+
+  await user.click(screen.getByRole("button", { name: /^Filter/ }));
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+      name: "Target Contract Type",
+    }),
+  );
+  await user.click(screen.getByRole("radio", { name: "NDA" }));
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+  expect(await screen.findByRole("button", { name: "Target Contract Type: NDA" })).toBeVisible();
+  await user.clear(screen.getByRole("searchbox", { name: "Search Auto-Docs" }));
+  await user.type(screen.getByRole("searchbox", { name: "Search Auto-Docs" }), "Agreement{enter}");
+  await waitFor(() =>
+    expect(Object.fromEntries(queries.at(-1)!)).toMatchObject({
+      q: "Agreement",
+      state: "published",
+      audience: "everyone",
+      targetContractTypeId: "nda-type",
+    }),
+  );
+  await user.click(screen.getByRole("button", { name: "Remove State filter" }));
+  await waitFor(() => expect(queries.at(-1)!.has("state")).toBe(false));
+  expect(screen.getByRole("button", { name: "Audience: Everyone" })).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Clear all" }));
+  await waitFor(() => expect(Object.fromEntries(queries.at(-1)!)).toEqual({ q: "Agreement" }));
+  expect(screen.queryByRole("button", { name: "Audience: Everyone" })).not.toBeInTheDocument();
+  await router.navigate(-1);
+  expect(await screen.findByRole("button", { name: "Audience: Everyone" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Target Contract Type: NDA" })).toBeVisible();
+  expect(screen.getByRole("searchbox", { name: "Search Auto-Docs" })).toHaveValue("Agreement");
+});
+
+it("shows Auto-Doc metadata in a sortable table with optional columns", async () => {
+  const user = userEvent.setup();
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, {
+          catalogFields: [],
+          contractTypes: [{ id: "type", displayName: "Supplier agreement" }],
+          entities: [{ id: "entity", name: "OpenLaw Ltd" }],
+          legalOwners: [{ id: "owner", displayName: "Alex Legal" }],
+        });
+      if (call.url.pathname === "/api/v1/auto-docs")
+        return json(200, {
+          autoDocs: [
+            {
+              ...autoDoc,
+              id: "a",
+              name: "Alpha agreement",
+              targetContractTypeId: "type",
+              defaultLegalOwnerId: "owner",
+              fixedEntityId: "entity",
+              publishedAt: "2026-09-12T00:00:00Z",
+              state: "published",
+            },
+            {
+              ...autoDoc,
+              id: "z",
+              name: "Zulu agreement",
+              formats: "pdf",
+              updatedAt: "2026-09-14T00:00:00Z",
+            },
+          ],
+        });
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs");
+  const table = await screen.findByRole("table");
+  expect(within(table).getByText("Supplier agreement")).toBeVisible();
+  expect(within(table).getByText("Word + PDF")).toBeVisible();
+  expect(within(table).getByText("PDF", { exact: true })).toBeVisible();
+  expect(within(table).getByText("Published")).toBeVisible();
+  expect(within(table).getAllByText("Legal only")).toHaveLength(2);
+  await user.click(within(table).getByRole("button", { name: "Name" }));
+  await user.click(within(table).getByRole("button", { name: "Name" }));
+  expect(
+    within(table)
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Zulu agreement", "Alpha agreement"]);
+  await user.click(within(table).getByRole("button", { name: "Name" }));
+  expect(
+    within(table)
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Alpha agreement", "Zulu agreement"]);
+  await user.click(screen.getByRole("button", { name: "Columns" }));
+  await user.click(screen.getByRole("menuitemcheckbox", { name: "Default Legal Owner" }));
+  await user.click(screen.getByRole("menuitemcheckbox", { name: "Fixed Entity" }));
+  await user.click(screen.getByRole("menuitemcheckbox", { name: "Published" }));
+  await user.keyboard("{Escape}");
+  expect(within(table).getByText("Alex Legal")).toBeVisible();
+  expect(within(table).getByText("OpenLaw Ltd")).toBeVisible();
+  expect(table.querySelector('time[datetime="2026-09-12T00:00:00Z"]')).toBeInTheDocument();
+  await user.click(within(table).getByRole("button", { name: "Published" }));
+  await user.click(within(table).getByRole("button", { name: "Published" }));
+  expect(
+    within(table)
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Alpha agreement", "Zulu agreement"]);
+});
+
+it("explains an empty filtered result", async () => {
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { contractTypes: [], legalOwners: [], entities: [], catalogFields: [] });
+      if (call.url.pathname === "/api/v1/auto-docs") return json(200, { autoDocs: [] });
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs?q=missing");
+  expect(await screen.findByText("No Auto-Docs match your search and filters")).toBeVisible();
+  expect(
+    screen.queryByText("Create an Auto-Doc to start with a Word template."),
+  ).not.toBeInTheDocument();
+});
+
 const reading = {
   versionId: "v1",
   versionNumber: 1,

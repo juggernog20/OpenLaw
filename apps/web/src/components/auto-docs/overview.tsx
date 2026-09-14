@@ -6,7 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import { formatFullDate } from "../../lib/format";
 import { useFieldCommit } from "../../lib/field-commit";
-import { TEXTAREA_CLASS } from "../../lib/form-controls";
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import type { AutoDocAnswer } from "../../lib/auto-docs";
 import { SettingsCard } from "../settings-card";
 import { StatusNote } from "../status-note";
@@ -19,7 +19,6 @@ export function AboutCard({
   record: AutoDocAnswer;
   onSaved: (record: AutoDocAnswer) => void;
 }) {
-  const intl = useIntl();
   const commits = useFieldCommit<"description">();
   const saved = record.autoDoc.description ?? "";
   const [draft, setDraft] = useState(saved);
@@ -36,9 +35,8 @@ export function AboutCard({
             detail={commits.error.description}
           />
         </div>
-        <textarea
+        <AutoResizeTextarea
           id="auto-doc-description"
-          className={TEXTAREA_CLASS}
           disabled={archived}
           maxLength={4000}
           value={draft}
@@ -65,13 +63,6 @@ export function AboutCard({
               commits.revertText("description", { draft, saved, reset: setDraft, send: () => {} });
           }}
         />
-        <span className="text-xs text-muted">
-          <FormattedMessage
-            id="autoDocs.createdCaption"
-            defaultMessage="Created {date}."
-            values={{ date: formatFullDate(record.autoDoc.createdAt, { locale: intl.locale }) }}
-          />
-        </span>
       </div>
     </SettingsCard>
   );

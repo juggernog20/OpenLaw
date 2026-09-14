@@ -1,12 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** ADO-006: browse and claim the Inbox’s unassigned generated Contracts. */
-import { useState } from "react";
-import { Link } from "react-router";
+/** Browse generated contracts and assign their Legal Owners from the Inbox. */
+import { useRef, useState } from "react";
+import { UserPlus } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
-import { formatFullDate } from "../lib/format";
+import { contractReference } from "../lib/contracts";
+import { builtInLayout } from "../lib/list-views";
+import { ManagedTable } from "./table/managed-table";
+import { Dialog } from "./ui/dialog";
+import {
+  UNASSIGNED_CONTRACTS_CATALOGUE,
+  type UnassignedContract,
+} from "./inbox/unassigned-contracts-columns";
+import { ContractAssignmentDialog } from "./inbox/contract-assignment-dialog";
 import { Button } from "./ui/button";
 
 export type UnassignedContracts =
@@ -19,6 +27,9 @@ export function UnassignedContractsPanel({
   onChange: (queue: UnassignedContracts) => void;
 }) {
   const intl = useIntl();
+  const [layout, setLayout] = useState(() => builtInLayout(UNASSIGNED_CONTRACTS_CATALOGUE));
+  const [assigning, setAssigning] = useState<UnassignedContract | null>(null);
+  const pending = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const refused = () =>
@@ -26,33 +37,35 @@ export function UnassignedContractsPanel({
       id: "inbox.unassignedRefused",
       defaultMessage: "The unassigned Contracts could not be updated. Try again.",
     });
-  async function claim(number: number) {
+  async function assign(number: number, legalOwnerId: string) {
+    if (pending.current) return;
+    pending.current = true;
     setBusy(true);
     setError(undefined);
     try {
-      const result = await api.POST("/api/v1/inbox/unassigned-contracts/{number}/claim", {
+      const result = await api.POST("/api/v1/inbox/unassigned-contracts/{number}/assign", {
         params: { path: { number } },
-        body: {},
+        body: { legalOwnerId },
       });
-      // A Claim that went through says exactly what changed, so the row
-      // leaves in place and every page already shown stays shown. Only a
-      // refusal means this view is stale, and only then is it re-read.
       if (result.data) {
         onChange({
           ...queue,
           contracts: queue.contracts.filter((row) => row.number !== number),
           total: Math.max(0, queue.total - 1),
         });
+        setAssigning(null);
         return;
       }
       if (result.response.status === 409 || result.response.status === 404) {
         const refreshed = await api.GET("/api/v1/inbox/unassigned-contracts");
         if (refreshed.data) onChange(refreshed.data);
+        setAssigning(null);
       }
       throw new Error(result.error?.detail ?? refused());
     } catch (error) {
       setError(error instanceof Error ? error.message : refused());
     } finally {
+      pending.current = false;
       setBusy(false);
     }
   }
@@ -88,7 +101,7 @@ export function UnassignedContractsPanel({
       })}
       className="space-y-3"
     >
-      {error && (
+      {error && !assigning && (
         <p role="alert" className="text-sm text-status-danger-fg">
           {error}
         </p>
@@ -98,71 +111,70 @@ export function UnassignedContractsPanel({
           <h2 className="font-semibold">
             <FormattedMessage
               id="inbox.noUnassigned"
-              defaultMessage="No Contracts need a Legal Owner"
+              defaultMessage="No generated contracts need a Legal Owner"
             />
           </h2>
           <p className="mt-2 text-sm text-muted">
             <FormattedMessage
               id="inbox.noUnassignedHelp"
-              defaultMessage="Generated Contracts without a Legal Owner appear here. Claim one to take responsibility for it."
+              defaultMessage="Contracts created through Auto-Docs without a Legal Owner appear here. Assign them to a legal colleague."
             />
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-card border border-border-default bg-raised">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-border-default text-muted">
-                <th scope="col" className="px-4 py-3">
-                  <FormattedMessage id="inbox.unassignedContract" defaultMessage="Contract" />
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  <FormattedMessage id="inbox.unassignedAutoDoc" defaultMessage="Auto-Doc" />
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  <FormattedMessage id="inbox.unassignedGenerator" defaultMessage="Generated by" />
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  <FormattedMessage id="inbox.column.actions" defaultMessage="Actions" />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {queue.contracts.map((row) => (
-                <tr key={row.id} className="border-b border-border-default last:border-0">
-                  <td className="px-4 py-3">
-                    <Link
-                      className="font-medium text-link hover:underline"
-                      to={`/contracts/${row.number}`}
-                    >
-                      {row.title}
-                    </Link>
-                    <p className="mt-1 text-xs text-muted">
-                      #{row.number} · {formatFullDate(row.createdAt, { locale: intl.locale })}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link className="text-link hover:underline" to={`/auto-docs/${row.autoDoc.id}`}>
-                      {row.autoDoc.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">{row.generator.displayName}</td>
-                  <td className="px-4 py-3">
-                    <Button disabled={busy} onClick={() => void claim(row.number)}>
-                      <FormattedMessage id="inbox.claim" defaultMessage="Claim" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ManagedTable
+          catalogue={UNASSIGNED_CONTRACTS_CATALOGUE}
+          layout={layout}
+          rows={queue.contracts}
+          rowKey={(row) => row.id}
+          onLayoutChange={setLayout}
+          actionsColumn={{
+            label: intl.formatMessage({ id: "inbox.column.actions", defaultMessage: "Actions" }),
+            width: 128,
+            pinned: true,
+            render: (row) => (
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={busy}
+                aria-label={intl.formatMessage(
+                  { id: "inbox.assignRow", defaultMessage: "Assign {reference}" },
+                  { reference: contractReference(intl, row.number) },
+                )}
+                onClick={() => {
+                  setError(undefined);
+                  setAssigning(row);
+                }}
+              >
+                <UserPlus size={16} aria-hidden="true" />
+                <FormattedMessage id="inbox.assign" defaultMessage="Assign" />
+              </Button>
+            ),
+          }}
+        />
       )}
       {queue.nextCursor !== null && (
         <Button variant="secondary" disabled={busy} onClick={() => void more()}>
           <FormattedMessage id="inbox.more" defaultMessage="Show more" />
         </Button>
       )}
+      <Dialog
+        open={assigning !== null}
+        onOpenChange={(open) => {
+          if (!open && !pending.current) setAssigning(null);
+        }}
+      >
+        {assigning && (
+          <ContractAssignmentDialog
+            key={assigning.id}
+            row={assigning}
+            busy={busy}
+            error={error}
+            onAssign={(ownerId) => void assign(assigning.number, ownerId)}
+            onClose={() => setAssigning(null)}
+          />
+        )}
+      </Dialog>
     </section>
   );
 }

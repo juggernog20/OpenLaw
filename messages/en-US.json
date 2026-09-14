@@ -1181,14 +1181,8 @@
   "autoDocs.addField": {
     "defaultMessage": "Add field"
   },
-  "autoDocs.allAudiences": {
-    "defaultMessage": "All audiences"
-  },
   "autoDocs.allStates": {
     "defaultMessage": "All states"
-  },
-  "autoDocs.allTargetTypes": {
-    "defaultMessage": "All target Contract Types"
   },
   "autoDocs.alwaysInclude": {
     "defaultMessage": "Always"
@@ -1201,9 +1195,6 @@
   },
   "autoDocs.answers": {
     "defaultMessage": "Answers"
-  },
-  "autoDocs.applyFilters": {
-    "defaultMessage": "Apply filters"
   },
   "autoDocs.archive": {
     "defaultMessage": "Archive"
@@ -1280,6 +1271,27 @@
   "autoDocs.clausesHelp": {
     "defaultMessage": "A Block with no rule is always included."
   },
+  "autoDocs.column.created": {
+    "defaultMessage": "Created"
+  },
+  "autoDocs.column.entity": {
+    "defaultMessage": "Fixed Entity"
+  },
+  "autoDocs.column.formats": {
+    "defaultMessage": "Output formats"
+  },
+  "autoDocs.column.legalOwner": {
+    "defaultMessage": "Default Legal Owner"
+  },
+  "autoDocs.column.published": {
+    "defaultMessage": "Published"
+  },
+  "autoDocs.column.unavailable": {
+    "defaultMessage": "Unavailable"
+  },
+  "autoDocs.column.updated": {
+    "defaultMessage": "Updated"
+  },
   "autoDocs.compareFiles": {
     "defaultMessage": "Compare files"
   },
@@ -1309,9 +1321,6 @@
   },
   "autoDocs.createSubmit": {
     "defaultMessage": "Create"
-  },
-  "autoDocs.createdCaption": {
-    "defaultMessage": "Created {date}."
   },
   "autoDocs.createdContract": {
     "defaultMessage": "Created Contract: {contract}"
@@ -1366,6 +1375,12 @@
   },
   "autoDocs.empty": {
     "defaultMessage": "Create an Auto-Doc to start with a Word template."
+  },
+  "autoDocs.empty.filtered.body": {
+    "defaultMessage": "Try another search or clear a filter to widen the list."
+  },
+  "autoDocs.empty.filtered.title": {
+    "defaultMessage": "No Auto-Docs match your search and filters"
   },
   "autoDocs.entityFromForm": {
     "defaultMessage": "From the form"
@@ -1546,6 +1561,9 @@
   },
   "autoDocs.linkCopied": {
     "defaultMessage": "Link copied"
+  },
+  "autoDocs.listCount": {
+    "defaultMessage": "{count, plural, one {# Auto-Doc} other {# Auto-Docs}}"
   },
   "autoDocs.liveSince": {
     "defaultMessage": "Live since {date}: file version {file}, form version {form}."
@@ -3358,6 +3376,9 @@
   },
   "docs.audience": {
     "defaultMessage": "Audience"
+  },
+  "docs.autoDocsDescription": {
+    "defaultMessage": "Write templates and build forms for document generation."
   },
   "docs.brand": {
     "defaultMessage": "OpenLaw documentation"
