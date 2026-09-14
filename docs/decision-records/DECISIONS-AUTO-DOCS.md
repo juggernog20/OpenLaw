@@ -64,6 +64,8 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 - **Alternatives considered** — Every Placeholder becomes a catalog Field under a new scope: supersedes DOC-007 and fills the catalog with one-offs. Re-upload only reports differences and Legal maintains fields by hand: more work than the first upload, for no gain.
 - **Consequences** — `auto_doc_form_fields` rows carry `catalog_field_id` and `contract_attribute` as two nullable maps with a CHECK that at most one is set. Conversion's value carry-through (INT-002) is reused for the catalog map. DD-027 opens the Entity picker to Business Users.
 
+**DES-087 addendum (2026-09-14, #874):** The editor is the builder: the template drawn beside its form, one field card per selected row, and each commit its own form version. An orphaned field prints "No Placeholder in file version N" on its row and the Fields card counts them; an unfilled Placeholder draws on `status-danger` in the template pane.
+
 ## ADO-004 — Two chains, one live pair: the file versions, the form versions, and Publish pins them
 
 - **Status** — Accepted
@@ -85,6 +87,8 @@ _None — queue cleared 2026-09-13 (ADO-001 through ADO-011). The clause library
 **M35/6 built addendum (#849):** Each form snapshot also holds its maps and Clause rules. The editor offers one row per detected Block and each select field's options. It refuses a rule for an absent Block when saving. Publish checks the chosen file and form together and names every missing Placeholder, Block, field, or option in one refusal. Structural form comparisons report field and rule changes. File comparisons open the shared Comparison view.
 
 Member+ can Publish a new pair, Unpublish, Archive, and Restore through separate audited routes. Later uploads and form saves keep the live pair. Migration 0121 adds publication and audience settings, the target Contract Type, and deferred checks on both version owners. Settings edits record before and after. The list searches by name and filters by state, audience, and target Type, with archived records hidden by default. Portal audience enforcement follows in M35/11.
+
+**DES-087 addendum (2026-09-14, #874):** The form editor has no Save. Every field-card commit, reorder, add, removal, and Clause rule change writes one form version, as this record's "saving the editor writes a new draft form version" already allows. Form versions are chosen only in the Publish and Compare dialogs. Publish is a dialog from the record's sub-bar and lists every gap inside it.
 
 ## ADO-005 — Destinations: a Contract Type target creates a draft Contract; anything can be Filed afterwards
 
@@ -140,6 +144,8 @@ A destination chosen on the Member generation form is saved in the acceptance tr
 Assignment settings are edited in place and audited. Rule ids survive edits and reordering. Save checks the latest Form; Publish and Generate check the chosen Form so a removed field cannot accidentally satisfy `is not`. A Generation saves its selected Legal Owner with its Contract facts, retaining the routing decision on retry. If the selected Owner has been archived or demoted when Generate accepts the answers, the saved Owner is null and the Contract waits in the Inbox. That first matching rule does not fall through to a different person. An Owner who becomes unavailable after acceptance is still refused by the shared Contract creation check; retry retains the accepted facts.
 
 The existing Owner Activity is `contract.updated` with `changed.owner`; `contract.manager_set` was an incorrect name in this decision. Claim uses that same Activity and the existing assignment notification, including its self-notification exclusion. The morning round previously addressed the Owner and team without an unassigned fallback; M35/10 adds the fallback for generated Contracts' expiry and notice reminders, leaving other Contract and Key-date audiences intact.
+
+**DES-087 addendum (2026-09-14, #874):** Assignment rules are a table inside the Settings section's Contract creation card, one row per rule as a sentence ("Jurisdiction equals United States") with the Legal Owner as its caption; Add rule and the row's pencil open one dialog. The default Legal Owner commits on pick.
 
 ## ADO-007 — Output and delivery: `.docx` and `.pdf` per Auto-Doc, on screen and by email, with Generation states
 

@@ -4943,6 +4943,12 @@ Every requirement stays. What changes is that the person building the form sees 
 
 **Mocks.** The five HTML mocks were throwaway and are not checked in. The next `designs/auto-docs.pen` frame, if one is drawn, follows this record.
 
+### Built addendum (2026-09-14, #874)
+
+The record ships as written, with three things decided at the keyboard. The name renames in place from the sub-bar's title. A published Auto-Doc keeps Generate as its primary action and offers **Publish new pair** in the overflow menu, so a newer file or form can go live without unpublishing first; the Publication card's own Publish button appears only when a newer version exists. The Clause rule commits the moment Include switches to a rule, with the first field and a default value, so the row says "when" at once; a typed value then commits when focus leaves the rule.
+
+`SettingsCard` became a named region (`role="region"` labelled by its title) so a card can be addressed by name; every settings pane inherits that. `ListEditor` gained an optional Add (the Clauses table has none) and a per-row class hook for the builder's selected-row wash. The template guide is a draft Help article (`auto-doc-template`, DOC-028, #875) published to the development edition; the pane's foot links to it.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |

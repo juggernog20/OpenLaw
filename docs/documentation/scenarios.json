@@ -1472,6 +1472,27 @@
         "basis": "Final complete-content Help/offline publication scenarios require provider articles and DOC-027 environment; batch and DOC-025 preview observations do not replace this gate.",
         "evidence": []
       }
+    },
+    {
+      "id": "V-C56",
+      "coverage": ["C56"],
+      "articles": ["auto-doc-template"],
+      "roles": ["legal_team_member", "administrator"],
+      "environment": "auto-docs",
+      "prerequisites": [
+        "A draft Auto-Doc and a fictional Word file with Placeholders, one directive, and one Block."
+      ],
+      "actions": [
+        "Upload the file, read the template pane, edit a field from its card, write a Clause rule, re-upload a file that drops a Placeholder, and publish."
+      ],
+      "expectedResults": [
+        "The pane marks every Placeholder and Block, the form follows each commit, the orphaned field is marked and kept, and Publish pins the chosen pair."
+      ],
+      "negativeChecks": [
+        "An unclosed Block, an unclosed brace, and a directive on a mismatched field type are refused with the offending text named."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "pending"
     }
   ]
 }
