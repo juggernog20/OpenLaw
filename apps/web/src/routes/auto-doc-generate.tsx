@@ -4,6 +4,13 @@
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
+import {
+  previousAnswerText,
+  previousGenerationForm,
+  reconcile,
+  toDraft,
+} from "../lib/auto-doc-answers";
+import { FilingPicker, type FilingDestination } from "../components/auto-docs/filings";
 import { api } from "../lib/api";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { isMemberPlus } from "../lib/roles";
@@ -13,23 +20,46 @@ import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
 import { FormControl, type Draft } from "../components/auto-docs/form-control";
 
-export async function autoDocGenerateLoader({ params }: LoaderFunctionArgs) {
+export async function autoDocGenerateLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/portal");
   const result = await api.GET("/api/v1/auto-docs/{id}/generate", {
     params: { path: { id: params.id! } },
   });
-  return { user, id: params.id!, form: result.data, refusal: result.error?.detail };
+  const from = new URL(request.url).searchParams.get("from");
+  const previous = from
+    ? await api.GET("/api/v1/auto-docs/{id}/generations/{generationId}", {
+        params: { path: { id: params.id!, generationId: from } },
+      })
+    : undefined;
+  return {
+    user,
+    id: params.id!,
+    form: result.data,
+    refusal: result.error?.detail,
+    previous: previous?.data?.generation,
+  };
 }
 
 export function AutoDocGeneratePage() {
   const loaded = useLoaderData<typeof autoDocGenerateLoader>();
   const [form, setForm] = useState(loaded.form);
   const [businessOwnerId, setBusinessOwnerId] = useState("");
-  const [draft, setDraft] = useState<Draft>({});
-  const [previousAnswers, setPreviousAnswers] = useState<{ label: string; value: string }[]>([]);
+  const [initial] = useState(() =>
+    loaded.form
+      ? reconcile(
+          toDraft(loaded.previous?.answers),
+          previousGenerationForm(loaded.previous),
+          loaded.form,
+        )
+      : { retained: {}, dropped: [] },
+  );
+  const [draft, setDraft] = useState<Draft>(initial.retained);
+  const [previousAnswers, setPreviousAnswers] = useState(initial.dropped);
   const [error, setError] = useState(loaded.refusal);
   const [busy, setBusy] = useState(false);
+  const [chooseFiling, setChooseFiling] = useState(false);
+  const [destination, setDestination] = useState<FilingDestination | null>(null);
   const intl = useIntl();
   const navigate = useNavigate();
   const signOut = useSignOut("/auth/login");
@@ -45,7 +75,7 @@ export function AutoDocGeneratePage() {
       defaultMessage: "Could not generate this document. Your answers are kept here. Try again.",
     });
   async function submit() {
-    if (!form || busy) return;
+    if (!form || busy || (chooseFiling && !destination)) return;
     const missingDate = form.fields.find(
       (field) =>
         field.fieldType === "date" &&
@@ -83,6 +113,9 @@ export function AutoDocGeneratePage() {
         body: {
           ...form.pair,
           answers,
+          ...(chooseFiling && destination && destination.kind !== "new_contract"
+            ? { filing: { destination } }
+            : {}),
           ...(form.autoDoc.targetContractTypeId
             ? { businessOwnerId: businessOwnerId || null }
             : {}),
@@ -102,35 +135,7 @@ export function AutoDocGeneratePage() {
     setBusy(false);
     if (result?.data) {
       const current = result.data;
-      const retained = { ...draft };
-      const previous: typeof previousAnswers = [];
-      for (const field of form?.fields ?? []) {
-        if (!Object.hasOwn(draft, field.slug)) continue;
-        const value = draft[field.slug]!;
-        const next = current.fields.find((candidate) => candidate.slug === field.slug);
-        const choices = Array.isArray(value) ? value : [value];
-        const compatible =
-          next?.fieldType === field.fieldType &&
-          (!["single_select", "multi_select"].includes(next.fieldType) ||
-            choices.every((choice) => !choice || next.options?.includes(choice))) &&
-          (next.fieldType !== "entity" ||
-            !value ||
-            current.entities.some((entity) => entity.id === value));
-        if (compatible) continue;
-        delete retained[field.slug];
-        if (value === "" || (Array.isArray(value) && value.length === 0)) continue;
-        const display =
-          field.fieldType === "entity"
-            ? (form?.entities.find((entity) => entity.id === value)?.name ?? String(value))
-            : field.fieldType === "boolean"
-              ? intl.formatMessage(
-                  value === "true"
-                    ? { id: "common.yes", defaultMessage: "Yes" }
-                    : { id: "common.no", defaultMessage: "No" },
-                )
-              : choices.join(", ");
-        previous.push({ label: field.label, value: display });
-      }
+      const { retained, dropped: previous } = reconcile(draft, form ?? null, current);
       setDraft(retained);
       setPreviousAnswers((answers) => [...answers, ...previous]);
       if (!current.businessOwners.some((person) => person.id === businessOwnerId))
@@ -179,7 +184,9 @@ export function AutoDocGeneratePage() {
               {previousAnswers.map((answer, index) => (
                 <div key={index}>
                   <dt className="font-medium">{answer.label}</dt>
-                  <dd className="whitespace-pre-wrap break-words">{answer.value}</dd>
+                  <dd className="whitespace-pre-wrap break-words">
+                    {previousAnswerText(intl, answer)}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -248,7 +255,20 @@ export function AutoDocGeneratePage() {
                   </select>
                 </label>
               )}
-              <Button type="submit" disabled={busy}>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={chooseFiling}
+                  disabled={busy}
+                  onChange={(event) => {
+                    setChooseFiling(event.target.checked);
+                    setDestination(null);
+                  }}
+                />
+                <FormattedMessage id="autoDocs.fileOnGenerate" defaultMessage="File to a record" />
+              </label>
+              {chooseFiling && <FilingPicker onChange={setDestination} disabled={busy} />}
+              <Button type="submit" disabled={busy || (chooseFiling && !destination)}>
                 <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
               </Button>
               {busy && (

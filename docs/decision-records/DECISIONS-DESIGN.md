@@ -4845,6 +4845,21 @@ The Portal adds routes for Auto-Docs, a gated form, and a Generation. The author
 
 Maintaining four screens requires the Form draft to survive the separate acknowledgement step. Pending output and email require polling, cancellation, and retention of the last successful result. Heading focus must follow transitions between acknowledgement and Form. An inline acknowledgement checkbox beside Generate was rejected because it gives the statement less attention and crowds the Form fields.
 
+## DES-086: File generated output from history or the generation form
+
+- **Status:** Accepted under M35/12, #855
+- **Date:** 2026-09-14
+
+### Decision
+
+A Generation offers **File** beside its allowed downloads, in Member history and the Portal confirmation. The control opens a labelled dialog showing an existing Matter or Contract picker, the allowed output format, and the Generation's previous Filings. A search narrows the available records; each choice names the record kind, number, and title. Member+ can choose **New Contract** and its Type. The Portal presents only existing team records.
+
+The Member generation form has an optional Filing destination using the same picker. Its default is no Filing. Confirmation shows when Filing is still preparing, its completed destination, or an actionable failure while downloads remain available. Each completed Filing links to its destination in the current shell; an unreachable destination has no identifying title or link. A deleted Document is shown as deleted in Filing history.
+
+Generate again opens the current published form. Compatible saved answers are prefilled; removed or incompatible answers are named in **Previous answers**, with saved Entity display names. The person reviews the new form before generating. Acknowledgement, publication, and reach continue to gate new Generations.
+
+The dialog follows the existing focus trap and return-focus behavior. All pickers have visible labels, errors use the existing alert treatment, and pending work disables repeat submission. Validate the new controls with route tests and axe in both shells.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -4934,6 +4949,7 @@ Maintaining four screens requires the Form draft to survive the separate acknowl
 | DES-083 | Portal record values are read-only; the Team applet can add members                                                                                                  | Accepted                                                                                                   |
 | DES-084 | The Business User first run is a Portal wizard                                                                                                                       | Accepted                                                                                                   |
 | DES-085 | The Portal Auto-Docs destination leads from acknowledgement to a generated file                                                                                      | Accepted                                                                                                   |
+| DES-086 | File generated output from history or the generation form                                                                                                            | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

@@ -1059,6 +1059,19 @@ export interface paths {
                 answers: {
                   [key: string]: string | number | boolean | string[];
                 };
+                answerFields: {
+                  slug: string;
+                  label: string;
+                  fieldType: string;
+                }[];
+                displayValues: {
+                  [key: string]: string;
+                };
+                filingPending: boolean;
+                filingFailure: {
+                  code: string;
+                  detail: string;
+                } | null;
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
@@ -1120,6 +1133,15 @@ export interface paths {
               [key: string]: (string | number | boolean | string[]) | null;
             };
             businessOwnerId?: string | null;
+            filing?: {
+              destination: {
+                /** @enum {string} */
+                kind: "matter" | "contract";
+                number: number;
+              };
+              /** @enum {string} */
+              format?: "docx" | "pdf";
+            };
           };
         };
       };
@@ -1147,6 +1169,19 @@ export interface paths {
                 answers: {
                   [key: string]: string | number | boolean | string[];
                 };
+                answerFields: {
+                  slug: string;
+                  label: string;
+                  fieldType: string;
+                }[];
+                displayValues: {
+                  [key: string]: string;
+                };
+                filingPending: boolean;
+                filingFailure: {
+                  code: string;
+                  detail: string;
+                } | null;
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
@@ -1243,6 +1278,19 @@ export interface paths {
                 answers: {
                   [key: string]: string | number | boolean | string[];
                 };
+                answerFields: {
+                  slug: string;
+                  label: string;
+                  fieldType: string;
+                }[];
+                displayValues: {
+                  [key: string]: string;
+                };
+                filingPending: boolean;
+                filingFailure: {
+                  code: string;
+                  detail: string;
+                } | null;
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
@@ -1333,6 +1381,19 @@ export interface paths {
                 answers: {
                   [key: string]: string | number | boolean | string[];
                 };
+                answerFields: {
+                  slug: string;
+                  label: string;
+                  fieldType: string;
+                }[];
+                displayValues: {
+                  [key: string]: string;
+                };
+                filingPending: boolean;
+                filingFailure: {
+                  code: string;
+                  detail: string;
+                } | null;
                 /** @enum {string} */
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
@@ -1472,6 +1533,392 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/filing-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Find reached live Filing destinations */
+    get: {
+      parameters: {
+        query?: {
+          search?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              destinations: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                number: number;
+                title: string;
+              }[];
+              contractTypes: {
+                id: string;
+                name: string;
+              }[];
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auto-docs/{id}/generations/{generationId}/filings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List a Generation's Filings */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          generationId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              filings: {
+                id: string;
+                generationId: string;
+                documentId: string | null;
+                /** @enum {string} */
+                format: "docx" | "pdf";
+                target: {
+                  /** @enum {string} */
+                  kind: "contract" | "matter";
+                  number: number;
+                  title: string;
+                } | null;
+                createdContract: boolean;
+                filedBy: string;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    /** File a Generation as a new Document */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          generationId: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json": {
+            destination:
+              | {
+                  /** @enum {string} */
+                  kind: "matter" | "contract";
+                  number: number;
+                }
+              | {
+                  /** @enum {string} */
+                  kind: "new_contract";
+                  contractTypeId: string;
+                  businessOwnerId?: string | null;
+                };
+            /** @enum {string} */
+            format?: "docx" | "pdf";
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              filing: {
+                id: string;
+                generationId: string;
+                documentId: string | null;
+                /** @enum {string} */
+                format: "docx" | "pdf";
+                target: {
+                  /** @enum {string} */
+                  kind: "contract" | "matter";
+                  number: number;
+                  title: string;
+                } | null;
+                createdContract: boolean;
+                filedBy: string;
+                /** Format: date-time */
+                createdAt: string;
+              };
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs/filing-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Find reached live Filing destinations */
+    get: {
+      parameters: {
+        query?: {
+          search?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              destinations: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                number: number;
+                title: string;
+              }[];
+              contractTypes: {
+                id: string;
+                name: string;
+              }[];
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/auto-docs/{id}/generations/{generationId}/filings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List a Generation's Filings */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          generationId: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              filings: {
+                id: string;
+                generationId: string;
+                documentId: string | null;
+                /** @enum {string} */
+                format: "docx" | "pdf";
+                target: {
+                  /** @enum {string} */
+                  kind: "contract" | "matter";
+                  number: number;
+                  title: string;
+                } | null;
+                createdContract: boolean;
+                filedBy: string;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    /** File a Generation as a new Document */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          generationId: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json": {
+            destination:
+              | {
+                  /** @enum {string} */
+                  kind: "matter" | "contract";
+                  number: number;
+                }
+              | {
+                  /** @enum {string} */
+                  kind: "new_contract";
+                  contractTypeId: string;
+                  businessOwnerId?: string | null;
+                };
+            /** @enum {string} */
+            format?: "docx" | "pdf";
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              filing: {
+                id: string;
+                generationId: string;
+                documentId: string | null;
+                /** @enum {string} */
+                format: "docx" | "pdf";
+                target: {
+                  /** @enum {string} */
+                  kind: "contract" | "matter";
+                  number: number;
+                  title: string;
+                } | null;
+                createdContract: boolean;
+                filedBy: string;
+                /** Format: date-time */
+                createdAt: string;
+              };
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -17476,6 +17923,19 @@ export interface operations {
               answers: {
                 [key: string]: string | number | boolean | string[];
               };
+              answerFields: {
+                slug: string;
+                label: string;
+                fieldType: string;
+              }[];
+              displayValues: {
+                [key: string]: string;
+              };
+              filingPending: boolean;
+              filingFailure: {
+                code: string;
+                detail: string;
+              } | null;
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
               hasDocx: boolean;
@@ -17551,6 +18011,19 @@ export interface operations {
               answers: {
                 [key: string]: string | number | boolean | string[];
               };
+              answerFields: {
+                slug: string;
+                label: string;
+                fieldType: string;
+              }[];
+              displayValues: {
+                [key: string]: string;
+              };
+              filingPending: boolean;
+              filingFailure: {
+                code: string;
+                detail: string;
+              } | null;
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
               hasDocx: boolean;
@@ -17628,6 +18101,19 @@ export interface operations {
               answers: {
                 [key: string]: string | number | boolean | string[];
               };
+              answerFields: {
+                slug: string;
+                label: string;
+                fieldType: string;
+              }[];
+              displayValues: {
+                [key: string]: string;
+              };
+              filingPending: boolean;
+              filingFailure: {
+                code: string;
+                detail: string;
+              } | null;
               /** @enum {string} */
               state: "pending" | "ready" | "failed";
               hasDocx: boolean;

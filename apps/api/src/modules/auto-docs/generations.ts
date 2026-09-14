@@ -47,6 +47,8 @@ import {
   versionStorageKey,
   type AppendedVersion,
 } from "../../lib/document-versions.js";
+import { GenerationFilingInput } from "./filing-schema.js";
+import { filingFormat, reachedFilingDestination, fulfilRequestedFiling } from "./filings.js";
 import { AutoDocFieldRow } from "./routes.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -80,6 +82,10 @@ export const GenerationRow = z.object({
   generatedBy: z.string(),
   person: z.object({ id: z.string(), displayName: z.string() }),
   answers: Answers,
+  answerFields: z.array(z.object({ slug: z.string(), label: z.string(), fieldType: z.string() })),
+  displayValues: z.record(z.string(), z.string()),
+  filingPending: z.boolean(),
+  filingFailure: z.object({ code: z.string(), detail: z.string() }).nullable(),
   state: z.enum(AUTO_DOC_GENERATION_STATES),
   hasDocx: z.boolean(),
   hasPdf: z.boolean(),
@@ -136,6 +142,7 @@ export function generationQuery(db: Executor, user: AuthenticatedUser) {
       person: { id: users.id, displayName: users.displayName },
       documentVersionNumber: documentVersions.versionNumber,
       formVersionNumber: autoDocFormVersions.versionNumber,
+      answerDefinition: autoDocFormVersions.definition,
     })
     .from(autoDocGenerations)
     .innerJoin(autoDocs, eq(autoDocs.id, autoDocGenerations.autoDocId))
@@ -152,6 +159,12 @@ export function toGeneration(row: Awaited<ReturnType<typeof generationQuery>>[nu
   return {
     ...generation,
     autoDocName: row.autoDocName,
+    answerFields: row.answerDefinition.fields.map(({ slug, label, fieldType }) => ({
+      slug,
+      label,
+      fieldType,
+    })),
+    filingPending: generation.requestedFiling !== null && generation.filingFailure === null,
     createdContract: row.createdContract,
     person: row.person,
     documentVersionNumber: row.documentVersionNumber,
@@ -269,6 +282,7 @@ async function fillGeneration(
     return;
   }
   if (primary) await requestDerivations(app.jobs, log, primary);
+  await fulfilRequestedFiling(app, log, generation.id);
   try {
     await boundedQueueAsk(app.jobs.requestGenerationDelivery(generation.id, generation.attempt));
   } catch (error) {
@@ -284,6 +298,7 @@ export interface GenerationSubmission {
   formVersionId: string;
   answers: Record<string, CustomFieldValue | null>;
   businessOwnerId?: string | null;
+  filing?: z.infer<typeof GenerationFilingInput>;
 }
 
 /** Portal policy runs in the acceptance transaction, before consuming the submitted pair. */
@@ -313,6 +328,18 @@ export async function generateAutoDoc(
       displayValues,
       submission.businessOwnerId,
     );
+    const requestedFiling = submission.filing
+      ? {
+          id: uuidv7(),
+          destination: submission.filing.destination,
+          format: filingFormat(live.autoDoc.formats, submission.filing.format),
+        }
+      : null;
+    if (requestedFiling) {
+      if (user.role === "business_user")
+        throw httpError(403, "Choose a Filing destination from the app.");
+      await reachedFilingDestination(tx, user, requestedFiling.destination, false);
+    }
     const [generation] = await tx
       .insert(autoDocGenerations)
       .values({
@@ -322,6 +349,7 @@ export async function generateAutoDoc(
         answers,
         displayValues,
         contractSnapshot,
+        requestedFiling,
         formats: live.autoDoc.formats,
         coverNote: live.autoDoc.coverNote,
         emailState: "pending",
@@ -434,6 +462,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
         body: Pair.extend({
           answers: z.record(z.string().regex(AUTO_DOC_SLUG), Value.nullable()),
           businessOwnerId: z.string().min(1).nullable().optional(),
+          filing: GenerationFilingInput.optional(),
         }).strict(),
         response: { 201: Envelope, default: problemResponse },
       },
@@ -512,6 +541,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
           .set({
             state: "pending",
             failure: null,
+            filingFailure: null,
             docxFileRef: null,
             pdfFileRef: null,
             emailState: "pending",

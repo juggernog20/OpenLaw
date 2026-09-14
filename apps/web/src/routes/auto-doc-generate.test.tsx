@@ -69,6 +69,10 @@ const form: Form = {
   businessOwners: [],
 };
 const generation: Generation = {
+  answerFields: form.fields,
+  displayValues: {},
+  filingPending: false,
+  filingFailure: null,
   id: "generation1",
   autoDocId: "nda",
   autoDocName: "NDA",
@@ -339,4 +343,61 @@ it("lets a Member name a Business Owner and links the generated Contract on conf
   await screen.findByRole("heading", { name: "Generation" });
   expect(submitted).toMatchObject({ businessOwnerId: "owner" });
   expect(screen.getByRole("link", { name: "NDA Acme" })).toHaveAttribute("href", "/contracts/27");
+});
+
+it("prefills Generate again and saves an optional Filing destination with the submitted answers", async () => {
+  let posted: unknown;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generate")) return json(200, form);
+      if (call.url.pathname.endsWith("/generations/generation1")) return json(200, { generation });
+      if (call.url.pathname.endsWith("/filing-options"))
+        return json(200, {
+          destinations: [{ kind: "contract", number: 42, title: "Acme NDA" }],
+          contractTypes: [],
+        });
+      if (call.method === "POST" && call.url.pathname.endsWith("/generations")) {
+        posted = call.body;
+        return json(201, { generation });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda/generate?from=generation1");
+  expect(await screen.findByRole("textbox", { name: "Counterparty" })).toHaveValue("Acme");
+  expect(screen.getByLabelText("Agreed")).toHaveValue("false");
+  await userEvent.click(screen.getByLabelText("File to a record"));
+  expect(screen.getByRole("button", { name: "Generate" })).toBeDisabled();
+  await screen.findByRole("option", { name: "Contract #42: Acme NDA" });
+  await userEvent.selectOptions(screen.getByLabelText("Filing destination"), "contract:42");
+  await userEvent.click(screen.getByRole("button", { name: "Generate" }));
+  await waitFor(() =>
+    expect(posted).toMatchObject({
+      filing: { destination: { kind: "contract", number: 42 } },
+      answers: generation.answers,
+    }),
+  );
+});
+
+it("names a dropped boolean answer as Yes when its field is no longer boolean", async () => {
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generate"))
+        return json(200, {
+          ...form,
+          fields: [form.fields[0]!, { ...form.fields[2]!, fieldType: "text", required: false }],
+        });
+      if (call.url.pathname.endsWith("/generations/generation1"))
+        return json(200, { generation: { ...generation, answers: { agreed: true } } });
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda/generate?from=generation1");
+  await screen.findByRole("heading", { name: "Previous answers" });
+  expect(screen.getByText("Agreed", { selector: "dt" })).toBeVisible();
+  expect(screen.getByText("Yes", { selector: "dd" })).toBeVisible();
+  expect(screen.queryByText("true")).not.toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Agreed" })).toHaveValue("");
 });

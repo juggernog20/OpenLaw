@@ -313,8 +313,9 @@ export const contracts = pgTable(
     // DOC-010's hard delete: removing a document row makes Postgres
     // check every contract for one naming it as its instrument, and
     // without an index that check is a sequential scan of `contracts`.
-    uniqueIndex("contracts_created_by_generation_idx").on(table.createdByGenerationId),
     index("contracts_primary_document_idx").on(table.primaryDocumentId),
+    // M35/12: distinct Filings may create multiple Contracts from one Generation.
+    index("contracts_created_by_generation_idx").on(table.createdByGenerationId),
     // "What sits under this contract" — the read M17's hierarchy
     // breadcrumb and relations panel ride, and the walk the cycle guard
     // already makes on every parent write.

@@ -111,6 +111,14 @@ The accepted Generation saves its resolved Contract facts for retry. After Word 
 
 The first Contract Activity entry names the Auto-Doc and Generation. Member+ can name a Business Owner; the shared Generation function names a generating Business User as Business Owner and adds their team row. The Portal entry point and its audience and acknowledgement checks follow in M35/11. Legal Owner assignment follows in M35/10. Filing follows in M35/12.
 
+### Built in M35/12
+
+A Filing copies an allowed Generation output into a fresh Document and Version 1. Word is the default when allowed; a PDF-only Generation files its PDF. The automatic Contract destination still uses Word as specified above. Existing record reach, the archive freeze, and the Portal team upload rule apply at commit. The first Member+ Filing takes an empty primary designation; Business User Filings remain supporting Documents.
+
+Member+ may choose a Contract Type when Filing an already generated output to a new Contract. This later Filing uses the original answers and Form maps with the current target Type, Entity, Assignment, and default people validation through the shared creation path. It is separate from the one automatic Contract created at Generation: each new-Contract Filing records its own provenance, and retry never creates it again. The automatic Generation links remain unchanged.
+
+A destination chosen on the Member generation form is saved in the acceptance transaction. Word Filing completes after fill; PDF Filing is fulfilled by the delivery worker when conversion finishes, with the saved Filing id preventing duplicate copies. Reach is checked again. A Filing failure leaves the Generation's output intact and lets the person choose a destination again. Every Filing writes `auto_doc.filed` and the ordinary `document.created` action, with generated provenance; existing upload narration is unchanged. History remains after Document erasure. Filing targets and their Activity are visible only through the reader's current destination reach.
+
 ## ADO-006 — Assignment rules choose the Legal Owner; an unmatched Generation waits on the Inbox as an Unassigned contract
 
 - **Status** — Accepted

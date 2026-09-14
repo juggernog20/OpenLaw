@@ -5,6 +5,14 @@ import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import type { paths } from "@openlaw/api-client";
+import {
+  previousAnswerText,
+  previousGenerationForm,
+  reconcile,
+  toDraft,
+  type PreviousAnswer,
+} from "../lib/auto-doc-answers";
+import { GenerationFiling } from "../components/auto-docs/filings";
 import { api } from "../lib/api";
 import { currentUserFor, useSignOut } from "../lib/session";
 import { formatLongDateTime } from "../lib/format";
@@ -22,7 +30,6 @@ import {
 
 type FormReply =
   paths["/api/v1/portal/auto-docs/{id}/generate"]["get"]["responses"][200]["content"]["application/json"];
-type Form = NonNullable<FormReply["form"]>;
 const CARD = "space-y-4 rounded-card border border-border-default bg-raised p-6";
 
 export async function portalAutoDocsLoader({ request }: LoaderFunctionArgs) {
@@ -179,54 +186,8 @@ export async function portalAutoDocGenerateLoader({ request, params }: LoaderFun
     id: params.id!,
     data: result.data,
     refusal: result.error?.detail,
-    answers: previous?.data?.generation.answers,
+    previous: previous?.data?.generation,
   };
-}
-function toDraft(answers: Record<string, unknown> | undefined): Draft {
-  return Object.fromEntries(
-    Object.entries(answers ?? {}).map(([slug, value]) => [
-      slug,
-      Array.isArray(value) ? value.map(String) : String(value ?? ""),
-    ]),
-  );
-}
-type PreviousAnswer = { label: string; value: string };
-/**
- * Keeps each draft answer the current form can still show. An answer
- * whose field, type, option, or Entity choice has gone is dropped and
- * reported under its old label, so the person sees what to re-enter.
- * The first load has no earlier form, so a field the form no longer has
- * is dropped without a label.
- */
-function reconcile(draft: Draft, previous: Form | null, current: Form) {
-  const retained = { ...draft };
-  const dropped: PreviousAnswer[] = [];
-  for (const [slug, value] of Object.entries(draft)) {
-    const old = previous?.fields.find((field) => field.slug === slug);
-    const field = current.fields.find((field) => field.slug === slug);
-    const choices = Array.isArray(value) ? value : [value];
-    const compatible =
-      field &&
-      (!old || old.fieldType === field.fieldType) &&
-      (!["single_select", "multi_select"].includes(field.fieldType) ||
-        choices.every((choice) => !choice || field.options?.includes(choice))) &&
-      (field.fieldType !== "entity" ||
-        !value ||
-        current.entities.some((entity) => entity.id === value));
-    if (compatible) continue;
-    delete retained[slug];
-    const label = old?.label ?? field?.label;
-    if (label && choices.some(Boolean))
-      dropped.push({
-        label,
-        value:
-          (old ?? field)!.fieldType === "entity"
-            ? ((previous ?? current).entities.find((entity) => entity.id === value)?.name ??
-              String(value))
-            : choices.join(", "),
-      });
-  }
-  return { retained, dropped };
 }
 export function PortalAutoDocGeneratePage() {
   const loaded = useLoaderData<typeof portalAutoDocGenerateLoader>();
@@ -240,13 +201,15 @@ function PortalAutoDocForm({
 }) {
   const [data, setData] = useState(loaded.data);
   const [initial] = useState(() => {
-    const saved = toDraft(loaded.answers);
+    const saved = toDraft(loaded.previous?.answers);
     return loaded.data?.form
-      ? reconcile(saved, null, loaded.data.form)
+      ? reconcile(saved, previousGenerationForm(loaded.previous), loaded.data.form)
       : { retained: saved, dropped: [] as PreviousAnswer[] };
   });
   const [draft, setDraft] = useState<Draft>(initial.retained);
-  const [lastForm, setLastForm] = useState<Form | null>(loaded.data?.form ?? null);
+  const [lastForm, setLastForm] = useState<ReturnType<typeof previousGenerationForm>>(
+    loaded.data?.form ?? previousGenerationForm(loaded.previous),
+  );
   const [previousAnswers, setPreviousAnswers] = useState<PreviousAnswer[]>(initial.dropped);
   const [acknowledgementId, setAcknowledgementId] = useState<string>();
   const [checked, setChecked] = useState(false);
@@ -460,7 +423,9 @@ function PortalAutoDocForm({
               {previousAnswers.map((answer, index) => (
                 <div key={index}>
                   <dt>{answer.label}</dt>
-                  <dd className="whitespace-pre-wrap text-muted">{answer.value}</dd>
+                  <dd className="whitespace-pre-wrap text-muted">
+                    {previousAnswerText(intl, answer)}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -586,6 +551,7 @@ function PortalGeneration({
             <GenerationContract generation={data.generation} portal />
             <GenerationDownload generation={data.generation} portal />
             <GenerationEmail generation={data.generation} />
+            <GenerationFiling generation={data.generation} portal showHistory />
             {data.canGenerate && (
               <Link
                 className="text-link hover:underline"

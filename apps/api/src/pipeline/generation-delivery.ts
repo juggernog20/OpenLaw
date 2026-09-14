@@ -18,6 +18,8 @@ import {
   isNotNull,
   asc,
 } from "@openlaw/db";
+import { fulfilRequestedFiling } from "../modules/auto-docs/filings.js";
+import { createNotifier } from "../lib/notifications/notifier.js";
 import { renderGenerationMail } from "../lib/notifications/generation-template.js";
 import type { MailerResolver, MailMessage } from "../lib/mailer.js";
 import { isTerminalFailure, reasonOf, withBlob, type DerivationDeps } from "./derivations.js";
@@ -26,6 +28,7 @@ import { boundedQueueAsk, type JobQueue } from "./jobs.js";
 export interface GenerationDeliveryDeps extends DerivationDeps {
   resolveMailer: MailerResolver;
   baseUrl: string;
+  jobs?: JobQueue;
 }
 export interface GenerationDeliveryAttempt {
   generationId: string;
@@ -84,6 +87,16 @@ export async function handleGenerationDelivery(
         throw error;
       }
     }
+    if (deps.jobs)
+      await fulfilRequestedFiling(
+        {
+          ...deps,
+          jobs: deps.jobs,
+          notifier: createNotifier({ db: deps.db, jobs: deps.jobs, log: deps.log }),
+        },
+        deps.log,
+        generation.id,
+      );
     stage = "email";
     // The row lock serializes duplicate wake-ups through the bounded SMTP send.
     // A recorded send is never repeated by another worker or by the recovery sweep.
@@ -242,7 +255,13 @@ export async function sweepGenerationDeliveries(
             eq(autoDocGenerations.state, "pending"),
             and(
               eq(autoDocGenerations.state, "ready"),
-              eq(autoDocGenerations.emailState, "pending"),
+              or(
+                eq(autoDocGenerations.emailState, "pending"),
+                and(
+                  isNotNull(autoDocGenerations.requestedFiling),
+                  isNull(autoDocGenerations.filingFailure),
+                ),
+              ),
             ),
           ),
           after ? gt(autoDocGenerations.id, after) : undefined,

@@ -492,6 +492,13 @@ it("shows Generation history and retries a failed fill", async () => {
     "/api/v1/auto-docs/nda/generations/ready/docx",
   );
   expect(within(list).getByText("The Word fill timed out. Try again.")).toBeVisible();
+  const fileButtons = within(list).getAllByRole("button", { name: "File" });
+  expect(fileButtons[0]).toBeEnabled();
+  expect(fileButtons[1]).toBeDisabled();
+  expect(within(list).getAllByRole("link", { name: "Generate again" })[0]).toHaveAttribute(
+    "href",
+    "/auto-docs/nda/generate?from=ready",
+  );
   await user.click(within(list).getByRole("button", { name: "Retry" }));
   await waitFor(() =>
     expect(within(list).getAllByRole("link", { name: "Download Word" })).toHaveLength(2),
