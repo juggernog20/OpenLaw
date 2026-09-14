@@ -7779,6 +7779,58 @@
             }
           }
         }
+      },
+      "delete": {
+        "operationId": "hardDeleteAutoDoc",
+        "summary": "Permanently erase an Auto-Doc, its template and derivations, forms, saved Generation answers and output files. Created Contracts and Filed Documents retain their own copies and generated provenance. Requires the typed word delete and the current Auto-Doc name, including for archived Auto-Docs.",
+        "tags": ["auto-docs"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "confirm": {
+                    "type": "string",
+                    "enum": ["delete"]
+                  },
+                  "confirmName": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["confirm", "confirmName"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/auto-docs/{id}/form-versions/diff": {
@@ -37620,30 +37672,44 @@
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                           },
                           "autoDoc": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["id", "name"],
+                                "additionalProperties": false
                               },
-                              "name": {
-                                "type": "string"
+                              {
+                                "type": "null"
                               }
-                            },
-                            "required": ["id", "name"],
-                            "additionalProperties": false
+                            ]
                           },
                           "generator": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["id", "displayName"],
+                                "additionalProperties": false
                               },
-                              "displayName": {
-                                "type": "string"
+                              {
+                                "type": "null"
                               }
-                            },
-                            "required": ["id", "displayName"],
-                            "additionalProperties": false
+                            ]
                           }
                         },
                         "required": ["id", "number", "title", "createdAt", "autoDoc", "generator"],

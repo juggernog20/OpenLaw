@@ -738,3 +738,64 @@ it("refreshes Assignment values after saving sibling settings without overwritin
   );
   expect(await screen.findByText("Assignment settings saved.")).toBeVisible();
 });
+
+it("requires typed delete, keeps refusals open, and returns to the list after erasure", async () => {
+  const user = userEvent.setup();
+  const current = record();
+  const deletions: unknown[] = [];
+  stubApi({
+    signedIn: { ...member, role: "administrator" },
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+      if (call.url.pathname === "/api/v1/auto-docs") return json(200, { autoDocs: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/nda") {
+        if (call.method === "DELETE") {
+          deletions.push(call.body);
+          return deletions.length === 1
+            ? problem(409, "This Auto-Doc was renamed. Reload it before deleting.")
+            : new Response(null, { status: 204 });
+        }
+        return json(200, current);
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  const trigger = await screen.findByRole("button", { name: "Delete Auto-Doc" });
+  await user.click(trigger);
+  let modal = await screen.findByRole("dialog", { name: "Delete this Auto-Doc?" });
+  expect(within(modal).getByText(/Created Contracts and Filed Documents remain/)).toBeInTheDocument();
+  let input = within(modal).getByLabelText('Type "delete" to confirm');
+  expect(input).toHaveFocus();
+  const erase = within(modal).getByRole("button", { name: "Delete Publish NDA" });
+  expect(erase).toBeDisabled();
+  await user.type(input, "yes");
+  expect(erase).toBeDisabled();
+  await user.click(within(modal).getByRole("button", { name: "Cancel" }));
+  expect(deletions).toEqual([]);
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  modal = await screen.findByRole("dialog");
+  input = within(modal).getByLabelText('Type "delete" to confirm');
+  expect(input).toHaveValue("");
+  await user.type(input, " DELETE ");
+  await user.click(within(modal).getByRole("button", { name: "Delete Publish NDA" }));
+  expect(await within(modal).findByRole("alert")).toHaveTextContent("was renamed");
+  expect(deletions).toEqual([{ confirm: "delete", confirmName: "Publish NDA" }]);
+  await user.click(within(modal).getByRole("button", { name: "Delete Publish NDA" }));
+  await screen.findByRole("heading", { name: "Auto-Docs" });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+it("does not offer Auto-Doc erasure to a Legal Team Member", async () => {
+  stubApi({ signedIn: member, extra: (call) => {
+    if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+    if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+    if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, record());
+    return undefined;
+  } });
+  renderAt("/auto-docs/nda");
+  await screen.findByRole("heading", { name: "Publish NDA" });
+  expect(screen.queryByRole("button", { name: "Delete Auto-Doc" })).not.toBeInTheDocument();
+});

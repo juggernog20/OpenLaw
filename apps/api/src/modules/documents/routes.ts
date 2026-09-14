@@ -125,6 +125,7 @@
  * rather than one generic edit.
  */
 
+import { documentErasureBlobs } from "../../lib/document-erasure.js";
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import type { FastifyRequest } from "fastify";
@@ -3633,42 +3634,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           throw httpError(400, "Type the document's name exactly to delete it.");
         }
 
-        // Read before anything is destroyed: the blobs cannot be
-        // found once the rows are gone, and the entry has to be able
-        // to say how much paper this took with it.
-        const chain = await tx
-          .select({ fileRef: documentVersions.fileRef })
-          .from(documentVersions)
-          .where(eq(documentVersions.documentId, documentId));
-
-        // And what the machine derived (DOC-004, M12/4). A display
-        // rendition is a second blob beside its version, and no database
-        // cascade can reach a storage driver — so it is read here and
-        // deleted below with the rest. Lawful erasure erases everything,
-        // including the PDF a converter made of a Word draft.
-        const renditions = await tx
-          .select({ fileRef: documentVersionRenditions.fileRef })
-          .from(documentVersionRenditions)
-          .innerJoin(documentVersions, eq(documentVersionRenditions.versionId, documentVersions.id))
-          .where(
-            and(
-              eq(documentVersions.documentId, documentId),
-              isNotNull(documentVersionRenditions.fileRef),
-            ),
-          );
-
-        // A Word comparison is another derived copy beside the chain.
-        // Its row cascades directly with the Document, but its stored
-        // DOCX has to be removed explicitly before the source blobs.
-        const comparisons = await tx
-          .select({ fileRef: documentComparisons.redlineFileRef })
-          .from(documentComparisons)
-          .where(
-            and(
-              eq(documentComparisons.documentId, documentId),
-              isNotNull(documentComparisons.redlineFileRef),
-            ),
-          );
+        const { versionCount, blobs } = await documentErasureBlobs(tx, documentId);
 
         // The entry is written first and it hangs off the owning
         // contract, never off the document (DOC-008), so nothing
@@ -3682,7 +3648,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "document.hard_deleted",
           visibility: RECORD_ACTIVITY_TIER,
-          payload: { documentId, title: target.title, versionCount: chain.length },
+          payload: { documentId, title: target.title, versionCount },
         });
 
         // The rows: the document, its whole chain behind the cascade,
@@ -3747,11 +3713,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // destroyed derived copies rather than originals — a rendition
         // can be made again from its source, and a source cannot be
         // made again from anything.
-        const blobs = [
-          ...renditions.flatMap((row) => (row.fileRef === null ? [] : [row.fileRef])),
-          ...comparisons.flatMap((row) => (row.fileRef === null ? [] : [row.fileRef])),
-          ...chain.map((version) => version.fileRef),
-        ];
         for (const fileRef of blobs) await app.storage.delete(fileRef);
 
         return paperOf(

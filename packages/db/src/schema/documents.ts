@@ -42,7 +42,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
-import { autoDocs, autoDocGenerations } from "./auto-docs.js";
+import { autoDocs, autoDocGenerationOrigins } from "./auto-docs.js";
 import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
@@ -305,7 +305,7 @@ export const documentVersions = pgTable(
     source: text("source", { enum: DOCUMENT_VERSION_SOURCES }).notNull().default("uploaded"),
     /** Null on uploads and redlines; otherwise the Generation that produced Version 1. */
     generatedFromGenerationId: text("generated_from_generation_id").references(
-      (): AnyPgColumn => autoDocGenerations.id,
+      (): AnyPgColumn => autoDocGenerationOrigins.id,
     ),
     /** The older operand behind a generated redline. NULL on an
      * uploaded round. */

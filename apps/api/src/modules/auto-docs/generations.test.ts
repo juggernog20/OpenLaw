@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
   autoDocGenerations,
+  autoDocGenerationOrigins,
   autoDocs,
   documents,
   entities,
@@ -311,8 +312,10 @@ it("keeps app Generation routes Member+ and refuses a Generation under another A
 it("enforces the Generation pair's ownership in Postgres, including later reparenting", async () => {
   const a = await prepare();
   const b = await prepare();
+  const [origin] = await h.db.insert(autoDocGenerationOrigins).values({}).returning();
   await expect(
     h.db.insert(autoDocGenerations).values({
+      id: origin!.id,
       autoDocId: a.id,
       documentVersionId: a.pair.documentVersionId,
       formVersionId: b.pair.formVersionId,

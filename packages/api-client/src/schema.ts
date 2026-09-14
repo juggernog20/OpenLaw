@@ -770,7 +770,8 @@ export interface paths {
     get: operations["getAutoDoc"];
     put?: never;
     post?: never;
-    delete?: never;
+    /** Permanently erase an Auto-Doc, its template and derivations, forms, saved Generation answers and output files. Created Contracts and Filed Documents retain their own copies and generated provenance. Requires the typed word delete and the current Auto-Doc name, including for archived Auto-Docs. */
+    delete: operations["hardDeleteAutoDoc"];
     options?: never;
     head?: never;
     /** Member+ edits Auto-Doc settings */
@@ -9678,6 +9679,43 @@ export interface operations {
             orphanedFields: string[];
           };
         };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  hardDeleteAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          confirm: "delete";
+          confirmName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Problem details (RFC 9457) */
       default: {
@@ -20113,11 +20151,11 @@ export interface operations {
               autoDoc: {
                 id: string;
                 name: string;
-              };
+              } | null;
               generator: {
                 id: string;
                 displayName: string;
-              };
+              } | null;
             }[];
             nextCursor: number | null;
           };

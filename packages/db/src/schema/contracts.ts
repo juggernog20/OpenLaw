@@ -47,7 +47,7 @@ import { contractTypes } from "./contract-types.js";
 // read inside `references(() => …)`, which Drizzle resolves after both
 // modules have finished loading, so neither file touches the other's
 // bindings while it is still evaluating.
-import { autoDocGenerations } from "./auto-docs.js";
+import { autoDocGenerationOrigins } from "./auto-docs.js";
 import { documents } from "./documents.js";
 import { entities } from "./entities.js";
 import { departments } from "./departments.js";
@@ -205,7 +205,7 @@ export const contracts = pgTable(
     isConfidential: boolean("is_confidential").notNull().default(false),
     /** Null on direct creation and Request conversion. */
     createdByGenerationId: text("created_by_generation_id").references(
-      (): AnyPgColumn => autoDocGenerations.id,
+      (): AnyPgColumn => autoDocGenerationOrigins.id,
       { onDelete: "set null" },
     ),
     /**

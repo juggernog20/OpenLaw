@@ -61,29 +61,28 @@ export async function handleGenerationDelivery(
   let stage: "pdf" | "email" = "pdf";
   try {
     if (generation.formats !== "docx" && !generation.pdfFileRef) {
-      const fileRef = await withBlob(deps, generation.docxFileRef, async (word) => {
-        const pdf = await deps.docEngine.convertToPdf(word, "docx");
-        try {
-          return await deps.storage.put(
-            `auto-doc-generations/${generation.id}/${uuidv7()}.pdf`,
-            Readable.from(pdf),
-          );
-        } finally {
-          pdf.destroy();
-        }
-      });
+      let fileRef: string | undefined;
       try {
-        const updated = await deps.db
-          .update(autoDocGenerations)
-          .set({ pdfFileRef: fileRef, state: "ready", updatedAt: new Date() })
-          .where(and(current, eq(autoDocGenerations.state, "pending")))
-          .returning({ id: autoDocGenerations.id });
-        if (!updated.length) {
-          await forget(deps, fileRef);
-          return;
-        }
+        await withBlob(deps, generation.docxFileRef, async (word) => {
+          const pdf = await deps.docEngine.convertToPdf(word, "docx");
+          try {
+            await deps.db.transaction(async (tx) => {
+              const [held] = await tx.select().from(autoDocGenerations)
+                .where(and(current, eq(autoDocGenerations.state, "pending")))
+                .for("update");
+              if (!held || held.pdfFileRef) return;
+              fileRef = await deps.storage.put(
+                `auto-doc-generations/${generation.id}/${uuidv7()}.pdf`, Readable.from(pdf),
+              );
+              await tx.update(autoDocGenerations)
+                .set({ pdfFileRef: fileRef, state: "ready", updatedAt: new Date() }).where(current);
+            });
+          } finally {
+            pdf.destroy();
+          }
+        });
       } catch (error) {
-        await forget(deps, fileRef);
+        if (fileRef) await forget(deps, fileRef);
         throw error;
       }
     }

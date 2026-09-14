@@ -904,6 +904,13 @@
       "when": 1789379435246,
       "tag": "0128_default_people_user_erasure",
       "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1789383496439,
+      "tag": "0129_auto_doc_erasure_provenance",
+      "breakpoints": true
     }
   ]
 }

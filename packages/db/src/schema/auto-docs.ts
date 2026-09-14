@@ -105,6 +105,9 @@ export interface AutoDocContractSnapshot {
   termType: TermType;
 }
 
+/** ADO-012: content-free identities keep generated Document and Contract provenance after erasure. */
+export const autoDocGenerationOrigins = pgTable("auto_doc_generation_origins", { id: uuidPk() });
+
 export const autoDocs = pgTable(
   "auto_docs",
   {
@@ -250,7 +253,7 @@ export const AUTO_DOC_GENERATION_STATES = ["pending", "ready", "failed"] as cons
 export const autoDocGenerations = pgTable(
   "auto_doc_generations",
   {
-    id: uuidPk(),
+    id: uuidPk().references(() => autoDocGenerationOrigins.id),
     autoDocId: text("auto_doc_id")
       .notNull()
       .references(() => autoDocs.id),

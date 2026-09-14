@@ -31,6 +31,7 @@ type Answer =
   paths["/api/v1/auto-docs/{id}"]["get"]["responses"][200]["content"]["application/json"];
 type Field = NonNullable<Answer["formVersion"]>["definition"]["fields"][number];
 import { CurrencySelect } from "../components/currency-select";
+import { DeleteAutoDoc } from "../components/auto-docs/delete-auto-doc";
 import { AssignmentEditor } from "../components/auto-docs/assignment-editor";
 import { ClausesEditor, FieldMap } from "../components/auto-docs/clauses-editor";
 import { AutoDocGenerations } from "../components/auto-docs/generations";
@@ -357,7 +358,10 @@ function AutoDocRecord({
             <FormattedMessage id="nav.autoDocs" defaultMessage="Auto-Docs" />
           </Link>
           <header>
-            <h1 className="text-xl font-semibold">{saved.autoDoc.name}</h1>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h1 className="text-xl font-semibold">{saved.autoDoc.name}</h1>
+              {user.role === "administrator" && <DeleteAutoDoc autoDoc={saved.autoDoc} disabled={busy} />}
+            </div>
             <p className="text-sm text-muted">
               <FormattedMessage
                 id="autoDocs.state"

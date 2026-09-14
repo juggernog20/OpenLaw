@@ -142,11 +142,17 @@ export function UnassignedContractsPanel({
                     </p>
                   </td>
                   <td className="px-4 py-3">
-                    <Link className="text-link hover:underline" to={`/auto-docs/${row.autoDoc.id}`}>
-                      {row.autoDoc.name}
-                    </Link>
+                    {row.autoDoc ? (
+                      <Link className="text-link hover:underline" to={`/auto-docs/${row.autoDoc.id}`}>
+                        {row.autoDoc.name}
+                      </Link>
+                    ) : (
+                      <FormattedMessage id="inbox.deletedAutoDoc" defaultMessage="Deleted Auto-Doc" />
+                    )}
                   </td>
-                  <td className="px-4 py-3">{row.generator.displayName}</td>
+                  <td className="px-4 py-3">{row.generator?.displayName ?? (
+                    <FormattedMessage id="inbox.deletedGeneration" defaultMessage="Generation details deleted" />
+                  )}</td>
                   <td className="px-4 py-3">
                     <Button disabled={busy} onClick={() => void claim(row.number)}>
                       <FormattedMessage id="inbox.claim" defaultMessage="Claim" />

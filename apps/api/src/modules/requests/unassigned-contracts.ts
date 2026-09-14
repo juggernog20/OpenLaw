@@ -28,8 +28,8 @@ const Row = z.object({
   number: z.number().int(),
   title: z.string(),
   createdAt: z.iso.datetime(),
-  autoDoc: z.object({ id: z.string(), name: z.string() }),
-  generator: z.object({ id: z.string(), displayName: z.string() }),
+  autoDoc: z.object({ id: z.string(), name: z.string() }).nullable(),
+  generator: z.object({ id: z.string(), displayName: z.string() }).nullable(),
 });
 const PAGE_SIZE = 50;
 export const unassignedContractsRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -74,12 +74,12 @@ export const unassignedContractsRoutes: FastifyPluginAsyncZod = async (app) => {
               generator: { id: users.id, displayName: users.displayName },
             })
             .from(contracts)
-            .innerJoin(
+            .leftJoin(
               autoDocGenerations,
               eq(autoDocGenerations.id, contracts.createdByGenerationId),
             )
-            .innerJoin(autoDocs, eq(autoDocs.id, autoDocGenerations.autoDocId))
-            .innerJoin(users, eq(users.id, autoDocGenerations.generatedBy))
+            .leftJoin(autoDocs, eq(autoDocs.id, autoDocGenerations.autoDocId))
+            .leftJoin(users, eq(users.id, autoDocGenerations.generatedBy))
             .where(
               and(
                 scope,

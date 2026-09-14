@@ -1253,6 +1253,7 @@ type KnowledgePayloads = {
  * narrator cannot read — the compiler is the only place to catch either.
  */
 type AutoDocPayloads = {
+  "auto_doc.hard_deleted": { generationCount: number; versionCount: number };
   "auto_doc.filed": {
     name: string;
     generationId: string;

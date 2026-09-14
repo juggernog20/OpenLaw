@@ -155,6 +155,12 @@ export async function fileGeneration(
   await withStoredBlobs(deps.storage, log, stored, () =>
     deps.notifier.notifying(async (tx) => {
       await lockPortalPerson(tx, user);
+      const [autoDoc] = await tx
+        .select()
+        .from(autoDocs)
+        .where(eq(autoDocs.id, autoDocId))
+        .for("share");
+      if (!autoDoc) throw httpError(404, "This Auto-Doc does not exist.");
       await filingSource(tx, user, autoDocId, generationId, portal, true);
       const [generation] = await tx
         .select()
@@ -173,11 +179,7 @@ export async function fileGeneration(
       const source = format === "docx" ? generation!.docxFileRef : generation!.pdfFileRef;
       if (!source)
         throw httpError(409, "This output is still being prepared. File it when it is ready.");
-      const [autoDoc] = await tx
-        .select()
-        .from(autoDocs)
-        .where(eq(autoDocs.id, autoDocId))
-        .for("share");
+
       const destination = input.destination;
       if (destination.kind === "new_contract" && (portal || user.role === "business_user"))
         throw httpError(403, "Only a Member can File to a new Contract from the app.");

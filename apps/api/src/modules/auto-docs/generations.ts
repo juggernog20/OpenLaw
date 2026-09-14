@@ -9,6 +9,7 @@ import {
   AUTO_DOC_FORMATS,
   AUTO_DOC_EMAIL_STATES,
   autoDocGenerations,
+  autoDocGenerationOrigins,
   autoDocFormVersions,
   autoDocs,
   contracts,
@@ -215,18 +216,13 @@ async function fillGeneration(
       answers: generation.answers,
       displayValues: generation.displayValues,
     });
-    const fileRef = await app.storage.put(
-      generationDocxKey(generation.id),
-      Readable.from([output]),
-    );
-    // The cleanup list stays the live array rather than a copy of it.
-    // The Contract Document's own blob is pushed below, after this call
-    // has taken the list, and a rollback has to remove that one too.
-    const stored = [fileRef];
+    const stored: string[] = [];
     await withStoredBlobs(app.storage, log, stored, async () => {
       await app.notifier.notifying(async (tx) => {
         const [held] = await tx.select().from(autoDocGenerations).where(current).for("update");
         if (!held) throw new AutoDocFillError("This fill attempt has been replaced.");
+        const fileRef = await app.storage.put(generationDocxKey(generation.id), Readable.from([output]));
+        stored.push(fileRef);
         if (held.contractSnapshot && !held.createdContractId) {
           stage = "contract";
           const documentId = uuidv7();
@@ -343,9 +339,11 @@ export async function generateAutoDoc(
         throw httpError(403, "Choose a Filing destination from the app.");
       await reachedFilingDestination(tx, user, requestedFiling.destination, false);
     }
+    const [origin] = await tx.insert(autoDocGenerationOrigins).values({}).returning();
     const [generation] = await tx
       .insert(autoDocGenerations)
       .values({
+        id: origin!.id,
         autoDocId: live.autoDoc.id,
         ...live.pair,
         generatedBy: user.id,

@@ -3012,6 +3012,14 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ name: text(payload, "name") ?? thingName(intl, payload) }),
   },
+  "auto_doc.hard_deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.autoDoc.hardDeleted",
+      defaultMessage: "{actor} permanently deleted an Auto-Doc, {versionCount, plural, one {# template version} other {# template versions}}, and {generationCount, plural, one {# Generation} other {# Generations}}",
+    }),
+    values: (_intl, payload) => ({ versionCount: wholeCount(payload, "versionCount"), generationCount: wholeCount(payload, "generationCount") }),
+  },
   "auto_doc.archived": {
     icon: Archive,
     message: defineMessage({
