@@ -5145,9 +5145,837 @@
                         "required": ["id", "name"],
                         "additionalProperties": false
                       }
+                    },
+                    "legalOwners": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["catalogFields", "contractTypes", "entities"],
+                  "required": ["catalogFields", "contractTypes", "entities", "legalOwners"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auto-docs/{id}/assignment-rules": {
+      "put": {
+        "operationId": "saveAutoDocAssignmentRules",
+        "tags": ["auto-docs"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rules": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "fieldSlug": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                        },
+                        "operator": {
+                          "type": "string",
+                          "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "maxLength": 4000
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                }
+                              ]
+                            },
+                            {
+                              "minItems": 1,
+                              "type": "array",
+                              "items": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "legalOwnerId": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": ["fieldSlug", "operator", "value", "legalOwnerId"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "defaultLegalOwnerId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["rules", "defaultLegalOwnerId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "autoDoc": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "formats": {
+                          "type": "string",
+                          "enum": ["docx", "pdf", "both"]
+                        },
+                        "coverNote": {
+                          "type": ["string", "null"]
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": ["draft", "published", "archived"]
+                        },
+                        "templateDocumentId": {
+                          "type": ["string", "null"]
+                        },
+                        "audience": {
+                          "type": "string",
+                          "enum": ["legal_only", "selected", "everyone"]
+                        },
+                        "targetContractTypeId": {
+                          "type": ["string", "null"]
+                        },
+                        "titlePattern": {
+                          "type": ["string", "null"]
+                        },
+                        "fixedEntityId": {
+                          "type": ["string", "null"]
+                        },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
+                        "publishedDocumentVersionId": {
+                          "type": ["string", "null"]
+                        },
+                        "publishedFormVersionId": {
+                          "type": ["string", "null"]
+                        },
+                        "publishedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "description",
+                        "formats",
+                        "coverNote",
+                        "state",
+                        "templateDocumentId",
+                        "audience",
+                        "targetContractTypeId",
+                        "titlePattern",
+                        "fixedEntityId",
+                        "defaultLegalOwnerId",
+                        "publishedDocumentVersionId",
+                        "publishedFormVersionId",
+                        "publishedAt",
+                        "archivedAt",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "template": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "versions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "originalFilename": {
+                                    "type": "string"
+                                  },
+                                  "byteSize": {
+                                    "type": "number"
+                                  },
+                                  "createdAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "versionNumber",
+                                  "originalFilename",
+                                  "byteSize",
+                                  "createdAt"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": ["id", "title", "versions"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "detection": {
+                      "type": "object",
+                      "properties": {
+                        "placeholders": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "blocks": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": ["placeholders", "blocks"],
+                      "additionalProperties": false
+                    },
+                    "formVersion": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "versionNumber": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "definition": {
+                              "type": "object",
+                              "properties": {
+                                "fields": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "slug": {
+                                        "type": "string"
+                                      },
+                                      "label": {
+                                        "type": "string"
+                                      },
+                                      "help": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "fieldType": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "long_text",
+                                          "number",
+                                          "currency",
+                                          "date",
+                                          "boolean",
+                                          "single_select",
+                                          "multi_select",
+                                          "entity"
+                                        ]
+                                      },
+                                      "options": {
+                                        "anyOf": [
+                                          {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "required": {
+                                        "type": "boolean"
+                                      },
+                                      "displayOrder": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "placeholder": {
+                                        "type": "boolean"
+                                      },
+                                      "catalogFieldId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "contractAttribute": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "title",
+                                              "primary_counterparty_name",
+                                              "entity_id",
+                                              "owning_department_id",
+                                              "region",
+                                              "value",
+                                              "effective_date",
+                                              "expiry_date",
+                                              "term_type"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "valueCurrency": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "valueCadence": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": ["one_time", "monthly", "annually"]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "slug",
+                                      "label",
+                                      "help",
+                                      "fieldType",
+                                      "options",
+                                      "required",
+                                      "displayOrder",
+                                      "placeholder",
+                                      "catalogFieldId",
+                                      "contractAttribute"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "clauseRules": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "fieldSlug": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                                      },
+                                      "operator": {
+                                        "type": "string",
+                                        "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                                      },
+                                      "value": {
+                                        "anyOf": [
+                                          {
+                                            "anyOf": [
+                                              {
+                                                "type": "string",
+                                                "maxLength": 4000
+                                              },
+                                              {
+                                                "type": "number"
+                                              },
+                                              {
+                                                "type": "boolean"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "minItems": 1,
+                                            "type": "array",
+                                            "items": {
+                                              "anyOf": [
+                                                {
+                                                  "type": "string",
+                                                  "maxLength": 4000
+                                                },
+                                                {
+                                                  "type": "number"
+                                                },
+                                                {
+                                                  "type": "boolean"
+                                                }
+                                              ]
+                                            }
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                                      }
+                                    },
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": ["fields", "clauseRules"],
+                              "additionalProperties": false
+                            },
+                            "createdBy": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "versionNumber",
+                            "definition",
+                            "createdBy",
+                            "createdAt"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "formVersions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "versionNumber": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "definition": {
+                            "type": "object",
+                            "properties": {
+                              "fields": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "slug": {
+                                      "type": "string"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "help": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "fieldType": {
+                                      "type": "string",
+                                      "enum": [
+                                        "text",
+                                        "long_text",
+                                        "number",
+                                        "currency",
+                                        "date",
+                                        "boolean",
+                                        "single_select",
+                                        "multi_select",
+                                        "entity"
+                                      ]
+                                    },
+                                    "options": {
+                                      "anyOf": [
+                                        {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "required": {
+                                      "type": "boolean"
+                                    },
+                                    "displayOrder": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "placeholder": {
+                                      "type": "boolean"
+                                    },
+                                    "catalogFieldId": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "contractAttribute": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "title",
+                                            "primary_counterparty_name",
+                                            "entity_id",
+                                            "owning_department_id",
+                                            "region",
+                                            "value",
+                                            "effective_date",
+                                            "expiry_date",
+                                            "term_type"
+                                          ]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "valueCurrency": {
+                                      "type": ["string", "null"]
+                                    },
+                                    "valueCadence": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": ["one_time", "monthly", "annually"]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "slug",
+                                    "label",
+                                    "help",
+                                    "fieldType",
+                                    "options",
+                                    "required",
+                                    "displayOrder",
+                                    "placeholder",
+                                    "catalogFieldId",
+                                    "contractAttribute"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "clauseRules": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "fieldSlug": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                                    },
+                                    "operator": {
+                                      "type": "string",
+                                      "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                                    },
+                                    "value": {
+                                      "anyOf": [
+                                        {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "maxLength": 4000
+                                            },
+                                            {
+                                              "type": "number"
+                                            },
+                                            {
+                                              "type": "boolean"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "minItems": 1,
+                                          "type": "array",
+                                          "items": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string",
+                                                "maxLength": 4000
+                                              },
+                                              {
+                                                "type": "number"
+                                              },
+                                              {
+                                                "type": "boolean"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                                    }
+                                  },
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": ["fields", "clauseRules"],
+                            "additionalProperties": false
+                          },
+                          "createdBy": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": ["id", "versionNumber", "definition", "createdBy", "createdAt"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "orphanedFields": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "autoDoc",
+                    "assignmentRules",
+                    "template",
+                    "detection",
+                    "formVersion",
+                    "formVersions",
+                    "orphanedFields"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -5309,6 +6137,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -5362,6 +6193,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -5370,6 +6202,82 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "template": {
                       "anyOf": [
@@ -5572,10 +6480,6 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
-                                      "blockName": {
-                                        "type": "string",
-                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                      },
                                       "fieldSlug": {
                                         "type": "string",
                                         "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -5622,9 +6526,13 @@
                                             "type": "null"
                                           }
                                         ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                       }
                                     },
-                                    "required": ["blockName", "fieldSlug", "operator", "value"],
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
                                     "additionalProperties": false
                                   }
                                 }
@@ -5782,10 +6690,6 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "blockName": {
-                                      "type": "string",
-                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                    },
                                     "fieldSlug": {
                                       "type": "string",
                                       "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -5832,9 +6736,13 @@
                                           "type": "null"
                                         }
                                       ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                     }
                                   },
-                                  "required": ["blockName", "fieldSlug", "operator", "value"],
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
                                   "additionalProperties": false
                                 }
                               }
@@ -5864,6 +6772,7 @@
                   },
                   "required": [
                     "autoDoc",
+                    "assignmentRules",
                     "template",
                     "detection",
                     "formVersion",
@@ -5948,6 +6857,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -6001,6 +6913,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -6009,6 +6922,82 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "template": {
                       "anyOf": [
@@ -6211,10 +7200,6 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
-                                      "blockName": {
-                                        "type": "string",
-                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                      },
                                       "fieldSlug": {
                                         "type": "string",
                                         "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -6261,9 +7246,13 @@
                                             "type": "null"
                                           }
                                         ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                       }
                                     },
-                                    "required": ["blockName", "fieldSlug", "operator", "value"],
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
                                     "additionalProperties": false
                                   }
                                 }
@@ -6421,10 +7410,6 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "blockName": {
-                                      "type": "string",
-                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                    },
                                     "fieldSlug": {
                                       "type": "string",
                                       "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -6471,9 +7456,13 @@
                                           "type": "null"
                                         }
                                       ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                     }
                                   },
-                                  "required": ["blockName", "fieldSlug", "operator", "value"],
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
                                   "additionalProperties": false
                                 }
                               }
@@ -6503,6 +7492,7 @@
                   },
                   "required": [
                     "autoDoc",
+                    "assignmentRules",
                     "template",
                     "detection",
                     "formVersion",
@@ -6704,6 +7694,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -6757,6 +7750,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -6765,6 +7759,82 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "template": {
                       "anyOf": [
@@ -6967,10 +8037,6 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
-                                      "blockName": {
-                                        "type": "string",
-                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                      },
                                       "fieldSlug": {
                                         "type": "string",
                                         "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -7017,9 +8083,13 @@
                                             "type": "null"
                                           }
                                         ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                       }
                                     },
-                                    "required": ["blockName", "fieldSlug", "operator", "value"],
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
                                     "additionalProperties": false
                                   }
                                 }
@@ -7177,10 +8247,6 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "blockName": {
-                                      "type": "string",
-                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                    },
                                     "fieldSlug": {
                                       "type": "string",
                                       "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -7227,9 +8293,13 @@
                                           "type": "null"
                                         }
                                       ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                     }
                                   },
-                                  "required": ["blockName", "fieldSlug", "operator", "value"],
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
                                   "additionalProperties": false
                                 }
                               }
@@ -7259,6 +8329,7 @@
                   },
                   "required": [
                     "autoDoc",
+                    "assignmentRules",
                     "template",
                     "detection",
                     "formVersion",
@@ -7357,6 +8428,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -7410,6 +8484,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -7418,6 +8493,82 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "template": {
                       "anyOf": [
@@ -7620,10 +8771,6 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
-                                      "blockName": {
-                                        "type": "string",
-                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                      },
                                       "fieldSlug": {
                                         "type": "string",
                                         "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -7670,9 +8817,13 @@
                                             "type": "null"
                                           }
                                         ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                       }
                                     },
-                                    "required": ["blockName", "fieldSlug", "operator", "value"],
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
                                     "additionalProperties": false
                                   }
                                 }
@@ -7830,10 +8981,6 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "blockName": {
-                                      "type": "string",
-                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                    },
                                     "fieldSlug": {
                                       "type": "string",
                                       "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -7880,9 +9027,13 @@
                                           "type": "null"
                                         }
                                       ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                     }
                                   },
-                                  "required": ["blockName", "fieldSlug", "operator", "value"],
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
                                   "additionalProperties": false
                                 }
                               }
@@ -7912,6 +9063,7 @@
                   },
                   "required": [
                     "autoDoc",
+                    "assignmentRules",
                     "template",
                     "detection",
                     "formVersion",
@@ -8010,6 +9162,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -8063,6 +9218,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -8071,6 +9227,82 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "template": {
                       "anyOf": [
@@ -8273,10 +9505,6 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
-                                      "blockName": {
-                                        "type": "string",
-                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                      },
                                       "fieldSlug": {
                                         "type": "string",
                                         "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -8323,9 +9551,13 @@
                                             "type": "null"
                                           }
                                         ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                       }
                                     },
-                                    "required": ["blockName", "fieldSlug", "operator", "value"],
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
                                     "additionalProperties": false
                                   }
                                 }
@@ -8483,10 +9715,6 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "blockName": {
-                                      "type": "string",
-                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                    },
                                     "fieldSlug": {
                                       "type": "string",
                                       "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -8533,9 +9761,13 @@
                                           "type": "null"
                                         }
                                       ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                     }
                                   },
-                                  "required": ["blockName", "fieldSlug", "operator", "value"],
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
                                   "additionalProperties": false
                                 }
                               }
@@ -8565,6 +9797,7 @@
                   },
                   "required": [
                     "autoDoc",
+                    "assignmentRules",
                     "template",
                     "detection",
                     "formVersion",
@@ -8663,6 +9896,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -8716,6 +9952,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -8724,6 +9961,82 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "template": {
                       "anyOf": [
@@ -8926,10 +10239,6 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
-                                      "blockName": {
-                                        "type": "string",
-                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                      },
                                       "fieldSlug": {
                                         "type": "string",
                                         "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -8976,9 +10285,13 @@
                                             "type": "null"
                                           }
                                         ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                       }
                                     },
-                                    "required": ["blockName", "fieldSlug", "operator", "value"],
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
                                     "additionalProperties": false
                                   }
                                 }
@@ -9136,10 +10449,6 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "blockName": {
-                                      "type": "string",
-                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                    },
                                     "fieldSlug": {
                                       "type": "string",
                                       "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -9186,9 +10495,13 @@
                                           "type": "null"
                                         }
                                       ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                     }
                                   },
-                                  "required": ["blockName", "fieldSlug", "operator", "value"],
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
                                   "additionalProperties": false
                                 }
                               }
@@ -9218,6 +10531,7 @@
                   },
                   "required": [
                     "autoDoc",
+                    "assignmentRules",
                     "template",
                     "detection",
                     "formVersion",
@@ -9334,6 +10648,9 @@
                           "fixedEntityId": {
                             "type": ["string", "null"]
                           },
+                          "defaultLegalOwnerId": {
+                            "type": ["string", "null"]
+                          },
                           "publishedDocumentVersionId": {
                             "type": ["string", "null"]
                           },
@@ -9387,6 +10704,7 @@
                           "targetContractTypeId",
                           "titlePattern",
                           "fixedEntityId",
+                          "defaultLegalOwnerId",
                           "publishedDocumentVersionId",
                           "publishedFormVersionId",
                           "publishedAt",
@@ -9497,6 +10815,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -9550,6 +10871,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -9658,6 +10980,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -9711,6 +11036,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -9719,6 +11045,82 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "template": {
                       "anyOf": [
@@ -9921,10 +11323,6 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
-                                      "blockName": {
-                                        "type": "string",
-                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                      },
                                       "fieldSlug": {
                                         "type": "string",
                                         "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -9971,9 +11369,13 @@
                                             "type": "null"
                                           }
                                         ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                       }
                                     },
-                                    "required": ["blockName", "fieldSlug", "operator", "value"],
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
                                     "additionalProperties": false
                                   }
                                 }
@@ -10131,10 +11533,6 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "blockName": {
-                                      "type": "string",
-                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                    },
                                     "fieldSlug": {
                                       "type": "string",
                                       "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -10181,9 +11579,13 @@
                                           "type": "null"
                                         }
                                       ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                     }
                                   },
-                                  "required": ["blockName", "fieldSlug", "operator", "value"],
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
                                   "additionalProperties": false
                                 }
                               }
@@ -10213,6 +11615,7 @@
                   },
                   "required": [
                     "autoDoc",
+                    "assignmentRules",
                     "template",
                     "detection",
                     "formVersion",
@@ -10370,10 +11773,6 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "blockName": {
-                          "type": "string",
-                          "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                        },
                         "fieldSlug": {
                           "type": "string",
                           "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -10420,9 +11819,13 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "blockName": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]{0,119}$"
                         }
                       },
-                      "required": ["blockName", "fieldSlug", "operator", "value"],
+                      "required": ["fieldSlug", "operator", "value", "blockName"],
                       "additionalProperties": false
                     }
                   }
@@ -10490,6 +11893,9 @@
                         "fixedEntityId": {
                           "type": ["string", "null"]
                         },
+                        "defaultLegalOwnerId": {
+                          "type": ["string", "null"]
+                        },
                         "publishedDocumentVersionId": {
                           "type": ["string", "null"]
                         },
@@ -10543,6 +11949,7 @@
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
+                        "defaultLegalOwnerId",
                         "publishedDocumentVersionId",
                         "publishedFormVersionId",
                         "publishedAt",
@@ -10551,6 +11958,82 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "assignmentRules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,119}$"
+                          },
+                          "operator": {
+                            "type": "string",
+                            "enum": ["equals", "is_one_of", "is_set", "is_not"]
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 4000
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              },
+                              {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 4000
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "legalOwnerId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "fieldSlug",
+                          "operator",
+                          "value",
+                          "id",
+                          "legalOwnerId",
+                          "displayOrder"
+                        ],
+                        "additionalProperties": false
+                      }
                     },
                     "template": {
                       "anyOf": [
@@ -10753,10 +12236,6 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
-                                      "blockName": {
-                                        "type": "string",
-                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                      },
                                       "fieldSlug": {
                                         "type": "string",
                                         "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -10803,9 +12282,13 @@
                                             "type": "null"
                                           }
                                         ]
+                                      },
+                                      "blockName": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                       }
                                     },
-                                    "required": ["blockName", "fieldSlug", "operator", "value"],
+                                    "required": ["fieldSlug", "operator", "value", "blockName"],
                                     "additionalProperties": false
                                   }
                                 }
@@ -10963,10 +12446,6 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
-                                    "blockName": {
-                                      "type": "string",
-                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
-                                    },
                                     "fieldSlug": {
                                       "type": "string",
                                       "pattern": "^[a-z][a-z0-9_]{0,119}$"
@@ -11013,9 +12492,13 @@
                                           "type": "null"
                                         }
                                       ]
+                                    },
+                                    "blockName": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]{0,119}$"
                                     }
                                   },
-                                  "required": ["blockName", "fieldSlug", "operator", "value"],
+                                  "required": ["fieldSlug", "operator", "value", "blockName"],
                                   "additionalProperties": false
                                 }
                               }
@@ -11045,6 +12528,7 @@
                   },
                   "required": [
                     "autoDoc",
+                    "assignmentRules",
                     "template",
                     "detection",
                     "formVersion",
@@ -33093,6 +34577,186 @@
                     }
                   },
                   "required": ["types", "people"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inbox/unassigned-contracts": {
+      "get": {
+        "operationId": "listUnassignedContracts",
+        "tags": ["inbox"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "contracts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "number": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "autoDoc": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "name"],
+                            "additionalProperties": false
+                          },
+                          "generator": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["id", "number", "title", "createdAt", "autoDoc", "generator"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["total", "contracts", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inbox/unassigned-contracts/{number}/claim": {
+      "post": {
+        "operationId": "claimUnassignedContract",
+        "tags": ["inbox"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "number": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "title": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id", "number", "title"],
                   "additionalProperties": false
                 }
               }

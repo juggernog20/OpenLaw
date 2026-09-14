@@ -92,6 +92,7 @@ export const autoDocUploadAnswer = z.object({
     targetContractTypeId: z.string().nullable(),
     titlePattern: z.string().nullable(),
     fixedEntityId: z.string().nullable(),
+    defaultLegalOwnerId: z.string().nullable(),
     publishedDocumentVersionId: z.string().nullable(),
     publishedFormVersionId: z.string().nullable(),
     publishedAt: z.string().nullable(),
@@ -99,6 +100,11 @@ export const autoDocUploadAnswer = z.object({
     createdAt: z.string(),
     updatedAt: z.string(),
   }),
+  assignmentRules: z.array(
+    autoDocClauseRule
+      .omit({ blockName: true })
+      .extend({ id: z.string(), displayOrder: z.number().int(), legalOwnerId: z.string() }),
+  ),
   template: z
     .object({
       id: z.string(),

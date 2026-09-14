@@ -188,6 +188,20 @@ const ARMS: Readonly<Record<string, Arm>> = {
         "{hasActor, select, yes {{actor} added you to the Contract team for {contract}} other {You were added to the Contract team for {contract}}}",
     }),
   },
+  "contract.generated": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "notifications.contract.generated",
+      defaultMessage: "{actor} generated {contract} from {autoDoc} and you are its Legal Owner",
+    }),
+  },
+  "contract.generated_unassigned": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "notifications.contract.generatedUnassigned",
+      defaultMessage: "{actor} generated {contract} from {autoDoc}; it needs a Legal Owner",
+    }),
+  },
   "contract.owner_assigned": {
     icon: UserPlus,
     message: defineMessage({
@@ -601,6 +615,7 @@ export function narrateNotification(
       // The same `label` key under the noun a Key date's sentence uses,
       // on the `contract`/`request` rule two lines up.
       keyDate: text(item.payload, "label") ?? intl.formatMessage(UNNAMED_KEY_DATE),
+      autoDoc: text(item.payload, "autoDocName") ?? "",
       actor: actor ?? "",
       // Every arm gets these whether or not its sentence selects on
       // them.

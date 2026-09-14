@@ -14,6 +14,7 @@ import {
   inArray,
   fields as catalogFields,
   type AutoDocFormDefinition,
+  type AutoDocCondition,
   type AutoDocFormField,
   type Executor,
   type Transaction,
@@ -64,9 +65,8 @@ export const FormFieldInput = z
       });
   });
 const RuleScalar = z.union([z.string().max(4000), z.number().finite(), z.boolean()]);
-export const ClauseRuleInput = z
+export const ConditionInput = z
   .strictObject({
-    blockName: z.string().regex(AUTO_DOC_SLUG),
     fieldSlug: z.string().regex(AUTO_DOC_SLUG),
     operator: z.enum(AUTO_DOC_RULE_OPERATORS),
     value: z.union([RuleScalar, z.array(RuleScalar).min(1), z.null()]),
@@ -86,6 +86,9 @@ export const ClauseRuleInput = z
           "Use no value for is set, a list for is one of, and one value for equals or is not.",
       });
   });
+export const ClauseRuleInput = ConditionInput.safeExtend({
+  blockName: z.string().regex(AUTO_DOC_SLUG),
+});
 export const FormSaveInput = z
   .strictObject({
     fields: z.array(FormFieldInput),
@@ -149,6 +152,35 @@ function directiveNeeds(
   return null;
 }
 
+export function conditionGaps(
+  definition: AutoDocFormDefinition,
+  rule: AutoDocCondition,
+  label: string,
+): string[] {
+  const gaps: string[] = [];
+  const field = definition.fields.find((field) => field.slug === rule.fieldSlug);
+  if (!field) gaps.push(`${label} names missing form field "${rule.fieldSlug}".`);
+  else if (field.options && rule.operator !== "is_set") {
+    const values = Array.isArray(rule.value) ? rule.value : [rule.value];
+    for (const value of values)
+      if (typeof value !== "string" || !field.options.includes(value))
+        gaps.push(
+          `${label} names option "${String(value)}" that "${field.label}" no longer holds.`,
+        );
+  } else if (rule.operator !== "is_set") {
+    const values = Array.isArray(rule.value) ? rule.value : [rule.value];
+    const expected =
+      field.fieldType === "number" || field.fieldType === "currency"
+        ? "number"
+        : field.fieldType === "boolean"
+          ? "boolean"
+          : "string";
+    if (values.some((value) => typeof value !== expected))
+      gaps.push(`${label} needs ${expected} values for "${field.label}".`);
+  }
+  return gaps;
+}
+
 export function publicationGaps(
   definition: AutoDocFormDefinition,
   detection: TemplateDetection,
@@ -160,27 +192,7 @@ export function publicationGaps(
   for (const rule of definition.clauseRules ?? []) {
     if (!detection.blocks.includes(rule.blockName))
       gaps.push(`Clause rule "${rule.blockName}" names a Block this file does not hold.`);
-    const field = fields.get(rule.fieldSlug);
-    if (!field)
-      gaps.push(`Clause rule "${rule.blockName}" names missing form field "${rule.fieldSlug}".`);
-    else if (field.options && rule.operator !== "is_set") {
-      const values = Array.isArray(rule.value) ? rule.value : [rule.value];
-      for (const value of values)
-        if (typeof value !== "string" || !field.options.includes(value))
-          gaps.push(
-            `Clause rule "${rule.blockName}" names option "${String(value)}" that "${field.label}" no longer holds.`,
-          );
-    } else if (rule.operator !== "is_set") {
-      const values = Array.isArray(rule.value) ? rule.value : [rule.value];
-      const expected =
-        field.fieldType === "number" || field.fieldType === "currency"
-          ? "number"
-          : field.fieldType === "boolean"
-            ? "boolean"
-            : "string";
-      if (values.some((value) => typeof value !== expected))
-        gaps.push(`Clause rule "${rule.blockName}" needs ${expected} values for "${field.label}".`);
-    }
+    gaps.push(...conditionGaps(definition, rule, `Clause rule "${rule.blockName}"`));
   }
   // Scans saved before directives were detected hold none, so they add no gap.
   for (const { slug, directive } of detection.directives ?? []) {

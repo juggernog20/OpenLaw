@@ -105,6 +105,8 @@ export function generationDefinition(
   };
 }
 
+import { chooseLegalOwner } from "./assignment.js";
+
 export async function prepareContractDestination(
   tx: Transaction,
   user: AuthenticatedUser,
@@ -252,6 +254,7 @@ export async function prepareContractDestination(
     title,
     entityId,
     businessOwnerId,
+    legalOwnerId: await chooseLegalOwner(tx, autoDoc, definition, answers),
     owningDepartmentId,
     region: text("region"),
     primaryCounterpartyName: counterparty,

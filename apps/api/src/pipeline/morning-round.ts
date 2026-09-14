@@ -114,6 +114,7 @@ import {
 } from "../lib/notifications/briefing-template.js";
 import { localMoment, morningHasArrived } from "../lib/notifications/local-day.js";
 import type { Notifier } from "../lib/notifications/notifier.js";
+import { inboxAudience } from "../lib/notifications/audience.js";
 import { reminderOffsets } from "../lib/notifications/offsets.js";
 import { briefingChoices, channelChoices } from "../lib/notifications/preferences.js";
 import { readApprovalsHomeSection } from "../modules/home/sections/approvals.js";
@@ -488,16 +489,35 @@ async function raiseReminders(
     // A record that went while the round was running is about nobody.
     if (!audience) continue;
     const defaultUserIds = audience.userIds.filter((userId) => inCohort.has(userId));
-    if (defaultUserIds.length === 0) continue;
 
     try {
       written += await deps.notifier.notifying(async (tx) => {
+        const [contract] =
+          first.entityType === CONTRACT_ENTITY
+            ? await tx
+                .select({
+                  managerId: contracts.managerId,
+                  generated: contracts.createdByGenerationId,
+                })
+                .from(contracts)
+                .where(eq(contracts.id, first.entityId))
+                .for("share")
+            : [];
+        // ADO-006: generated term dates wait with Legal until someone claims the Contract.
+        const termUserIds = contract?.generated
+          ? (contract.managerId ? [contract.managerId] : await inboxAudience(tx)).filter((id) =>
+              inCohort.has(id),
+            )
+          : defaultUserIds;
         let rows = 0;
         for (const date of dates) {
           const selected =
             date.eventType === "date.key_date_approaching" ? date.reminderRecipientIds : [];
           // Explicit selections narrow the current team; a removed person is never re-added.
-          const userIds = selectedKeyDateRecipients(defaultUserIds, selected);
+          const userIds =
+            date.eventType === "date.key_date_approaching"
+              ? selectedKeyDateRecipients(defaultUserIds, selected)
+              : termUserIds;
           if (userIds.length === 0) continue;
           if (date.entityType === MATTER_ENTITY) {
             if (date.eventType !== "date.key_date_approaching" || !("matterNumber" in audience)) {
