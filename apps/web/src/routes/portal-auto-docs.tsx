@@ -190,6 +190,44 @@ function toDraft(answers: Record<string, unknown> | undefined): Draft {
     ]),
   );
 }
+type PreviousAnswer = { label: string; value: string };
+/**
+ * Keeps each draft answer the current form can still show. An answer
+ * whose field, type, option, or Entity choice has gone is dropped and
+ * reported under its old label, so the person sees what to re-enter.
+ * The first load has no earlier form, so a field the form no longer has
+ * is dropped without a label.
+ */
+function reconcile(draft: Draft, previous: Form | null, current: Form) {
+  const retained = { ...draft };
+  const dropped: PreviousAnswer[] = [];
+  for (const [slug, value] of Object.entries(draft)) {
+    const old = previous?.fields.find((field) => field.slug === slug);
+    const field = current.fields.find((field) => field.slug === slug);
+    const choices = Array.isArray(value) ? value : [value];
+    const compatible =
+      field &&
+      (!old || old.fieldType === field.fieldType) &&
+      (!["single_select", "multi_select"].includes(field.fieldType) ||
+        choices.every((choice) => !choice || field.options?.includes(choice))) &&
+      (field.fieldType !== "entity" ||
+        !value ||
+        current.entities.some((entity) => entity.id === value));
+    if (compatible) continue;
+    delete retained[slug];
+    const label = old?.label ?? field?.label;
+    if (label && choices.some(Boolean))
+      dropped.push({
+        label,
+        value:
+          (old ?? field)!.fieldType === "entity"
+            ? ((previous ?? current).entities.find((entity) => entity.id === value)?.name ??
+              String(value))
+            : choices.join(", "),
+      });
+  }
+  return { retained, dropped };
+}
 export function PortalAutoDocGeneratePage() {
   const loaded = useLoaderData<typeof portalAutoDocGenerateLoader>();
   // Each Auto-Doc owns its draft, even when navigation reuses this route component.
@@ -201,11 +239,15 @@ function PortalAutoDocForm({
   loaded: Exclude<Awaited<ReturnType<typeof portalAutoDocGenerateLoader>>, Response>;
 }) {
   const [data, setData] = useState(loaded.data);
-  const [draft, setDraft] = useState<Draft>(() => toDraft(loaded.answers));
+  const [initial] = useState(() => {
+    const saved = toDraft(loaded.answers);
+    return loaded.data?.form
+      ? reconcile(saved, null, loaded.data.form)
+      : { retained: saved, dropped: [] as PreviousAnswer[] };
+  });
+  const [draft, setDraft] = useState<Draft>(initial.retained);
   const [lastForm, setLastForm] = useState<Form | null>(loaded.data?.form ?? null);
-  const [previousAnswers, setPreviousAnswers] = useState<Array<{ label: string; value: string }>>(
-    [],
-  );
+  const [previousAnswers, setPreviousAnswers] = useState<PreviousAnswer[]>(initial.dropped);
   const [acknowledgementId, setAcknowledgementId] = useState<string>();
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -238,35 +280,10 @@ function PortalAutoDocForm({
     setData(next);
     setChecked(false);
     if (!next.form) return;
-    const current = next.form;
-    const retained = { ...draft };
-    const previous: typeof previousAnswers = [];
-    for (const [slug, value] of Object.entries(draft)) {
-      const old = lastForm?.fields.find((field) => field.slug === slug);
-      const field = current.fields.find((field) => field.slug === slug);
-      const choices = Array.isArray(value) ? value : [value];
-      const compatible =
-        field &&
-        (!old || old.fieldType === field.fieldType) &&
-        (!["single_select", "multi_select"].includes(field.fieldType) ||
-          choices.every((choice) => !choice || field.options?.includes(choice))) &&
-        (field.fieldType !== "entity" ||
-          !value ||
-          current.entities.some((entity) => entity.id === value));
-      if (compatible) continue;
-      delete retained[slug];
-      if (old && choices.some(Boolean))
-        previous.push({
-          label: old.label,
-          value:
-            old.fieldType === "entity"
-              ? (lastForm?.entities.find((entity) => entity.id === value)?.name ?? String(value))
-              : choices.join(", "),
-        });
-    }
+    const { retained, dropped } = reconcile(draft, lastForm, next.form);
     setDraft(retained);
-    if (previous.length) setPreviousAnswers((saved) => [...saved, ...previous]);
-    setLastForm(current);
+    if (dropped.length) setPreviousAnswers((saved) => [...saved, ...dropped]);
+    setLastForm(next.form);
   }
   async function refresh(id = acknowledgementId) {
     setBusy(true);

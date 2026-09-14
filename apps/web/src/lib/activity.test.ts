@@ -1499,6 +1499,31 @@ it("names an Auto-Doc's selected audience and target Contract Type in History", 
     { label: "Target Contract Type", from: "Not set", to: "Supplier NDA Type" },
   ]);
   expect(
+    narrate("auto_doc.updated", {
+      name: "Supplier NDA",
+      changed: {
+        audienceUsers: { from: null, to: "Buyer" },
+        audienceDepartments: { from: "Sales", to: "Sales, Finance" },
+        acknowledgementFrequency: { from: "once_per_auto_doc", to: "every_use" },
+        acknowledgementText: { from: null, to: "Do not edit." },
+      },
+    }).changes,
+  ).toEqual([
+    { label: "Selected people", from: "Not set", to: "Buyer" },
+    { label: "Selected Departments", from: "Sales", to: "Sales, Finance" },
+    { label: "Acknowledgement frequency", from: "Once per Auto-Doc", to: "Every use" },
+    { label: "Acknowledgement text", from: "Not set", to: "Do not edit." },
+  ]);
+  expect(
+    narrate("org_settings.updated", {
+      field: "autoDocAcknowledgementText",
+      old: "Do not edit.",
+      new: "Ask Legal first.",
+    }).changes,
+  ).toEqual([
+    { label: "Default acknowledgement text", from: "Do not edit.", to: "Ask Legal first." },
+  ]);
+  expect(
     narrateActivity(
       intl,
       {

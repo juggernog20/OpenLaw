@@ -243,3 +243,39 @@ it("Generate again prefills owned answers and still shows the current acknowledg
   await userEvent.click(await screen.findByRole("link", { name: "Generate again" }));
   await screen.findByRole("heading", { name: "Before you generate" });
 });
+
+it("Generate again drops a saved Entity the current form cannot show and names it as a previous answer", async () => {
+  let posted: unknown;
+  stubApi({
+    signedIn: person,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations/gen1"))
+        return json(200, {
+          generation: { ...generation, answers: { counterparty: "Acme", entity: "gone" } },
+          canGenerate: true,
+        });
+      if (call.url.pathname.endsWith("/generate"))
+        return json(200, {
+          autoDoc,
+          availability,
+          acknowledgement: { ...acknowledgement, required: false },
+          form,
+        });
+      if (call.method === "POST" && call.url.pathname.endsWith("/generations")) {
+        posted = call.body;
+        return json(201, { generation });
+      }
+      return undefined;
+    },
+  });
+  const user = userEvent.setup();
+  renderAt("/portal/auto-docs/nda/generate?from=gen1");
+  expect(await screen.findByRole("textbox", { name: "Counterparty" })).toHaveValue("Acme");
+  expect(screen.getByRole("combobox", { name: "Entity" })).toHaveValue("");
+  expect(screen.getByRole("heading", { name: "Previous answers" })).toBeInTheDocument();
+  expect(screen.getByText("gone")).toBeInTheDocument();
+  await user.selectOptions(screen.getByRole("combobox", { name: "Entity" }), "entity1");
+  await user.click(screen.getByRole("button", { name: "Generate" }));
+  await screen.findByRole("heading", { name: "Your generated document", level: 1 });
+  expect(posted).toMatchObject({ answers: { counterparty: "Acme", entity: "entity1" } });
+});

@@ -385,6 +385,9 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "registrationId {Registration} recurrenceMonths {Repeat every (months)} " +
         "nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} " +
         "audience {Audience} url {Address} target {Target} " +
+        "audienceUsers {Selected people} audienceDepartments {Selected Departments} " +
+        "acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} " +
+        "autoDocAcknowledgementText {Default acknowledgement text} " +
         "other {{key}}}",
     },
     { key },
@@ -458,6 +461,20 @@ function changeValue(
     });
   if (key === "audience" && (value === "legal_only" || value === "everyone")) {
     return knowledgeAudienceLabel(intl, value);
+  }
+  // ADO-008's frequency is a stored slug, so the feed says "Every use"
+  // where the column says `every_use`. Its `other` arm covers a value
+  // this build no longer has.
+  if (key === "acknowledgementFrequency") {
+    return intl.formatMessage(
+      {
+        id: "activity.autoDoc.acknowledgementFrequency",
+        defaultMessage:
+          "{frequency, select, none {None} every_use {Every use} " +
+          "once_per_auto_doc {Once per Auto-Doc} once {Once across Auto-Docs} other {{frequency}}}",
+      },
+      { frequency: value as string },
+    );
   }
   if (key === "kind") {
     return intl.formatMessage(
