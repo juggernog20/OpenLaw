@@ -33,17 +33,22 @@ export function UnassignedContractsPanel({
         params: { path: { number } },
         body: {},
       });
-      if (result.data)
+      // A Claim that went through says exactly what changed, so the row
+      // leaves in place and every page already shown stays shown. Only a
+      // refusal means this view is stale, and only then is it re-read.
+      if (result.data) {
         onChange({
           ...queue,
           contracts: queue.contracts.filter((row) => row.number !== number),
           total: Math.max(0, queue.total - 1),
         });
-      if (result.data || result.response.status === 409 || result.response.status === 404) {
+        return;
+      }
+      if (result.response.status === 409 || result.response.status === 404) {
         const refreshed = await api.GET("/api/v1/inbox/unassigned-contracts");
         if (refreshed.data) onChange(refreshed.data);
       }
-      if (!result.data) throw new Error(result.error?.detail ?? refused());
+      throw new Error(result.error?.detail ?? refused());
     } catch (error) {
       setError(error instanceof Error ? error.message : refused());
     } finally {

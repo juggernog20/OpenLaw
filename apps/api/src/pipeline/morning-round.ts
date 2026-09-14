@@ -489,6 +489,10 @@ async function raiseReminders(
     // A record that went while the round was running is about nobody.
     if (!audience) continue;
     const defaultUserIds = audience.userIds.filter((userId) => inCohort.has(userId));
+    // Only a Contract can widen past this audience, through the ADO-006
+    // fallback below. Everything else with nobody in the cohort writes no
+    // row, so it never needs the transaction.
+    if (defaultUserIds.length === 0 && first.entityType !== CONTRACT_ENTITY) continue;
 
     try {
       written += await deps.notifier.notifying(async (tx) => {
