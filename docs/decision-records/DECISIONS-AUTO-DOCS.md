@@ -90,6 +90,8 @@ Member+ can Publish a new pair, Unpublish, Archive, and Restore through separate
 
 **DES-087 addendum (2026-09-14, #874):** The form editor has no Save. Every field-card commit, reorder, add, removal, and Clause rule change writes one form version, as this record's "saving the editor writes a new draft form version" already allows. Form versions are chosen only in the Publish and Compare dialogs. Publish is a dialog from the record's sub-bar and lists every gap inside it.
 
+**ADO-012 addendum (2026-09-14, #873):** "Unpublish clears the pair and deletes nothing" holds for every lifecycle act. Administrator erasure is the one act that removes both chains. It destroys every file Version and every form version together with the Auto-Doc, so nothing is left to publish or to compare. It is the only path that can take a Version away.
+
 ## ADO-005 — Destinations: a Contract Type target creates a draft Contract; anything can be Filed afterwards
 
 - **Status** — Accepted
@@ -169,6 +171,8 @@ The Word download appears after fill when its saved formats allow Word. The deli
 
 Migration 0123 preserves older Word-only Generations with `formats = docx` and `email_state = not_requested`. It adds checks for the requested ready files and the email outcome. New submissions explicitly request email and copy today's formats, whose Auto-Doc default is both. The boot and scheduled recovery sweeps requeue saved work. A pending fill with no Word output after five minutes becomes failed so Legal can retry an interrupted request.
 
+**ADO-012 addendum (2026-09-14, #873):** The kept `.docx`, the derived `.pdf`, and the saved answers behind them are content, so Administrator erasure removes them with the Auto-Doc. The delivery worker, the PDF conversion, and retry take the Generation's row lock before they write, so a job queued before the erasure completes without recreating a file. The email already sent is outside this system and cannot be recalled.
+
 ## ADO-008 — Acknowledgement before use, by Business Users, at a configurable frequency
 
 - **Status** — Accepted
@@ -217,6 +221,8 @@ Migration 0123 preserves older Word-only Generations with `formats = docx` and `
 
 **M35/13 reconciliation (2026-09-14, #856):** ADO-005's earlier Inbox-bypass wording is superseded by the Unassigned contracts tab built in M35/10 (#853). No Request is created. ADO-009's lifecycle check distinguishes new use from owned history: Unpublish and Archive stop new Generations while preserving historical reads and Filing under current audience reach, as ADO-010 requires. Assignment configuration warnings appear for Legal-only Auto-Docs too. A failed Generation retains its saved Filing destination for retry but no longer presents the Filing as pending.
 
+**ADO-012 addendum (2026-09-14, #873):** Archive is retention. It hides the Auto-Doc and keeps every Generation readable, which is what makes it safe and what makes it the wrong answer to an erasure request. ADO-012 adds a fourth act beside Unpublish, Archive, and Restore: an Administrator-only erasure that removes the record and its content outright, reaches an archived Auto-Doc, and leaves created Contracts and Filed Documents standing on their own records.
+
 ## ADO-011 — Signature: a Generation is download-only; the created Contract takes the ordinary pipeline
 
 - **Status** — Accepted
@@ -226,6 +232,27 @@ Migration 0123 preserves older Word-only Generations with `formats = docx` and `
 - **Rationale** — Legal keeps control of when paper leaves the building. Everything a Business User needs to see afterwards, DD-023 already shows them.
 - **Alternatives considered** — Send for signature from the confirmation screen: hands a Business User an act CTR-013 reserves for Member+.
 - **Consequences** — None beyond ADO-005. CTR-013 is unchanged.
+
+## ADO-012 — Erasure: an Administrator deletes an Auto-Doc outright; independent records keep a content-free origin
+
+- **Status** — Accepted
+- **Date** — 2026-09-14
+- **Context** — The review of #872 found that an Auto-Doc's content could not reach DOC-010 permanent erasure. The generic Administrator Document delete refuses an Auto-Doc owner with 409 and says "Manage this template through its Auto-Doc.", and the Auto-Doc itself offered only ADO-010's Unpublish, Archive, and Restore. All three are retention: the source file, its extracted text and renditions, every saved answer, and every generated output stay. Archive is not erasure. A release that holds a Business User's typed answers with no way to remove them cannot answer a lawful erasure request, so this blocked M34.
+- **Decision** —
+  - **Erasure is its own Administrator-only act**, not a widening of an existing one. `DELETE /api/v1/auto-docs/:id` takes the typed word `delete` and the Auto-Doc's current name. The route checks both, in DOC-010's sense that the ceremony is a server rule and not a dialog's manners; a name that no longer matches is refused with 409 so a rename cannot be erased by a stale screen. Member+ cannot reach the route, and neither can a Business User.
+  - **It reaches an archived Auto-Doc.** Erasure is compelled from outside the record, so a frozen record is not a place to hide from it. This is DOC-010's rule for a document on an archived Contract, applied here.
+  - **It destroys the Auto-Doc's own content.** The template Document and every file Version, the extracted text, renditions, and Comparisons those Versions carry, every form version, the audience rows, the Assignment rules, the Acknowledgements, every Generation with its saved answers and display values, the Filing rows, and every stored blob behind any of them.
+  - **Created Contracts and Filed Documents survive.** They are independent records with their own paper, their own teams, and their own history. A Contract that reached signature does not disappear because Legal removed the template that started it.
+  - **A content-free origin row carries their provenance.** `auto_doc_generation_origins` holds Generation ids and nothing else. A Contract's `created_by_generation_id` and a generated Version's `generated_from_generation_id` point at that table instead of at the Generation. Erasure removes the Generation and leaves the origin, so the generated Version CHECK still holds and the record still says it was generated, while nothing that says what was generated remains. A Contract's pointer clears on erasure; a Version keeps its id.
+  - **Copies that already left are erased separately.** A Filed Document on a Matter or a Contract is that record's paper. An Administrator answering an erasure request removes it through DOC-010 on its own record. The dialog says so rather than implying one act is enough.
+  - **Ordering is DOC-010's.** The route locks the Auto-Doc, its Generations, and its template Versions, reads every blob reference, writes the audited entry, deletes the rows, and destroys the blobs inside the same transaction before the commit. A storage failure rolls every row back, and the retry converges because deleting a key that is already gone succeeds (DOC-012).
+  - **Queued work cannot outlive the erasure.** PDF conversion, email delivery, retry, and Filing take the Generation's row lock before they write anything. A job that wakes after the erasure finds no row and does nothing, so no worker can put a blob back after the files are gone.
+  - **One audited entry, `auto_doc.hard_deleted`**, carries the Generation count and the Version count. It names no answer, no filename, and no file content.
+- **Rationale** — Erasure and retention are different acts and a person must be able to tell which one they are about to perform, so Archive keeps its meaning and erasure gets its own verb, its own confirmation, and its own refusals. Provenance is the hard part: a Contract that names its Generation through a restrictive foreign key either blocks the erasure or is destroyed by it, and both are wrong. Splitting the identity from the content lets the id survive as a fact while everything it described is removed.
+- **Alternatives considered** — Widen the generic Document hard delete to accept an Auto-Doc owner: it erases the template and leaves every Generation and every saved answer behind, which is the gap this record closes. Cascade the erasure into created Contracts: an executed Contract is destroyed because a template was removed. Rewrite a generated Version's `source` to `uploaded`: the record then states something untrue about where the paper came from, and the change is silent.
+- **Consequences** — Migration 0129 adds `auto_doc_generation_origins`, backfills it from the existing Generations, and repoints the two provenance foreign keys. `apps/api/src/lib/document-erasure.ts` holds the blob collection both erasure paths share. The Auto-Doc record's sub-bar shows Delete Auto-Doc to an Administrator only. ADO-004, ADO-007, and ADO-010 gain the exception this act makes to what they promise is kept.
+
+**Built addendum (2026-09-14, #873):** The delivery worker now writes the PDF reference inside the transaction that holds the Generation lock, where it previously stored the blob first and updated the row afterwards, so an erasure between the two steps can no longer leave an orphaned file. The display-conversion and comparison pipelines take the same lock for the same reason. `auto_doc_filings.document_id` already cleared on Document erasure, so a Filed Document erased on its own record leaves its Filing history intact.
 
 ## Index of decisions
 
@@ -242,3 +269,4 @@ Migration 0123 preserves older Word-only Generations with `formats = docx` and `
 | ADO-009 | Reach: Legal only, selected people and Departments, or everyone; the Portal lists Auto-Docs and outputs | Accepted |
 | ADO-010 | Lifecycle: draft, published, archived; transitions never lose form work or surprise a person mid-form   | Accepted |
 | ADO-011 | Signature: a Generation is download-only; the created Contract takes the ordinary pipeline              | Accepted |
+| ADO-012 | Erasure: an Administrator deletes an Auto-Doc outright; independent records keep a content-free origin  | Accepted |

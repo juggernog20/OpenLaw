@@ -379,6 +379,12 @@ It has no settings pane yet — it is an Administrator-only API call, and the AP
 
 The same is true of the database backups in [Backups](#backups) below: a `pg_dump` taken before an erasure still holds what was erased.
 
+**An erasure request about an Auto-Doc takes more than one act.** A Business User who fills an Auto-Doc form types answers that are kept with the Generation, and those answers are printed into the Word and PDF files it produces. Unpublish and Archive do not remove any of it. They stop new use and keep the history, which is what they are for. The act that removes the content is **Delete Auto-Doc**, on the Auto-Doc record, shown to an Administrator only. It asks for the typed word `delete`, and the server checks the Auto-Doc's current name as well, so a record renamed since the screen loaded is refused rather than erased. It works on an archived Auto-Doc.
+
+It erases the template and all its versions, the extracted text and rendered previews behind them, every form version, the Assignment rules, the audience, the Acknowledgements, and every Generation with its saved answers and its output files. It leaves the **Contracts** those Generations created and any **Filed** copies on Matters or Contracts standing, because those are separate records with their own paper and their own history. Each keeps an id saying it was generated and nothing saying what from. If the request covers those copies too, erase each one on its own record with the Administrator document delete (DOC-010). The audit entry that records the erasure carries counts only, so it holds nothing you would then have to erase again.
+
+The two caveats above still apply here. Emails already sent carry the attachments out of reach, and a backup or a shipped log line taken before the erasure still holds what was erased.
+
 ## Health
 
 - `GET /healthz` — liveness: the process is up.
