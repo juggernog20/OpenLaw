@@ -20,7 +20,14 @@ export const FormChange = z.object({
   after: z.string().nullable(),
 });
 type Change = z.infer<typeof FormChange>;
-const mapOf = (field: AutoDocFormField) => field.catalogFieldId ?? field.contractAttribute ?? null;
+const mapOf = (field: AutoDocFormField) =>
+  field.contractAttribute === "value"
+    ? JSON.stringify({
+        attribute: "value",
+        currency: field.valueCurrency ?? null,
+        cadence: field.valueCadence ?? null,
+      })
+    : (field.catalogFieldId ?? field.contractAttribute ?? null);
 
 export function diffForms(before: AutoDocFormDefinition, after: AutoDocFormDefinition): Change[] {
   const changes: Change[] = [];

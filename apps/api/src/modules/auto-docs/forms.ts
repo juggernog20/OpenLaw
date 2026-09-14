@@ -3,6 +3,7 @@
 /** ADO-003 and ADO-004 preserve form history when a file or the editor changes it. */
 import {
   AUTO_DOC_FIELD_TYPES,
+  VALUE_CADENCES,
   AUTO_DOC_RULE_OPERATORS,
   AUTO_DOC_CONTRACT_ATTRIBUTES,
   autoDocFormVersions,
@@ -24,6 +25,7 @@ import {
   detectAutoDocTemplate,
   type TemplateDetection,
 } from "../../lib/auto-doc-template.js";
+import { CurrencySchema } from "../../lib/currencies.js";
 import { httpError } from "../../lib/problem.js";
 import type { StorageAdapter } from "../../lib/storage/adapter.js";
 
@@ -37,6 +39,8 @@ export const FormFieldInput = z
     required: z.boolean().default(false),
     catalogFieldId: z.string().min(1).nullable().default(null),
     contractAttribute: z.enum(AUTO_DOC_CONTRACT_ATTRIBUTES).nullable().default(null),
+    valueCurrency: CurrencySchema.nullable().optional(),
+    valueCadence: z.enum(VALUE_CADENCES).nullable().optional(),
   })
   .superRefine((field, ctx) => {
     if (field.catalogFieldId && field.contractAttribute)

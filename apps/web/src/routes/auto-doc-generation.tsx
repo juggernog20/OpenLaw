@@ -17,6 +17,7 @@ import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageTitle } from "../components/page-title";
 import {
+  GenerationContract,
   GenerationDownload,
   GenerationEmail,
   generationWaiting,
@@ -85,6 +86,7 @@ export function AutoDocGenerationPage() {
                 {generation.failure.detail}
               </p>
             )}
+            <GenerationContract generation={generation} />
             <GenerationDownload generation={generation} />
             <GenerationEmail generation={generation} />
           </section>

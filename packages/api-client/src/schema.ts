@@ -912,6 +912,8 @@ export interface paths {
                 id: string;
                 name: string;
                 description: string | null;
+                targetContractTypeId: string | null;
+                fixedEntityId: string | null;
               };
               pair: {
                 documentVersionId: string;
@@ -950,8 +952,14 @@ export interface paths {
                       | "term_type"
                     )
                   | null;
+                valueCurrency?: string | null;
+                valueCadence?: ("one_time" | "monthly" | "annually") | null;
               }[];
               entities: {
+                id: string;
+                name: string;
+              }[];
+              businessOwners: {
                 id: string;
                 name: string;
               }[];
@@ -1023,6 +1031,11 @@ export interface paths {
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
                 hasPdf: boolean;
+                createdContract: {
+                  id: string;
+                  number: number;
+                  title: string;
+                } | null;
                 /** @enum {string} */
                 formats: "docx" | "pdf" | "both";
                 /** @enum {string} */
@@ -1074,6 +1087,7 @@ export interface paths {
             answers: {
               [key: string]: (string | number | boolean | string[]) | null;
             };
+            businessOwnerId?: string | null;
           };
         };
       };
@@ -1105,6 +1119,11 @@ export interface paths {
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
                 hasPdf: boolean;
+                createdContract: {
+                  id: string;
+                  number: number;
+                  title: string;
+                } | null;
                 /** @enum {string} */
                 formats: "docx" | "pdf" | "both";
                 /** @enum {string} */
@@ -1196,6 +1215,11 @@ export interface paths {
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
                 hasPdf: boolean;
+                createdContract: {
+                  id: string;
+                  number: number;
+                  title: string;
+                } | null;
                 /** @enum {string} */
                 formats: "docx" | "pdf" | "both";
                 /** @enum {string} */
@@ -1281,6 +1305,11 @@ export interface paths {
                 state: "pending" | "ready" | "failed";
                 hasDocx: boolean;
                 hasPdf: boolean;
+                createdContract: {
+                  id: string;
+                  number: number;
+                  title: string;
+                } | null;
                 /** @enum {string} */
                 formats: "docx" | "pdf" | "both";
                 /** @enum {string} */
@@ -8838,6 +8867,10 @@ export interface operations {
               id: string;
               displayName: string;
             }[];
+            entities: {
+              id: string;
+              name: string;
+            }[];
           };
         };
       };
@@ -8883,6 +8916,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -8945,6 +8980,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -8995,6 +9032,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9043,6 +9082,8 @@ export interface operations {
           formats?: "docx" | "pdf" | "both";
           coverNote?: string | null;
           targetContractTypeId?: string | null;
+          titlePattern?: string | null;
+          fixedEntityId?: string | null;
         };
       };
     };
@@ -9067,6 +9108,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9129,6 +9172,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9179,6 +9224,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9295,6 +9342,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9357,6 +9406,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9407,6 +9458,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9470,6 +9523,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9532,6 +9587,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9582,6 +9639,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9645,6 +9704,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9707,6 +9768,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9757,6 +9820,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9820,6 +9885,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9882,6 +9949,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9932,6 +10001,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -9994,6 +10065,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -10053,6 +10126,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -10114,6 +10189,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -10176,6 +10253,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -10226,6 +10305,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -10302,6 +10383,8 @@ export interface operations {
                   | "term_type"
                 )
               | null;
+            valueCurrency?: string | null;
+            valueCadence?: ("one_time" | "monthly" | "annually") | null;
           }[];
           /** @default [] */
           clauseRules?: {
@@ -10335,6 +10418,8 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -10397,6 +10482,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;
@@ -10447,6 +10534,8 @@ export interface operations {
                         | "term_type"
                       )
                     | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
                   blockName: string;

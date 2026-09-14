@@ -607,6 +607,9 @@ type ContractPayloads = {
    * the viewer narrates what was filled, and the values are on the
    * record to be read. */
   "contract.created": {
+    autoDocId?: string;
+    autoDocName?: string;
+    generationId?: string;
     number: number;
     title: string;
     contractType: string;

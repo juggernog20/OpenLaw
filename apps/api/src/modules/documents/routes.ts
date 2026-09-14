@@ -2627,6 +2627,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               id: documentVersions.id,
               versionNumber: documentVersions.versionNumber,
               kind: documentVersions.kind,
+              source: documentVersions.source,
             })
             .from(documentVersions)
             .where(
@@ -2637,6 +2638,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (version.kind === "generated_redline") {
             throw httpError(409, "A generated redline's kind records how it was made.");
           }
+          if (version.source === "generated")
+            throw httpError(409, "An Auto-Doc Version's kind records how it was made.");
           if (version.kind === kind) {
             throw httpError(409, "That version already has this kind.");
           }

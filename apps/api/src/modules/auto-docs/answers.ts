@@ -11,8 +11,13 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/guards.js";
+import { portalEntityScope } from "../../lib/portal-entities.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import { httpError } from "../../lib/problem.js";
+
+export function generationEntityScope(tx: Transaction, user: AuthenticatedUser) {
+  return user.role === "business_user" ? portalEntityScope : entityReachScope(tx, user);
+}
 
 export async function validateGenerationAnswers(
   tx: Transaction,
@@ -104,7 +109,11 @@ export async function validateGenerationAnswers(
           .select({ name: entities.legalName })
           .from(entities)
           .where(
-            and(eq(entities.id, value), isNull(entities.archivedAt), entityReachScope(tx, user)),
+            and(
+              eq(entities.id, value),
+              isNull(entities.archivedAt),
+              generationEntityScope(tx, user),
+            ),
           )
           .for("share");
         if (!entity) {

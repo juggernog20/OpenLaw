@@ -78,6 +78,7 @@ import {
   isNull,
   sql,
   type Contract,
+  type AutoDocContractSnapshot,
   type ContractStage,
   type CustomFieldValue,
   type Matter,
@@ -128,6 +129,8 @@ export interface CreateContractInput {
   /** Who is creating it: the CTR-004 creator row and the actor on every
    * entry this write narrates. */
   actorId: string;
+  /** Trusted Auto-Doc provenance and facts resolved by the Generation path. */
+  autoDoc?: { id: string; generationId: string; facts: AutoDocContractSnapshot };
   title: string;
   description?: string | null;
   owningDepartmentId?: string | null | undefined;
@@ -339,6 +342,18 @@ export async function createContract(
       // honestly is (MTR-012).
       ...(input.priority ? { priority: input.priority } : {}),
       ...(copied ?? {}),
+      ...(input.autoDoc
+        ? {
+            createdByGenerationId: input.autoDoc.generationId,
+            entityId: input.autoDoc.facts.entityId,
+            effectiveDate: input.autoDoc.facts.effectiveDate,
+            expiryDate: input.autoDoc.facts.expiryDate,
+            termType: input.autoDoc.facts.termType,
+            valueAmount: input.autoDoc.facts.value?.amount ?? null,
+            valueCurrency: input.autoDoc.facts.value?.currency ?? null,
+            valueCadence: input.autoDoc.facts.value?.cadence ?? null,
+          }
+        : {}),
     })
     .returning();
   // Provenance, written once and never again (CTR-004): who made this
@@ -370,6 +385,13 @@ export async function createContract(
       // not the values: the M9 viewer narrates what was filled, and the
       // values are on the record to be read.
       customFields: Object.keys(customFields).sort((a, b) => a.localeCompare(b)),
+      ...(input.autoDoc
+        ? {
+            autoDocId: input.autoDoc.id,
+            autoDocName: input.autoDoc.facts.autoDocName,
+            generationId: input.autoDoc.generationId,
+          }
+        : {}),
     },
   });
   const [actor] = await tx

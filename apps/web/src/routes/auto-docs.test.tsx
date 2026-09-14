@@ -23,6 +23,8 @@ const autoDoc: AutoDocAnswer["autoDoc"] = {
   templateDocumentId: "template",
   audience: "legal_only",
   targetContractTypeId: null,
+  titlePattern: null,
+  fixedEntityId: null,
   formats: "both",
   coverNote: null,
   publishedDocumentVersionId: null,

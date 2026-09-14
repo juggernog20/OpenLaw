@@ -16,6 +16,8 @@ import {
   type PgTableExtraConfigValue,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
+import { contracts, type TermType, type ValueCadence } from "./contracts.js";
+import { entities } from "./entities.js";
 import { contractTypes } from "./contract-types.js";
 import { documents, documentVersions } from "./documents.js";
 import { FIELD_TYPES, type FieldType, type CustomFieldValue } from "./fields.js";
@@ -65,10 +67,30 @@ export interface AutoDocFormField {
   /** Absent in snapshots saved before maps were added. */
   catalogFieldId?: string | null;
   contractAttribute?: (typeof AUTO_DOC_CONTRACT_ATTRIBUTES)[number] | null;
+  /** The Value map supplies the units that a numeric answer cannot carry. */
+  valueCurrency?: string | null;
+  valueCadence?: ValueCadence | null;
 }
 export interface AutoDocFormDefinition {
   fields: AutoDocFormField[];
   clauseRules?: AutoDocClauseRule[];
+}
+
+/** Contract facts resolved at submission and retained for the same Generation's retry. */
+export interface AutoDocContractSnapshot {
+  autoDocName: string;
+  contractTypeId: string;
+  title: string;
+  entityId: string | null;
+  businessOwnerId: string | null;
+  owningDepartmentId: string | null;
+  region: string | null;
+  primaryCounterpartyName: string | null;
+  customFields: Record<string, CustomFieldValue>;
+  value: { amount: number; currency: string; cadence: ValueCadence } | null;
+  effectiveDate: string | null;
+  expiryDate: string | null;
+  termType: TermType;
 }
 
 export const autoDocs = pgTable(
@@ -80,6 +102,10 @@ export const autoDocs = pgTable(
     formats: text("formats", { enum: AUTO_DOC_FORMATS }).notNull().default("both"),
     /** Null omits the optional email cover note. */
     coverNote: text("cover_note"),
+    /** Null uses a mapped title, then the Auto-Doc's name. */
+    titlePattern: text("title_pattern"),
+    /** Null lets the form supply our Entity. */
+    fixedEntityId: text("fixed_entity_id").references(() => entities.id),
     state: text("state", { enum: AUTO_DOC_STATES }).notNull().default("draft"),
     audience: text("audience", { enum: AUTO_DOC_AUDIENCES }).notNull().default("legal_only"),
     /** Null means this Auto-Doc has no target Contract Type. */
@@ -200,6 +226,15 @@ export const autoDocGenerations = pgTable(
     generatedBy: text("generated_by")
       .notNull()
       .references(() => users.id),
+    /** Null means this Generation has no automatic Contract destination. */
+    contractSnapshot: jsonb("contract_snapshot").$type<AutoDocContractSnapshot>(),
+    createdContractId: text("created_contract_id").references((): AnyPgColumn => contracts.id, {
+      onDelete: "set null",
+    }),
+    /** The original primary Document, retained even if Legal chooses a later primary. */
+    createdDocumentId: text("created_document_id").references((): AnyPgColumn => documents.id, {
+      onDelete: "set null",
+    }),
     answers: jsonb("answers").$type<Record<string, CustomFieldValue>>().notNull(),
     formats: text("formats", { enum: AUTO_DOC_FORMATS }).notNull().default("docx"),
     /** Saved at submission; null means this Generation has no cover note. */
@@ -234,6 +269,8 @@ export const autoDocGenerations = pgTable(
       columns: [table.formVersionId],
       foreignColumns: [autoDocFormVersions.id],
     }),
+    uniqueIndex("auto_doc_generations_created_contract_idx").on(table.createdContractId),
+    uniqueIndex("auto_doc_generations_created_document_idx").on(table.createdDocumentId),
     index("auto_doc_generations_delivery_idx").on(table.state, table.emailState),
     check("auto_doc_generations_formats_check", sql`${table.formats} in ('docx', 'pdf', 'both')`),
     check("auto_doc_generations_attempt_check", sql`${table.attempt} > 0`),

@@ -58,6 +58,26 @@ export function GenerationDownload({ generation }: { generation: AutoDocGenerati
     </div>
   );
 }
+export function GenerationContract({ generation }: { generation: AutoDocGeneration }) {
+  const contract = generation.createdContract;
+  if (!contract) return null;
+  return (
+    <p className="text-sm">
+      <FormattedMessage
+        id="autoDocs.createdContract"
+        defaultMessage="Created Contract: {contract}"
+        values={{
+          contract: (
+            <Link className="text-link hover:underline" to={`/contracts/${contract.number}`}>
+              {contract.title}
+            </Link>
+          ),
+        }}
+      />
+    </p>
+  );
+}
+
 export function GenerationEmail({ generation }: { generation: AutoDocGeneration }) {
   if (generation.emailState === "unconfigured")
     return <p className="text-sm text-muted">{generation.emailFailure?.detail}</p>;
@@ -154,6 +174,7 @@ export function AutoDocGenerations({ generations }: { generations: AutoDocGenera
               {generation.failure && (
                 <p className="text-status-danger-fg">{generation.failure.detail}</p>
               )}
+              <GenerationContract generation={generation} />
               <GenerationDownload generation={generation} />
               <GenerationEmail generation={generation} />
               {generation.state === "failed" && (

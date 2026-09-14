@@ -124,6 +124,7 @@ function FormControl({
 export function AutoDocGeneratePage() {
   const loaded = useLoaderData<typeof autoDocGenerateLoader>();
   const [form, setForm] = useState(loaded.form);
+  const [businessOwnerId, setBusinessOwnerId] = useState("");
   const [draft, setDraft] = useState<Draft>({});
   const [previousAnswers, setPreviousAnswers] = useState<{ label: string; value: string }[]>([]);
   const [error, setError] = useState(loaded.refusal);
@@ -178,7 +179,13 @@ export function AutoDocGeneratePage() {
     const result = await api
       .POST("/api/v1/auto-docs/{id}/generations", {
         params: { path: { id: loaded.id } },
-        body: { ...form.pair, answers },
+        body: {
+          ...form.pair,
+          answers,
+          ...(form.autoDoc.targetContractTypeId
+            ? { businessOwnerId: businessOwnerId || null }
+            : {}),
+        },
       })
       .catch(() => undefined);
     setBusy(false);
@@ -225,6 +232,8 @@ export function AutoDocGeneratePage() {
       }
       setDraft(retained);
       setPreviousAnswers((answers) => [...answers, ...previous]);
+      if (!current.businessOwners.some((person) => person.id === businessOwnerId))
+        setBusinessOwnerId("");
       setForm(result.data);
       setError(undefined);
     } else setError(result?.error?.detail ?? failed());
@@ -311,6 +320,33 @@ export function AutoDocGeneratePage() {
                   )}
                 </div>
               ))}
+              {form.autoDoc.targetContractTypeId && (
+                <label className="block space-y-1.5">
+                  <span className="text-sm font-medium">
+                    <FormattedMessage
+                      id="contracts.businessOwner"
+                      defaultMessage="Business Owner"
+                    />
+                  </span>
+                  <select
+                    className={CONTROL_CLASS}
+                    value={businessOwnerId}
+                    onChange={(event) => setBusinessOwnerId(event.target.value)}
+                  >
+                    <option value="">
+                      {intl.formatMessage({
+                        id: "autoDocs.noBusinessOwner",
+                        defaultMessage: "Leave unassigned",
+                      })}
+                    </option>
+                    {form.businessOwners.map((person) => (
+                      <option key={person.id} value={person.id}>
+                        {person.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <Button type="submit" disabled={busy}>
                 <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
               </Button>
