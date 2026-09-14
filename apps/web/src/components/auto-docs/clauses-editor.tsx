@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-002 and ADO-003: edit Clause rules and Form field maps together. */
-import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
+import { CONTROL_CLASS } from "../../lib/form-controls";
+import { RuleValueInput, defaultRuleValue } from "./rule-value-input";
 import {
   autoDocContractAttributes,
+  autoDocClauseRule,
   type AutoDocField,
   type AutoDocOptions,
   type AutoDocClauseRule,
@@ -136,24 +137,6 @@ export function ClausesEditor({
       {names.map((blockName) => {
         const rule = rules.find((row) => row.blockName === blockName);
         const field = fields.find((row) => row.slug === rule?.fieldSlug);
-        const options =
-          field?.options ?? (field?.fieldType === "boolean" ? ["true", "false"] : null);
-        const scalar = (value: string) =>
-          field?.fieldType === "number" || field?.fieldType === "currency"
-            ? Number(value)
-            : field?.fieldType === "boolean"
-              ? value === "true"
-              : value;
-        const multiple = rule?.operator === "is_one_of";
-        const defaultValue = (operator: AutoDocClauseRule["operator"], nextField = field) => {
-          const value =
-            nextField?.fieldType === "boolean"
-              ? true
-              : nextField?.fieldType === "number" || nextField?.fieldType === "currency"
-                ? 0
-                : (nextField?.options?.[0] ?? "");
-          return operator === "is_set" ? null : operator === "is_one_of" ? [value] : value;
-        };
         return (
           <fieldset
             key={blockName}
@@ -184,7 +167,7 @@ export function ClausesEditor({
                       blockName,
                       fieldSlug: fields[0]?.slug ?? "",
                       operator: "equals",
-                      value: defaultValue("equals", fields[0]),
+                      value: defaultRuleValue("equals", fields[0]),
                     });
                 }}
               >
@@ -219,7 +202,7 @@ export function ClausesEditor({
                       change({
                         ...rule,
                         fieldSlug: event.target.value,
-                        value: defaultValue(rule.operator, nextField),
+                        value: defaultRuleValue(rule.operator, nextField),
                       });
                     }}
                   >
@@ -246,8 +229,10 @@ export function ClausesEditor({
                     className={CONTROL_CLASS}
                     value={rule.operator}
                     onChange={(event) => {
-                      const operator = event.target.value as AutoDocClauseRule["operator"];
-                      change({ ...rule, operator, value: defaultValue(operator) });
+                      const parsed = autoDocClauseRule.shape.operator.safeParse(event.target.value);
+                      if (!parsed.success) return;
+                      const operator = parsed.data;
+                      change({ ...rule, operator, value: defaultRuleValue(operator, field) });
                     }}
                   >
                     {(["equals", "is_one_of", "is_set", "is_not"] as const).map((operator) => (
@@ -257,144 +242,18 @@ export function ClausesEditor({
                     ))}
                   </select>
                 </label>
-                {rule.operator !== "is_set" && (
-                  <label className="block space-y-1">
-                    <span>
-                      <FormattedMessage id="autoDocs.ruleValue" defaultMessage="Value" />
-                    </span>
-                    {options ? (
-                      <select
-                        required
-                        multiple={multiple}
-                        className={CONTROL_CLASS}
-                        value={
-                          multiple
-                            ? Array.isArray(rule.value)
-                              ? rule.value.map(String)
-                              : []
-                            : String(rule.value ?? "")
-                        }
-                        onChange={(event) =>
-                          change({
-                            ...rule,
-                            value: multiple
-                              ? Array.from(event.target.selectedOptions, (option) =>
-                                  scalar(option.value),
-                                )
-                              : scalar(event.target.value),
-                          })
-                        }
-                      >
-                        {[
-                          ...new Set([
-                            ...options,
-                            ...(Array.isArray(rule.value)
-                              ? rule.value.map(String)
-                              : rule.value === null
-                                ? []
-                                : [String(rule.value)]),
-                          ]),
-                        ].map((value) => (
-                          <option key={value} value={value}>
-                            {options.includes(value)
-                              ? value
-                              : intl.formatMessage(
-                                  {
-                                    id: "autoDocs.missingRuleOption",
-                                    defaultMessage: "{value} (missing)",
-                                  },
-                                  { value },
-                                )}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <RuleTextValue
-                        key={`${rule.fieldSlug}:${field?.fieldType}:${rule.operator}`}
-                        value={rule.value}
-                        multiple={multiple}
-                        fieldType={field?.fieldType}
-                        onChange={(value) => change({ ...rule, value })}
-                      />
-                    )}
-                  </label>
-                )}
+                <RuleValueInput
+                  field={field}
+                  fieldSlug={rule.fieldSlug}
+                  operator={rule.operator}
+                  value={rule.value}
+                  onChange={(value) => change({ ...rule, value })}
+                />
               </div>
             )}
           </fieldset>
         );
       })}
     </section>
-  );
-}
-
-export function RuleTextValue({
-  value,
-  multiple,
-  fieldType,
-  onChange,
-}: {
-  value: AutoDocClauseRule["value"];
-  multiple: boolean;
-  fieldType: AutoDocField["fieldType"] | undefined;
-  onChange: (value: AutoDocClauseRule["value"]) => void;
-}) {
-  const intl = useIntl();
-  const [text, setText] = useState(Array.isArray(value) ? value.join("\n") : String(value ?? ""));
-  const scalar = (value: string) =>
-    fieldType === "number" || fieldType === "currency" ? Number(value) : value;
-  function edit(value: string) {
-    setText(value);
-    onChange(
-      multiple
-        ? value
-            .split("\n")
-            .map((line) => line.trim())
-            .filter(Boolean)
-            .map(scalar)
-        : scalar(value),
-    );
-  }
-  const values = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const invalid =
-    !values.length ||
-    ((fieldType === "number" || fieldType === "currency") &&
-      values.some((value) => !Number.isFinite(Number(value))));
-  return multiple ? (
-    <textarea
-      ref={(element) => {
-        element?.setCustomValidity(
-          invalid
-            ? intl.formatMessage({
-                id: "autoDocs.ruleListRefused",
-                defaultMessage:
-                  "Enter one value per line, using numbers for a number or currency field.",
-              })
-            : "",
-        );
-      }}
-      required
-      className={TEXTAREA_CLASS}
-      value={text}
-      onChange={(event) => edit(event.target.value)}
-    />
-  ) : (
-    <input
-      required
-      type={
-        fieldType === "number" || fieldType === "currency"
-          ? "number"
-          : fieldType === "date"
-            ? "date"
-            : "text"
-      }
-      step="any"
-      className={CONTROL_CLASS}
-      value={text}
-      onChange={(event) => edit(event.target.value)}
-    />
   );
 }

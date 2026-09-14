@@ -14687,6 +14687,7 @@
     },
     "/api/v1/auto-docs/filing-options": {
       "get": {
+        "operationId": "listAutoDocFilingOptions",
         "summary": "Find reached live Filing destinations",
         "tags": ["Auto-Docs"],
         "parameters": [
@@ -14768,6 +14769,7 @@
     },
     "/api/v1/auto-docs/{id}/generations/{generationId}/filings": {
       "get": {
+        "operationId": "listAutoDocFilings",
         "summary": "List a Generation's Filings",
         "tags": ["Auto-Docs"],
         "parameters": [
@@ -14885,6 +14887,7 @@
         }
       },
       "post": {
+        "operationId": "fileAutoDocGeneration",
         "summary": "File a Generation as a new Document",
         "tags": ["Auto-Docs"],
         "requestBody": {
@@ -15065,6 +15068,7 @@
     },
     "/api/v1/portal/auto-docs/filing-options": {
       "get": {
+        "operationId": "listPortalAutoDocFilingOptions",
         "summary": "Find reached live Filing destinations",
         "tags": ["Auto-Docs"],
         "parameters": [
@@ -15146,6 +15150,7 @@
     },
     "/api/v1/portal/auto-docs/{id}/generations/{generationId}/filings": {
       "get": {
+        "operationId": "listPortalAutoDocFilings",
         "summary": "List a Generation's Filings",
         "tags": ["Auto-Docs"],
         "parameters": [
@@ -15263,6 +15268,7 @@
         }
       },
       "post": {
+        "operationId": "filePortalAutoDocGeneration",
         "summary": "File a Generation as a new Document",
         "tags": ["Auto-Docs"],
         "requestBody": {

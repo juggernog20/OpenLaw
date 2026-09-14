@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** ADO-005 and DOC-012: copy generated paper into its own Document and record its creation. */
 import { contracts, documents, eq } from "@openlaw/db";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { insertDocumentVersion, type AppendedVersion } from "../../lib/document-versions.js";

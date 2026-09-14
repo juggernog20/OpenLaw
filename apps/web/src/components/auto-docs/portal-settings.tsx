@@ -158,7 +158,7 @@ export function PortalSettingsFields({
           <span>
             <FormattedMessage
               id="autoDocs.defaultAcknowledgement"
-              defaultMessage="Use the organisation's acknowledgement text"
+              defaultMessage="Use the organization's acknowledgement text"
             />
           </span>
         </label>

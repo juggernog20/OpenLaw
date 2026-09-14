@@ -1058,7 +1058,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   renamed: defineMessage({
     id: "activity.taxonomy.renamed",
@@ -1067,7 +1067,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   updated: defineMessage({
     id: "activity.taxonomy.updated",
@@ -1076,7 +1076,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   reordered: defineMessage({
     id: "activity.taxonomy.reordered",
@@ -1085,7 +1085,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} list",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} list",
   }),
   archived: defineMessage({
     id: "activity.taxonomy.archived",
@@ -1094,7 +1094,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   restored: defineMessage({
     id: "activity.taxonomy.restored",
@@ -1103,7 +1103,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
   deleted: defineMessage({
     id: "activity.taxonomy.deleted",
@@ -1112,7 +1112,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
   }),
 } as const;
 

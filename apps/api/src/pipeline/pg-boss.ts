@@ -781,12 +781,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       await boss.work(JOB_QUEUES.conversionSweep, { batchSize: 1 }, async () => {
         await sweepConversionDrafts(handlers.db, queue);
         await sweepConversionAnalysis(handlers.db, queue);
+        await sweepGenerationDeliveries(handlers, queue, sweeping.signal);
       });
       await boss.work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
         const summary = await runBackfillSweep({ db: handlers.db, log }, queue, {
           signal: sweeping.signal,
         });
-        await sweepGenerationDeliveries(handlers, queue, sweeping.signal);
         log.info({ ...summary }, "the scheduled backfill sweep finished");
       });
       // The reconciliation sweep gets its own worker for the backfill

@@ -234,13 +234,19 @@ async function mailAbout(fixture: { email: string }, contract: ContractRow) {
       harness.mailer
         .messagesTo(fixture.email)
         .some(
-          (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+          (m) =>
+            m.text.includes(contract.title) &&
+            m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
         ),
     ),
   );
   const message = harness.mailer
     .messagesTo(fixture.email)
-    .find((m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "));
+    .find(
+      (m) =>
+        m.text.includes(contract.title) &&
+        m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
+    );
   expect(message).toBeDefined();
   return message!;
 }
@@ -624,7 +630,9 @@ describe("being asked again after a rejection (CTR-012)", () => {
         harness.mailer
           .messagesTo(TARGET.email)
           .filter(
-            (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+            (m) =>
+              m.text.includes(contract.title) &&
+              m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
           ).length >= 2,
       ),
     );

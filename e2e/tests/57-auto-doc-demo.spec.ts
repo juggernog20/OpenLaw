@@ -187,7 +187,7 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
       .getByRole("combobox", { name: "Acknowledgement frequency", exact: true })
       .selectOption("every_use");
     await settings
-      .getByRole("checkbox", { name: "Use the organisation's acknowledgement text", exact: true })
+      .getByRole("checkbox", { name: "Use the organization's acknowledgement text", exact: true })
       .uncheck();
     await settings
       .getByRole("textbox", { name: "Acknowledgement text", exact: true })

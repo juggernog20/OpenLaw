@@ -207,3 +207,21 @@ it.each(["administrator", "legal_team_member"])("refuses the wizard to a %s", as
   renderAt("/portal/onboarding");
   expect(await screen.findByRole("heading", { name: "Profile" })).toBeVisible();
 });
+
+it("keeps Finish reachable when every Department disappears during the tour", async () => {
+  const departments = [SALES];
+  setup(departments, false, true);
+  renderAt("/portal/onboarding");
+  const user = userEvent.setup();
+  await user.selectOptions(await screen.findByRole("combobox", { name: "Department" }), "sales");
+  await waitFor(() => expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled());
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  for (let step = 0; step < 3; step++)
+    await user.click(screen.getByRole("button", { name: "Skip" }));
+  departments.splice(0);
+  await user.click(screen.getByRole("button", { name: "Finish" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Choose a live Department");
+  expect(screen.getByRole("region", { name: "A short tour" })).toBeVisible();
+  expect(screen.queryByRole("combobox", { name: "Department" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Finish" })).toBeEnabled();
+});

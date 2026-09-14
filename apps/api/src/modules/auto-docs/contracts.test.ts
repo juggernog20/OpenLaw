@@ -10,6 +10,7 @@ import {
   contractTeam,
   documents,
   documentVersions,
+  departments,
   entities,
   entityTypes,
   eq,
@@ -18,7 +19,6 @@ import {
   sql,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
-import { generateAutoDoc } from "./generations.js";
 import { AutoDocFillError } from "../../lib/auto-doc-fill/engine.js";
 import {
   startHarness,
@@ -317,14 +317,16 @@ it("leaves no Contract or primary Document when fill fails", async () => {
 });
 
 it("names the generating Business User as Business Owner and shows their Contract in the Portal", async () => {
-  const prepared = await prepare();
+  const prepared = await prepare({ audience: "everyone", acknowledgementFrequency: "none" });
   expect((await post(`/auto-docs/${prepared.id}/publish`, prepared.pair)).statusCode).toBe(200);
-  const [person] = await h.db.select().from(users).where(eq(users.id, businessId));
-  // The Portal entry point supplies its audience and acknowledgement gates in M35/11.
-  const generation = await generateAutoDoc(h.app, h.app.log, person!, prepared.id, {
-    ...prepared.pair,
-    answers: answers(),
+  const response = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/portal/auto-docs/${prepared.id}/generations`,
+    cookies: businessCookies,
+    payload: { ...prepared.pair, answers: answers() },
   });
+  expect(response.statusCode, response.body).toBe(201);
+  const generation = response.json().generation;
   expect(generation.createdContract).not.toBeNull();
   const [row] = await h.db
     .select()
@@ -558,4 +560,33 @@ it("hides the Contract link when its current title is outside the reader's audie
     expect(item.createdContract).toBeNull();
     expect(read.body).not.toContain("Confidential new title");
   }
+});
+
+it("refuses an ambiguous Department name and accepts the chosen Department id", async () => {
+  const prepared = await prepare();
+  const candidates = await h.db
+    .insert(departments)
+    .values([
+      { slug: "ambiguous_procurement_a", displayName: "Ambiguous Procurement", displayOrder: 100 },
+      { slug: "ambiguous_procurement_b", displayName: "Ambiguous Procurement", displayOrder: 101 },
+    ])
+    .returning();
+  expect((await post(`/auto-docs/${prepared.id}/publish`, prepared.pair)).statusCode).toBe(200);
+  const refused = await post(`/auto-docs/${prepared.id}/generations`, {
+    ...prepared.pair,
+    answers: { ...answers(), department: "Ambiguous Procurement" },
+  });
+  expect(refused.statusCode, refused.body).toBe(400);
+  expect(refused.json().detail).toContain("more than one");
+  const made = await post(`/auto-docs/${prepared.id}/generations`, {
+    ...prepared.pair,
+    answers: { ...answers(), department: candidates[1]!.id },
+  });
+  expect(made.statusCode, made.body).toBe(201);
+  const detail = await h.app.inject({
+    url: `/api/v1/contracts/${made.json().generation.createdContract.number}`,
+    cookies,
+  });
+  expect(detail.statusCode).toBe(200);
+  expect(detail.json().contract.owningDepartmentId).toBe(candidates[1]!.id);
 });

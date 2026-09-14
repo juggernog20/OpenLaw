@@ -7,6 +7,10 @@
  */
 
 import { mkdtemp, rm } from "node:fs/promises";
+import {
+  createFakeAutoDocFillEngine,
+  type FakeAutoDocFillEngine,
+} from "../lib/auto-doc-fill/fake.js";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
@@ -220,7 +224,7 @@ export interface TestHarness {
    */
   docEngine: DocEngine;
   /** A deterministic fill driver whose output exposes inputs at the HTTP download seam. */
-  fillEngine: import("../lib/auto-doc-fill/fake.js").FakeAutoDocFillEngine;
+  fillEngine: FakeAutoDocFillEngine;
   /**
    * The real background pipeline (TECH-007), running in this process
    * against this container's Postgres: the real pg-boss queue, and the
@@ -368,7 +372,6 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     const { storage, root: storageRoot, cleanup } = await createTestStorage();
     cleanupStorage = cleanup;
     const docEngine = createFakeDocEngine();
-    const { createFakeAutoDocFillEngine } = await import("../lib/auto-doc-fill/fake.js");
     const fillEngine = createFakeAutoDocFillEngine();
     const jobLog: JobLogLine[] = [];
     // The production resolver over the fake driver: the stored row and

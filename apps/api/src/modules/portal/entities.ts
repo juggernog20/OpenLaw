@@ -4,9 +4,8 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { asc, entities, sql } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
-import { portalEntityScope } from "../../lib/portal-entities.js";
+import { listPortalEntities } from "../../lib/portal-entities.js";
 import { problemResponse } from "../../lib/problem.js";
 
 export const portalEntityRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -26,11 +25,7 @@ export const portalEntityRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async () => ({
-      entities: await app.db
-        .select({ id: entities.id, name: entities.legalName })
-        .from(entities)
-        .where(portalEntityScope)
-        .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.id)),
+      entities: await listPortalEntities(app.db),
     }),
   );
 };

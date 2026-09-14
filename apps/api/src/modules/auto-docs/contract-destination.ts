@@ -92,7 +92,7 @@ export function contractPublicationGaps(
   return gaps;
 }
 
-/** A fixed Entity fills Entity answers without asking the person to choose it again. */
+/** ADO-005 and #852: targeted Entity answers are optional; a fixed Entity removes the picker. */
 export function generationDefinition(
   autoDoc: Pick<AutoDoc, "targetContractTypeId" | "fixedEntityId">,
   definition: AutoDocFormDefinition,
@@ -199,7 +199,7 @@ export async function prepareContractDestination(
   const department = text("owning_department_id");
   let owningDepartmentId: string | null = null;
   if (department) {
-    const [row] = await tx
+    const matches = await tx
       .select({ id: departments.id })
       .from(departments)
       .where(
@@ -209,9 +209,15 @@ export async function prepareContractDestination(
         ),
       )
       .orderBy(desc(eq(departments.id, department)), asc(departments.id))
-      .limit(1)
+      .limit(2)
       .for("share");
+    const row = matches[0];
     if (!row) throw httpError(400, "The Owning department answer must name a live Department.");
+    if (row.id !== department && matches.length > 1)
+      throw httpError(
+        400,
+        "The Owning department answer matches more than one live Department. Choose its id.",
+      );
     owningDepartmentId = row.id;
   }
   const term = text("term_type") ?? "fixed";

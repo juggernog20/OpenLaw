@@ -11,14 +11,13 @@ import {
   autoDocGenerations,
   autoDocs,
   desc,
-  entities,
   eq,
   lt,
   type Executor,
 } from "@openlaw/db";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { AUTO_DOC_SLUG } from "../../lib/auto-doc-template.js";
-import { portalEntityScope } from "../../lib/portal-entities.js";
+import { listPortalEntities } from "../../lib/portal-entities.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { generationDefinition } from "../auto-docs/contract-destination.js";
 import {
@@ -39,6 +38,7 @@ import {
   lockPortalPerson,
   portalAutoDocScope,
   portalWarnings,
+  portalWarningsFor,
   PORTAL_UNAVAILABLE,
   readPortalAutoDoc,
 } from "../auto-docs/portal-policy.js";
@@ -104,18 +104,19 @@ export const portalAutoDocRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(autoDocs)
         .where(and(eq(autoDocs.state, "published"), portalAutoDocScope(request.user)))
         .orderBy(asc(autoDocs.name), asc(autoDocs.id));
+      const warnings =
+        request.user.role === "business_user"
+          ? await portalWarningsFor(app.db, rows)
+          : new Map<string, string[]>();
       return {
-        autoDocs: await Promise.all(
-          rows.map(async (row) => {
-            const ready =
-              request.user.role !== "business_user" || !(await portalWarnings(app.db, row)).length;
-            return {
-              ...row,
-              createsContract: row.targetContractTypeId !== null,
-              availability: { ready, message: ready ? null : PORTAL_UNAVAILABLE },
-            };
-          }),
-        ),
+        autoDocs: rows.map((row) => {
+          const ready = !warnings.get(row.id)?.length;
+          return {
+            ...row,
+            createsContract: row.targetContractTypeId !== null,
+            availability: { ready, message: ready ? null : PORTAL_UNAVAILABLE },
+          };
+        }),
       };
     },
   );
@@ -170,11 +171,7 @@ export const portalAutoDocRoutes: FastifyPluginAsyncZod = async (app) => {
             contractAttribute: field.contractAttribute ?? null,
           }));
         const choices = fields.some((field) => field.fieldType === "entity")
-          ? await tx
-              .select({ id: entities.id, name: entities.legalName })
-              .from(entities)
-              .where(portalEntityScope)
-              .orderBy(asc(entities.legalName), asc(entities.id))
+          ? await listPortalEntities(tx)
           : [];
         return { ...base, form: { pair: live.pair, fields, entities: choices } };
       }),

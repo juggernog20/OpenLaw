@@ -209,7 +209,8 @@ describe("the Entity registry managed list", () => {
       "Next obligation",
     ]);
     expect(within(table).getByText("Annual return")).toBeVisible();
-    expect(within(table).getByText("Yes")).toBeVisible();
+    const entityRow = within(table).getAllByRole("row")[1]!;
+    expect(within(entityRow).getAllByRole("cell")[5]).toHaveTextContent(/^Yes$/);
 
     await user.selectOptions(screen.getByRole("combobox", { name: "Type" }), "t-llc");
     await expectQuery(api.queries, "type", "t-llc");

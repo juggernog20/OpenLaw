@@ -808,7 +808,9 @@ describe("a confidential record's dates", () => {
     ).toEqual([]);
     expect(
       digestsTo(OUTSIDER).some(
-        (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+        (m) =>
+          m.text.includes(contract.title) &&
+          m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
       ),
     ).toBe(false);
   });
@@ -835,13 +837,17 @@ describe("an immediate email whose wake-up was lost", () => {
       harness.mailer
         .messagesTo(OUTSIDER.email)
         .some(
-          (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+          (m) =>
+            m.text.includes(contract.title) &&
+            m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
         ),
     );
     const delivered = harness.mailer
       .messagesTo(OUTSIDER.email)
       .filter(
-        (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+        (m) =>
+          m.text.includes(contract.title) &&
+          m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
       ).length;
 
     // Staged, in the two columns no endpoint exposes: the row still owes
@@ -891,7 +897,9 @@ describe("an immediate email whose wake-up was lost", () => {
         harness.mailer
           .messagesTo(OUTSIDER.email)
           .filter(
-            (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+            (m) =>
+              m.text.includes(contract.title) &&
+              m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
           ).length > delivered,
     );
     // The mark lands after the message, so settle on the column rather

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { expect, test } from "@playwright/test";
 import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs } from "./helpers.js";
 
@@ -18,7 +19,9 @@ test("Legal targets a Contract Type and generates its draft Contract with a prim
     data: { displayName: name },
   });
   expect(madeType.status()).toBe(201);
-  const type = (await madeType.json()).contractType;
+  const { contractType: type } = z
+    .object({ contractType: z.object({ id: z.string() }) })
+    .parse(await madeType.json());
   await page.goto("/auto-docs");
   await page.getByRole("button", { name: "Create Auto-Doc", exact: true }).click();
   await page.getByRole("textbox", { name: "Name", exact: true }).fill(name);
@@ -74,21 +77,48 @@ test("Legal targets a Contract Type and generates its draft Contract with a prim
   expect(word.status()).toBe(200);
   const detail = await page.request.get(`/api/v1${contractPath}`);
   expect(detail.status()).toBe(200);
-  const contract = (await detail.json()).contract;
+  const { contract } = z
+    .object({
+      contract: z.object({
+        value: z.object({ amount: z.number(), currency: z.string(), cadence: z.string() }),
+        businessOwner: z.object({ displayName: z.string() }),
+      }),
+    })
+    .parse(await detail.json());
   expect(contract.value).toEqual({ amount: 1234567, currency: "USD", cadence: "annually" });
   expect(contract.businessOwner.displayName).toBe(ADMIN.displayName);
   const papers = await page.request.get(`/api/v1${contractPath}/documents`);
   expect(papers.status()).toBe(200);
-  const primary = (await papers.json()).documents.find(
-    (document: { isPrimary: boolean }) => document.isPrimary,
-  );
+  const { documents } = z
+    .object({
+      documents: z.array(
+        z.object({
+          id: z.string(),
+          isPrimary: z.boolean(),
+          versions: z
+            .array(
+              z.object({
+                id: z.string(),
+                kind: z.string(),
+                source: z.string(),
+                versionNumber: z.number(),
+              }),
+            )
+            .min(1),
+        }),
+      ),
+    })
+    .parse(await papers.json());
+  const primary = documents.find((document) => document.isPrimary);
+  expect(primary, "The generated Contract has a primary Document").toBeDefined();
+  if (!primary) throw new Error("The generated Contract has no primary Document.");
   expect(primary.versions[0]).toMatchObject({
     kind: "draft_ours",
     source: "generated",
     versionNumber: 1,
   });
   const primaryWord = await page.request.get(
-    `/api/v1/documents/${primary.id}/versions/${primary.versions[0].id}/download`,
+    `/api/v1/documents/${primary.id}/versions/${primary.versions[0]!.id}/download`,
   );
   expect(primaryWord.status()).toBe(200);
   expect(await primaryWord.body()).toEqual(await word.body());

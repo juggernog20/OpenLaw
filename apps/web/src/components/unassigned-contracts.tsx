@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { formatFullDate } from "../lib/format";
 import { Button } from "./ui/button";
 
 export type UnassignedContracts =
@@ -137,7 +138,7 @@ export function UnassignedContractsPanel({
                       {row.title}
                     </Link>
                     <p className="mt-1 text-xs text-muted">
-                      #{row.number} · {intl.formatDate(row.createdAt)}
+                      #{row.number} · {formatFullDate(row.createdAt, { locale: intl.locale })}
                     </p>
                   </td>
                   <td className="px-4 py-3">

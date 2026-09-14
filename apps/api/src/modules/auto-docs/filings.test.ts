@@ -309,10 +309,12 @@ it("refuses required target Fields without leaving a partial Filing or Contract"
       })
     ).statusCode,
   ).toBe(201);
-  const before = await h.db.select({ id: contracts.id }).from(contracts);
+  const before = await h.db.select({ id: contracts.id }).from(contracts).orderBy(contracts.id);
   const refused = await file(source, { kind: "new_contract", contractTypeId });
   expect(refused.statusCode, refused.body).toBe(400);
-  expect(await h.db.select({ id: contracts.id }).from(contracts)).toEqual(before);
+  expect(await h.db.select({ id: contracts.id }).from(contracts).orderBy(contracts.id)).toEqual(
+    before,
+  );
   const history = await get(
     `/auto-docs/${source.id}/generations/${source.generationId}/filings`,
     member,

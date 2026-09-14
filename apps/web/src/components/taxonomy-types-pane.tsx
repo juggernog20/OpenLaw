@@ -247,9 +247,8 @@ function ArchiveTypeDialog<Row extends TaxonomyPaneRow>({
                   values={{ count: target.inUseCount }}
                 />
               </Label>
-              {/* The affordance is always drawn (ST8); with nothing to
-                move it waits disabled, and the SET-003 requirement arms
-                once records exist (the record milestone). */}
+              {/* SET-003 requires reassignment for these taxonomies when records use them.
+                Taxonomies that keep references on archive omit this control. */}
               <select
                 id="reassignToId"
                 name="reassignToId"

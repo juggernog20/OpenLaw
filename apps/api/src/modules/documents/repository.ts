@@ -270,6 +270,7 @@ function recordPredicate(reference: string | undefined, owner?: DocumentOwner): 
     return or(
       sql`${documentOwnerSql("entity").documentOwnerId} = ${parsed.id}`,
       sql`${documentOwnerSql("knowledge_item").documentOwnerId} = ${parsed.id}`,
+      sql`${documentOwnerSql("auto_doc").documentOwnerId} = ${parsed.id}`,
     );
   }
   return "id" in parsed

@@ -800,12 +800,17 @@ describe("Portal-listed", () => {
       { archivedAt: "2026-09-13T00:00:00.000Z" },
       "Archived Entities stay out of Portal pickers.",
     ],
-  ])("keeps an unavailable Portal-listed control disabled", async (signedIn, overrides, reason) => {
-    const api = recordApi(entityRow(overrides));
-    stubApi({ signedIn, extra: api.handler });
-    renderAt("/entities/e1");
-    expect(await screen.findByRole("switch", { name: "Portal-listed" })).toBeDisabled();
-    if (reason) expect(screen.getByText(reason)).toBeInTheDocument();
-    expect(api.patches).toEqual([]);
-  });
+  ])(
+    "keeps an unavailable Portal-listed control disabled for %o with %o: %s",
+    async (signedIn, overrides, reason) => {
+      const api = recordApi(entityRow(overrides));
+      stubApi({ signedIn, extra: api.handler });
+      renderAt("/entities/e1");
+      const control = await screen.findByRole("switch", { name: "Portal-listed" });
+      expect(control).toBeDisabled();
+      await userEvent.click(control);
+      expect(screen.getByText(reason)).toBeInTheDocument();
+      expect(api.patches).toEqual([]);
+    },
+  );
 });

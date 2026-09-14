@@ -304,7 +304,10 @@ async function sendNotificationEmail(
   // No copy for this event yet — group 3's words arrive with the digest
   // (NOT-003). Terminal, because no retry writes copy.
   if (!message) return "unrenderable";
-  await mailer.send(message);
+  await mailer.send({
+    ...message,
+    headers: { "X-OpenLaw-Notification-Event": row.eventType },
+  });
   await settle(deps, notificationId, "sent");
   return null;
 }

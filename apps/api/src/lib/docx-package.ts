@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Bounded ZIP and XML reads shared by Word comparison and Auto-Doc detection. */
+/** DOC-003 and TECH-028: bounded ZIP and XML reads for Word comparison and Auto-Doc detection. */
 import { inflateRawSync } from "node:zlib";
 import { DOMParser, type DOMParserOptions, type Document as XmlDocument } from "@xmldom/xmldom";
 
@@ -84,6 +84,18 @@ export function readZipEntry(packageBytes: Buffer, entry: ZipEntry): Buffer {
   return body;
 }
 
+export function xmlPart(
+  packageBytes: Buffer,
+  entries: ReadonlyMap<string, ZipEntry>,
+  name: string,
+  required: true,
+): XmlDocument;
+export function xmlPart(
+  packageBytes: Buffer,
+  entries: ReadonlyMap<string, ZipEntry>,
+  name: string,
+  required?: boolean,
+): XmlDocument | undefined;
 export function xmlPart(
   packageBytes: Buffer,
   entries: ReadonlyMap<string, ZipEntry>,

@@ -207,8 +207,8 @@ it("edits fields, preserves the orphan cue, and shows saved form versions and up
   );
   invalidReply = true;
   await user.click(screen.getByRole("button", { name: "Upload template" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent(
-    "The upload response could not be read.",
+  await waitFor(() =>
+    expect(screen.getByRole("alert")).toHaveTextContent("The upload response could not be read."),
   );
   expect(
     within(screen.getByRole("region", { name: "Form versions" })).getByText("Form version 2"),

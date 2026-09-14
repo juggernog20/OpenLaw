@@ -534,7 +534,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
           const [entity] = await tx
             .select({ name: entities.legalName })
             .from(entities)
-            .where(eq(entities.id, value));
+            .where(and(eq(entities.id, value), isNull(entities.archivedAt)));
           if (!entity)
             throw httpError(409, `The Entity used for "${field.label}" is no longer available.`);
           displayValues[field.slug] = entity.name;

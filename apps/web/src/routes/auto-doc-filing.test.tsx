@@ -4,7 +4,7 @@
 import { screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
-import { json, renderAt, stubApi } from "../testing/helpers";
+import { json, problem, renderAt, stubApi } from "../testing/helpers";
 
 const generation = {
   id: "gen1",
@@ -89,4 +89,45 @@ it.each([
     "href",
     `/${portal ? "portal/" : ""}matters/7`,
   );
+});
+
+it.each([
+  { shell: "app", portal: false },
+  { shell: "Portal", portal: true },
+])("keeps the destination and refusal visible in the $shell Filing dialog", async ({ portal }) => {
+  stubApi({
+    signedIn: {
+      id: "person",
+      email: "person@example.com",
+      displayName: "Person",
+      role: portal ? "business_user" : "legal_team_member",
+    },
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations/gen1"))
+        return json(200, { generation, canGenerate: true });
+      if (call.url.pathname.endsWith("/filing-options"))
+        return json(200, {
+          destinations: [{ kind: "matter", number: 7, title: "Board meeting" }],
+          contractTypes: [],
+        });
+      if (call.url.pathname.endsWith("/filings"))
+        return call.method === "GET"
+          ? json(200, { filings: [] })
+          : problem(409, "Restore this Matter before filing a Document.");
+      return undefined;
+    },
+  });
+  renderAt(`/${portal ? "portal/" : ""}auto-docs/nda/generations/gen1`);
+  await userEvent.click(await screen.findByRole("button", { name: "File" }));
+  const dialog = await screen.findByRole("dialog", { name: "File Filing NDA" });
+  await within(dialog).findByRole("option", { name: "Matter #7: Board meeting" });
+  await userEvent.selectOptions(within(dialog).getByLabelText("Filing destination"), "matter:7");
+  await userEvent.selectOptions(within(dialog).getByLabelText("File format"), "pdf");
+  await userEvent.click(within(dialog).getByRole("button", { name: "File" }));
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+    "Restore this Matter before filing a Document.",
+  );
+  expect(dialog).toBeVisible();
+  expect(within(dialog).getByLabelText("Filing destination")).toHaveValue("matter:7");
+  expect(within(dialog).getByLabelText("File format")).toHaveValue("pdf");
 });

@@ -88,7 +88,10 @@ test("the four Portal Auto-Doc screens are accessible and deliver Word and PDF",
     await portal.goto("/portal/auto-docs");
     await expect(portal.getByRole("heading", { name: "Auto-Docs", level: 1 })).toBeVisible();
     expect(await reportAxeViolations(portal, testInfo, "Portal-Auto-Docs-list")).toEqual([]);
-    await portal.screenshot({ path: "/tmp/m35-854-portal-list.png", fullPage: true });
+    await testInfo.attach("m35-854-portal-list", {
+      body: await portal.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
     await portal.getByRole("link", { name: `Generate ${name}`, exact: true }).click();
     await expect(
       portal.getByRole("heading", { name: "Before you generate", level: 1 }),
@@ -96,7 +99,10 @@ test("the four Portal Auto-Doc screens are accessible and deliver Word and PDF",
     expect(await reportAxeViolations(portal, testInfo, "Portal-Auto-Doc-acknowledgement")).toEqual(
       [],
     );
-    await portal.screenshot({ path: "/tmp/m35-854-portal-acknowledgement.png", fullPage: true });
+    await testInfo.attach("m35-854-portal-acknowledgement", {
+      body: await portal.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
     await portal.getByRole("checkbox", { name: "I acknowledge this statement." }).check();
     await portal.getByRole("button", { name: "Acknowledge and continue", exact: true }).click();
     await expect(portal.getByRole("heading", { name: `Generate ${name}`, level: 1 })).toBeVisible();
@@ -112,7 +118,10 @@ test("the four Portal Auto-Doc screens are accessible and deliver Word and PDF",
     await calendar.getByRole("combobox", { name: "Month", exact: true }).selectOption("9");
     await calendar.getByRole("button", { name: /October 1st, 2026/ }).click();
     expect(await reportAxeViolations(portal, testInfo, "Portal-Auto-Doc-form")).toEqual([]);
-    await portal.screenshot({ path: "/tmp/m35-854-portal-form.png", fullPage: true });
+    await testInfo.attach("m35-854-portal-form", {
+      body: await portal.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
     await portal.getByRole("button", { name: "Generate", exact: true }).click();
     await expect(
       portal.getByRole("heading", { name: "Your generated document", level: 1 }),
@@ -122,7 +131,10 @@ test("the four Portal Auto-Doc screens are accessible and deliver Word and PDF",
       timeout: 30_000,
     });
     expect(await reportAxeViolations(portal, testInfo, "Portal-Auto-Doc-confirmation")).toEqual([]);
-    await portal.screenshot({ path: "/tmp/m35-854-portal-confirmation.png", fullPage: true });
+    await testInfo.attach("m35-854-portal-confirmation", {
+      body: await portal.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
     const mail = await waitForMailDetails(page.request, email, new RegExp(name));
     expect(mail.attachments.map((attachment) => attachment.filename).sort()).toEqual([
       `${name}.docx`,
@@ -137,7 +149,9 @@ test("the four Portal Auto-Doc screens are accessible and deliver Word and PDF",
     await expect(
       portal.getByRole("textbox", { name: "Counterparty name", exact: true }),
     ).toHaveValue("Portal supplier");
-    await page.request.post(`/api/v1/auto-docs/${id}/unpublish`, { data: {} });
+    expect(
+      (await page.request.post(`/api/v1/auto-docs/${id}/unpublish`, { data: {} })).status(),
+    ).toBe(200);
     await portal.getByRole("button", { name: "Generate", exact: true }).click();
     await expect(portal.getByRole("alert")).toContainText(name);
     await expect(

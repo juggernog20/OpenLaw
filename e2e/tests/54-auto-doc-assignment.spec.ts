@@ -47,7 +47,10 @@ test("Legal edits Assignment rules and claims an unassigned generated Contract f
   await assignment.getByRole("button", { name: "Save assignment", exact: true }).click();
   await expect(assignment.getByText("Assignment settings saved.", { exact: true })).toBeVisible();
   expect(await reportAxeViolations(page, testInfo, "Auto-Doc-assignment-editor")).toEqual([]);
-  await page.screenshot({ path: "/tmp/m35-853-assignment-editor.png", fullPage: true });
+  await testInfo.attach("m35-853-assignment-editor", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
   await rule.getByRole("button", { name: "Remove rule", exact: true }).click();
   await assignment.getByRole("button", { name: "Save assignment", exact: true }).click();
   await expect(assignment.getByText("Assignment settings saved.", { exact: true })).toBeVisible();
@@ -59,10 +62,13 @@ test("Legal edits Assignment rules and claims an unassigned generated Contract f
   await expect(page.getByRole("heading", { name: "Generation", exact: true })).toBeVisible();
   const contractPath = (await page.getByRole("link", { name, exact: true }).getAttribute("href"))!;
   await page.goto("/inbox?tab=unassigned-contracts");
-  const row = page.getByRole("row").filter({ has: page.locator(`a[href="${contractPath}"]`) });
+  const row = page.getByRole("row").filter({ has: page.getByRole("link", { name, exact: true }) });
   await expect(row).toBeVisible();
   expect(await reportAxeViolations(page, testInfo, "Inbox-unassigned-Contracts")).toEqual([]);
-  await page.screenshot({ path: "/tmp/m35-853-inbox.png", fullPage: true });
+  await testInfo.attach("m35-853-inbox", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
   await row.getByRole("button", { name: "Claim", exact: true }).click();
   await expect(row).toHaveCount(0);
   const queue = await page.request.get("/api/v1/inbox/unassigned-contracts");

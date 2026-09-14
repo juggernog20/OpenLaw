@@ -2,6 +2,8 @@
 
 /** ADO-002–004: one template Document and immutable form snapshots. */
 import { useState } from "react";
+import { z } from "zod";
+import { formatRelativeOrShort } from "../lib/format";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import type { paths } from "@openlaw/api-client";
@@ -285,11 +287,12 @@ function AutoDocRecord({
         `/api/v1/auto-docs/${encodeURIComponent(saved.autoDoc.id)}/template`,
         { method: "POST", credentials: "same-origin", body },
       );
-      const result = await response.json();
+      const result: unknown = await response.json();
       if (!response.ok) {
+        const refusal = z.object({ detail: z.string() }).safeParse(result);
         setError(
-          typeof result.detail === "string"
-            ? result.detail
+          refusal.success
+            ? refusal.data.detail
             : intl.formatMessage({
                 id: "autoDocs.uploadFailed",
                 defaultMessage: "Could not upload the template. Please try again.",
@@ -772,9 +775,9 @@ function AutoDocRecord({
                   <span className="text-muted">
                     <FormattedMessage
                       id="autoDocs.formVersionDetails"
-                      defaultMessage="{date, date, medium} · {count, plural, one {# field} other {# fields}}"
+                      defaultMessage="{date} · {count, plural, one {# field} other {# fields}}"
                       values={{
-                        date: new Date(version.createdAt),
+                        date: formatRelativeOrShort(version.createdAt, { locale: intl.locale }),
                         count: version.definition.fields.length,
                       }}
                     />

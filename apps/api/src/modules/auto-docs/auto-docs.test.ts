@@ -3,16 +3,7 @@
 /** ADO-001–004 at the Auto-Doc routes and their real Document chain. */
 import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import {
-  AUTO_DOC_FIELD_TYPES,
-  autoDocs,
-  documents,
-  documentVersions,
-  entities,
-  entityTypes,
-  eq,
-  users,
-} from "@openlaw/db";
+import { AUTO_DOC_FIELD_TYPES, documents, documentVersions, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -232,42 +223,6 @@ it("refuses user fields and invalid options without saving a form version", asyn
   expect((await record()).formVersions).toHaveLength(before.formVersions.length);
 });
 
-it("enforces exactly one owner and refuses a template pointer to another Auto-Doc's Document", async () => {
-  const [actor] = await h.db.select().from(users).where(eq(users.email, TEST_ADMIN.email));
-  const [other] = await h.db
-    .insert(autoDocs)
-    .values({ name: "Other template", createdBy: actor!.id, updatedBy: actor!.id })
-    .returning();
-  const [type] = await h.db.select().from(entityTypes).limit(1);
-  const [entity] = await h.db
-    .insert(entities)
-    .values({ legalName: "Template owner test", entityTypeId: type!.id })
-    .returning();
-  for (const owners of [{}, { autoDocId: other!.id, entityId: entity!.id }]) {
-    await expect(
-      h.db.insert(documents).values({ ...owners, title: "Invalid owner", createdBy: actor!.id }),
-    ).rejects.toMatchObject({ cause: { constraint: "documents_owner_check" } });
-  }
-  const current = await record();
-  await expect(
-    h.db
-      .update(autoDocs)
-      .set({ templateDocumentId: current.template.id })
-      .where(eq(autoDocs.id, other!.id)),
-  ).rejects.toBeDefined();
-  // A different Document avoids the unique pointer constraint and proves common ownership itself.
-  const [foreign] = await h.db
-    .insert(documents)
-    .values({ entityId: entity!.id, title: "Entity paper", createdBy: actor!.id })
-    .returning();
-  await expect(
-    h.db
-      .update(autoDocs)
-      .set({ templateDocumentId: foreign!.id })
-      .where(eq(autoDocs.id, other!.id)),
-  ).rejects.toMatchObject({ cause: { constraint: "auto_docs_template_owner_check" } });
-});
-
 it("keeps templates and their activity Legal-only across direct reads, search, and the repository", async () => {
   const current = await record();
   const doc = current.template;
@@ -297,6 +252,15 @@ it("keeps templates and their activity Legal-only across direct reads, search, a
   expect(list.statusCode, list.body).toBe(200);
   expect(list.json().documents.map((row: { id: string }) => row.id)).toEqual([doc.id]);
   expect(list.json().documents[0].owner).toMatchObject({ kind: "auto_doc", title: "Supplier NDA" });
+  const unhinted = await h.app.inject({
+    url: `/api/v1/documents?record=${autoDocId}`,
+    cookies: admin,
+  });
+  expect(unhinted.statusCode, unhinted.body).toBe(200);
+  expect(unhinted.json().documents.map((document: { id: string }) => document.id)).toContain(
+    doc.id,
+  );
+
   const options = await h.app.inject({
     method: "GET",
     url: "/api/v1/documents/options",

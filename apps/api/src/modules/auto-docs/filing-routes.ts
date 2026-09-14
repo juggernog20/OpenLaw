@@ -22,6 +22,7 @@ export const autoDocFilingRoutes: FastifyPluginAsyncZod = async (app) => {
         preHandler,
         schema: {
           tags: ["Auto-Docs"],
+          operationId: portal ? "listPortalAutoDocFilingOptions" : "listAutoDocFilingOptions",
           summary: "Find reached live Filing destinations",
           querystring: z.object({ search: z.string().max(200).optional() }),
           response: {
@@ -78,6 +79,7 @@ export const autoDocFilingRoutes: FastifyPluginAsyncZod = async (app) => {
         preHandler,
         schema: {
           tags: ["Auto-Docs"],
+          operationId: portal ? "listPortalAutoDocFilings" : "listAutoDocFilings",
           summary: "List a Generation's Filings",
           params,
           response: { 200: z.object({ filings: z.array(FilingRow) }), default: problemResponse },
@@ -102,6 +104,7 @@ export const autoDocFilingRoutes: FastifyPluginAsyncZod = async (app) => {
         preHandler,
         schema: {
           tags: ["Auto-Docs"],
+          operationId: portal ? "filePortalAutoDocGeneration" : "fileAutoDocGeneration",
           summary: "File a Generation as a new Document",
           params,
           body: FilingInput,

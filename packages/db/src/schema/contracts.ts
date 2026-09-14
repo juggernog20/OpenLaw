@@ -203,6 +203,11 @@ export const contracts = pgTable(
      * never cascades to or from a linked record (CTR-018), so no other
      * table reads this column. */
     isConfidential: boolean("is_confidential").notNull().default(false),
+    /** Null on direct creation and Request conversion. */
+    createdByGenerationId: text("created_by_generation_id").references(
+      (): AnyPgColumn => autoDocGenerations.id,
+      { onDelete: "set null" },
+    ),
     /**
      * CTR-014's primary document: which of this contract's documents is
      * the instrument (M11/4). Everything else on the record is a loose
@@ -229,11 +234,6 @@ export const contracts = pgTable(
     // cycle — a contract names its primary document, and a document
     // names its owning contract — and TypeScript cannot infer a type
     // that depends on itself.
-    /** Null on direct creation and Request conversion. */
-    createdByGenerationId: text("created_by_generation_id").references(
-      (): AnyPgColumn => autoDocGenerations.id,
-      { onDelete: "set null" },
-    ),
     primaryDocumentId: text("primary_document_id").references((): AnyPgColumn => documents.id, {
       onDelete: "set null",
     }),

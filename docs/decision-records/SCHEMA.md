@@ -1362,7 +1362,7 @@ MTR-001 taxonomy machinery: `id`, `slug`, `display_name`, `display_order`, `arch
 
 Source: **CTR-026**. Built in M35/4, migration 0119.
 
-(`contract_type_id`, `user_id`, `display_order`, `created_at`), compound PK on the first two columns. `display_order` stores the People card order. Copied to `contract_team` on every creation of a Contract of that Type, deduplicated; archived users skipped. Direct creation, Request conversion, targeted Generation, and new-Contract Filing use the shared creation routine. No role column: DD-023.
+(`contract_type_id`, `user_id`, `display_order`, `created_at`), compound PK on the first two columns. `display_order` stores the People card order. Copied to `contract_team` on every creation of a Contract of that Type, deduplicated; archived users skipped. Direct creation, Request conversion, targeted Generation, and new-Contract Filing use the shared creation routine. No role column: DD-023. Migration 0128 cascades default-person rows on user deletion, so revoking a pending invite cannot leave a blocking reference.
 
 ---
 

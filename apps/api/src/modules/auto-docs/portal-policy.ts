@@ -8,6 +8,7 @@ import {
   and,
   asc,
   autoDocAcknowledgements,
+  autoDocAssignmentRules,
   autoDocAudienceDepartments,
   autoDocAudienceUsers,
   autoDocFormVersions,
@@ -32,8 +33,7 @@ import type { AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError } from "../../lib/problem.js";
 import { portalEntityScope } from "../../lib/portal-entities.js";
-import { assignmentGaps, readAssignmentRules } from "./assignment.js";
-import { latestForm } from "./forms.js";
+import { assignmentGaps } from "./assignment.js";
 
 export const AcknowledgementText = z.string().trim().min(1).max(10_000);
 const DistinctIds = z
@@ -224,39 +224,83 @@ export async function applyPortalSettings(
   }
 }
 export async function portalWarnings(db: Executor, autoDoc: AutoDoc) {
-  const [published] = autoDoc.publishedFormVersionId
-    ? await db
-        .select()
-        .from(autoDocFormVersions)
-        .where(eq(autoDocFormVersions.id, autoDoc.publishedFormVersionId))
-    : [];
-  const form = published ?? (await latestForm(db, autoDoc.id));
-  const warnings =
-    form && autoDoc.targetContractTypeId
-      ? assignmentGaps(form.definition, await readAssignmentRules(db, autoDoc.id))
-      : [];
-  if (warnings.length)
-    warnings.push(
-      "Publish a Form that matches the saved Assignment rules before generating this Auto-Doc.",
-    );
-  if (autoDoc.targetContractTypeId) {
-    const [type] = await db
-      .select({ id: contractTypes.id })
-      .from(contractTypes)
-      .where(
-        and(eq(contractTypes.id, autoDoc.targetContractTypeId), isNull(contractTypes.archivedAt)),
+  return (await portalWarningsFor(db, [autoDoc])).get(autoDoc.id) ?? [];
+}
+
+/** Read configuration for the whole visible list in a fixed number of queries. */
+export async function portalWarningsFor(db: Executor, rows: AutoDoc[]) {
+  const warnings = new Map<string, string[]>();
+  if (!rows.length) return warnings;
+  const ids = rows.map((row) => row.id);
+  const publishedIds = rows.flatMap((row) =>
+    row.publishedFormVersionId ? [row.publishedFormVersionId] : [],
+  );
+  const typeIds = rows.flatMap((row) =>
+    row.targetContractTypeId ? [row.targetContractTypeId] : [],
+  );
+  const entityIds = rows.flatMap((row) => (row.fixedEntityId ? [row.fixedEntityId] : []));
+  const [published, latest, rules, types, portalEntities] = await Promise.all([
+    publishedIds.length
+      ? db.select().from(autoDocFormVersions).where(inArray(autoDocFormVersions.id, publishedIds))
+      : [],
+    db
+      .selectDistinctOn([autoDocFormVersions.autoDocId])
+      .from(autoDocFormVersions)
+      .where(inArray(autoDocFormVersions.autoDocId, ids))
+      .orderBy(asc(autoDocFormVersions.autoDocId), desc(autoDocFormVersions.versionNumber)),
+    db
+      .select()
+      .from(autoDocAssignmentRules)
+      .where(inArray(autoDocAssignmentRules.autoDocId, ids))
+      .orderBy(asc(autoDocAssignmentRules.displayOrder), asc(autoDocAssignmentRules.id)),
+    typeIds.length
+      ? db
+          .select({ id: contractTypes.id })
+          .from(contractTypes)
+          .where(and(inArray(contractTypes.id, typeIds), isNull(contractTypes.archivedAt)))
+      : [],
+    entityIds.length
+      ? db
+          .select({ id: entities.id })
+          .from(entities)
+          .where(and(inArray(entities.id, entityIds), portalEntityScope))
+      : [],
+  ]);
+  const publishedById = new Map(published.map((form) => [form.id, form]));
+  const latestById = new Map(latest.map((form) => [form.autoDocId, form]));
+  const rulesById = new Map<string, typeof rules>();
+  for (const rule of rules) {
+    const group = rulesById.get(rule.autoDocId) ?? [];
+    group.push(rule);
+    rulesById.set(rule.autoDocId, group);
+  }
+  const liveTypes = new Set(types.map((type) => type.id));
+  const liveEntities = new Set(portalEntities.map((entity) => entity.id));
+  for (const row of rows) {
+    const form =
+      (row.publishedFormVersionId ? publishedById.get(row.publishedFormVersionId) : undefined) ??
+      latestById.get(row.id);
+    const messages =
+      form && row.targetContractTypeId
+        ? assignmentGaps(form.definition, rulesById.get(row.id) ?? [])
+        : [];
+    if (messages.length)
+      messages.push(
+        "Publish a Form that matches the saved Assignment rules before generating this Auto-Doc.",
       );
-    if (!type) warnings.push("Choose a live target Contract Type before generating this Auto-Doc.");
-    if (autoDoc.fixedEntityId && autoDoc.audience !== "legal_only") {
-      const [entity] = await db
-        .select({ id: entities.id })
-        .from(entities)
-        .where(and(eq(entities.id, autoDoc.fixedEntityId), portalEntityScope));
-      if (!entity)
-        warnings.push(
+    if (row.targetContractTypeId) {
+      if (!liveTypes.has(row.targetContractTypeId))
+        messages.push("Choose a live target Contract Type before generating this Auto-Doc.");
+      if (
+        row.fixedEntityId &&
+        row.audience !== "legal_only" &&
+        !liveEntities.has(row.fixedEntityId)
+      )
+        messages.push(
           "The fixed Entity must be live, Portal-listed and non-Confidential. An Administrator can change its Portal-listed setting, or you can choose another Entity.",
         );
     }
+    warnings.set(row.id, messages);
   }
   return warnings;
 }

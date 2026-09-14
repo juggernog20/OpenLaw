@@ -7,7 +7,6 @@ import { activityLog, and, contracts, eq, notifications, orgSettings, users } fr
 import { provisionUser } from "../../auth/instance.js";
 import { AutoDocFillError } from "../../lib/auto-doc-fill/engine.js";
 import { runMorningRound } from "../../pipeline/morning-round.js";
-import { generateAutoDoc } from "./generations.js";
 import {
   signInCookies,
   startHarness,
@@ -90,7 +89,12 @@ async function prepare() {
     method: "PATCH",
     url: `/api/v1/auto-docs/${id}`,
     cookies,
-    payload: { targetContractTypeId: typeId, formats: "docx" },
+    payload: {
+      targetContractTypeId: typeId,
+      formats: "docx",
+      audience: "everyone",
+      acknowledgementFrequency: "none",
+    },
   });
   expect(configured.statusCode, configured.body).toBe(200);
   const bytes = await readFile(
@@ -130,11 +134,17 @@ async function generate(
   prepared: Awaited<ReturnType<typeof prepare>>,
   jurisdiction: string | null,
 ) {
-  const [person] = await h.db.select().from(users).where(eq(users.id, businessId));
-  const generation = await generateAutoDoc(h.app, h.app.log, person!, prepared.id, {
-    ...prepared.pair,
-    answers: { counterparty_name: "Acme Assignment", signing_date: "2026-10-01", jurisdiction },
+  const response = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/portal/auto-docs/${prepared.id}/generations`,
+    cookies: businessCookies,
+    payload: {
+      ...prepared.pair,
+      answers: { counterparty_name: "Acme Assignment", signing_date: "2026-10-01", jurisdiction },
+    },
   });
+  expect(response.statusCode, response.body).toBe(201);
+  const generation = response.json().generation;
   expect(generation.state).toBe("ready");
   const [row] = await h.db
     .select()
@@ -436,14 +446,24 @@ it("keeps the accepted Owner and original generator when failed fill is retried 
     200,
   );
   await publish(prepared);
-  const [person] = await h.db.select().from(users).where(eq(users.id, businessId));
   h.fillEngine.failure = new AutoDocFillError("Retry this fill.");
   let failed;
   try {
-    failed = await generateAutoDoc(h.app, h.app.log, person!, prepared.id, {
-      ...prepared.pair,
-      answers: { counterparty_name: "Retry Owner", signing_date: "2026-10-01", jurisdiction: "US" },
+    const response = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/portal/auto-docs/${prepared.id}/generations`,
+      cookies: businessCookies,
+      payload: {
+        ...prepared.pair,
+        answers: {
+          counterparty_name: "Retry Owner",
+          signing_date: "2026-10-01",
+          jurisdiction: "US",
+        },
+      },
     });
+    expect(response.statusCode, response.body).toBe(201);
+    failed = response.json().generation;
   } finally {
     h.fillEngine.failure = null;
   }

@@ -455,3 +455,28 @@ it("refuses archived people and archived Type edits without changing the list", 
   });
   expect(list.json().people.map((p: { id: string }) => p.id)).toEqual([portalId]);
 });
+
+it("revokes a pending invite even when it is a Contract Type default person", async () => {
+  const invited = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/auth/invites",
+    cookies: admin,
+    payload: {
+      email: "pending-default@example.com",
+      displayName: "Pending default",
+      role: "legal_team_member",
+    },
+  });
+  expect(invited.statusCode, invited.body).toBe(201);
+  const userId = invited.json().user.id;
+  await add(userId);
+  const revoked = await h.app.inject({
+    method: "DELETE",
+    url: `/api/v1/auth/invites/${userId}`,
+    cookies: admin,
+  });
+  expect(revoked.statusCode, revoked.body).toBe(204);
+  const current = await h.app.inject({ url: endpoint(), cookies: admin });
+  expect(current.statusCode).toBe(200);
+  expect(current.json().people).not.toContainEqual(expect.objectContaining({ id: userId }));
+});

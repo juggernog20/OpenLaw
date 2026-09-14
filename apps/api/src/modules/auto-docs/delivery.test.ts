@@ -5,6 +5,8 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { autoDocGenerations, eq, orgSettings, sql } from "@openlaw/db";
+import { PgBoss } from "pg-boss";
+import { JOB_QUEUES } from "../../pipeline/jobs.js";
 import { sweepGenerationDeliveries } from "../../pipeline/generation-delivery.js";
 import { startPipeline, type Pipeline } from "../../pipeline/pg-boss.js";
 import {
@@ -423,5 +425,32 @@ it("requires recorded email failures to have a nonempty code and reason", async 
         sql`update auto_doc_generations set state = 'failed', failure = '{"code":"email_failed","detail":"Email failed"}'::jsonb, email_state = 'failed', email_sent_at = null, email_failure = ${JSON.stringify(failure)}::jsonb where id = ${generation.id}`,
       ),
     ).rejects.toThrow();
+  }
+});
+
+it("recovers a lost delivery job on the minute sweep without restarting the worker", async () => {
+  const { id, pair } = await prepare("docx");
+  await startWorker();
+  const enqueue = h.pipeline.requestGenerationDelivery;
+  h.pipeline.requestGenerationDelivery = async () => {
+    throw new Error("Queue unavailable");
+  };
+  let generationId: string;
+  try {
+    generationId = (await generate(id, pair)).id;
+  } finally {
+    h.pipeline.requestGenerationDelivery = enqueue;
+  }
+  const producer = new PgBoss(h.databaseUrl);
+  await producer.start();
+  try {
+    await producer.send(JOB_QUEUES.conversionSweep, {});
+    await expect
+      .poll(async () => (await read(id, generationId)).json().generation.emailState, {
+        timeout: 10_000,
+      })
+      .toBe("sent");
+  } finally {
+    await producer.stop();
   }
 });

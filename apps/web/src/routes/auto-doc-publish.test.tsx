@@ -665,7 +665,7 @@ it("saves selected people and Departments with the acknowledgement override and 
     "every_use",
   );
   await user.click(
-    screen.getByRole("checkbox", { name: "Use the organisation's acknowledgement text" }),
+    screen.getByRole("checkbox", { name: "Use the organization's acknowledgement text" }),
   );
   await user.clear(screen.getByLabelText("Acknowledgement text"));
   await user.type(screen.getByLabelText("Acknowledgement text"), "Ask Legal before changes.");
@@ -679,4 +679,62 @@ it("saves selected people and Departments with the acknowledgement override and 
       acknowledgementText: "Ask Legal before changes.",
     }),
   );
+});
+
+it("refreshes Assignment values after saving sibling settings without overwriting the refreshed record", async () => {
+  const user = userEvent.setup();
+  let current = record();
+  current.formVersion!.definition.fields[0] = {
+    ...current.formVersion!.definition.fields[0]!,
+    fieldType: "text",
+    options: null,
+  };
+  current.assignmentRules = [
+    {
+      id: "rule",
+      fieldSlug: "jurisdiction",
+      operator: "equals",
+      value: "old",
+      legalOwnerId: "member",
+      displayOrder: 0,
+    },
+  ];
+  let saved: unknown;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+      if (call.url.pathname === "/api/v1/auto-docs/nda") {
+        if (call.method === "PATCH")
+          current = {
+            ...current,
+            autoDoc: { ...current.autoDoc, defaultLegalOwnerId: "other" },
+            assignmentRules: [
+              { ...current.assignmentRules[0]!, value: "refreshed", legalOwnerId: "other" },
+            ],
+          };
+        return json(200, current);
+      }
+      if (call.url.pathname.endsWith("/assignment-rules")) {
+        saved = call.body;
+        return json(200, current);
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  const editor = within(await screen.findByRole("region", { name: "Assignment rules" }));
+  expect(editor.getByLabelText("Value")).toHaveValue("old");
+  await user.click(screen.getByRole("button", { name: "Save settings" }));
+  await waitFor(() => expect(editor.getByLabelText("Default Legal Owner")).toHaveValue("other"));
+  expect(editor.getByLabelText("Value")).toHaveValue("refreshed");
+  await user.click(editor.getByRole("button", { name: "Save assignment" }));
+  await waitFor(() =>
+    expect(saved).toMatchObject({
+      defaultLegalOwnerId: "other",
+      rules: [{ value: "refreshed", legalOwnerId: "other" }],
+    }),
+  );
+  expect(await screen.findByText("Assignment settings saved.")).toBeVisible();
 });

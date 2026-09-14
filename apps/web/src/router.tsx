@@ -648,12 +648,22 @@ export const routes: RouteObject[] = [
       {
         path: "auto-docs/:id/generate",
         loader: portalAutoDocGenerateLoader,
-        element: <PortalAutoDocGeneratePage />,
+        element: (
+          <KeyedByParam name="id">
+            <PortalAutoDocGeneratePage />
+          </KeyedByParam>
+        ),
       },
       {
         path: "auto-docs/:id/generations/:generationId",
         loader: portalAutoDocGenerationLoader,
-        element: <PortalAutoDocGenerationPage />,
+        element: (
+          <KeyedByParam name="id">
+            <KeyedByParam name="generationId">
+              <PortalAutoDocGenerationPage />
+            </KeyedByParam>
+          </KeyedByParam>
+        ),
       },
       { index: true, loader: portalHomeLoader, element: <PortalHomePage /> },
       { path: "contracts", loader: portalContractsLoader, element: <PortalContractsPage /> },

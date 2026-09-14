@@ -2510,8 +2510,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // round on a chain is ambient movement on the record (NOT-002
       // group 2). The storage wrapper removes the fresh blob if the
       // locked reach or archival state changed while it streamed.
-      const updated = await withStoredFile(request, file, () =>
-        app.notifier.notifying(async (tx) => {
+      const updated = await withStoredFile(request, file, async () => {
+        const detection = reached.autoDocId
+          ? await detectStoredTemplate(app.storage, file.fileRef, file.filename, app.maxUploadBytes)
+          : null;
+        return app.notifier.notifying(async (tx) => {
           // The owning contract's row is held here, and this is the lock
           // the version number is assigned under: two uploaders reading
           // the chain's high-water mark at the same moment would both see
@@ -2520,14 +2523,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           const locked = await reachedDocument(tx, request.user, documentId, true);
           assertOpenDocument(locked);
 
-          const detection = locked.autoDocId
-            ? await detectStoredTemplate(
-                app.storage,
-                file.fileRef,
-                file.filename,
-                app.maxUploadBytes,
-              )
-            : null;
           const versionNumber = await nextVersionNumber(tx, documentId);
 
           await insertVersion(tx, { documentId, versionId, versionNumber, file, by: request.user });
@@ -2583,8 +2578,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             });
           }
           return documentWithChain(tx, documentId, locked.primaryDocumentId);
-        }),
-      );
+        });
+      });
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: updated });

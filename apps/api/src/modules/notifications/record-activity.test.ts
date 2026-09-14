@@ -351,7 +351,9 @@ async function owesNoEmail(fixture: { email: string }, contract: ContractRow): P
     harness.mailer
       .messagesTo(fixture.email)
       .filter(
-        (m) => m.text.includes(contract.title) && !m.subject.startsWith("You were added to "),
+        (m) =>
+          m.text.includes(contract.title) &&
+          m.headers?.["X-OpenLaw-Notification-Event"] !== "contract.team_added",
       ),
   ).toEqual([]);
 }

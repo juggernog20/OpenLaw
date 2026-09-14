@@ -447,7 +447,7 @@ export function parseTrackedChangesDocx(packageBytes: Buffer): ChangeModel {
   const document = xmlPart(packageBytes, entries, "word/document.xml", true);
   const headings = headingStyles(xmlPart(packageBytes, entries, "word/styles.xml"));
   const numbering = numberingOf(xmlPart(packageBytes, entries, "word/numbering.xml"));
-  const paragraphs = documentParagraphs(document as XmlDocument, headings, numbering).map(
+  const paragraphs = documentParagraphs(document, headings, numbering).map(
     (paragraph, index): ChangeParagraph => ({ index, ...paragraph }),
   );
   return { paragraphs, changes: changesOf(paragraphs) };

@@ -5,24 +5,15 @@ import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import { autoDocClauseRule } from "../../lib/auto-docs";
-import type { AutoDocAnswer, AutoDocField, AutoDocOptions } from "../../lib/auto-docs";
+import type { AutoDocAnswer, AutoDocOptions } from "../../lib/auto-docs";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { Button } from "../ui/button";
-import { RuleTextValue } from "./clauses-editor";
+import { RuleValueInput, defaultRuleValue } from "./rule-value-input";
 
 type Rule = Omit<AutoDocAnswer["assignmentRules"][number], "id" | "displayOrder"> & {
   id?: string;
   key: string;
 };
-function initialValue(operator: Rule["operator"], field?: AutoDocField): Rule["value"] {
-  const value =
-    field?.fieldType === "boolean"
-      ? true
-      : field?.fieldType === "number" || field?.fieldType === "currency"
-        ? 0
-        : (field?.options?.[0] ?? "");
-  return operator === "is_set" ? null : operator === "is_one_of" ? [value] : value;
-}
 export function AssignmentEditor({
   record,
   options,
@@ -40,6 +31,12 @@ export function AssignmentEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
+  const [sourceRecord, setSourceRecord] = useState(record);
+  if (record !== sourceRecord) {
+    setSourceRecord(record);
+    setRules(record.assignmentRules.map((rule) => ({ ...rule, key: rule.id })));
+    setDefaultOwner(record.autoDoc.defaultLegalOwnerId ?? "");
+  }
   const fields = record.formVersion?.definition.fields ?? [];
   const disabled = busy || record.autoDoc.state === "archived";
   const change = (index: number, patch: Partial<Rule>) =>
@@ -139,11 +136,6 @@ export function AssignmentEditor({
       >
         {rules.map((rule, index) => {
           const field = fields.find((field) => field.slug === rule.fieldSlug);
-          const choices =
-            field?.options ?? (field?.fieldType === "boolean" ? ["true", "false"] : null);
-          const multiple = rule.operator === "is_one_of";
-          const scalar = (value: string) =>
-            field?.fieldType === "boolean" ? value === "true" : value;
           return (
             <fieldset
               key={rule.key}
@@ -168,7 +160,7 @@ export function AssignmentEditor({
                     onChange={(event) =>
                       change(index, {
                         fieldSlug: event.target.value,
-                        value: initialValue(
+                        value: defaultRuleValue(
                           rule.operator,
                           fields.find((field) => field.slug === event.target.value),
                         ),
@@ -201,7 +193,7 @@ export function AssignmentEditor({
                       const parsed = autoDocClauseRule.shape.operator.safeParse(event.target.value);
                       if (!parsed.success) return;
                       const operator = parsed.data;
-                      change(index, { operator, value: initialValue(operator, field) });
+                      change(index, { operator, value: defaultRuleValue(operator, field) });
                     }}
                   >
                     {(["equals", "is_one_of", "is_set", "is_not"] as const).map((operator) => (
@@ -218,67 +210,13 @@ export function AssignmentEditor({
                     ))}
                   </select>
                 </label>
-                {rule.operator !== "is_set" && (
-                  <label className="block space-y-1">
-                    <span>
-                      <FormattedMessage id="autoDocs.ruleValue" defaultMessage="Value" />
-                    </span>
-                    {choices ? (
-                      <select
-                        className={CONTROL_CLASS}
-                        required
-                        multiple={multiple}
-                        value={
-                          multiple
-                            ? Array.isArray(rule.value)
-                              ? rule.value.map(String)
-                              : []
-                            : String(rule.value ?? "")
-                        }
-                        onChange={(event) =>
-                          change(index, {
-                            value: multiple
-                              ? Array.from(event.target.selectedOptions, (option) =>
-                                  scalar(option.value),
-                                )
-                              : scalar(event.target.value),
-                          })
-                        }
-                      >
-                        {[
-                          ...new Set([
-                            ...choices,
-                            ...(Array.isArray(rule.value)
-                              ? rule.value.map(String)
-                              : rule.value === null
-                                ? []
-                                : [String(rule.value)]),
-                          ]),
-                        ].map((value) => (
-                          <option key={value} value={value}>
-                            {choices.includes(value)
-                              ? value
-                              : intl.formatMessage(
-                                  {
-                                    id: "autoDocs.missingRuleOption",
-                                    defaultMessage: "{value} (missing)",
-                                  },
-                                  { value },
-                                )}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <RuleTextValue
-                        key={`${rule.fieldSlug}:${field?.fieldType}:${rule.operator}`}
-                        value={rule.value}
-                        multiple={multiple}
-                        fieldType={field?.fieldType}
-                        onChange={(value) => change(index, { value })}
-                      />
-                    )}
-                  </label>
-                )}
+                <RuleValueInput
+                  field={field}
+                  fieldSlug={rule.fieldSlug}
+                  operator={rule.operator}
+                  value={rule.value}
+                  onChange={(value) => change(index, { value })}
+                />
                 <label className="block space-y-1">
                   <span>
                     <FormattedMessage id="autoDocs.legalOwner" defaultMessage="Legal Owner" />
@@ -334,7 +272,7 @@ export function AssignmentEditor({
                 key: crypto.randomUUID(),
                 fieldSlug: fields[0]!.slug,
                 operator: "equals",
-                value: initialValue("equals", fields[0]),
+                value: defaultRuleValue("equals", fields[0]),
                 legalOwnerId: options.legalOwners[0]!.id,
               },
             ])
