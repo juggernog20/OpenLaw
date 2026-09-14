@@ -158,6 +158,15 @@ export function PortalRequestPage() {
                   <AttachmentList number={request.number} attachments={attachments} />
                 </ValueRow>
               )}
+              <ValueRow
+                label={intl.formatMessage({
+                  id: "records.department",
+                  defaultMessage: "Department",
+                })}
+              >
+                {request.department ??
+                  intl.formatMessage({ id: "departments.none", defaultMessage: "No Department" })}
+              </ValueRow>
               <ValueRow label={intl.formatMessage(BASIC_LABELS.urgency)}>
                 {severityLabel(intl, request.urgency)}
               </ValueRow>

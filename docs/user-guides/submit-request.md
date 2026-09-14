@@ -17,7 +17,7 @@ Send Legal a Request with the details and attachments they need to review it.
 6. Keep the confirmation open until the attachments finish uploading. Note the Request's **R-** reference and check whether any file failed.
 7. Select **Open request** to check the saved answers and attachments.
 
-For example, a fictional **Docs Contract review** Request could use the title **Review the Northstar evaluation terms**, an explanation of the proposed evaluation, **High** urgency, and **Procurement** as the Owning department. These are example values, not required choices.
+For example, a fictional **Docs Contract review** Request could use the title **Review the Northstar evaluation terms**, an explanation of the proposed evaluation, **High** urgency, and **Procurement** as the Department. Department identifies the business team responsible for this work. Choose it from the shared list, or leave **No Department** selected. Legal can correct it while the Request is open; conversion carries it to the new record. These are example values, not required choices.
 
 ## Check the result
 

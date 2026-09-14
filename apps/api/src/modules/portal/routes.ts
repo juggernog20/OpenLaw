@@ -48,6 +48,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { FastifyReply } from "fastify";
 import { z } from "zod";
+import { departmentOptions } from "../departments/references.js";
 import {
   and,
   asc,
@@ -276,6 +277,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
              * that a state that exists, and the portal meets it rather
              * than hiding it. */
             fields: z.array(AttachedCustomFieldSchema),
+            departments: z.array(z.object({ id: z.string(), displayName: z.string() })),
             intakeLinks: z.array(PortalIntakeLinkSchema),
           }),
           default: problemResponse,
@@ -320,6 +322,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
       ]);
       return {
         requestType: type,
+        departments: await departmentOptions(app.db),
         fields,
         intakeLinks: links.map(portalLink),
       };

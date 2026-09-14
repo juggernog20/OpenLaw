@@ -6,6 +6,9 @@ import { defineConfig } from "vite";
 import { pdfjsAssets } from "./vite-pdfjs-assets.ts";
 import { documentation } from "./vite-documentation.ts";
 
+const apiOrigin = process.env.DEV_API_ORIGIN ?? "http://localhost:3000";
+const webPort = process.env.WEB_PORT ? Number(process.env.WEB_PORT) : undefined;
+
 export default defineConfig({
   // The doc panel's PDF surface fetches pdf.js's character maps,
   // standard-font metrics, image decoders, and colour profiles by name
@@ -17,11 +20,20 @@ export default defineConfig({
   // The Origin header is rewritten because better-auth's CSRF check
   // compares it against its own base URL; production sits same-origin
   // behind the reverse proxy and never needs this.
+  //
+  // Both ports are read from the environment because `pnpm dev:hot
+  // --isolated` runs a second instance on a block of its own, and a
+  // proxy still pointing at 3000 would drive the first instance's API
+  // from the second instance's screens. Unset means the usual pair.
   server: {
+    port: webPort,
+    // Vite's fallback is the next free port, which would put the app
+    // somewhere the dev loop did not announce and did not reserve.
+    strictPort: webPort !== undefined,
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
-        headers: { origin: "http://localhost:3000" },
+        target: apiOrigin,
+        headers: { origin: apiOrigin },
       },
     },
   },

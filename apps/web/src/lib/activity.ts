@@ -351,7 +351,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // provider. A key with no arm reads as itself, which is the
       // honest rendering for one this build no longer writes.
       defaultMessage:
-        "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} " +
+        "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} " +
         "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +
@@ -2326,6 +2326,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       date: civilDateIn(intl, payload, "to"),
     }),
   },
+  "request.department_changed": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.request.departmentChanged",
+      defaultMessage: "{actor} changed Department",
+    }),
+  },
   "request.assignee_changed": {
     icon: UserPlus,
     message: defineMessage({
@@ -3016,9 +3023,13 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: Trash2,
     message: defineMessage({
       id: "activity.autoDoc.hardDeleted",
-      defaultMessage: "{actor} permanently deleted an Auto-Doc, {versionCount, plural, one {# template version} other {# template versions}}, and {generationCount, plural, one {# Generation} other {# Generations}}",
+      defaultMessage:
+        "{actor} permanently deleted an Auto-Doc, {versionCount, plural, one {# template version} other {# template versions}}, and {generationCount, plural, one {# Generation} other {# Generations}}",
     }),
-    values: (_intl, payload) => ({ versionCount: wholeCount(payload, "versionCount"), generationCount: wholeCount(payload, "generationCount") }),
+    values: (_intl, payload) => ({
+      versionCount: wholeCount(payload, "versionCount"),
+      generationCount: wholeCount(payload, "generationCount"),
+    }),
   },
   "auto_doc.archived": {
     icon: Archive,

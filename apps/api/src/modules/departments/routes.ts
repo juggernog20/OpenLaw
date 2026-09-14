@@ -4,7 +4,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { contracts, count, departments, inArray, users } from "@openlaw/db";
+import { contracts, count, departments, inArray, matters, requests, users } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
@@ -39,6 +39,13 @@ export const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
               .from(contracts)
               .where(inArray(contracts.owningDepartmentId, ids))
               .groupBy(contracts.owningDepartmentId),
+            ...[matters, requests].map((table) =>
+              db
+                .select({ id: table.departmentId, count: count() })
+                .from(table)
+                .where(inArray(table.departmentId, ids))
+                .groupBy(table.departmentId),
+            ),
           ]);
           const counts = new Map<string, number>();
           for (const row of rows.flat())

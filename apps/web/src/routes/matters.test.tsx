@@ -387,6 +387,7 @@ describe("the Matters destination", () => {
       title: "New advice",
       matterTypeId: TYPE.id,
       managerId: MEMBER.id,
+      departmentId: null,
       priority: "high",
       risk: "low",
       description: "Review the transfer.",

@@ -369,7 +369,7 @@ describe("Home", () => {
       within(card).getByRole("link", { name: /Follow up with external counsel/ }),
     ).toHaveAttribute("href", "/matters/13/tasks");
     expect(screen.queryByRole("link", { name: "View all 4" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("link", { name: "Back to Home" }));
+    await user.click(screen.getByRole("link", { name: "Home" }));
     expect(await screen.findByRole("link", { name: "View all 4" })).toBeInTheDocument();
   });
 
@@ -431,7 +431,7 @@ describe("Home", () => {
       expect(within(card).getAllByRole("listitem")).toHaveLength(2);
       expect(within(card).getByText("2")).toBeInTheDocument();
       expect(screen.getByRole("status")).toHaveTextContent(`Completed: ${task.title}`);
-      await user.click(screen.getByRole("link", { name: "Back to Home" }));
+      await user.click(screen.getByRole("link", { name: "Home" }));
       expect(await screen.findByRole("link", { name: "View all 2" })).toBeInTheDocument();
     },
   );

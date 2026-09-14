@@ -2323,7 +2323,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (Object.keys(body).some((key) => !allowed.has(key))) {
             throw httpError(
               403,
-              "Business Users can edit only the value, effective date, owning department, region, and business Fields on this Contract.",
+              "Business Users can edit only the value, effective date, department, region, and business Fields on this Contract.",
             );
           }
           if (body.customFields !== undefined) {

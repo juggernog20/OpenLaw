@@ -40,7 +40,8 @@
  *                                start can be restarted without doubling up
  *
  * Environment: SEED_BASE_URL (default http://localhost:3000),
- * SEED_MAILPIT_URL (default http://localhost:8025).
+ * SEED_MAILPIT_URL (default http://localhost:8025),
+ * SEED_WEB_URL (default http://localhost:5173, the sign-in link only).
  */
 
 import { DEFAULT_BASE_URL, Session, pause, pool } from "./client.mjs";
@@ -181,13 +182,21 @@ async function settlePeople(people, random, log) {
   let read = 0;
   await pool([...people.values()], 4, async (person) => {
     if (!person.session) return;
+    // Which bell this person actually has. A Business User's work moved
+    // into the Portal, and the staff notification centre refuses them:
+    // reading everybody's mail from `/notifications` would fail the seed
+    // on the first Business User it reached.
     if (person.role === "business_user") await completeFirstRun(person.session, random);
-    const { body } = await person.session.get("/api/v1/notifications?limit=50");
+    const bell =
+      person.role === "administrator" || person.role === "legal_team_member"
+        ? "/api/v1/notifications"
+        : "/api/v1/portal/notifications";
+    const { body } = await person.session.get(bell);
     const rows = body.notifications ?? [];
     // Most people have read most of it and are behind on the rest.
     const toRead = rows.slice(Math.floor(rows.length * random.float(0.15, 0.4)));
     if (toRead.length > 0) {
-      await person.session.post("/api/v1/notifications/read", { ids: toRead.map((row) => row.id) });
+      await person.session.post(`${bell}/read`, { ids: toRead.map((row) => row.id) });
       read += toRead.length;
     }
     // Not the Administrator: that is the account the instance gets
@@ -341,7 +350,9 @@ async function main() {
     // The dev loop serves the app from Vite on 5173 while the API answers
     // on 3000. A seed pointed elsewhere (SEED_BASE_URL) targets a built
     // image, which serves the app and the API at the same address.
-    const signIn = process.env.SEED_BASE_URL ?? "http://localhost:5173";
+    // SEED_WEB_URL wins over both: an isolated loop moves the two apart
+    // onto ports of its own, and only it knows where Vite landed.
+    const signIn = process.env.SEED_WEB_URL ?? process.env.SEED_BASE_URL ?? "http://localhost:5173";
     log(`sign in at ${signIn} as ${ADMIN.email} / ${ADMIN.password}`);
     log("every seeded person shares that password; business users sign in with a magic link.");
   } finally {

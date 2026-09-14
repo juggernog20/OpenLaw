@@ -44,6 +44,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
+import { departments } from "./departments.js";
 import { contracts, SEVERITY_LEVELS } from "./contracts.js";
 import type { CustomFieldValue } from "./fields.js";
 import { searchVector, uuidPk } from "./helpers.js";
@@ -88,6 +89,7 @@ export const requests = pgTable(
     /** The ask in full. Required on every form, so the column is only
      * nullable for the rows a later import might bring. */
     description: text("description"),
+    departmentId: text("department_id").references(() => departments.id),
     /** DES-018's severity ramp, requester-supplied, required on every
      * form. It maps 1:1 to `priority` at conversion; `risk` is never
      * requester-set (MTR-012). */

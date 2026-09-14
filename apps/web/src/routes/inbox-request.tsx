@@ -16,9 +16,8 @@
  *
  * **The thread is the chat applet**, the same one the contract record
  * mounts, keyed by the Request's own id (CMT-001, CMT-010). A Member+
- * is in every room on a Request, so the panel draws every tier and the
- * composer offers all three: Legal Only triage chatter and Full Thread
- * requester-facing replies live in one conversation (DD-016). Posting
+ * can read every tier on a Request. The composer offers Legal only and
+ * Shared with requester; older Working team comments remain readable. Posting
  * one changes no status — the clarifying back-and-forth while a Request
  * is `new` is the point (INT-007), and the only thing on this page that
  * writes to the Request is its disposition.
@@ -105,6 +104,8 @@ import { useCommentApplet } from "../components/comments/comment-applet";
 import { AttachmentPreview } from "../components/comments/attachment-preview";
 import { PreparedConvertDialog } from "../components/intake/prepared-convert-dialog";
 import { CustomFieldValueText } from "../components/intake/custom-field-value";
+import { DepartmentPicker } from "../components/department-picker";
+import { problem as readProblem } from "../lib/problem";
 import { RequestAssignment } from "../components/inbox/request-assignment";
 import { ResolveDialog } from "../components/intake/resolve-dialog";
 import {
@@ -181,6 +182,7 @@ export async function inboxRequestLoader({ params }: LoaderFunctionArgs) {
     contractTypes: options.data.contractTypes,
     matterTypes: matterOptions.data.matterTypes,
     people: options.data.users,
+    departments: options.data.departments ?? [],
     entities: registry.data.entities,
   };
 }
@@ -198,6 +200,7 @@ export function InboxRequestPage() {
     contractTypes,
     matterTypes,
     people,
+    departments,
     entities,
   } = useLoaderData<typeof inboxRequestLoader>();
   const intl = useIntl();
@@ -214,10 +217,7 @@ export function InboxRequestPage() {
    * is one disposition. */
   const [busy, setBusy] = useState(false);
 
-  /** The conversation about this Request (CMT-004, CMT-010), keyed by
-   * the entity reference the panel takes — it never learns it is a
-   * Request. A Member+ is in every room on one, so the API answers
-   * every tier and the composer offers all three (DD-016). */
+  /** Request comments offer internal Legal discussion or replies shared with the requester. */
   const chatApplet = useCommentApplet({
     enabled: request.status !== "converted",
     entityType: "request",
@@ -383,7 +383,7 @@ export function InboxRequestPage() {
       />
       <RecordApplets applets={request.status === "converted" ? [] : [chatApplet]}>
         <div className="flex h-full flex-col gap-4 overflow-y-auto px-page-x py-page-y">
-          <Hero request={request} />
+          <Hero request={request} departments={departments} />
           {/* The record box rather than the page: opening the thread
               takes a column out of this row, so the two columns have to
               reflow against what is left of it (DES-012, DES-016). */}
@@ -479,7 +479,13 @@ export function InboxRequestPage() {
  * one is the form the requester filled in, the other is how much of the
  * conversion is already decided (DD-018, INT-002).
  */
-function Hero({ request }: Readonly<{ request: StaffRequest }>) {
+function Hero({
+  request,
+  departments,
+}: Readonly<{
+  request: StaffRequest;
+  departments: readonly { id: string; displayName: string }[];
+}>) {
   const intl = useIntl();
   return (
     // A named landmark rather than a bare strip: it carries no heading
@@ -506,6 +512,13 @@ function Hero({ request }: Readonly<{ request: StaffRequest }>) {
       <HeroItem label={<FormattedMessage id="inbox.request.target" defaultMessage="Converts to" />}>
         {requestTargetLabel(intl, request.requestType)}
       </HeroItem>
+      <HeroItem label={<FormattedMessage id="records.department" defaultMessage="Department" />}>
+        <RequestDepartment
+          key={`${request.id}:${request.departmentId}`}
+          request={request}
+          options={departments}
+        />
+      </HeroItem>
       <HeroItem label={<FormattedMessage id="inbox.column.urgency" defaultMessage="Urgency" />}>
         <span
           className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${SEVERITY_PILL[request.urgency]}`}
@@ -526,6 +539,69 @@ function Hero({ request }: Readonly<{ request: StaffRequest }>) {
         </time>
       </HeroItem>
     </section>
+  );
+}
+
+function RequestDepartment({
+  request,
+  options,
+}: {
+  request: StaffRequest;
+  options: readonly { id: string; displayName: string }[];
+}) {
+  const intl = useIntl();
+  const [value, setValue] = useState({
+    departmentId: request.departmentId ?? null,
+    department: request.department ?? null,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>();
+  const revalidator = useRevalidator();
+  if (request.status !== "new")
+    return (
+      <span>
+        {value.department ??
+          intl.formatMessage({ id: "departments.none", defaultMessage: "No Department" })}
+      </span>
+    );
+  return (
+    <div>
+      <DepartmentPicker
+        label={intl.formatMessage({ id: "records.department", defaultMessage: "Department" })}
+        value={value.departmentId}
+        currentName={value.department}
+        options={options}
+        disabled={saving}
+        onChange={async (departmentId) => {
+          if (saving) return;
+          setSaving(true);
+          setError(undefined);
+          const result = await api
+            .PATCH("/api/v1/requests/{number}/department", {
+              params: { path: { number: request.number } },
+              body: { departmentId },
+            })
+            .catch(() => undefined);
+          if (result?.data) {
+            setValue(result.data);
+            void revalidator.revalidate();
+          } else
+            setError(
+              (await readProblem(result)).detail ??
+                intl.formatMessage({
+                  id: "matters.edit.error",
+                  defaultMessage: "The change could not be saved.",
+                }),
+            );
+          setSaving(false);
+        }}
+      />
+      {error && (
+        <p role="alert" className="text-xs text-status-danger-fg">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 

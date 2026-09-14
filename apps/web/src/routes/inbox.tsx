@@ -379,9 +379,10 @@ export function InboxPage() {
                 catalogue={CATALOGUE}
                 actionsColumn={{
                   label: intl.formatMessage({
-                    id: "inbox.column.actions",
-                    defaultMessage: "Actions",
+                    id: "inbox.column.triager",
+                    defaultMessage: "Triager",
                   }),
+                  showLabel: true,
                   width: 128,
                   pinned: true,
                   render: (row) => (
@@ -404,14 +405,6 @@ export function InboxPage() {
                 focusRowKey={appended?.from}
                 foot={
                   <>
-                    {!layout.sort && (
-                      <p className="text-xs text-muted">
-                        <FormattedMessage
-                          id="inbox.ordering"
-                          defaultMessage="Ordered by urgency, then age"
-                        />
-                      </p>
-                    )}
                     {pageError && (
                       <p role="alert" className="text-xs text-status-danger-fg">
                         {pageError}

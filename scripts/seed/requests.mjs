@@ -132,6 +132,9 @@ async function workTheRecord(made, triager, plan, random, taxonomy, log) {
 
 export async function seedRequests(admin, context, log) {
   const { random, taxonomy, people, fields, attached, templates, plans } = context;
+  const {
+    body: { departments },
+  } = await admin.get("/api/v1/departments/options");
   const requesters = businessUsers(people);
   const triagers = memberPlus(people);
   const submitted = [];
@@ -143,6 +146,7 @@ export async function seedRequests(admin, context, log) {
 
     const { body } = await requester.session.post("/api/v1/requests", {
       requestTypeId: type.id,
+      departmentId: departments.length ? random.pick(departments).id : null,
       title: plan.title,
       description: plan.description,
       urgency: plan.urgency,
@@ -278,14 +282,6 @@ export async function seedRequests(admin, context, log) {
     ).rows.find((row) => row.id === targetTypeId)?.slug;
     if (targetSlug) {
       const values = customFields(fields, attached, module, targetSlug);
-      values.set(
-        "Owning department",
-        random.pick(["Sales", "Procurement", "Engineering", "People", "Finance", "Marketing"]),
-      );
-      values.set(
-        "Business unit",
-        random.pick(["Platform", "Analytics", "Sales", "People", "Group"]),
-      );
       values.set("Regulator", "Not applicable");
       values.set("Region", random.pick(["EMEA", "Americas", "APAC"]));
       if (Object.keys(values.values).length > 0) payload.customFields = values.values;

@@ -101,9 +101,9 @@ const REQUIRED_RULE: EditorRequiredRule = {
 };
 
 /**
- * The four basics (INT-002): what every request form collects, whatever
+ * The fixed basics (INT-002): what every request form collects, whatever
  * an Administrator configures. Title, Description, and Urgency are
- * required; Attachments are optional. Urgency wears the DES-018
+ * required; Attachments and Department are optional. Urgency wears the DES-018
  * severity ramp.
  */
 const BASICS = defineMessages({
@@ -130,6 +130,7 @@ const BASICS = defineMessages({
     id: "settings.requestTypeEditor.basicAttachmentsType",
     defaultMessage: "Files",
   },
+  department: { id: "records.department", defaultMessage: "Department" },
   urgency: { id: "settings.requestTypeEditor.basicUrgency", defaultMessage: "Urgency" },
   urgencyType: {
     id: "settings.requestTypeEditor.basicUrgencyType",
@@ -154,6 +155,7 @@ const BASICS_SLOT: TypeEditorBasics = {
       caption: BASICS.attachmentsType,
       isRequired: false,
     },
+    { key: "department", name: BASICS.department, caption: BASICS.urgencyType, isRequired: false },
     { key: "urgency", name: BASICS.urgency, caption: BASICS.urgencyType, isRequired: true },
   ],
 };

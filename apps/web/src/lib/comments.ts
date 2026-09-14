@@ -272,6 +272,11 @@ export function tierLabel(
   tier: CommentTier,
   entityType?: CommentEntityType,
 ): string {
+  if (entityType === "request" && tier === "full_thread")
+    return intl.formatMessage({
+      id: "comments.request.sharedWithRequester",
+      defaultMessage: "Shared with requester",
+    });
   if (entityType === "matter" || entityType === "contract") {
     if (tier === "legal_only")
       return intl.formatMessage({ id: "comments.matter.legalOnly", defaultMessage: "Legal Only" });
@@ -289,6 +294,11 @@ export function tierAudience(
   tier: CommentTier,
   entityType?: CommentEntityType,
 ): string {
+  if (entityType === "request" && tier === "full_thread")
+    return intl.formatMessage({
+      id: "comments.request.sharedAudience",
+      defaultMessage: "Visible to Legal and the requester.",
+    });
   if (entityType === "contract" && tier === "full_thread")
     return intl.formatMessage({
       id: "comments.contract.teamAudience",
@@ -314,7 +324,7 @@ export function tierAudience(
 
 /** Staff choose the record audience. Business Users post Full Thread only. */
 export function composerTiers(role: Role, entityType?: CommentEntityType): readonly CommentTier[] {
-  if (entityType === "matter" || entityType === "contract")
+  if (entityType === "matter" || entityType === "contract" || entityType === "request")
     return isMemberPlus(role) ? ["legal_only", "full_thread"] : ["full_thread"];
   if (isMemberPlus(role)) return COMMENT_TIERS;
   return REQUESTER_TIERS;

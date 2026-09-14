@@ -144,7 +144,7 @@ export function PortalContractPage() {
               {fact(
                 <FormattedMessage
                   id="contracts.form.owningDepartment"
-                  defaultMessage="Owning department"
+                  defaultMessage="Department"
                 />,
                 recordWork?.work.owningDepartment ?? unset,
               )}

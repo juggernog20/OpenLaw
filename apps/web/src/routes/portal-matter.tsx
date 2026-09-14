@@ -87,6 +87,12 @@ export function PortalMatterPage() {
               </dt>
               <dd>{matter.businessOwner?.displayName ?? unset}</dd>
             </div>
+            <div>
+              <dt className="text-sm font-medium text-muted">
+                <FormattedMessage id="records.department" defaultMessage="Department" />
+              </dt>
+              <dd>{matter.department ?? unset}</dd>
+            </div>
           </dl>
           <PortalRecordWork module="matter" number={matter.number} {...recordWork} />
         </>

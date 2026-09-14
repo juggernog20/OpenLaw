@@ -133,7 +133,7 @@ export function LinkedContractsCard({
       </header>
       <div className={contracts.length === 0 ? "p-4" : "px-4"}>
         {contracts.length === 0 ? (
-          <p className="text-sm text-muted">
+          <p className="text-base text-muted">
             <FormattedMessage
               id="contractMatter.contracts.empty"
               defaultMessage="No Contracts are linked to this Matter."
@@ -159,7 +159,7 @@ export function LinkedContractsCard({
                 >
                   <Link
                     to={`/contracts/${contract.number}`}
-                    className="min-w-0 break-words text-sm text-link hover:underline"
+                    className="min-w-0 break-words text-base text-link hover:underline"
                   >
                     {contractReference(intl, contract.number)} {contract.title}
                   </Link>

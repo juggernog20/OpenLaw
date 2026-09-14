@@ -55,6 +55,7 @@ import {
 } from "../lib/documents";
 import { canReadMatters, isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
+import { DepartmentPicker } from "../components/department-picker";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
 import { useActivityApplet } from "../components/activity/activity-applet";
@@ -63,6 +64,7 @@ import { CustomFieldControl, type FieldReference } from "../components/custom-fi
 import { useMatterTeamApplet } from "../components/matters/team-applet";
 import type { Applet } from "../components/shell/applets";
 import { MatterKeyDatesCard } from "../components/matters/key-dates-card";
+import { RecordPersonField } from "../components/record-person-field";
 import { MatterTasksCard } from "../components/matters/tasks-card";
 import { RelatedMattersCard } from "../components/matters/related-matters-card";
 import { MatterStatusProgression } from "../components/matters/matter-status-progression";
@@ -168,6 +170,7 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
     matterTypes: options?.data?.matterTypes ?? [],
     matterStatuses: options?.data?.matterStatuses ?? [],
     users: options?.data?.users ?? [],
+    departments: options?.data?.departments ?? [],
     entities: entities?.data?.entities ?? [],
     relations: relations.data,
     linkedContracts: linkedContracts.data.contracts,
@@ -193,6 +196,7 @@ type FieldKey =
   | "matterTypeId"
   | "managerId"
   | "businessOwnerId"
+  | "departmentId"
   | "priority"
   | "risk"
   | "statusId"
@@ -630,6 +634,39 @@ function MatterRecord() {
         },
         ...matterStatuses,
       ];
+  const customFields = fields;
+
+  function renderMatterField(field: MatterField) {
+    return (
+      <MatterConversionValue
+        // Retain the control's draft if the next Type attaches this same Field.
+        key={field.slug}
+        active={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
+        number={saved.number}
+        slug={`field:${field.slug}`}
+        onConfirmed={!frozen ? confirmedConversion : undefined}
+      >
+        {" "}
+        <MatterCustomField
+          field={field}
+          aiGenerated={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
+          saved={saved.customFields[field.slug]}
+          frozen={frozen}
+          people={peopleRefs}
+          entities={entityChoices(saved.customFields[field.slug])}
+          status={fieldStatus[`field:${field.slug}`] ?? "idle"}
+          error={fieldError[`field:${field.slug}`]}
+          onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}
+          onCommit={(value) =>
+            commit(`field:${field.slug}`, {
+              customFields: { [field.slug]: value },
+            })
+          }
+        />
+      </MatterConversionValue>
+    );
+  }
+
   const managerOptions = users.filter(
     (person) => person.role === "administrator" || person.role === "legal_team_member",
   );
@@ -1041,84 +1078,65 @@ function MatterRecord() {
                         }))}
                       />
                     </MatterConversionValue>{" "}
-                    <EditableSelectFact
+                    <RecordPersonField
                       id="matter-manager"
-                      label={
-                        <FormattedMessage
-                          id="matters.field.manager"
-                          defaultMessage="Matter Manager"
-                        />
-                      }
+                      label={intl.formatMessage({
+                        id: "matters.field.manager",
+                        defaultMessage: "Matter Manager",
+                      })}
                       frozen={frozen}
-                      value={saved.manager?.id ?? ""}
-                      display={
-                        saved.manager?.displayName ??
-                        intl.formatMessage({
-                          id: "matters.unassigned",
-                          defaultMessage: "Unassigned",
-                        })
-                      }
+                      value={saved.manager}
+                      people={[...heldManager, ...managerOptions]}
                       status={fieldStatus.managerId ?? "idle"}
                       error={fieldError.managerId}
-                      onChange={(managerId) =>
-                        void commit("managerId", { managerId: managerId || null })
-                      }
-                      options={[
-                        {
-                          value: "",
-                          label: intl.formatMessage({
-                            id: "matters.unassigned",
-                            defaultMessage: "Unassigned",
-                          }),
-                        },
-                        ...[...heldManager, ...managerOptions].map((person) => ({
-                          value: person.id,
-                          label: person.displayName,
-                        })),
-                      ]}
+                      onChange={(managerId) => commit("managerId", { managerId })}
                     />
-                    <EditableSelectFact
+                    <RecordPersonField
                       id="matter-business-owner"
-                      label={
-                        <FormattedMessage
-                          id="contracts.form.businessOwner"
-                          defaultMessage="Business Owner"
-                        />
-                      }
+                      label={intl.formatMessage({
+                        id: "contracts.form.businessOwner",
+                        defaultMessage: "Business Owner",
+                      })}
                       frozen={frozen}
-                      value={saved.businessOwner?.id ?? ""}
-                      display={
-                        saved.businessOwner?.displayName ??
-                        intl.formatMessage({
-                          id: "matters.unassigned",
-                          defaultMessage: "Unassigned",
-                        })
-                      }
-                      status={fieldStatus.businessOwnerId ?? "idle"}
-                      error={fieldError.businessOwnerId}
-                      onChange={(businessOwnerId) =>
-                        void commit("businessOwnerId", { businessOwnerId: businessOwnerId || null })
-                      }
-                      options={[
-                        {
-                          value: "",
-                          label: intl.formatMessage({
-                            id: "matters.unassigned",
-                            defaultMessage: "Unassigned",
-                          }),
-                        },
+                      value={saved.businessOwner ?? null}
+                      people={[
                         ...(saved.businessOwner &&
                         !users.some((person) => person.id === saved.businessOwner!.id)
-                          ? [
-                              {
-                                value: saved.businessOwner.id,
-                                label: saved.businessOwner.displayName,
-                              },
-                            ]
+                          ? [saved.businessOwner]
                           : []),
-                        ...users.map((person) => ({ value: person.id, label: person.displayName })),
+                        ...users,
                       ]}
+                      status={fieldStatus.businessOwnerId ?? "idle"}
+                      error={fieldError.businessOwnerId}
+                      onChange={(businessOwnerId) => commit("businessOwnerId", { businessOwnerId })}
                     />
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="matter-department">
+                        <FormattedMessage id="records.department" defaultMessage="Department" />
+                      </Label>
+                      <div>
+                        {frozen ? (
+                          <p className="text-sm">{saved.department ?? notProvided(intl)}</p>
+                        ) : (
+                          <DepartmentPicker
+                            id="matter-department"
+                            value={saved.departmentId ?? null}
+                            currentName={saved.department}
+                            options={loader.departments}
+                            disabled={fieldStatus.departmentId === "saving"}
+                            onChange={(departmentId) =>
+                              void commit("departmentId", { departmentId })
+                            }
+                          />
+                        )}
+                        {!frozen && (
+                          <StatusNote
+                            status={fieldStatus.departmentId ?? "idle"}
+                            detail={fieldError.departmentId}
+                          />
+                        )}
+                      </div>
+                    </div>
                     <MatterConversionValue
                       active={Boolean(saved.aiUnverified?.priority)}
                       number={saved.number}
@@ -1261,7 +1279,7 @@ function MatterRecord() {
                               id: "matters.field.description",
                               defaultMessage: "Description",
                             })}
-                            className={TEXTAREA_CLASS}
+                            className="text-base"
                             value={description}
                             onChange={(event) => setDescription(event.target.value)}
                             onBlur={() => commitText("description")}
@@ -1279,7 +1297,7 @@ function MatterRecord() {
                   </div>
                 </section>
               </MatterConversionValue>{" "}
-              {fields.length > 0 && (
+              {customFields.length > 0 && (
                 <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
                   <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
                     <h2 className="text-base font-semibold">
@@ -1287,34 +1305,7 @@ function MatterRecord() {
                     </h2>
                   </header>
                   <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
-                    {fields.map((field) => (
-                      <MatterConversionValue
-                        // Retain the control's draft if the next Type attaches this same Field.
-                        key={field.slug}
-                        active={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
-                        number={saved.number}
-                        slug={`field:${field.slug}`}
-                        onConfirmed={!frozen ? confirmedConversion : undefined}
-                      >
-                        {" "}
-                        <MatterCustomField
-                          field={field}
-                          aiGenerated={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
-                          saved={saved.customFields[field.slug]}
-                          frozen={frozen}
-                          people={peopleRefs}
-                          entities={entityChoices(saved.customFields[field.slug])}
-                          status={fieldStatus[`field:${field.slug}`] ?? "idle"}
-                          error={fieldError[`field:${field.slug}`]}
-                          onInvalid={(detail) => note(`field:${field.slug}`, "error", detail)}
-                          onCommit={(value) =>
-                            commit(`field:${field.slug}`, {
-                              customFields: { [field.slug]: value },
-                            })
-                          }
-                        />
-                      </MatterConversionValue>
-                    ))}
+                    {customFields.map(renderMatterField)}
                   </div>
                 </section>
               )}
@@ -1451,6 +1442,7 @@ function MatterRecord() {
         )}
         {subMatterOpen && (
           <CreateMatterDialog
+            departments={loader.departments}
             matterTypes={matterTypes}
             users={users}
             entities={liveEntities}
@@ -1536,7 +1528,7 @@ function EditableSelectFact({
 }) {
   return (
     <div>
-      <dt>
+      <dt className="flex">
         <Label htmlFor={id}>{label}</Label>
       </dt>
       <dd className="mt-1.5 text-md">

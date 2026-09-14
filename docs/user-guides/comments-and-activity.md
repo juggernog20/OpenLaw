@@ -25,6 +25,10 @@ Record access applies to every tier. Full Thread on a Contract or Matter reaches
 
 Comments form one chronological conversation. Use **Show older** when earlier comments are available. The Comments badge counts unread comments you can see, excluding your own posts and removed comments. Reading the loaded conversation updates that count.
 
+## Choose an audience in the Inbox
+
+On a Request, choose **Legal only** for internal legal discussion or **Shared with requester** for a reply visible to Legal and the requester. New comments default to **Legal only**. Older **Working team** comments remain readable by Legal and are not shared with Business Users.
+
 ## Mention a person
 
 1. In **New comment**, type `@` and start the person's name.

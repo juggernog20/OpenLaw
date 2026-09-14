@@ -107,6 +107,7 @@ function portalForm(
         },
         fields: state.fields ?? [COUNTERPARTY, PAPER_SIDE],
         intakeLinks: state.intakeLinks ?? [],
+        departments: [{ id: "dept-finance", displayName: "Finance" }],
       });
     }
     if (call.url.pathname === "/api/v1/requests" && call.method === "POST") {
@@ -235,6 +236,7 @@ describe("submitting the form", () => {
     const submissions = openForm();
     await fillComplete(user);
     await user.selectOptions(screen.getByLabelText(/^Paper side/), "Theirs");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Department" }), "dept-finance");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
     await screen.findByRole("heading", { name: /R-42/ });
@@ -244,6 +246,7 @@ describe("submitting the form", () => {
       description: "They sent a redline on the cap.",
       urgency: "high",
       customFields: { counterparty: "Orion Cloud", paper_side: "Theirs" },
+      departmentId: "dept-finance",
     });
   });
 

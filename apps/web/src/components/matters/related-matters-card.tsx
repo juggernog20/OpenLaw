@@ -31,7 +31,7 @@ function RelativeRow({
     );
   }
   return (
-    <li className="flex items-center gap-2 py-1 text-sm">
+    <li className="flex items-center gap-2 py-1 text-base">
       <Link className="min-w-0 text-link hover:underline" to={`/matters/${relative.number}`}>
         {matterReference(intl, relative.number)} {relative.title}
       </Link>
@@ -158,7 +158,7 @@ export function RelatedMattersCard({
           </p>
         )}
         {empty ? (
-          <p className="text-sm text-muted">
+          <p className="text-base text-muted">
             <FormattedMessage id="matters.relations.empty" defaultMessage="No related Matters." />
           </p>
         ) : (

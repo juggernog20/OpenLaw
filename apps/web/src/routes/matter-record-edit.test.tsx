@@ -822,6 +822,105 @@ describe("the editable matter record", () => {
     expect(within(dialog).getByRole("button", { name: "Close matter" })).toBeEnabled();
   });
 
+  it.each([
+    ["Matter Manager", "managerId", "manager"],
+    ["Business Owner", "businessOwnerId", "businessOwner"],
+  ] as const)(
+    "searches and saves %s, retaining the picker after a refusal",
+    async (label, key, field) => {
+      let saved = row();
+      const patches: unknown[] = [];
+      const business = {
+        ...MEMBER,
+        id: "u-business",
+        displayName: "Blair Business",
+        role: "business_user",
+      };
+      stubApi({
+        signedIn: ADMIN,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+            return json(200, record(saved));
+          if (call.url.pathname === "/api/v1/matters/options")
+            return json(200, {
+              matterTypes: TYPES,
+              matterStatuses: STATUSES,
+              users: [MEMBER, business],
+            });
+          if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+            patches.push(call.body);
+            if (patches.length === 1) return problem(400, "Please try again.");
+            saved = row({ ...saved, [field]: MEMBER });
+            return json(200, record(saved));
+          }
+          return undefined;
+        },
+      });
+      renderAt("/matters/12");
+      const user = userEvent.setup();
+      const trigger = await screen.findByRole("button", { name: label });
+      await user.click(trigger);
+      const dialog = screen.getByRole("dialog", { name: label });
+      const picker = within(dialog);
+      if (key === "managerId") {
+        expect(picker.queryByRole("button", { name: "Blair Business" })).not.toBeInTheDocument();
+      } else {
+        expect(picker.getByRole("button", { name: "Blair Business" })).toBeInTheDocument();
+      }
+      await user.type(picker.getByRole("textbox", { name: "Search people" }), "Mina");
+      expect(picker.queryByRole("button", { name: "Blair Business" })).not.toBeInTheDocument();
+      await user.click(picker.getByRole("button", { name: "Mina Member" }));
+      expect(await picker.findByRole("alert")).toHaveTextContent("Please try again.");
+      expect(trigger).toHaveTextContent("Unassigned");
+      await user.click(picker.getByRole("button", { name: "Mina Member" }));
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
+      expect(trigger).toHaveTextContent("Mina Member");
+      expect(patches).toEqual([{ [key]: MEMBER.id }, { [key]: MEMBER.id }]);
+    },
+  );
+
+  it("edits and clears Department in the core Matter fields", async () => {
+    let saved = row({ departmentId: "dept-people", department: "People" });
+    const patches: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(saved));
+        if (call.url.pathname === "/api/v1/matters/options")
+          return json(200, {
+            matterTypes: TYPES,
+            matterStatuses: STATUSES,
+            users: [MEMBER],
+            departments: [
+              { id: "dept-people", displayName: "People" },
+              { id: "dept-finance", displayName: "Finance" },
+            ],
+          });
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          patches.push(call.body);
+          const { departmentId } = call.body as { departmentId: string | null };
+          saved = row({ ...saved, departmentId, department: departmentId ? "Finance" : null });
+          return json(200, record(saved));
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    const section = (await screen.findByRole("heading", { name: "Matter" })).closest("section")!;
+    const input = within(section).getByRole("combobox", { name: "Department" });
+    expect(input).toHaveValue("dept-people");
+    await user.selectOptions(input, "dept-finance");
+    await waitFor(() => expect(patches).toEqual([{ departmentId: "dept-finance" }]));
+    await waitFor(() => expect(input).toBeEnabled());
+    await user.selectOptions(input, "");
+    await waitFor(() =>
+      expect(patches).toEqual([{ departmentId: "dept-finance" }, { departmentId: null }]),
+    );
+    expect(input).toHaveValue("");
+  });
+
   it("keeps an archived Matter Manager selectable and lets the record unassign them", async () => {
     const gone = {
       id: "u-gone",
@@ -848,16 +947,15 @@ describe("the editable matter record", () => {
     });
     renderAt("/matters/12");
     const user = userEvent.setup();
-    const manager = await screen.findByRole("combobox", { name: "Matter Manager" });
-    expect(manager).toHaveValue("u-gone");
-    expect(
-      within(manager)
-        .getAllByRole("option")
-        .map((option) => option.textContent),
-    ).toEqual(["Unassigned", "Gus Gone", "Mina Member"]);
-    await user.selectOptions(manager, "");
+    const manager = await screen.findByRole("button", { name: "Matter Manager" });
+    expect(manager).toHaveTextContent("Gus Gone");
+    await user.click(manager);
+    const picker = within(screen.getByRole("dialog", { name: "Matter Manager" }));
+    expect(picker.getByRole("button", { name: "Gus Gone" })).toBeInTheDocument();
+    expect(picker.getByRole("button", { name: "Mina Member" })).toBeInTheDocument();
+    await user.click(picker.getByRole("button", { name: "Unassigned" }));
     await waitFor(() => expect(patches).toEqual([{ managerId: null }]));
-    await waitFor(() => expect(manager).toHaveValue(""));
+    await waitFor(() => expect(manager).toHaveTextContent("Unassigned"));
   });
 
   it("shows a PATCH refusal beside its field and lets that field retry", async () => {

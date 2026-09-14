@@ -100,10 +100,6 @@ function customFieldsFor(plan, fields, attached, random) {
   const collector = customFields(fields, attached, "matter", plan.kind.typeSlug);
   const set = (name, value) => collector.set(name, value);
   set(
-    "Business unit",
-    random.pick(["Platform", "Analytics", "Sales", "People", "Finance", "Group"]),
-  );
-  set(
     "External counsel",
     random.chance(0.5)
       ? random.pick(["Meyer and Roth LLP", "Ashworth Bell Solicitors", "Whitcombe Employment Law"])
@@ -126,6 +122,9 @@ function customFieldsFor(plan, fields, attached, random) {
 
 export async function seedMatters(admin, context, log) {
   const { random, taxonomy, people, fields, attached, templates, plans } = context;
+  const {
+    body: { departments },
+  } = await admin.get("/api/v1/departments/options");
   const staff = memberPlus(people);
   const helpers = businessUsers(people);
   const matters = [];
@@ -146,6 +145,7 @@ export async function seedMatters(admin, context, log) {
       title: plan.title,
       matterTypeId: type.id,
       managerId: manager.id,
+      departmentId: departments.length ? random.pick(departments).id : null,
       priority: plan.priority,
       risk: plan.risk,
       description: plan.description,

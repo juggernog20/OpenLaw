@@ -3,6 +3,7 @@
 /** The first matter surface: list, create, options, and record read. */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { departmentOptions, departmentName, lockedDepartment } from "../departments/references.js";
 import { recordPerson } from "../../lib/record-person.js";
 import { originalIntake, OriginalIntakeSchema } from "../requests/original-intake.js";
 import { nextDeadline, NextDeadlineSchema } from "../../lib/next-deadline.js";
@@ -117,6 +118,8 @@ const MatterRowSchema = z.object({
   statusProgressionGroup: z.enum(MATTER_PROGRESSION_GROUPS),
   manager: PersonSchema.nullable(),
   businessOwner: PersonSchema.nullable().optional(),
+  departmentId: z.string().nullable().optional(),
+  department: z.string().nullable().optional(),
   createdBy: z.string().nullable().optional(),
   priority: SeveritySchema,
   risk: SeveritySchema.nullable(),
@@ -188,6 +191,7 @@ function toRow(
   return {
     id: row.id,
     createdBy: row.createdBy,
+    departmentId: row.departmentId,
     number: row.number,
     title: row.title,
     description: row.description,
@@ -606,6 +610,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
               }),
             ),
             users: z.array(PersonSchema.extend({ role: z.enum(USER_ROLES) })),
+            departments: z.array(z.object({ id: z.string(), displayName: z.string() })),
           }),
           default: problemResponse,
         },
@@ -674,6 +679,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         templatesByType.set(template.matterTypeId, rows);
       }
       return {
+        departments: await departmentOptions(app.db),
         matterTypes: types.map((type, index) => {
           const visibleSlugs = new Set(
             attached[index]!.filter(
@@ -744,6 +750,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         matter: {
           ...toRow(context, projection.customFields),
           businessOwner: await recordPerson(app.db, context.row.businessOwnerId),
+          department: await departmentName(app.db, context.row.departmentId),
         },
         creator: await recordPerson(app.db, context.row.createdBy),
         originalIntake: await originalIntake(app.db, request.user, "matter", context.row.id),
@@ -849,6 +856,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           title: z.string().trim().min(1).max(MAX_MATTER_TITLE_LENGTH),
           matterTypeId: z.string(),
           managerId: z.string().nullable().optional(),
+          departmentId: z.string().min(1).nullable().optional(),
           priority: SeveritySchema.optional(),
           risk: SeveritySchema.nullable().optional(),
           description: z.string().trim().max(10_000).nullable().optional(),
@@ -889,7 +897,14 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return next;
       });
-      return reply.status(201).send({ matter: toRow(created) });
+      return reply
+        .status(201)
+        .send({
+          matter: {
+            ...toRow(created),
+            department: await departmentName(app.db, created.row.departmentId),
+          },
+        });
     },
   );
 
@@ -908,6 +923,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           description: z.string().trim().max(10_000).nullable().optional(),
           matterTypeId: z.string().optional(),
           managerId: z.string().nullable().optional(),
+          departmentId: z.string().min(1).nullable().optional(),
           businessOwnerId: z.string().nullable().optional(),
           priority: SeveritySchema.optional(),
           risk: SeveritySchema.nullable().optional(),
@@ -974,6 +990,14 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           }
         }
 
+        if (body.departmentId !== undefined && body.departmentId !== target.departmentId) {
+          const next = body.departmentId ? await lockedDepartment(tx, body.departmentId) : null;
+          patch.departmentId = next?.id ?? null;
+          changed.department = {
+            from: await departmentName(tx, target.departmentId),
+            to: next?.displayName ?? null,
+          };
+        }
         if (body.businessOwnerId !== undefined && body.businessOwnerId !== target.businessOwnerId) {
           const next = body.businessOwnerId ? await lockedLiveUser(tx, body.businessOwnerId) : null;
           const previous = await recordPerson(tx, target.businessOwnerId);
@@ -1215,6 +1239,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         matter: {
           ...toRow(updated, projection.customFields),
           businessOwner: await recordPerson(app.db, updated.row.businessOwnerId),
+          department: await departmentName(app.db, updated.row.departmentId),
         },
         fields: projection.fields,
         customFieldRefs: await resolveStaffRefs(
