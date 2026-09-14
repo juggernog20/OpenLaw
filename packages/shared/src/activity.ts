@@ -1251,6 +1251,13 @@ type KnowledgePayloads = {
  * narrator cannot read — the compiler is the only place to catch either.
  */
 type AutoDocPayloads = {
+  "auto_doc.acknowledged": {
+    name: string;
+    text: string;
+    textHash: string;
+    frequency: "every_use" | "once_per_auto_doc" | "once";
+    acknowledgementId: string;
+  };
   "auto_doc.generated": {
     name: string;
     generationId: string;

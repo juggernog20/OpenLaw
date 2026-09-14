@@ -10,6 +10,15 @@
  * comment there for why the screen must remount when its record does.
  */
 
+import { SettingsAutoDocsPage, settingsAutoDocsLoader } from "./routes/settings-auto-docs";
+import {
+  PortalAutoDocsPage,
+  portalAutoDocsLoader,
+  PortalAutoDocGeneratePage,
+  portalAutoDocGenerateLoader,
+  PortalAutoDocGenerationPage,
+  portalAutoDocGenerationLoader,
+} from "./routes/portal-auto-docs";
 import { PortalMattersPage, portalMattersLoader } from "./routes/portal-matters";
 import { PortalMatterPage, portalMatterLoader } from "./routes/portal-matter";
 import { Fragment, type ReactNode } from "react";
@@ -591,6 +600,7 @@ export const routes: RouteObject[] = [
         loader: settingsRemindersLoader,
         element: <SettingsRemindersPage />,
       },
+      { path: "auto-docs", loader: settingsAutoDocsLoader, element: <SettingsAutoDocsPage /> },
       // #245: the Integrations section, E-signature its first pane
       // (SET-007, superseding CTR-013's Contracts-tab placement).
       { path: "integrations", loader: settingsIntegrationsIndexLoader, element: <></> },
@@ -634,6 +644,17 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
     children: [
+      { path: "auto-docs", loader: portalAutoDocsLoader, element: <PortalAutoDocsPage /> },
+      {
+        path: "auto-docs/:id/generate",
+        loader: portalAutoDocGenerateLoader,
+        element: <PortalAutoDocGeneratePage />,
+      },
+      {
+        path: "auto-docs/:id/generations/:generationId",
+        loader: portalAutoDocGenerationLoader,
+        element: <PortalAutoDocGenerationPage />,
+      },
       { index: true, loader: portalHomeLoader, element: <PortalHomePage /> },
       { path: "contracts", loader: portalContractsLoader, element: <PortalContractsPage /> },
       { path: "matters", loader: portalMattersLoader, element: <PortalMattersPage /> },

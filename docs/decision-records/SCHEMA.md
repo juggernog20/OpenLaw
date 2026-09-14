@@ -1338,7 +1338,9 @@ Generation `created_contract_id` and `created_document_id` are nullable unique F
 
 `auto_doc_filings`: `id`; `generation_id`; exactly one of `matter_id`, `contract_id`; `document_id` FK → `documents.id` (the Document the Filing created); `filed_by`; `created_at`.
 
-`auto_doc_acknowledgements`: `id`; `auto_doc_id` nullable (null for a `once` org-wide acknowledgement); `user_id`; `text_hash` (SHA-256 of the text shown, so a text edit invalidates); `acknowledged_at`. The Activity entry `auto_doc.acknowledged` carries the full text.
+`auto_doc_acknowledgements`: `id`; nullable `auto_doc_id` FK (null exactly when `frequency = once`); `user_id` FK; checked `frequency` (`every_use | once_per_auto_doc | once`); `text_hash` (64 lowercase hexadecimal SHA-256 characters); `acknowledged_at`; nullable `consumed_at` (every-use only); nullable `revoked_at`. Standing lookups are indexed by user, scope and hash; a partial hash index supports text-edit invalidation. Every-use acknowledgement consumption occurs in the Generation acceptance transaction, so invalid answers or a stale pair leave it available. A per-Auto-Doc text edit revokes the old hash for that Auto-Doc and org-wide once rows; an org default edit revokes matching hashes globally. Revocation retains history and prevents a later text reversion from reviving an Acknowledgement. The admin-only Activity entry `auto_doc.acknowledged` carries the exact full text.
+
+**Built in M35/11:** `auto_doc_audience_users` and `auto_doc_audience_departments` use `(auto_doc_id, user_id)` and `(auto_doc_id, department_id)` primary keys, with cascading foreign keys. Department reach reads the person’s current membership and Department archival state. The org default `org_settings.auto_doc_acknowledgement_text` is non-null; a null Auto-Doc override inherits it. Portal history is limited to the generating person, rechecks audience, and survives Unpublish/Archive under ADO-010; new use requires a published pair.
 
 `document_versions.source = 'generated'` CHECK widens to admit `kind = 'draft_ours'` when the Version was written by a Generation or a Filing.
 

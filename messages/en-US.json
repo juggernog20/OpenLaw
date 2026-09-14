@@ -95,6 +95,12 @@
   "activity.approverGroup.memberRemoved": {
     "defaultMessage": "{actor} took {member} off the approver group {name}"
   },
+  "activity.autoDoc.acknowledged": {
+    "defaultMessage": "{actor} acknowledged {name}{hasWords, select, yes {: {words}} other {}}"
+  },
+  "activity.autoDoc.acknowledgementFrequency": {
+    "defaultMessage": "{frequency, select, none {None} every_use {Every use} once_per_auto_doc {Once per Auto-Doc} once {Once across Auto-Docs} other {{frequency}}}"
+  },
   "activity.autoDoc.archived": {
     "defaultMessage": "{actor} archived {name}"
   },
@@ -372,7 +378,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} autoDocAcknowledgementText {Default acknowledgement text} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1145,6 +1151,18 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "autoDocs.acknowledgementFrequency": {
+    "defaultMessage": "Acknowledgement frequency"
+  },
+  "autoDocs.acknowledgementFrequencyName": {
+    "defaultMessage": "{frequency, select, none {None} every_use {Every use} once_per_auto_doc {Once per Auto-Doc} other {Once across Auto-Docs}}"
+  },
+  "autoDocs.acknowledgementHelp": {
+    "defaultMessage": "Business Users acknowledge this statement before generating. Editing the text requires them to acknowledge it again. Administrators and Legal Team Members never acknowledge."
+  },
+  "autoDocs.acknowledgementText": {
+    "defaultMessage": "Acknowledgement text"
+  },
   "autoDocs.addField": {
     "defaultMessage": "Add field"
   },
@@ -1208,8 +1226,14 @@
   "autoDocs.audience": {
     "defaultMessage": "Audience"
   },
+  "autoDocs.audienceDepartments": {
+    "defaultMessage": "Selected Departments"
+  },
   "autoDocs.audienceName": {
     "defaultMessage": "{audience, select, legal_only {Legal only} selected {Selected} other {Everyone}}"
+  },
+  "autoDocs.audiencePeople": {
+    "defaultMessage": "Selected people"
   },
   "autoDocs.backToAutoDoc": {
     "defaultMessage": "Back to Auto-Doc"
@@ -1261,6 +1285,9 @@
   },
   "autoDocs.createdContract": {
     "defaultMessage": "Created Contract: {contract}"
+  },
+  "autoDocs.defaultAcknowledgement": {
+    "defaultMessage": "Use the organisation's acknowledgement text"
   },
   "autoDocs.defaultLegalOwner": {
     "defaultMessage": "Default Legal Owner"
@@ -1372,6 +1399,9 @@
   },
   "autoDocs.generate": {
     "defaultMessage": "Generate"
+  },
+  "autoDocs.generateAgain": {
+    "defaultMessage": "Generate again"
   },
   "autoDocs.generateNamed": {
     "defaultMessage": "Generate {name}"
@@ -1508,6 +1538,9 @@
   "autoDocs.removeField": {
     "defaultMessage": "Remove field"
   },
+  "autoDocs.requiredAnswer": {
+    "defaultMessage": "Required"
+  },
   "autoDocs.restore": {
     "defaultMessage": "Restore"
   },
@@ -1553,6 +1586,9 @@
   "autoDocs.search": {
     "defaultMessage": "Search Auto-Docs"
   },
+  "autoDocs.selectedAudienceHelp": {
+    "defaultMessage": "A person can use this Auto-Doc when selected directly or through their live Department. Legal can always use it in the app."
+  },
   "autoDocs.settings": {
     "defaultMessage": "Settings"
   },
@@ -1586,6 +1622,9 @@
   "autoDocs.titlePatternHelp": {
     "defaultMessage": "Use form field slugs in double braces. Leave blank to use the mapped title or Auto-Doc name."
   },
+  "autoDocs.unavailableDepartment": {
+    "defaultMessage": "Archived Department"
+  },
   "autoDocs.unavailableEntity": {
     "defaultMessage": "Unavailable Entity"
   },
@@ -1594,6 +1633,9 @@
   },
   "autoDocs.unavailableMap": {
     "defaultMessage": "Unavailable catalog Field"
+  },
+  "autoDocs.unavailablePerson": {
+    "defaultMessage": "Unavailable person"
   },
   "autoDocs.unpublish": {
     "defaultMessage": "Unpublish"
@@ -1900,6 +1942,9 @@
   },
   "common.showMore": {
     "defaultMessage": "Show more"
+  },
+  "common.tryAgain": {
+    "defaultMessage": "Try again"
   },
   "common.yes": {
     "defaultMessage": "Yes"
@@ -6362,6 +6407,42 @@
   "notifications.unreadRow": {
     "defaultMessage": "Unread"
   },
+  "portal.autoDocs.acknowledgeContinue": {
+    "defaultMessage": "Acknowledge and continue"
+  },
+  "portal.autoDocs.acknowledgeStatement": {
+    "defaultMessage": "I acknowledge this statement."
+  },
+  "portal.autoDocs.available": {
+    "defaultMessage": "Available Auto-Docs"
+  },
+  "portal.autoDocs.back": {
+    "defaultMessage": "Back to Auto-Docs"
+  },
+  "portal.autoDocs.beforeGenerate": {
+    "defaultMessage": "Before you generate"
+  },
+  "portal.autoDocs.confirmation": {
+    "defaultMessage": "Your generated document"
+  },
+  "portal.autoDocs.empty": {
+    "defaultMessage": "No Auto-Docs are available to you yet."
+  },
+  "portal.autoDocs.history": {
+    "defaultMessage": "Your Generations"
+  },
+  "portal.autoDocs.historyEmpty": {
+    "defaultMessage": "Your generated documents will appear here."
+  },
+  "portal.autoDocs.historyFailed": {
+    "defaultMessage": "Could not read more Generations. Try again."
+  },
+  "portal.autoDocs.intro": {
+    "defaultMessage": "Generate documents using the words approved by Legal."
+  },
+  "portal.autoDocs.statusFailed": {
+    "defaultMessage": "Could not refresh the document status. Try again."
+  },
   "portal.brand": {
     "defaultMessage": "OpenLaw"
   },
@@ -6758,6 +6839,9 @@
   "portal.navigation": {
     "defaultMessage": "Portal"
   },
+  "portal.navigation.autoDocs": {
+    "defaultMessage": "Auto-Docs"
+  },
   "portal.navigation.contracts": {
     "defaultMessage": "Contracts"
   },
@@ -6819,7 +6903,7 @@
     "defaultMessage": "Auto-Docs"
   },
   "portal.onboarding.tour.autoDocs.detail": {
-    "defaultMessage": "Auto-Docs will let you fill in a form to generate a Document from a template Legal has prepared."
+    "defaultMessage": "Fill in a form to generate a document from an Auto-Doc prepared by Legal."
   },
   "portal.onboarding.tour.contracts": {
     "defaultMessage": "Contracts"
@@ -7654,6 +7738,12 @@
   },
   "settings.auth.sessionsCaption": {
     "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
+  },
+  "settings.autoDocs.acknowledgementHelp": {
+    "defaultMessage": "This is the default statement Business Users acknowledge before generating an Auto-Doc. Each Auto-Doc can use its own text and frequency. Editing the text requires a new acknowledgement."
+  },
+  "settings.autoDocs.defaultAcknowledgementText": {
+    "defaultMessage": "Default acknowledgement text"
   },
   "settings.contractFields.add": {
     "defaultMessage": "Add field"
@@ -9562,6 +9652,9 @@
   },
   "settings.section.authentication": {
     "defaultMessage": "Authentication"
+  },
+  "settings.section.autoDocs": {
+    "defaultMessage": "Auto-Docs"
   },
   "settings.section.contracts": {
     "defaultMessage": "Contracts"

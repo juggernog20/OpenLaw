@@ -11,6 +11,8 @@ import { documentComparisonPath } from "../../lib/documents";
 import type { AutoDocAnswer, AutoDocOptions } from "../../lib/auto-docs";
 import { Button } from "../ui/button";
 
+import { PortalSettingsFields, type PortalSettingsDraft } from "./portal-settings";
+
 const CARD = "space-y-4 rounded-card border border-border-default bg-raised p-6";
 
 export function PublicationCard({
@@ -207,6 +209,12 @@ export function AutoDocSettings({
 }) {
   const intl = useIntl();
   const [audience, setAudience] = useState(record.autoDoc.audience);
+  const [portal, setPortal] = useState<PortalSettingsDraft>({
+    audienceUserIds: record.audienceUserIds,
+    audienceDepartmentIds: record.audienceDepartmentIds,
+    acknowledgementText: record.autoDoc.acknowledgementText,
+    acknowledgementFrequency: record.autoDoc.acknowledgementFrequency,
+  });
   const [target, setTarget] = useState(record.autoDoc.targetContractTypeId ?? "");
   const [titlePattern, setTitlePattern] = useState(record.autoDoc.titlePattern ?? "");
   const [fixedEntityId, setFixedEntityId] = useState(record.autoDoc.fixedEntityId ?? "");
@@ -232,6 +240,7 @@ export function AutoDocSettings({
               params: { path: { id: record.autoDoc.id } },
               body: {
                 audience,
+                ...portal,
                 targetContractTypeId: target || null,
                 titlePattern: titlePattern || null,
                 fixedEntityId: fixedEntityId || null,
@@ -283,6 +292,13 @@ export function AutoDocSettings({
               ))}
             </select>
           </label>
+          <PortalSettingsFields
+            record={record}
+            options={options}
+            audience={audience}
+            value={portal}
+            onChange={setPortal}
+          />
           <label className="block space-y-1">
             <span>
               <FormattedMessage id="autoDocs.targetType" defaultMessage="Target Contract Type" />
@@ -420,6 +436,15 @@ export function AutoDocSettings({
           <p role="alert" className="text-sm text-status-danger-fg">
             {error}
           </p>
+        )}
+        {!!record.portalWarnings.length && (
+          <div className="space-y-2" role="status">
+            {record.portalWarnings.map((warning) => (
+              <p key={warning} className="text-sm text-status-warning-fg">
+                {warning}
+              </p>
+            ))}
+          </div>
         )}
         {notice && (
           <p role="status" className="text-sm text-muted">

@@ -89,6 +89,8 @@ export const autoDocUploadAnswer = z.object({
     state: autoDocStates,
     templateDocumentId: z.string().nullable(),
     audience: autoDocAudiences,
+    acknowledgementText: z.string().nullable(),
+    acknowledgementFrequency: z.enum(["none", "every_use", "once_per_auto_doc", "once"]),
     targetContractTypeId: z.string().nullable(),
     titlePattern: z.string().nullable(),
     fixedEntityId: z.string().nullable(),
@@ -100,6 +102,10 @@ export const autoDocUploadAnswer = z.object({
     createdAt: z.string(),
     updatedAt: z.string(),
   }),
+  audienceUserIds: z.array(z.string()),
+  audienceDepartmentIds: z.array(z.string()),
+  defaultAcknowledgementText: z.string(),
+  portalWarnings: z.array(z.string()),
   assignmentRules: z.array(
     autoDocClauseRule
       .omit({ blockName: true })
