@@ -83,8 +83,9 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
         })
       ).status(),
     ).toBe(201);
-    const entityTypes = (await (await page.request.get("/api/v1/entities/types")).json())
-      .entityTypes;
+    const typesResponse = await page.request.get("/api/v1/entities/types");
+    expect(typesResponse.status(), await typesResponse.text()).toBe(200);
+    const entityTypes = (await typesResponse.json()).entityTypes;
     const entityReply = await page.request.post("/api/v1/entities", {
       data: { legalName: `Signing Entity ${suffix}`, entityTypeId: entityTypes[0].id },
     });
@@ -378,16 +379,22 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     await Promise.all(
       colleagues.map((colleague) => colleague.context.close().catch(() => undefined)),
     );
+    // Members first: the executive holds the Sales Department. Each sweep
+    // runs whatever the earlier one did, so one failed step never leaves
+    // the never-reset instance (TECH-018) with a live per-run Department.
     try {
       for (const email of emails) await ensureMemberInert(cleanup, email);
-      for (const departmentId of departmentIds)
-        expect(
-          (
-            await cleanup.post(`/api/v1/departments/${departmentId}/archive`, { data: {} })
-          ).status(),
-        ).toBe(200);
     } finally {
-      await cleanup.dispose();
+      try {
+        for (const departmentId of departmentIds) {
+          const archived = await cleanup.post(`/api/v1/departments/${departmentId}/archive`, {
+            data: {},
+          });
+          expect(archived.status(), await archived.text()).toBe(200);
+        }
+      } finally {
+        await cleanup.dispose();
+      }
     }
   }
 });
