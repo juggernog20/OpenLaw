@@ -355,7 +355,12 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
       .getByRole("row")
       .filter({ has: lawyer.getByRole("link", { name: secondContract.title, exact: true }) });
     await expect(row).toBeVisible();
-    await row.getByRole("button", { name: "Claim", exact: true }).click();
+    await row.getByRole("button", { name: /^Assign / }).click();
+    await lawyer.getByRole("dialog").getByRole("radio", { name: lawyerName, exact: true }).check();
+    await lawyer
+      .getByRole("dialog")
+      .getByRole("button", { name: "Save assignment", exact: true })
+      .click();
     await expect(row).toHaveCount(0);
     expect(
       (await (await lawyer.request.get(`/api/v1/contracts/${secondContract.number}`)).json())

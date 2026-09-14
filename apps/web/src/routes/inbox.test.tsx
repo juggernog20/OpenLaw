@@ -543,7 +543,7 @@ describe("Inbox filters and views", () => {
 });
 
 it.each([false, true])(
-  "assigns a generated Contract and updates tab counts (source erased: %s)",
+  "assigns a generated Contract to a colleague (source erased: %s)",
   async (erased) => {
     const user = userEvent.setup();
     let claimed = false;
@@ -559,14 +559,19 @@ it.each([false, true])(
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
+        if (call.url.pathname === "/api/v1/inbox/unassigned-contracts/assignees")
+          return json(200, {
+            people: [
+              { id: "colleague", displayName: "Lin Legal" },
+              { id: MEMBER.id, displayName: MEMBER.displayName },
+            ],
+          });
         if (call.url.pathname === "/api/v1/inbox/unassigned-contracts")
           return json(200, {
             contracts: claimed ? [] : [queue],
             total: claimed ? 0 : 1,
             nextCursor: null,
           });
-        if (call.url.pathname === "/api/v1/inbox/unassigned-contracts/assignees")
-          return json(200, { people: [{ id: "colleague", displayName: "Alex Legal" }] });
         if (call.url.pathname.endsWith("/81/assign")) {
           expect(call.body).toEqual({ legalOwnerId: "colleague" });
           claimed = true;
@@ -585,8 +590,11 @@ it.each([false, true])(
     ).toBeInTheDocument();
     if (erased) expect(screen.getByText("Deleted Auto-Doc")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Assign C-81" }));
-    await user.click(await screen.findByRole("radio", { name: "Alex Legal" }));
-    await user.click(screen.getByRole("button", { name: "Save assignment" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("button", { name: "Save assignment" })).toBeDisabled();
+    await user.type(within(dialog).getByRole("textbox", { name: "Search people" }), "Lin");
+    await user.click(await within(dialog).findByRole("radio", { name: "Lin Legal" }));
+    await user.click(within(dialog).getByRole("button", { name: "Save assignment" }));
     await waitFor(() =>
       expect(
         screen.queryByRole("link", { name: "Generated supplier NDA" }),
@@ -613,14 +621,19 @@ it("refreshes the unassigned queue and reports an assignment conflict", async ()
   stubApi({
     signedIn: MEMBER,
     extra: (call) => {
+      if (call.url.pathname === "/api/v1/inbox/unassigned-contracts/assignees")
+        return json(200, {
+          people: [
+            { id: "colleague", displayName: "Lin Legal" },
+            { id: MEMBER.id, displayName: MEMBER.displayName },
+          ],
+        });
       if (call.url.pathname === "/api/v1/inbox/unassigned-contracts")
         return json(200, {
           contracts: claimedElsewhere ? [] : [queue],
           total: claimedElsewhere ? 0 : 1,
           nextCursor: null,
         });
-      if (call.url.pathname === "/api/v1/inbox/unassigned-contracts/assignees")
-        return json(200, { people: [{ id: "colleague", displayName: "Alex Legal" }] });
       if (call.url.pathname.endsWith("/81/assign")) {
         expect(call.body).toEqual({ legalOwnerId: "colleague" });
         claimedElsewhere = true;
@@ -631,8 +644,9 @@ it("refreshes the unassigned queue and reports an assignment conflict", async ()
   });
   renderAt("/inbox?tab=unassigned-contracts");
   await user.click(await screen.findByRole("button", { name: "Assign C-81" }));
-  await user.click(await screen.findByRole("radio", { name: "Alex Legal" }));
-  await user.click(screen.getByRole("button", { name: "Save assignment" }));
+  const dialog = screen.getByRole("dialog");
+  await user.click(await within(dialog).findByRole("radio", { name: "Lin Legal" }));
+  await user.click(within(dialog).getByRole("button", { name: "Save assignment" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "This Contract already has a Legal Owner.",
   );
