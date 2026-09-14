@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-009: reconcile saved Generation answers with the current published Auto-Doc form. */
+import type { IntlShape } from "react-intl";
 import type { Draft } from "../components/auto-docs/form-control";
 import type { AutoDocGeneration } from "./auto-docs";
 
@@ -11,7 +12,16 @@ type PreviousForm = {
 type CurrentForm = Omit<PreviousForm, "fields"> & {
   fields: (PreviousForm["fields"][number] & { options: string[] | null })[];
 };
-export type PreviousAnswer = { label: string; value: string };
+export type PreviousAnswer = { label: string; value: string; fieldType?: string };
+/** A dropped boolean reads as the Yes or No the form showed, not the stored word. */
+export function previousAnswerText(intl: IntlShape, answer: PreviousAnswer): string {
+  if (answer.fieldType !== "boolean") return answer.value;
+  return intl.formatMessage(
+    answer.value === "true"
+      ? { id: "common.yes", defaultMessage: "Yes" }
+      : { id: "common.no", defaultMessage: "No" },
+  );
+}
 export function toDraft(answers: Record<string, unknown> | undefined): Draft {
   return Object.fromEntries(
     Object.entries(answers ?? {}).map(([slug, value]) => [
@@ -69,6 +79,7 @@ export function reconcile(draft: Draft, previous: PreviousForm | null, current: 
     if (choices.some(Boolean))
       dropped.push({
         label: old?.label ?? field?.label ?? slug,
+        fieldType: (old ?? field)?.fieldType,
         value:
           (old ?? field)?.fieldType === "entity"
             ? (previous?.entities.find((entity) => entity.id === value)?.name ??

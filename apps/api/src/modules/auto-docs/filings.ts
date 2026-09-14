@@ -55,8 +55,9 @@ export async function filingSource(
   autoDocId: string,
   generationId: string,
   portal: boolean,
+  lock = false,
 ) {
-  if (portal) await readPortalAutoDoc(db, user, autoDocId, false);
+  if (portal) await readPortalAutoDoc(db, user, autoDocId, false, lock);
   const [generation] = await db
     .select()
     .from(autoDocGenerations)
@@ -154,8 +155,7 @@ export async function fileGeneration(
   await withStoredBlobs(deps.storage, log, stored, () =>
     deps.notifier.notifying(async (tx) => {
       await lockPortalPerson(tx, user);
-      if (portal) await readPortalAutoDoc(tx, user, autoDocId, false, true);
-      await filingSource(tx, user, autoDocId, generationId, portal);
+      await filingSource(tx, user, autoDocId, generationId, portal, true);
       const [generation] = await tx
         .select()
         .from(autoDocGenerations)

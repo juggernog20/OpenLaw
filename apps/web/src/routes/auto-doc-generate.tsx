@@ -4,7 +4,12 @@
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
-import { previousGenerationForm, reconcile, toDraft } from "../lib/auto-doc-answers";
+import {
+  previousAnswerText,
+  previousGenerationForm,
+  reconcile,
+  toDraft,
+} from "../lib/auto-doc-answers";
 import { FilingPicker, type FilingDestination } from "../components/auto-docs/filings";
 import { api } from "../lib/api";
 import { CONTROL_CLASS } from "../lib/form-controls";
@@ -179,7 +184,9 @@ export function AutoDocGeneratePage() {
               {previousAnswers.map((answer, index) => (
                 <div key={index}>
                   <dt className="font-medium">{answer.label}</dt>
-                  <dd className="whitespace-pre-wrap break-words">{answer.value}</dd>
+                  <dd className="whitespace-pre-wrap break-words">
+                    {previousAnswerText(intl, answer)}
+                  </dd>
                 </div>
               ))}
             </dl>

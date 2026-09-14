@@ -379,3 +379,25 @@ it("prefills Generate again and saves an optional Filing destination with the su
     }),
   );
 });
+
+it("names a dropped boolean answer as Yes when its field is no longer boolean", async () => {
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generate"))
+        return json(200, {
+          ...form,
+          fields: [form.fields[0]!, { ...form.fields[2]!, fieldType: "text", required: false }],
+        });
+      if (call.url.pathname.endsWith("/generations/generation1"))
+        return json(200, { generation: { ...generation, answers: { agreed: true } } });
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda/generate?from=generation1");
+  await screen.findByRole("heading", { name: "Previous answers" });
+  expect(screen.getByText("Agreed", { selector: "dt" })).toBeVisible();
+  expect(screen.getByText("Yes", { selector: "dd" })).toBeVisible();
+  expect(screen.queryByText("true")).not.toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Agreed" })).toHaveValue("");
+});

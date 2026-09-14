@@ -6,6 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import type { paths } from "@openlaw/api-client";
 import {
+  previousAnswerText,
   previousGenerationForm,
   reconcile,
   toDraft,
@@ -422,7 +423,9 @@ function PortalAutoDocForm({
               {previousAnswers.map((answer, index) => (
                 <div key={index}>
                   <dt>{answer.label}</dt>
-                  <dd className="whitespace-pre-wrap text-muted">{answer.value}</dd>
+                  <dd className="whitespace-pre-wrap text-muted">
+                    {previousAnswerText(intl, answer)}
+                  </dd>
                 </div>
               ))}
             </dl>
