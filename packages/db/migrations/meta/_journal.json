@@ -820,6 +820,20 @@
       "when": 1789299238301,
       "tag": "0116_departments",
       "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1789325186920,
+      "tag": "0117_record_departments",
+      "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1789326193926,
+      "tag": "0118_normalize_department_values",
+      "breakpoints": true
     }
   ]
 }

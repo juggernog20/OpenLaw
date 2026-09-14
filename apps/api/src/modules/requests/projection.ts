@@ -36,6 +36,7 @@
 
 import type { FastifyReply } from "fastify";
 import { z } from "zod";
+import { departmentName } from "../departments/references.js";
 import {
   alias,
   and,
@@ -504,6 +505,8 @@ export const StaffRequestSchema = z.object({
   status: z.enum(REQUEST_STATUSES),
   title: z.string(),
   description: z.string().nullable(),
+  departmentId: z.string().nullable().optional(),
+  department: z.string().nullable().optional(),
   /** DES-018's severity ramp, as the requester claimed it. */
   urgency: z.enum(SEVERITY_LEVELS),
   /** What the form collected, keyed by field slug (INT-002). */
@@ -547,6 +550,7 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       status: requests.status,
       title: requests.title,
       description: requests.description,
+      departmentId: requests.departmentId,
       urgency: requests.urgency,
       customFields: requests.customFields,
       declinedReason: requests.declinedReason,
@@ -576,6 +580,7 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
   const records = await selectConvertedRecords(db, user, [row.id]);
   return {
     ...row,
+    department: await departmentName(db, row.departmentId),
     convertedRecord: records.get(row.id) ?? null,
   };
 }
@@ -589,6 +594,8 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     assignee: row.assignee,
     title: row.title,
     description: row.description,
+    departmentId: row.departmentId,
+    department: row.department,
     urgency: row.urgency,
     customFields: row.customFields,
     declinedReason: row.declinedReason,

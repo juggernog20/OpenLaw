@@ -4902,3 +4902,7 @@ This is a new Request attachment read path: the Inbox's chat-only `RecordApplets
 ### DES-016 addendum (2026-09-11, #829) — Saved conversion citations
 
 The stacked source modal remains appropriate while the Convert dialog is active and keeps that dialog mounted. On saved Matter and Contract records, a citation with a Document Version uses the existing doc panel in RecordApplets. It docks beside the record at the existing width threshold and covers only the record content at narrower widths. It opens the original Version with the quoted passage highlighted, preserves the route and typed values, and restores the sparkle on close. Multiple citations offer a source choice. Request/message text remains available beside its value; unfiled conversation attachments retain their source reader. This supersedes the INT-008-era permission to reuse the centered Convert source modal for promoted Document Versions on saved records.
+
+### Record Overview alignment — 2026-09-13
+
+Matter and Contract core cards follow the same reading and keyboard order: Title, Type, legal responsibility (Matter Manager or Legal Owner), Business Owner, Department, Priority, Risk. Title spans the card; the remaining fields use two columns when space permits and one column on narrow layouts. Labels use the shared form label style. Both owner fields use the shared searchable avatar picker. Record-specific fields follow this core group; custom Fields remain separate.

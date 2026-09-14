@@ -12,7 +12,7 @@ If the work arrived as a Request, use [Request conversion](convert-request.md) a
 
 Open **Matters** and select **New matter**. Enter **Title**, choose **Matter type**, and fill every Field marked required. The **Matter Manager** starts with you. Keep that selection, choose another eligible person, or clear it to **Unassigned**. Matter Managers must be active Legal Team Members or Administrators.
 
-Review **Priority**, **Risk**, **Description**, and **Confidential**. Priority starts at **Medium** and Risk at **Not assessed** unless a template supplies defaults. Complete any Entity or person reference Fields your type offers by selecting the intended record, rather than entering an identifier.
+Choose **Department** from the shared list, or leave **No Department** selected. Review **Priority**, **Risk**, **Description**, and **Confidential**. Priority starts at **Medium** and Risk at **Not assessed** unless a template supplies defaults. Complete any Entity or person reference Fields your type offers by selecting the intended record, rather than entering an identifier.
 
 Select **Create**. The new Matter opens with its M- reference. Check the saved values and its initial open-category Status. The M- reference remains the same if you rename the Matter. **Cancel** leaves the dialog without creating it.
 
@@ -32,7 +32,7 @@ Later template edits do not change this Matter. Manage the copied Tasks, dates, 
 
 ## Set responsibility and maintain the record
 
-On **Overview**, edit the normal controls for the title, type, **Matter Manager**, **Business Owner**, Priority, Risk, Description, and **Custom fields**. Wait for each save result. Changing type can require a **Change matter type** dialog to fill the new type's required Fields; use **Change type** to confirm. A required value cannot be cleared. Values for Fields no longer attached to the type are retained but no longer shown there.
+On **Overview**, edit the normal controls for the title, type, **Matter Manager**, **Business Owner**, **Department**, Priority, Risk, Description, and **Custom fields**. These core fields use the same sequence as Contracts: title, type, legal responsibility, business responsibility, Department, Priority, then Risk. Both owner controls let you search for a person and show their avatar. Wait for each save result. Changing type can require a **Change matter type** dialog to fill the new type's required Fields; use **Change type** to confirm. A required value cannot be cleared. Values for Fields no longer attached to the type are retained but no longer shown there.
 
 Open **Matter team** in the activity bar. Select **Add team member**, choose **Person**, then **Add**. The roster has one membership row per person, with Matter Manager, Business Owner and Creator as separate statements. Change owners through their Overview controls. Owner assignments do not grant Portal access; membership does.
 

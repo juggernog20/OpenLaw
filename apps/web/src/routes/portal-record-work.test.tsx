@@ -92,7 +92,7 @@ it.each([
     renderAt("/portal/contracts/12");
     const overview = within(await screen.findByRole("region", { name: "Overview" }));
     for (const [label, value] of [
-      ["Owning department", classification.owningDepartment],
+      ["Department", classification.owningDepartment],
       ["Region", classification.region],
     ] as const) {
       expect(overview.getByText(label).nextElementSibling).toHaveTextContent(
@@ -101,7 +101,7 @@ it.each([
       expect(overview.queryByRole("textbox", { name: label })).not.toBeInTheDocument();
     }
     const fields = within(screen.getByRole("region", { name: "Fields" }));
-    expect(fields.queryByText("Owning department")).not.toBeInTheDocument();
+    expect(fields.queryByText("Department")).not.toBeInTheDocument();
     expect(fields.queryByText("Region")).not.toBeInTheDocument();
     expect(fields.getByText("Cost center")).toBeInTheDocument();
   },

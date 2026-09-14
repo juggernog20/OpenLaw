@@ -1044,7 +1044,7 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
   });
 });
 
-it("carries legacy Request classification into built-in Contract attributes", async () => {
+it("carries Department and legacy Region into built-in Contract attributes", async () => {
   const [department] = await harness.db
     .insert(departments)
     .values({ slug: "finance", displayName: "Finance", displayOrder: 1 })
@@ -1052,7 +1052,10 @@ it("carries legacy Request classification into built-in Contract attributes", as
   const request = await submit("Classification before conversion");
   await harness.db
     .update(requests)
-    .set({ customFields: { owning_department: "Finance", region: "EMEA" } })
+    .set({
+      departmentId: department!.id,
+      customFields: { owning_department: "Finance", region: "EMEA" },
+    })
     .where(eq(requests.id, request.id));
   const res = await convert(request.number, { title: "Classified contract" });
   expect(res.statusCode, res.body).toBe(200);
@@ -1093,3 +1096,26 @@ it.each(["", "  ", "Unlisted department", "Archived department"])(
     });
   },
 );
+
+it("keeps a cleared Department empty when a Request retains its legacy answer", async () => {
+  const request = await submit("Cleared classification");
+  const [department] = await harness.db
+    .select()
+    .from(departments)
+    .where(eq(departments.slug, "finance"));
+  await harness.db
+    .update(requests)
+    .set({ departmentId: department!.id, customFields: { owning_department: "Finance" } })
+    .where(eq(requests.id, request.id));
+  const cleared = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/requests/${request.number}/department`,
+    cookies: memberCookies,
+    payload: { departmentId: null },
+  });
+  expect(cleared.statusCode, cleared.body).toBe(200);
+  const res = await convert(request.number, { title: "No Department" });
+  expect(res.statusCode, res.body).toBe(200);
+  const contract = await contractNumbered(res.json().request.convertedContract.number as number);
+  expect(contract.owningDepartmentId).toBeNull();
+});

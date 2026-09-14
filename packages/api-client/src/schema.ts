@@ -2373,6 +2373,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/requests/{number}/department": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["setRequestDepartment"];
+    trace?: never;
+  };
   "/api/v1/requests/{number}": {
     parameters: {
       query?: never;
@@ -9998,6 +10014,8 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              departmentId?: string | null;
+              department?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -10064,6 +10082,7 @@ export interface operations {
           title: string;
           matterTypeId: string;
           managerId?: string | null;
+          departmentId?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
           risk?: ("low" | "medium" | "high" | "critical") | null;
@@ -10110,6 +10129,8 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              departmentId?: string | null;
+              department?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -10273,6 +10294,10 @@ export interface operations {
               /** @enum {string} */
               role: "administrator" | "legal_team_member" | "business_user";
             }[];
+            departments: {
+              id: string;
+              displayName: string;
+            }[];
           };
         };
       };
@@ -10330,6 +10355,8 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              departmentId?: string | null;
+              department?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -10453,6 +10480,7 @@ export interface operations {
           description?: string | null;
           matterTypeId?: string;
           managerId?: string | null;
+          departmentId?: string | null;
           businessOwnerId?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
@@ -10501,6 +10529,8 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              departmentId?: string | null;
+              department?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -10809,6 +10839,8 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              departmentId?: string | null;
+              department?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -10899,6 +10931,8 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              departmentId?: string | null;
+              department?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -13638,6 +13672,10 @@ export interface operations {
               displayOrder: number;
               isRequired: boolean;
             }[];
+            departments: {
+              id: string;
+              displayName: string;
+            }[];
             intakeLinks: (
               | {
                   id: string;
@@ -14919,6 +14957,8 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
+              departmentId?: string | null;
+              department?: string | null;
             }[];
             total: number;
             filterOptions: {
@@ -14985,6 +15025,8 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               } | null;
+              departmentId?: string | null;
+              department?: string | null;
             };
           };
         };
@@ -15098,6 +15140,7 @@ export interface operations {
       content: {
         "application/json": {
           requestTypeId: string;
+          departmentId?: string | null;
           title: string;
           description: string;
           /** @enum {string} */
@@ -15124,6 +15167,8 @@ export interface operations {
               status: "new";
               title: string;
               description: string | null;
+              departmentId?: string | null;
+              department?: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
               customFields: {
@@ -15225,6 +15270,8 @@ export interface operations {
               };
               createdAt: string;
               description: string | null;
+              departmentId?: string | null;
+              department?: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
               customFields: {
@@ -15480,6 +15527,8 @@ export interface operations {
               status: "new" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
+              departmentId?: string | null;
+              department?: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
               customFields: {
@@ -15575,6 +15624,46 @@ export interface operations {
       };
     };
   };
+  setRequestDepartment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          departmentId: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            departmentId: string | null;
+            department: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   readRequest: {
     parameters: {
       query?: never;
@@ -15600,6 +15689,8 @@ export interface operations {
               status: "new" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
+              departmentId?: string | null;
+              department?: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
               customFields: {
@@ -15776,6 +15867,8 @@ export interface operations {
               status: "new" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
+              departmentId?: string | null;
+              department?: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
               customFields: {
@@ -15911,6 +16004,8 @@ export interface operations {
               status: "new" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
+              departmentId?: string | null;
+              department?: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
               customFields: {
@@ -16495,6 +16590,8 @@ export interface operations {
               status: "new" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
+              departmentId?: string | null;
+              department?: string | null;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
               customFields: {

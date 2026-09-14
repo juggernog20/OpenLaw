@@ -3,7 +3,7 @@
 /** Assigned Tasks, with optional completed rows and Undo for the latest completion (DES-069). */
 
 import { useState } from "react";
-import { Link, redirect, useLoaderData } from "react-router";
+import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Undo2 } from "lucide-react";
 import { api } from "../lib/api";
@@ -204,11 +204,6 @@ export function HomeTasksPage() {
     <AppShell user={user} onSignOut={() => void signOut()} subbar={<PageSubBar title={title} />}>
       <PageTitle title={title} />
       <div className="space-y-4">
-        <Button asChild variant="link" className="px-0">
-          <Link to="/">
-            <FormattedMessage id="home.tasks.back" defaultMessage="Back to Home" />
-          </Link>
-        </Button>
         {filterFailed ? (
           <p role="alert" className="text-status-severe-fg">
             <FormattedMessage
@@ -217,7 +212,9 @@ export function HomeTasksPage() {
             />
           </p>
         ) : null}
-        <div className="flex min-h-8 items-center gap-2">
+        <div
+          className={completedTask || restoredTitle ? "flex min-h-8 items-center gap-2" : "sr-only"}
+        >
           <p role="status" className="text-muted empty:hidden">
             {completedTask ? (
               <FormattedMessage

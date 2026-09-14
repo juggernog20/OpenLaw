@@ -241,3 +241,9 @@ model uses the existing connector save and Activity path.
 | SET-009 | Select the Signing connector update mode                                   | Accepted                                                                           |
 | SET-010 | Departments are an Administrator-managed list, on users and Contracts      | Accepted                                                                           |
 | SET-011 | The Business User first run in the Portal                                  | Accepted; mandatory before M34                                                     |
+
+### SET-010 amendment — consistent record Department, 2026-09-13
+
+Requests, Matters, and Contracts use **Department** for the business team responsible for the work. They select from the same Administrator-managed list. This record value is independent of a person's Department and grants no access. Department is optional, built in, and does not require a custom Field attachment. Legal can correct an open Request's Department; conversion carries it into the new record, which can then be edited independently. Existing Business unit and Owning department answers migrate into this list; legacy custom definitions are archived and their original answers retained.
+
+Matter and Request APIs use `departmentId`; Contracts retain `owningDepartmentId` for compatibility. All visible labels say Department.

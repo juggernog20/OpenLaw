@@ -310,7 +310,7 @@ describe("what the requester submitted", () => {
       .map((term) => term.textContent);
     // Description and Urgency first — the basics every form collects —
     // then the type's own fields in display order.
-    expect(labels).toEqual(["Description", "Urgency", "Counterparty", "Paper side"]);
+    expect(labels).toEqual(["Description", "Department", "Urgency", "Counterparty", "Paper side"]);
     expect(within(card).getByText("High")).toBeInTheDocument();
     expect(within(card).getByText("Orion Cloud Ltd")).toBeInTheDocument();
     expect(within(card).getByText("Theirs")).toBeInTheDocument();
@@ -433,7 +433,7 @@ describe("what the requester submitted", () => {
       .map((term) => term.textContent);
     // The basics in INT-002's order, with the paper between the
     // Description and the Urgency.
-    expect(labels).toEqual(["Description", "Attachments", "Urgency", "Counterparty"]);
+    expect(labels).toEqual(["Description", "Attachments", "Department", "Urgency", "Counterparty"]);
 
     // Same-origin and behind the session: the bytes come through the
     // API, and there is no presigned URL anywhere on this page.
@@ -595,7 +595,7 @@ describe("the conversation", () => {
     expect(within(card).getByText("Thanks Tom — reviewing the redline now.")).toBeInTheDocument();
     // I7's author pill: the reader's own reply is "You", and on a
     // Request the only other author is staff.
-    expect(within(card).getAllByText("Full thread")).toHaveLength(2);
+    expect(within(card).getAllByText("Shared with requester")).toHaveLength(2);
     expect(within(card).getByText("Sarah Chen")).toBeInTheDocument();
   });
 
@@ -751,7 +751,7 @@ describe("the conversation", () => {
     // The tier picker is a staff affordance. A Requester is in one room,
     // so there is nothing here to pick between (DD-016).
     expect(within(card).queryByRole("radio")).not.toBeInTheDocument();
-    expect(within(card).queryByText("Full thread")).not.toBeInTheDocument();
+    expect(within(card).queryByText("Shared with requester")).not.toBeInTheDocument();
     expect(within(card).queryByText("Legal only")).not.toBeInTheDocument();
     expect(within(card).queryByText("Working team")).not.toBeInTheDocument();
   });

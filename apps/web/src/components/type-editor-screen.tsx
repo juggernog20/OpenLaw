@@ -26,7 +26,7 @@
  *
  * **The right card takes locked rows above the attachments.** `basics`
  * is what a form always collects whatever an Administrator configures
- * — ST14's Title, Description, Attachments, and Urgency (INT-002).
+ * — ST14's Title, Description, Attachments, Department, and Urgency (INT-002).
  * They are stated, not configured: no catalog row is behind them,
  * nothing detaches them, and their required flags are facts, so the
  * card draws them disabled and never offers them in the Attach menu.
@@ -101,8 +101,8 @@ export interface EditorCatalogRow {
 
 /**
  * One row the mount states rather than configures: what this kind of
- * form always collects (ST14's four basics — INT-002 fixes Title,
- * Description, Attachments, and Urgency on every request form).
+ * form always collects (ST14's fixed basics — INT-002 fixes Title,
+ * Description, Attachments, Department, and Urgency on every request form).
  *
  * It is not an attachment. There is no catalog row behind it, nothing
  * detaches it, and its required flag is a fact rather than a control —
@@ -199,7 +199,7 @@ export interface TypeEditorAttachmentsMessages {
 
 /**
  * The rows a mount states rather than configures, and the two lines
- * that make them readable (ST14's four basics).
+ * that make them readable (ST14's fixed basics).
  *
  * The three travel together for `TypeEditorAttachments`' reason: a
  * locked row with no caption saying why it is locked, or a lock glyph a
@@ -233,7 +233,7 @@ export interface TypeEditorAttachments {
   messages: TypeEditorAttachmentsMessages;
   /**
    * Rows the mount states rather than configures, drawn locked above
-   * the attachments (ST14's four basics). The two type editors have
+   * the attachments (ST14's fixed basics). The two type editors have
    * none: every field on a contract type is attached, so there is
    * nothing to state.
    */

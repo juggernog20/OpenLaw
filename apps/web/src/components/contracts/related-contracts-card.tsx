@@ -121,7 +121,7 @@ function RelationRow({
   }
   const ref = contractReference(intl, entry.number);
   return (
-    <li className="flex items-center gap-2 py-1 text-sm">
+    <li className="flex items-center gap-2 py-1 text-base">
       <Link
         to={`/contracts/${entry.number}`}
         className="text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
@@ -307,7 +307,7 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
             </p>
           )}
           {empty ? (
-            <p className="text-sm text-muted">
+            <p className="text-base text-muted">
               <FormattedMessage
                 id="contracts.relations.empty"
                 defaultMessage="No related contracts."

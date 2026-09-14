@@ -748,14 +748,6 @@ export const CUSTOM_FIELDS = [
     attach: { contract: ["msa", "sales", "employment", "lease"] },
   },
   {
-    displayName: "Business unit",
-    moduleScope: "matter",
-    fieldType: "single_select",
-    fieldTag: "business",
-    options: ["Platform", "Analytics", "Sales", "People", "Finance", "Group"],
-    attach: { matter: ["employment", "commercial", "corporate", "privacy", "product_counsel"] },
-  },
-  {
     displayName: "External counsel",
     moduleScope: "matter",
     fieldType: "text",

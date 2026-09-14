@@ -7,7 +7,7 @@
  * own, the target. The machinery itself is covered by the Contracts and
  * Matters editor suites; these tests pin the wiring and the target.
  *
- * The right card is the form definition (#355): the four basics as
+ * The right card is the form definition (#355): the five basics as
  * locked rows, and below them the catalog fields, offered by the rule
  * the target sets.
  *
@@ -268,7 +268,7 @@ describe("identity (ST14's left card)", () => {
 });
 
 describe("the form definition (ST14's right card)", () => {
-  it("opens with the four basics, locked and disabled, on the DES-018 ramp", async () => {
+  it("opens with the five basics, locked and disabled, on the DES-018 ramp", async () => {
     openEditor(editorApi(newCalls()));
     expect(await screen.findByText("Form fields")).toBeInTheDocument();
     expect(screen.getByText("Basics are always on the form")).toBeInTheDocument();
@@ -277,6 +277,7 @@ describe("the form definition (ST14's right card)", () => {
       ["Title", true],
       ["Description", true],
       ["Attachments", false],
+      ["Department", false],
       ["Urgency", true],
     ] as const) {
       const box = screen.getByRole("checkbox", { name: `${name} required` });

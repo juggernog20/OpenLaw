@@ -71,8 +71,6 @@
  * anywhere leaves the conversation exactly where the requester left it.
  */
 
-import { departmentByName } from "../departments/references.js";
-
 import { reserveConversionAnalysis } from "../../pipeline/conversion-analysis.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -242,6 +240,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               .select({
                 urgency: requests.urgency,
                 requesterId: requests.requesterId,
+                departmentId: requests.departmentId,
                 description: requests.description,
                 customFields: requests.customFields,
                 targetModule: requestTypes.targetModule,
@@ -320,10 +319,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
-                    owningDepartmentId: await departmentByName(
-                      tx,
-                      row.customFields.owning_department,
-                    ),
+                    owningDepartmentId: row.departmentId,
                     region:
                       typeof row.customFields.region === "string" ? row.customFields.region : null,
                     description:
@@ -340,6 +336,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     businessOwnerId: row.requesterId,
                   })
                 : await createMatter(tx, {
+                    departmentId: row.departmentId,
                     actorId: request.user.id,
                     businessOwnerId: row.requesterId,
                     // The dialog seeds this from the title. The held

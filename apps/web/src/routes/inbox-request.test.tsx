@@ -669,11 +669,11 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
     const rows = within(thread).getAllByRole("listitem");
     expect(within(rows[0]!).getByText("Legal only")).toBeInTheDocument();
     expect(within(rows[1]!).getByText("Working team")).toBeInTheDocument();
-    expect(within(rows[2]!).getByText("Full thread")).toBeInTheDocument();
+    expect(within(rows[2]!).getByText("Shared with requester")).toBeInTheDocument();
     expect(within(rows[2]!).getByText("Tom Iwu")).toBeInTheDocument();
   });
 
-  it("offers the composer every tier and posts at the one picked", async () => {
+  it("defaults to Legal only and posts to either of the two audiences", async () => {
     const user = userEvent.setup();
     const comments = commentsApi();
     stubApi({ signedIn: MEMBER, extra: pageApi(detailApi(detail()), comments) });
@@ -685,15 +685,20 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
       within(panel)
         .getAllByRole("radio")
         .map((segment) => segment.getAttribute("value")),
-    ).toEqual(["legal_only", "working_team", "full_thread"]);
+    ).toEqual(["legal_only", "full_thread"]);
+    expect(within(panel).getByRole("radio", { name: "Legal only" })).toBeChecked();
+    expect(within(panel).queryByRole("radio", { name: "Working team" })).not.toBeInTheDocument();
 
     // Legal Only triage chatter and Full Thread requester-facing
     // replies, in one conversation.
     for (const [segment, tier, body] of [
       ["Legal only", "legal_only", "Cap looks standard."],
-      ["Full thread", "full_thread", "Can you send the 2025 copy?"],
+      ["Shared with requester", "full_thread", "Can you send the 2025 copy?"],
     ] as const) {
       await user.click(within(panel).getByRole("radio", { name: segment }));
+      if (tier === "full_thread") {
+        expect(within(panel).getByText("Visible to Legal and the requester.")).toBeInTheDocument();
+      }
       await user.type(within(panel).getByLabelText("New comment"), body);
       await user.click(within(panel).getByRole("button", { name: "Comment" }));
       await waitFor(() => {
@@ -734,7 +739,7 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
           entityType: "request",
           entityId: "r1",
           body: "@Nadia Counsel take a look.",
-          visibility: "working_team",
+          visibility: "legal_only",
           mentions: ["u2"],
         },
       ]);
@@ -761,7 +766,7 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
     await openChat(user);
 
     const panel = await screen.findByRole("complementary", { name: "Comments" });
-    await user.click(within(panel).getByRole("radio", { name: "Full thread" }));
+    await user.click(within(panel).getByRole("radio", { name: "Shared with requester" }));
     await user.type(within(panel).getByLabelText("New comment"), "Which entity is signing?");
     await user.click(within(panel).getByRole("button", { name: "Comment" }));
     await waitFor(() => expect(comments.posts).toHaveLength(1));

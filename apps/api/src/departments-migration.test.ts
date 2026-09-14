@@ -50,3 +50,60 @@ it("preserves each distinct Owning department, shares repeated values, and keeps
     await db.$client.end();
   }
 });
+
+it("promotes legacy Request and Matter classifications without losing their original answers", async () => {
+  const db = await freshDb(container, "record_departments_migration");
+  try {
+    await migrateThrough(db, "0116_departments", migrationEntries());
+    await db.execute(
+      sql`insert into departments (id, slug, display_name, display_order) values ('finance', 'finance', 'Finance', 0)`,
+    );
+    await db.execute(
+      sql`insert into users (id, email, display_name, role) values ('requester', 'requester@example.com', 'Requester', 'business_user')`,
+    );
+    await db.execute(sql`insert into matters (id, title, matter_type_id, status_id, created_by, custom_fields)
+      select 'legacy-matter', 'Legacy', mt.id, ms.id, 'requester', '{"business_unit":"finance"}'::jsonb
+      from (select id from matter_types limit 1) mt cross join (select id from matter_statuses limit 1) ms`);
+    await db.execute(sql`insert into requests (id, title, request_type_id, requester_id, urgency, custom_fields)
+      select 'legacy-request', 'Legacy request', id, 'requester', 'medium', '{"owning_department":"Platform"}'::jsonb from request_types limit 1`);
+    await db.execute(sql`insert into fields (id, slug, display_name, module_scope, field_type, field_tag, options)
+      values ('legacy-unit', 'business_unit', 'Business unit', 'matter', 'single_select', 'business', '["Platform","People"]'::jsonb)`);
+    await runMigrations(db);
+    const matter = (
+      await db.execute(
+        sql`select department_id, custom_fields from matters where id = 'legacy-matter'`,
+      )
+    ).rows[0];
+    expect(matter).toEqual({
+      department_id: "finance",
+      custom_fields: { business_unit: "finance" },
+    });
+    const request = (
+      await db.execute(
+        sql`select d.display_name, r.custom_fields from requests r join departments d on d.id = r.department_id where r.id = 'legacy-request'`,
+      )
+    ).rows[0];
+    expect(request).toEqual({
+      display_name: "Platform",
+      custom_fields: { owning_department: "Platform" },
+    });
+    expect(
+      (await db.execute(sql`select display_name from departments order by display_name`)).rows,
+    ).toEqual([
+      { display_name: "Finance" },
+      { display_name: "People" },
+      { display_name: "Platform" },
+    ]);
+    expect(
+      (
+        await db.execute(
+          sql`select display_name, archived_at is not null as archived from fields where id = 'legacy-unit'`,
+        )
+      ).rows,
+    ).toEqual([{ display_name: "Department", archived: true }]);
+    await runMigrations(db);
+    expect((await db.execute(sql`select id from departments`)).rows).toHaveLength(3);
+  } finally {
+    await db.$client.end();
+  }
+});

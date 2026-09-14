@@ -30,6 +30,7 @@ import {
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
+import { lockedDepartment, departmentByName } from "../departments/references.js";
 import { createMatterTask } from "../matter-tasks/create.js";
 
 export interface CreateMatterInput {
@@ -37,6 +38,7 @@ export interface CreateMatterInput {
   title: string;
   matterTypeId: string;
   managerId?: string | null;
+  departmentId?: string | null;
   businessOwnerId?: string | null;
   priority?: SeverityLevel;
   risk?: SeverityLevel | null;
@@ -168,6 +170,19 @@ export async function createMatter(
   );
   assertRequiredCustomFields(attached, customFields);
 
+  const departmentId =
+    input.departmentId !== undefined
+      ? input.departmentId
+        ? (await lockedDepartment(tx, input.departmentId)).id
+        : null
+      : await departmentByName(
+          tx,
+          input.customFields?.department ??
+            input.customFields?.business_unit ??
+            input.customFields?.["business-unit"] ??
+            template?.defaultCustomFields?.business_unit ??
+            template?.defaultCustomFields?.["business-unit"],
+        );
   const confidential = input.isConfidential ?? false;
   const [row] = await tx
     .insert(matters)
@@ -177,6 +192,7 @@ export async function createMatter(
       matterTypeId: matterType.id,
       statusId: status.id,
       managerId: manager?.id ?? null,
+      departmentId,
       priority: input.priority ?? template?.defaultPriority ?? "medium",
       risk: input.risk !== undefined ? input.risk : (template?.defaultRisk ?? null),
       customFields,

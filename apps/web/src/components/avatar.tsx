@@ -42,11 +42,13 @@ export function Avatar({
     <span
       aria-hidden="true"
       className={cn(
-        "flex size-8 shrink-0 items-center justify-center rounded-avatar bg-avatar-bg text-xs font-semibold text-avatar-fg",
+        "flex size-8 shrink-0 items-center justify-center rounded-avatar bg-avatar-bg text-xs leading-none font-semibold text-avatar-fg",
         className,
       )}
     >
-      {initialsOf(name)}
+      <span className="[text-box-edge:cap_alphabetic] [text-box-trim:trim-both]">
+        {initialsOf(name)}
+      </span>
     </span>
   );
 }

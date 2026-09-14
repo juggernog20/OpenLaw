@@ -145,6 +145,7 @@ import {
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
+import { lockedDepartment, departmentName } from "../departments/references.js";
 import { publishInboxTotal } from "./live-inbox.js";
 import {
   attachmentOn,
@@ -172,6 +173,8 @@ const RequestSchema = z.object({
   status: z.literal("new"),
   title: z.string(),
   description: z.string().nullable(),
+  departmentId: z.string().nullable().optional(),
+  department: z.string().nullable().optional(),
   urgency: z.enum(SEVERITY_LEVELS),
   /** What the form collected, keyed by field slug (INT-002). */
   customFields: CustomFieldsSchema,
@@ -207,6 +210,8 @@ const MyRequestRowSchema = z.object({
  * submitted" card, and the disposition. */
 const MyRequestSchema = MyRequestRowSchema.extend({
   description: z.string().nullable(),
+  departmentId: z.string().nullable().optional(),
+  department: z.string().nullable().optional(),
   urgency: z.enum(SEVERITY_LEVELS),
   customFields: CustomFieldsSchema,
   /** INT-006: "no" always arrives with a why. NULL on every status but
@@ -231,6 +236,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["requests"],
         body: z.strictObject({
           requestTypeId: z.string(),
+          departmentId: z.string().min(1).nullable().optional(),
           title: z.string(),
           description: z.string(),
           /** DES-018's four severity levels and nothing else. */
@@ -301,6 +307,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             })),
         ]);
 
+        const department = body.departmentId ? await lockedDepartment(tx, body.departmentId) : null;
         const [row] = await tx
           .insert(requests)
           .values({
@@ -309,6 +316,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             // is no body field to forge and no route to create one on
             // somebody else's behalf.
             requesterId: request.user.id,
+            departmentId: department?.id ?? null,
             title,
             description,
             urgency: body.urgency,
@@ -377,6 +385,8 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           description: created.description,
           urgency: created.urgency,
           customFields: created.customFields,
+          departmentId: created.departmentId,
+          department: await departmentName(app.db, created.departmentId),
           createdAt: created.createdAt.toISOString(),
         },
       };
@@ -496,6 +506,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           convertedMatterId: requests.convertedMatterId,
           title: requests.title,
           description: requests.description,
+          departmentId: requests.departmentId,
           urgency: requests.urgency,
           customFields: requests.customFields,
           declinedReason: requests.declinedReason,
@@ -556,6 +567,8 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         request: {
           ...toRow(row),
           description: row.description,
+          departmentId: row.departmentId,
+          department: await departmentName(app.db, row.departmentId),
           urgency: row.urgency,
           customFields: row.customFields,
           declinedReason: row.declinedReason,

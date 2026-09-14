@@ -323,7 +323,8 @@ export function InboxPage() {
           <ManagedTable
             catalogue={CATALOGUE}
             actionsColumn={{
-              label: intl.formatMessage({ id: "inbox.column.actions", defaultMessage: "Actions" }),
+              label: intl.formatMessage({ id: "inbox.column.triager", defaultMessage: "Triager" }),
+              showLabel: true,
               width: 128,
               pinned: true,
               render: (row) => (
@@ -345,26 +346,20 @@ export function InboxPage() {
             onLayoutChange={(next) => void commit(next)}
             focusRowKey={appended?.from}
             foot={
-              <>
-                {!layout.sort && (
-                  <p className="text-xs text-muted">
-                    <FormattedMessage
-                      id="inbox.ordering"
-                      defaultMessage="Ordered by urgency, then age"
-                    />
-                  </p>
-                )}
-                {pageError && (
-                  <p role="alert" className="text-xs text-status-danger-fg">
-                    {pageError}
-                  </p>
-                )}
-                {cursor !== null && (
-                  <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
-                    <FormattedMessage id="inbox.more" defaultMessage="Show more" />
-                  </Button>
-                )}
-              </>
+              (pageError || cursor !== null) && (
+                <>
+                  {pageError && (
+                    <p role="alert" className="text-xs text-status-danger-fg">
+                      {pageError}
+                    </p>
+                  )}
+                  {cursor !== null && (
+                    <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
+                      <FormattedMessage id="inbox.more" defaultMessage="Show more" />
+                    </Button>
+                  )}
+                </>
+              )
             }
           />
         )}

@@ -25,7 +25,7 @@ export const attachedFieldsRoutes = typeFieldRoutes({
     scopes: ["contract", "global"],
     excludedSlugs: CONTRACT_OVERVIEW_FIELD_SLUGS,
     refusal:
-      "Only contract-scoped and global fields attach to contract types. Owning department and Region are built-in Overview attributes.",
+      "Only contract-scoped and global fields attach to contract types. Department and Region are built-in Overview attributes.",
   },
   scopeSummary: "contract-scoped and global fields only (CTR-016)",
   actionPrefix: "contract_type_field",

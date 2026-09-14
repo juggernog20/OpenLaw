@@ -18,7 +18,7 @@ Select a column heading to sort ascending, descending or return to the default o
 
 ## Read record information
 
-**Overview** and **Fields** show the current values from the full app record. On a Contract, this includes **Owning department**, **Region**, Value and dates. Business Fields, including Description, are read-only. Ask Legal to change a value; reload the record to see their update.
+**Overview** and **Fields** show the current values from the full app record. On a Contract, this includes **Department**, **Region**, Value and dates. Business Fields, including Description, are read-only. Ask Legal to change a value; reload the record to see their update.
 
 **Original request** contains the original description, submitted answers, Requester and submission date. It is read-only. A record may show more than one original submission, or none if it started without a Request. Legal’s changes to the live Description do not change the original ask.
 

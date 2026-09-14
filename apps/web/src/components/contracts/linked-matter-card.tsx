@@ -58,11 +58,8 @@ export function LinkedMatterCard({
       </header>
       <div className="p-4">
         {matter === null ? (
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="contractMatter.standalone"
-              defaultMessage="Standalone Contract — no broader Matter is linked."
-            />
+          <p className="text-base text-muted">
+            <FormattedMessage id="contractMatter.standalone" defaultMessage="No matter is linked" />
           </p>
         ) : matter.restricted ? (
           <RestrictedRecordCell
@@ -75,7 +72,7 @@ export function LinkedMatterCard({
           <div className="flex min-w-0 flex-col gap-3 @sm/record:flex-row @sm/record:items-center">
             <Link
               to={`/matters/${matter.number}`}
-              className="min-w-0 break-words text-sm text-link hover:underline"
+              className="min-w-0 break-words text-base text-link hover:underline"
             >
               {matterReference(intl, matter.number)} {matter.title}
             </Link>

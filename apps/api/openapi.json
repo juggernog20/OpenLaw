@@ -9475,6 +9475,12 @@
                               }
                             ]
                           },
+                          "departmentId": {
+                            "type": ["string", "null"]
+                          },
+                          "department": {
+                            "type": ["string", "null"]
+                          },
                           "createdBy": {
                             "type": ["string", "null"]
                           },
@@ -9714,6 +9720,17 @@
                   "managerId": {
                     "type": ["string", "null"]
                   },
+                  "departmentId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "priority": {
                     "type": "string",
                     "enum": ["low", "medium", "high", "critical"]
@@ -9886,6 +9903,12 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
                         },
                         "createdBy": {
                           "type": ["string", "null"]
@@ -10404,9 +10427,25 @@
                         "required": ["id", "displayName", "image", "archived", "role"],
                         "additionalProperties": false
                       }
+                    },
+                    "departments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["matterTypes", "matterStatuses", "users"],
+                  "required": ["matterTypes", "matterStatuses", "users", "departments"],
                   "additionalProperties": false
                 }
               }
@@ -10538,6 +10577,12 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
                         },
                         "createdBy": {
                           "type": ["string", "null"]
@@ -10972,6 +11017,17 @@
                   "managerId": {
                     "type": ["string", "null"]
                   },
+                  "departmentId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "businessOwnerId": {
                     "type": ["string", "null"]
                   },
@@ -11151,6 +11207,12 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
                         },
                         "createdBy": {
                           "type": ["string", "null"]
@@ -11982,6 +12044,12 @@
                             }
                           ]
                         },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
+                        },
                         "createdBy": {
                           "type": ["string", "null"]
                         },
@@ -12287,6 +12355,12 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
                         },
                         "createdBy": {
                           "type": ["string", "null"]
@@ -19800,6 +19874,22 @@
                         "additionalProperties": false
                       }
                     },
+                    "departments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
                     "intakeLinks": {
                       "type": "array",
                       "items": {
@@ -19850,7 +19940,7 @@
                       }
                     }
                   },
-                  "required": ["requestType", "fields", "intakeLinks"],
+                  "required": ["requestType", "fields", "departments", "intakeLinks"],
                   "additionalProperties": false
                 }
               }
@@ -23389,6 +23479,12 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "departmentId": {
+                            "type": ["string", "null"]
+                          },
+                          "department": {
+                            "type": ["string", "null"]
                           }
                         },
                         "required": [
@@ -23585,6 +23681,12 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
                         }
                       },
                       "required": [
@@ -23632,6 +23734,17 @@
                 "properties": {
                   "requestTypeId": {
                     "type": "string"
+                  },
+                  "departmentId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "title": {
                     "type": "string"
@@ -23712,6 +23825,12 @@
                           "type": "string"
                         },
                         "description": {
+                          "type": ["string", "null"]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
                           "type": ["string", "null"]
                         },
                         "urgency": {
@@ -24286,6 +24405,12 @@
                           "type": "string"
                         },
                         "description": {
+                          "type": ["string", "null"]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
                           "type": ["string", "null"]
                         },
                         "urgency": {
@@ -24900,6 +25025,12 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
+                        },
                         "urgency": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -25179,6 +25310,81 @@
         }
       }
     },
+    "/api/v1/requests/{number}/department": {
+      "patch": {
+        "operationId": "setRequestDepartment",
+        "tags": ["requests"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "departmentId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["departmentId"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "departmentId": {
+                      "type": ["string", "null"]
+                    },
+                    "department": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["departmentId", "department"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/requests/{number}": {
       "get": {
         "operationId": "readRequest",
@@ -25223,6 +25429,12 @@
                           "type": "string"
                         },
                         "description": {
+                          "type": ["string", "null"]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
                           "type": ["string", "null"]
                         },
                         "urgency": {
@@ -25742,6 +25954,12 @@
                         "description": {
                           "type": ["string", "null"]
                         },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
+                        },
                         "urgency": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -26138,6 +26356,12 @@
                           "type": "string"
                         },
                         "description": {
+                          "type": ["string", "null"]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
                           "type": ["string", "null"]
                         },
                         "urgency": {
@@ -27663,6 +27887,12 @@
                           "type": "string"
                         },
                         "description": {
+                          "type": ["string", "null"]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
                           "type": ["string", "null"]
                         },
                         "urgency": {

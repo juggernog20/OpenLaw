@@ -12,6 +12,7 @@ import {
   sql,
   type SQL,
   matters,
+  departments,
   matterStatuses,
   matterTypes,
   users,
@@ -39,6 +40,8 @@ const Matter = z.object({
   category: z.enum(["open", "closed"]),
   manager: Person.nullable(),
   businessOwner: Person.nullable(),
+  departmentId: z.string().nullable().optional(),
+  department: z.string().nullable().optional(),
 });
 
 export const portalMatterRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -47,6 +50,8 @@ export const portalMatterRoutes: FastifyPluginAsyncZod = async (app) => {
     app.db
       .select({
         number: matters.number,
+        departmentId: matters.departmentId,
+        department: departments.displayName,
         typeId: matters.matterTypeId,
         statusId: matters.statusId,
         sortValue: sortExpr.as("portal_matter_sort_value"),
@@ -61,7 +66,8 @@ export const portalMatterRoutes: FastifyPluginAsyncZod = async (app) => {
       .innerJoin(matterTypes, eq(matters.matterTypeId, matterTypes.id))
       .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
       .leftJoin(users, eq(matters.managerId, users.id))
-      .leftJoin(owner, eq(matters.businessOwnerId, owner.id));
+      .leftJoin(owner, eq(matters.businessOwnerId, owner.id))
+      .leftJoin(departments, eq(matters.departmentId, departments.id));
 
   app.get(
     "/portal/matters",

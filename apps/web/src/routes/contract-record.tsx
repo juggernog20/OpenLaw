@@ -210,6 +210,7 @@ import {
   type ContractDocument,
 } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
+import { RecordPersonField } from "../components/record-person-field";
 import { DepartmentPicker } from "../components/department-picker";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { subscribeLiveEvents } from "../lib/events";
@@ -2330,24 +2331,6 @@ function ContractRecord() {
                         {confirmationControl("title")}
                       </div>
                     </div>
-                    <ReadOnlyField
-                      label={
-                        <FormattedMessage
-                          id="contracts.column.reference"
-                          defaultMessage="Reference"
-                        />
-                      }
-                      value={reference}
-                    />
-                    {/* The type is a field like any other on the surface,
-                      and not like any other underneath: picking one
-                      re-checks what that type demands (MTR-014), so a
-                      pick with gaps opens a dialog instead of
-                      committing. The C2 mock draws the type in a hero
-                      meta strip that edits through the page-level Edit
-                      toggle DES-017 removed, so it lands here with the
-                      other scalars — the same move the Owner, our
-                      entity, and the value already made. */}
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-type">
                         <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
@@ -2379,11 +2362,65 @@ function ContractRecord() {
                       {unverifiedMarker("contract_type")}
                       {confirmationControl("contract_type")}
                     </div>
+                    <RecordPersonField
+                      id="contract-owner"
+                      label={intl.formatMessage({
+                        id: "contracts.form.legalOwner",
+                        defaultMessage: "Legal Owner",
+                      })}
+                      frozen={frozen}
+                      value={saved.manager ?? null}
+                      people={
+                        saved.manager &&
+                        !ownerOptions.some((person) => person.id === saved.manager!.id)
+                          ? [saved.manager, ...ownerOptions]
+                          : ownerOptions
+                      }
+                      status={fieldStatus.managerId ?? "idle"}
+                      error={fieldError.managerId}
+                      onChange={async (value) => {
+                        const result = await commit("managerId", { managerId: value });
+                        return result.ok
+                          ? undefined
+                          : (result.detail ??
+                              intl.formatMessage({
+                                id: "matters.edit.error",
+                                defaultMessage: "The change could not be saved.",
+                              }));
+                      }}
+                    />
+                    <RecordPersonField
+                      id="contract-business-owner"
+                      label={intl.formatMessage({
+                        id: "contracts.form.businessOwner",
+                        defaultMessage: "Business Owner",
+                      })}
+                      frozen={frozen}
+                      value={saved.businessOwner ?? null}
+                      people={
+                        saved.businessOwner &&
+                        !users.some((person) => person.id === saved.businessOwner!.id)
+                          ? [saved.businessOwner, ...users]
+                          : users
+                      }
+                      status={fieldStatus.businessOwnerId ?? "idle"}
+                      error={fieldError.businessOwnerId}
+                      onChange={async (value) => {
+                        const result = await commit("businessOwnerId", { businessOwnerId: value });
+                        return result.ok
+                          ? undefined
+                          : (result.detail ??
+                              intl.formatMessage({
+                                id: "matters.edit.error",
+                                defaultMessage: "The change could not be saved.",
+                              }));
+                      }}
+                    />
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="contract-owningDepartment">
                         <FormattedMessage
                           id="contracts.form.owningDepartment"
-                          defaultMessage="Owning department"
+                          defaultMessage="Department"
                         />
                       </Label>
                       <div className="flex items-center gap-2">
@@ -2401,6 +2438,72 @@ function ContractRecord() {
                           status={fieldStatus.owningDepartmentId ?? "idle"}
                           detail={fieldError.owningDepartmentId}
                         />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-priority">
+                        <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <AiField
+                          active={Boolean(saved.aiUnverified?.priority)}
+                          className="min-w-0 flex-1"
+                        >
+                          <select
+                            id="contract-priority"
+                            value={saved.priority}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("priority", {
+                                priority: event.target.value as SeverityLevel,
+                              })
+                            }
+                          >
+                            {SEVERITY_LEVELS.map((level) => (
+                              <option key={level} value={level}>
+                                {severityLabel(intl, level)}
+                              </option>
+                            ))}
+                          </select>
+                        </AiField>
+                        <StatusNote
+                          status={fieldStatus.priority ?? "idle"}
+                          detail={fieldError.priority}
+                        />
+                      </div>
+                      {unverifiedMarker("priority")}
+                      {confirmationControl("priority")}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-risk">
+                        <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="contract-risk"
+                          value={saved.risk ?? ""}
+                          className={CONTROL_CLASS}
+                          disabled={frozen}
+                          onChange={(event) =>
+                            void commit("risk", {
+                              risk:
+                                event.target.value === ""
+                                  ? null
+                                  : (event.target.value as SeverityLevel),
+                            })
+                          }
+                        >
+                          {/* Empty is a real answer, not a placeholder: risk
+                        stays unset until legal assesses it (CTR-005). */}
+                          <option value="">{riskLabel(intl, null)}</option>
+                          {SEVERITY_LEVELS.map((level) => (
+                            <option key={level} value={level}>
+                              {severityLabel(intl, level)}
+                            </option>
+                          ))}
+                        </select>
+                        <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -2428,92 +2531,15 @@ function ContractRecord() {
                         />
                       </div>
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-business-owner">
+                    <ReadOnlyField
+                      label={
                         <FormattedMessage
-                          id="contracts.form.businessOwner"
-                          defaultMessage="Business Owner"
+                          id="contracts.column.reference"
+                          defaultMessage="Reference"
                         />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <select
-                          id="contract-business-owner"
-                          value={saved.businessOwner?.id ?? ""}
-                          className={CONTROL_CLASS}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            void commit("businessOwnerId", {
-                              businessOwnerId: event.target.value || null,
-                            })
-                          }
-                        >
-                          <option value="">
-                            {intl.formatMessage({
-                              id: "contracts.ownerUnassigned",
-                              defaultMessage: "Unassigned",
-                            })}
-                          </option>
-                          {(saved.businessOwner &&
-                          !users.some((person) => person.id === saved.businessOwner!.id)
-                            ? [saved.businessOwner, ...users]
-                            : users
-                          ).map((person) => (
-                            <option key={person.id} value={person.id}>
-                              {person.displayName}
-                            </option>
-                          ))}
-                        </select>
-                        <StatusNote
-                          status={fieldStatus.businessOwnerId ?? "idle"}
-                          detail={fieldError.businessOwnerId}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-owner">
-                        <FormattedMessage
-                          id="contracts.form.legalOwner"
-                          defaultMessage="Legal Owner"
-                        />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <select
-                          id="contract-owner"
-                          value={saved.manager?.id ?? ""}
-                          className={CONTROL_CLASS}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            void commit("managerId", { managerId: event.target.value || null })
-                          }
-                        >
-                          {/* Empty is a real answer: an unassigned contract
-                        sits in triage until someone takes it (CTR-004). */}
-                          <option value="">
-                            {intl.formatMessage({
-                              id: "contracts.ownerUnassigned",
-                              defaultMessage: "Unassigned",
-                            })}
-                          </option>
-                          {/* The saved Owner may have been archived since, and
-                        so be absent from the picker read — keep them
-                        selectable as themselves rather than let the
-                        select lie about what the record holds. */}
-                          {(saved.manager &&
-                          !ownerOptions.some((person) => person.id === saved.manager!.id)
-                            ? [saved.manager, ...ownerOptions]
-                            : ownerOptions
-                          ).map((person) => (
-                            <option key={person.id} value={person.id}>
-                              {person.displayName}
-                            </option>
-                          ))}
-                        </select>
-                        <StatusNote
-                          status={fieldStatus.managerId ?? "idle"}
-                          detail={fieldError.managerId}
-                        />
-                      </div>
-                    </div>
+                      }
+                      value={reference}
+                    />
                     <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
                       <Label htmlFor="contract-entity">
                         {/* "Our entity" as the C2 mock labels it: the Entity
@@ -2585,72 +2611,6 @@ function ContractRecord() {
                       to keep in step. What the record holds is still
                       read here — the sub-bar pill says it, two rows
                       up. */}
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-priority">
-                        <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <AiField
-                          active={Boolean(saved.aiUnverified?.priority)}
-                          className="min-w-0 flex-1"
-                        >
-                          <select
-                            id="contract-priority"
-                            value={saved.priority}
-                            className={CONTROL_CLASS}
-                            disabled={frozen}
-                            onChange={(event) =>
-                              void commit("priority", {
-                                priority: event.target.value as SeverityLevel,
-                              })
-                            }
-                          >
-                            {SEVERITY_LEVELS.map((level) => (
-                              <option key={level} value={level}>
-                                {severityLabel(intl, level)}
-                              </option>
-                            ))}
-                          </select>
-                        </AiField>
-                        <StatusNote
-                          status={fieldStatus.priority ?? "idle"}
-                          detail={fieldError.priority}
-                        />
-                      </div>
-                      {unverifiedMarker("priority")}
-                      {confirmationControl("priority")}
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-risk">
-                        <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <select
-                          id="contract-risk"
-                          value={saved.risk ?? ""}
-                          className={CONTROL_CLASS}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            void commit("risk", {
-                              risk:
-                                event.target.value === ""
-                                  ? null
-                                  : (event.target.value as SeverityLevel),
-                            })
-                          }
-                        >
-                          {/* Empty is a real answer, not a placeholder: risk
-                        stays unset until legal assesses it (CTR-005). */}
-                          <option value="">{riskLabel(intl, null)}</option>
-                          {SEVERITY_LEVELS.map((level) => (
-                            <option key={level} value={level}>
-                              {severityLabel(intl, level)}
-                            </option>
-                          ))}
-                        </select>
-                        <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
-                      </div>
-                    </div>
                     {/* CTR-010's value: three controls, one field. It sits
                     with the other scalars the record holds, because the
                     C2 hero meta strip it is drawn in edits through the
@@ -2944,6 +2904,7 @@ function ContractRecord() {
                       >
                         <AutoResizeTextarea
                           id="contract-description"
+                          className="text-base"
                           // The card's own heading names the field: a second
                           // label above a full-width textarea would repeat it.
                           aria-labelledby="contract-description-heading"
@@ -3532,14 +3493,6 @@ function CounterpartiesField({
         exclude={parties.map((party) => party.id)}
         onPick={add}
       />
-      {/* The C10 mock's own line, put in the imperative DES-015 asks
-          for and kept where the affordance now lives. */}
-      <p className="text-xs text-muted">
-        <FormattedMessage
-          id="contracts.counterparty.hint"
-          defaultMessage="Type an unknown name to create it."
-        />
-      </p>
     </div>
   );
 }

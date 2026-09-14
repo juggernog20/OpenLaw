@@ -1926,11 +1926,22 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
     const owner = await screen.findByLabelText("Business Owner");
-    await user.selectOptions(owner, "u3");
+    await user.click(owner);
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Business Owner" })).getByRole("button", {
+        name: "Casey Contributor",
+      }),
+    );
     await waitFor(() => expect(api.patches).toEqual([{ businessOwnerId: "u3" }]));
-    expect(owner).toHaveValue("u3");
-    expect(screen.getByLabelText("Legal Owner")).toHaveValue("");
-    await user.selectOptions(owner, "");
+    expect(owner).toHaveTextContent("Casey Contributor");
+    expect(screen.getByLabelText("Legal Owner")).toHaveTextContent("Unassigned");
+    await user.click(owner);
+    await user.click(
+      within(screen.getByRole("dialog", { name: owner.getAttribute("aria-label")! })).getByRole(
+        "button",
+        { name: "Unassigned" },
+      ),
+    );
     await waitFor(() =>
       expect(api.patches).toEqual([{ businessOwnerId: "u3" }, { businessOwnerId: null }]),
     );
@@ -2032,15 +2043,26 @@ describe("the /contracts/:number record page", () => {
     const user = userEvent.setup();
 
     const owner = await screen.findByLabelText("Legal Owner");
-    expect(owner).toHaveValue("");
-    await user.selectOptions(owner, "u2");
+    expect(owner).toHaveTextContent("Unassigned");
+    await user.click(owner);
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Legal Owner" })).getByRole("button", {
+        name: "Nadia Counsel",
+      }),
+    );
     await waitFor(() => expect(api.patches).toEqual([{ managerId: "u2" }]));
     // The roster follows: the Legal Owner heads the Contract team applet.
     const team = await openTeam(user);
     expect(within(team).getByText("Nadia Counsel")).toBeInTheDocument();
     expect(within(team).getByText("Legal Owner")).toBeInTheDocument();
 
-    await user.selectOptions(owner, "");
+    await user.click(owner);
+    await user.click(
+      within(screen.getByRole("dialog", { name: owner.getAttribute("aria-label")! })).getByRole(
+        "button",
+        { name: "Unassigned" },
+      ),
+    );
     await waitFor(() => expect(api.patches).toEqual([{ managerId: "u2" }, { managerId: null }]));
   });
 
@@ -2048,12 +2070,12 @@ describe("the /contracts/:number record page", () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
     renderAt("/contracts/42");
 
-    const owner = (await screen.findByLabelText("Legal Owner")) as HTMLSelectElement;
-    expect([...owner.options].map((option) => option.textContent)).toEqual([
-      "Unassigned",
-      "Ada Admin",
-      "Nadia Counsel",
-    ]);
+    const owner = await screen.findByLabelText("Legal Owner");
+    await userEvent.setup().click(owner);
+    const picker = within(screen.getByRole("dialog", { name: "Legal Owner" }));
+    expect(picker.getByRole("button", { name: "Ada Admin" })).toBeInTheDocument();
+    expect(picker.getByRole("button", { name: "Nadia Counsel" })).toBeInTheDocument();
+    expect(picker.queryByRole("button", { name: "Casey Contributor" })).not.toBeInTheDocument();
   });
 
   it("keeps a saved Owner the picker no longer offers selectable as themselves", async () => {
@@ -2070,9 +2092,12 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
 
     const owner = await screen.findByLabelText("Legal Owner");
-    expect(owner).toHaveValue("u9");
+    expect(owner).toHaveTextContent("Gone Counsel");
+    await userEvent.setup().click(owner);
     expect(
-      within(owner as HTMLElement).getByRole("option", { name: "Gone Counsel" }),
+      within(screen.getByRole("dialog", { name: "Legal Owner" })).getByRole("button", {
+        name: "Gone Counsel",
+      }),
     ).toBeInTheDocument();
   });
 
@@ -2517,8 +2542,6 @@ describe("the /contracts/:number record page", () => {
     for (const label of [
       "Title",
       "Contract type",
-      "Business Owner",
-      "Legal Owner",
       "Our entity",
       "Priority",
       "Risk",
@@ -2530,6 +2553,8 @@ describe("the /contracts/:number record page", () => {
     ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
+    expect(screen.queryByRole("button", { name: "Business Owner" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Legal Owner" })).not.toBeInTheDocument();
     // The move control does not freeze — it goes (DES-053). An
     // archived record is facts until it is restored, and the strip is
     // the reading it always was.
@@ -2895,9 +2920,7 @@ describe("the contract record's broader Matter context (M23/6)", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     const first = renderAt("/contracts/42");
 
-    expect(
-      await screen.findByText("Standalone Contract — no broader Matter is linked."),
-    ).toBeVisible();
+    expect(await screen.findByText("No matter is linked")).toBeVisible();
     expect(screen.getByRole("button", { name: "Link to Matter" })).toBeVisible();
 
     first.view.unmount();
@@ -2943,9 +2966,7 @@ describe("the contract record's broader Matter context (M23/6)", () => {
     );
     await user.click(screen.getByRole("button", { name: "Unlink" }));
     await waitFor(() => expect(unlinks).toBe(1));
-    expect(
-      await screen.findByText("Standalone Contract — no broader Matter is linked."),
-    ).toBeVisible();
+    expect(await screen.findByText("No matter is linked")).toBeVisible();
   });
 
   it("links from the record and makes a one-time, non-mutating mismatch suggestion", async () => {
@@ -11142,7 +11163,7 @@ it("keeps built-in classification on Overview and out of Fields", async () => {
   stubApi({ signedIn: MEMBER, extra: api.handler });
   renderAt("/contracts/42");
   const user = userEvent.setup();
-  const department = await screen.findByRole("combobox", { name: "Owning department" });
+  const department = await screen.findByRole("combobox", { name: "Department" });
   expect(department).toHaveValue("dept-sales");
   expect(screen.getByRole("textbox", { name: "Region" })).toHaveValue("EMEA");
   await user.selectOptions(department, "dept-procurement");
@@ -11151,10 +11172,10 @@ it("keeps built-in classification on Overview and out of Fields", async () => {
   );
   await user.click(screen.getByRole("link", { name: "Fields" }));
   await screen.findByRole("region", { name: "Fields" });
-  expect(screen.queryByRole("combobox", { name: "Owning department" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("combobox", { name: "Department" })).not.toBeInTheDocument();
   expect(screen.queryByRole("textbox", { name: "Region" })).not.toBeInTheDocument();
   await user.click(screen.getByRole("link", { name: "Overview" }));
-  expect(await screen.findByRole("combobox", { name: "Owning department" })).toHaveValue(
+  expect(await screen.findByRole("combobox", { name: "Department" })).toHaveValue(
     "dept-procurement",
   );
 });

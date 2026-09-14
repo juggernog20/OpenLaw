@@ -230,7 +230,7 @@ export function RecordApplets({
         <div className="@container/record relative flex min-h-0 min-w-0 flex-1">
           <div
             inert={readingCitation ? citationCovers : contentCovered}
-            className="min-h-0 min-w-0 flex-1 overflow-hidden"
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto"
           >
             {children}
           </div>

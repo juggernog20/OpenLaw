@@ -16,6 +16,7 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
+import { departments } from "./departments.js";
 import type { CustomFieldValue } from "./fields.js";
 import { searchVector, uuidPk } from "./helpers.js";
 import { matterStatuses } from "./matter-statuses.js";
@@ -31,6 +32,7 @@ export const matters = pgTable(
       .generatedAlwaysAsIdentity({ name: "matters_number_seq", startWith: 1 }),
     title: text("title").notNull(),
     description: text("description"),
+    departmentId: text("department_id").references(() => departments.id),
     matterTypeId: text("matter_type_id")
       .notNull()
       .references(() => matterTypes.id),

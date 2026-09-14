@@ -164,8 +164,9 @@ export function ManagedTable<Row>({
    * it is never in a saved view and never in the column menu.
    */
   actionsColumn?: {
-    /** The accessible name of a column whose heading is drawn empty. */
+    /** The column heading, visually hidden unless showLabel is set. */
     label: string;
+    showLabel?: boolean;
     /** Reserve the trailing edge and fit resizable columns into the space beside it. */
     pinned?: boolean;
     width: number;
@@ -338,7 +339,9 @@ export function ManagedTable<Row>({
                   scope="col"
                   className={`px-4 py-2 text-end font-medium ${pinned ? "sticky end-0 z-10 bg-section-header" : ""}`}
                 >
-                  <span className="sr-only">{actionsColumn.label}</span>
+                  <span className={actionsColumn.showLabel ? undefined : "sr-only"}>
+                    {actionsColumn.label}
+                  </span>
                 </th>
               )}
             </tr>

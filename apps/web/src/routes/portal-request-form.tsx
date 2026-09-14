@@ -6,7 +6,7 @@
  * submission earns.
  *
  * **The form is a read, not a second copy of the rule.** The four fixed
- * basics — Title, Description, Attachments, Urgency — are drawn here
+ * basics — Title, Description, Attachments, Department, Urgency — are drawn here
  * because INT-002's M19/4 addendum makes them a fact about every form
  * rather than a configuration of one. Everything after them is the
  * request type's attached catalog fields, in the Administrator's
@@ -33,8 +33,8 @@
  *    applied to the same row on the next screen.
  * 2. I6 places Attachments last, under the type's own fields. The four
  *    basics render first, in INT-002's order — Title, Description,
- *    Attachments, Urgency — which is the order the M19 editor locks
- *    them in. The Administrator reads the form as four basics over the
+ *    Attachments, Department, Urgency — which is the order the M19 editor locks
+ *    them in. The Administrator reads the form as fixed basics over the
  *    attached fields, and the requester fills in the same thing.
  * 3. I6's Urgency control offers "Normal". DES-018's ramp replaced that
  *    vocabulary, as INT-002 already records: the four levels are low,
@@ -51,7 +51,7 @@
  *    take one back. The files a requester chose are listed under it,
  *    each with a control that removes it, because a mis-picked file
  *    that cannot be unpicked is a form that has to be started again.
- * 7. I6 draws the form as one run of fields. The four basics and the
+ * 7. I6 draws the form as one run of fields. The fixed basics and the
  *    type's own fields sit under two section strips, so a long form
  *    reads as "what every request says" and then "what this kind of
  *    request adds". The second strip is absent when the type attaches
@@ -103,6 +103,7 @@ import { DeflectionPanel } from "../components/portal/deflection-panel";
 import { PortalShell } from "../components/portal/portal-shell";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { DepartmentPicker } from "../components/department-picker";
 import { Label } from "../components/ui/label";
 
 type FormResponse =
@@ -151,8 +152,13 @@ interface Submitted {
 }
 
 export function PortalRequestFormPage() {
-  const { user, requestType, fields, intakeLinks } =
-    useLoaderData<typeof portalRequestFormLoader>();
+  const {
+    user,
+    requestType,
+    fields,
+    intakeLinks,
+    departments = [],
+  } = useLoaderData<typeof portalRequestFormLoader>();
   const intl = useIntl();
 
   const [title, setTitle] = useState("");
@@ -160,6 +166,7 @@ export function PortalRequestFormPage() {
   /** DES-018's ramp, and `medium` until the requester says otherwise —
    * the same default a contract's priority is born with. */
   const [urgency, setUrgency] = useState<(typeof SEVERITY_LEVELS)[number]>("medium");
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
   /** The paper, chosen but not yet sent: an attachment is a row against
    * a Request, and there is no Request until Submit is pressed. */
@@ -254,6 +261,7 @@ export function PortalRequestFormPage() {
       .POST("/api/v1/requests", {
         body: {
           requestTypeId: requestType.id,
+          ...(departmentId ? { departmentId } : {}),
           title: title.trim(),
           description: description.trim(),
           urgency,
@@ -384,6 +392,21 @@ export function PortalRequestFormPage() {
                 <AttachmentsField files={files} onFiles={setFiles} />
 
                 <Field
+                  htmlFor="request-department"
+                  label={intl.formatMessage({
+                    id: "records.department",
+                    defaultMessage: "Department",
+                  })}
+                >
+                  <DepartmentPicker
+                    id="request-department"
+                    value={departmentId}
+                    options={departments}
+                    onChange={setDepartmentId}
+                    disabled={busy}
+                  />
+                </Field>
+                <Field
                   htmlFor="request-urgency"
                   label={intl.formatMessage(BASIC_LABELS.urgency)}
                   required
@@ -470,7 +493,7 @@ export function PortalRequestFormPage() {
   );
 }
 
-/** The four basics' labels, said once: the form draws them and the
+/** The fixed basics' labels, said once: the form draws them and the
  * refusal names them, and two spellings would be two fields. */
 const BASIC_LABELS = {
   title: defineMessage({ id: "portal.form.title", defaultMessage: "Title" }),

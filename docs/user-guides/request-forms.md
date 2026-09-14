@@ -6,7 +6,7 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 
 - Sign in as an Administrator.
 - Have live destination types and the Fields you want to collect. A Field must be attached to the destination Contract or Matter type if its answer should carry into that record. See [Configure types, Statuses, and Fields](types-statuses-fields.md).
-- This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and its **Owning department** Field. Use the names configured in your instance.
+- This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and a **Deal value** Field. Use the names configured in your instance.
 
 ## Create the request type
 
@@ -27,11 +27,11 @@ Check the Portal's request-type card for this duration as general guidance befor
 
 ## Choose the form fields
 
-1. Under **Form fields**, select **Attach field** and choose a Field, such as **Owning department**.
+1. Under **Form fields**, select **Attach field** and choose a Field, such as **Deal value**.
 2. Turn on that Field's **Required** checkbox if the Requester must answer it. Wait for the save to finish.
 3. Repeat for the other Fields you need. Use the reorder controls to put them in a useful order; with a reorder control focused, the arrow keys move its Field.
 
-Plan the form around its fixed basics: **Title**, **Description**, **Attachments**, and **Urgency**. Title, Description, and Urgency are required; attachments are optional. These basics cannot be removed or reordered here.
+Plan the form around its fixed basics: **Title**, **Description**, **Attachments**, **Department**, and **Urgency**. Title, Description, and Urgency are required; attachments and Department are optional. Department uses the shared list managed under **Settings → Organization → Departments** and carries into the converted record without a Field attachment. These basics cannot be removed or reordered here.
 
 Choose Contract-scoped or Global Fields for a Contract form, and Matter-scoped or Global Fields for a Matter form. User and Entity Fields cannot be required on a Portal form, because the Portal does not offer those records for the Requester to choose. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
 

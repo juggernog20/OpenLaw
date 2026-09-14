@@ -104,6 +104,7 @@ export async function mattersLoader(args?: LoaderFunctionArgs) {
     matterTypes: options.data.matterTypes,
     matterStatuses: options.data.matterStatuses,
     users: options.data.users,
+    departments: options.data.departments ?? [],
     entities: entities?.data?.entities ?? [],
     views,
     layout,
@@ -379,6 +380,7 @@ export function MattersPage() {
       </div>
       {createOpen && (
         <CreateMatterDialog
+          departments={loaded.departments}
           matterTypes={loaded.matterTypes}
           users={loaded.users}
           entities={loaded.entities.map((entity) => ({ id: entity.id, label: entity.legalName }))}

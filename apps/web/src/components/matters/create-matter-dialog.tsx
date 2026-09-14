@@ -35,6 +35,7 @@ import { CustomFieldControl, type FieldReference } from "../custom-field-control
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
+import { DepartmentPicker } from "../department-picker";
 import { Label } from "../ui/label";
 
 function isMatterSeverity(value: string): value is MatterRow["priority"] {
@@ -43,6 +44,7 @@ function isMatterSeverity(value: string): value is MatterRow["priority"] {
 
 export function CreateMatterDialog({
   matterTypes,
+  departments = [],
   users,
   entities,
   viewerId,
@@ -51,6 +53,7 @@ export function CreateMatterDialog({
   onCreated,
 }: Readonly<{
   matterTypes: MatterTypeOption[];
+  departments?: readonly { id: string; displayName: string }[];
   users: MatterUserOption[];
   entities: readonly FieldReference[];
   /** Who opened the dialog. Seeded as the Matter Manager when eligible. */
@@ -62,6 +65,7 @@ export function CreateMatterDialog({
   const intl = useIntl();
   const attachments = useCreateAttachments();
   const [title, setTitle] = useState("");
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
   const [matterTypeId, setMatterTypeId] = useState("");
   const [templateId, setTemplateId] = useState("");
   const managers = users.filter(
@@ -157,6 +161,7 @@ export function CreateMatterDialog({
           title: title.trim(),
           matterTypeId,
           managerId: managerId || null,
+          departmentId,
           priority,
           risk,
           description: description.trim() || null,
@@ -323,6 +328,17 @@ export function CreateMatterDialog({
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="matter-new-department">
+                <FormattedMessage id="records.department" defaultMessage="Department" />
+              </Label>
+              <DepartmentPicker
+                id="matter-new-department"
+                value={departmentId}
+                options={departments}
+                onChange={setDepartmentId}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">

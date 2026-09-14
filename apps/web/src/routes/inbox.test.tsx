@@ -102,7 +102,7 @@ describe("the Inbox destination", () => {
         expect(screen.queryByText("Ordered by urgency, then age")).not.toBeInTheDocument();
       } else {
         expect(header).not.toHaveAttribute("aria-sort");
-        expect(screen.getByText("Ordered by urgency, then age")).toBeInTheDocument();
+        expect(screen.queryByText("Ordered by urgency, then age")).not.toBeInTheDocument();
       }
     }
     await act(async () => {
@@ -141,7 +141,7 @@ describe("the Inbox destination", () => {
 
     expect(await screen.findByRole("heading", { level: 1, name: "Inbox" })).toBeInTheDocument();
     expect(
-      screen.queryByRole("separator", { name: "Width of the Actions column" }),
+      screen.queryByRole("separator", { name: "Width of the Triager column" }),
     ).not.toBeInTheDocument();
     const row = screen.getByRole("row", { name: /Injunction threat/ });
     expect(within(row).getByText("R-48")).toBeInTheDocument();
@@ -193,7 +193,7 @@ describe("the Inbox destination", () => {
     expect(within(question).getByText("No target")).toBeInTheDocument();
   });
 
-  it("says what the queue is and how it is ordered", async () => {
+  it("shows the request count without an ordering note", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: inboxApi([inboxRow(), inboxRow({ id: "r2", number: 45 })]).handler,
@@ -202,7 +202,7 @@ describe("the Inbox destination", () => {
 
     const subbar = await screen.findByRole("region", { name: "Inbox" });
     expect(within(subbar).getByText("2 requests")).toBeInTheDocument();
-    expect(screen.getByText("Ordered by urgency, then age")).toBeInTheDocument();
+    expect(screen.queryByText("Ordered by urgency, then age")).not.toBeInTheDocument();
   });
 
   it("states plainly that nothing is waiting", async () => {

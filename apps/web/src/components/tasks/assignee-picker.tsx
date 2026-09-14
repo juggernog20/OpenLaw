@@ -44,6 +44,7 @@ export function TaskAssigneePicker({
   readOnly = false,
   id,
   label,
+  dialogLabel,
   onChange,
 }: Readonly<{
   value: TaskAssigneePerson | null;
@@ -55,6 +56,7 @@ export function TaskAssigneePicker({
   readOnly?: boolean;
   id?: string;
   label?: string;
+  dialogLabel?: string;
   onChange: (id: string | null, addToTeam?: boolean) => Promise<string | null>;
 }>) {
   const intl = useIntl();
@@ -153,10 +155,13 @@ export function TaskAssigneePicker({
       <PopoverContent
         align="end"
         className="w-72 max-w-[calc(100vw-2rem)] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto"
-        aria-label={intl.formatMessage({
-          id: "taskAssignee.choose",
-          defaultMessage: "Assign task",
-        })}
+        aria-label={
+          dialogLabel ??
+          intl.formatMessage({
+            id: "taskAssignee.choose",
+            defaultMessage: "Assign task",
+          })
+        }
       >
         {adding && (
           <Button
