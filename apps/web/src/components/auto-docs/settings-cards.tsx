@@ -79,6 +79,10 @@ export function SettingsCards({
   const [coverNote, setCoverNote] = useState(doc.coverNote ?? "");
   const [titlePattern, setTitlePattern] = useState(doc.titlePattern ?? "");
   const [ackText, setAckText] = useState(doc.acknowledgementText ?? "");
+  // The radio answers at once; the commit behind it is what the record
+  // holds. A refusal prints beside the pair and the record's own value
+  // is what the next render reads.
+  const [customText, setCustomText] = useState(doc.acknowledgementText !== null);
   const [ruleDialog, setRuleDialog] = useState<{
     rule: AutoDocAssignmentRule | null;
     index: number;
@@ -315,8 +319,11 @@ export function SettingsCards({
               <input
                 type="radio"
                 name="auto-doc-ack-source"
-                checked={doc.acknowledgementText === null}
-                onChange={() => void patch("acknowledgementText", { acknowledgementText: null })}
+                checked={!customText}
+                onChange={() => {
+                  setCustomText(false);
+                  void patch("acknowledgementText", { acknowledgementText: null });
+                }}
               />
               <FormattedMessage
                 id="autoDocs.orgAcknowledgement"
@@ -332,8 +339,9 @@ export function SettingsCards({
               <input
                 type="radio"
                 name="auto-doc-ack-source"
-                checked={doc.acknowledgementText !== null}
+                checked={customText}
                 onChange={() => {
+                  setCustomText(true);
                   setAckText(record.defaultAcknowledgementText);
                   void patch("acknowledgementText", {
                     acknowledgementText: record.defaultAcknowledgementText,
@@ -342,7 +350,7 @@ export function SettingsCards({
               />
               <FormattedMessage id="autoDocs.customAcknowledgement" defaultMessage="Custom text" />
             </label>
-            {doc.acknowledgementText !== null && (
+            {customText && (
               <div className="ms-6 flex flex-col gap-1">
                 <textarea
                   aria-label={intl.formatMessage({

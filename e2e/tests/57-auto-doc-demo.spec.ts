@@ -128,8 +128,8 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     await page.getByRole("link", { name: "Form", exact: true }).click();
     await upload(1);
     const fields = page.getByRole("region", { name: "Fields", exact: true });
-    await fields.getByRole("button", { name: "Edit counterparty name", exact: true }).click();
-    const counterparty = page.getByRole("region", { name: "counterparty name", exact: true });
+    await fields.getByRole("button", { name: "Edit Counterparty name", exact: true }).click();
+    const counterparty = page.getByRole("region", { name: "Counterparty name", exact: true });
     await counterparty.getByRole("checkbox", { name: "Required", exact: true }).click();
     await expect(
       counterparty.getByRole("checkbox", { name: "Required", exact: true }),

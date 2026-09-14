@@ -45,14 +45,14 @@ test("Legal edits Assignment rules and claims an unassigned generated Contract f
     .getByRole("combobox", { name: "Legal Owner", exact: true })
     .selectOption({ label: ADMIN.displayName });
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(assignment.getByText("counterparty name is set", { exact: true })).toBeVisible();
+  await expect(assignment.getByText("Counterparty name is set", { exact: true })).toBeVisible();
   expect(await reportAxeViolations(page, testInfo, "Auto-Doc-assignment-editor")).toEqual([]);
   await testInfo.attach("m35-853-assignment-editor", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
   await assignment.getByRole("button", { name: "Remove rule 1", exact: true }).click();
-  await expect(assignment.getByText("counterparty name is set", { exact: true })).toHaveCount(0);
+  await expect(assignment.getByText("Counterparty name is set", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("link", { name: "Generate", exact: true }).click();

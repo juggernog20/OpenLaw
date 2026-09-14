@@ -41,16 +41,16 @@ test("Legal targets a Contract Type and generates its draft Contract with a prim
   await expect(dialog.getByRole("status")).toContainText("File version 1");
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   const fields = page.getByRole("region", { name: "Fields", exact: true });
-  await fields.getByRole("button", { name: "Edit counterparty name", exact: true }).click();
+  await fields.getByRole("button", { name: "Edit Counterparty name", exact: true }).click();
   await page
-    .getByRole("region", { name: "counterparty name", exact: true })
+    .getByRole("region", { name: "Counterparty name", exact: true })
     .getByRole("combobox", { name: "Map to", exact: true })
     .selectOption("attribute:primary_counterparty_name");
   await expect(
     fields.getByText("counterparty_name · Text · Primary Counterparty name", { exact: true }),
   ).toBeVisible();
-  await fields.getByRole("button", { name: "Edit amount", exact: true }).click();
-  const amount = page.getByRole("region", { name: "amount", exact: true });
+  await fields.getByRole("button", { name: "Edit Amount", exact: true }).click();
+  const amount = page.getByRole("region", { name: "Amount", exact: true });
   await amount
     .getByRole("combobox", { name: "Map to", exact: true })
     .selectOption("attribute:value");

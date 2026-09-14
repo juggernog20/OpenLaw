@@ -41,9 +41,9 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   }
   await upload("blocks");
   const fields = page.getByRole("region", { name: "Fields", exact: true });
-  await fields.getByRole("button", { name: "Edit seat", exact: true }).click();
+  await fields.getByRole("button", { name: "Edit Seat", exact: true }).click();
   await page
-    .getByRole("region", { name: "seat", exact: true })
+    .getByRole("region", { name: "Seat", exact: true })
     .getByRole("combobox", { name: "Map to", exact: true })
     .selectOption("attribute:region");
   await expect(fields.getByText("seat · Text · Region", { exact: true })).toBeVisible();

@@ -40,8 +40,8 @@ test("Legal uploads a template, edits its form from the card, and retains orphan
     page.getByRole("button", { name: "Placeholder signing_date", exact: true }),
   ).toBeVisible();
   const fields = page.getByRole("region", { name: "Fields", exact: true });
-  await fields.getByRole("button", { name: "Edit signing date", exact: true }).click();
-  const card = page.getByRole("region", { name: "signing date", exact: true });
+  await fields.getByRole("button", { name: "Edit Signing date", exact: true }).click();
+  const card = page.getByRole("region", { name: "Signing date", exact: true });
   await card.getByRole("combobox", { name: "Type", exact: true }).selectOption("date");
   await expect(fields.getByText("signing_date · Date", { exact: true })).toBeVisible();
   await card.getByLabel("Help text", { exact: true }).fill("Use the agreed date.");
@@ -54,8 +54,8 @@ test("Legal uploads a template, edits its form from the card, and retains orphan
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(fields.getByText("1 orphaned", { exact: true })).toBeVisible();
   await expect(fields.getByText("No Placeholder in file version 2", { exact: true })).toBeVisible();
-  await expect(fields.getByText("amount", { exact: true })).toBeVisible();
-  await fields.getByRole("button", { name: "Edit signing date", exact: true }).click();
+  await expect(fields.getByText("Amount", { exact: true })).toBeVisible();
+  await fields.getByRole("button", { name: "Edit Signing date", exact: true }).click();
   await expect(card.getByRole("combobox", { name: "Type", exact: true })).toHaveValue("date");
   expect(await reportAxeViolations(page, testInfo, "Auto-Doc-editor")).toEqual([]);
   dialog = await upload("unclosed-block");
