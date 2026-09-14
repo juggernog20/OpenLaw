@@ -49,6 +49,7 @@ function record(): RecordAnswer {
       targetContractTypeId: null,
       titlePattern: null,
       fixedEntityId: null,
+      defaultLegalOwnerId: null,
       formats: "both",
       coverNote: null,
       templateDocumentId: "template",
@@ -74,9 +75,14 @@ function record(): RecordAnswer {
     formVersion,
     formVersions: [formVersion, { ...formVersion, id: "form1", versionNumber: 1 }],
     orphanedFields: [],
+    assignmentRules: [],
   };
 }
 const options = {
+  legalOwners: [
+    { id: "member", displayName: "Legal" },
+    { id: "other", displayName: "Other Legal" },
+  ],
   entities: [{ id: "entity", name: "Example Subsidiary" }],
   catalogFields: [{ id: "catalog", displayName: "Contract reference", fieldType: "text" }],
   contractTypes: [{ id: "type", displayName: "NDA" }],
@@ -527,5 +533,86 @@ it("saves the currency and cadence of a Contract Value map", async () => {
   await user.click(screen.getByRole("button", { name: "Save form" }));
   await waitFor(() =>
     expect(saved).toMatchObject({ fields: [expect.objectContaining({ valueCadence: null })] }),
+  );
+});
+
+it("edits ordered Assignment rules with every operator and an optional default Legal Owner", async () => {
+  const user = userEvent.setup();
+  let current = record();
+  let nextRuleId = 0;
+  const saves: Array<{
+    rules: Array<{
+      id?: string;
+      fieldSlug: string;
+      operator: string;
+      value: unknown;
+      legalOwnerId: string;
+    }>;
+    defaultLegalOwnerId: string | null;
+  }> = [];
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
+      if (call.url.pathname.endsWith("/assignment-rules")) {
+        const body = call.body as (typeof saves)[number];
+        saves.push(body);
+        current = {
+          ...current,
+          autoDoc: { ...current.autoDoc, defaultLegalOwnerId: body.defaultLegalOwnerId },
+          assignmentRules: body.rules.map((rule, displayOrder) => ({
+            ...rule,
+            id: rule.id ?? `rule-${nextRuleId++}`,
+            displayOrder,
+          })) as RecordAnswer["assignmentRules"],
+        };
+        return json(200, current);
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda");
+  const editor = within(await screen.findByRole("region", { name: "Assignment rules" }));
+  await user.click(editor.getByRole("button", { name: "Add rule" }));
+  for (const operator of ["equals", "is_one_of", "is_set", "is_not"]) {
+    const rule = within(editor.getByRole("group", { name: "Assignment rule 1" }));
+    await user.selectOptions(rule.getByLabelText("Operator"), operator);
+    if (operator !== "is_set")
+      await user.selectOptions(
+        rule.getByLabelText("Value"),
+        operator === "is_one_of" ? ["US", "UK"] : "US",
+      );
+    await user.selectOptions(rule.getByLabelText("Legal Owner"), "other");
+    await user.click(editor.getByRole("button", { name: "Save assignment" }));
+    await waitFor(() => expect(saves.at(-1)?.rules[0]?.operator).toBe(operator));
+  }
+  expect(saves[1]?.rules[0]?.value).toEqual(["US", "UK"]);
+  expect(saves[2]?.rules[0]?.value).toBeNull();
+  await user.click(editor.getByRole("button", { name: "Add rule" }));
+  await user.click(
+    within(editor.getByRole("group", { name: "Assignment rule 2" })).getByRole("button", {
+      name: "Move up",
+    }),
+  );
+  await user.selectOptions(editor.getByLabelText("Default Legal Owner"), "member");
+  await user.click(editor.getByRole("button", { name: "Save assignment" }));
+  await waitFor(() =>
+    expect(saves.at(-1)?.rules.map((rule) => rule.legalOwnerId)).toEqual(["member", "other"]),
+  );
+  expect(saves.at(-1)?.defaultLegalOwnerId).toBe("member");
+  await user.click(
+    within(editor.getByRole("group", { name: "Assignment rule 1" })).getByRole("button", {
+      name: "Remove rule",
+    }),
+  );
+  await user.selectOptions(editor.getByLabelText("Default Legal Owner"), "");
+  await user.click(editor.getByRole("button", { name: "Save assignment" }));
+  await waitFor(() =>
+    expect(saves.at(-1)).toMatchObject({
+      rules: [{ id: "rule-0", legalOwnerId: "other" }],
+      defaultLegalOwnerId: null,
+    }),
   );
 });

@@ -328,7 +328,7 @@ export function ClausesEditor({
   );
 }
 
-function RuleTextValue({
+export function RuleTextValue({
   value,
   multiple,
   fieldType,

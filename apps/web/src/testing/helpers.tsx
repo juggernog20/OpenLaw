@@ -359,6 +359,8 @@ export function stubApi(state: ApiState) {
   return stubFetch((call) => {
     const fromExtra = state.extra?.(call);
     if (fromExtra) return fromExtra;
+    if (call.url.pathname === "/api/v1/inbox/unassigned-contracts" && call.method === "GET")
+      return json(200, { total: 0, contracts: [], nextCursor: null });
     if (call.url.pathname === "/api/v1/me" && call.method === "GET") {
       return state.signedIn
         ? json(200, {

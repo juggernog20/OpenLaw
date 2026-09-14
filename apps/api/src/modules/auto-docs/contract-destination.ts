@@ -34,6 +34,7 @@ import {
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
 import { generationEntityScope } from "./answers.js";
+import { chooseLegalOwner } from "./assignment.js";
 import { httpError } from "../../lib/problem.js";
 
 /**
@@ -252,6 +253,7 @@ export async function prepareContractDestination(
     title,
     entityId,
     businessOwnerId,
+    legalOwnerId: await chooseLegalOwner(tx, autoDoc, definition, answers),
     owningDepartmentId,
     region: text("region"),
     primaryCounterpartyName: counterparty,

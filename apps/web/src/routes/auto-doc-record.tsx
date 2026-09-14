@@ -29,6 +29,7 @@ type Answer =
   paths["/api/v1/auto-docs/{id}"]["get"]["responses"][200]["content"]["application/json"];
 type Field = NonNullable<Answer["formVersion"]>["definition"]["fields"][number];
 import { CurrencySelect } from "../components/currency-select";
+import { AssignmentEditor } from "../components/auto-docs/assignment-editor";
 import { ClausesEditor, FieldMap } from "../components/auto-docs/clauses-editor";
 import { AutoDocGenerations } from "../components/auto-docs/generations";
 import {
@@ -745,6 +746,7 @@ function AutoDocRecord({
             </form>
           </section>
           <AutoDocSettings record={saved} options={options} onSaved={setSaved} />
+          <AssignmentEditor record={saved} options={options} onSaved={setSaved} />
           <AutoDocGenerations generations={generations} />
           <AutoDocVersionDiff
             key={`diff-${saved.formVersion?.id}-${saved.template?.versions[0]?.id}`}

@@ -39,6 +39,7 @@ export async function createGeneratedContract(
     title: facts.title,
     contractTypeId: facts.contractTypeId,
     businessOwnerId: facts.businessOwnerId,
+    managerId: facts.legalOwnerId ?? null,
     owningDepartmentId: facts.owningDepartmentId,
     region: facts.region,
     customFields: facts.customFields,
@@ -61,5 +62,20 @@ export async function createGeneratedContract(
       name: facts.primaryCounterpartyName,
       actorId: generation.generatedBy,
     });
+  const [generator] = await tx
+    .select({ displayName: users.displayName })
+    .from(users)
+    .where(eq(users.id, generation.generatedBy));
+  await notifier.contractGenerated(tx, {
+    contractId: born.row.id,
+    contractNumber: born.row.number,
+    contractTitle: born.row.title,
+    ownerId: born.row.managerId,
+    actorId: generation.generatedBy,
+    actorName: generator!.displayName,
+    autoDocId: generation.autoDocId,
+    autoDocName: facts.autoDocName,
+    generationId: generation.id,
+  });
   return { createdContractId: born.row.id, createdDocumentId: version.documentId };
 }

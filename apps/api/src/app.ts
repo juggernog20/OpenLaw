@@ -104,6 +104,7 @@ import { requestDeclineRoutes } from "./modules/requests/decline.js";
 import { requestDetailRoutes } from "./modules/requests/request-detail.js";
 import { requestAssignmentRoutes } from "./modules/requests/assignment.js";
 import { requestInboxRoutes } from "./modules/requests/inbox.js";
+import { unassignedContractsRoutes } from "./modules/requests/unassigned-contracts.js";
 import { requestResolveRoutes } from "./modules/requests/resolve.js";
 import { requestsRoutes } from "./modules/requests/routes.js";
 import { listViewsRoutes } from "./modules/list-views/routes.js";
@@ -521,6 +522,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(requestsRoutes, { prefix: "/api/v1" });
   await app.register(requestAssignmentRoutes, { prefix: "/api/v1" });
   await app.register(requestInboxRoutes, { prefix: "/api/v1" });
+  await app.register(unassignedContractsRoutes, { prefix: "/api/v1" });
   await app.register(requestDetailRoutes, { prefix: "/api/v1" });
   await app.register(requestDeclineRoutes, { prefix: "/api/v1" });
   await app.register(requestResolveRoutes, { prefix: "/api/v1" });

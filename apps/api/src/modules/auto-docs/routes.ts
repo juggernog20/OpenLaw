@@ -20,6 +20,8 @@ import {
   AUTO_DOC_STATES,
   autoDocFormVersions,
   autoDocs,
+  autoDocAssignmentRules,
+  users,
   autoDocTemplateScans,
   asc,
   desc,
@@ -64,6 +66,15 @@ import { escapeLikePattern } from "../../lib/like.js";
 import { diffForms, FormChange } from "./form-diff.js";
 import type { ChangedFields } from "@openlaw/shared";
 
+import {
+  AssignmentRuleRow,
+  AssignmentSettingsInput,
+  assignmentGaps,
+  legalOwnerChoices,
+  readAssignmentRules,
+  requireLegalOwner,
+} from "./assignment.js";
+
 const requireMember = requireRole("administrator", "legal_team_member");
 const Params = z.object({ id: z.string() });
 const AutoDocRow = z.object({
@@ -78,6 +89,7 @@ const AutoDocRow = z.object({
   targetContractTypeId: z.string().nullable(),
   titlePattern: z.string().nullable(),
   fixedEntityId: z.string().nullable(),
+  defaultLegalOwnerId: z.string().nullable(),
   publishedDocumentVersionId: z.string().nullable(),
   publishedFormVersionId: z.string().nullable(),
   publishedAt: z.iso.datetime().nullable(),
@@ -122,6 +134,7 @@ const Template = z.object({
 });
 const RecordEnvelope = z.object({
   autoDoc: AutoDocRow,
+  assignmentRules: z.array(AssignmentRuleRow),
   template: Template.nullable(),
   detection: Detection,
   formVersion: FormVersion.nullable(),
@@ -189,6 +202,7 @@ async function recordView(db: Executor, id: string) {
   const detection = scan?.detection ?? { placeholders: [], blocks: [] };
   return {
     autoDoc: rowView(row),
+    assignmentRules: await readAssignmentRules(db, id),
     template: document
       ? {
           id: document.id,
@@ -235,6 +249,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
             ),
             contractTypes: z.array(z.object({ id: z.string(), displayName: z.string() })),
             entities: z.array(z.object({ id: z.string(), name: z.string() })),
+            legalOwners: z.array(z.object({ id: z.string(), displayName: z.string() })),
           }),
           default: problemResponse,
         },
@@ -267,7 +282,129 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(entities)
         .where(and(isNull(entities.archivedAt), entityReachScope(app.db, request.user)))
         .orderBy(asc(entities.legalName));
-      return { catalogFields: fields, contractTypes: types, entities: choices };
+      return {
+        catalogFields: fields,
+        contractTypes: types,
+        entities: choices,
+        legalOwners: await legalOwnerChoices(app.db),
+      };
+    },
+  );
+
+  app.put(
+    "/auto-docs/:id/assignment-rules",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "saveAutoDocAssignmentRules",
+        tags: ["auto-docs"],
+        params: Params,
+        body: AssignmentSettingsInput,
+        response: { 200: RecordEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      await app.db.transaction(async (tx) => {
+        const row = await editable(tx, request.params.id);
+        const previous = await readAssignmentRules(tx, row.id);
+        const form = await latestForm(tx, row.id);
+        const { rules, defaultLegalOwnerId } = request.body;
+        const gaps = assignmentGaps(form?.definition ?? { fields: [] }, rules);
+        if (gaps.length) throw httpError(400, gaps.join(" "));
+        const existing = new Set(previous.map((rule) => rule.id));
+        const ids = rules.flatMap((rule) => (rule.id ? [rule.id] : []));
+        if (new Set(ids).size !== ids.length || ids.some((id) => !existing.has(id)))
+          throw httpError(400, "Choose distinct Assignment rules from this Auto-Doc.");
+        const ownerIds = [
+          ...new Set([
+            ...rules.map((rule) => rule.legalOwnerId),
+            ...(defaultLegalOwnerId ? [defaultLegalOwnerId] : []),
+          ]),
+        ].sort();
+        const owners = new Map<string, string>();
+        for (const id of ownerIds) owners.set(id, (await requireLegalOwner(tx, id)).displayName);
+        const next = rules.map((rule, displayOrder) => ({
+          ...rule,
+          id: rule.id ?? uuidv7(),
+          autoDocId: row.id,
+          displayOrder,
+        }));
+        const shape = ({
+          id,
+          fieldSlug,
+          operator,
+          value,
+          legalOwnerId,
+          displayOrder,
+        }: (typeof next)[number]) => ({
+          id,
+          fieldSlug,
+          operator,
+          value,
+          legalOwnerId,
+          displayOrder,
+        });
+        const changed: ChangedFields = {};
+        if (JSON.stringify(previous.map(shape)) !== JSON.stringify(next.map(shape))) {
+          const oldOwners = await tx
+            .select({ id: users.id, displayName: users.displayName })
+            .from(users)
+            .where(
+              inArray(
+                users.id,
+                previous.map((rule) => rule.legalOwnerId),
+              ),
+            );
+          const names = new Map(oldOwners.map((owner) => [owner.id, owner.displayName]));
+          const describe = (items: typeof next, labels: Map<string, string>) =>
+            items
+              .map(
+                (rule) =>
+                  `${rule.fieldSlug} ${rule.operator}${rule.operator === "is_set" ? "" : ` ${JSON.stringify(rule.value)}`} → ${labels.get(rule.legalOwnerId) ?? "Former Member"}`,
+              )
+              .join("; ") || null;
+          changed.assignmentRules = { from: describe(previous, names), to: describe(next, owners) };
+          const removed = previous.filter((rule) => !ids.includes(rule.id)).map((rule) => rule.id);
+          if (removed.length)
+            await tx
+              .delete(autoDocAssignmentRules)
+              .where(inArray(autoDocAssignmentRules.id, removed));
+          for (const rule of next) {
+            if (existing.has(rule.id))
+              await tx
+                .update(autoDocAssignmentRules)
+                .set(rule)
+                .where(eq(autoDocAssignmentRules.id, rule.id));
+            else await tx.insert(autoDocAssignmentRules).values(rule);
+          }
+        }
+        if (defaultLegalOwnerId !== row.defaultLegalOwnerId) {
+          const [old] = row.defaultLegalOwnerId
+            ? await tx
+                .select({ displayName: users.displayName })
+                .from(users)
+                .where(eq(users.id, row.defaultLegalOwnerId))
+            : [];
+          changed.defaultLegalOwner = {
+            from: old?.displayName ?? null,
+            to: defaultLegalOwnerId ? owners.get(defaultLegalOwnerId)! : null,
+          };
+        }
+        if (!Object.keys(changed).length) return;
+        await tx
+          .update(autoDocs)
+          .set({ defaultLegalOwnerId, updatedBy: request.user.id, updatedAt: new Date() })
+          .where(eq(autoDocs.id, row.id));
+        await recordActivity(tx, {
+          entityType: "auto_doc",
+          entityId: row.id,
+          actorId: request.user.id,
+          action: "auto_doc.updated",
+          visibility: "legal_only",
+          payload: { name: row.name, changed },
+        });
+      });
+      return snapshot(request.params.id);
     },
   );
 
@@ -497,6 +634,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
         const gaps = [
           ...publicationGaps(form.definition, scan.detection),
           ...contractPublicationGaps(row, form.definition),
+          ...assignmentGaps(form.definition, await readAssignmentRules(tx, row.id)),
         ];
         if (gaps.length) throw httpError(409, `This pair cannot be published. ${gaps.join(" ")}`);
         await validateMaps(tx, form.definition);

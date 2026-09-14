@@ -159,6 +159,15 @@ export interface OwnerAssignedEvent {
   ownerId: string;
 }
 
+/** NOT-009 names the generated Contract, its Auto-Doc, and its generator. */
+export interface ContractGeneratedEvent extends Omit<OwnerAssignedEvent, "ownerId"> {
+  /** Null emits contract.generated_unassigned to every live Member+; otherwise only this Owner. */
+  ownerId: string | null;
+  autoDocId: string;
+  autoDocName: string;
+  generationId: string;
+}
+
 /** CTR-026 addresses the person added to the Contract team. */
 export interface ContractTeamAddedEvent extends Omit<OwnerAssignedEvent, "ownerId"> {
   userId: string;
@@ -530,6 +539,8 @@ export interface Notifier {
   /** CTR-026 group 1 tells the added person. Adding yourself is silent. */
   contractTeamAdded(tx: NotifyingTransaction, event: ContractTeamAddedEvent): Promise<void>;
   ownerAssigned(tx: NotifyingTransaction, event: OwnerAssignedEvent): Promise<void>;
+  /** NOT-009: tell the selected Legal Owner, or all live Member+ when unassigned. */
+  contractGenerated(tx: NotifyingTransaction, event: ContractGeneratedEvent): Promise<void>;
 
   /**
    * A task on a contract has been given to somebody (CTR-017) — group 1,
@@ -1452,6 +1463,31 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             },
           },
         ],
+      );
+    },
+
+    async contractGenerated(
+      tx: NotifyingTransaction,
+      event: ContractGeneratedEvent,
+    ): Promise<void> {
+      const audience = event.ownerId ? [event.ownerId] : await inboxAudience(tx);
+      await fanOut(
+        tx,
+        event.ownerId ? "contract.generated" : "contract.generated_unassigned",
+        { type: CONTRACT_ENTITY, id: event.contractId },
+        event.actorId,
+        audience.map((userId) => ({
+          userId,
+          payload: {
+            contractNumber: event.contractNumber,
+            contractTitle: event.contractTitle,
+            actorId: event.actorId,
+            actorName: event.actorName,
+            autoDocId: event.autoDocId,
+            autoDocName: event.autoDocName,
+            generationId: event.generationId,
+          },
+        })),
       );
     },
 

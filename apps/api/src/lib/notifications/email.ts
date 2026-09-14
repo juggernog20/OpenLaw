@@ -416,6 +416,27 @@ function contractMail(
           link,
         ].join("\n"),
       };
+    case "contract.generated":
+    case "contract.generated_unassigned": {
+      const autoDoc = detail(notification, "autoDocName") ?? "an Auto-Doc";
+      const assigned = notification.eventType === "contract.generated";
+      return {
+        to,
+        subject: assigned
+          ? `Generated Contract assigned to you: ${contractTitle}`
+          : `Unassigned generated Contract: ${contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          `${who} generated ${contractTitle} from ${autoDoc}.`,
+          assigned
+            ? "You are the Owner of this Contract."
+            : "This Contract needs an Owner. Claim it in the Inbox.",
+          "",
+          link,
+        ].join("\n"),
+      };
+    }
     case "contract.owner_assigned":
       return {
         to,

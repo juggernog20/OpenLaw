@@ -25,6 +25,7 @@ const autoDoc: AutoDocAnswer["autoDoc"] = {
   targetContractTypeId: null,
   titlePattern: null,
   fixedEntityId: null,
+  defaultLegalOwnerId: null,
   formats: "both",
   coverNote: null,
   publishedDocumentVersionId: null,
@@ -70,6 +71,7 @@ function record(): AutoDocAnswer & { formVersion: NonNullable<AutoDocAnswer["for
   };
   return {
     autoDoc,
+    assignmentRules: [],
     template: {
       id: "template",
       title: "NDA.docx",
@@ -98,7 +100,7 @@ it("lists Auto-Docs and creates a draft from name and description", async () => 
     extra: (call) => {
       if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options")
-        return json(200, { catalogFields: [], contractTypes: [] });
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
       if (call.url.pathname === "/api/v1/auto-docs") {
         if (call.method === "POST") {
           creates.push(call.body);
@@ -130,7 +132,7 @@ it("edits fields, preserves the orphan cue, and shows saved form versions and up
     extra: (call) => {
       if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options")
-        return json(200, { catalogFields: [], contractTypes: [] });
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
       if (call.url.pathname.endsWith("/form-versions")) {
         const body = call.body as Definition;
@@ -216,7 +218,7 @@ it("drops blank option lines and names the rule when a save cannot be sent", asy
     extra: (call) => {
       if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options")
-        return json(200, { catalogFields: [], contractTypes: [] });
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
       if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
       if (call.url.pathname.endsWith("/form-versions")) {
         const body = call.body as Definition;
@@ -272,7 +274,7 @@ it("reserves the destination and app routes for Member+", async () => {
     extra: (call) => {
       if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
       if (call.url.pathname === "/api/v1/auto-docs/options")
-        return json(200, { catalogFields: [], contractTypes: [] });
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
       calls.push(call.url.pathname);
       return undefined;
     },

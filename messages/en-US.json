@@ -372,7 +372,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
+    "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Owning department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1175,6 +1175,33 @@
   "autoDocs.archivedTargetType": {
     "defaultMessage": "Archived Contract Type"
   },
+  "autoDocs.assignmentAdd": {
+    "defaultMessage": "Add rule"
+  },
+  "autoDocs.assignmentHelp": {
+    "defaultMessage": "For generated Contracts, the first matching rule chooses the Legal Owner. If no rule matches, the default applies. Without either, the Contract waits in the Inbox to be claimed."
+  },
+  "autoDocs.assignmentMoveDown": {
+    "defaultMessage": "Move down"
+  },
+  "autoDocs.assignmentMoveUp": {
+    "defaultMessage": "Move up"
+  },
+  "autoDocs.assignmentRefused": {
+    "defaultMessage": "Assignment settings could not be saved."
+  },
+  "autoDocs.assignmentRemove": {
+    "defaultMessage": "Remove rule"
+  },
+  "autoDocs.assignmentRuleNumber": {
+    "defaultMessage": "Assignment rule {number}"
+  },
+  "autoDocs.assignmentRules": {
+    "defaultMessage": "Assignment rules"
+  },
+  "autoDocs.assignmentSaved": {
+    "defaultMessage": "Assignment settings saved."
+  },
   "autoDocs.attributeName": {
     "defaultMessage": "{attribute, select, title {Title} primary_counterparty_name {Primary Counterparty name} entity_id {Our Entity} owning_department_id {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}"
   },
@@ -1234,6 +1261,9 @@
   },
   "autoDocs.createdContract": {
     "defaultMessage": "Created Contract: {contract}"
+  },
+  "autoDocs.defaultLegalOwner": {
+    "defaultMessage": "Default Legal Owner"
   },
   "autoDocs.description": {
     "defaultMessage": "Description"
@@ -1370,6 +1400,9 @@
   "autoDocs.invalidUploadReply": {
     "defaultMessage": "The upload response could not be read. Reload this Auto-Doc to check its saved template."
   },
+  "autoDocs.legalOwner": {
+    "defaultMessage": "Legal Owner"
+  },
   "autoDocs.lifecycleFailed": {
     "defaultMessage": "Could not change this Auto-Doc's state. Try again."
   },
@@ -1408,6 +1441,9 @@
   },
   "autoDocs.noBusinessOwner": {
     "defaultMessage": "Leave unassigned"
+  },
+  "autoDocs.noDefaultOwner": {
+    "defaultMessage": "None — leave unassigned"
   },
   "autoDocs.noFixedEntity": {
     "defaultMessage": "Use the form's Entity answer"
@@ -1496,6 +1532,9 @@
   "autoDocs.ruleValue": {
     "defaultMessage": "Value"
   },
+  "autoDocs.saveAssignment": {
+    "defaultMessage": "Save assignment"
+  },
   "autoDocs.saveBeforePublish": {
     "defaultMessage": "Save your form changes before publishing."
   },
@@ -1549,6 +1588,9 @@
   },
   "autoDocs.unavailableEntity": {
     "defaultMessage": "Unavailable Entity"
+  },
+  "autoDocs.unavailableLegalOwner": {
+    "defaultMessage": "Unavailable Legal Owner"
   },
   "autoDocs.unavailableMap": {
     "defaultMessage": "Unavailable catalog Field"
@@ -5018,6 +5060,9 @@
   "inbox.assignment.unavailable": {
     "defaultMessage": "{name} is no longer available to triage. Choose another person or clear the assignment."
   },
+  "inbox.claim": {
+    "defaultMessage": "Claim"
+  },
   "inbox.column.actions": {
     "defaultMessage": "Actions"
   },
@@ -5074,6 +5119,12 @@
   },
   "inbox.moreError": {
     "defaultMessage": "The next requests could not be read. Try again."
+  },
+  "inbox.noUnassigned": {
+    "defaultMessage": "No Contracts need a Legal Owner"
+  },
+  "inbox.noUnassignedHelp": {
+    "defaultMessage": "Generated Contracts without a Legal Owner appear here. Claim one to take responsibility for it."
   },
   "inbox.ordering": {
     "defaultMessage": "Ordered by urgency, then age"
@@ -5132,6 +5183,12 @@
   "inbox.request.triage": {
     "defaultMessage": "Triage"
   },
+  "inbox.requestsTab": {
+    "defaultMessage": "Requests ({count})"
+  },
+  "inbox.tabs": {
+    "defaultMessage": "Inbox tabs"
+  },
   "inbox.target.module": {
     "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {No target}}"
   },
@@ -5143,6 +5200,27 @@
   },
   "inbox.title": {
     "defaultMessage": "Inbox"
+  },
+  "inbox.unassignedAutoDoc": {
+    "defaultMessage": "Auto-Doc"
+  },
+  "inbox.unassignedContract": {
+    "defaultMessage": "Contract"
+  },
+  "inbox.unassignedContracts": {
+    "defaultMessage": "Unassigned contracts"
+  },
+  "inbox.unassignedCount": {
+    "defaultMessage": "{count, plural, one {# unassigned Contract} other {# unassigned Contracts}}"
+  },
+  "inbox.unassignedGenerator": {
+    "defaultMessage": "Generated by"
+  },
+  "inbox.unassignedRefused": {
+    "defaultMessage": "The unassigned Contracts could not be updated. Try again."
+  },
+  "inbox.unassignedTab": {
+    "defaultMessage": "Unassigned contracts ({count})"
   },
   "intake.field.requiredMark": {
     "defaultMessage": "(required)"
@@ -6181,6 +6259,12 @@
   },
   "notifications.comment.posted": {
     "defaultMessage": "{hasActor, select, yes {{actor} commented on {contract}} other {A comment was posted on {contract}}}"
+  },
+  "notifications.contract.generated": {
+    "defaultMessage": "{actor} generated {contract} from {autoDoc} and you are its Legal Owner"
+  },
+  "notifications.contract.generatedUnassigned": {
+    "defaultMessage": "{actor} generated {contract} from {autoDoc}; it needs a Legal Owner"
   },
   "notifications.contract.ownerAssigned": {
     "defaultMessage": "{hasActor, select, yes {{actor} made you the Owner of {contract}} other {You were made the Owner of {contract}}}"
@@ -9066,7 +9150,7 @@
     "defaultMessage": "Assigned to you"
   },
   "settings.notifications.group.assigned.detail": {
-    "defaultMessage": "Assignments, Contract team additions, tasks, mentions, and approval requests addressed to you."
+    "defaultMessage": "Assignments, generated Contracts where you are the Legal Owner, Contract team additions, tasks, mentions, and approval requests addressed to you."
   },
   "settings.notifications.group.dates": {
     "defaultMessage": "Dates approaching"
@@ -9090,7 +9174,7 @@
     "defaultMessage": "New requests"
   },
   "settings.notifications.group.requests.detail": {
-    "defaultMessage": "New intake requests arriving in the Inbox."
+    "defaultMessage": "New Requests and Unassigned contracts arriving in the Inbox."
   },
   "settings.notifications.title": {
     "defaultMessage": "Notification preferences"

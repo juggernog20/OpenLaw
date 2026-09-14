@@ -727,6 +727,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auto-docs/{id}/assignment-rules": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["saveAutoDocAssignmentRules"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auto-docs/{id}": {
     parameters: {
       query?: never;
@@ -3219,6 +3235,38 @@ export interface paths {
     get: operations["inboxFilterOptions"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/inbox/unassigned-contracts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listUnassignedContracts"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/inbox/unassigned-contracts/{number}/claim": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["claimUnassignedContract"];
     delete?: never;
     options?: never;
     head?: never;
@@ -8871,6 +8919,10 @@ export interface operations {
               id: string;
               name: string;
             }[];
+            legalOwners: {
+              id: string;
+              displayName: string;
+            }[];
           };
         };
       };
@@ -8885,7 +8937,7 @@ export interface operations {
       };
     };
   };
-  getAutoDoc: {
+  saveAutoDocAssignmentRules: {
     parameters: {
       query?: never;
       header?: never;
@@ -8894,7 +8946,21 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        "application/json": {
+          rules: {
+            fieldSlug: string;
+            /** @enum {string} */
+            operator: "equals" | "is_one_of" | "is_set" | "is_not";
+            value: (string | number | boolean) | (string | number | boolean)[] | null;
+            id?: string;
+            legalOwnerId: string;
+          }[];
+          defaultLegalOwnerId: string | null;
+        };
+      };
+    };
     responses: {
       /** @description Default Response */
       200: {
@@ -8918,6 +8984,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -8927,6 +8994,15 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
             template: {
               id: string;
               title: string;
@@ -8984,11 +9060,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9036,11 +9112,198 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            orphanedFields: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getAutoDoc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            autoDoc: {
+              id: string;
+              name: string;
+              description: string | null;
+              /** @enum {string} */
+              formats: "docx" | "pdf" | "both";
+              coverNote: string | null;
+              /** @enum {string} */
+              state: "draft" | "published" | "archived";
+              templateDocumentId: string | null;
+              /** @enum {string} */
+              audience: "legal_only" | "selected" | "everyone";
+              targetContractTypeId: string | null;
+              titlePattern: string | null;
+              fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
+              publishedDocumentVersionId: string | null;
+              publishedFormVersionId: string | null;
+              publishedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
+            template: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                originalFilename: string;
+                byteSize: number;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+            detection: {
+              placeholders: string[];
+              blocks: string[];
+            };
+            formVersion: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
+                }[];
+                clauseRules: {
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
+                }[];
+              };
+              createdBy: string;
+              /** Format: date-time */
+              createdAt: string;
+            } | null;
+            formVersions: {
+              id: string;
+              versionNumber: number;
+              definition: {
+                fields: {
+                  slug: string;
+                  label: string;
+                  help: string | null;
+                  /** @enum {string} */
+                  fieldType:
+                    | "text"
+                    | "long_text"
+                    | "number"
+                    | "currency"
+                    | "date"
+                    | "boolean"
+                    | "single_select"
+                    | "multi_select"
+                    | "entity";
+                  options: string[] | null;
+                  required: boolean;
+                  displayOrder: number;
+                  placeholder: boolean;
+                  catalogFieldId: string | null;
+                  contractAttribute:
+                    | (
+                        | "title"
+                        | "primary_counterparty_name"
+                        | "entity_id"
+                        | "owning_department_id"
+                        | "region"
+                        | "value"
+                        | "effective_date"
+                        | "expiry_date"
+                        | "term_type"
+                      )
+                    | null;
+                  valueCurrency?: string | null;
+                  valueCadence?: ("one_time" | "monthly" | "annually") | null;
+                }[];
+                clauseRules: {
+                  fieldSlug: string;
+                  /** @enum {string} */
+                  operator: "equals" | "is_one_of" | "is_set" | "is_not";
+                  value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9110,6 +9373,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9119,6 +9383,15 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
             template: {
               id: string;
               title: string;
@@ -9176,11 +9449,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9228,11 +9501,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9344,6 +9617,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9353,6 +9627,15 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
             template: {
               id: string;
               title: string;
@@ -9410,11 +9693,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9462,11 +9745,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9525,6 +9808,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9534,6 +9818,15 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
             template: {
               id: string;
               title: string;
@@ -9591,11 +9884,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9643,11 +9936,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9706,6 +9999,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9715,6 +10009,15 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
             template: {
               id: string;
               title: string;
@@ -9772,11 +10075,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9824,11 +10127,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -9887,6 +10190,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -9896,6 +10200,15 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
             template: {
               id: string;
               title: string;
@@ -9953,11 +10266,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -10005,11 +10318,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -10067,6 +10380,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -10128,6 +10442,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -10191,6 +10506,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -10200,6 +10516,15 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
             template: {
               id: string;
               title: string;
@@ -10257,11 +10582,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -10309,11 +10634,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -10388,11 +10713,11 @@ export interface operations {
           }[];
           /** @default [] */
           clauseRules?: {
-            blockName: string;
             fieldSlug: string;
             /** @enum {string} */
             operator: "equals" | "is_one_of" | "is_set" | "is_not";
             value: (string | number | boolean) | (string | number | boolean)[] | null;
+            blockName: string;
           }[];
         };
       };
@@ -10420,6 +10745,7 @@ export interface operations {
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
+              defaultLegalOwnerId: string | null;
               publishedDocumentVersionId: string | null;
               publishedFormVersionId: string | null;
               publishedAt: string | null;
@@ -10429,6 +10755,15 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            assignmentRules: {
+              fieldSlug: string;
+              /** @enum {string} */
+              operator: "equals" | "is_one_of" | "is_set" | "is_not";
+              value: (string | number | boolean) | (string | number | boolean)[] | null;
+              id: string;
+              legalOwnerId: string;
+              displayOrder: number;
+            }[];
             template: {
               id: string;
               title: string;
@@ -10486,11 +10821,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -10538,11 +10873,11 @@ export interface operations {
                   valueCadence?: ("one_time" | "monthly" | "annually") | null;
                 }[];
                 clauseRules: {
-                  blockName: string;
                   fieldSlug: string;
                   /** @enum {string} */
                   operator: "equals" | "is_one_of" | "is_set" | "is_not";
                   value: (string | number | boolean) | (string | number | boolean)[] | null;
+                  blockName: string;
                 }[];
               };
               createdBy: string;
@@ -18466,6 +18801,94 @@ export interface operations {
               id: string;
               displayName: string;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listUnassignedContracts: {
+    parameters: {
+      query?: {
+        cursor?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            total: number;
+            contracts: {
+              id: string;
+              number: number;
+              title: string;
+              /** Format: date-time */
+              createdAt: string;
+              autoDoc: {
+                id: string;
+                name: string;
+              };
+              generator: {
+                id: string;
+                displayName: string;
+              };
+            }[];
+            nextCursor: number | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  claimUnassignedContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": Record<string, never>;
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            number: number;
+            title: string;
           };
         };
       };

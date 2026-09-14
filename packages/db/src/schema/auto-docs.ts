@@ -83,6 +83,8 @@ export interface AutoDocContractSnapshot {
   title: string;
   entityId: string | null;
   businessOwnerId: string | null;
+  /** Null or absent in legacy snapshots means the Contract starts unassigned. */
+  legalOwnerId?: string | null;
   owningDepartmentId: string | null;
   region: string | null;
   primaryCounterpartyName: string | null;
@@ -106,6 +108,10 @@ export const autoDocs = pgTable(
     titlePattern: text("title_pattern"),
     /** Null lets the form supply our Entity. */
     fixedEntityId: text("fixed_entity_id").references(() => entities.id),
+    /** Null leaves an unmatched Generation without a Legal Owner. */
+    defaultLegalOwnerId: text("default_legal_owner_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     state: text("state", { enum: AUTO_DOC_STATES }).notNull().default("draft"),
     audience: text("audience", { enum: AUTO_DOC_AUDIENCES }).notNull().default("legal_only"),
     /** Null means this Auto-Doc has no target Contract Type. */
@@ -323,3 +329,30 @@ export const autoDocGenerations = pgTable(
   ],
 );
 export type AutoDocGeneration = typeof autoDocGenerations.$inferSelect;
+
+/** ADO-006: ordered settings, edited in place under the Auto-Doc row lock. */
+export const autoDocAssignmentRules = pgTable(
+  "auto_doc_assignment_rules",
+  {
+    id: uuidPk(),
+    autoDocId: text("auto_doc_id")
+      .notNull()
+      .references(() => autoDocs.id, { onDelete: "cascade" }),
+    displayOrder: integer("display_order").notNull(),
+    fieldSlug: text("field_slug").notNull(),
+    operator: text("operator", { enum: AUTO_DOC_RULE_OPERATORS }).notNull(),
+    /** Null is the operand-free is_set condition. */
+    value: jsonb("value").$type<AutoDocCondition["value"]>(),
+    legalOwnerId: text("legal_owner_id")
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [
+    index("auto_doc_assignment_rules_order_idx").on(table.autoDocId, table.displayOrder),
+    check("auto_doc_assignment_rules_order_check", sql`${table.displayOrder} >= 0`),
+    check(
+      "auto_doc_assignment_rules_operator_check",
+      sql`${table.operator} in ('equals', 'is_one_of', 'is_set', 'is_not')`,
+    ),
+  ],
+);
