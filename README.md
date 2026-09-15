@@ -45,6 +45,20 @@ pnpm test
 
 Two things to know about it. Emailed links point at `http://localhost:3000`, because that is the origin the API is configured for; open one on 5173 by changing the port by hand. And uploaded files go to `.storage/` in the repo rather than to the stack's volume, which the container's user owns — so a file uploaded here is not visible to `pnpm stack`, or the other way round. The database _is_ the same one, so accounts and every record are shared.
 
+Stop the loop from any terminal, including after its original terminal has closed:
+
+```sh
+pnpm dev:stop                  # stop the host API, web, worker, and in-progress seed/setup
+pnpm dev:down                  # stop the host loop and its backing containers; keep data
+pnpm dev:stop --isolated       # stop this checkout's isolated loop
+pnpm dev:down --isolated       # also stop that isolated instance's containers
+```
+
+Ctrl-C also stops the host processes. These commands use the same instance name as
+`dev:hot`, including `COMPOSE_PROJECT_NAME` overrides; the shared loop can be stopped
+from any worktree. The host process cleanup requires Linux `/proc`. Processes started
+manually with `pnpm dev` are outside this loop's tracking.
+
 ### Seeding a demo instance
 
 `pnpm seed:demo` fills a running dev loop with a whole fictional company, Helix Software Group: a legal team of twelve, thirty group entities, a contract pipeline across every stage, matters, an intake queue with triage history, and a knowledge library. It exists for design and UX review, where an empty instance tells you nothing and a hand-made record or two tells you almost as little.
@@ -80,7 +94,7 @@ That sends real Envelopes through the real driver: some still out, some signed w
 
 It writes a lot and cleans up nothing. Point it at a database you are willing to lose. Dates are anchored to the day it runs, so deadlines stay overdue, due and upcoming however long ago you seeded. A heavy run takes two to three minutes on a laptop; the long pole is the seed waiting on the document queue, because an Analysis run cannot start until the text extraction it reads has finished.
 
-`pnpm dev:infra` brings up only the containers, for when you start the watch processes yourself; `pnpm dev:infra:down` stops them. Ports move with `POSTGRES_PORT`, `DOC_ENGINE_PORT`, `MAILPIT_SMTP_PORT`. All of it is [`compose.hostdev.yml`](compose.hostdev.yml) plus [`scripts/dev-hot.sh`](scripts/dev-hot.sh), and none of it touches what a deployment runs.
+`pnpm dev:infra` brings up only the containers, for when you start the watch processes yourself; `pnpm dev:infra:down` stops **only those containers**, leaving host watch processes running. Ports move with `POSTGRES_PORT`, `DOC_ENGINE_PORT`, `MAILPIT_SMTP_PORT`. All of it is [`compose.hostdev.yml`](compose.hostdev.yml) plus [`scripts/dev-hot.sh`](scripts/dev-hot.sh), and none of it touches what a deployment runs.
 
 Everything E2E and every milestone acceptance runs against the built Compose stack instead (TECH-018):
 

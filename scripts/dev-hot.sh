@@ -46,39 +46,8 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
-# A git worktree starts without the two things this loop cannot run
-# without. .env and node_modules are both gitignored, so checking a
-# branch out into a worktree gives you neither, and the first thing you
-# see is compose refusing to interpolate AUTH_SECRET. Set them up here
-# rather than send you to a README.
-if [[ ! -f .env ]]; then
-  # `git worktree list` prints the main checkout first.
-  main_checkout="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
-  if [[ -n "$main_checkout" && "$main_checkout" != "$root" && -f "$main_checkout/.env" ]]; then
-    # Copy it, never generate a new one, when the main checkout has one.
-    # Every loop on this machine shares one database, and
-    # OPENLAW_SECRET_KEY is what decrypts the credentials stored in it.
-    # A second key reads those columns as noise.
-    echo "==> no .env here. Copying the one from $main_checkout"
-    cp "$main_checkout/.env" .env
-  else
-    echo "==> no .env here. Writing one from .env.example with new secrets"
-    cp .env.example .env
-    for name in AUTH_SECRET OPENLAW_SECRET_KEY; do
-      secret="$(openssl rand -base64 32)"
-      # The example file leaves both empty. Fill the empty line, and
-      # leave a value alone if someone put one there.
-      awk -v name="$name" -v secret="$secret" \
-        '$0 == name "=" { print name "=" secret; next } { print }' .env > .env.tmp
-      mv .env.tmp .env
-    done
-  fi
-fi
-
-if [[ ! -d node_modules ]]; then
-  echo "==> no node_modules here. Installing, which takes a minute, once per worktree"
-  pnpm install
-fi
+original_args=("$@")
+action=start
 
 seed=false
 fresh=false
@@ -87,6 +56,8 @@ offset=""
 seed_args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --stop) action=stop ;;
+    --down) action=down ;;
     --seed) seed=true ;;
     --fresh) fresh=true; seed=true ;;
     # An instance of its own starts with an empty database. Seeding it
@@ -146,6 +117,58 @@ else
   offset=0
 fi
 
+compose=(docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml)
+
+if [[ "$action" != start ]]; then
+  node scripts/dev-processes.mjs stop "$COMPOSE_PROJECT_NAME"
+  if [[ "$action" == down ]]; then
+    "${compose[@]}" stop postgres doc-engine mailpit
+  fi
+  exit 0
+fi
+
+# Mark the whole loop before setup, so another terminal can stop it even
+# during install or startup. Children retain the marker across Turbo's
+# separate process groups and after their parents exit.
+if [[ -z "${OPENLAW_DEV_RUN:-}" ]]; then
+  exec node scripts/dev-processes.mjs run "$COMPOSE_PROJECT_NAME" \
+    bash "$root/scripts/dev-hot.sh" "${original_args[@]}"
+fi
+
+# A git worktree starts without the two things this loop cannot run
+# without. .env and node_modules are both gitignored, so checking a
+# branch out into a worktree gives you neither, and the first thing you
+# see is compose refusing to interpolate AUTH_SECRET. Set them up here
+# rather than send you to a README.
+if [[ ! -f .env ]]; then
+  # `git worktree list` prints the main checkout first.
+  main_checkout="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
+  if [[ -n "$main_checkout" && "$main_checkout" != "$root" && -f "$main_checkout/.env" ]]; then
+    # Copy it, never generate a new one, when the main checkout has one.
+    # Every loop on this machine shares one database, and
+    # OPENLAW_SECRET_KEY is what decrypts the credentials stored in it.
+    # A second key reads those columns as noise.
+    echo "==> no .env here. Copying the one from $main_checkout"
+    cp "$main_checkout/.env" .env
+  else
+    echo "==> no .env here. Writing one from .env.example with new secrets"
+    cp .env.example .env
+    for name in AUTH_SECRET OPENLAW_SECRET_KEY; do
+      secret="$(openssl rand -base64 32)"
+      # The example file leaves both empty. Fill the empty line, and
+      # leave a value alone if someone put one there.
+      awk -v name="$name" -v secret="$secret" \
+        '$0 == name "=" { print name "=" secret; next } { print }' .env > .env.tmp
+      mv .env.tmp .env
+    done
+  fi
+fi
+
+if [[ ! -d node_modules ]]; then
+  echo "==> no node_modules here. Installing, which takes a minute, once per worktree"
+  pnpm install
+fi
+
 export PORT="${PORT:-$((3000 + offset))}"
 export WEB_PORT="${WEB_PORT:-$((5173 + offset))}"
 export POSTGRES_PORT="${POSTGRES_PORT:-$((55432 + offset))}"
@@ -169,16 +192,14 @@ for port in "$PORT" "$WEB_PORT"; do
   if ss -ltn "sport = :$port" 2>/dev/null | grep -q LISTEN; then
     echo "error: port $port is already in use. A dev loop is probably already running." >&2
     if $isolated; then
-      echo "       This instance is $COMPOSE_PROJECT_NAME. Move it with --offset N." >&2
+      echo "       Stop it with pnpm dev:stop --isolated, or move it with --offset N." >&2
     else
-      echo "       Browse http://localhost:$WEB_PORT, or Ctrl-C that loop before starting this one." >&2
+      echo "       Stop it with pnpm dev:stop, then run pnpm dev:hot again." >&2
       echo "       To run this checkout beside that one instead, add --isolated." >&2
     fi
     exit 1
   fi
 done
-
-compose=(docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml)
 
 # Blobs cannot go to the stack's named volume: it belongs to the
 # container's user, not yours. A host process gets its own directory, so
@@ -237,23 +258,9 @@ export HOST="${HOST:-127.0.0.1}"
 
 mkdir -p "$STORAGE_PATH"
 
-# Each background job has its own process group so cleanup reaches its children.
+# Keep background jobs out of the terminal's foreground process group.
+# dev-processes.mjs owns cleanup, including children that create new groups.
 set -m
-seed_pid=""
-dev_pid=""
-worker_pid=""
-cleanup() {
-  trap - EXIT INT TERM
-  for child in "$seed_pid" "$worker_pid" "$dev_pid"; do
-    if [[ -n "$child" ]]; then
-      kill -TERM -- "-$child" 2>/dev/null || true
-      wait "$child" 2>/dev/null || true
-    fi
-  done
-}
-trap cleanup EXIT
-trap 'exit 130' INT
-trap 'exit 143' TERM
 
 if $seed; then
   echo "==> seeding once the api answers (only if the instance is empty)"
@@ -261,7 +268,6 @@ if $seed; then
     node scripts/seed/index.mjs --wait --only-if-empty "${seed_args[@]}" 2>&1 \
       | sed -u 's/^/[seed] /'
   ) &
-  seed_pid=$!
 fi
 
 echo "==> web http://localhost:$WEB_PORT   api http://localhost:$PORT   mail http://localhost:$MAILPIT_PORT"
@@ -290,6 +296,5 @@ dev_pid=$!
   done
   pnpm dev --filter=@openlaw/worker
 ) &
-worker_pid=$!
 
 wait "$dev_pid"

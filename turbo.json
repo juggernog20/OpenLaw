@@ -20,6 +20,8 @@
     "OPENLAW_DOCS_PREVIEW",
     "OPENLAW_DOCS_FIXTURE"
   ],
+  // Build prerequisites also belong to the dev loop that launched them.
+  "globalPassThroughEnv": ["OPENLAW_DEV_INSTANCE", "OPENLAW_DEV_RUN"],
   "tasks": {
     // The embedded edition records the current Git identity, including docs-only commits.
     "@openlaw/web#build": { "dependsOn": ["^build"], "outputs": ["dist/**"], "cache": false },
