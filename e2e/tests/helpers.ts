@@ -467,3 +467,19 @@ export async function sweepOrSay(label: string, sweep: () => Promise<void>): Pro
 export function startsWithName(name: string): RegExp {
   return new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
 }
+
+/** INT-010: request journeys need a live Department even on a fresh install. */
+export async function ensureIntakeDepartment(request: APIRequestContext): Promise<string> {
+  const response = await request.get("/api/v1/departments");
+  expect(response.status(), await response.text()).toBe(200);
+  const { departments } = z
+    .object({ departments: z.array(z.object({ id: z.string() })) })
+    .parse(await response.json());
+  if (departments[0]) return departments[0].id;
+  const created = await request.post("/api/v1/departments", {
+    data: { displayName: "E2E Intake" },
+  });
+  expect(created.status(), await created.text()).toBe(201);
+  return z.object({ department: z.object({ id: z.string() }) }).parse(await created.json())
+    .department.id;
+}
