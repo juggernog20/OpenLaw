@@ -104,6 +104,7 @@ test("Legal keeps answers through Unpublish, then generates and downloads the ap
   // own name rather than a generic label.
   await page.getByRole("link", { name, exact: true }).first().click();
   await expect(page).toHaveURL(recordUrl);
+  await page.getByRole("link", { name: /^Generations/ }).click();
   const generations = page.getByRole("region", { name: "Generations", exact: true });
   await expect(generations).toContainText(ADMIN.displayName);
   // Every commit writes a form version, so the number is not fixed.
