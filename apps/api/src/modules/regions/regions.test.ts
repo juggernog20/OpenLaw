@@ -182,5 +182,14 @@ it("shares Regions with Matters and retains their references on rename and archi
   expect((await patch("Unknown")).statusCode).toBe(400);
   expect((await patch(null)).statusCode).toBe(200);
   expect((await patch("APAC")).statusCode).toBe(400);
-  expect((await patch("Americas")).statusCode).toBe(200);
+  const alternate = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/regions",
+    cookies: admin,
+    payload: { displayName: "Matter alternate" },
+  });
+  expect(alternate.statusCode, alternate.body).toBe(201);
+  const assigned = await patch("matter ALTERNATE");
+  expect(assigned.statusCode, assigned.body).toBe(200);
+  expect(assigned.json().matter.region).toBe("Matter alternate");
 });

@@ -34,6 +34,7 @@ export const matters = pgTable(
     title: text("title").notNull(),
     description: text("description"),
     departmentId: text("department_id").references(() => departments.id),
+    /** Null means no Region is assigned. */
     region: text("region").references(() => regions.displayName, { onUpdate: "cascade" }),
     matterTypeId: text("matter_type_id")
       .notNull()

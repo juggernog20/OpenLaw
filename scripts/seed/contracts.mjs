@@ -299,11 +299,21 @@ export async function seedContracts(admin, context, log) {
     departmentIds.push(department.id);
   }
 
-  const { body: regionList } = await admin.get("/api/v1/regions");
+  const { body: regionList } = await admin.get("/api/v1/regions?includeArchived=true");
+  const regionNames = [];
   for (const displayName of ["EMEA", "Americas", "APAC"]) {
-    if (!regionList.regions.some((row) => row.displayName === displayName)) {
-      await admin.post("/api/v1/regions", { displayName });
+    let region = regionList.regions.find(
+      (row) => row.displayName.toLowerCase() === displayName.toLowerCase(),
+    );
+    if (region?.archivedAt) {
+      const { body } = await admin.post(`/api/v1/regions/${region.id}/restore`, {});
+      region = body.region;
     }
+    if (!region) {
+      const { body } = await admin.post("/api/v1/regions", { displayName });
+      region = body.region;
+    }
+    regionNames.push(region.displayName);
   }
 
   await pool(plans, 4, async (plan, index) => {
@@ -342,7 +352,7 @@ export async function seedContracts(admin, context, log) {
     await author.patch(at, {
       managerId: owner.id,
       owningDepartmentId: random.pick(departmentIds),
-      region: random.pick(["EMEA", "Americas", "APAC"]),
+      region: random.pick(regionNames),
       businessOwnerId: random.chance(0.6) ? random.pick(helpers.length ? helpers : staff).id : null,
       entityId: ourEntity.id,
       priority: plan.priority,

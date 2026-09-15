@@ -282,3 +282,5 @@ The onboarding wizard and Authentication settings expose Legal User Authenticati
 ### SET-012 amendment — shared Matter Region, 2026-09-15
 
 Matters also have an optional Region picker using the same organization catalog. Rename, archive, restore, and in-use checks cover both Matters and Contracts. Business Portal Matter overviews display the saved Region. Existing Matters start with no Region; custom Fields remain unchanged. Migration `0136` adds the nullable Matter reference with the same update-cascade behavior as Contracts.
+
+Region references use display names to preserve the existing Contract API. Renames therefore cascade through current records and can lock referencing rows. Stable-ID references would avoid name coupling but require migrating the public string contract; the shared catalog was chosen to keep Contract and Matter classifications consistent.
