@@ -200,7 +200,7 @@ async function enterPortalByMagicLink(
   const page = await context.newPage();
   await page.goto("/portal/login");
   await page.getByRole("button", { name: "Email me a sign-in link" }).click();
-  await expect(page.getByText("Business Portal sign-in")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Get a sign-in link" })).toBeVisible();
   await page.getByLabel("Email").fill(REQUESTER);
   await page.getByRole("button", { name: "Send link" }).click();
   // The sent screen says the same thing whether or not mail goes out;

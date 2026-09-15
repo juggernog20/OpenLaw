@@ -32,6 +32,8 @@ const PAGE_TITLES = defineMessages({
 export async function loginLoader({ request }: LoaderFunctionArgs) {
   const group: "legal" | "business" =
     new URL(request.url).pathname === "/portal/login" ? "business" : "legal";
+  if (new URL(request.url).searchParams.get("error") === "INVALID_TOKEN")
+    return redirect(`/auth/link-expired${group === "business" ? "?portal=1" : ""}`);
   if (await currentUser()) return redirect(group === "business" ? "/portal" : "/");
   if (await needsSetup()) return redirect("/auth/setup");
   const { data, response } = await api.GET("/api/v1/auth/methods");
