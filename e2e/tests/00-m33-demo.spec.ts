@@ -149,18 +149,17 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         await page.getByLabel("Default timezone").press("Enter");
         await next();
         await step("Authentication", 3);
-        await page.getByRole("button", { name: /^Built-in sign-in/ }).click();
-        await expect(page.getByRole("button", { name: /^Built-in sign-in/ })).toHaveAttribute(
-          "aria-pressed",
-          "true",
-        );
+        await page.getByRole("switch", { name: "Email and password", exact: true }).check();
+        await expect(
+          page.getByRole("switch", { name: "Email and password", exact: true }),
+        ).toBeChecked();
         await next();
         await step("Business-user portal", 4);
         await page.getByLabel("Allowed email domains").fill("example.com");
         await page.getByRole("button", { name: "Add", exact: true }).click();
         await expect(
-          page.getByRole("button", { name: /^Magic-link sign-in is on/ }),
-        ).toHaveAttribute("aria-pressed", "true");
+          page.getByRole("switch", { name: "Email magic link", exact: true }),
+        ).toBeChecked();
         await next();
         await step("Outbound email", 5);
         // Compose supplies the relay. The invite below proves real delivery.

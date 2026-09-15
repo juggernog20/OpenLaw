@@ -35,6 +35,7 @@ export function MagicLinkRequest({
   title,
   description,
   footer,
+  group,
 }: Readonly<{
   /** The card's heading before the link is sent; also the document title. */
   title: MessageDescriptor;
@@ -42,6 +43,7 @@ export function MagicLinkRequest({
   description: ReactNode;
   /** Anything the screen offers below the form — a way back, usually. */
   footer?: ReactNode;
+  group?: "legal" | "business";
 }>) {
   const intl = useIntl();
   const [email, setEmail] = useState("");
@@ -55,7 +57,7 @@ export function MagicLinkRequest({
     setError(null);
     try {
       const result = await api.POST("/api/v1/auth/magic-link", {
-        body: { email },
+        body: { email, ...(group ? { group } : {}) },
       });
       const { response } = result;
       if (response.status === 202) {
