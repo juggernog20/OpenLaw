@@ -384,7 +384,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} autoDocAcknowledgementText {Default acknowledgement text} other {{key}}}"
+    "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1169,11 +1169,8 @@
   "autoDocs.acknowledgementCaption": {
     "defaultMessage": "Changing the text asks everyone to acknowledge it again."
   },
-  "autoDocs.acknowledgementFrequency": {
-    "defaultMessage": "Frequency"
-  },
-  "autoDocs.acknowledgementFrequencyName": {
-    "defaultMessage": "{frequency, select, none {None} every_use {Every use} once_per_auto_doc {Once per Auto-Doc} other {Once across Auto-Docs}}"
+  "autoDocs.acknowledgementPolicyHelp": {
+    "defaultMessage": "Acknowledgement frequency can be adjusted in <settings>Organization Auto-Doc Settings</settings>."
   },
   "autoDocs.acknowledgementText": {
     "defaultMessage": "Text"
@@ -1212,7 +1209,7 @@
     "defaultMessage": "Add rule"
   },
   "autoDocs.assignmentCaption": {
-    "defaultMessage": "The first matching rule names the Legal Owner. Without a match or a default, the Contract waits on the Inbox."
+    "defaultMessage": "The first matching rule names the Legal Owner. Without a match or a default, the Contract remains unassigned."
   },
   "autoDocs.assignmentRules": {
     "defaultMessage": "Assignment rules"
@@ -1317,7 +1314,7 @@
     "defaultMessage": "Cover note"
   },
   "autoDocs.coverNoteCaption": {
-    "defaultMessage": "Sent in the email with the files. Markdown."
+    "defaultMessage": "Write a message to include in the email with the generated files."
   },
   "autoDocs.create": {
     "defaultMessage": "Create Auto-Doc"
@@ -1574,6 +1571,9 @@
   "autoDocs.includedWhen": {
     "defaultMessage": "Included when {rule}"
   },
+  "autoDocs.insertTitleVariable": {
+    "defaultMessage": "Insert title variable"
+  },
   "autoDocs.invalidUploadReply": {
     "defaultMessage": "The upload response could not be read. Reload this Auto-Doc to check its saved template."
   },
@@ -1620,7 +1620,7 @@
     "defaultMessage": "New field"
   },
   "autoDocs.newerThanLive": {
-    "defaultMessage": "{both, select, true {File version {file} and form version {form} are} file {File version {file} is} other {Form version {form} is}} newer than the live pair."
+    "defaultMessage": "{both, select, true {File version {file} and form version {form} are newer than the currently published file and form.} file {File version {file} is newer than the currently published file.} other {Form version {form} is newer than the currently published form.}}"
   },
   "autoDocs.noBlocks": {
     "defaultMessage": "This file has no Blocks."
@@ -1654,6 +1654,9 @@
   },
   "autoDocs.noTemplate": {
     "defaultMessage": "Upload a Word file to start the form."
+  },
+  "autoDocs.noTitleVariables": {
+    "defaultMessage": "Add form fields to make variables available."
   },
   "autoDocs.noValue": {
     "defaultMessage": "None"
@@ -1840,9 +1843,6 @@
   },
   "autoDocs.titlePattern": {
     "defaultMessage": "Title pattern"
-  },
-  "autoDocs.titlePatternCaption": {
-    "defaultMessage": "Form field slugs in double braces. Blank uses the mapped title or the Auto-Doc name."
   },
   "autoDocs.unavailableCatalogField": {
     "defaultMessage": "Unavailable catalog Field"
@@ -2702,6 +2702,9 @@
   "contracts.record.tab.keyDates": {
     "defaultMessage": "Key dates"
   },
+  "contracts.record.tab.keyDates.unverified": {
+    "defaultMessage": "{count, plural, one {# AI-suggested date awaiting confirmation} other {# AI-suggested dates awaiting confirmation}}"
+  },
   "contracts.record.tab.keyDates.upcoming": {
     "defaultMessage": "{count, plural, one {# upcoming date} other {# upcoming dates}}"
   },
@@ -3220,6 +3223,9 @@
   },
   "datePicker.previousMonth": {
     "defaultMessage": "Previous month"
+  },
+  "datePicker.today": {
+    "defaultMessage": "Today"
   },
   "datePicker.year": {
     "defaultMessage": "Year"
@@ -5721,13 +5727,13 @@
     "defaultMessage": "Edit"
   },
   "knowledge.body.help": {
-    "defaultMessage": "Markdown headings, lists, emphasis, code, and links are supported."
+    "defaultMessage": "Use Preview to see how your guidance will appear to readers."
   },
   "knowledge.body.markdown": {
-    "defaultMessage": "Guidance in Markdown"
+    "defaultMessage": "Guidance"
   },
   "knowledge.body.placeholder": {
-    "defaultMessage": "Write guidance in Markdown…"
+    "defaultMessage": "Write guidance for your team…"
   },
   "knowledge.body.preview": {
     "defaultMessage": "Preview"
@@ -7991,8 +7997,17 @@
   "settings.auth.sessionsCaption": {
     "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
   },
+  "settings.autoDocs.acknowledgementFrequency": {
+    "defaultMessage": "Acknowledgement frequency"
+  },
+  "settings.autoDocs.acknowledgementFrequencyName": {
+    "defaultMessage": "{frequency, select, none {No acknowledgement required} every_use {Before every generation} once_per_auto_doc {Once per person for each Auto-Doc} other {Once per person across all Auto-Docs}}"
+  },
   "settings.autoDocs.acknowledgementHelp": {
-    "defaultMessage": "This is the default statement Business Users acknowledge before generating an Auto-Doc. Each Auto-Doc can use its own text and frequency. Editing the text requires a new acknowledgement."
+    "defaultMessage": "Choose how often Business Users must acknowledge the statement before generating documents. This frequency applies to all Auto-Docs. Each Auto-Doc can use its own text. Changing the text requires a new acknowledgement."
+  },
+  "settings.autoDocs.acknowledgementScopeHelp": {
+    "defaultMessage": "When acknowledgement is required, a person must accept each distinct statement, including any custom text on an Auto-Doc."
   },
   "settings.autoDocs.defaultAcknowledgementText": {
     "defaultMessage": "Default acknowledgement text"
@@ -9973,6 +9988,21 @@
   },
   "settings.title": {
     "defaultMessage": "Settings"
+  },
+  "settings.users.action.archive": {
+    "defaultMessage": "Archive"
+  },
+  "settings.users.action.resend": {
+    "defaultMessage": "Resend invite"
+  },
+  "settings.users.action.restore": {
+    "defaultMessage": "Restore"
+  },
+  "settings.users.action.revoke": {
+    "defaultMessage": "Revoke invite"
+  },
+  "settings.users.action.signOut": {
+    "defaultMessage": "Sign out user"
   },
   "settings.users.active": {
     "defaultMessage": "Active"

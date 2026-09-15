@@ -67,12 +67,18 @@ afterAll(async () => {
   await h.stop();
 });
 async function prepare(frequency = "none", extra: Record<string, unknown> = {}) {
+  const settings = await h.app.inject({
+    method: "PUT",
+    url: "/api/v1/auto-docs/settings",
+    payload: { acknowledgementFrequency: frequency },
+    cookies: admin,
+  });
+  expect(settings.statusCode, settings.body).toBe(200);
   const made = await post("/auto-docs", { name: "Portal approved NDA" });
   expect(made.statusCode, made.body).toBe(201);
   const id = made.json().autoDoc.id as string;
   const configured = await patch(id, {
     audience: "everyone",
-    acknowledgementFrequency: frequency,
     formats: "docx",
     ...extra,
   });

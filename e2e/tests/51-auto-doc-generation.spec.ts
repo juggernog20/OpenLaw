@@ -20,27 +20,40 @@ test("Legal keeps answers through Unpublish, then generates and downloads the ap
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   const recordUrl = page.url();
   const id = recordUrl.split("/").at(-1)!;
-  await page
+
+  // The record is the DES-087 builder: the file arrives through the
+  // upload dialog, and each field is edited on its own card. Every
+  // commit writes a form version, so none of them is asserted by number.
+  await page.getByRole("link", { name: "Form", exact: true }).click();
+  await page.getByRole("button", { name: "Upload version", exact: true }).click();
+  const upload = page.getByRole("dialog");
+  await upload
     .getByLabel("Word template", { exact: true })
     .setInputFiles(
       fileURLToPath(
         new URL("../../apps/api/src/testing/fixtures/auto-docs/plain.docx", import.meta.url),
       ),
     );
-  await page.getByRole("button", { name: "Upload template", exact: true }).click();
-  const counterparty = page.getByRole("group", { name: "counterparty_name", exact: true });
-  await expect(counterparty).toBeVisible();
+  await upload.getByRole("button", { name: "Upload", exact: true }).click();
+  await upload.getByRole("button", { name: "Close", exact: true }).click();
+
+  const fields = page.getByRole("region", { name: "Fields", exact: true });
+  await fields.getByRole("button", { name: "Edit Counterparty name", exact: true }).click();
+  const counterparty = page.getByRole("region", { name: "Counterparty name", exact: true });
+  // Required first: renaming the field renames its card with it, so the
+  // locator above stops matching the moment the label commits.
+  await counterparty.getByRole("checkbox", { name: "Required", exact: true }).click();
+  await expect(counterparty.getByRole("checkbox", { name: "Required", exact: true })).toBeChecked();
   await counterparty.getByLabel("Label", { exact: true }).fill("Counterparty");
-  await counterparty.getByLabel("Required", { exact: true }).check();
-  const date = page.getByRole("group", { name: "signing_date", exact: true });
+  await counterparty.getByLabel("Label", { exact: true }).blur();
+  await expect(page.getByRole("region", { name: "Counterparty", exact: true })).toBeVisible();
+  await fields.getByRole("button", { name: "Edit Signing date", exact: true }).click();
+  const date = page.getByRole("region", { name: "Signing date", exact: true });
   await date.getByRole("combobox", { name: "Type", exact: true }).selectOption("date");
-  await page.getByRole("button", { name: "Save form", exact: true }).click();
-  await expect(
-    page
-      .getByRole("region", { name: "Form versions", exact: true })
-      .getByText("Form version 2", { exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(fields.getByText("signing_date · Date", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Publish", exact: true }).first().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Publish", exact: true }).click();
   await expect(page.getByRole("link", { name: "Generate", exact: true })).toBeVisible();
   const read = await page.request.get(`/api/v1/auto-docs/${id}`);
   const pinned = z
@@ -52,7 +65,9 @@ test("Legal keeps answers through Unpublish, then generates and downloads the ap
     })
     .parse(await read.json()).autoDoc;
   await page.getByRole("link", { name: "Generate", exact: true }).click();
-  await expect(page.getByRole("heading", { name: `Generate ${name}`, exact: true })).toBeVisible();
+  // The builder's sub-bar carries the Auto-Doc's name, so the heading is
+  // the action alone.
+  await expect(page.getByRole("heading", { name: "Generate", exact: true })).toBeVisible();
   await page.getByLabel("Counterparty", { exact: true }).fill("Acme & Sons");
   await page.getByLabel("Signing date", { exact: true }).click();
   const calendar = page.getByRole("dialog", { name: "Choose a date" });
@@ -85,10 +100,14 @@ test("Legal keeps answers through Unpublish, then generates and downloads the ap
   expect(file.headers()["content-type"]).toContain("wordprocessingml.document");
   expect((await file.body()).subarray(0, 4).toString("hex")).toBe("504b0304");
   expect(await reportAxeViolations(page, testInfo, "Auto-Doc-Generation")).toEqual([]);
-  await page.getByRole("link", { name: "Back to Auto-Doc", exact: true }).click();
+  // The builder's sub-bar is the way back, and it carries the Auto-Doc's
+  // own name rather than a generic label.
+  await page.getByRole("link", { name, exact: true }).first().click();
   await expect(page).toHaveURL(recordUrl);
+  await page.getByRole("link", { name: /^Generations/ }).click();
   const generations = page.getByRole("region", { name: "Generations", exact: true });
   await expect(generations).toContainText(ADMIN.displayName);
-  await expect(generations).toContainText("File version 1, form version 2");
+  // Every commit writes a form version, so the number is not fixed.
+  await expect(generations).toContainText(/File version 1, form version \d+/);
   await expect(generations.getByRole("link", { name: "Download Word", exact: true })).toBeVisible();
 });

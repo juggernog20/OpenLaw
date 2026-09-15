@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** ADO-008: Administrators maintain the default acknowledgement statement. */
+/** ADO-008: Administrators maintain the acknowledgement policy and default statement. */
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { redirect, useLoaderData } from "react-router";
 import { api } from "../lib/api";
 import { requireUser } from "../lib/session";
-import { TEXTAREA_CLASS } from "../lib/form-controls";
+import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
 
@@ -20,6 +21,7 @@ export async function settingsAutoDocsLoader() {
 export function SettingsAutoDocsPage() {
   const loaded = useLoaderData<typeof settingsAutoDocsLoader>();
   const [text, setText] = useState(loaded.acknowledgementText);
+  const [frequency, setFrequency] = useState(loaded.acknowledgementFrequency);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string>();
@@ -34,11 +36,14 @@ export function SettingsAutoDocsPage() {
     setSaved(false);
     setError(undefined);
     const result = await api
-      .PUT("/api/v1/auto-docs/settings", { body: { acknowledgementText: text } })
+      .PUT("/api/v1/auto-docs/settings", {
+        body: { acknowledgementText: text, acknowledgementFrequency: frequency },
+      })
       .catch(() => undefined);
     setBusy(false);
     if (result?.data) {
       setText(result.data.acknowledgementText);
+      setFrequency(result.data.acknowledgementFrequency);
       setSaved(true);
     } else
       setError(
@@ -56,7 +61,7 @@ export function SettingsAutoDocsPage() {
       <p className="text-muted">
         <FormattedMessage
           id="settings.autoDocs.acknowledgementHelp"
-          defaultMessage="This is the default statement Business Users acknowledge before generating an Auto-Doc. Each Auto-Doc can use its own text and frequency. Editing the text requires a new acknowledgement."
+          defaultMessage="Choose how often Business Users must acknowledge the statement before generating documents. This frequency applies to all Auto-Docs. Each Auto-Doc can use its own text. Changing the text requires a new acknowledgement."
         />
       </p>
       <form
@@ -69,11 +74,55 @@ export function SettingsAutoDocsPage() {
         <label className="block space-y-1">
           <span>
             <FormattedMessage
+              id="settings.autoDocs.acknowledgementFrequency"
+              defaultMessage="Acknowledgement frequency"
+            />
+          </span>
+          <select
+            className={CONTROL_CLASS}
+            value={frequency}
+            disabled={busy}
+            onChange={(event) => {
+              const value = event.target.value;
+              if (
+                value === "none" ||
+                value === "every_use" ||
+                value === "once_per_auto_doc" ||
+                value === "once"
+              ) {
+                setFrequency(value);
+                setSaved(false);
+              }
+            }}
+          >
+            {(["none", "every_use", "once_per_auto_doc", "once"] as const).map((frequency) => (
+              <option key={frequency} value={frequency}>
+                {intl.formatMessage(
+                  {
+                    id: "settings.autoDocs.acknowledgementFrequencyName",
+                    defaultMessage:
+                      "{frequency, select, none {No acknowledgement required} every_use {Before every generation} once_per_auto_doc {Once per person for each Auto-Doc} other {Once per person across all Auto-Docs}}",
+                  },
+                  { frequency },
+                )}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="text-sm text-muted">
+          <FormattedMessage
+            id="settings.autoDocs.acknowledgementScopeHelp"
+            defaultMessage="When acknowledgement is required, a person must accept each distinct statement, including any custom text on an Auto-Doc."
+          />
+        </p>
+        <label className="block space-y-1">
+          <span>
+            <FormattedMessage
               id="settings.autoDocs.defaultAcknowledgementText"
               defaultMessage="Default acknowledgement text"
             />
           </span>
-          <textarea
+          <AutoResizeTextarea
             className={TEXTAREA_CLASS}
             required
             maxLength={10_000}

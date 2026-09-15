@@ -125,6 +125,7 @@
  * (CTR-022) — so that item is drawn for those three and nobody else.
  */
 
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { BulkDocumentActions } from "./bulk-document-actions";
 import { Checkbox } from "../ui/checkbox";
 import { useDocumentDrag } from "./use-document-drag";
@@ -3949,7 +3950,7 @@ function UploadDialog({
             <Label htmlFor="document-note">
               <FormattedMessage id="documents.composer.note" defaultMessage="Note" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="document-note"
               value={note}
               maxLength={MAX_NOTE_LENGTH}
@@ -4070,7 +4071,7 @@ function DetailsDialog({
             <Label htmlFor="document-description">
               <FormattedMessage id="documents.details.description" defaultMessage="Description" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="document-description"
               value={description}
               maxLength={MAX_DESCRIPTION_LENGTH}

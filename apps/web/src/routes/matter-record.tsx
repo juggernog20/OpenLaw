@@ -1911,7 +1911,7 @@ function MatterLifecycleDialog({
             <Label htmlFor="matter-closing-note" required>
               <FormattedMessage id="matters.close.note" defaultMessage="Closing note" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="matter-closing-note"
               className={TEXTAREA_CLASS}
               autoFocus

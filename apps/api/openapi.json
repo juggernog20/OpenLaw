@@ -5099,9 +5099,13 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 10000
+                    },
+                    "acknowledgementFrequency": {
+                      "type": "string",
+                      "enum": ["none", "every_use", "once_per_auto_doc", "once"]
                     }
                   },
-                  "required": ["acknowledgementText"],
+                  "required": ["acknowledgementText", "acknowledgementFrequency"],
                   "additionalProperties": false
                 }
               }
@@ -5133,9 +5137,12 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 10000
+                  },
+                  "acknowledgementFrequency": {
+                    "type": "string",
+                    "enum": ["none", "every_use", "once_per_auto_doc", "once"]
                   }
                 },
-                "required": ["acknowledgementText"],
                 "additionalProperties": false
               }
             }
@@ -5153,9 +5160,13 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 10000
+                    },
+                    "acknowledgementFrequency": {
+                      "type": "string",
+                      "enum": ["none", "every_use", "once_per_auto_doc", "once"]
                     }
                   },
-                  "required": ["acknowledgementText"],
+                  "required": ["acknowledgementText", "acknowledgementFrequency"],
                   "additionalProperties": false
                 }
               }
@@ -5458,10 +5469,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -5525,7 +5532,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -6203,10 +6209,6 @@
                       }
                     ]
                   },
-                  "acknowledgementFrequency": {
-                    "type": "string",
-                    "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                  },
                   "description": {
                     "anyOf": [
                       {
@@ -6327,10 +6329,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -6394,7 +6392,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -7081,10 +7078,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -7148,7 +7141,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -8004,10 +7996,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -8071,7 +8059,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -8772,10 +8759,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -8839,7 +8822,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -9540,10 +9522,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -9607,7 +9585,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -10308,10 +10285,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -10375,7 +10348,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -11094,10 +11066,6 @@
                           "acknowledgementText": {
                             "type": ["string", "null"]
                           },
-                          "acknowledgementFrequency": {
-                            "type": "string",
-                            "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                          },
                           "targetContractTypeId": {
                             "type": ["string", "null"]
                           },
@@ -11161,7 +11129,6 @@
                           "templateDocumentId",
                           "audience",
                           "acknowledgementText",
-                          "acknowledgementFrequency",
                           "targetContractTypeId",
                           "titlePattern",
                           "fixedEntityId",
@@ -11270,10 +11237,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -11337,7 +11300,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -11444,10 +11406,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -11511,7 +11469,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -12391,10 +12348,6 @@
                         "acknowledgementText": {
                           "type": ["string", "null"]
                         },
-                        "acknowledgementFrequency": {
-                          "type": "string",
-                          "enum": ["none", "every_use", "once_per_auto_doc", "once"]
-                        },
                         "targetContractTypeId": {
                           "type": ["string", "null"]
                         },
@@ -12458,7 +12411,6 @@
                         "templateDocumentId",
                         "audience",
                         "acknowledgementText",
-                        "acknowledgementFrequency",
                         "targetContractTypeId",
                         "titlePattern",
                         "fixedEntityId",
@@ -37983,9 +37935,12 @@
                                   },
                                   "displayName": {
                                     "type": "string"
+                                  },
+                                  "email": {
+                                    "type": "string"
                                   }
                                 },
-                                "required": ["id", "displayName"],
+                                "required": ["id", "displayName", "email"],
                                 "additionalProperties": false
                               },
                               {
@@ -38052,9 +38007,12 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
                           }
                         },
-                        "required": ["id", "displayName"],
+                        "required": ["id", "displayName", "email"],
                         "additionalProperties": false
                       }
                     }

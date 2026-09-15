@@ -1102,7 +1102,12 @@ describe("the /contracts/:number record page", () => {
         });
       });
 
-      await waitFor(() => expect(screen.getByLabelText("1 upcoming date")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(
+          screen.getByLabelText("1 AI-suggested date awaiting confirmation"),
+        ).toBeInTheDocument(),
+      );
+      expect(screen.queryByLabelText("1 upcoming date")).not.toBeInTheDocument();
       await waitFor(() => {
         expect(screen.getByLabelText("Term type")).toHaveValue("auto_renew");
         expect(screen.getByLabelText("Effective date")).toHaveTextContent("Jan 15, 2026");
@@ -1467,6 +1472,82 @@ describe("the /contracts/:number record page", () => {
         screen.queryByRole("button", { name: "View AI evidence for Term type" }),
       ).not.toBeInTheDocument();
       expect(screen.getByLabelText("Amount").closest("[data-ai-generated]")).not.toBeNull();
+    });
+
+    it("moves suggested upcoming dates into the standard tab count after confirmation", async () => {
+      const api = recordApi(
+        contractRow({ aiUnverified: { expiry_date: { evidence: "ends on June 30" } } }),
+        undefined,
+        undefined,
+        undefined,
+        {
+          available: true,
+          latestRun: analysisRun({
+            outcome: {
+              written: ["expiry_date"],
+              kept: [],
+              unsupported: [],
+              invalid: [],
+              results: [
+                {
+                  slug: "expiry_date",
+                  value: "2028-06-30",
+                  evidence: "ends on June 30",
+                  outcome: "written",
+                },
+              ],
+            },
+          }),
+        },
+      );
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => {
+          if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "GET") {
+            return json(200, {
+              deadlines: [
+                {
+                  source: "key_date",
+                  keyDateId: "kd-1",
+                  date: "2028-05-01",
+                  daysAway: 30,
+                  label: "Price review",
+                  note: null,
+                  isNext: true,
+                  unverified: false,
+                },
+                {
+                  source: "expiry",
+                  keyDateId: null,
+                  date: "2028-06-30",
+                  daysAway: 90,
+                  label: null,
+                  note: null,
+                  isNext: false,
+                  unverified: !api.posts.includes("confirm expiry_date"),
+                },
+              ],
+            });
+          }
+          return api.handler(call);
+        },
+      });
+      renderAt("/contracts/42/fields");
+      const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+      expect(strip.getByRole("img", { name: "1 upcoming date" })).toBeInTheDocument();
+      expect(
+        strip.getByRole("img", { name: "1 AI-suggested date awaiting confirmation" }),
+      ).toHaveClass("text-ai-evidence-fg");
+
+      await userEvent.setup().click(await screen.findByRole("button", { name: "Confirm" }));
+
+      await waitFor(() =>
+        expect(strip.getByRole("img", { name: "2 upcoming dates" })).toHaveClass(
+          "bg-badge-count-bg",
+          "text-badge-count-fg",
+        ),
+      );
+      expect(strip.queryByRole("img", { name: /AI-suggested/ })).not.toBeInTheDocument();
     });
 
     it("confirms every marker from the card header", async () => {

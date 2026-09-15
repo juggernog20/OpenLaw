@@ -1290,11 +1290,12 @@ function ContractRecord() {
   /**
    * Work waiting in the three sections that carry a count chip on the
    * tab strip. Unresolved approvals (pending, or a rejection nobody
-   * re-requested), upcoming dates on the CTR-009 union, and tasks that
-   * are not done. Zero is not drawn: an empty section is not news.
+   * re-requested), confirmed upcoming dates on the CTR-009 union, AI
+   * dates awaiting review, and tasks that are not done. Zero is not drawn.
    */
   const openApprovalCount = approvals.filter(isUnresolved).length;
-  const upcomingDateCount = deadlines.filter((row) => row.daysAway >= 0).length;
+  const upcomingDateCount = deadlines.filter((row) => row.daysAway >= 0 && !row.unverified).length;
+  const unverifiedDateCount = deadlines.filter((row) => row.unverified).length;
   const openTaskCount = taskTotalCount - taskDoneCount;
   /**
    * Whether this viewer may decide who sees the record (DD-014,
@@ -2182,6 +2183,15 @@ function ContractRecord() {
                     />
                   ),
                   count: upcomingDateCount,
+                  unverifiedCount: unverifiedDateCount,
+                  unverifiedCountLabel: intl.formatMessage(
+                    {
+                      id: "contracts.record.tab.keyDates.unverified",
+                      defaultMessage:
+                        "{count, plural, one {# AI-suggested date awaiting confirmation} other {# AI-suggested dates awaiting confirmation}}",
+                    },
+                    { count: unverifiedDateCount },
+                  ),
                   countLabel: intl.formatMessage(
                     {
                       id: "contracts.record.tab.keyDates.upcoming",

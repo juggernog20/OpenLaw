@@ -28,6 +28,7 @@ export function RecordPersonField({
       <Label htmlFor={id}>{label}</Label>
       <div>
         <TaskAssigneePicker
+          fullWidth
           id={id}
           label={label}
           dialogLabel={label}

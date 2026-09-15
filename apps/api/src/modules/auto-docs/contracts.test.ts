@@ -41,6 +41,13 @@ beforeAll(async () => {
   h = await startHarness({ runPipelineWorkers: false });
   await h.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   cookies = await signInCookies(h.app, TEST_ADMIN.email, TEST_ADMIN.password);
+  const policy = await h.app.inject({
+    method: "PUT",
+    url: "/api/v1/auto-docs/settings",
+    payload: { acknowledgementFrequency: "none" },
+    cookies: cookies,
+  });
+  expect(policy.statusCode, policy.body).toBe(200);
   for (const role of ["business_user", "legal_team_member"] as const) {
     const user = await provisionUser(h.app.auth, {
       email: `target-${role}@example.com`,
@@ -317,7 +324,7 @@ it("leaves no Contract or primary Document when fill fails", async () => {
 });
 
 it("names the generating Business User as Business Owner and shows their Contract in the Portal", async () => {
-  const prepared = await prepare({ audience: "everyone", acknowledgementFrequency: "none" });
+  const prepared = await prepare({ audience: "everyone" });
   expect((await post(`/auto-docs/${prepared.id}/publish`, prepared.pair)).statusCode).toBe(200);
   const response = await h.app.inject({
     method: "POST",

@@ -23,7 +23,6 @@ const autoDoc: AutoDocAnswer["autoDoc"] = {
   templateDocumentId: "template",
   audience: "legal_only",
   acknowledgementText: null,
-  acknowledgementFrequency: "once_per_auto_doc",
   targetContractTypeId: null,
   titlePattern: null,
   fixedEntityId: null,

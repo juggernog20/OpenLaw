@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The Entity record shell and M27/4 Overview (ENT-001/ENT-002). */
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -581,7 +582,7 @@ function EntityRecord() {
                           />
                         </Label>
                         <div className="flex items-center gap-2">
-                          <textarea
+                          <AutoResizeTextarea
                             id="entity-registered-address"
                             value={drafts.registeredAddress}
                             className={TEXTAREA_CLASS}

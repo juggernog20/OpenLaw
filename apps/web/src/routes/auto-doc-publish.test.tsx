@@ -48,7 +48,6 @@ function record(): RecordAnswer {
       state: "draft",
       audience: "legal_only",
       acknowledgementText: null,
-      acknowledgementFrequency: "once_per_auto_doc",
       targetContractTypeId: null,
       titlePattern: null,
       fixedEntityId: null,
@@ -281,7 +280,9 @@ it("publishes from a dialog that lists every gap, then unpublishes, archives, an
     screen.getByText("Live since Sep 13, 2026: file version 1, form version 1."),
   ).toBeVisible();
   expect(
-    screen.getByText("File version 2 and form version 2 are newer than the live pair."),
+    screen.getByText(
+      "File version 2 and form version 2 are newer than the currently published file and form.",
+    ),
   ).toBeVisible();
   expect(screen.getByRole("link", { name: "Generate" })).toHaveAttribute(
     "href",
@@ -348,8 +349,17 @@ it("commits each setting on its own, then applies list filters", async () => {
   ).toBeVisible();
   await user.selectOptions(within(creation).getByLabelText("Target Contract Type"), "type");
   await waitFor(() => expect(edits).toHaveLength(2));
-  await user.click(within(creation).getByLabelText("Title pattern"));
-  await user.paste("NDA {{jurisdiction}}");
+  const titleInput = within(creation).getByLabelText("Title pattern");
+  await user.click(titleInput);
+  await user.paste("NDA ");
+  await user.tab();
+  expect(within(creation).getByRole("button", { name: "Insert title variable" })).toHaveFocus();
+  await user.keyboard("{Enter}");
+  await user.click(await screen.findByRole("menuitem", { name: "Jurisdiction" }));
+  expect(titleInput).toHaveValue("NDA {{jurisdiction}}");
+  expect(titleInput).toHaveFocus();
+  expect(edits).toHaveLength(2);
+  await user.tab();
   await user.tab();
   await waitFor(() => expect(edits.at(-1)).toEqual({ titlePattern: "NDA {{jurisdiction}}" }));
   await user.selectOptions(within(creation).getByLabelText("Our Entity"), "entity");
@@ -699,7 +709,11 @@ it("commits selected people and Departments and the acknowledgement override one
   await user.selectOptions(screen.getByRole("combobox", { name: "Audience" }), "selected");
   await user.selectOptions(await screen.findByRole("listbox", { name: "People" }), "buyer");
   await user.selectOptions(screen.getByRole("listbox", { name: "Departments" }), "sales");
-  await user.selectOptions(screen.getByRole("combobox", { name: "Frequency" }), "every_use");
+  expect(screen.queryByRole("combobox", { name: "Cadence" })).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Organization Auto-Doc Settings" })).toHaveAttribute(
+    "href",
+    "/settings/auto-docs",
+  );
   await user.click(screen.getByRole("radio", { name: "Custom text" }));
   const text = await screen.findByRole("textbox", { name: "Acknowledgement text" });
   expect(text).toHaveValue("Do not edit.");
@@ -711,7 +725,6 @@ it("commits selected people and Departments and the acknowledgement override one
       { audience: "selected" },
       { audienceUserIds: ["buyer"] },
       { audienceDepartmentIds: ["sales"] },
-      { acknowledgementFrequency: "every_use" },
       { acknowledgementText: "Do not edit." },
       { acknowledgementText: "Ask Legal before changes." },
     ]),
@@ -800,8 +813,10 @@ it("requires typed delete, keeps refusals open, and returns to the list after er
     },
   });
   renderAt("/auto-docs/nda");
-  const trigger = await screen.findByRole("button", { name: "Delete Auto-Doc" });
+  const trigger = await screen.findByRole("button", { name: "Auto-Doc actions" });
+  expect(screen.queryByRole("button", { name: "Delete Auto-Doc" })).not.toBeInTheDocument();
   await user.click(trigger);
+  await user.click(await screen.findByRole("menuitem", { name: "Delete Auto-Doc" }));
   let modal = await screen.findByRole("dialog", { name: "Delete this Auto-Doc?" });
   expect(
     within(modal).getByText(/Created Contracts and Filed Documents remain/),
@@ -816,6 +831,7 @@ it("requires typed delete, keeps refusals open, and returns to the list after er
   expect(deletions).toEqual([]);
   expect(trigger).toHaveFocus();
   await user.click(trigger);
+  await user.click(await screen.findByRole("menuitem", { name: "Delete Auto-Doc" }));
   modal = await screen.findByRole("dialog");
   input = within(modal).getByLabelText('Type "delete" to confirm');
   expect(input).toHaveValue("");
@@ -829,6 +845,7 @@ it("requires typed delete, keeps refusals open, and returns to the list after er
 });
 
 it("does not offer Auto-Doc erasure to a Legal Team Member", async () => {
+  const user = userEvent.setup();
   stubApi({
     signedIn: member,
     extra: (call) => {
@@ -841,4 +858,6 @@ it("does not offer Auto-Doc erasure to a Legal Team Member", async () => {
   renderAt("/auto-docs/nda");
   await screen.findByRole("heading", { name: "Publish NDA" });
   expect(screen.queryByRole("button", { name: "Delete Auto-Doc" })).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Auto-Doc actions" }));
+  expect(screen.queryByRole("menuitem", { name: "Delete Auto-Doc" })).not.toBeInTheDocument();
 });

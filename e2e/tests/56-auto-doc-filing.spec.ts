@@ -14,11 +14,27 @@ import {
 
 test.setTimeout(120_000);
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
+let previousFrequency: string | undefined;
+test.afterEach(async ({ page }) => {
+  if (previousFrequency === undefined) return;
+  const restored = await page.request.put("/api/v1/auto-docs/settings", {
+    data: { acknowledgementFrequency: previousFrequency },
+  });
+  expect(restored.status()).toBe(200);
+  previousFrequency = undefined;
+});
 test("Filing keeps the generated copy and follows the destination rules in both shells", async ({
   page,
   browser,
 }, testInfo) => {
   await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+  const settings = await page.request.get("/api/v1/auto-docs/settings");
+  expect(settings.status()).toBe(200);
+  previousFrequency = (await settings.json()).acknowledgementFrequency;
+  const policy = await page.request.put("/api/v1/auto-docs/settings", {
+    data: { acknowledgementFrequency: "none" },
+  });
+  expect(policy.status()).toBe(200);
   const name = `Filed NDA ${Date.now()}`;
   const email = `filing-${Date.now()}@example.com`;
   const created = await page.request.post("/api/v1/auto-docs", { data: { name } });
@@ -27,7 +43,7 @@ test("Filing keeps the generated copy and follows the destination rules in both 
   expect(
     (
       await page.request.patch(`/api/v1/auto-docs/${id}`, {
-        data: { audience: "everyone", formats: "both", acknowledgementFrequency: "none" },
+        data: { audience: "everyone", formats: "both" },
       })
     ).status(),
   ).toBe(200);

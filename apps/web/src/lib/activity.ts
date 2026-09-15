@@ -387,7 +387,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "audience {Audience} url {Address} target {Target} " +
         "audienceUsers {Selected people} audienceDepartments {Selected Departments} " +
         "acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} " +
-        "autoDocAcknowledgementText {Default acknowledgement text} " +
+        "requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} " +
         "other {{key}}}",
     },
     { key },
@@ -465,7 +465,7 @@ function changeValue(
   // ADO-008's frequency is a stored slug, so the feed says "Every use"
   // where the column says `every_use`. Its `other` arm covers a value
   // this build no longer has.
-  if (key === "acknowledgementFrequency") {
+  if (key === "acknowledgementFrequency" || key === "autoDocAcknowledgementFrequency") {
     return intl.formatMessage(
       {
         id: "activity.autoDoc.acknowledgementFrequency",

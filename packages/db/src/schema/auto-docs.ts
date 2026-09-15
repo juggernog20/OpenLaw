@@ -27,12 +27,6 @@ import { documents, documentVersions } from "./documents.js";
 import { FIELD_TYPES, type FieldType, type CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 
-export const AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES = [
-  "none",
-  "every_use",
-  "once_per_auto_doc",
-  "once",
-] as const;
 export const AUTO_DOC_FORMATS = ["docx", "pdf", "both"] as const;
 export const AUTO_DOC_EMAIL_STATES = [
   "not_requested",
@@ -128,11 +122,6 @@ export const autoDocs = pgTable(
     state: text("state", { enum: AUTO_DOC_STATES }).notNull().default("draft"),
     /** Null uses the org acknowledgement text. */
     acknowledgementText: text("acknowledgement_text"),
-    acknowledgementFrequency: text("acknowledgement_frequency", {
-      enum: AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES,
-    })
-      .notNull()
-      .default("once_per_auto_doc"),
     audience: text("audience", { enum: AUTO_DOC_AUDIENCES }).notNull().default("legal_only"),
     /** Null means this Auto-Doc has no target Contract Type. */
     targetContractTypeId: text("target_contract_type_id").references(() => contractTypes.id, {
@@ -165,10 +154,6 @@ export const autoDocs = pgTable(
       columns: [table.publishedFormVersionId],
       foreignColumns: [autoDocFormVersions.id],
     }),
-    check(
-      "auto_docs_acknowledgement_frequency_check",
-      sql`${table.acknowledgementFrequency} in ('none', 'every_use', 'once_per_auto_doc', 'once')`,
-    ),
     check("auto_docs_formats_check", sql`${table.formats} in ('docx', 'pdf', 'both')`),
     check("auto_docs_state_check", sql`${table.state} in ('draft', 'published', 'archived')`),
     check(

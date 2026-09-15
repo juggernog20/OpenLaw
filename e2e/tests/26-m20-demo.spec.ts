@@ -446,7 +446,9 @@ test.describe.serial("M20 demo path", () => {
       await thread.getByRole("button", { name: "Comment", exact: true }).click();
       expect((await posted).status()).toBe(201);
       await expect(thread.getByText(REQUESTER_REPLY)).toBeVisible();
-      await expect(thread.getByText("Full thread", { exact: true }).first()).toBeVisible();
+      await expect(
+        thread.getByText("Shared with requester", { exact: true }).first(),
+      ).toBeVisible();
 
       // Legal answers. There is no staff surface for a Request until
       // M21's Inbox, so the Administrator posts at the seam — the same
@@ -486,7 +488,7 @@ test.describe.serial("M20 demo path", () => {
       await portal.reload();
       await expect((await conversation(portal)).getByText(STAFF_REPLY)).toBeVisible();
       await expect(
-        (await conversation(portal)).getByText("Full thread", { exact: true }).first(),
+        (await conversation(portal)).getByText("Shared with requester", { exact: true }).first(),
       ).toBeVisible();
 
       // Second as email, because a requester does not live in the app and

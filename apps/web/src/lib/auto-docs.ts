@@ -96,7 +96,6 @@ export const autoDocUploadAnswer = z.object({
     templateDocumentId: z.string().nullable(),
     audience: autoDocAudiences,
     acknowledgementText: z.string().nullable(),
-    acknowledgementFrequency: z.enum(["none", "every_use", "once_per_auto_doc", "once"]),
     targetContractTypeId: z.string().nullable(),
     titlePattern: z.string().nullable(),
     fixedEntityId: z.string().nullable(),

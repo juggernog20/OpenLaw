@@ -290,11 +290,11 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
           {editable && (
             <div className="ml-auto flex gap-1">
               {!hasParent && (
-                <Button variant="ghost" size="sm" onClick={() => setDialog("parent")}>
+                <Button variant="secondary" onClick={() => setDialog("parent")}>
                   <FormattedMessage {...LABELS.addParent} />
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={() => setDialog("link")}>
+              <Button variant="secondary" onClick={() => setDialog("link")}>
                 <FormattedMessage {...LABELS.addLink} />
               </Button>
             </div>

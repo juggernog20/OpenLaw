@@ -60,7 +60,7 @@ export function PortalRecordList<Row extends { number: number; title: string }>(
   const intl = useIntl();
   const navigate = useNavigate();
   const navigation = useNavigation();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
   const { beginRead, noteUrlSync, shouldAdoptLoader } = useListReadGuard();
   const [data, setData] = useState<PortalListData<Row>>(loaded);
   const [layout, setLayout] = useState(loaded.layout);

@@ -15,6 +15,7 @@
  * The API's 403 is the real refusal behind the loader's SET-002 bounce.
  */
 
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import {
   useEffect,
   useRef,
@@ -452,7 +453,7 @@ export function SettingsESignaturePage() {
               />
             }
           >
-            <textarea
+            <AutoResizeTextarea
               id="ds-private-key"
               rows={4}
               required={!connector.hasPrivateKey}

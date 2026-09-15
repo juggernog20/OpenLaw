@@ -42,6 +42,7 @@ export function TaskAssigneePicker({
   deferred = false,
   disabled = false,
   readOnly = false,
+  fullWidth = false,
   id,
   label,
   dialogLabel,
@@ -54,6 +55,7 @@ export function TaskAssigneePicker({
   deferred?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
+  fullWidth?: boolean;
   id?: string;
   label?: string;
   dialogLabel?: string;
@@ -145,11 +147,13 @@ export function TaskAssigneePicker({
             )
           }
           title={name}
-          className="flex min-h-8 shrink-0 items-center gap-2 rounded-button border border-border-default bg-raised px-2 py-1 text-sm hover:bg-control focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:opacity-50"
+          className={`flex min-h-8 items-center gap-2 rounded-button border border-border-default bg-raised px-2 py-1 text-sm hover:bg-control focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:opacity-50 ${fullWidth ? "w-full min-w-0" : "shrink-0"}`}
         >
           {face}
-          <span className="max-w-36 truncate">{name}</span>
-          <ChevronDown size={12} className="text-muted" aria-hidden="true" />
+          <span className={fullWidth ? "min-w-0 flex-1 truncate text-left" : "max-w-36 truncate"}>
+            {name}
+          </span>
+          <ChevronDown size={12} className="shrink-0 text-muted" aria-hidden="true" />
         </button>
       </PopoverTrigger>
       <PopoverContent

@@ -55,12 +55,18 @@ afterAll(async () => {
   await h.stop();
 });
 async function prepare(frequency = "none", extra: Record<string, unknown> = {}) {
+  const settings = await h.app.inject({
+    method: "PUT",
+    url: "/api/v1/auto-docs/settings",
+    payload: { acknowledgementFrequency: frequency },
+    cookies: admin,
+  });
+  expect(settings.statusCode, settings.body).toBe(200);
   const made = await post("/auto-docs", { name: "Portal approved NDA" });
   expect(made.statusCode, made.body).toBe(201);
   const id = made.json().autoDoc.id as string;
   const configured = await patch(id, {
     audience: "everyone",
-    acknowledgementFrequency: frequency,
     formats: "docx",
     ...extra,
   });
@@ -542,4 +548,66 @@ it("a per-Auto-Doc text edit preserves another Auto-Doc's once-per-Auto-Doc ackn
   ).toBe(200);
   expect((await formFor(first.id)).json().acknowledgement.required).toBe(true);
   expect((await formFor(second.id)).json().acknowledgement.required).toBe(false);
+});
+
+it("applies the organisation's frequency to existing Auto-Docs and refuses record overrides", async () => {
+  const first = await prepare("none");
+  const second = await prepare("none", {
+    acknowledgementText: "Ask Legal before editing this document.",
+  });
+  expect((await formFor(first.id)).json().acknowledgement.required).toBe(false);
+  expect((await formFor(second.id)).json().acknowledgement.required).toBe(false);
+  for (const cookies of [member, buyers[0]!.cookies]) {
+    const denied = await h.app.inject({
+      method: "PUT",
+      url: "/api/v1/auto-docs/settings",
+      payload: { acknowledgementFrequency: "every_use" },
+      cookies,
+    });
+    expect(denied.statusCode).toBe(403);
+  }
+  const invalid = await h.app.inject({
+    method: "PUT",
+    url: "/api/v1/auto-docs/settings",
+    payload: { acknowledgementFrequency: "weekly" },
+    cookies: admin,
+  });
+  expect(invalid.statusCode).toBe(400);
+  const updated = await h.app.inject({
+    method: "PUT",
+    url: "/api/v1/auto-docs/settings",
+    payload: { acknowledgementFrequency: "every_use" },
+    cookies: admin,
+  });
+  expect(updated.statusCode, updated.body).toBe(200);
+  expect(updated.json().acknowledgementFrequency).toBe("every_use");
+  expect((await get("/auto-docs/settings", admin)).json().acknowledgementFrequency).toBe(
+    "every_use",
+  );
+  for (const prepared of [first, second]) {
+    expect((await formFor(prepared.id)).json().acknowledgement).toMatchObject({
+      frequency: "every_use",
+      required: true,
+    });
+    expect((await generate(prepared)).statusCode).toBe(409);
+    expect((await patch(prepared.id, { acknowledgementFrequency: "none" })).statusCode).toBe(400);
+    const ack = await acknowledge(prepared.id);
+    expect((await generate(prepared, ack)).statusCode).toBe(201);
+    expect((await generate(prepared, ack)).statusCode).toBe(409);
+  }
+  expect((await formFor(second.id)).json().acknowledgement.text).toBe(
+    "Ask Legal before editing this document.",
+  );
+  const audit = await get("/audit-log?action=org_settings.updated", admin);
+  expect(audit.statusCode, audit.body).toBe(200);
+  expect(audit.headers["content-type"]).toContain("application/json");
+  expect(
+    audit
+      .json()
+      .entries.some(
+        (entry: { payload: Record<string, unknown> }) =>
+          entry.payload.field === "autoDocAcknowledgementFrequency" &&
+          entry.payload.new === "every_use",
+      ),
+  ).toBe(true);
 });

@@ -124,7 +124,7 @@ export function PublicationCard({
         <p className="text-sm text-status-warning-fg">
           <FormattedMessage
             id="autoDocs.newerThanLive"
-            defaultMessage="{both, select, true {File version {file} and form version {form} are} file {File version {file} is} other {Form version {form} is}} newer than the live pair."
+            defaultMessage="{both, select, true {File version {file} and form version {form} are newer than the currently published file and form.} file {File version {file} is newer than the currently published file.} other {Form version {form} is newer than the currently published form.}}"
             values={{
               both: newerFile && newerForm ? "true" : newerFile ? "file" : "form",
               file: newestFile?.versionNumber,

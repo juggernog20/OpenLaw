@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-001–004: Legal maintains Auto-Docs and their two version chains. */
+import { departmentOptions } from "../departments/references.js";
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import { buffer } from "node:stream/consumers";
@@ -10,7 +11,6 @@ import {
   VALUE_CADENCES,
   AUTO_DOC_AUDIENCES,
   AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES,
-  departments,
   orgSettings,
   AUTO_DOC_FORMATS,
   AUTO_DOC_CONTRACT_ATTRIBUTES,
@@ -102,7 +102,6 @@ const AutoDocRow = z.object({
   templateDocumentId: z.string().nullable(),
   audience: z.enum(AUTO_DOC_AUDIENCES),
   acknowledgementText: z.string().nullable(),
-  acknowledgementFrequency: z.enum(AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES),
   targetContractTypeId: z.string().nullable(),
   titlePattern: z.string().nullable(),
   fixedEntityId: z.string().nullable(),
@@ -282,7 +281,10 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
       accessMode: "read only",
     });
 
-  const Settings = z.object({ acknowledgementText: AcknowledgementText });
+  const Settings = z.object({
+    acknowledgementText: AcknowledgementText,
+    acknowledgementFrequency: z.enum(AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES),
+  });
   app.get(
     "/auto-docs/settings",
     {
@@ -295,7 +297,10 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async () => {
       const [row] = await app.db
-        .select({ acknowledgementText: orgSettings.autoDocAcknowledgementText })
+        .select({
+          acknowledgementText: orgSettings.autoDocAcknowledgementText,
+          acknowledgementFrequency: orgSettings.autoDocAcknowledgementFrequency,
+        })
         .from(orgSettings);
       if (!row) throw httpError(500, "The organisation settings could not be read.");
       return row;
@@ -308,7 +313,9 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "saveAutoDocSettings",
         tags: ["auto-docs"],
-        body: Settings.strict(),
+        body: Settings.partial()
+          .strict()
+          .refine((body) => Object.keys(body).length > 0),
         response: { 200: Settings, default: problemResponse },
       },
     },
@@ -316,7 +323,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
       app.db.transaction(async (tx) => {
         const [row] = await tx.select().from(orgSettings).for("update");
         if (!row) throw httpError(500, "The organisation settings could not be read.");
-        const next = request.body.acknowledgementText;
+        const next = request.body.acknowledgementText ?? row.autoDocAcknowledgementText;
         if (row.autoDocAcknowledgementText !== next) {
           await revokeAcknowledgements(tx, textHash(row.autoDocAcknowledgementText));
           await tx
@@ -335,7 +342,26 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
             },
           });
         }
-        return { acknowledgementText: next };
+        const frequency =
+          request.body.acknowledgementFrequency ?? row.autoDocAcknowledgementFrequency;
+        if (frequency !== row.autoDocAcknowledgementFrequency) {
+          await tx
+            .update(orgSettings)
+            .set({ autoDocAcknowledgementFrequency: frequency, updatedAt: new Date() })
+            .where(eq(orgSettings.id, row.id));
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "org_settings.updated",
+            visibility: "admin_only",
+            payload: {
+              field: "autoDocAcknowledgementFrequency",
+              old: row.autoDocAcknowledgementFrequency,
+              new: frequency,
+            },
+          });
+        }
+        return { acknowledgementText: next, acknowledgementFrequency: frequency };
       }),
   );
 
@@ -398,11 +424,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(users)
           .where(isNull(users.archivedAt))
           .orderBy(asc(users.displayName), asc(users.id)),
-        departments: await app.db
-          .select({ id: departments.id, displayName: departments.displayName })
-          .from(departments)
-          .where(isNull(departments.archivedAt))
-          .orderBy(asc(departments.displayName), asc(departments.id)),
+        departments: await departmentOptions(app.db),
       };
     },
   );

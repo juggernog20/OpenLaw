@@ -16,6 +16,7 @@
  * 403 is the real refusal.
  */
 
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { CONTRACT_OVERVIEW_FIELD_SLUGS } from "@openlaw/shared";
 
 import { useRef, useState, type ReactNode } from "react";
@@ -494,7 +495,7 @@ function FieldEditorDialog({
                   defaultMessage="Options"
                 />
               </Label>
-              <textarea
+              <AutoResizeTextarea
                 id="field-options"
                 value={draft.optionsText}
                 className={TEXTAREA_CLASS}
@@ -516,7 +517,7 @@ function FieldEditorDialog({
                   defaultMessage="AI prompt"
                 />
               </Label>
-              <textarea
+              <AutoResizeTextarea
                 id="field-ai-prompt"
                 value={draft.aiPrompt}
                 className={TEXTAREA_CLASS}

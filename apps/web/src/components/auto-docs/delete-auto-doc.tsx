@@ -6,30 +6,29 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
 import { api } from "../../lib/api";
 import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 export function DeleteAutoDoc({
   autoDoc,
-  disabled,
+  onClose,
+  onCloseFocus,
 }: {
   autoDoc: { id: string; name: string };
-  disabled: boolean;
+  onClose: () => void;
+  onCloseFocus: () => void;
 }) {
   const intl = useIntl();
   const navigate = useNavigate();
   const id = useId();
-  const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const matches = typed.trim().toLowerCase() === "delete";
   function changeOpen(next: boolean) {
     if (busy) return;
-    setTyped("");
-    setError(null);
-    setOpen(next);
+    if (!next) onClose();
   }
   async function submit() {
     if (!matches || busy) return;
@@ -56,13 +55,14 @@ export function DeleteAutoDoc({
     }
   }
   return (
-    <Dialog open={open} onOpenChange={changeOpen}>
-      <DialogTrigger asChild>
-        <Button variant="danger" disabled={disabled}>
-          <FormattedMessage id="autoDocs.delete.action" defaultMessage="Delete Auto-Doc" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent aria-describedby={`${id}-description`}>
+    <Dialog open onOpenChange={changeOpen}>
+      <DialogContent
+        aria-describedby={`${id}-description`}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          onCloseFocus();
+        }}
+      >
         <DialogTitle>
           <FormattedMessage id="autoDocs.delete.title" defaultMessage="Delete this Auto-Doc?" />
         </DialogTitle>

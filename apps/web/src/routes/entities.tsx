@@ -2,6 +2,7 @@
 
 /** M27's routed Calendar, managed registry List, and ownership Chart destination. */
 
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import {
   CreateAttachments,
   useCreateAttachments,
@@ -1506,7 +1507,7 @@ function RegisterEntityDialog({
                   defaultMessage="Registered address"
                 />
               </Label>
-              <textarea
+              <AutoResizeTextarea
                 id="entity-registered-address"
                 value={draft.registeredAddress}
                 className={TEXTAREA_CLASS}

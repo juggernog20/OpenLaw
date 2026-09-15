@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-004 and ADO-006: Clause and Assignment rules share typed values and missing-option cues. */
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
@@ -126,7 +127,7 @@ function RuleTextValue({
     ((fieldType === "number" || fieldType === "currency") &&
       values.some((value) => !Number.isFinite(Number(value))));
   return multiple ? (
-    <textarea
+    <AutoResizeTextarea
       ref={(element) => {
         element?.setCustomValidity(
           invalid
