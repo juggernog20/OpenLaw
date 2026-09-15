@@ -2523,10 +2523,10 @@ describe("the /contracts/:number record page", () => {
     const team = await openTeam(user);
     expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
     expect(within(team).getByText("Creator")).toBeInTheDocument();
-    // The control removes membership, leaving the Creator statement.
+    // Named record roles remain on the roster without a removal action.
     expect(
-      within(team).getByRole("button", { name: "Take Ada Admin off the contract team" }),
-    ).toBeInTheDocument();
+      within(team).queryByRole("button", { name: "Take Ada Admin off the contract team" }),
+    ).not.toBeInTheDocument();
   });
 
   it("adds a team member through the dialog and takes one off again", async () => {
@@ -2553,23 +2553,19 @@ describe("the /contracts/:number record page", () => {
     expect(within(team).queryByText("Casey Contributor")).not.toBeInTheDocument();
   });
 
-  it("removes membership while keeping the person's Creator statement", async () => {
+  it("keeps the Creator statement without offering membership removal", async () => {
     const api = recordApi(contractRow({ createdBy: "u2" }), [person("u2")]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
     const user = userEvent.setup();
     const team = await openTeam(user);
     const creator = within(team).getByText("Nadia Counsel");
-    await user.click(
-      within(team).getByRole("button", { name: "Take Nadia Counsel off the contract team" }),
-    );
-    await waitFor(() => expect(api.teamCalls).toEqual(["remove u2"]));
+    expect(api.teamCalls).toEqual([]);
     expect(within(team).getByText("Creator")).toBeInTheDocument();
     expect(within(team).getByText("Nadia Counsel")).toBe(creator);
     expect(
       within(team).queryByRole("button", { name: "Take Nadia Counsel off the contract team" }),
     ).not.toBeInTheDocument();
-    expect(within(team).getByRole("button", { name: "Add team member" })).toHaveFocus();
   });
 
   it("shows the API's refusal when a team change is turned down", async () => {
