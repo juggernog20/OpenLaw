@@ -319,7 +319,7 @@ test.describe.serial("M31 deployer journey", () => {
         .getByRole("link", { name: "Overview" })
         .click();
       await expect(observer.getByLabel("Term type", { exact: true })).toHaveValue("auto_renew");
-      await expect(observer.getByLabel("Amount", { exact: true })).toHaveValue("125000");
+      await expect(observer.getByLabel("Amount", { exact: true })).toHaveValue("125,000");
       await expect(observer.getByLabel("Currency", { exact: true })).toHaveValue("USD");
       await expect(observer.getByLabel("Frequency", { exact: true })).toHaveValue("annually");
       await expect(observer.getByLabel("Notice period (days)", { exact: true })).toHaveValue("90");
