@@ -312,9 +312,9 @@ test.describe.serial("M19 demo path", () => {
         ).toBeVisible();
         await expect(basics.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
       }
-      // Title, Description, and Urgency are required on every form;
-      // Attachments and Department are optional. None can be changed.
-      expect(await basics.getByRole("checkbox", { checked: true }).count()).toBe(3);
+      // Title, Description, Department, and Urgency are required on every form;
+      // Attachments are optional. None can be changed.
+      expect(await basics.getByRole("checkbox", { checked: true }).count()).toBe(4);
 
       // Attaches two catalog fields. The Attach menu offers the
       // catalog's unattached fields the target allows — contract-scoped

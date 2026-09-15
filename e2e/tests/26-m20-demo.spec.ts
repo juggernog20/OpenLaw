@@ -53,6 +53,7 @@ import {
   ADMIN,
   completePortalFirstRun,
   ensureAdminExists,
+  ensureIntakeDepartment,
   ensureMemberInert,
   signInAs,
   sweepOrSay,
@@ -235,6 +236,7 @@ test.describe.serial("M20 demo path", () => {
     browser,
   }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await ensureIntakeDepartment(page.request);
 
     // The compose-up acceptance, from inside the running stack: the M20
     // migrations (0061, 0062) landed, so the requests seam answers a
@@ -329,12 +331,13 @@ test.describe.serial("M20 demo path", () => {
         portal.getByRole("heading", { level: 1, name: TYPE_NAME, exact: true }),
       ).toBeVisible();
 
-      // The four basics are drawn as facts about every form (INT-002's
+      // The five basics are drawn as facts about every form (INT-002's
       // M19/4 addendum), and the attached field follows them.
       await expect(portal.getByLabel("Title")).toBeVisible();
       await expect(portal.getByLabel("Description")).toBeVisible();
       await expect(portal.getByRole("button", { name: "Choose files" })).toBeVisible();
       await expect(portal.getByLabel("Urgency")).toBeVisible();
+      await expect(portal.getByLabel("Department")).not.toHaveValue("");
       await expect(portal.getByLabel(FIELD_NAME)).toBeVisible();
 
       // One refusal names every gap, basics and attached field together

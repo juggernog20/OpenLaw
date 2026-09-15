@@ -68,9 +68,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { activityLog, and, asc, eq, requestTypeFields, requests, isNull, users } from "@openlaw/db";
-import { lockedDepartment, departmentName } from "../departments/references.js";
-import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { activityLog, and, asc, eq, requestTypeFields, users } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { DocEngineError } from "../../lib/doc-engine/engine.js";
 import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
@@ -98,58 +96,6 @@ const requireMember = requireRole("administrator", "legal_team_member");
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 
 export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
-  app.patch(
-    "/requests/:number/department",
-    {
-      preHandler: requireMember,
-      schema: {
-        operationId: "setRequestDepartment",
-        tags: ["requests"],
-        params: NumberParams,
-        body: z.strictObject({ departmentId: z.string().min(1).nullable() }),
-        response: {
-          200: z.object({ departmentId: z.string().nullable(), department: z.string().nullable() }),
-          default: problemResponse,
-        },
-      },
-    },
-    async (request) =>
-      app.db.transaction(async (tx) => {
-        const [row] = await tx
-          .select()
-          .from(requests)
-          .where(and(eq(requests.number, request.params.number), isNull(requests.archivedAt)))
-          .for("update");
-        if (!row) throw httpError(404, "No request exists with this number.");
-        if (row.status !== "new")
-          throw httpError(409, "Department can only be changed before this Request is triaged.");
-        if (request.body.departmentId === row.departmentId)
-          return {
-            departmentId: row.departmentId,
-            department: await departmentName(tx, row.departmentId),
-          };
-        const next = request.body.departmentId
-          ? await lockedDepartment(tx, request.body.departmentId)
-          : null;
-        await tx
-          .update(requests)
-          .set({ departmentId: next?.id ?? null })
-          .where(eq(requests.id, row.id));
-        await recordActivity(tx, {
-          entityType: "request",
-          entityId: row.id,
-          actorId: request.user.id,
-          action: "request.department_changed",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            number: row.number,
-            from: await departmentName(tx, row.departmentId),
-            to: next?.displayName ?? null,
-          },
-        });
-        return { departmentId: next?.id ?? null, department: next?.displayName ?? null };
-      }),
-  );
   app.get(
     "/requests/:number",
     {

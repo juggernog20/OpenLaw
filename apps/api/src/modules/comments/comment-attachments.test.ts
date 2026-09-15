@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /** Comment paper (CMT-011) at the HTTP and storage seams. */
 
 import { readdir } from "node:fs/promises";
@@ -48,6 +50,7 @@ const REQUESTER = {
 } as const;
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
@@ -58,6 +61,7 @@ let requestTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness({ maxUploadBytes: 16 });
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -155,6 +159,7 @@ async function submittedRequest(title: string): Promise<string> {
     url: "/api/v1/requests",
     cookies: requesterCookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId,
       title,
       description: "The counterparty returned its markup.",

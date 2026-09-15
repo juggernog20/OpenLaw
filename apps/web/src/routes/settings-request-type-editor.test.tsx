@@ -277,7 +277,7 @@ describe("the form definition (ST14's right card)", () => {
       ["Title", true],
       ["Description", true],
       ["Attachments", false],
-      ["Department", false],
+      ["Department", true],
       ["Urgency", true],
     ] as const) {
       const box = screen.getByRole("checkbox", { name: `${name} required` });

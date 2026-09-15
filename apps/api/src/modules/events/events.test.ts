@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * The live channel's integration seam (TECH-009): a real Fastify server,
  * a real socket, and the testcontainer Postgres. `app.inject()` waits for
@@ -178,6 +180,7 @@ class EventStream {
 }
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let origin: string;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
@@ -193,6 +196,7 @@ let secondRecord: { id: string; number: number };
 
 beforeAll(async () => {
   harness = await startHarness({ eventHeartbeatMs: 25 });
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -549,6 +553,7 @@ describe("GET /api/events", () => {
           url: "/api/v1/requests",
           cookies: requesterCookies,
           payload: {
+            departmentId: requestDepartmentId,
             requestTypeId,
             title,
             description: "The live Inbox count needs this Request.",
@@ -630,6 +635,7 @@ describe("GET /api/events", () => {
           url: "/api/v1/requests",
           cookies: requesterCookies,
           payload: {
+            departmentId: requestDepartmentId,
             requestTypeId: contractRequestTypeId,
             title,
             description: "Two triagers are clearing different Requests.",

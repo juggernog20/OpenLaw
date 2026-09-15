@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { eq, requests, requestTypes, users } from "@openlaw/db";
 import {
@@ -11,10 +13,12 @@ import {
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let cast: DispositionScaffold;
 let typeId: string;
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   expect(
     (await harness.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN }))
       .statusCode,
@@ -35,6 +39,7 @@ async function submit() {
     url: "/api/v1/requests",
     cookies: cast.requesterCookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: typeId,
       title: "Choose who should triage",
       description: "Review the proposed NDA.",

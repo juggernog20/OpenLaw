@@ -3275,6 +3275,9 @@
   "departments.archived": {
     "defaultMessage": "{name} (archived)"
   },
+  "departments.choose": {
+    "defaultMessage": "Choose a Department"
+  },
   "departments.none": {
     "defaultMessage": "No Department"
   },
@@ -8451,13 +8454,10 @@
     "defaultMessage": "{count, plural, one {# Department} other {# Departments}}"
   },
   "settings.departments.help": {
-    "defaultMessage": "Drag to reorder. Archiving a Department removes it from pickers and keeps existing references."
+    "defaultMessage": "Find Departments in alphabetical order. Archive a Department to remove it from pickers and keep existing references."
   },
   "settings.departments.inUse": {
     "defaultMessage": "{count, plural, one {# reference} other {# references}}"
-  },
-  "settings.departments.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
   },
   "settings.departments.noCandidates": {
     "defaultMessage": "Departments keep existing references when archived."
@@ -8473,9 +8473,6 @@
   },
   "settings.departments.renameLabel": {
     "defaultMessage": "Rename {name}"
-  },
-  "settings.departments.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
   },
   "settings.departments.restore": {
     "defaultMessage": "Restore {name}"

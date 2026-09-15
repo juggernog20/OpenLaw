@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * Convert (#420): the disposition the Inbox exists to reach, asserted
  * at the HTTP seam the dialog presses.
@@ -47,6 +49,7 @@ import {
 import { startHarness, TEST_ADMIN as ADMIN, type TestHarness } from "../../testing/harness.js";
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let cast: DispositionScaffold;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
@@ -70,6 +73,7 @@ let matterTargetTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -240,6 +244,7 @@ async function submit(
     url: "/api/v1/requests",
     cookies: requesterCookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: options.typeId ?? requestTypeIds.get("nda_request"),
       title,
       description: "For the pilot kicking off next month.",
@@ -1084,7 +1089,7 @@ it.each(["", "  ", "Unlisted department", "Archived department"])(
     const request = await submit("Legacy Department answer");
     await harness.db
       .update(requests)
-      .set({ customFields: { owning_department: answer } })
+      .set({ departmentId: null, customFields: { owning_department: answer } })
       .where(eq(requests.id, request.id));
     const res = await convert(request.number, { title: "Contract from legacy answer" });
     expect(res.statusCode, res.body).toBe(200);
@@ -1097,7 +1102,7 @@ it.each(["", "  ", "Unlisted department", "Archived department"])(
   },
 );
 
-it("keeps a cleared Department empty when a Request retains its legacy answer", async () => {
+it("keeps the submitted Department fixed until conversion", async () => {
   const request = await submit("Cleared classification");
   const [department] = await harness.db
     .select()
@@ -1113,9 +1118,9 @@ it("keeps a cleared Department empty when a Request retains its legacy answer", 
     cookies: memberCookies,
     payload: { departmentId: null },
   });
-  expect(cleared.statusCode, cleared.body).toBe(200);
+  expect(cleared.statusCode, cleared.body).toBe(404);
   const res = await convert(request.number, { title: "No Department" });
   expect(res.statusCode, res.body).toBe(200);
   const contract = await contractNumbered(res.json().request.convertedContract.number as number);
-  expect(contract.owningDepartmentId).toBeNull();
+  expect(contract.owningDepartmentId).toBe(department!.id);
 });

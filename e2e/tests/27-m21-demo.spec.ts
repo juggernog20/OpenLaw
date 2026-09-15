@@ -51,6 +51,7 @@ import {
   ADMIN,
   completePortalFirstRun,
   ensureAdminExists,
+  ensureIntakeDepartment,
   ensureMemberInert,
   signInAs,
   sweepOrSay,
@@ -371,6 +372,7 @@ test.describe.serial("M21 demo path", () => {
     browser,
   }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await ensureIntakeDepartment(page.request);
 
     // The compose-up acceptance, from inside the running stack: M21's
     // migration (0067) landed and the staff read answers, so the Inbox

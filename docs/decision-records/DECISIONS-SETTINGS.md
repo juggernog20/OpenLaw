@@ -260,6 +260,14 @@ Requests, Matters, and Contracts use **Department** for the business team respon
 
 Matter and Request APIs use `departmentId`; Contracts retain `owningDepartmentId` for compatibility. All visible labels say Department.
 
+### SET-010 amendment — alphabetical Departments, 2026-09-15
+
+Departments are listed alphabetically by name in Settings and in pickers. Add, rename, and restore place each Department in that order automatically. Departments have no manual reorder controls or order endpoint; the shared taxonomy's manual ordering continues for the other catalogs. Archiving still removes a Department from pickers and retains existing references.
+
+### SET-010 amendment — required intake Department, 2026-09-15
+
+Department is required when submitting a Request. The submitted Department is read-only throughout intake and conversion, alongside the other original answers. Conversion carries it to the Matter or Contract, where normal record editing can change it. Historical Requests without a Department remain readable. This supersedes the earlier editable Request Department control.
+
 ### SET-004 amendment — independent group authentication, 2026-09-15
 
 The onboarding wizard and Authentication settings expose Legal User Authentication and Business Portal Authentication. Each group independently enables password, email magic link, and configured OIDC SSO, with a separate required two-factor toggle. TECH-008 defines enforcement and the separate sign-in URLs. Email service remains mandatory before completing instance setup.

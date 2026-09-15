@@ -236,7 +236,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["requests"],
         body: z.strictObject({
           requestTypeId: z.string(),
-          departmentId: z.string().min(1).nullable().optional(),
+          departmentId: z.string().min(1),
           title: z.string(),
           description: z.string(),
           /** DES-018's four severity levels and nothing else. */
@@ -303,7 +303,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             })),
         ]);
 
-        const department = body.departmentId ? await lockedDepartment(tx, body.departmentId) : null;
+        const department = await lockedDepartment(tx, body.departmentId);
         const [row] = await tx
           .insert(requests)
           .values({
@@ -312,7 +312,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             // is no body field to forge and no route to create one on
             // somebody else's behalf.
             requesterId: request.user.id,
-            departmentId: department?.id ?? null,
+            departmentId: department.id,
             title,
             description,
             urgency: body.urgency,
