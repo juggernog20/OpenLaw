@@ -1373,9 +1373,11 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       };
       const key = coreKey[slug];
       return {
-        field: key
-          ? changeLabel(intl, key, context)
-          : (customField(context, slug)?.displayName ?? slug),
+        field: slug.startsWith("key_date:")
+          ? intl.formatMessage({ id: "keyDates.source.keyDate", defaultMessage: "Key date" })
+          : key
+            ? changeLabel(intl, key, context)
+            : (customField(context, slug)?.displayName ?? slug),
       };
     },
   },

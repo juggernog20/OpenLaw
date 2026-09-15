@@ -41,6 +41,9 @@ export interface RecordTab {
    * after a tab label says nothing. Required for the chip to render.
    */
   countLabel?: string;
+  /** AI suggestions awaiting review, shown separately from confirmed work. */
+  unverifiedCount?: number;
+  unverifiedCountLabel?: string;
 }
 
 export function RecordTabs({
@@ -58,6 +61,7 @@ export function RecordTabs({
     >
       {tabs.map((tab) => {
         const count = tab.count ?? 0;
+        const unverifiedCount = tab.unverifiedCount ?? 0;
         return (
           <NavLink
             key={tab.to}
@@ -80,6 +84,16 @@ export function RecordTabs({
                 className="shrink-0 rounded-chip bg-badge-count-bg px-1.5 py-px text-xs font-medium tabular-nums text-badge-count-fg"
               >
                 {formatCount(count)}
+              </span>
+            ) : null}
+            {unverifiedCount > 0 && tab.unverifiedCountLabel ? (
+              <span
+                role="img"
+                aria-label={tab.unverifiedCountLabel}
+                title={tab.unverifiedCountLabel}
+                className="shrink-0 rounded-chip bg-ai-evidence-fg/10 px-1.5 py-px text-xs font-medium tabular-nums text-ai-evidence-fg"
+              >
+                {formatCount(unverifiedCount)}
               </span>
             ) : null}
           </NavLink>

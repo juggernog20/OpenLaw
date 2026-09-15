@@ -115,6 +115,7 @@ type Editing = { row: null } | { row: ContractDeadline & { keyDateId: string } }
 export function KeyDatesCard({
   deadlines,
   conversionReview,
+  reviewControl,
   noticePeriodDays,
   onDeadlines,
 }: Readonly<{
@@ -122,6 +123,7 @@ export function KeyDatesCard({
    * with the next deadline already marked. */
   deadlines: readonly ContractDeadline[];
   conversionReview?: ReactNode;
+  reviewControl?: (row: ContractDeadline) => ReactNode;
   /** CTR-006's notice period, which is the only part of the derived
    * deadline's own sentence the union does not carry: the row says how
    * long before the expiry it falls. Null when none is recorded, in
@@ -277,6 +279,7 @@ export function KeyDatesCard({
                   key={row.keyDateId ?? row.source}
                   row={row}
                   conversionReview={conversionReview}
+                  reviewControl={reviewControl}
                   intl={intl}
                   noticePeriodDays={noticePeriodDays}
                   busy={busy}
@@ -323,6 +326,7 @@ export function KeyDatesCard({
 function DeadlineRow({
   row,
   conversionReview,
+  reviewControl,
   intl,
   noticePeriodDays,
   busy,
@@ -332,6 +336,7 @@ function DeadlineRow({
 }: Readonly<{
   row: ContractDeadline;
   conversionReview?: ReactNode;
+  reviewControl?: (row: ContractDeadline) => ReactNode;
   intl: IntlShape;
   noticePeriodDays: number | null;
   busy: boolean;
@@ -365,7 +370,9 @@ function DeadlineRow({
             <FormattedMessage {...SOURCE_LABEL[row.source]} />
           </span>
           {row.unverified ? <UnverifiedMarker /> : null}
-          {row.source === "key_date" && row.unverified ? conversionReview : null}
+          {row.source === "key_date" && row.unverified
+            ? (reviewControl?.(row) ?? conversionReview)
+            : null}
         </span>
       </td>
       {!frozen && (

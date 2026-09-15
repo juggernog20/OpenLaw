@@ -173,6 +173,19 @@ function recordApi(
     if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "GET") {
       return envelope();
     }
+    if (call.url.pathname === "/api/v1/contracts/42/analysis/confirm" && call.method === "POST") {
+      writes.push({ method: call.method, path: call.url.pathname, body: call.body });
+      if (refuse) return problem(refuse.status, refuse.detail);
+      const { slug } = call.body as { slug: string };
+      const flags = { ...(row.aiUnverified as Record<string, { keyDateId: string }>) };
+      const id = flags[slug]!.keyDateId;
+      delete flags[slug];
+      row = { ...row, aiUnverified: Object.keys(flags).length ? flags : null };
+      deadlines = deadlines.map((date) =>
+        date.keyDateId === id ? { ...date, unverified: false } : date,
+      );
+      return json(200, { contract: row });
+    }
     if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "POST") {
       writes.push({ method: "POST", path: call.url.pathname, body: call.body });
       if (refuse) return problem(refuse.status, refuse.detail);
@@ -207,12 +220,69 @@ function recordApi(
     refuseNext: (status: number, detail: string) => {
       refuse = { status, detail };
     },
+    clearRefusal: () => {
+      refuse = null;
+    },
   };
 }
 
 const section = async () => within(await screen.findByRole("region", { name: "Key dates" }));
 
 describe("the record's Key dates section (CTR-009)", () => {
+  it("reviews each milestone in the list and transfers its purple count only after a successful confirmation", async () => {
+    const api = recordApi(
+      [
+        deadline({ label: "Price review", unverified: true }),
+        deadline({ keyDateId: "kd-2", label: "Delivery", unverified: true }),
+      ],
+      contractRow({
+        aiUnverified: {
+          "key_date:price": {
+            runId: "run-1",
+            keyDateId: "kd-1",
+            writtenAt: "2026-09-01T00:00:00.000Z",
+          },
+          "key_date:delivery": {
+            runId: "run-1",
+            keyDateId: "kd-2",
+            writtenAt: "2026-09-01T00:00:00.000Z",
+          },
+        },
+      }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/key-dates");
+    const card = await section();
+    const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
+    expect(strip.getByRole("img", { name: "2 unverified dates" })).toHaveClass(
+      "text-ai-evidence-fg",
+    );
+    expect(strip.queryByRole("img", { name: /upcoming date/ })).not.toBeInTheDocument();
+    expect(
+      card.getByRole("button", { name: "View AI evidence for Price review" }),
+    ).toBeInTheDocument();
+    const price = within(card.getByText("Price review").closest("tr")!);
+    api.refuseNext(503, "Confirmation could not be saved.");
+    await userEvent.setup().click(price.getByRole("button", { name: "Confirm" }));
+    expect(await price.findByText("Confirmation could not be saved.")).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "2 unverified dates" })).toBeInTheDocument();
+    api.clearRefusal();
+    await userEvent.setup().click(price.getByRole("button", { name: "Confirm" }));
+    await waitFor(() =>
+      expect(strip.getByRole("img", { name: "1 upcoming date" })).toHaveClass(
+        "text-badge-count-fg",
+      ),
+    );
+    expect(strip.getByRole("img", { name: "1 unverified date" })).toBeInTheDocument();
+    expect(price.queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
+    const delivery = within(card.getByText("Delivery").closest("tr")!);
+    await userEvent.setup().click(delivery.getByRole("button", { name: "Confirm" }));
+    await waitFor(() =>
+      expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument(),
+    );
+    expect(strip.queryByRole("img", { name: /unverified date/ })).not.toBeInTheDocument();
+  });
+
   it("edits a date with departed recipients without widening its audience", async () => {
     const api = recordApi([
       deadline({
@@ -299,7 +369,10 @@ describe("the record's Key dates section (CTR-009)", () => {
     // The tab chip counts upcoming work, not the whole union — a past
     // date is not news on the strip.
     const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
-    expect(strip.getByRole("img", { name: "3 upcoming dates" })).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "1 unverified date" })).toHaveClass(
+      "text-ai-evidence-fg",
+    );
   });
 
   it("draws no Due column and no distance label, and keeps the seam's row order", async () => {

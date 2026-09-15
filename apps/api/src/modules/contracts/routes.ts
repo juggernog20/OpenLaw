@@ -539,12 +539,14 @@ const ContractRowSchema = z.object({
         z.object({
           runId: z.string(),
           sourceContext: z.boolean().optional(),
+          keyDateId: z.string().optional(),
           draftId: z.string().optional(),
           writtenAt: z.iso.datetime(),
         }),
         z.object({
           draftId: z.string(),
           runId: z.string().optional(),
+          keyDateId: z.string().optional(),
           writtenAt: z.iso.datetime(),
         }),
       ]),
@@ -807,8 +809,13 @@ function publicUnverified(map: Contract["aiUnverified"]) {
     Object.entries(map).map(([slug, entry]) => [
       slug,
       entry.draftId !== undefined
-        ? { draftId: entry.draftId, writtenAt: entry.writtenAt }
-        : { runId: entry.runId, writtenAt: entry.writtenAt, sourceContext: entry.sourceContext },
+        ? { draftId: entry.draftId, writtenAt: entry.writtenAt, keyDateId: entry.keyDateId }
+        : {
+            runId: entry.runId,
+            writtenAt: entry.writtenAt,
+            sourceContext: entry.sourceContext,
+            keyDateId: entry.keyDateId,
+          },
     ]),
   );
 }
@@ -875,23 +882,25 @@ function toRow(
     aiUnverified: publicUnverified(
       row.aiUnverified
         ? Object.fromEntries(
-            Object.entries(row.aiUnverified).filter(([slug]) =>
-              slug.startsWith("field:")
-                ? visibleSlugs.has(slug.slice(6))
-                : [
-                    "title",
-                    "description",
-                    "priority",
-                    "contract_type",
-                    "counterparty",
-                    "needed_by",
-                    "term_type",
-                    "effective_date",
-                    "expiry_date",
-                    "renewal_period_months",
-                    "notice_period_days",
-                    "value",
-                  ].includes(slug) || visibleSlugs.has(slug),
+            Object.entries(row.aiUnverified).filter(
+              ([slug]) =>
+                slug.startsWith("key_date:") ||
+                (slug.startsWith("field:")
+                  ? visibleSlugs.has(slug.slice(6))
+                  : [
+                      "title",
+                      "description",
+                      "priority",
+                      "contract_type",
+                      "counterparty",
+                      "needed_by",
+                      "term_type",
+                      "effective_date",
+                      "expiry_date",
+                      "renewal_period_months",
+                      "notice_period_days",
+                      "value",
+                    ].includes(slug) || visibleSlugs.has(slug)),
             ),
           )
         : null,

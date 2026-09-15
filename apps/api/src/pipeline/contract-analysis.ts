@@ -48,6 +48,12 @@ import type { StorageAdapter } from "../lib/storage/adapter.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
 import type { ConversionAnalysisContext, ConversionSuggestion } from "@openlaw/shared";
 import type { PipelineLogger } from "./logger.js";
+import {
+  applyKeyDateSuggestions,
+  keyDatesExtractionTarget,
+  KEY_DATES_TARGET,
+} from "../lib/analysis-key-dates.js";
+import type { AiSource } from "../lib/ai/provider.js";
 
 export interface ContractAnalysisDeps {
   db: Db;
@@ -352,6 +358,7 @@ async function applyAnswers(
   extractions: AiExtraction[],
   model: string,
   requestSnapshot?: string,
+  milestoneSources?: readonly AiSource[],
 ): Promise<void> {
   const answerBySlug = new Map(extractions.map((answer) => [answer.slug, answer]));
   await deps.db.transaction(async (tx) => {
@@ -583,6 +590,28 @@ async function applyAnswers(
       return result ? [result] : [];
     });
 
+    const milestoneResults = await applyKeyDateSuggestions(
+      tx,
+      { ...row, ...patch },
+      flags,
+      run.id,
+      answerBySlug.get(KEY_DATES_TARGET),
+      milestoneSources ?? [
+        {
+          id: targetText.versionId,
+          revision: targetText.versionId,
+          label: "Contract document",
+          kind: "document",
+          text: targetText.text,
+        },
+      ],
+      run.sourceContext,
+    );
+    outcome.results.push(...milestoneResults);
+    for (const result of milestoneResults) {
+      if (result.outcome !== "unmatched") outcome[result.outcome].push(result.slug);
+    }
+
     if (outcome.written.length > 0) {
       patch.aiUnverified = Object.keys(flags).length > 0 ? flags : null;
     }
@@ -715,6 +744,7 @@ export async function handleContractAnalysis(
       const truncated = targetText.text.length > AI_ANALYSIS_CHARACTER_BUDGET;
       const sentText = targetText.text.slice(0, AI_ANALYSIS_CHARACTER_BUDGET);
       const targets = await buildAnalysisTargets(tx, targetText.contractTypeId);
+      const milestoneTarget = await keyDatesExtractionTarget(tx, contract.id);
       await tx
         .update(contractAnalysisRuns)
         .set({
@@ -725,9 +755,9 @@ export async function handleContractAnalysis(
           startedAt: run.startedAt ?? new Date(),
         })
         .where(eq(contractAnalysisRuns.id, run.id));
-      return { provider, targetText, truncated, sentText, targets };
+      return { provider, targetText, truncated, sentText, targets, milestoneTarget };
     });
-    const { provider, targetText, truncated, sentText, targets } = prepared;
+    const { provider, targetText, truncated, sentText, targets, milestoneTarget } = prepared;
     const extractions = await provider.extract(
       [
         {
@@ -738,7 +768,7 @@ export async function handleContractAnalysis(
           text: sentText,
         },
       ],
-      targets,
+      [...targets, milestoneTarget],
     );
     await applyAnswers(
       deps,
@@ -842,13 +872,21 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
       throw new AnalysisTargetError(
         "Request sources or Contract Fields changed before extraction.",
       );
-    const answers = await extractCompleteSources(provider, context.sources, targets);
+    const milestoneTarget = await keyDatesExtractionTarget(deps.db, contract.id);
+    const answers = await extractCompleteSources(provider, context.sources, [
+      ...targets,
+      milestoneTarget,
+    ]);
     const suggestions: Record<string, ConversionSuggestion> = {};
     const checked: AiExtraction[] = [];
     const conflicted = new Set(
       answers.filter((answer) => answer.conflict).map((answer) => answer.slug),
     );
     for (const answer of answers) {
+      if (answer.slug === KEY_DATES_TARGET) {
+        checked.push(answer);
+        continue;
+      }
       if (
         conflicted.has(answer.slug) ||
         answer.conflict ||
@@ -883,6 +921,7 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
       checked,
       provider.model,
       context.snapshot,
+      context.sources,
     );
   } finally {
     clearInterval(heartbeat);

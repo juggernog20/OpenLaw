@@ -2702,6 +2702,9 @@
   "contracts.record.tab.keyDates": {
     "defaultMessage": "Key dates"
   },
+  "contracts.record.tab.keyDates.unverified": {
+    "defaultMessage": "{count, plural, one {# unverified date} other {# unverified dates}}"
+  },
   "contracts.record.tab.keyDates.upcoming": {
     "defaultMessage": "{count, plural, one {# upcoming date} other {# upcoming dates}}"
   },

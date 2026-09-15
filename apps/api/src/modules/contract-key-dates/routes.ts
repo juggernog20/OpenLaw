@@ -54,7 +54,6 @@ import {
   contractKeyDates,
   contracts,
   eq,
-  sql,
   type Executor,
   type Transaction,
 } from "@openlaw/db";
@@ -65,7 +64,12 @@ import {
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { derivedDateUnverified, type DerivedDateSource } from "../../lib/ai-unverified.js";
+import {
+  derivedDateUnverified,
+  keyDateUnverified,
+  reviewKeyDate,
+  type DerivedDateSource,
+} from "../../lib/ai-unverified.js";
 import {
   contractTeamScope,
   NO_CONTRACT,
@@ -276,7 +280,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
       reminderRecipientIds: ownReminderRecipients(row.reminderRecipientIds),
       daysAway: daysBetween(today, row.date),
       isNext: false,
-      unverified: contract.aiUnverified?.needed_by?.keyDateId === row.id,
+      unverified: keyDateUnverified(contract.aiUnverified, row.id),
     }));
 
     /** A term-derived date joins the union as a row with no row behind
@@ -557,20 +561,8 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           // only a change to one of them reviews it. A reminder or a
           // note edit re-sends both boxes without touching either
           // value, and the Matter arm reads the same two keys.
-          if (
-            keyDate.contract.aiUnverified?.needed_by?.keyDateId === keyDate.id &&
-            ("date" in changed || "label" in changed)
-          ) {
-            await tx
-              .update(contracts)
-              .set({
-                aiUnverified: sql`nullif(${contracts.aiUnverified} - 'needed_by', '{}'::jsonb)`,
-              })
-              .where(eq(contracts.id, keyDate.contract.id));
-            const flags = { ...keyDate.contract.aiUnverified };
-            delete flags.needed_by;
-            keyDate.contract.aiUnverified = Object.keys(flags).length ? flags : null;
-          }
+          if ("date" in changed || "label" in changed)
+            await reviewKeyDate(tx, keyDate.contract, keyDate.id);
 
           await recordActivity(tx, {
             entityType: "contract",
@@ -617,13 +609,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
         if (keyDate.contract.archivedAt) throw httpError(409, FROZEN);
 
         await tx.delete(contractKeyDates).where(eq(contractKeyDates.id, keyDate.id));
-        if (keyDate.contract.aiUnverified?.needed_by?.keyDateId === keyDate.id)
-          await tx
-            .update(contracts)
-            .set({
-              aiUnverified: sql`nullif(${contracts.aiUnverified} - 'needed_by', '{}'::jsonb)`,
-            })
-            .where(eq(contracts.id, keyDate.contract.id));
+        await reviewKeyDate(tx, keyDate.contract, keyDate.id);
 
         // The row is gone, so this entry is the only thing left that
         // says the date was ever on the record — which is why it carries

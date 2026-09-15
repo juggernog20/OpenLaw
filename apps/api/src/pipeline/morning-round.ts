@@ -87,7 +87,7 @@ import {
 } from "@openlaw/db";
 import type { AiUnverifiedMap } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../auth/user.js";
-import { derivedDateUnverified } from "../lib/ai-unverified.js";
+import { derivedDateUnverified, keyDateUnverified } from "../lib/ai-unverified.js";
 import { civilDate, civilInstant, daysBetween } from "../lib/contract-term.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import {
@@ -1191,8 +1191,11 @@ function digestRow(
       row.entityType === CONTRACT_ENTITY &&
       (row.eventType === "date.expiry_approaching"
         ? derivedDateUnverified(row.contractAiUnverified, "expiry")
-        : row.eventType === "date.notice_deadline_approaching" &&
-          derivedDateUnverified(row.contractAiUnverified, "notice_deadline")),
+        : row.eventType === "date.notice_deadline_approaching"
+          ? derivedDateUnverified(row.contractAiUnverified, "notice_deadline")
+          : row.eventType === "date.key_date_approaching" &&
+            typeof row.payload.keyDateId === "string" &&
+            keyDateUnverified(row.contractAiUnverified, row.payload.keyDateId)),
   };
   if (entity) return { ...common, entityType: ENTITY_ENTITY, recordId: row.entityId };
   return {

@@ -82,7 +82,7 @@ export type AiUnverifiedEntry =
       draftId?: never;
       sourceContext?: boolean;
       targetTypeId?: never;
-      keyDateId?: never;
+      keyDateId?: string;
     }
   | (ConversionProvenance & { evidence?: never; runId?: never });
 

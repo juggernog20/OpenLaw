@@ -1102,7 +1102,7 @@ describe("the /contracts/:number record page", () => {
         });
       });
 
-      await waitFor(() => expect(screen.getByLabelText("1 upcoming date")).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByLabelText("1 unverified date")).toBeInTheDocument());
       await waitFor(() => {
         expect(screen.getByLabelText("Term type")).toHaveValue("auto_renew");
         expect(screen.getByLabelText("Effective date")).toHaveTextContent("Jan 15, 2026");

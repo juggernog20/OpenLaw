@@ -6,6 +6,7 @@ import {
   and,
   contractAnalysisRuns,
   contractCounterparties,
+  contractKeyDates,
   contracts,
   contractTeam,
   contractTypeFields,
@@ -26,6 +27,7 @@ import {
 } from "../../lib/ai/provider.js";
 import { FAKE_VALID_AI_KEY, FakeAiProvider } from "../../lib/ai/fake.js";
 import { handleContractAnalysis } from "../../pipeline/contract-analysis.js";
+import { KEY_DATES_TARGET, keyDateSuggestionSlug } from "../../lib/analysis-key-dates.js";
 import {
   signInCookies,
   startHarness,
@@ -49,6 +51,7 @@ const answers: Record<string, Answer> = {};
 
 class ScriptedProvider extends FakeAiProvider {
   failure: "none" | "config" | "transport" = "none";
+  beforeReply?: () => Promise<void>;
 
   constructor() {
     super({ answers, model: "analysis-test-model" });
@@ -57,7 +60,11 @@ class ScriptedProvider extends FakeAiProvider {
   override async extract(text: string, targets: readonly AiExtractionTarget[]) {
     if (this.failure === "config") throw new AiConfigError("The scripted key was refused.");
     if (this.failure === "transport") throw new AiUnavailableError("The scripted host is down.");
-    return super.extract(text, targets);
+    const result = await super.extract(text, targets);
+    const beforeReply = this.beforeReply;
+    this.beforeReply = undefined;
+    await beforeReply?.();
+    return result;
   }
 }
 
@@ -988,4 +995,244 @@ describe("confirming AI-written Contract values", () => {
     });
     expect(frozen.statusCode).toBe(409);
   });
+});
+
+describe("Contract milestone extraction", () => {
+  it("rechecks dates added while the provider is running and respects existing date Fields", async () => {
+    await configureConnector();
+    const contract = await newContract("Concurrent milestone review");
+    const evidence = "Delivery is due on 2028-06-30. The warranty expires on 2028-08-01.";
+    const paper = await addPaper(contract, [evidence]);
+    await harness.db
+      .update(contracts)
+      .set({ customFields: { warranty_expiry: "2028-08-01" } })
+      .where(eq(contracts.id, contract.id));
+    setAnswers({
+      [KEY_DATES_TARGET]: {
+        value: [
+          {
+            kind: "milestone",
+            label: "Delivery",
+            date: "2028-06-30",
+            evidence,
+            sourceId: paper.versions[0]!.id,
+          },
+          {
+            kind: "milestone",
+            label: "Warranty expiry",
+            date: "2028-08-01",
+            evidence,
+            sourceId: paper.versions[0]!.id,
+          },
+        ],
+      },
+    });
+    await harness.app.resolveAiProvider();
+    provider.beforeReply = async () => {
+      const added = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${contract.number}/key-dates`,
+        cookies: memberCookies,
+        payload: { label: "Delivery deadline", date: "2028-06-30" },
+      });
+      expect(added.statusCode, added.body).toBe(201);
+    };
+    const response = await startRun(contract.number);
+    const run = await waitForRun(response.json().run.id);
+    expect(run.state, run.failure ?? "").toBe("ready");
+    const rows = await harness.db
+      .select()
+      .from(contractKeyDates)
+      .where(eq(contractKeyDates.contractId, contract.id));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.label).toBe("Delivery deadline");
+    expect(run.outcome!.written.filter((slug) => slug.startsWith("key_date:"))).toEqual([]);
+  });
+
+  it("bounds the response and rejects quotes from the wrong document without losing valid siblings", async () => {
+    await configureConnector();
+    const contract = await newContract("Milestone validation");
+    const evidence = "Delivery is due on 2028-06-30.";
+    const paper = await addPaper(contract, [evidence]);
+    const value = {
+      kind: "milestone",
+      label: "Delivery",
+      date: "2028-06-30",
+      evidence,
+      sourceId: paper.versions[0]!.id,
+    };
+    setAnswers({ [KEY_DATES_TARGET]: { value: Array.from({ length: 21 }, () => value) } });
+    const oversized = await startRun(contract.number);
+    const rejected = await waitForRun(oversized.json().run.id);
+    expect(rejected.outcome!.invalid).toContain(KEY_DATES_TARGET);
+    expect(
+      await harness.db
+        .select()
+        .from(contractKeyDates)
+        .where(eq(contractKeyDates.contractId, contract.id)),
+    ).toHaveLength(0);
+    setAnswers({
+      [KEY_DATES_TARGET]: { value: [{ ...value, sourceId: "another-contract-document" }, value] },
+    });
+    const valid = await startRun(contract.number);
+    const run = await waitForRun(valid.json().run.id);
+    expect(run.state, run.failure ?? "").toBe("ready");
+    expect(
+      await harness.db
+        .select()
+        .from(contractKeyDates)
+        .where(eq(contractKeyDates.contractId, contract.id)),
+    ).toHaveLength(1);
+  });
+
+  it("adds supported milestones in the field extraction call without duplicating existing or term dates", async () => {
+    await configureConnector();
+    const contract = await newContract("Milestones in one pass");
+    const text =
+      "Delivery is due on 2028-06-30. A price review is due on 2028-06-30. The Contract expires on 2028-06-30. Insurance renews on 2028-08-01.";
+    const paper = await addPaper(contract, [text]);
+    const sourceId = paper.versions[0]!.id;
+    await harness.db
+      .insert(contractKeyDates)
+      .values({ contractId: contract.id, date: "2028-08-01", label: "Insurance renewal" });
+    const entry = (label: string, date: string, evidence: string, kind = "milestone") => ({
+      label,
+      date,
+      evidence,
+      sourceId,
+      kind,
+    });
+    setAnswers({
+      expiry_date: { value: "2028-06-30", evidence: "The Contract expires on 2028-06-30." },
+      [KEY_DATES_TARGET]: {
+        value: [
+          entry("Delivery", "2028-06-30", "Delivery is due on 2028-06-30."),
+          entry("Delivery deadline", "2028-06-30", "Delivery is due on 2028-06-30."),
+          entry("Price review", "2028-06-30", "A price review is due on 2028-06-30."),
+          entry(
+            "Contract expiry",
+            "2028-06-30",
+            "The Contract expires on 2028-06-30.",
+            "expiry_date",
+          ),
+          entry("Insurance renewal date", "2028-08-01", "Insurance renews on 2028-08-01."),
+          entry("Unsupported date", "2028-09-01", "This is not in the document."),
+          entry("Impossible date", "2028-02-30", "Delivery is due on 2028-06-30."),
+        ],
+      },
+    });
+    await harness.app.resolveAiProvider();
+    const calls = provider.extractions.length;
+    const response = await startRun(contract.number);
+    expect(response.statusCode, response.body).toBe(202);
+    const run = await waitForRun(response.json().run.id);
+    expect(run.state, run.failure ?? "").toBe("ready");
+    expect(provider.extractions).toHaveLength(calls + 1);
+    const target = provider.extractions
+      .at(-1)!
+      .targets.find((target) => target.slug === KEY_DATES_TARGET)!;
+    expect(target.prompt).toContain("Insurance renewal");
+    expect(run.outcome!.written.filter((slug) => slug.startsWith("key_date:"))).toHaveLength(2);
+    const rows = await harness.db
+      .select()
+      .from(contractKeyDates)
+      .where(eq(contractKeyDates.contractId, contract.id));
+    expect(rows.map((row) => row.label).sort()).toEqual([
+      "Delivery",
+      "Insurance renewal",
+      "Price review",
+    ]);
+    const read = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contract.number}`,
+      cookies: memberCookies,
+    });
+    const flags = read.json().contract.aiUnverified;
+    expect(flags[keyDateSuggestionSlug({ date: "2028-06-30", label: "Delivery" })]).toMatchObject({
+      runId: run.id,
+      keyDateId: rows.find((row) => row.label === "Delivery")!.id,
+    });
+    const dates = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contract.number}/key-dates`,
+      cookies: memberCookies,
+    });
+    expect(
+      dates
+        .json()
+        .deadlines.filter(
+          (row: { source: string; unverified: boolean }) =>
+            row.source === "key_date" && row.unverified,
+        ),
+    ).toHaveLength(2);
+    const rerun = await startRun(contract.number);
+    expect((await waitForRun(rerun.json().run.id)).state).toBe("ready");
+    expect(
+      await harness.db
+        .select()
+        .from(contractKeyDates)
+        .where(eq(contractKeyDates.contractId, contract.id)),
+    ).toHaveLength(3);
+  });
+
+  it.each(["confirm", "edit", "remove"] as const)(
+    "preserves a person's %s decision on later runs",
+    async (action) => {
+      await configureConnector();
+      const contract = await newContract(`Reviewed milestone ${action}`);
+      const evidence = "The price review opens on 2028-05-01.";
+      const paper = await addPaper(contract, [evidence]);
+      const value = {
+        kind: "milestone",
+        date: "2028-05-01",
+        label: "Price review",
+        sourceId: paper.versions[0]!.id,
+        evidence,
+      };
+      setAnswers({ [KEY_DATES_TARGET]: { value: [value] } });
+      const started = await startRun(contract.number);
+      expect((await waitForRun(started.json().run.id)).state).toBe("ready");
+      const [date] = await harness.db
+        .select()
+        .from(contractKeyDates)
+        .where(eq(contractKeyDates.contractId, contract.id));
+      const slug = keyDateSuggestionSlug(value);
+      const response =
+        action === "confirm"
+          ? await harness.app.inject({
+              method: "POST",
+              url: `/api/v1/contracts/${contract.number}/analysis/confirm`,
+              cookies: memberCookies,
+              payload: { slug },
+            })
+          : await harness.app.inject({
+              method: action === "edit" ? "PATCH" : "DELETE",
+              url: `/api/v1/key-dates/${date!.id}`,
+              cookies: memberCookies,
+              ...(action === "edit"
+                ? { payload: { date: "2028-05-09", label: "Negotiated price review" } }
+                : {}),
+            });
+      expect(response.statusCode, response.body).toBe(200);
+      const [reviewed] = await harness.db
+        .select()
+        .from(contracts)
+        .where(eq(contracts.id, contract.id));
+      expect(reviewed!.aiUnverified?.[slug]).toBeUndefined();
+      expect(reviewed!.analysisHumanFields).toContain(slug);
+      const rerun = await startRun(contract.number);
+      const run = await waitForRun(rerun.json().run.id);
+      expect(run.state, run.failure ?? "").toBe("ready");
+      const rows = await harness.db
+        .select()
+        .from(contractKeyDates)
+        .where(eq(contractKeyDates.contractId, contract.id));
+      expect(rows).toHaveLength(action === "remove" ? 0 : 1);
+      if (action === "edit") expect(rows[0]!.date).toBe("2028-05-09");
+      expect(
+        provider.extractions.at(-1)!.targets.find((target) => target.slug === KEY_DATES_TARGET)!
+          .prompt,
+      ).toContain("Price review");
+    },
+  );
 });

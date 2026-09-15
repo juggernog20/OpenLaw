@@ -87,6 +87,8 @@ const OUTCOME_LABELS: Readonly<Record<ContractAnalysisResult["outcome"], Message
 };
 
 function resultLabel(slug: string, fields: readonly AttachedField[]): ReactNode {
+  if (slug.startsWith("key_date:") || slug.startsWith("key_dates:"))
+    return <FormattedMessage id="keyDates.source.keyDate" defaultMessage="Key date" />;
   const core = coreAnalysisLabel(slug);
   return core ? (
     <FormattedMessage {...core} />
@@ -106,6 +108,17 @@ function isContractValue(value: unknown): value is NonNullable<ContractRow["valu
 }
 
 function resultValue(intl: IntlShape, slug: string, value: unknown): string {
+  if (
+    slug.startsWith("key_date:") &&
+    typeof value === "object" &&
+    value !== null &&
+    "label" in value &&
+    "date" in value &&
+    typeof value.label === "string" &&
+    typeof value.date === "string"
+  ) {
+    return `${value.label} — ${formatShortDate(value.date, { locale: intl.locale })}`;
+  }
   if (value === null || value === undefined || value === "") {
     return intl.formatMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" });
   }
