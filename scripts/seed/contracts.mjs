@@ -299,6 +299,13 @@ export async function seedContracts(admin, context, log) {
     departmentIds.push(department.id);
   }
 
+  const { body: regionList } = await admin.get("/api/v1/regions");
+  for (const displayName of ["EMEA", "Americas", "APAC"]) {
+    if (!regionList.regions.some((row) => row.displayName === displayName)) {
+      await admin.post("/api/v1/regions", { displayName });
+    }
+  }
+
   await pool(plans, 4, async (plan, index) => {
     const owner = random.pick(staff);
     const author = owner.session;

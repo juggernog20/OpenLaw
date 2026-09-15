@@ -16,6 +16,7 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
+import { regions } from "./regions.js";
 import { departments } from "./departments.js";
 import type { CustomFieldValue } from "./fields.js";
 import { searchVector, uuidPk } from "./helpers.js";
@@ -33,6 +34,7 @@ export const matters = pgTable(
     title: text("title").notNull(),
     description: text("description"),
     departmentId: text("department_id").references(() => departments.id),
+    region: text("region").references(() => regions.displayName, { onUpdate: "cascade" }),
     matterTypeId: text("matter_type_id")
       .notNull()
       .references(() => matterTypes.id),

@@ -270,3 +270,14 @@ Department is required when submitting a Request. The submitted Department is re
 ### SET-004 amendment — independent group authentication, 2026-09-15
 
 The onboarding wizard and Authentication settings expose Legal User Authentication and Business Portal Authentication. Each group independently enables password, email magic link, and configured OIDC SSO, with a separate required two-factor toggle. TECH-008 defines enforcement and the separate sign-in URLs. Email service remains mandatory before completing instance setup.
+
+## SET-012: Regions are an Administrator-managed Contract classification
+
+- **Status:** Accepted
+- **Date:** 2026-09-15
+- **Decision:** Organization Settings → Regions provides add, rename, archive, and restore, ordered alphabetically like Departments. Region on a Contract is an optional picker; new assignments must use a live configured Region. Region names must be unique without regard to case. Archiving retains existing Contract references and removes the Region from choices. Renaming updates referencing Contracts. Existing Contract and original intake values seed the initial catalog during migration.
+- **Compatibility:** The Contract API retains its `region` string. A foreign key to the catalog's unique display name, with update cascade, preserves this contract while enforcing catalog membership. Region settings rows retain stable IDs and slugs. Original Request answers and Auto-Doc snapshots remain historical values.
+
+### SET-012 amendment — shared Matter Region, 2026-09-15
+
+Matters also have an optional Region picker using the same organization catalog. Rename, archive, restore, and in-use checks cover both Matters and Contracts. Business Portal Matter overviews display the saved Region. Existing Matters start with no Region; custom Fields remain unchanged. Migration `0136` adds the nullable Matter reference with the same update-cascade behavior as Contracts.

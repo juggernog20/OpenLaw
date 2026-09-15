@@ -979,3 +979,7 @@ template default the person cleared does not come back on the saved Matter. A Fi
 untouched keeps its default, and a replacement value wins over it. A required Field still
 needs an answer at both creation seams. This matches the conversion rule already recorded
 in INT-002.
+
+### MTR-002 addendum — Region, 2026-09-15
+
+The Matter details section includes an optional Region picker beside Department, using Organization Settings → Regions (SET-012). Only live Regions can be assigned; archived references remain visible. Renames update existing Matters. Existing Matter edit permissions apply, and changes are audited. The Business Portal displays the saved Region.

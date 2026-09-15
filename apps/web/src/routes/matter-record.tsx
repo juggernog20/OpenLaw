@@ -171,6 +171,7 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
     matterStatuses: options?.data?.matterStatuses ?? [],
     users: options?.data?.users ?? [],
     departments: options?.data?.departments ?? [],
+    regions: options?.data?.regions ?? [],
     entities: entities?.data?.entities ?? [],
     relations: relations.data,
     linkedContracts: linkedContracts.data.contracts,
@@ -197,6 +198,7 @@ type FieldKey =
   | "managerId"
   | "businessOwnerId"
   | "departmentId"
+  | "region"
   | "priority"
   | "risk"
   | "statusId"
@@ -1136,6 +1138,50 @@ function MatterRecord() {
                           />
                         )}
                       </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="matter-region">
+                        <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
+                      </Label>
+                      {frozen ? (
+                        <p className="text-sm">{saved.region ?? notProvided(intl)}</p>
+                      ) : (
+                        <>
+                          <select
+                            id="matter-region"
+                            className={CONTROL_CLASS}
+                            value={saved.region ?? ""}
+                            disabled={fieldStatus.region === "saving"}
+                            onChange={(event) =>
+                              void commit("region", { region: event.target.value || null })
+                            }
+                          >
+                            <option value="">
+                              {intl.formatMessage({
+                                id: "contracts.region.none",
+                                defaultMessage: "No Region",
+                              })}
+                            </option>
+                            {saved.region &&
+                              !loader.regions.some(
+                                (region) => region.displayName === saved.region,
+                              ) && (
+                                <option value={saved.region} disabled>
+                                  {saved.region}
+                                </option>
+                              )}
+                            {loader.regions.map((region) => (
+                              <option key={region.id} value={region.displayName}>
+                                {region.displayName}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.region ?? "idle"}
+                            detail={fieldError.region}
+                          />
+                        </>
+                      )}
                     </div>
                     <MatterConversionValue
                       active={Boolean(saved.aiUnverified?.priority)}

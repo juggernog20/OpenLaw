@@ -229,6 +229,10 @@ const EVERY_FIELD = [
 }));
 
 const OPTIONS = {
+  regions: [
+    { id: "emea", displayName: "EMEA" },
+    { id: "americas", displayName: "Americas" },
+  ],
   departments: [
     { id: "dept-sales", displayName: "Sales" },
     { id: "dept-procurement", displayName: "Procurement" },
@@ -11246,7 +11250,9 @@ it("keeps built-in classification on Overview and out of Fields", async () => {
   const user = userEvent.setup();
   const department = await screen.findByRole("combobox", { name: "Department" });
   expect(department).toHaveValue("dept-sales");
-  expect(screen.getByRole("textbox", { name: "Region" })).toHaveValue("EMEA");
+  expect(screen.getByRole("combobox", { name: "Region" })).toHaveValue("EMEA");
+  await user.selectOptions(screen.getByRole("combobox", { name: "Region" }), "Americas");
+  await waitFor(() => expect(api.patches).toContainEqual({ region: "Americas" }));
   await user.selectOptions(department, "dept-procurement");
   await waitFor(() =>
     expect(api.patches).toContainEqual({ owningDepartmentId: "dept-procurement" }),
@@ -11254,7 +11260,7 @@ it("keeps built-in classification on Overview and out of Fields", async () => {
   await user.click(screen.getByRole("link", { name: "Fields" }));
   await screen.findByRole("region", { name: "Fields" });
   expect(screen.queryByRole("combobox", { name: "Department" })).not.toBeInTheDocument();
-  expect(screen.queryByRole("textbox", { name: "Region" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("combobox", { name: "Region" })).not.toBeInTheDocument();
   await user.click(screen.getByRole("link", { name: "Overview" }));
   expect(await screen.findByRole("combobox", { name: "Department" })).toHaveValue(
     "dept-procurement",

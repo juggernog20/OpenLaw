@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { regions } from "@openlaw/db";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
@@ -34,6 +36,10 @@ let matterTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  await harness.db.insert(regions).values([
+    { slug: "emea", displayName: "EMEA", displayOrder: 1 },
+    { slug: "americas", displayName: "Americas", displayOrder: 2 },
+  ]);
   await harness.db.insert(departments).values({
     id: "dept-procurement",
     slug: "procurement",

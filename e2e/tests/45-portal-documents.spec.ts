@@ -52,6 +52,15 @@ test("Portal Documents keep one current row, read earlier versions and accept re
     expect(made.status(), await made.text()).toBe(201);
     return z.object({ department }).parse(await made.json()).department.id;
   }
+  const regionList = await (await page.request.get("/api/v1/regions")).json();
+  for (const displayName of ["EMEA", "Americas"]) {
+    if (
+      !regionList.regions.some((row: { displayName: string }) => row.displayName === displayName)
+    ) {
+      const created = await page.request.post("/api/v1/regions", { data: { displayName } });
+      expect(created.status(), await created.text()).toBe(201);
+    }
+  }
   const sales = await departmentId("Sales");
   const procurement = await departmentId("Procurement");
   const records: { module: "contract" | "matter"; number: number }[] = [];

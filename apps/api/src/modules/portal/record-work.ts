@@ -163,6 +163,7 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
           number: table.number,
           title: table.title,
           description: table.description,
+          region: table.region,
           customFields: table.customFields,
           typeId,
         })
@@ -209,7 +210,9 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
             id: row.id,
             description: row.description,
             ...projection,
-            ...(module === "contract" ? await contractBusinessValues(app.db, row.id) : {}),
+            ...(module === "contract"
+              ? await contractBusinessValues(app.db, row.id)
+              : { region: row.region }),
             references: await references(app.db, projection.fields, projection.customFields),
             originalRequests: await Promise.all(
               originals.map(async ({ row: original, requester }) => {

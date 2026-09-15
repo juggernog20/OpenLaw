@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { regionOptions, lockedRegionName } from "../regions/references.js";
+
 /**
  * The contract record routes (M8): list, create, the record read, the
  * DES-017 per-field update, archive, restore, and the contract team,
@@ -1787,6 +1789,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: {
           200: z.object({
             departments: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            regions: z.array(z.object({ id: z.string(), displayName: z.string() })),
             contractTypes: z.array(TypeChoiceSchema),
             contractStatuses: z.array(StatusOptionSchema),
             users: z.array(UserOptionSchema),
@@ -1881,6 +1884,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       );
       return {
         departments: await departmentOptions(app.db),
+        regions: await regionOptions(app.db),
         contractTypes: types.map((contractType, index) => ({
           ...contractType,
           fields: attached[index]!,
@@ -2379,7 +2383,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (body[key] === undefined) continue;
           const next = body[key]?.trim() || null;
           if (next !== target[key]) {
-            patch[key] = next;
+            patch[key] = await lockedRegionName(tx, next);
             changed[key] = { from: target[key], to: next };
           }
         }

@@ -2061,6 +2061,77 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/regions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The Region taxonomy in alphabetical order (SET-012); archived rows only with includeArchived=true */
+    get: operations["listRegions"];
+    put?: never;
+    /** Add a Region: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createRegion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/regions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One Region — the read behind the type editor */
+    get: operations["getRegion"];
+    put?: never;
+    post?: never;
+    /** Hard-delete a Region (SET-012); a type still used by references refuses */
+    delete: operations["deleteRegion"];
+    options?: never;
+    head?: never;
+    /** Rename a Region's display name (DES-017 in-place rename) or edit its description; the slug never changes */
+    patch: operations["updateRegion"];
+    trace?: never;
+  };
+  "/api/v1/regions/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a Region; it leaves pickers and retains every reference */
+    post: operations["archiveRegion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/regions/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived Region (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreRegion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matter-types/{id}/fields": {
     parameters: {
       query?: never;
@@ -13470,6 +13541,304 @@ export interface operations {
       };
     };
   };
+  listRegions: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            regions: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listMatterTypeFields: {
     parameters: {
       query?: never;
@@ -14171,6 +14540,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14238,6 +14608,7 @@ export interface operations {
           matterTypeId: string;
           managerId?: string | null;
           departmentId?: string | null;
+          region?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
           risk?: ("low" | "medium" | "high" | "critical") | null;
@@ -14286,6 +14657,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14453,6 +14825,10 @@ export interface operations {
               id: string;
               displayName: string;
             }[];
+            regions: {
+              id: string;
+              displayName: string;
+            }[];
           };
         };
       };
@@ -14512,6 +14888,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14636,6 +15013,7 @@ export interface operations {
           matterTypeId?: string;
           managerId?: string | null;
           departmentId?: string | null;
+          region?: string | null;
           businessOwnerId?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
@@ -14686,6 +15064,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14996,6 +15375,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -15088,6 +15468,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -22616,6 +22997,10 @@ export interface operations {
         content: {
           "application/json": {
             departments: {
+              id: string;
+              displayName: string;
+            }[];
+            regions: {
               id: string;
               displayName: string;
             }[];
