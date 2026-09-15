@@ -1421,10 +1421,12 @@ CMT-001 Task conversations addendum.
 
 Conversion drafts enforce their `pending | ready | failed` states and `matter | contract` targets with CHECK constraints. A nullable `lease_at` is renewed every 30 seconds while preparation runs; `started_at` remains the worker's immutable claim token. Recovery checks pending conversion work once per minute. Drafts and Contract Analysis runs carry non-null `created_at` and `updated_at`; application writes refresh `updated_at`. These internal timestamps are not added to public response schemas. Partial indexes on Matter and Contract IDs where `ai_unverified is not null` support source audience checks without scanning unmarked records. [INT-008, CTR-008]
 
-### Authentication policy and Regions (2026-09-15)
+### Authentication policy (2026-09-15)
 
 `org_settings.authentication_policy` is nullable JSON with `legal` and `business` objects, each containing `password`, `magicLink`, `sso`, and `requireTwoFactor` booleans. Null uses the legacy mode columns. Migration `0134` also adds `sessions.second_factor_verified`.
 
-`regions` uses the shared taxonomy columns (ID, immutable slug, display name, description, order, defaults and timestamps). Display name is unique. `contracts.region` references `regions.display_name` with `ON UPDATE CASCADE`; archive retains references and blocks new selections. Migration `0135` imports existing Contract and original Request Region values before adding this constraint. See SET-012.
+### Regions (2026-09-15)
+
+`regions` uses the shared taxonomy columns (ID, immutable slug, display name, description, order, defaults and timestamps). Display name is unique both exactly (for foreign-key references) and without regard to case. `contracts.region` references `regions.display_name` with `ON UPDATE CASCADE`; archive retains references and blocks new selections. Migration `0135` imports existing Contract and original Request Region values before adding this constraint. See SET-012.
 
 `matters.region` is nullable text referencing `regions.display_name` with `ON UPDATE CASCADE` (migration `0136`). Region usage counts and deletion protection include both Matters and Contracts.

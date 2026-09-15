@@ -10689,6 +10689,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "regions_display_name_lower_unique": {
+          "name": "regions_display_name_lower_unique",
+          "columns": [
+            {
+              "expression": "lower(\"display_name\")",
+              "isExpression": true,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},

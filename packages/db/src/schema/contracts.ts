@@ -116,6 +116,7 @@ export const contracts = pgTable(
     /** DD-021: NULL means unassigned, at direct creation or after an explicit clear. */
     businessOwnerId: text("business_owner_id").references(() => users.id),
     owningDepartmentId: text("owning_department_id").references(() => departments.id),
+    /** Null means no Region is assigned. */
     region: text("region").references(() => regions.displayName, { onUpdate: "cascade" }),
     /** CTR-011's our side of the contract: which of our own Entities
      * signs it. NULL until known — a contract is often recorded before
