@@ -455,9 +455,8 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
   };
 }
 
-/** The fields that commit as free text (DES-017); the Owner, our
- * signing entity, the type, the status, priority, and risk have their
- * own selects, and the counterparties have their own routes. */
+/** String drafts for title and description (DES-017), plus the selected
+ * Region name. Region commits on selection; title and description on blur. */
 type TextFieldKey = "title" | "description" | "region";
 /**
  * The four term fields that commit as typed text (CTR-006, DES-017):
