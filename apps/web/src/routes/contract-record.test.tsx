@@ -1118,7 +1118,7 @@ describe("the /contracts/:number record page", () => {
         expect(screen.getByLabelText("Expiry date")).toHaveTextContent("Jan 14, 2027");
         expect(screen.getByLabelText("Renewal period (months)")).toHaveValue(12);
         expect(screen.getByLabelText("Notice period (days)")).toHaveValue(90);
-        expect(screen.getByLabelText("Amount")).toHaveValue(125000);
+        expect(screen.getByLabelText("Amount")).toHaveValue("125,000");
       });
     });
 
@@ -1809,7 +1809,7 @@ describe("the /contracts/:number record page", () => {
     let dialog = await screen.findByRole("dialog", { name: "Add new currency" });
     expect(api.patches).toEqual([]);
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
-    expect(amount).toHaveValue(250);
+    expect(amount).toHaveValue("250");
     expect(api.patches).toEqual([]);
     await user.selectOptions(picker, "__add_currency__");
     dialog = await screen.findByRole("dialog", { name: "Add new currency" });
@@ -1817,7 +1817,7 @@ describe("the /contracts/:number record page", () => {
     await user.click(within(dialog).getByRole("button", { name: "EUR Euro" }));
     await waitFor(() => expect(picker).toHaveValue("EUR"));
     expect(api.patches).toEqual([]);
-    expect(amount).toHaveValue(250);
+    expect(amount).toHaveValue("250");
     await leaveValueGroup(user);
     await waitFor(() =>
       expect(api.patches).toEqual([
@@ -1834,12 +1834,12 @@ describe("the /contracts/:number record page", () => {
 
     // Empty, the three controls are the whole field — there is no
     // read-back line under them to wait for.
-    expect(await screen.findByLabelText("Amount")).toHaveValue(null);
+    expect(await screen.findByLabelText("Amount")).toHaveValue("");
     await user.type(screen.getByLabelText("Amount"), "480000");
     // Moving between the three controls stays inside one field, so
     // neither of these blurs commits anything on its own.
     await user.selectOptions(screen.getByLabelText("Currency"), "USD");
-    await user.selectOptions(screen.getByLabelText("Cadence"), "annually");
+    await user.selectOptions(screen.getByLabelText("Frequency"), "annually");
     expect(api.patches).toEqual([]);
 
     // Leaving the group is what commits it.
@@ -1850,7 +1850,7 @@ describe("the /contracts/:number record page", () => {
       ]),
     );
     // The record reads the value back as DES-014 renders it.
-    expect(await screen.findByText("$480,000.00 /year")).toBeVisible();
+    expect(screen.getByLabelText("Amount")).toHaveValue("480,000");
   });
 
   it("commits the group on Enter from any one of its three controls", async () => {
@@ -1861,7 +1861,7 @@ describe("the /contracts/:number record page", () => {
 
     await user.type(await screen.findByLabelText("Amount"), "1200");
     await user.selectOptions(screen.getByLabelText("Currency"), "EUR");
-    await user.selectOptions(screen.getByLabelText("Cadence"), "monthly");
+    await user.selectOptions(screen.getByLabelText("Frequency"), "monthly");
     await user.keyboard("{Enter}");
 
     await waitFor(() =>
@@ -1869,7 +1869,7 @@ describe("the /contracts/:number record page", () => {
         { value: { amount: 120_000, currency: "EUR", cadence: "monthly" } },
       ]),
     );
-    expect(await screen.findByText("€1,200.00 /month")).toBeVisible();
+    expect(screen.getByLabelText("Amount")).toHaveValue("1,200");
   });
 
   it("reverts all three parts on Escape, because half a value is nobody's", async () => {
@@ -1881,16 +1881,16 @@ describe("the /contracts/:number record page", () => {
     const user = userEvent.setup();
 
     const amount = await screen.findByLabelText("Amount");
-    expect(amount).toHaveValue(480_000);
+    expect(amount).toHaveValue("480,000");
     await user.clear(amount);
     await user.type(amount, "1");
     await user.selectOptions(screen.getByLabelText("Currency"), "GBP");
-    await user.selectOptions(screen.getByLabelText("Cadence"), "monthly");
+    await user.selectOptions(screen.getByLabelText("Frequency"), "monthly");
     await user.keyboard("{Escape}");
 
-    expect(amount).toHaveValue(480_000);
+    expect(amount).toHaveValue("480,000");
     expect(screen.getByLabelText("Currency")).toHaveValue("USD");
-    expect(screen.getByLabelText("Cadence")).toHaveValue("annually");
+    expect(screen.getByLabelText("Frequency")).toHaveValue("annually");
     await leaveValueGroup(user);
     expect(api.patches).toEqual([]);
   });
@@ -1903,17 +1903,14 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    // A one-off takes no cadence suffix: there is nothing it is per.
-    expect(await screen.findByText("$5,000.00")).toBeVisible();
+    expect(await screen.findByLabelText("Amount")).toHaveValue("5,000");
     await user.clear(screen.getByLabelText("Amount"));
     await leaveValueGroup(user);
 
     await waitFor(() => expect(api.patches).toEqual([{ value: null }]));
     // The currency and the cadence go with it — the group clears whole.
     expect(screen.getByLabelText("Currency")).toHaveValue("");
-    expect(screen.getByLabelText("Cadence")).toHaveValue("one_time");
-    // And the read-back line goes with them: with no value there is
-    // nothing to read back.
+    expect(screen.getByLabelText("Frequency")).toHaveValue("one_time");
     expect(screen.queryByText("$5,000.00")).not.toBeInTheDocument();
   });
 
@@ -1981,7 +1978,7 @@ describe("the /contracts/:number record page", () => {
         { value: { amount: 5000, currency: "JPY", cadence: "one_time" } },
       ]),
     );
-    expect(await screen.findByText("¥5,000")).toBeVisible();
+    expect(screen.getByLabelText("Amount")).toHaveValue("5,000");
   });
 
   it("shows the API's refusal beside the value when a commit is turned down", async () => {
@@ -2633,7 +2630,7 @@ describe("the /contracts/:number record page", () => {
       // The value freezes as a group, like it commits as one.
       "Amount",
       "Currency",
-      "Cadence",
+      "Frequency",
       "Description",
     ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();
@@ -11265,4 +11262,104 @@ it("keeps built-in classification on Overview and out of Fields", async () => {
   expect(await screen.findByRole("combobox", { name: "Department" })).toHaveValue(
     "dept-procurement",
   );
+});
+
+it("accepts grouped decimal amounts without changing their monetary value", async () => {
+  const api = recordApi(
+    contractRow({ value: { amount: 1000000, currency: "USD", cadence: "one_time" } }),
+  );
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/contracts/42");
+  const user = userEvent.setup();
+  const amount = await screen.findByLabelText("Amount");
+  expect(amount).toHaveValue("10,000");
+  await user.clear(amount);
+  await user.paste("12,345.67");
+  await leaveValueGroup(user);
+  await waitFor(() =>
+    expect(api.patches).toEqual([
+      { value: { amount: 1234567, currency: "USD", cadence: "one_time" } },
+    ]),
+  );
+  expect(amount).toHaveValue("12,345.67");
+  await user.clear(amount);
+  await user.paste("12,34");
+  await leaveValueGroup(user);
+  expect(await screen.findByText("Enter the amount as a number.")).toBeVisible();
+  expect(api.patches).toHaveLength(1);
+});
+
+it("shows a custom cadence input for Other and saves it with the value", async () => {
+  const api = recordApi(
+    contractRow({ value: { amount: 1000000, currency: "USD", cadence: "monthly" } }),
+  );
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/contracts/42");
+  const user = userEvent.setup();
+  const cadence = await screen.findByLabelText("Frequency");
+  expect(screen.queryByLabelText("Custom cadence")).not.toBeInTheDocument();
+  await user.selectOptions(cadence, "other");
+  const custom = await screen.findByLabelText("Custom cadence");
+  await user.click(custom);
+  expect(api.patches).toEqual([]);
+  await leaveValueGroup(user);
+  expect(await screen.findByText("Enter a custom cadence.")).toBeVisible();
+  await user.type(custom, "quarter");
+  await leaveValueGroup(user);
+  await waitFor(() =>
+    expect(api.patches).toEqual([
+      {
+        value: {
+          amount: 1000000,
+          currency: "USD",
+          cadence: "other",
+          cadenceDescription: "quarter",
+        },
+      },
+    ]),
+  );
+  await user.selectOptions(cadence, "annually");
+  expect(screen.queryByLabelText("Custom cadence")).not.toBeInTheDocument();
+  await leaveValueGroup(user);
+  await waitFor(() =>
+    expect(api.patches.at(-1)).toEqual({
+      value: { amount: 1000000, currency: "USD", cadence: "annually" },
+    }),
+  );
+});
+
+it("keeps cadence and currency entered before an amount when focus leaves the value group", async () => {
+  const api = recordApi(contractRow());
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/contracts/42");
+  const user = userEvent.setup();
+  const cadence = await screen.findByLabelText("Frequency");
+  await user.selectOptions(cadence, "other");
+  await leaveValueGroup(user);
+  expect(cadence).toHaveValue("other");
+  const custom = screen.getByLabelText("Custom cadence");
+  await user.type(custom, "milestone");
+  await leaveValueGroup(user);
+  expect(custom).toHaveValue("milestone");
+  await user.selectOptions(screen.getByLabelText("Currency"), "USD");
+  await leaveValueGroup(user);
+  expect(screen.getByLabelText("Currency")).toHaveValue("USD");
+  expect(custom).toHaveValue("milestone");
+  expect(api.patches).toEqual([]);
+
+  await user.type(screen.getByLabelText("Amount"), "10000");
+  await leaveValueGroup(user);
+  await waitFor(() =>
+    expect(api.patches).toEqual([
+      {
+        value: {
+          amount: 1000000,
+          currency: "USD",
+          cadence: "other",
+          cadenceDescription: "milestone",
+        },
+      },
+    ]),
+  );
+  expect(screen.getByLabelText("Amount")).toHaveValue("10,000");
 });

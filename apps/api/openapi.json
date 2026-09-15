@@ -33886,7 +33886,10 @@
                                   },
                                   "cadence": {
                                     "type": "string",
-                                    "enum": ["one_time", "monthly", "annually"]
+                                    "enum": ["one_time", "monthly", "annually", "other"]
+                                  },
+                                  "cadenceDescription": {
+                                    "type": "string"
                                   }
                                 },
                                 "required": ["amount", "currency", "cadence"],
@@ -34182,7 +34185,10 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string"
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -34929,7 +34935,10 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string"
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -35413,7 +35422,10 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string"
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -43623,7 +43635,11 @@
                                   },
                                   "cadence": {
                                     "type": "string",
-                                    "enum": ["one_time", "monthly", "annually"]
+                                    "enum": ["one_time", "monthly", "annually", "other"]
+                                  },
+                                  "cadenceDescription": {
+                                    "type": "string",
+                                    "maxLength": 100
                                   }
                                 },
                                 "required": ["amount", "currency", "cadence"],
@@ -44243,7 +44259,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -45133,7 +45153,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -46026,7 +46050,11 @@
                           },
                           "cadence": {
                             "type": "string",
-                            "enum": ["one_time", "monthly", "annually"]
+                            "enum": ["one_time", "monthly", "annually", "other"]
+                          },
+                          "cadenceDescription": {
+                            "type": "string",
+                            "maxLength": 100
                           }
                         },
                         "required": ["amount", "currency", "cadence"],
@@ -46333,7 +46361,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -47115,7 +47147,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -47636,7 +47672,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -48181,7 +48221,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -48986,7 +49030,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -49537,7 +49585,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -50088,7 +50140,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -50631,7 +50687,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],
@@ -51152,7 +51212,11 @@
                                 },
                                 "cadence": {
                                   "type": "string",
-                                  "enum": ["one_time", "monthly", "annually"]
+                                  "enum": ["one_time", "monthly", "annually", "other"]
+                                },
+                                "cadenceDescription": {
+                                  "type": "string",
+                                  "maxLength": 100
                                 }
                               },
                               "required": ["amount", "currency", "cadence"],

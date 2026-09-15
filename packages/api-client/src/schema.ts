@@ -19049,7 +19049,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               unverifiedFields: (
                 | "counterparty"
@@ -19134,7 +19135,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               unverifiedFields: (
                 | "counterparty"
@@ -19446,7 +19448,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               effectiveDate?: string | null;
               id: string;
@@ -19589,7 +19592,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               effectiveDate?: string | null;
               id: string;
@@ -22695,7 +22699,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -22846,7 +22851,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23132,7 +23138,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23347,7 +23354,8 @@ export interface operations {
             amount: number;
             currency: string;
             /** @enum {string} */
-            cadence: "one_time" | "monthly" | "annually";
+            cadence: "one_time" | "monthly" | "annually" | "other";
+            cadenceDescription?: string;
           } | null;
           /** @enum {string} */
           termType?: "fixed" | "auto_renew" | "evergreen";
@@ -23421,7 +23429,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23651,7 +23660,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23782,7 +23792,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23922,7 +23933,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -24181,7 +24193,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -24319,7 +24332,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -24457,7 +24471,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -24594,7 +24609,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -24725,7 +24741,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";

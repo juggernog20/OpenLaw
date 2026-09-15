@@ -2376,7 +2376,7 @@
     "defaultMessage": "Business Owner"
   },
   "contracts.cadenceLabel": {
-    "defaultMessage": "{cadence, select, one_time {One time} monthly {Monthly} annually {Annually} other {Unknown}}"
+    "defaultMessage": "{cadence, select, one_time {One time} monthly {Monthly} annually {Annually} other {Other}}"
   },
   "contracts.column.actions": {
     "defaultMessage": "Actions"
@@ -2958,7 +2958,7 @@
     "defaultMessage": "Enter the amount as a number."
   },
   "contracts.value.cadence": {
-    "defaultMessage": "Cadence"
+    "defaultMessage": "Frequency"
   },
   "contracts.value.currency": {
     "defaultMessage": "Currency"
@@ -2969,14 +2969,23 @@
   "contracts.value.currencyPlaceholder": {
     "defaultMessage": "Currency…"
   },
-  "contracts.value.hint": {
-    "defaultMessage": "Empty the amount to take the value off."
+  "contracts.value.customCadence": {
+    "defaultMessage": "Custom cadence"
+  },
+  "contracts.value.customCadencePlaceholder": {
+    "defaultMessage": "e.g. quarter or milestone"
+  },
+  "contracts.value.customCadenceRequired": {
+    "defaultMessage": "Enter a custom cadence."
   },
   "contracts.valueNone": {
     "defaultMessage": "No value"
   },
   "contracts.valueWithCadence": {
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
+  },
+  "contracts.valueWithCustomCadence": {
+    "defaultMessage": "{amount} /{cadence}"
   },
   "conversion.attachmentOmissions": {
     "defaultMessage": "Some attachments could not be fully read. Review the source statuses and original files before converting."

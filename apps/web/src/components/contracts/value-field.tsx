@@ -4,13 +4,13 @@ import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { CurrencySelect } from "../currency-select";
 import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { AiField } from "../ui/ai-field";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { CONTROL_CLASS } from "../../lib/form-controls";
-import { currencyFractionDigits, toMajorUnits, toMinorUnits } from "../../lib/format";
+import { toMajorUnits, toMinorUnits } from "../../lib/format";
 import {
   cadenceLabel,
-  formatContractValue,
   VALUE_CADENCES,
   type ContractValue,
   type ValueCadence,
@@ -23,6 +23,7 @@ interface ValueDraft {
   amount: string;
   currency: string;
   cadence: ValueCadence;
+  cadenceDescription: string;
 }
 
 /** The saved value as the controls show it, and as a string that
@@ -30,16 +31,27 @@ interface ValueDraft {
  * from when a commit lands. */
 function valueDraft(value: ContractValue | null, locale: string): ValueDraft {
   return value === null
-    ? { amount: "", currency: "", cadence: "one_time" }
+    ? { amount: "", currency: "", cadence: "one_time", cadenceDescription: "" }
     : {
         amount: String(toMajorUnits(value.amount, value.currency, { locale })),
         currency: value.currency,
         cadence: value.cadence,
+        cadenceDescription: value.cadenceDescription ?? "",
       };
 }
 
 function valueSeed(value: ContractValue | null): string {
-  return value === null ? "" : `${value.amount}:${value.currency}:${value.cadence}`;
+  return value === null
+    ? ""
+    : `${value.amount}:${value.currency}:${value.cadence}:${value.cadenceDescription ?? ""}`;
+}
+
+function groupedAmount(amount: string): string {
+  return amount.replace(
+    /^(\d+)(\.\d*)?$/,
+    (_, whole: string, fraction: string = "") =>
+      whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + fraction,
+  );
 }
 
 /**
@@ -81,6 +93,7 @@ export function ValueField({
   onCommit: (value: ContractValue | null) => void;
 }>) {
   const intl = useIntl();
+  const [editingAmount, setEditingAmount] = useState(false);
   const [draft, setDraft] = useState<ValueDraft>(() => valueDraft(value, intl.locale));
   /** The value the draft was last seeded from. Comparing the content
    * rather than the object is what lets another field's commit answer
@@ -91,16 +104,6 @@ export function ValueField({
     setSeed(seeded);
     setDraft(valueDraft(value, intl.locale));
   }
-
-  /** A step of one smallest unit: cents for USD, whole yen for JPY. The
-   * box refuses a precision the currency cannot hold. */
-  const step =
-    draft.currency === ""
-      ? 0.01
-      : 10 **
-        -currencyFractionDigits(draft.currency, {
-          locale: intl.locale,
-        });
 
   function revert() {
     setDraft(valueDraft(value, intl.locale));
@@ -114,19 +117,19 @@ export function ValueField({
     const typed = draft.amount.trim();
 
     if (typed === "") {
-      // An empty amount is how the whole field is cleared. With nothing
-      // recorded there is nothing to clear, so the group reverts —
-      // a currency picked and then abandoned is not a value.
+      // Before the first value is saved, keep the other parts so the
+      // person can choose a cadence or currency before entering an amount.
       if (value === null) {
-        revert();
+        onStatus("idle");
         return;
       }
       onCommit(null);
       return;
     }
 
-    const major = Number(typed);
-    if (!Number.isFinite(major) || major < 0) {
+    const validAmount = /^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?$|^\.\d+$/.test(typed);
+    const major = Number(typed.replaceAll(",", ""));
+    if (!validAmount || !Number.isFinite(major) || major < 0) {
       onStatus(
         "error",
         intl.formatMessage({
@@ -150,16 +153,28 @@ export function ValueField({
       return;
     }
 
+    if (draft.cadence === "other" && !draft.cadenceDescription.trim()) {
+      onStatus(
+        "error",
+        intl.formatMessage({
+          id: "contracts.value.customCadenceRequired",
+          defaultMessage: "Enter a custom cadence.",
+        }),
+      );
+      return;
+    }
     const next: ContractValue = {
       amount: toMinorUnits(major, draft.currency, { locale: intl.locale }),
       currency: draft.currency,
       cadence: draft.cadence,
+      ...(draft.cadence === "other" ? { cadenceDescription: draft.cadenceDescription.trim() } : {}),
     };
     if (
       value &&
       next.amount === value.amount &&
       next.currency === value.currency &&
-      next.cadence === value.cadence
+      next.cadence === value.cadence &&
+      next.cadenceDescription === value.cadenceDescription
     ) {
       // Nothing changed: commit nothing (DES-017), and drop any
       // refusal the last attempt left standing.
@@ -171,22 +186,11 @@ export function ValueField({
 
   return (
     <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
-      <div className="flex items-center gap-2">
-        <span id="contract-value-label" className="text-sm font-medium text-primary">
-          <FormattedMessage id="contracts.form.value" defaultMessage="Value" />
-        </span>
-        {marker}
-        <StatusNote status={status} detail={error} />
-      </div>
-      {/* The review controls sit beside the group, never inside it.
-          The group takes Enter as a commit and cancels the key, so a
-          button within it could never be pressed with the keyboard.
-          The group names the value's three controls and nothing else. */}
       <div className="flex flex-wrap items-center gap-2">
         <div
           role="group"
           aria-labelledby="contract-value-label"
-          className="flex flex-1 flex-wrap items-center gap-2"
+          className="flex flex-1 flex-wrap items-end gap-2"
           // Focus moving between the three controls stays inside one
           // field, so only focus leaving the group commits it.
           onBlur={(event) => {
@@ -194,6 +198,7 @@ export function ValueField({
             commit();
           }}
           onKeyDown={(event) => {
+            if (event.target instanceof HTMLElement && event.target.closest("button")) return;
             if (event.key === "Enter") {
               // The record page is not a form; Enter here means commit.
               event.preventDefault();
@@ -202,84 +207,110 @@ export function ValueField({
             if (event.key === "Escape") revert();
           }}
         >
-          <AiField active={Boolean(marker)} className="w-40">
-            <Input
-              id="contract-value-amount"
-              type="number"
-              inputMode="decimal"
-              min={0}
-              step={step}
-              disabled={frozen}
-              aria-label={intl.formatMessage({
-                id: "contracts.value.amount",
-                defaultMessage: "Amount",
-              })}
-              value={draft.amount}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, amount: event.target.value }))
-              }
-            />
-          </AiField>
-          <AiField active={Boolean(marker)} className="w-56">
-            <CurrencySelect
-              id="contract-value-currency"
-              className="w-full"
-              disabled={frozen}
-              aria-label={intl.formatMessage({
-                id: "contracts.value.currency",
-                defaultMessage: "Currency",
-              })}
-              value={draft.currency}
-              onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
-              placeholder={intl.formatMessage({
-                id: "contracts.value.currencyPlaceholder",
-                defaultMessage: "Currency…",
-              })}
-            />
-          </AiField>
-          <AiField active={Boolean(marker)} className="w-40">
-            <select
-              id="contract-value-cadence"
-              className={CONTROL_CLASS}
-              disabled={frozen}
-              aria-label={intl.formatMessage({
-                id: "contracts.value.cadence",
-                defaultMessage: "Cadence",
-              })}
-              value={draft.cadence}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, cadence: event.target.value as ValueCadence }))
-              }
-            >
-              {/* No empty option: an amount always says what it is per, and
+          <div className="flex w-40 flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <Label id="contract-value-label" htmlFor="contract-value-amount">
+                <FormattedMessage id="contracts.form.value" defaultMessage="Value" />
+              </Label>
+              {marker}
+              <StatusNote status={status} detail={error} />
+            </div>
+            <AiField active={Boolean(marker)}>
+              <Input
+                id="contract-value-amount"
+                type="text"
+                inputMode="decimal"
+                disabled={frozen}
+                aria-label={intl.formatMessage({
+                  id: "contracts.value.amount",
+                  defaultMessage: "Amount",
+                })}
+                value={editingAmount ? draft.amount : groupedAmount(draft.amount)}
+                onFocus={() => setEditingAmount(true)}
+                onBlur={() => setEditingAmount(false)}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, amount: event.target.value }))
+                }
+              />
+            </AiField>
+          </div>
+          <div className="flex w-56 flex-col gap-1.5">
+            <Label htmlFor="contract-value-currency">
+              <FormattedMessage id="contracts.value.currency" defaultMessage="Currency" />
+            </Label>
+            <AiField active={Boolean(marker)}>
+              <CurrencySelect
+                id="contract-value-currency"
+                className="w-full"
+                disabled={frozen}
+                aria-label={intl.formatMessage({
+                  id: "contracts.value.currency",
+                  defaultMessage: "Currency",
+                })}
+                value={draft.currency}
+                onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
+                placeholder={intl.formatMessage({
+                  id: "contracts.value.currencyPlaceholder",
+                  defaultMessage: "Currency…",
+                })}
+              />
+            </AiField>
+          </div>
+          <div className="flex w-40 flex-col gap-1.5">
+            <Label htmlFor="contract-value-cadence">
+              <FormattedMessage id="contracts.value.cadence" defaultMessage="Frequency" />
+            </Label>
+            <AiField active={Boolean(marker)}>
+              <select
+                id="contract-value-cadence"
+                className={CONTROL_CLASS}
+                disabled={frozen}
+                aria-label={intl.formatMessage({
+                  id: "contracts.value.cadence",
+                  defaultMessage: "Frequency",
+                })}
+                value={draft.cadence}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    cadence: event.target.value as ValueCadence,
+                  }))
+                }
+              >
+                {/* No empty option: an amount always says what it is per, and
               a one-off is a cadence, not the absence of one (CTR-010). */}
-              {VALUE_CADENCES.map((cadence) => (
-                <option key={cadence} value={cadence}>
-                  {cadenceLabel(intl, cadence)}
-                </option>
-              ))}
-            </select>
-          </AiField>
+                {VALUE_CADENCES.map((cadence) => (
+                  <option key={cadence} value={cadence}>
+                    {cadenceLabel(intl, cadence)}
+                  </option>
+                ))}
+              </select>
+            </AiField>
+          </div>
+          {draft.cadence === "other" && (
+            <AiField active={Boolean(marker)} className="min-w-40 flex-1">
+              <Input
+                id="contract-value-custom-cadence"
+                disabled={frozen}
+                maxLength={100}
+                aria-label={intl.formatMessage({
+                  id: "contracts.value.customCadence",
+                  defaultMessage: "Custom cadence",
+                })}
+                placeholder={intl.formatMessage({
+                  id: "contracts.value.customCadencePlaceholder",
+                  defaultMessage: "e.g. quarter or milestone",
+                })}
+                value={draft.cadenceDescription}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, cadenceDescription: event.target.value }))
+                }
+              />
+            </AiField>
+          )}
         </div>
         <span className="flex items-center gap-2">{confirmation}</span>
       </div>
-      {/* Only once there is a value to read back. Empty, the three
-          controls are the whole field: they already say the amount is
-          blank, so a line under them saying the same is noise. */}
-      {value && (
-        <>
-          {/* What the record says it is worth, read back as DES-014
-              renders it — the three controls hold the parts, this is
-              the field. */}
-          <p className="text-md">{formatContractValue(intl, value)}</p>
-          <p className="text-xs text-muted">
-            <FormattedMessage
-              id="contracts.value.hint"
-              defaultMessage="Empty the amount to take the value off."
-            />
-          </p>
-        </>
-      )}
     </div>
   );
 }

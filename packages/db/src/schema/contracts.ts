@@ -75,6 +75,7 @@ export { SEVERITY_LEVELS, type SeverityLevel } from "./severity.js";
  * enum, not an admin-configurable list.
  */
 export const VALUE_CADENCES = ["one_time", "monthly", "annually"] as const;
+export const CONTRACT_VALUE_CADENCES = [...VALUE_CADENCES, "other"] as const;
 export type ValueCadence = (typeof VALUE_CADENCES)[number];
 
 /**
@@ -167,7 +168,8 @@ export const contracts = pgTable(
      * standard, so the column is too. */
     valueCurrency: char("value_currency", { length: 3 }),
     /** What the amount is per (CTR-010). */
-    valueCadence: text("value_cadence", { enum: VALUE_CADENCES }),
+    valueCadence: text("value_cadence", { enum: CONTRACT_VALUE_CADENCES }),
+    valueCadenceDescription: text("value_cadence_description"),
     /**
      * CTR-015's hierarchy: the one contract this one sits under (M16/5).
      *
@@ -335,8 +337,12 @@ export const contracts = pgTable(
     ),
     check("contracts_risk_check", sql`${table.risk} in ('low', 'medium', 'high', 'critical')`),
     check(
+      "contracts_value_cadence_description_check",
+      sql`(${table.valueCadence} = 'other' and ${table.valueCadenceDescription} is not null and length(btrim(${table.valueCadenceDescription})) between 1 and 100) or (${table.valueCadence} is distinct from 'other' and ${table.valueCadenceDescription} is null)`,
+    ),
+    check(
       "contracts_value_cadence_check",
-      sql`${table.valueCadence} in ('one_time', 'monthly', 'annually')`,
+      sql`${table.valueCadence} in ('one_time', 'monthly', 'annually', 'other')`,
     ),
     check(
       "contracts_term_type_check",

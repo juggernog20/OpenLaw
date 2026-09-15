@@ -174,7 +174,7 @@ import {
   TERM_TYPES,
   users,
   USER_ROLES,
-  VALUE_CADENCES,
+  CONTRACT_VALUE_CADENCES,
   type AnyPgColumn,
   type Contract,
   type ContractStage,
@@ -323,7 +323,8 @@ const ISO_4217 = new Set(Intl.supportedValuesOf("currency"));
 const ContractValueSchema = z.object({
   amount: z.int().nonnegative(),
   currency: z.string(),
-  cadence: z.enum(VALUE_CADENCES),
+  cadence: z.enum(CONTRACT_VALUE_CADENCES),
+  cadenceDescription: z.string().trim().max(100).optional(),
 });
 
 /**
@@ -332,17 +333,29 @@ const ContractValueSchema = z.object({
  * the object is how the whole value is cleared. Case is normalized, so
  * "usd" and "USD" are one currency and never two rows that disagree.
  */
-const ContractValueInput = z.strictObject({
-  amount: z.int().nonnegative(),
-  currency: z
-    .string()
-    .trim()
-    .transform((code) => code.toUpperCase())
-    .refine((code) => ISO_4217.has(code), {
-      message: "Use a three-letter ISO 4217 currency code.",
-    }),
-  cadence: z.enum(VALUE_CADENCES),
-});
+const ContractValueInput = z
+  .strictObject({
+    amount: z.int().nonnegative(),
+    currency: z
+      .string()
+      .trim()
+      .transform((code) => code.toUpperCase())
+      .refine((code) => ISO_4217.has(code), {
+        message: "Use a three-letter ISO 4217 currency code.",
+      }),
+    cadence: z.enum(CONTRACT_VALUE_CADENCES),
+    cadenceDescription: z.string().trim().max(100).optional(),
+  })
+  .refine(
+    (value) =>
+      value.cadence === "other"
+        ? !!value.cadenceDescription
+        : value.cadenceDescription === undefined,
+    {
+      message: "Enter a custom cadence only when Other is selected.",
+      path: ["cadenceDescription"],
+    },
+  );
 
 /** CTR-006's three kinds of commitment. Code branches on it, so it is a
  * fixed enum rather than an admin-configurable list. */
@@ -781,7 +794,12 @@ interface ContractContext {
 function toValue(row: Contract) {
   return row.valueAmount === null || row.valueCurrency === null || row.valueCadence === null
     ? null
-    : { amount: row.valueAmount, currency: row.valueCurrency, cadence: row.valueCadence };
+    : {
+        amount: row.valueAmount,
+        currency: row.valueCurrency,
+        cadence: row.valueCadence,
+        ...(row.valueCadenceDescription ? { cadenceDescription: row.valueCadenceDescription } : {}),
+      };
 }
 
 /** One value equals another when all three parts match, and no value
@@ -796,7 +814,8 @@ function sameValue(
   return (
     left.amount === right.amount &&
     left.currency === right.currency &&
-    left.cadence === right.cadence
+    left.cadence === right.cadence &&
+    left.cadenceDescription === right.cadenceDescription
   );
 }
 
@@ -2636,6 +2655,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             patch.valueAmount = next?.amount ?? null;
             patch.valueCurrency = next?.currency ?? null;
             patch.valueCadence = next?.cadence ?? null;
+            patch.valueCadenceDescription = next?.cadenceDescription ?? null;
             changed.value = { from: before, to: next };
           }
         }

@@ -3,7 +3,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
-  VALUE_CADENCES,
+  CONTRACT_VALUE_CADENCES,
   SEVERITY_LEVELS,
   and,
   asc,
@@ -39,7 +39,8 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 const Value = z.object({
   amount: z.int().nonnegative(),
   currency: z.string(),
-  cadence: z.enum(VALUE_CADENCES),
+  cadence: z.enum(CONTRACT_VALUE_CADENCES),
+  cadenceDescription: z.string().optional(),
 });
 const BusinessValues = {
   owningDepartment: z.string().nullable().optional(),
@@ -65,6 +66,9 @@ async function contractBusinessValues(db: Executor, id: string) {
             amount: row!.contract.valueAmount,
             currency: row!.contract.valueCurrency!,
             cadence: row!.contract.valueCadence!,
+            ...(row!.contract.valueCadenceDescription
+              ? { cadenceDescription: row!.contract.valueCadenceDescription }
+              : {}),
           },
   };
 }
