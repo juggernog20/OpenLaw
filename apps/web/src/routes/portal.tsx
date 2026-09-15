@@ -54,7 +54,7 @@ import { PortalShell } from "../components/portal/portal-shell";
 
 export async function portalHomeLoader({ request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const [typesRes, linksRes, requestsRes] = await Promise.all([
     api.GET("/api/v1/portal/request-types"),
     api.GET("/api/v1/portal/intake-links"),
@@ -83,7 +83,7 @@ export function PortalHomePage() {
     useLoaderData<typeof portalHomeLoader>();
   const intl = useIntl();
 
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
 
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>

@@ -47,6 +47,9 @@
   "action.save": {
     "defaultMessage": "Save"
   },
+  "action.signOut": {
+    "defaultMessage": "Sign out"
+  },
   "activity.actor.system": {
     "defaultMessage": "OpenLaw"
   },
@@ -998,6 +1001,9 @@
   "auth.enroll.passwordHint": {
     "defaultMessage": "Confirm your password to start enrollment."
   },
+  "auth.enroll.required": {
+    "defaultMessage": "Your organization requires two-factor authentication."
+  },
   "auth.enroll.title": {
     "defaultMessage": "Two-factor authentication"
   },
@@ -1021,9 +1027,6 @@
   },
   "auth.linkExpired.title": {
     "defaultMessage": "Sign-in link expired"
-  },
-  "auth.login.backToSso": {
-    "defaultMessage": "Back"
   },
   "auth.login.breakGlass": {
     "defaultMessage": "Administrator sign-in"
@@ -1058,6 +1061,12 @@
   "auth.login.title": {
     "defaultMessage": "Sign in"
   },
+  "auth.login.unavailable": {
+    "defaultMessage": "Sign-in is unavailable. Contact your administrator."
+  },
+  "auth.login.withPassword": {
+    "defaultMessage": "Sign in with a password"
+  },
   "auth.magic.body": {
     "defaultMessage": "Enter your work email to get a single-use sign-in link."
   },
@@ -1075,6 +1084,18 @@
   },
   "auth.magicSent.title": {
     "defaultMessage": "Check your email"
+  },
+  "auth.passwordSetup.open": {
+    "defaultMessage": "Set up or reset your password"
+  },
+  "auth.passwordSetup.send": {
+    "defaultMessage": "Send password setup link"
+  },
+  "auth.passwordSetup.sent": {
+    "defaultMessage": "If your email address is eligible, a password setup link is on its way. It expires in one hour."
+  },
+  "auth.portalLogin.title": {
+    "defaultMessage": "Business Portal sign-in"
   },
   "auth.setPassword.confirmPassword": {
     "defaultMessage": "Confirm password"
@@ -6842,15 +6863,6 @@
   "portal.documents.versionOf": {
     "defaultMessage": "New version of {name}"
   },
-  "portal.entry.closed": {
-    "defaultMessage": "Sign-in links are switched off. Use your organization's sign-in to reach the portal."
-  },
-  "portal.entry.lead": {
-    "defaultMessage": "Enter your work email to get a single-use link into the portal. No account and no password."
-  },
-  "portal.entry.title": {
-    "defaultMessage": "Legal portal"
-  },
   "portal.form.attachmentFailedReason": {
     "defaultMessage": "{filename} — {reason}"
   },
@@ -7910,14 +7922,11 @@
   "settings.auth.addDomain": {
     "defaultMessage": "Add"
   },
+  "settings.auth.adminRecovery": {
+    "defaultMessage": "Administrators retain emergency password sign-in. Any required two-factor authentication still applies."
+  },
   "settings.auth.authentication": {
-    "defaultMessage": "Authentication"
-  },
-  "settings.auth.builtIn": {
-    "defaultMessage": "Built-in"
-  },
-  "settings.auth.builtIn.hint": {
-    "defaultMessage": "Staff sign in with email and password. Each user can add two-factor authentication (TOTP) from their profile."
+    "defaultMessage": "Legal User Authentication"
   },
   "settings.auth.callback": {
     "defaultMessage": "Paste this callback URL into your IdP console: {url}"
@@ -7928,6 +7937,9 @@
   "settings.auth.clientSecret": {
     "defaultMessage": "Client secret"
   },
+  "settings.auth.configureSso": {
+    "defaultMessage": "Configure an identity provider below to enable single sign-on."
+  },
   "settings.auth.domain": {
     "defaultMessage": "Email domain"
   },
@@ -7937,38 +7949,32 @@
   "settings.auth.domains": {
     "defaultMessage": "Allowed email domains"
   },
+  "settings.auth.factorAllMethods": {
+    "defaultMessage": "An authenticator app is required with every enabled sign-in method. Users must complete setup before accessing OpenLaw."
+  },
+  "settings.auth.identityProvider": {
+    "defaultMessage": "Identity provider"
+  },
   "settings.auth.issuer": {
     "defaultMessage": "Issuer URL"
   },
   "settings.auth.issuerPlaceholder": {
     "defaultMessage": "https://idp.example.com"
   },
-  "settings.auth.magicLink": {
-    "defaultMessage": "Magic-link sign-in"
+  "settings.auth.method.magicLink": {
+    "defaultMessage": "Email magic link"
   },
-  "settings.auth.magicLink.hint": {
-    "defaultMessage": "Business users sign in through emailed magic links — no password or IdP account needed."
+  "settings.auth.method.password": {
+    "defaultMessage": "Email and password"
   },
-  "settings.auth.modeCaption": {
-    "defaultMessage": "Switching modes applies immediately and is recorded in the activity log."
+  "settings.auth.method.sso": {
+    "defaultMessage": "Single sign-on (SSO)"
   },
   "settings.auth.noDomains": {
     "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
-  "settings.auth.oidc": {
-    "defaultMessage": "Identity provider (OIDC)"
-  },
-  "settings.auth.oidc.hint": {
-    "defaultMessage": "Staff sign in through your identity provider — works with Okta, Microsoft Entra, Google Workspace, Keycloak, and Authentik."
-  },
   "settings.auth.portal": {
-    "defaultMessage": "Portal access"
-  },
-  "settings.auth.portalLocked": {
-    "defaultMessage": "Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
-  },
-  "settings.auth.portalOptional": {
-    "defaultMessage": "Turn off to require SSO for Business Users. They will need accounts in your identity provider to reach the Portal. Administrators retain emergency password sign-in."
+    "defaultMessage": "Business Portal Authentication"
   },
   "settings.auth.providerId": {
     "defaultMessage": "Provider ID"
@@ -7979,11 +7985,11 @@
   "settings.auth.registerProvider": {
     "defaultMessage": "Register provider"
   },
-  "settings.auth.registerToSwitch": {
-    "defaultMessage": "Register your identity provider to finish the switch."
-  },
   "settings.auth.removeDomain": {
     "defaultMessage": "Remove {domain}"
+  },
+  "settings.auth.requireTwoFactor": {
+    "defaultMessage": "Require two-factor authentication"
   },
   "settings.auth.saveProvider": {
     "defaultMessage": "Save provider"
@@ -7993,9 +7999,6 @@
   },
   "settings.auth.secretPlaceholder": {
     "defaultMessage": "••••••••••••••••"
-  },
-  "settings.auth.sessionsCaption": {
-    "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
   },
   "settings.autoDocs.acknowledgementFrequency": {
     "defaultMessage": "Acknowledgement frequency"
@@ -9674,6 +9677,9 @@
   "settings.profile.twoFactorOn": {
     "defaultMessage": "Two-factor is on — a code is required when you sign in with your password."
   },
+  "settings.profile.twoFactorRequired": {
+    "defaultMessage": "Required by your organization"
+  },
   "settings.profile.upload": {
     "defaultMessage": "Upload"
   },
@@ -10475,20 +10481,8 @@
   "welcome.aiAnalysis.replace.cancel": {
     "defaultMessage": "Keep current credentials"
   },
-  "welcome.auth.builtIn": {
-    "defaultMessage": "Built-in sign-in"
-  },
-  "welcome.auth.builtIn.hint": {
-    "defaultMessage": "Email and password, with optional two-factor authentication. The default."
-  },
   "welcome.auth.callback": {
     "defaultMessage": "Paste this callback URL into your IdP console: {url}"
-  },
-  "welcome.auth.error.mode": {
-    "defaultMessage": "The authentication mode could not be saved."
-  },
-  "welcome.auth.error.noProvider": {
-    "defaultMessage": "Register an identity provider before switching to single sign-on."
   },
   "welcome.auth.error.register": {
     "defaultMessage": "The identity provider could not be registered."
@@ -10516,12 +10510,6 @@
   },
   "welcome.auth.field.providerIdPlaceholder": {
     "defaultMessage": "okta"
-  },
-  "welcome.auth.oidc": {
-    "defaultMessage": "Single sign-on (OIDC)"
-  },
-  "welcome.auth.oidc.hint": {
-    "defaultMessage": "Bring your own identity provider. Administrators keep password sign-in as break-glass."
   },
   "welcome.auth.register.submit": {
     "defaultMessage": "Register provider"
@@ -10623,7 +10611,7 @@
     "defaultMessage": "Test email sent to {email}. Check your inbox."
   },
   "welcome.email.unset": {
-    "defaultMessage": "Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
+    "defaultMessage": "Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications."
   },
   "welcome.error.complete": {
     "defaultMessage": "Onboarding could not be marked finished. Try again."
@@ -10632,7 +10620,7 @@
     "defaultMessage": "Finish"
   },
   "welcome.intro": {
-    "defaultMessage": "A few choices get this instance ready for your team. Every step is skippable and stays editable later."
+    "defaultMessage": "A few choices get this instance ready for your team. Email is required to finish setup. You can skip the other steps and return to them later."
   },
   "welcome.invites.error": {
     "defaultMessage": "The invite could not be sent."
@@ -10670,32 +10658,20 @@
   "welcome.portal.add": {
     "defaultMessage": "Add"
   },
-  "welcome.portal.disabled": {
-    "defaultMessage": "Magic-link sign-in is off"
-  },
   "welcome.portal.domains": {
     "defaultMessage": "Allowed email domains"
   },
   "welcome.portal.empty": {
     "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
-  "welcome.portal.enabled": {
-    "defaultMessage": "Magic-link sign-in is on"
-  },
   "welcome.portal.error.domains": {
     "defaultMessage": "The domain allowlist could not be saved."
   },
-  "welcome.portal.error.toggle": {
-    "defaultMessage": "The magic-link setting could not be saved."
-  },
   "welcome.portal.hint": {
-    "defaultMessage": "Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
+    "defaultMessage": "Choose sign-in methods and two-factor requirements for Business Users. Allow domains for email-based access; an empty list prevents new email-based access."
   },
   "welcome.portal.remove": {
     "defaultMessage": "Remove {domain}"
-  },
-  "welcome.portal.toggle.hint": {
-    "defaultMessage": "In built-in mode, turning off magic links closes Portal entry. With OIDC, business users can still sign in with SSO."
   },
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"
@@ -10749,7 +10725,7 @@
     "defaultMessage": "Set up later"
   },
   "welcome.skipAll": {
-    "defaultMessage": "Set up later"
+    "defaultMessage": "Skip optional steps"
   },
   "welcome.start": {
     "defaultMessage": "Get started"

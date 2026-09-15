@@ -100,7 +100,7 @@ async function enroll(cookies: Record<string, string>, password: string) {
     payload: { code: await currentCode(secret) },
   });
   expect(prove.statusCode, prove.body).toBe(200);
-  return { secret, backupCodes };
+  return { secret, backupCodes, cookies: { ...cookies, ...cookiesOf(prove) } };
 }
 
 /** Password sign-in that must come back as a 2FA challenge, not a session. */
@@ -332,4 +332,212 @@ describe("TOTP two-factor (mounted better-auth twoFactor plugin)", () => {
     expect(res.json().twoFactorRedirect).toBeUndefined();
     expect(hasSessionCookie(cookiesOf(res))).toBe(true);
   });
+});
+
+describe("organization requires two-factor authentication", () => {
+  it("gates staff access until enrollment is verified and prevents disabling the factor", async () => {
+    const email = "required@example.com";
+    const password = "required-staff-passphrase";
+    await inviteActivated(email, "Required Staff", password);
+    let staff = await signInCookies(harness.app, email, password);
+    let admin = await signInThroughChallenge();
+    const policy = (cookies: Record<string, string>, requireTwoFactor: boolean) =>
+      harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/auth/two-factor-policy",
+        cookies,
+        payload: { requireTwoFactor },
+      });
+    expect((await policy(staff, true)).statusCode).toBe(403);
+    expect((await policy(admin, true)).statusCode).toBe(200);
+    expect((await me(staff)).json().user).toMatchObject({
+      twoFactorRequired: true,
+      twoFactorSetupRequired: true,
+    });
+    const blocked = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/departments/options",
+      cookies: staff,
+    });
+    expect(blocked.statusCode, blocked.body).toBe(403);
+    expect(blocked.json().type).toBe("/problems/two-factor-setup-required");
+    const update = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/update-user",
+      cookies: staff,
+      payload: { name: "Bypass" },
+    });
+    expect(update.statusCode, update.body).toBe(403);
+    const enrollment = await enroll(staff, password);
+    staff = enrollment.cookies;
+    expect((await me(staff)).json().user.twoFactorSetupRequired).toBe(false);
+    expect(
+      (
+        await harness.app.inject({
+          method: "GET",
+          url: "/api/v1/departments/options",
+          cookies: staff,
+        })
+      ).statusCode,
+    ).toBe(200);
+    const disabled = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/two-factor/disable",
+      cookies: staff,
+      payload: { password },
+    });
+    expect(disabled.statusCode, disabled.body).toBe(403);
+    const verified = await answer(
+      await challenge(email, password),
+      "verify-totp",
+      await currentCode(enrollment.secret),
+    );
+    expect(verified.statusCode, verified.body).toBe(200);
+    // The administrator who enabled the policy must enroll too.
+    expect((await policy(admin, false)).statusCode).toBe(403);
+    const adminEnrollment = await enroll(admin, TEST_ADMIN.password);
+    adminSecret = adminEnrollment.secret;
+    admin = adminEnrollment.cookies;
+    expect((await policy(admin, true)).statusCode).toBe(200);
+    const audit = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "org_settings.updated"));
+    expect(
+      audit.filter((row) => (row.payload as { field?: string }).field === "requireTwoFactor"),
+    ).toHaveLength(1);
+  });
+
+  it("requires a second factor after staff magic-link sign-in while leaving the optional Business Portal policy unchanged", async () => {
+    for (const [email, allowed] of [
+      [TEST_ADMIN.email, false],
+      ["business-policy@example.com", true],
+    ] as const) {
+      const sent = await harness.app.inject({
+        method: "POST",
+        url: "/api/auth/sign-in/magic-link",
+        payload: { email, callbackURL: "/" },
+      });
+      expect(sent.statusCode, sent.body).toBe(200);
+      const message = harness.mailer.messagesTo(email).at(-1)!;
+      const url = new URL(/https?:\/\/\S+/.exec(message.text)![0]!);
+      const redeemed = await harness.app.inject({ method: "GET", url: url.pathname + url.search });
+      const jar = cookiesOf(redeemed);
+      expect(hasSessionCookie(jar), redeemed.body).toBe(true);
+      if (!allowed) {
+        expect((await me(jar)).json().user.twoFactorVerificationRequired).toBe(true);
+        const blocked = await harness.app.inject({
+          method: "GET",
+          url: "/api/v1/departments/options",
+          cookies: jar,
+        });
+        expect(blocked.statusCode, blocked.body).toBe(403);
+        expect(blocked.json().type).toBe("/problems/two-factor-verification-required");
+        const wrong = await answer(jar, "verify-totp", "invalid");
+        expect(wrong.statusCode).not.toBe(200);
+        expect((await me(jar)).json().user.twoFactorVerificationRequired).toBe(true);
+        for (let attempt = 1; attempt < 10; attempt++) {
+          expect((await answer(jar, "verify-totp", "invalid")).statusCode).toBe(401);
+        }
+        expect((await answer(jar, "verify-totp", await currentCode(adminSecret!))).statusCode).toBe(
+          429,
+        );
+        await harness.db
+          .update(twoFactors)
+          .set({ lockedUntil: new Date(0) })
+          .where(eq(twoFactors.userId, (await me(jar)).json().user.id));
+        const verified = await answer(jar, "verify-totp", await currentCode(adminSecret!));
+        expect(verified.statusCode, verified.body).toBe(200);
+        expect((await me(jar)).json().user.twoFactorVerificationRequired).toBe(false);
+      }
+      if (allowed)
+        expect((await me(jar)).json().user).toMatchObject({
+          twoFactorRequired: false,
+          twoFactorSetupRequired: false,
+        });
+    }
+  });
+
+  it("leaves SSO policy to the identity provider and allows administrators to turn the requirement off", async () => {
+    await harness.db.update(orgSettings).set({ authMode: "oidc" });
+    try {
+      const cookies = await signInThroughChallenge();
+      expect((await me(cookies)).json().user.twoFactorRequired).toBe(false);
+      await harness.db.update(orgSettings).set({ magicLinkEnabled: false });
+      const switched = await harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/auth/mode",
+        cookies,
+        payload: { mode: "built_in" },
+      });
+      expect(switched.statusCode, switched.body).toBe(200);
+      const methods = await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
+      expect(methods.json()).toMatchObject({
+        mode: "built_in",
+        requireTwoFactor: true,
+        magicLinkEnabled: true,
+      });
+    } finally {
+      await harness.db.update(orgSettings).set({ authMode: "built_in" });
+    }
+    const cookies = await signInThroughChallenge();
+    const response = await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/auth/two-factor-policy",
+      cookies,
+      payload: { requireTwoFactor: false },
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect((await me(cookies)).json().user.twoFactorRequired).toBe(false);
+  });
+});
+
+it("enrolls passwordless Business Users and requires a second factor on later magic links", async () => {
+  const admin = await signInThroughChallenge();
+  const required = await harness.app.inject({
+    method: "PATCH",
+    url: "/api/v1/auth/policy/business",
+    cookies: admin,
+    payload: { password: false, magicLink: true, sso: false, requireTwoFactor: true },
+  });
+  expect(required.statusCode, required.body).toBe(200);
+  const email = "passwordless-factor@example.com";
+  async function magicSignIn() {
+    await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/sign-in/magic-link",
+      payload: { email, callbackURL: "/portal" },
+    });
+    const url = new URL(/https?:\/\/\S+/.exec(harness.mailer.messagesTo(email).at(-1)!.text)![0]!);
+    return cookiesOf(await harness.app.inject({ method: "GET", url: url.pathname + url.search }));
+  }
+  const pending = await magicSignIn();
+  expect((await me(pending)).json().user.twoFactorSetupRequired).toBe(true);
+  const enabled = await harness.app.inject({
+    method: "POST",
+    url: "/api/auth/two-factor/enable",
+    cookies: pending,
+    payload: {},
+  });
+  expect(enabled.statusCode, enabled.body).toBe(200);
+  const secret = secretFrom(enabled.json().totpURI);
+  const proof = await answer(pending, "verify-totp", await currentCode(secret));
+  expect(proof.statusCode, proof.body).toBe(200);
+  const session = { ...pending, ...cookiesOf(proof) };
+  expect((await me(session)).json().user).toMatchObject({
+    twoFactorSetupRequired: false,
+    twoFactorVerificationRequired: false,
+  });
+  const returning = await magicSignIn();
+  expect((await me(returning)).json().user.twoFactorVerificationRequired).toBe(true);
+  const backup = enabled.json().backupCodes[0] as string;
+  expect((await answer(returning, "verify-backup-code", backup)).statusCode).toBe(200);
+  expect((await me(returning)).json().user.twoFactorVerificationRequired).toBe(false);
+  const disabled = await harness.app.inject({
+    method: "POST",
+    url: "/api/auth/two-factor/disable",
+    cookies: returning,
+    payload: {},
+  });
+  expect(disabled.statusCode).toBe(403);
 });

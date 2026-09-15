@@ -319,8 +319,9 @@ async function enterPortalByMagicLink(
   api: APIRequestContext,
 ): Promise<Page> {
   const page = await context.newPage();
-  await page.goto("/portal/enter");
-  await expect(page.getByText("Legal portal")).toBeVisible();
+  await page.goto("/portal/login");
+  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  await expect(page.getByRole("heading", { name: "Get a sign-in link" })).toBeVisible();
   await page.getByLabel("Email").fill(REQUESTER);
   await page.getByRole("button", { name: "Send link" }).click();
   await expect(page.getByText("Check your email")).toBeVisible();

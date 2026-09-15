@@ -117,7 +117,7 @@ type FormField = FormResponse["fields"][number];
 
 export async function portalRequestFormLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const res = await api.GET("/api/v1/portal/request-types/{slug}", {
     params: { path: { slug: params.slug! } },
   });
@@ -187,7 +187,7 @@ export function PortalRequestFormPage() {
    * still going up must have been told the ask landed. */
   const [submitted, setSubmitted] = useState<Submitted | null>(null);
 
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
 
   /** A key stops being marked the moment it is answered, so a refusal
    * clears box by box rather than only on the next press. */

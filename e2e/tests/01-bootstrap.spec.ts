@@ -31,11 +31,13 @@ test.describe("bootstrap probe", () => {
       await page.getByLabel("Password", { exact: true }).fill(ADMIN.password);
       await page.getByLabel("Confirm password").fill(ADMIN.password);
       await page.getByRole("button", { name: "Create Administrator" }).click();
-      // Setup signs its creator in and lands them in the SET-004 wizard;
-      // skipping out marks onboarding complete and proves the session.
+      // Setup signs its creator in and lands them in the SET-004 wizard.
+      // Skipping the optional steps marks onboarding complete and proves
+      // the session. It only completes because the stack's Compose relay
+      // already configures email, which the wizard now requires.
       await expect(page).toHaveURL("/welcome");
       await expect(page.getByRole("heading", { name: "Welcome to OpenLaw" })).toBeVisible();
-      await page.getByRole("button", { name: "Set up later" }).click();
+      await page.getByRole("button", { name: "Skip optional steps" }).click();
       await expect(page).toHaveURL("/");
       // The shell header (#41) shows the signed-in identity as the
       // user menu's avatar; the display name is its accessible name.

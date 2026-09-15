@@ -1,32 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * Organization · Security · Authentication (#64), from the ST17/ST18
- * frames of settings.pen: the mode cards (built-in vs OIDC), the OIDC
- * provider form, and the Portal access card. That card holds the
- * magic-link toggle with its built-in-mode lock (DD-010), plus the
- * allowed-email-domains editor the SET-001 amendment moved onto this
- * pane. Everything fronts the M2 typed routes with SET-003 immediate
- * apply and DES-017 micro-states. The API's 403 is the real refusal
- * behind the loader's SET-002 bounce.
- */
+/** Independent sign-in methods and second-factor requirements for each user group. */
 
 import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
-import { redirect, useLoaderData } from "react-router";
+import { redirect, useLoaderData, useRevalidator } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
-import { cn } from "../lib/utils";
+import {
+  AuthenticationOptionsFields,
+  type AuthenticationOptions,
+} from "../components/authentication-options";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Switch } from "../components/ui/switch";
 
 export async function settingsAuthenticationLoader() {
   const user = await requireUser();
@@ -40,15 +33,12 @@ export async function settingsAuthenticationLoader() {
     throw new Error("The authentication settings could not be read.");
   }
   return {
-    mode: methods.data.mode,
-    magicLinkEnabled: methods.data.magicLinkEnabled,
+    policy: methods.data.policy,
     domains: domains.data.domains,
     // One org, one IdP: the pane manages the first (and only) provider.
     provider: providers.data.providers[0] ?? null,
   };
 }
-
-type AuthMode = "built_in" | "oidc";
 
 interface Provider {
   id: string;
@@ -56,50 +46,6 @@ interface Provider {
   issuer: string;
   domain: string;
   clientId: string | null;
-}
-
-/** A mode card from ST17: radio, title, description. One per mode. */
-function ModeOption(
-  props: Readonly<{
-    mode: AuthMode;
-    selected: boolean;
-    onSelect: () => void;
-    title: ReactNode;
-    description: ReactNode;
-    children?: ReactNode;
-  }>,
-) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-3 rounded-card border p-3",
-        // The mock outlines the chosen mode with the CTA green ($cta).
-        props.selected ? "border-cta-primary" : "border-border-default",
-      )}
-    >
-      <div className="flex items-start gap-2.5">
-        <input
-          type="radio"
-          name="authMode"
-          value={props.mode}
-          checked={props.selected}
-          onChange={props.onSelect}
-          aria-labelledby={`mode-${props.mode}-title`}
-          aria-describedby={`mode-${props.mode}-description`}
-          className="mt-0.5 size-3.5 shrink-0 accent-cta-primary"
-        />
-        <span className="flex flex-col gap-0.5">
-          <span id={`mode-${props.mode}-title`} className="text-base font-medium text-primary">
-            {props.title}
-          </span>
-          <span id={`mode-${props.mode}-description`} className="text-sm text-muted">
-            {props.description}
-          </span>
-        </span>
-      </div>
-      {props.children}
-    </div>
-  );
 }
 
 /** The PATCH body as the generated contract types it. A misspelled key
@@ -137,11 +83,9 @@ function FormField(props: Readonly<{ id: string; label: ReactNode; children: Rea
 export function SettingsAuthenticationPage() {
   const loaded = useLoaderData<typeof settingsAuthenticationLoader>();
   const intl = useIntl();
+  const revalidator = useRevalidator();
 
-  const [mode, setMode] = useState<AuthMode>(loaded.mode);
-  // OIDC picked with no provider yet: the switch waits for registration.
-  const [modeDraft, setModeDraft] = useState<AuthMode | null>(null);
-  const [magicLinkEnabled, setMagicLinkEnabled] = useState(loaded.magicLinkEnabled);
+  const [policy, setPolicy] = useState(loaded.policy);
   const [domains, setDomains] = useState(loaded.domains);
   const [domainInput, setDomainInput] = useState("");
   const [provider, setProvider] = useState<Provider | null>(loaded.provider);
@@ -156,11 +100,11 @@ export function SettingsAuthenticationPage() {
   const [secretDraft, setSecretDraft] = useState("");
 
   const [status, setStatus] = useState<
-    Record<"mode" | "portal" | "domains" | "provider", FieldStatus>
-  >({ mode: "idle", portal: "idle", domains: "idle", provider: "idle" });
+    Record<"legal" | "business" | "domains" | "provider", FieldStatus>
+  >({ legal: "idle", business: "idle", domains: "idle", provider: "idle" });
   const [detail, setDetail] = useState<Record<keyof typeof status, string | undefined>>({
-    mode: undefined,
-    portal: undefined,
+    legal: undefined,
+    business: undefined,
     domains: undefined,
     provider: undefined,
   });
@@ -170,68 +114,18 @@ export function SettingsAuthenticationPage() {
     setDetail((current) => ({ ...current, [field]: message }));
   }
 
-  const selectedMode = modeDraft ?? mode;
-
-  async function commitMode(next: AuthMode): Promise<void> {
-    note("mode", "saving");
-    try {
-      const result = await api.PATCH("/api/v1/auth/mode", { body: { mode: next } });
-      const { data } = result;
-      if (!data) {
-        setModeDraft(null);
-        note("mode", "error", (await problem(result)).detail);
-        return;
-      }
-      setMode(data.mode);
-      setModeDraft(null);
-      note("mode", "saved");
-      // The DD-010 floor as state, not only a disabled switch. Magic
-      // links could be off from OIDC mode, and built-in mode locks the
-      // toggle. Without this restore the portal would be shut with no
-      // control left to reopen it.
-      if (data.mode === "built_in" && !magicLinkEnabled) await commitPortal(true);
-    } catch {
-      setModeDraft(null);
-      note("mode", "error");
-    }
-  }
-
-  function pickMode(next: AuthMode) {
-    if (next === selectedMode) return;
-    // Switching to OIDC without a registered IdP would leave everyone
-    // but Administrators without a sign-in method. The switch waits
-    // for the registration below (wizard precedent, #34).
-    if (next === "oidc" && !provider) {
-      setModeDraft("oidc");
+  async function commitPolicy(group: "legal" | "business", value: AuthenticationOptions) {
+    note(group, "saving");
+    const result = await api
+      .PATCH("/api/v1/auth/policy/{group}", { params: { path: { group } }, body: value })
+      .catch(() => undefined);
+    if (!result?.data) {
+      note(group, "error", (await problem(result)).detail);
       return;
     }
-    // Backing out of an uncommitted draft needs no request.
-    if (next === mode) {
-      setModeDraft(null);
-      return;
-    }
-    // The radio flips optimistically (SET-003 immediate apply). A
-    // failed PATCH snaps it back with the error micro-state.
-    setModeDraft(next);
-    void commitMode(next);
-  }
-
-  async function commitPortal(next: boolean): Promise<void> {
-    note("portal", "saving");
-    try {
-      const result = await api.PATCH("/api/v1/auth/portal", {
-        body: { magicLinkEnabled: next },
-      });
-      const { data } = result;
-      if (!data) {
-        note("portal", "error", (await problem(result)).detail);
-        return;
-      }
-      setMagicLinkEnabled(data.magicLinkEnabled);
-      note("portal", "saved");
-    } catch {
-      note("portal", "error");
-    }
+    setPolicy(result.data);
+    note(group, "saved");
+    void revalidator.revalidate();
   }
 
   /** Resolves with whether the list landed, so callers can sequence on
@@ -317,8 +211,6 @@ export function SettingsAuthenticationPage() {
       setCallbackUrl(data.callbackUrl);
       setSecretDraft("");
       note("provider", "saved");
-      // Registration finishes a drafted switch to OIDC.
-      if (modeDraft === "oidc") await commitMode("oidc");
     } catch {
       note("provider", "error");
     }
@@ -326,14 +218,6 @@ export function SettingsAuthenticationPage() {
 
   const providerForm = (
     <form className="flex flex-col gap-3" onSubmit={(event) => void saveProvider(event)}>
-      {modeDraft === "oidc" && (
-        <p className="text-sm text-status-info-fg">
-          <FormattedMessage
-            id="settings.auth.registerToSwitch"
-            defaultMessage="Register your identity provider to finish the switch."
-          />
-        </p>
-      )}
       {!provider && (
         <FormField
           id="sso-provider-id"
@@ -458,97 +342,45 @@ export function SettingsAuthenticationPage() {
         })}
       />
       <SettingsCard
+        region
         title={
-          <FormattedMessage id="settings.auth.authentication" defaultMessage="Authentication" />
+          <FormattedMessage
+            id="settings.auth.authentication"
+            defaultMessage="Legal User Authentication"
+          />
         }
       >
-        <ModeOption
-          mode="built_in"
-          selected={selectedMode === "built_in"}
-          onSelect={() => pickMode("built_in")}
-          title={<FormattedMessage id="settings.auth.builtIn" defaultMessage="Built-in" />}
-          description={
-            <FormattedMessage
-              id="settings.auth.builtIn.hint"
-              defaultMessage="Staff sign in with email and password. Each user can add two-factor authentication (TOTP) from their profile."
-            />
-          }
+        <AuthenticationOptionsFields
+          value={policy.legal}
+          onChange={(value) => void commitPolicy("legal", value)}
+          disabled={status.legal === "saving" || status.business === "saving"}
+          ssoConfigured={!!provider}
         />
-        <ModeOption
-          mode="oidc"
-          selected={selectedMode === "oidc"}
-          onSelect={() => pickMode("oidc")}
-          title={
-            <FormattedMessage id="settings.auth.oidc" defaultMessage="Identity provider (OIDC)" />
-          }
-          description={
-            <FormattedMessage
-              id="settings.auth.oidc.hint"
-              defaultMessage="Staff sign in through your identity provider — works with Okta, Microsoft Entra, Google Workspace, Keycloak, and Authentik."
-            />
-          }
-        >
-          {selectedMode === "oidc" && providerForm}
-        </ModeOption>
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-muted">
-            {selectedMode === "oidc" ? (
-              <FormattedMessage
-                id="settings.auth.sessionsCaption"
-                defaultMessage="The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
-              />
-            ) : (
-              <FormattedMessage
-                id="settings.auth.modeCaption"
-                defaultMessage="Switching modes applies immediately and is recorded in the activity log."
-              />
-            )}
-          </p>
-          <StatusNote status={status.mode} detail={detail.mode} />
-        </div>
+        <StatusNote status={status.legal} detail={detail.legal} />
+        <p className="text-sm text-muted">
+          <FormattedMessage
+            id="settings.auth.adminRecovery"
+            defaultMessage="Administrators retain emergency password sign-in. Any required two-factor authentication still applies."
+          />
+        </p>
       </SettingsCard>
 
       <SettingsCard
-        title={<FormattedMessage id="settings.auth.portal" defaultMessage="Portal access" />}
+        region
+        title={
+          <FormattedMessage
+            id="settings.auth.portal"
+            defaultMessage="Business Portal Authentication"
+          />
+        }
       >
-        <div className="flex items-start justify-between gap-4">
-          <span className="flex flex-col gap-0.5">
-            <span id="portal-toggle-label" className="text-base font-medium text-primary">
-              <FormattedMessage id="settings.auth.magicLink" defaultMessage="Magic-link sign-in" />
-            </span>
-            <span id="portal-toggle-description" className="text-sm text-muted">
-              <FormattedMessage
-                id="settings.auth.magicLink.hint"
-                defaultMessage="Business users sign in through emailed magic links — no password or IdP account needed."
-              />
-            </span>
-          </span>
-          <span className="flex items-center gap-2 pt-0.5">
-            <StatusNote status={status.portal} detail={detail.portal} />
-            <Switch
-              checked={magicLinkEnabled}
-              // The DD-010 floor: in built-in mode magic links cannot be
-              // turned off. The API would accept it; the product says no.
-              disabled={mode === "built_in"}
-              onCheckedChange={(next) => void commitPortal(next)}
-              aria-labelledby="portal-toggle-label"
-              aria-describedby="portal-toggle-description"
-            />
-          </span>
-        </div>
-        <p className="text-xs text-muted">
-          {mode === "built_in" ? (
-            <FormattedMessage
-              id="settings.auth.portalLocked"
-              defaultMessage="Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
-            />
-          ) : (
-            <FormattedMessage
-              id="settings.auth.portalOptional"
-              defaultMessage="Turn off to require SSO for Business Users. They will need accounts in your identity provider to reach the Portal. Administrators retain emergency password sign-in."
-            />
-          )}
-        </p>
+        <AuthenticationOptionsFields
+          value={policy.business}
+          onChange={(value) => void commitPolicy("business", value)}
+          disabled={status.legal === "saving" || status.business === "saving"}
+          ssoConfigured={!!provider}
+        />
+        <StatusNote status={status.business} detail={detail.business} />
 
         <div className="flex flex-col gap-1.5 border-t border-border-default pt-4">
           <div className="flex items-center gap-2">
@@ -609,6 +441,17 @@ export function SettingsAuthenticationPage() {
             </p>
           )}
         </div>
+      </SettingsCard>
+      <SettingsCard
+        region
+        title={
+          <FormattedMessage
+            id="settings.auth.identityProvider"
+            defaultMessage="Identity provider"
+          />
+        }
+      >
+        {providerForm}
       </SettingsCard>
     </>
   );

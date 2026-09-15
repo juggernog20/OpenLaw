@@ -36,7 +36,7 @@ const MEMBER = {
 };
 
 const PORTAL_HOME = "What do you need from Legal?";
-const PORTAL_DOOR = "Legal portal";
+const PORTAL_DOOR = "Business Portal sign-in";
 
 interface HomeType {
   id: string;
@@ -107,6 +107,7 @@ describe("the portal front door", () => {
     stubApi({ signedIn: null });
     renderAt("/portal");
     expect(await screen.findByRole("heading", { name: PORTAL_DOOR })).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Email me a sign-in link" }));
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
   });
 
@@ -119,8 +120,9 @@ describe("the portal front door", () => {
           ? json(202, { message: "If the address is eligible, a sign-in link is on its way." })
           : undefined,
     });
-    renderAt("/portal/enter");
+    renderAt("/portal/login");
 
+    await user.click(await screen.findByRole("button", { name: "Email me a sign-in link" }));
     await user.type(await screen.findByLabelText("Email"), REQUESTER.email);
     await user.click(screen.getByRole("button", { name: "Send link" }));
 
@@ -135,15 +137,17 @@ describe("the portal front door", () => {
       signedIn: null,
       methods: { mode: "oidc", magicLinkEnabled: false, ssoProviderId: "acme-idp" },
     });
-    renderAt("/portal/enter");
+    renderAt("/portal/login");
 
     expect(await screen.findByRole("heading", { name: PORTAL_DOOR })).toBeInTheDocument();
     expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send link" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Sign in" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Continue with single sign-on" }),
+    ).toBeInTheDocument();
   });
 
-  it("offers no email step when the deployment cannot send email", async () => {
+  it("offers passwords but no magic link when the deployment cannot send email", async () => {
     stubApi({
       signedIn: null,
       methods: {
@@ -153,10 +157,13 @@ describe("the portal front door", () => {
         ssoProviderId: null,
       },
     });
-    renderAt("/portal/enter");
+    renderAt("/portal/login");
 
     expect(await screen.findByRole("heading", { name: PORTAL_DOOR })).toBeInTheDocument();
-    expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Email me a sign-in link" }),
+    ).not.toBeInTheDocument();
   });
 
   it("sends a session holder past the door and into the portal", async () => {
@@ -276,7 +283,7 @@ describe("the portal chrome", () => {
 
     const header = await screen.findByRole("banner");
     expect(within(header).getByText(REQUESTER.email)).toBeInTheDocument();
-    expect(within(header).getByText(PORTAL_DOOR)).toBeInTheDocument();
+    expect(within(header).getByText("Legal portal")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Skip to content" })).toHaveAttribute("href", "#main");
   });
 
@@ -655,4 +662,11 @@ describe("my-requests", () => {
     const block = await screen.findByRole("region", { name: "Your requests" });
     expect(within(block).getByText("R-45")).toBeInTheDocument();
   });
+});
+
+it("redirects the legacy signed-out Portal entry URL to Portal login", async () => {
+  stubApi({ signedIn: null });
+  const { router } = renderAt("/portal/enter");
+  expect(await screen.findByRole("heading", { name: PORTAL_DOOR })).toBeVisible();
+  expect(router.state.location.pathname).toBe("/portal/login");
 });

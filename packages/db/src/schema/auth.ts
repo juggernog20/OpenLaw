@@ -87,6 +87,7 @@ export const sessions = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     token: text("token").notNull(),
+    secondFactorVerified: boolean("second_factor_verified").notNull().default(false),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),

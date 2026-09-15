@@ -382,6 +382,20 @@ Recommended built-in sessions+passwords+magic-links. Blair widened it for the le
 - **Sessions are ours in both modes**: server-side session table, httpOnly cookies, revocable — the IdP only authenticates; it never becomes the session model.
 - SAML and aggregators (WorkOS) are future adapters behind the same auth-mode interface. Working implementation default: **better-auth** (framework-agnostic, email/password + OIDC + magic-link + TOTP) — an implementation detail behind our session model, swappable.
 
+### Addendum (2026-09-15): organization-required two-factor authentication
+
+**Superseded by the group authentication amendment below.**
+
+Administrators can require authenticator-app enrollment for staff in built-in authentication mode. The setting defaults off. When enabled, staff without a verified factor must enroll before accessing the app, including staff with an existing session. Enrollment requires the password and a valid TOTP code. App API guards enforce the requirement; users cannot disable a required factor or bypass it with a staff magic link. Business Portal magic links remain available, and OIDC authentication leaves second-factor policy to the identity provider. Policy changes are audited.
+
+### Amendment (2026-09-15): independent authentication methods for each user group
+
+This supersedes the exclusive mode choice and magic-link floor above. **Legal User Authentication** and **Business Portal Authentication** independently enable email/password, email magic link, and OIDC SSO. Each group must retain at least one method; SSO requires a configured provider. Administrators retain emergency password sign-in. Existing mode settings supply defaults until an Administrator saves a group policy.
+
+Each group can require two-factor authentication across every sign-in method, including SSO and magic links. A user without an authenticator enrolls before accessing the app. Every subsequent session must prove a TOTP or backup code. App and authentication API guards enforce setup and verification, including existing sessions after policy changes. Passwordless users can enroll from their authenticated session. Required factors cannot be disabled; policy changes are audited.
+
+Legal Users sign in at `/auth/login`; Business Users at `/portal/login`, with no group toggle. Existing `/portal/enter` bookmarks redirect. Business password setup verifies email ownership with an expiring, single-use link before creating an account; existing users use password reset. Enabled methods are checked against the actual account role on the server, independently of which sign-in URL was opened.
+
 ### Rationale
 
 Legal departments at Series A–C companies increasingly sit behind Okta/Entra; SSO-at-setup removes a real adoption blocker. Generic OIDC (not per-vendor connectors) keeps the OSS surface small.

@@ -44,7 +44,7 @@ type Note = { status: FieldStatus; detail?: string };
 
 export async function portalOnboardingLoader({ request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   if (user.role !== "business_user") return redirect("/settings/profile");
   if (user.portalOnboardingCompletedAt) return redirect("/portal");
   const [onboarding, preferences] = await Promise.all([
@@ -61,7 +61,7 @@ export function PortalOnboardingPage() {
   const loaded = useLoaderData<typeof portalOnboardingLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
   const [departments, setDepartments] = useState(loaded.onboarding.departments);
   const [departmentId, setDepartmentId] = useState(loaded.onboarding.departmentId);
   const [step, setStep] = useState<Step>(departments.length ? "department" : "profile");

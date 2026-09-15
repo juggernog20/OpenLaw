@@ -122,6 +122,22 @@ test.describe("accessibility floor", () => {
     });
   }
 
+  /**
+   * Walks the wizard from Organization through each named step in turn.
+   * Most steps defer with "Set up later". Outbound email does not: it is
+   * required to finish setup, so it offers Continue alone. The stack's
+   * Compose relay already configures it, so Continue is live here.
+   */
+  async function walkWizard(page: Page, headings: readonly string[], exact = false): Promise<void> {
+    let step = "Organization";
+    for (const heading of headings) {
+      const defers = step !== "Outbound email";
+      await page.getByRole("button", { name: defers ? "Set up later" : "Continue" }).click();
+      await expect(page.getByRole("heading", { name: heading, exact })).toBeVisible();
+      step = heading;
+    }
+  }
+
   test("E-signature onboarding step: clean axe scan", async ({ page, request }, testInfo) => {
     await ensureAdminExists(request);
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
@@ -156,16 +172,13 @@ test.describe("accessibility floor", () => {
 
     await page.goto("/welcome");
     await page.getByRole("button", { name: "Get started" }).click();
-    for (const heading of [
+    await walkWizard(page, [
       "Authentication",
       "Business-user portal",
       "Outbound email",
       "Invite your team",
       "E-signature",
-    ]) {
-      await page.getByRole("button", { name: "Set up later" }).click();
-      await expect(page.getByRole("heading", { name: heading })).toBeVisible();
-    }
+    ]);
 
     await expect(page.getByRole("region", { name: "E-signature" })).toBeVisible();
     expect(
@@ -211,17 +224,14 @@ test.describe("accessibility floor", () => {
 
     await page.goto("/welcome");
     await page.getByRole("button", { name: "Get started" }).click();
-    for (const heading of [
+    await walkWizard(page, [
       "Authentication",
       "Business-user portal",
       "Outbound email",
       "Invite your team",
       "E-signature",
       "AI analysis",
-    ]) {
-      await page.getByRole("button", { name: "Set up later" }).click();
-      await expect(page.getByRole("heading", { name: heading })).toBeVisible();
-    }
+    ]);
 
     await expect(page.getByRole("region", { name: "AI analysis" })).toBeVisible();
     expect(
@@ -235,18 +245,19 @@ test.describe("accessibility floor", () => {
     await reopenWizard(page);
     await page.goto("/welcome");
     await page.getByRole("button", { name: "Get started" }).click();
-    for (const heading of [
-      "Authentication",
-      "Business-user portal",
-      "Outbound email",
-      "Invite your team",
-      "E-signature",
-      "AI analysis",
-      "Review",
-    ]) {
-      await page.getByRole("button", { name: "Set up later" }).click();
-      await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
-    }
+    await walkWizard(
+      page,
+      [
+        "Authentication",
+        "Business-user portal",
+        "Outbound email",
+        "Invite your team",
+        "E-signature",
+        "AI analysis",
+        "Review",
+      ],
+      true,
+    );
     await expect(page.getByRole("region", { name: "Review" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Review" }).getByRole("link")).toHaveCount(10);
     expect(

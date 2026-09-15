@@ -55,7 +55,8 @@ test("Business Owner is a statement, and team membership grants revocable Portal
     });
     expect(allowRun.status()).toBe(200);
     const portal = await ownerContext.newPage();
-    await portal.goto("/portal/enter");
+    await portal.goto("/portal/login");
+    await portal.getByRole("button", { name: "Email me a sign-in link" }).click();
     await portal.getByLabel("Email").fill(ownerEmail);
     await portal.getByRole("button", { name: "Send link" }).click();
     await expect(portal.getByText("Check your email")).toBeVisible();

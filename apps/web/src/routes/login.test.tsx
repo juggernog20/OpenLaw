@@ -151,3 +151,90 @@ describe("login offers what the auth mode allows", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Check your email and password.");
   });
 });
+
+it("uses separate Legal and Business Portal sign-in URLs with each group's enabled methods", async () => {
+  stubApi({
+    signedIn: null,
+    methods: {
+      mode: "built_in",
+      magicLinkEnabled: true,
+      ssoProviderId: "idp",
+      policy: {
+        legal: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+        business: { password: false, magicLink: false, sso: true, requireTwoFactor: false },
+      },
+    },
+  });
+  const { router } = renderAt("/portal/login");
+  expect(await screen.findByRole("heading", { name: "Business Portal sign-in" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Continue with single sign-on" })).toBeVisible();
+  expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  expect(screen.queryByRole("group", { name: "Sign in to" })).not.toBeInTheDocument();
+  await router.navigate("/auth/login");
+  expect(await screen.findByLabelText("Password")).toBeVisible();
+  expect(
+    screen.queryByRole("button", { name: "Continue with single sign-on" }),
+  ).not.toBeInTheDocument();
+});
+
+it("lets Business Users request a password setup link from their own sign-in page", async () => {
+  const sent: unknown[] = [];
+  stubApi({
+    signedIn: null,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auth/password-setup") {
+        sent.push(call.body);
+        return json(202, { message: "Check your email" });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/portal/login");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Set up or reset your password" }));
+  await user.type(screen.getByLabelText("Email"), "business@example.com");
+  await user.click(screen.getByRole("button", { name: "Send password setup link" }));
+  expect(await screen.findByRole("heading", { name: "Check your email" })).toBeVisible();
+  expect(sent).toEqual([{ email: "business@example.com" }]);
+});
+
+it("shows an unavailable state when the only method needs unconfigured email", async () => {
+  const unavailable = { password: false, magicLink: true, sso: false, requireTwoFactor: false };
+  stubApi({
+    signedIn: null,
+    methods: {
+      mode: "built_in",
+      magicLinkEnabled: true,
+      ssoProviderId: null,
+      emailConfigured: false,
+      policy: { legal: unavailable, business: unavailable },
+    },
+  });
+  renderAt("/portal/login");
+  expect(
+    await screen.findByText("Sign-in is unavailable. Contact your administrator."),
+  ).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Send link" })).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+});
+
+it("returns from password setup without sending a request", async () => {
+  const requests: unknown[] = [];
+  stubApi({
+    signedIn: null,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auth/password-setup") {
+        requests.push(call.body);
+        return json(202, { message: "Sent" });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/portal/login");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Set up or reset your password" }));
+  await user.type(screen.getByLabelText("Email"), "business@example.com");
+  await user.click(screen.getByRole("button", { name: "Back to sign-in" }));
+  expect(await screen.findByLabelText("Password")).toBeVisible();
+  expect(requests).toEqual([]);
+});

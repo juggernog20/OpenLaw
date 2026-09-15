@@ -124,8 +124,13 @@ describe("login method discovery (GET /api/v1/auth/methods)", () => {
     const res = await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
     expect(res.statusCode, res.body).toBe(200);
     expect(res.json()).toEqual({
+      policy: {
+        legal: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+        business: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+      },
       mode: "built_in",
       magicLinkEnabled: true,
+      requireTwoFactor: false,
       emailConfigured: true,
       ssoProviderId: null,
     });
