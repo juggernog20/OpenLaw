@@ -244,7 +244,7 @@ it("shows Auto-Doc metadata in a sortable table with optional columns", async ()
   renderAt("/auto-docs");
   const table = await screen.findByRole("table");
   expect(within(table).getByText("Supplier agreement")).toBeVisible();
-  expect(within(table).getByText("Word + PDF")).toBeVisible();
+  expect(within(table).getByText("Word and PDF")).toBeVisible();
   expect(within(table).getByText("PDF", { exact: true })).toBeVisible();
   expect(within(table).getByText("Published")).toBeVisible();
   expect(within(table).getAllByText("Legal only")).toHaveLength(2);
