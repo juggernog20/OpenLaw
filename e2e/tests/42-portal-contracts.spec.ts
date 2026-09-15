@@ -113,7 +113,7 @@ test("Business Owner is a statement, and team membership grants revocable Portal
     const businessBox = await businessOwner.boundingBox();
     const legalBox = await legalOwner.boundingBox();
     const entityBox = await page.getByLabel("Our entity", { exact: true }).boundingBox();
-    expect(Math.abs(businessBox!.y - legalBox!.y)).toBeLessThan(2);
+    expect(businessBox!.y).toBeGreaterThan(legalBox!.y);
     expect(entityBox!.y).toBeGreaterThan(businessBox!.y + businessBox!.height);
     expect(entityBox!.width).toBeGreaterThan(businessBox!.width * 1.5);
     await page.getByRole("button", { name: "Contract team", exact: true }).click();
