@@ -259,9 +259,6 @@ Every Portal route checks the current user's completion state before its page lo
 Requests, Matters, and Contracts use **Department** for the business team responsible for the work. They select from the same Administrator-managed list. This record value is independent of a person's Department and grants no access. Department is optional, built in, and does not require a custom Field attachment. Legal can correct an open Request's Department; conversion carries it into the new record, which can then be edited independently. Existing Business unit and Owning department answers migrate into this list; legacy custom definitions are archived and their original answers retained.
 
 Matter and Request APIs use `departmentId`; Contracts retain `owningDepartmentId` for compatibility. All visible labels say Department.
-same Administrator-managed list. This record value is independent of a person's Department and grants no access. Department is optional, built in, and does not require a custom Field attachment. Legal can correct an open Request's Department; conversion carries it into the new record, which can then be edited independently. Existing Business unit and Owning department answers migrate into this list; legacy custom definitions are archived and their original answers retained.
-
-Matter and Request APIs use `departmentId`; Contracts retain `owningDepartmentId` for compatibility. All visible labels say Department.
 
 ### SET-010 amendment — alphabetical Departments, 2026-09-15
 
