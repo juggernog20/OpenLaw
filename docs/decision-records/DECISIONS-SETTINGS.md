@@ -271,4 +271,3 @@ Department is required when submitting a Request. The submitted Department is re
 ### SET-004 amendment — independent group authentication, 2026-09-15
 
 The onboarding wizard and Authentication settings expose Legal User Authentication and Business Portal Authentication. Each group independently enables password, email magic link, and configured OIDC SSO, with a separate required two-factor toggle. TECH-008 defines enforcement and the separate sign-in URLs. Email service remains mandatory before completing instance setup.
-
