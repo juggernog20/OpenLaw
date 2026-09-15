@@ -54,6 +54,7 @@ export class FakeAiProvider implements AiProvider {
     return targets.map((target, index) => {
       const answer = this.answers?.[target.slug];
       if (answer) return { slug: target.slug, ...answer };
+      if (target.slug === "key_dates:milestones") return { slug: target.slug, value: [] };
       return {
         slug: target.slug,
         value: `fake-${target.slug}`,

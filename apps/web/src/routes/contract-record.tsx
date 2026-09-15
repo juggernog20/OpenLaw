@@ -1216,7 +1216,7 @@ function ContractRecord() {
     analysis.available && analysisRunnable && analysis.latestRun?.state !== "pending";
   const unverifiedMarker = (slug: string) =>
     saved.aiUnverified?.[slug] ? <UnverifiedMarker /> : null;
-  const confirmationControl = (slug: string) => {
+  const confirmationControl = (slug: string, eventLabel?: string) => {
     const marker =
       saved.aiUnverified?.[slug] ??
       (slug.startsWith("field:") ? saved.aiUnverified?.[slug.slice(6)] : undefined);
@@ -1231,6 +1231,7 @@ function ContractRecord() {
           showMarker={false}
           number={saved.number}
           slug={evidenceSlug}
+          label={eventLabel}
           onConfirm={analysisConfirmable ? () => confirmAnalysisField(evidenceSlug) : undefined}
         />
       );
@@ -1238,9 +1239,11 @@ function ContractRecord() {
     if (!marker.runId) return null;
     if (slug.startsWith("field:")) slug = slug.slice(6);
     const coreLabel = coreAnalysisLabel(slug);
-    const label = coreLabel
-      ? intl.formatMessage(coreLabel)
-      : (attached.find((field) => field.slug === slug)?.displayName ?? slug);
+    const label =
+      eventLabel ??
+      (coreLabel
+        ? intl.formatMessage(coreLabel)
+        : (attached.find((field) => field.slug === slug)?.displayName ?? slug));
     return (
       <>
         {analysisConfirmable && <ConfirmUnverified onConfirm={() => confirmAnalysisField(slug)} />}
@@ -2187,7 +2190,7 @@ function ContractRecord() {
                     {
                       id: "contracts.record.tab.keyDates.unverified",
                       defaultMessage:
-                        "{count, plural, one {# AI-suggested date awaiting confirmation} other {# AI-suggested dates awaiting confirmation}}",
+                        "{count, plural, one {# unverified Key date} other {# unverified Key dates}}",
                     },
                     { count: unverifiedDateCount },
                   ),
@@ -3067,6 +3070,12 @@ function ContractRecord() {
             {tab === "key-dates" && (
               <KeyDatesCard
                 conversionReview={confirmationControl("needed_by")}
+                reviewControl={(row) => {
+                  const slug = Object.entries(saved.aiUnverified ?? {}).find(
+                    ([, marker]) => marker.keyDateId === row.keyDateId,
+                  )?.[0];
+                  return slug ? confirmationControl(slug, row.label ?? undefined) : null;
+                }}
                 deadlines={deadlines}
                 // The saved row, not the loader's copy: editing the
                 // notice period on the Overview changes what the
@@ -3079,16 +3088,17 @@ function ContractRecord() {
                   // union it answers with is what says so, so the row the
                   // Overview holds drops the flag rather than waiting for
                   // the next whole-record read.
-                  if (!rows.some((row) => row.source === "key_date" && row.unverified))
-                    setSaved((current) => {
-                      if (!current.aiUnverified?.needed_by) return current;
-                      const rest = { ...current.aiUnverified };
-                      delete rest.needed_by;
-                      return {
-                        ...current,
-                        aiUnverified: Object.keys(rest).length > 0 ? rest : null,
-                      };
-                    });
+                  setSaved((current) => {
+                    const rest = { ...current.aiUnverified };
+                    for (const [slug, marker] of Object.entries(rest)) {
+                      if (
+                        marker.keyDateId &&
+                        !rows.some((row) => row.keyDateId === marker.keyDateId && row.unverified)
+                      )
+                        delete rest[slug];
+                    }
+                    return { ...current, aiUnverified: Object.keys(rest).length ? rest : null };
+                  });
                 }}
               />
             )}

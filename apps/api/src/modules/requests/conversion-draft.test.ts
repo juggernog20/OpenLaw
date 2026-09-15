@@ -1165,6 +1165,7 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
   });
   expect(edited.statusCode, edited.body).toBe(200);
   expect(edited.json().contract.aiUnverified).not.toHaveProperty("field:contract_opening");
+  expect(edited.json().contract.aiUnverified).not.toHaveProperty("needed_by");
   expect(edited.json().contract.aiUnverified.title.draftId).toBe(id);
 });
 

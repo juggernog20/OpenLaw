@@ -21,6 +21,7 @@ import type { AiExtraction } from "../../lib/ai/provider.js";
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
 import { dispositionScaffold, type DispositionScaffold } from "../../testing/disposition.js";
 import { handleContractAnalysis } from "../../pipeline/contract-analysis.js";
+import { KEY_DATES_TARGET, keyDateSuggestionSlug } from "../../lib/analysis-key-dates.js";
 let harness: TestHarness;
 let cast: DispositionScaffold;
 let typeId: string;
@@ -350,6 +351,57 @@ it("refuses late replies after a Type or source changes", async () => {
     await harness.db.update(aiConnector).set({ contractConversionAnalysis: true });
   }
 });
+it("extracts a milestone from original paper and retains authorized evidence on the key-date suggestion", async () => {
+  const { Readable } = await import("node:stream");
+  const { requestAttachments, contractKeyDates } = await import("@openlaw/db");
+  const { fakeExtractedText } = await import("../../lib/doc-engine/fake.js");
+  const date = { label: "Price review", date: "2028-05-01" };
+  const { contract, runs } = await convert({}, async (id) => {
+    const bytes = Buffer.from("%PDF-1.4\nPrice review on 2028-05-01");
+    const fileRef = await harness.storage.put(`milestone/${id}`, Readable.from([bytes]));
+    const [file] = await harness.db
+      .insert(requestAttachments)
+      .values({ requestId: id, fileRef, filename: "milestones.pdf", uploadedBy: cast.requesterId })
+      .returning();
+    const evidence = fakeExtractedText(bytes);
+    const sourceId = `attachment:${file!.id}`;
+    answers[KEY_DATES_TARGET] = {
+      value: [{ ...date, kind: "milestone", sourceId, evidence }],
+      sourceId,
+      evidence,
+    };
+  });
+  await handleContractAnalysis(
+    {
+      db: harness.db,
+      resolveAiProvider: harness.app.resolveAiProvider,
+      log: harness.app.log,
+      storage: harness.storage,
+      docEngine: harness.app.docEngine,
+    },
+    { runId: runs[0]!.id, retryCount: 0, retryLimit: 0 },
+  );
+  const [run] = await harness.db
+    .select()
+    .from(contractAnalysisRuns)
+    .where(eq(contractAnalysisRuns.id, runs[0]!.id));
+  expect(run!.state, run!.failure ?? "").toBe("ready");
+  const [row] = await harness.db
+    .select()
+    .from(contractKeyDates)
+    .where(eq(contractKeyDates.contractId, contract.id));
+  expect(row).toMatchObject(date);
+  const slug = keyDateSuggestionSlug(date);
+  const evidence = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/contracts/${contract.number}/analysis/${run!.id}/evidence/${slug}`,
+    cookies: cast.memberCookies,
+  });
+  expect(evidence.statusCode, evidence.body).toBe(200);
+  expect(evidence.json().available).toBe(true);
+  expect(evidence.json().citations).toHaveLength(1);
+});
+
 it("reads multiple original attachments, reports omissions and suppresses competing primary-Document runs", async () => {
   const { Readable } = await import("node:stream");
   const { requestAttachments, documentVersionText } = await import("@openlaw/db");

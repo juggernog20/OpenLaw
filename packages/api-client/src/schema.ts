@@ -22732,6 +22732,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -22739,6 +22740,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -22884,6 +22886,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -22891,6 +22894,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -23171,6 +23175,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -23178,6 +23183,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -23462,6 +23468,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -23469,6 +23476,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -23693,6 +23701,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -23700,6 +23709,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -23825,6 +23835,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -23832,6 +23843,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -23966,6 +23978,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -23973,6 +23986,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -24226,6 +24240,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -24233,6 +24248,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -24365,6 +24381,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -24372,6 +24389,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -24504,6 +24522,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -24511,6 +24530,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -24642,6 +24662,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -24649,6 +24670,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };
@@ -24774,6 +24796,7 @@ export interface operations {
                   | {
                       runId: string;
                       sourceContext?: boolean;
+                      keyDateId?: string;
                       draftId?: string;
                       /** Format: date-time */
                       writtenAt: string;
@@ -24781,6 +24804,7 @@ export interface operations {
                   | {
                       draftId: string;
                       runId?: string;
+                      keyDateId?: string;
                       /** Format: date-time */
                       writtenAt: string;
                     };

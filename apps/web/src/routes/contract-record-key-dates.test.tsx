@@ -24,6 +24,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -173,6 +174,21 @@ function recordApi(
     if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "GET") {
       return envelope();
     }
+    if (call.url.pathname === "/api/v1/contracts/42/analysis/confirm" && call.method === "POST") {
+      writes.push({ method: call.method, path: call.url.pathname, body: call.body });
+      if (refuse) return problem(refuse.status, refuse.detail);
+      const { slug } = z.object({ slug: z.string() }).parse(call.body);
+      const flags = z
+        .record(z.string(), z.object({ keyDateId: z.string() }).passthrough())
+        .parse(row.aiUnverified);
+      const id = flags[slug]!.keyDateId;
+      delete flags[slug];
+      row = { ...row, aiUnverified: Object.keys(flags).length ? flags : null };
+      deadlines = deadlines.map((date) =>
+        date.keyDateId === id ? { ...date, unverified: false } : date,
+      );
+      return json(200, { contract: row });
+    }
     if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "POST") {
       writes.push({ method: "POST", path: call.url.pathname, body: call.body });
       if (refuse) return problem(refuse.status, refuse.detail);
@@ -207,12 +223,69 @@ function recordApi(
     refuseNext: (status: number, detail: string) => {
       refuse = { status, detail };
     },
+    clearRefusal: () => {
+      refuse = null;
+    },
   };
 }
 
 const section = async () => within(await screen.findByRole("region", { name: "Key dates" }));
 
 describe("the record's Key dates section (CTR-009)", () => {
+  it("reviews each milestone in the list and transfers its purple count only after a successful confirmation", async () => {
+    const api = recordApi(
+      [
+        deadline({ label: "Price review", unverified: true }),
+        deadline({ keyDateId: "kd-2", label: "Delivery", unverified: true }),
+      ],
+      contractRow({
+        aiUnverified: {
+          "key_date:price": {
+            runId: "run-1",
+            keyDateId: "kd-1",
+            writtenAt: "2026-09-01T00:00:00.000Z",
+          },
+          "key_date:delivery": {
+            runId: "run-1",
+            keyDateId: "kd-2",
+            writtenAt: "2026-09-01T00:00:00.000Z",
+          },
+        },
+      }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/key-dates");
+    const card = await section();
+    const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
+    expect(strip.getByRole("img", { name: "2 unverified Key dates" })).toHaveClass(
+      "text-ai-evidence-fg",
+    );
+    expect(strip.queryByRole("img", { name: /upcoming date/ })).not.toBeInTheDocument();
+    expect(
+      card.getByRole("button", { name: "View AI evidence for Price review" }),
+    ).toBeInTheDocument();
+    const price = within(card.getByText("Price review").closest("tr")!);
+    api.refuseNext(503, "Confirmation could not be saved.");
+    await userEvent.setup().click(price.getByRole("button", { name: "Confirm" }));
+    expect(await price.findByText("Confirmation could not be saved.")).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "2 unverified Key dates" })).toBeInTheDocument();
+    api.clearRefusal();
+    await userEvent.setup().click(price.getByRole("button", { name: "Confirm" }));
+    await waitFor(() =>
+      expect(strip.getByRole("img", { name: "1 upcoming date" })).toHaveClass(
+        "text-badge-count-fg",
+      ),
+    );
+    expect(strip.getByRole("img", { name: "1 unverified Key date" })).toBeInTheDocument();
+    expect(price.queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
+    const delivery = within(card.getByText("Delivery").closest("tr")!);
+    await userEvent.setup().click(delivery.getByRole("button", { name: "Confirm" }));
+    await waitFor(() =>
+      expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument(),
+    );
+    expect(strip.queryByRole("img", { name: /unverified Key date/ })).not.toBeInTheDocument();
+  });
+
   it("counts all suggestions awaiting review separately, including past dates", async () => {
     stubApi({
       signedIn: MEMBER,
@@ -224,9 +297,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     });
     renderAt("/contracts/42/key-dates");
     const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
-    expect(
-      strip.getByRole("img", { name: "2 AI-suggested dates awaiting confirmation" }),
-    ).toHaveTextContent("2");
+    expect(strip.getByRole("img", { name: "2 unverified Key dates" })).toHaveTextContent("2");
     expect(strip.queryByRole("img", { name: /upcoming date/ })).not.toBeInTheDocument();
   });
 
@@ -316,9 +387,9 @@ describe("the record's Key dates section (CTR-009)", () => {
     // Confirmed upcoming dates and suggestions awaiting review have separate counts.
     const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
     expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument();
-    expect(
-      strip.getByRole("img", { name: "1 AI-suggested date awaiting confirmation" }),
-    ).toHaveClass("text-ai-evidence-fg");
+    expect(strip.getByRole("img", { name: "1 unverified Key date" })).toHaveClass(
+      "text-ai-evidence-fg",
+    );
   });
 
   it("draws no Due column and no distance label, and keeps the seam's row order", async () => {

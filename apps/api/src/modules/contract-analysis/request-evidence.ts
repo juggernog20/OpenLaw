@@ -43,7 +43,10 @@ export async function requestAnalysisEvidenceReader(
     throw error;
   });
   return async (slug) => {
-    if (!(CORE_ANALYSIS_SLUGS as readonly string[]).includes(slug)) {
+    if (
+      !(CORE_ANALYSIS_SLUGS as readonly string[]).includes(slug) &&
+      !/^key_date:[a-f0-9]{64}$/.test(slug)
+    ) {
       const field = fields.find((field) => field.slug === slug);
       if (
         !field ||

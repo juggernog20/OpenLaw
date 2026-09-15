@@ -13,6 +13,35 @@
 import { and, contracts, eq, sql, type Executor } from "@openlaw/db";
 import type { AiUnverifiedMap } from "@openlaw/shared";
 
+export function keyDateUnverified(
+  flags: AiUnverifiedMap | null | undefined,
+  keyDateId: string,
+): boolean {
+  return Object.values(flags ?? {}).some((entry) => entry.keyDateId === keyDateId);
+}
+
+/** Editing the event or removing it records the review decision for future analysis runs. */
+export async function reviewKeyDate(
+  db: Executor,
+  contract: { id: string; aiUnverified: AiUnverifiedMap | null },
+  keyDateId: string,
+): Promise<void> {
+  const slugs = Object.entries(contract.aiUnverified ?? {})
+    .filter(([, entry]) => entry.keyDateId === keyDateId)
+    .map(([slug]) => slug);
+  if (!slugs.length) return;
+  const flags = { ...contract.aiUnverified };
+  for (const slug of slugs) delete flags[slug];
+  contract.aiUnverified = Object.keys(flags).length ? flags : null;
+  await db
+    .update(contracts)
+    .set({
+      aiUnverified: contract.aiUnverified,
+      analysisHumanFields: sql`${contracts.analysisHumanFields} || ${JSON.stringify(slugs)}::jsonb`,
+    })
+    .where(eq(contracts.id, contract.id));
+}
+
 /** The two dates the term derives (CTR-006). A key date is never marked,
  * because a person typed it. */
 export type DerivedDateSource = "expiry" | "notice_deadline";
