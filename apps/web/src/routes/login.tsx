@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Separate Legal User and Business Portal URLs share the configured sign-in methods. */
+/** Separate Legal User and Business Portal URLs share the configured sign-in methods (TECH-008). */
 
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";
 import {
@@ -39,7 +39,8 @@ export async function loginLoader({ request }: LoaderFunctionArgs) {
   return { methods: data, group };
 }
 
-type View = "password" | "sso" | "magic" | "magicSent" | "passwordSetup" | "passwordSent";
+type View =
+  "unavailable" | "password" | "sso" | "magic" | "magicSent" | "passwordSetup" | "passwordSent";
 
 export function LoginPage() {
   const { methods, group } = useLoaderData<typeof loginLoader>() as Exclude<
@@ -62,9 +63,9 @@ export function LoginPage() {
       ? "sso"
       : policy.password
         ? "password"
-        : policy.magicLink
+        : policy.magicLink && methods.emailConfigured
           ? "magic"
-          : "password";
+          : "unavailable";
   };
   const primaryView = initialView(group);
   const [view, setView] = useState<View>(primaryView);
@@ -249,6 +250,14 @@ export function LoginPage() {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {view === "unavailable" && (
+          <Alert variant="danger">
+            <FormattedMessage
+              id="auth.login.unavailable"
+              defaultMessage="Sign-in is unavailable. Contact your administrator."
+            />
+          </Alert>
+        )}
         {view === "passwordSetup" && (
           <form className="flex flex-col gap-4" onSubmit={(event) => void requestPassword(event)}>
             <Label htmlFor="setup-email">
@@ -268,7 +277,7 @@ export function LoginPage() {
                 defaultMessage="Send password setup link"
               />
             </Button>
-            <Button variant="link" onClick={() => show(primaryView)}>
+            <Button type="button" variant="link" onClick={() => show(primaryView)}>
               <FormattedMessage id="auth.backToSignIn" defaultMessage="Back to sign-in" />
             </Button>
           </form>

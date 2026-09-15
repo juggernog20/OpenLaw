@@ -263,3 +263,5 @@ Matter and Request APIs use `departmentId`; Contracts retain `owningDepartmentId
 ### SET-004 amendment — independent group authentication, 2026-09-15
 
 The onboarding wizard and Authentication settings expose Legal User Authentication and Business Portal Authentication. Each group independently enables password, email magic link, and configured OIDC SSO, with a separate required two-factor toggle. TECH-008 defines enforcement and the separate sign-in URLs. Email service remains mandatory before completing instance setup.
+
+Maintaining two group policies requires Administrators to review both sets of methods and recovery paths. This supersedes a single organization-wide authentication policy.

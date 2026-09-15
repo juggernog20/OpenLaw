@@ -47,7 +47,7 @@ Application user. Single role per user (no multi-role membership in v1). better-
 | `created_at`, `updated_at` | timestamptz |                                                                                                                    |
 | `archived_at`              | timestamptz | soft-delete affordance; checked in the session-creation hook — an archived user cannot authenticate by any path    |
 
-Resolved (**TECH-008**, closing the earlier "Open" note): no credential material lives on `users`. Password hashes and OIDC subjects live in `accounts`; magic-link and set-password tokens live in `verifications`. The plugin-demanded columns above (`image`, `two_factor_enabled`, the ban trio) are deliberate deviations recorded per the auth spec. **DD-010**'s floor stands: non-legal users authenticate via magic link, not password.
+Resolved (**TECH-008**, closing the earlier "Open" note): no credential material lives on `users`. Password hashes and OIDC subjects live in `accounts`; magic-link and set-password tokens live in `verifications`. The plugin-demanded columns above (`image`, `two_factor_enabled`, the ban trio) are deliberate deviations recorded per the auth spec. TECH-008's group policies now govern password, magic-link, and SSO access for both Legal and Business Users.
 
 ---
 
@@ -129,6 +129,7 @@ Organization-wide settings. Exactly one row, seeded by the migration that create
 | ------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`                           | UUID        | PK                                                                                                                                                                                                                                                                                 |
 | `auth_mode`                    | text (enum) | `built_in` \| `oidc` per **TECH-008**; seeded `built_in`                                                                                                                                                                                                                           |
+| `authentication_policy`        | jsonb       | Nullable Legal and Business method/enrollment policies; null uses legacy settings (TECH-008, migration 0134).                                                                                                                                                                      |
 | `require_two_factor`           | boolean     | Legacy fallback, default `false`; superseded when `authentication_policy` is saved (**TECH-008**, migrations `0133`–`0134`).                                                                                                                                                       |
 | `magic_link_enabled`           | boolean     | DD-010's portal floor; host-closable where SSO-only is policy. Seeded `true`                                                                                                                                                                                                       |
 | `allowed_email_domains`        | jsonb       | lower-cased domain strings gating magic-link issuance + JIT provisioning. Empty = nobody; seeded `[]`                                                                                                                                                                              |
@@ -215,9 +216,9 @@ Landed in M31/1, migration `0085_loud_scourge`. No `archived_at`: the singleton 
 
 ### `two_factors`
 
-Source: **TECH-008** (TOTP second factor for password accounts)
+Source: **TECH-008** (TOTP or backup-code proof under each group policy)
 
-One row per 2FA-enrolled user, owned by better-auth's twoFactor plugin. The seed and backup codes are symmetrically encrypted with the auth secret before storage and are never returned by any endpoint. 2FA gates only password sign-in — SSO delegates MFA to the IdP, and a magic link already proves inbox control. A companion `two_factor_enabled` boolean lives on `users` (plugin-demanded, like the admin-plugin columns).
+One row per 2FA-enrolled user, owned by better-auth's twoFactor plugin. The seed and backup codes are symmetrically encrypted with the auth secret before storage and are never returned by any endpoint. Required group policies gate password, SSO, and magic-link sessions on TOTP or backup-code proof. Passwordless accounts can enroll from an authenticated session. A companion `two_factor_enabled` boolean lives on `users` (plugin-demanded, like the admin-plugin columns).
 
 | Column                      | Type        | Notes                                                                                                |
 | --------------------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
@@ -1421,6 +1422,6 @@ CMT-001 Task conversations addendum.
 
 Conversion drafts enforce their `pending | ready | failed` states and `matter | contract` targets with CHECK constraints. A nullable `lease_at` is renewed every 30 seconds while preparation runs; `started_at` remains the worker's immutable claim token. Recovery checks pending conversion work once per minute. Drafts and Contract Analysis runs carry non-null `created_at` and `updated_at`; application writes refresh `updated_at`. These internal timestamps are not added to public response schemas. Partial indexes on Matter and Contract IDs where `ai_unverified is not null` support source audience checks without scanning unmarked records. [INT-008, CTR-008]
 
-### Authentication policy and Regions (2026-09-15)
+### Authentication policy (2026-09-15)
 
 `org_settings.authentication_policy` is nullable JSON with `legal` and `business` objects, each containing `password`, `magicLink`, `sso`, and `requireTwoFactor` booleans. Null uses the legacy mode columns. Migration `0134` also adds `sessions.second_factor_verified`.

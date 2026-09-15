@@ -1061,6 +1061,9 @@
   "auth.login.title": {
     "defaultMessage": "Sign in"
   },
+  "auth.login.unavailable": {
+    "defaultMessage": "Sign-in is unavailable. Contact your administrator."
+  },
   "auth.login.withPassword": {
     "defaultMessage": "Sign in with a password"
   },
@@ -10665,7 +10668,7 @@
     "defaultMessage": "The domain allowlist could not be saved."
   },
   "welcome.portal.hint": {
-    "defaultMessage": "Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
+    "defaultMessage": "Choose sign-in methods and two-factor requirements for Business Users. Allow domains for email-based access; an empty list prevents new email-based access."
   },
   "welcome.portal.remove": {
     "defaultMessage": "Remove {domain}"

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Reads required enrollment and session verification under TECH-008. Without a session ID, callers can check enrollment but cannot establish a session verification requirement. */
+
 import { eq, sessions, users, type Executor } from "@openlaw/db";
 import { httpError } from "../lib/problem.js";
 import { getOrgSettings } from "../lib/org-settings.js";

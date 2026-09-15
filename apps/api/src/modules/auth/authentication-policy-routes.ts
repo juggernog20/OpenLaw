@@ -1,10 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** TECH-008 group policies and password setup. Administrators edit policies; unauthenticated callers request or redeem an email-ownership proof before Business User creation (DD-013). */
+
 import { randomBytes, createHash } from "node:crypto";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { fromNodeHeaders } from "better-auth/node";
 import { z } from "zod";
-import { accounts, and, eq, orgSettings, ssoProviders, users, verifications } from "@openlaw/db";
+import {
+  accounts,
+  and,
+  eq,
+  gt,
+  ilike,
+  sql,
+  orgSettings,
+  ssoProviders,
+  users,
+  verifications,
+} from "@openlaw/db";
 import {
   authenticationForEmail,
   authenticationPolicy,
@@ -92,6 +105,35 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
     },
     async (request, reply) => {
       const email = request.body.email.toLowerCase();
+      const now = new Date();
+      // Shared database counters apply across replicas and every eligible-address outcome.
+      const allowed = await app.db.transaction(async (tx) => {
+        for (const [scope, value, maximum] of [
+          ["ip", request.ip, 30],
+          ["email", email, 3],
+        ] as const) {
+          const identifier = `password-setup-rate:${scope}:${createHash("sha256").update(value).digest("hex")}`;
+          await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${identifier}))`);
+          const [existing] = await tx
+            .select()
+            .from(verifications)
+            .where(eq(verifications.identifier, identifier));
+          const count = existing && existing.expiresAt > now ? Number(existing.value) : 0;
+          if (count >= maximum) return false;
+          const expiresAt =
+            existing && existing.expiresAt > now
+              ? existing.expiresAt
+              : new Date(now.getTime() + 15 * 60_000);
+          if (existing)
+            await tx
+              .update(verifications)
+              .set({ value: String(count + 1), expiresAt })
+              .where(eq(verifications.id, existing.id));
+          else await tx.insert(verifications).values({ identifier, value: "1", expiresAt });
+        }
+        return true;
+      });
+      if (!allowed) throw httpError(429, "Too many password setup requests. Try again later.");
       const { settings, user, options } = await authenticationForEmail(app.db, email);
       const { mailer } = await app.resolveMailer();
       if (!mailer.configured)
@@ -104,18 +146,47 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
           });
         } else if (isEmailDomainAllowed(email, settings.allowedEmailDomains)) {
           const token = `business.${randomBytes(32).toString("hex")}`;
-          await app.db.insert(verifications).values({
-            identifier: tokenIdentifier(token),
-            value: email,
-            expiresAt: new Date(Date.now() + 3600000),
+          const verification = await app.db.transaction(async (tx) => {
+            await tx.execute(
+              sql`select pg_advisory_xact_lock(hashtext(${`business-password-email:${email}`}))`,
+            );
+            const [pending] = await tx
+              .select({ id: verifications.id })
+              .from(verifications)
+              .where(
+                and(
+                  eq(verifications.value, email),
+                  ilike(verifications.identifier, "business-password:%"),
+                  gt(verifications.expiresAt, now),
+                ),
+              );
+            if (pending) return undefined;
+            const [created] = await tx
+              .insert(verifications)
+              .values({
+                identifier: tokenIdentifier(token),
+                value: email,
+                expiresAt: new Date(now.getTime() + 3600000),
+              })
+              .returning({ id: verifications.id });
+            return created;
           });
+          if (!verification)
+            return reply.status(202).send({
+              message: "If the address is eligible, a password setup link is on its way.",
+            });
           const context = await app.auth.$context;
           const origin = new URL(context.baseURL).origin;
-          await mailer.send({
-            to: email,
-            subject: "Set your OpenLaw password",
-            text: `Set your OpenLaw password using the link below:\n\n${origin}/auth/set-password?token=${token}\n\nThe link expires in one hour. If you did not expect this email, you can ignore it.`,
-          });
+          try {
+            await mailer.send({
+              to: email,
+              subject: "Set your OpenLaw password",
+              text: `Set your OpenLaw password using the link below:\n\n${origin}/auth/set-password?token=${token}\n\nThe link expires in one hour. If you did not expect this email, you can ignore it.`,
+            });
+          } catch (error) {
+            await app.db.delete(verifications).where(eq(verifications.id, verification.id));
+            throw error;
+          }
         }
       }
       return reply

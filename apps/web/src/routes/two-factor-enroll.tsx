@@ -27,14 +27,14 @@ export async function enrollLoader() {
   if (!user) return redirect("/auth/login");
   const { data } = await authClient.getSession();
   if (!data) return redirect("/auth/login");
+  const accounts = await authClient.listAccounts();
+  if (accounts.error || !accounts.data)
+    throw new Error("The account's sign-in methods could not be read.");
   return {
     twoFactorEnabled: data.user.twoFactorEnabled === true,
     required: user.twoFactorRequired,
     loginUrl: user.role === "business_user" ? "/portal/login" : "/auth/login",
-    hasPassword:
-      (await authClient.listAccounts()).data?.some(
-        (account) => account.providerId === "credential",
-      ) ?? true,
+    hasPassword: accounts.data.some((account) => account.providerId === "credential"),
   };
 }
 

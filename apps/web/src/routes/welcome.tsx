@@ -1309,7 +1309,7 @@ export function WelcomePage() {
                     <CardDescription>
                       <FormattedMessage
                         id="welcome.portal.hint"
-                        defaultMessage="Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
+                        defaultMessage="Choose sign-in methods and two-factor requirements for Business Users. Allow domains for email-based access; an empty list prevents new email-based access."
                       />
                     </CardDescription>
                     <AuthenticationOptionsFields
