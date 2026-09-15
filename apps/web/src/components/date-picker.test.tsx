@@ -60,6 +60,19 @@ describe("DatePicker", () => {
     expect(screen.queryByRole("dialog", { name: "Choose a date" })).not.toBeInTheDocument();
   });
 
+  it.each(["", "2001-03-01"])(
+    "selects today from the calendar when the current value is %s",
+    async (initial) => {
+      const user = userEvent.setup();
+      render(<Harness initial={initial} />);
+      await user.click(screen.getByLabelText("When"));
+      await user.click(screen.getByRole("button", { name: "Today" }));
+      expect(screen.getByText(localDateToCivil(new Date()))).toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Choose a date" })).not.toBeInTheDocument();
+      expect(screen.getByLabelText("When")).toHaveFocus();
+    },
+  );
+
   it("clears back to nothing recorded", async () => {
     const user = userEvent.setup();
     render(<Harness initial="2026-03-01" />);

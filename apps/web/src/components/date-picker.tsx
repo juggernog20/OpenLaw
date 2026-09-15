@@ -18,6 +18,7 @@ import { formatFullDate } from "../lib/format";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { cn } from "../lib/utils";
 import { Calendar } from "./ui/calendar";
+import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 const CIVIL = /^\d{4}-\d{2}-\d{2}$/;
@@ -132,22 +133,35 @@ export function DatePicker({
             setOpen(false);
           }}
         />
-        {value !== "" && (
-          <button
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <Button
             type="button"
-            className="mt-2 text-sm font-medium text-link focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-            aria-label={intl.formatMessage({
-              id: "datePicker.clear",
-              defaultMessage: "Clear date",
-            })}
+            variant="secondary"
+            size="sm"
             onClick={() => {
-              onChange("");
+              onChange(localDateToCivil(new Date()));
               setOpen(false);
             }}
           >
-            <FormattedMessage id="action.clear" defaultMessage="Clear" />
-          </button>
-        )}
+            <FormattedMessage id="datePicker.today" defaultMessage="Today" />
+          </Button>
+          {value !== "" && (
+            <button
+              type="button"
+              className="text-sm font-medium text-link focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+              aria-label={intl.formatMessage({
+                id: "datePicker.clear",
+                defaultMessage: "Clear date",
+              })}
+              onClick={() => {
+                onChange("");
+                setOpen(false);
+              }}
+            >
+              <FormattedMessage id="action.clear" defaultMessage="Clear" />
+            </button>
+          )}
+        </div>
       </PopoverContent>
     </Popover>
   );

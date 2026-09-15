@@ -190,6 +190,12 @@ Migration 0123 preserves older Word-only Generations with `formats = docx` and `
 
 **M35/11 built addendum (#854):** Portal audience is rechecked for the published list, acknowledgement, form, acceptance, owned history and downloads. Every-use acknowledgements are consumed atomically with acceptance; rejected submissions do not consume them. Text edits revoke earlier matching Acknowledgements, so restoring old text still requires a new acknowledgement. Member+ bypasses acknowledgement. Existing Generations remain readable after Unpublish or Archive as ADO-010 requires, while audience revocation removes access. An Entity fixed for a targeted Auto-Doc must remain Portal-listed, live and non-Confidential for Business User use; Legal sees the specific configuration warning and the Portal asks the person to contact Legal. Saved Assignment rules that name fields absent from the Live Form receive the same author warning and Portal refusal.
 
+### UX revision (2026-09-14): organisation acknowledgement frequency
+
+This supersedes ADO-008's per-Auto-Doc frequency setting and DES-087's Frequency control. Administrators set one frequency in Settings → Auto-Docs, applying to existing and future Auto-Docs. The schedules remain none, every generation, once per person for each Auto-Doc, and once per person across all Auto-Docs. Each distinct statement still needs its own acknowledgement, and a text change invalidates agreements to the old words. Individual records retain their optional custom acknowledgement text.
+
+Migration 0132 moves frequency from `auto_docs` to `org_settings.auto_doc_acknowledgement_frequency`, initially once per person for each Auto-Doc. The settings API audits frequency changes; record edits cannot override the organisation policy. Generation acceptance checks the current policy while holding the organisation settings lock.
+
 ## ADO-009 — Reach: Legal only, selected people and Departments, or everyone; the Portal lists an Auto-Doc and the person's own Generations
 
 - **Status** — Accepted

@@ -101,6 +101,7 @@
  * a thing to end by reflex.
  */
 
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useRef, useState } from "react";
 import { useRecord } from "../record-context";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
@@ -1542,7 +1543,7 @@ function DecisionDialog({
             <Label htmlFor="approval-note">
               <FormattedMessage id="approvals.note" defaultMessage="Note" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="approval-note"
               value={note}
               rows={3}
@@ -1675,7 +1676,7 @@ function VoidEnvelopeDialog({
             <Label htmlFor="envelope-void-reason">
               <FormattedMessage id="signing.reason" defaultMessage="Reason" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="envelope-void-reason"
               value={reason}
               rows={3}

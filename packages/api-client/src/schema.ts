@@ -9248,6 +9248,8 @@ export interface operations {
         content: {
           "application/json": {
             acknowledgementText: string;
+            /** @enum {string} */
+            acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
           };
         };
       };
@@ -9272,7 +9274,9 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          acknowledgementText: string;
+          acknowledgementText?: string;
+          /** @enum {string} */
+          acknowledgementFrequency?: "none" | "every_use" | "once_per_auto_doc" | "once";
         };
       };
     };
@@ -9285,6 +9289,8 @@ export interface operations {
         content: {
           "application/json": {
             acknowledgementText: string;
+            /** @enum {string} */
+            acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
           };
         };
       };
@@ -9399,8 +9405,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -9593,8 +9597,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -9809,8 +9811,6 @@ export interface operations {
           audienceUserIds?: string[];
           audienceDepartmentIds?: string[];
           acknowledgementText?: string | null;
-          /** @enum {string} */
-          acknowledgementFrequency?: "none" | "every_use" | "once_per_auto_doc" | "once";
           description?: string | null;
           /** @enum {string} */
           audience?: "legal_only" | "selected" | "everyone";
@@ -9844,8 +9844,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10095,8 +10093,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10293,8 +10289,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10491,8 +10485,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10689,8 +10681,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10886,8 +10876,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10951,8 +10939,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -11018,8 +11004,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -11264,8 +11248,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -20318,6 +20300,7 @@ export interface operations {
               generator: {
                 id: string;
                 displayName: string;
+                email: string;
               } | null;
             }[];
             nextCursor: number | null;
@@ -20354,6 +20337,7 @@ export interface operations {
             people: {
               id: string;
               displayName: string;
+              email: string;
             }[];
           };
         };

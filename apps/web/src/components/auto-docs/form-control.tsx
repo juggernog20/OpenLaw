@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** Shared labelled answers for Member and Portal Generation forms. */
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useIntl } from "react-intl";
 import type { AutoDocGenerationForm } from "../../lib/auto-docs";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
@@ -47,7 +48,7 @@ export function FormControl({
     );
   if (field.fieldType === "long_text")
     return (
-      <textarea
+      <AutoResizeTextarea
         {...props}
         className={TEXTAREA_CLASS}
         value={String(draft)}

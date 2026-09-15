@@ -4,7 +4,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
-  AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES,
   and,
   asc,
   autoDocAcknowledgements,
@@ -44,7 +43,6 @@ export const PortalSettingsShape = {
   audienceUserIds: DistinctIds.optional(),
   audienceDepartmentIds: DistinctIds.optional(),
   acknowledgementText: AcknowledgementText.nullable().optional(),
-  acknowledgementFrequency: z.enum(AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES).optional(),
 };
 export const textHash = (text: string) => createHash("sha256").update(text).digest("hex");
 export function portalAutoDocScope(user: AuthenticatedUser) {
@@ -89,11 +87,16 @@ export async function lockPortalPerson(tx: Transaction, user: AuthenticatedUser)
       .for("share");
 }
 export async function acknowledgementWords(db: Executor, autoDoc: AutoDoc, lock = false) {
-  const query = db.select({ text: orgSettings.autoDocAcknowledgementText }).from(orgSettings);
+  const query = db
+    .select({
+      text: orgSettings.autoDocAcknowledgementText,
+      frequency: orgSettings.autoDocAcknowledgementFrequency,
+    })
+    .from(orgSettings);
   const [org] = lock ? await query.for("share") : await query;
   if (!org) throw httpError(500, "The organisation settings could not be read.");
   const text = autoDoc.acknowledgementText ?? org.text;
-  return { text, textHash: textHash(text), defaultText: org.text };
+  return { text, textHash: textHash(text), defaultText: org.text, frequency: org.frequency };
 }
 export async function revokeAcknowledgements(tx: Transaction, hash: string, autoDocId?: string) {
   await tx
@@ -146,16 +149,6 @@ export async function applyPortalSettings(
     if (next !== before.text) await revokeAcknowledgements(tx, before.textHash, row.id);
     patch.acknowledgementText = body.acknowledgementText;
     changed.acknowledgementText = { from: row.acknowledgementText, to: body.acknowledgementText };
-  }
-  if (
-    body.acknowledgementFrequency !== undefined &&
-    body.acknowledgementFrequency !== row.acknowledgementFrequency
-  ) {
-    patch.acknowledgementFrequency = body.acknowledgementFrequency;
-    changed.acknowledgementFrequency = {
-      from: row.acknowledgementFrequency,
-      to: body.acknowledgementFrequency,
-    };
   }
   const before = await readAudience(tx, row.id);
   if (body.audienceUserIds) {
@@ -311,10 +304,10 @@ async function standingAcknowledgement(
   user: AuthenticatedUser,
   row: AutoDoc,
   hash: string,
+  frequency: Awaited<ReturnType<typeof acknowledgementWords>>["frequency"],
   id?: string,
   lock = false,
 ) {
-  const frequency = row.acknowledgementFrequency;
   if (frequency === "none" || (frequency === "every_use" && !id)) return null;
   const query = db
     .select()
@@ -348,10 +341,10 @@ export async function acknowledgementState(
   const words = await acknowledgementWords(db, row, lock);
   const required =
     user.role === "business_user" &&
-    row.acknowledgementFrequency !== "none" &&
-    !(await standingAcknowledgement(db, user, row, words.textHash, id));
+    words.frequency !== "none" &&
+    !(await standingAcknowledgement(db, user, row, words.textHash, words.frequency, id));
   return {
-    frequency: row.acknowledgementFrequency,
+    frequency: words.frequency,
     required,
     text: words.text,
     textHash: words.textHash,
@@ -363,8 +356,9 @@ export async function acceptAcknowledgement(
   row: AutoDoc,
   shownHash: string,
 ) {
-  if (user.role !== "business_user" || row.acknowledgementFrequency === "none") return null;
+  if (user.role !== "business_user") return null;
   const words = await acknowledgementWords(tx, row, true);
+  if (words.frequency === "none") return null;
   if (shownHash !== words.textHash)
     throw httpError(
       409,
@@ -374,8 +368,8 @@ export async function acceptAcknowledgement(
     .insert(autoDocAcknowledgements)
     .values({
       userId: user.id,
-      autoDocId: row.acknowledgementFrequency === "once" ? null : row.id,
-      frequency: row.acknowledgementFrequency,
+      autoDocId: words.frequency === "once" ? null : row.id,
+      frequency: words.frequency,
       textHash: words.textHash,
     })
     .returning();
@@ -389,7 +383,7 @@ export async function acceptAcknowledgement(
       name: row.name,
       text: words.text,
       textHash: words.textHash,
-      frequency: row.acknowledgementFrequency,
+      frequency: words.frequency,
       acknowledgementId: ack!.id,
     },
   });
@@ -405,15 +399,24 @@ export async function authorisePortalGeneration(
   const row = await readPortalAutoDoc(tx, user, id, true, true);
   if (user.role === "business_user" && (await portalWarnings(tx, row)).length)
     throw httpError(409, PORTAL_UNAVAILABLE);
-  if (user.role !== "business_user" || row.acknowledgementFrequency === "none") return;
+  if (user.role !== "business_user") return;
   const words = await acknowledgementWords(tx, row, true);
-  const ack = await standingAcknowledgement(tx, user, row, words.textHash, acknowledgementId, true);
+  if (words.frequency === "none") return;
+  const ack = await standingAcknowledgement(
+    tx,
+    user,
+    row,
+    words.textHash,
+    words.frequency,
+    acknowledgementId,
+    true,
+  );
   if (!ack)
     throw httpError(
       409,
       "Acknowledge the current text before generating. Your answers have not been submitted.",
     );
-  if (row.acknowledgementFrequency === "every_use")
+  if (words.frequency === "every_use")
     await tx
       .update(autoDocAcknowledgements)
       .set({ consumedAt: new Date() })

@@ -45,7 +45,7 @@ export function AutoResizeTextarea({
         fitContents(event.currentTarget);
         onInput?.(event);
       }}
-      className={cn(TEXTAREA_CLASS, "resize-none overflow-hidden", className)}
+      className={cn(TEXTAREA_CLASS, className, "resize-none overflow-hidden")}
     />
   );
 }

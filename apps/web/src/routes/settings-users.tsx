@@ -373,7 +373,7 @@ export function SettingsUsersPage() {
     );
   }
 
-  /** A ghost icon action on the row. All actions on one row share that
+  /** A labelled action on the row. All actions on one row share that
    * row's saving lock, so a double-click cannot race two mutations. */
   function rowAction(
     row: UserRow,
@@ -391,6 +391,17 @@ export function SettingsUsersPage() {
         onClick={() => void onClick(row)}
       >
         <Icon size={16} aria-hidden="true" className="text-muted" />
+        {Icon === Send ? (
+          <FormattedMessage id="settings.users.action.resend" defaultMessage="Resend invite" />
+        ) : Icon === Trash2 ? (
+          <FormattedMessage id="settings.users.action.revoke" defaultMessage="Revoke invite" />
+        ) : Icon === LogOut ? (
+          <FormattedMessage id="settings.users.action.signOut" defaultMessage="Sign out user" />
+        ) : Icon === Archive ? (
+          <FormattedMessage id="settings.users.action.archive" defaultMessage="Archive" />
+        ) : (
+          <FormattedMessage id="settings.users.action.restore" defaultMessage="Restore" />
+        )}
       </Button>
     );
   }

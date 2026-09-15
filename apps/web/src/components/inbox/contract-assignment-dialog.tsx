@@ -25,7 +25,9 @@ export function ContractAssignmentDialog({
   onClose: () => void;
 }) {
   const intl = useIntl();
-  const [people, setPeople] = useState<{ id: string; displayName: string }[] | null>(null);
+  const [people, setPeople] = useState<{ id: string; displayName: string; email: string }[] | null>(
+    null,
+  );
   const [loadError, setLoadError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [query, setQuery] = useState("");
@@ -47,7 +49,9 @@ export function ContractAssignmentDialog({
     };
   }, [attempt]);
   const candidates = people?.filter((person) =>
-    person.displayName.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
+    `${person.displayName} ${person.email}`
+      .toLocaleLowerCase()
+      .includes(query.trim().toLocaleLowerCase()),
   );
   return (
     <DialogContent aria-describedby="contract-assignment-description">
@@ -140,7 +144,10 @@ export function ContractAssignmentDialog({
                   onChange={() => setSelected(person.id)}
                 />
                 <Avatar name={person.displayName} />
-                <span className="min-w-0 flex-1 truncate text-sm">{person.displayName}</span>
+                <span className="min-w-0 flex-1 text-sm">
+                  <span className="block truncate">{person.displayName}</span>
+                  <span className="block truncate text-xs text-muted">{person.email}</span>
+                </span>
                 {selected === person.id && (
                   <Check size={16} aria-hidden="true" className="text-link" />
                 )}

@@ -18,35 +18,39 @@ test("Legal configures a cover note and receives matching Word and PDF downloads
   await page.getByRole("textbox", { name: "Name", exact: true }).fill(name);
   await page.getByRole("button", { name: "Create", exact: true }).click();
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
-  await page
+  // The record is the DES-087 builder: the file arrives through the
+  // upload dialog, and the directives in it decide each field's type.
+  await page.getByRole("link", { name: "Form", exact: true }).click();
+  await page.getByRole("button", { name: "Upload version", exact: true }).click();
+  const upload = page.getByRole("dialog");
+  await upload
     .getByLabel("Word template", { exact: true })
     .setInputFiles(
       fileURLToPath(
         new URL("../../apps/api/src/testing/fixtures/auto-docs/directives.docx", import.meta.url),
       ),
     );
-  await page.getByRole("button", { name: "Upload template", exact: true }).click();
-  await expect(
-    page
-      .getByRole("group", { name: "signing_date", exact: true })
-      .getByRole("combobox", { name: "Type", exact: true }),
-  ).toHaveValue("date");
-  await expect(
-    page
-      .getByRole("group", { name: "amount", exact: true })
-      .getByRole("combobox", { name: "Type", exact: true }),
-  ).toHaveValue("currency");
-  const settings = page.getByRole("region", { name: "Settings", exact: true });
-  await expect(settings).toBeVisible({ timeout: 10_000 });
-  await settings.getByRole("combobox", { name: "Formats", exact: true }).selectOption("both");
-  await settings
+  await upload.getByRole("button", { name: "Upload", exact: true }).click();
+  await upload.getByRole("button", { name: "Close", exact: true }).click();
+  const fields = page.getByRole("region", { name: "Fields", exact: true });
+  await expect(fields.getByText("signing_date · Date", { exact: true })).toBeVisible();
+  await expect(fields.getByText("amount · Currency", { exact: true })).toBeVisible();
+
+  // Settings live on their own cards now, and each control commits on
+  // its own (DES-087): there is no Save button to press.
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  const output = page.getByRole("region", { name: "Output", exact: true });
+  await expect(output).toBeVisible({ timeout: 10_000 });
+  await output.getByRole("combobox", { name: "Formats", exact: true }).selectOption("both");
+  await output
     .getByLabel("Cover note", { exact: true })
     .fill("Please **review** the attached NDA before signing.");
-  await expect(settings.getByText("review", { exact: true })).toBeVisible();
-  await settings.getByRole("button", { name: "Save settings", exact: true }).click();
-  await expect(settings.getByText("Settings saved.", { exact: true })).toBeVisible();
+  await output.getByLabel("Cover note", { exact: true }).blur();
+  await expect(output.getByText("Saved", { exact: true }).last()).toBeVisible();
+  await expect(output.getByText("review", { exact: true })).toBeVisible();
   expect(await reportAxeViolations(page, testInfo, "Auto-Doc-delivery-settings")).toEqual([]);
-  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await page.getByRole("button", { name: "Publish", exact: true }).first().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("link", { name: "Generate", exact: true }).click();
   await page.getByLabel("Counterparty name", { exact: true }).fill("Acme & Sons");
   await page.getByLabel("Amount", { exact: true }).fill("12345.67");

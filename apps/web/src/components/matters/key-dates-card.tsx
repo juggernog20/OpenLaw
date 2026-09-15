@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The Matter record's named Key dates (MTR-004). */
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useState } from "react";
 import { KeyDateReminderFields, type KeyDateReminderDraft } from "../key-date-reminder-fields";
 import { useRecord } from "../record-context";
@@ -382,7 +383,7 @@ function MatterKeyDateDialog({
             <Label htmlFor="matter-key-date-note">
               <FormattedMessage id="matterKeyDates.note" defaultMessage="Note" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="matter-key-date-note"
               value={note}
               rows={3}

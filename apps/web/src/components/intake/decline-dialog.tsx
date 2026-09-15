@@ -30,6 +30,7 @@
  * that is already made.
  */
 
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Ban, Mail } from "lucide-react";
@@ -180,7 +181,7 @@ export function DeclineDialog({
                   <FormattedMessage id="intake.field.requiredMark" defaultMessage="(required)" />
                 </span>
               </Label>
-              <textarea
+              <AutoResizeTextarea
                 id="decline-reason"
                 value={reason}
                 rows={4}

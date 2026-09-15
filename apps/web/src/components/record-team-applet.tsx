@@ -125,7 +125,10 @@ function TeamPanel({
           ...statements,
           ...team.map((person) => ({
             person,
-            onRemove: frozen ? undefined : () => void remove(person),
+            onRemove:
+              frozen || statements.some((entry) => entry.person.id === person.id)
+                ? undefined
+                : () => void remove(person),
             removeDisabled: audienceLocked || removing !== null,
             removeLabel: intl.formatMessage(
               { id: "record.team.remove", defaultMessage: "Take {name} off the {module} team" },
@@ -150,7 +153,10 @@ function TeamPanel({
           module={module}
           number={number}
           users={users.filter(
-            (person) => !person.archived && !team.some((member) => member.id === person.id),
+            (person) =>
+              !person.archived &&
+              !team.some((member) => member.id === person.id) &&
+              !statements.some((entry) => entry.person.id === person.id),
           )}
           disabled={frozen || audienceLocked}
           onOpenChange={onAdding}

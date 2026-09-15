@@ -16,6 +16,7 @@ import {
   Link2,
   MoreHorizontal,
   Send,
+  Trash2,
   Undo2,
 } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -52,6 +53,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Input } from "../components/ui/input";
@@ -181,7 +183,8 @@ function AutoDocRecord({
   const [saved, setSaved] = useState(initial);
   const [reading, setReading] = useState(initialReading);
   const [selection, setSelection] = useState<BuilderSelection>(null);
-  const [dialog, setDialog] = useState<"publish" | "upload" | "compare" | null>(null);
+  const [dialog, setDialog] = useState<"publish" | "upload" | "compare" | "delete" | null>(null);
+  const actionsTrigger = useRef<HTMLButtonElement>(null);
   const [reading_, setReadingDoc] = useState(landing);
   const [covered, setCovered] = useState(false);
   const [error, setError] = useState<string>();
@@ -381,15 +384,10 @@ function AutoDocRecord({
                   </Button>
                 )
               )}
-              {user.role === "administrator" && (
-                <DeleteAutoDoc
-                  autoDoc={saved.autoDoc}
-                  disabled={actionBusy || commits.status.name === "saving"}
-                />
-              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
+                    ref={actionsTrigger}
                     variant="ghost"
                     size="icon"
                     disabled={actionBusy}
@@ -401,7 +399,12 @@ function AutoDocRecord({
                     <MoreHorizontal size={16} aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent
+                  align="end"
+                  onCloseAutoFocus={(event) => {
+                    if (dialog === "delete") event.preventDefault();
+                  }}
+                >
                   <DropdownMenuItem onSelect={() => void copyLink()}>
                     <Link2 size={16} aria-hidden="true" />
                     <FormattedMessage id="autoDocs.copyLink" defaultMessage="Copy link" />
@@ -431,6 +434,22 @@ function AutoDocRecord({
                       <Archive size={16} aria-hidden="true" />
                       <FormattedMessage id="autoDocs.archive" defaultMessage="Archive" />
                     </DropdownMenuItem>
+                  )}
+                  {user.role === "administrator" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        disabled={actionBusy || commits.status.name === "saving"}
+                        className="text-status-danger-fg"
+                        onSelect={() => setDialog("delete")}
+                      >
+                        <Trash2 size={16} aria-hidden="true" />
+                        <FormattedMessage
+                          id="autoDocs.delete.action"
+                          defaultMessage="Delete Auto-Doc"
+                        />
+                      </DropdownMenuItem>
+                    </>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -542,6 +561,13 @@ function AutoDocRecord({
       )}
       {dialog === "compare" && (
         <CompareFormsDialog record={saved} onClose={() => setDialog(null)} />
+      )}
+      {dialog === "delete" && user.role === "administrator" && (
+        <DeleteAutoDoc
+          autoDoc={saved.autoDoc}
+          onClose={() => setDialog(null)}
+          onCloseFocus={() => actionsTrigger.current?.focus()}
+        />
       )}
     </AppShell>
   );

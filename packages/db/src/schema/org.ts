@@ -12,6 +12,13 @@ import { boolean, check, jsonb, pgTable, text, timestamp, uniqueIndex } from "dr
 import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
 
+export const AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES = [
+  "none",
+  "every_use",
+  "once_per_auto_doc",
+  "once",
+] as const;
+
 export const AUTH_MODES = ["built_in", "oidc"] as const;
 export type AuthMode = (typeof AUTH_MODES)[number];
 
@@ -34,6 +41,11 @@ export const orgSettings = pgTable(
     autoDocAcknowledgementText: text("auto_doc_acknowledgement_text")
       .notNull()
       .default(DEFAULT_AUTO_DOC_ACKNOWLEDGEMENT_TEXT),
+    autoDocAcknowledgementFrequency: text("auto_doc_acknowledgement_frequency", {
+      enum: AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES,
+    })
+      .notNull()
+      .default("once_per_auto_doc"),
     /** Org identity (SET-001 General pane). Empty until an Administrator names the org. */
     name: text("name").notNull().default(""),
     /** The org logo as a data: URI; NULL until one is uploaded. */
@@ -99,6 +111,10 @@ export const orgSettings = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    check(
+      "org_settings_auto_doc_acknowledgement_frequency_check",
+      sql`${table.autoDocAcknowledgementFrequency} in ('none', 'every_use', 'once_per_auto_doc', 'once')`,
+    ),
     uniqueIndex("org_settings_singleton").on(sql`(true)`),
     check("org_settings_auth_mode_check", sql`${table.authMode} in ('built_in', 'oidc')`),
   ],

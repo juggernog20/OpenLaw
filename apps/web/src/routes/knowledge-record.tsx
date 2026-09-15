@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M28's one-section Knowledge record with DES-017 field commits. */
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
@@ -689,20 +690,17 @@ function KnowledgeRecord() {
                 ) : (
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="knowledge-body" className="sr-only">
-                      <FormattedMessage
-                        id="knowledge.body.markdown"
-                        defaultMessage="Guidance in Markdown"
-                      />
+                      <FormattedMessage id="knowledge.body.markdown" defaultMessage="Guidance" />
                     </Label>
-                    <textarea
+                    <AutoResizeTextarea
                       ref={textarea}
                       id="knowledge-body"
-                      className={`${TEXTAREA_CLASS} min-h-64 font-mono`}
+                      className={`${TEXTAREA_CLASS} min-h-64`}
                       value={body}
                       disabled={saved.archivedAt !== null}
                       placeholder={intl.formatMessage({
                         id: "knowledge.body.placeholder",
-                        defaultMessage: "Write guidance in Markdown…",
+                        defaultMessage: "Write guidance for your team…",
                       })}
                       onChange={(event) => setBody(event.target.value)}
                       onBlur={commitBody}
@@ -710,7 +708,7 @@ function KnowledgeRecord() {
                     <p className="text-xs text-muted">
                       <FormattedMessage
                         id="knowledge.body.help"
-                        defaultMessage="Markdown headings, lists, emphasis, code, and links are supported."
+                        defaultMessage="Use Preview to see how your guidance will appear to readers."
                       />
                     </p>
                   </div>

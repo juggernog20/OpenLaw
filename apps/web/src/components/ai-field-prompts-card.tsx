@@ -2,6 +2,7 @@
 
 /** The seven editable core prompts used by the next Contract analysis run. */
 
+import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { useState, type KeyboardEvent } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -102,7 +103,7 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
           <StatusNote status={status[prompt.slug] ?? "idle"} detail={error[prompt.slug]} />
         </div>
       </div>
-      <textarea
+      <AutoResizeTextarea
         id={inputId}
         aria-label={intl.formatMessage(
           {
@@ -118,7 +119,7 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => commitText(prompt.slug, field)}
         onKeyDown={onKeyDown}
-        className="w-full resize-y rounded-button border border-border-default bg-raised px-2 py-1.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+        className="w-full rounded-button border border-border-default bg-raised px-2 py-1.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
       />
     </li>
   );

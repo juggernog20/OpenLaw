@@ -2,6 +2,7 @@
 
 /** ST21 Matter-template editor for reusable defaults, tasks, and key dates. */
 
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { useState } from "react";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -396,7 +397,7 @@ export function SettingsMatterTemplateEditorPage() {
                   defaultMessage="Description"
                 />
               </Label>
-              <textarea
+              <AutoResizeTextarea
                 id="template-editor-description"
                 rows={3}
                 value={description}

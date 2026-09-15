@@ -5,9 +5,11 @@
  * Reach, Acknowledgement, Output, and Contract creation, the last with
  * the Assignment rules table and its dialog. No Save buttons.
  */
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useState, type ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { Link } from "react-router";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../../lib/api";
 import {
@@ -25,9 +27,9 @@ import { SettingsCard } from "../settings-card";
 import { StatusNote } from "../status-note";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
-import { Input } from "../ui/input";
 import { defaultRuleValue, RuleValueInput } from "./rule-value-input";
 import { useRuleWords } from "./rule-words";
+import { TitlePatternInput } from "./title-pattern-input";
 
 type Patch = paths["/api/v1/auto-docs/{id}"]["patch"]["requestBody"]["content"]["application/json"];
 type RuleInput = Omit<AutoDocAssignmentRule, "id" | "displayOrder"> & { id?: string };
@@ -263,124 +265,101 @@ export function SettingsCards({
         region
         title={<FormattedMessage id="autoDocs.acknowledgement" defaultMessage="Acknowledgement" />}
       >
-        <Control
-          label={
-            <FormattedMessage id="autoDocs.acknowledgementFrequency" defaultMessage="Frequency" />
-          }
-          htmlFor="auto-doc-ack-frequency"
-          status={status("acknowledgementFrequency")}
-          error={commits.error.acknowledgementFrequency}
-        >
-          <select
-            id="auto-doc-ack-frequency"
-            className={CONTROL_CLASS}
-            value={doc.acknowledgementFrequency}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (
-                value === "none" ||
-                value === "every_use" ||
-                value === "once_per_auto_doc" ||
-                value === "once"
-              )
-                void patch("acknowledgementFrequency", { acknowledgementFrequency: value });
+        <p className="text-sm text-muted">
+          <FormattedMessage
+            id="autoDocs.acknowledgementPolicyHelp"
+            defaultMessage="Acknowledgement frequency can be adjusted in <settings>Organization Auto-Doc Settings</settings>."
+            values={{
+              // Underlined at rest, like every other link inside prose:
+              // colour alone against muted body text fails WCAG 1.4.1
+              // (axe link-in-text-block).
+              settings: (chunks) => (
+                <Link to="/settings/auto-docs" className="text-link underline">
+                  {chunks}
+                </Link>
+              ),
             }}
-          >
-            {(["none", "every_use", "once_per_auto_doc", "once"] as const).map((frequency) => (
-              <option key={frequency} value={frequency}>
-                {intl.formatMessage(
-                  {
-                    id: "autoDocs.acknowledgementFrequencyName",
-                    defaultMessage:
-                      "{frequency, select, none {None} every_use {Every use} once_per_auto_doc {Once per Auto-Doc} other {Once across Auto-Docs}}",
-                  },
-                  { frequency },
-                )}
-              </option>
-            ))}
-          </select>
-        </Control>
-        {doc.acknowledgementFrequency !== "none" && (
-          <div
-            className="flex flex-col gap-2"
-            role="radiogroup"
-            aria-labelledby="auto-doc-ack-text-label"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span id="auto-doc-ack-text-label" className="text-sm font-medium">
-                <FormattedMessage id="autoDocs.acknowledgementText" defaultMessage="Text" />
-              </span>
-              <StatusNote
-                status={status("acknowledgementText")}
-                detail={commits.error.acknowledgementText}
-              />
-            </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="auto-doc-ack-source"
-                checked={!customText}
-                onChange={() => {
-                  setCustomText(false);
-                  void patch("acknowledgementText", { acknowledgementText: null });
-                }}
-              />
-              <FormattedMessage
-                id="autoDocs.orgAcknowledgement"
-                defaultMessage="Organization's text"
-              />
-            </label>
-            {doc.acknowledgementText === null && (
-              <p className="ms-6 text-sm whitespace-pre-wrap text-muted">
-                {record.defaultAcknowledgementText}
-              </p>
-            )}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="auto-doc-ack-source"
-                checked={customText}
-                onChange={() => {
-                  setCustomText(true);
-                  setAckText(record.defaultAcknowledgementText);
-                  void patch("acknowledgementText", {
-                    acknowledgementText: record.defaultAcknowledgementText,
-                  });
-                }}
-              />
-              <FormattedMessage id="autoDocs.customAcknowledgement" defaultMessage="Custom text" />
-            </label>
-            {customText && (
-              <div className="ms-6 flex flex-col gap-1">
-                <textarea
-                  aria-label={intl.formatMessage({
-                    id: "autoDocs.acknowledgementTextField",
-                    defaultMessage: "Acknowledgement text",
-                  })}
-                  className={TEXTAREA_CLASS}
-                  maxLength={10_000}
-                  value={ackText}
-                  onChange={(event) => setAckText(event.target.value)}
-                  onBlur={() =>
-                    commits.commitText("acknowledgementText", {
-                      draft: ackText,
-                      saved: doc.acknowledgementText ?? "",
-                      required: true,
-                      reset: setAckText,
-                      send: (value) => patch("acknowledgementText", { acknowledgementText: value }),
-                    })
-                  }
-                />
-                <span className="text-xs text-muted">
-                  <FormattedMessage
-                    id="autoDocs.acknowledgementCaption"
-                    defaultMessage="Changing the text asks everyone to acknowledge it again."
-                  />
-                </span>
-              </div>
-            )}
+          />
+        </p>
+        <div
+          className="flex flex-col gap-2"
+          role="radiogroup"
+          aria-labelledby="auto-doc-ack-text-label"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span id="auto-doc-ack-text-label" className="text-sm font-medium">
+              <FormattedMessage id="autoDocs.acknowledgementText" defaultMessage="Text" />
+            </span>
+            <StatusNote
+              status={status("acknowledgementText")}
+              detail={commits.error.acknowledgementText}
+            />
           </div>
-        )}
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="auto-doc-ack-source"
+              checked={!customText}
+              onChange={() => {
+                setCustomText(false);
+                void patch("acknowledgementText", { acknowledgementText: null });
+              }}
+            />
+            <FormattedMessage
+              id="autoDocs.orgAcknowledgement"
+              defaultMessage="Organization's text"
+            />
+          </label>
+          {doc.acknowledgementText === null && (
+            <p className="ms-6 text-sm whitespace-pre-wrap text-muted">
+              {record.defaultAcknowledgementText}
+            </p>
+          )}
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="auto-doc-ack-source"
+              checked={customText}
+              onChange={() => {
+                setCustomText(true);
+                setAckText(record.defaultAcknowledgementText);
+                void patch("acknowledgementText", {
+                  acknowledgementText: record.defaultAcknowledgementText,
+                });
+              }}
+            />
+            <FormattedMessage id="autoDocs.customAcknowledgement" defaultMessage="Custom text" />
+          </label>
+          {customText && (
+            <div className="ms-6 flex flex-col gap-1">
+              <AutoResizeTextarea
+                aria-label={intl.formatMessage({
+                  id: "autoDocs.acknowledgementTextField",
+                  defaultMessage: "Acknowledgement text",
+                })}
+                className={TEXTAREA_CLASS}
+                maxLength={10_000}
+                value={ackText}
+                onChange={(event) => setAckText(event.target.value)}
+                onBlur={() =>
+                  commits.commitText("acknowledgementText", {
+                    draft: ackText,
+                    saved: doc.acknowledgementText ?? "",
+                    required: true,
+                    reset: setAckText,
+                    send: (value) => patch("acknowledgementText", { acknowledgementText: value }),
+                  })
+                }
+              />
+              <span className="text-xs text-muted">
+                <FormattedMessage
+                  id="autoDocs.acknowledgementCaption"
+                  defaultMessage="Changing the text asks everyone to acknowledge it again."
+                />
+              </span>
+            </div>
+          )}
+        </div>
       </SettingsCard>
 
       <SettingsCard
@@ -424,11 +403,11 @@ export function SettingsCards({
           caption={
             <FormattedMessage
               id="autoDocs.coverNoteCaption"
-              defaultMessage="Sent in the email with the files. Markdown."
+              defaultMessage="Write a message to include in the email with the generated files."
             />
           }
         >
-          <textarea
+          <AutoResizeTextarea
             id="auto-doc-cover-note"
             className={TEXTAREA_CLASS}
             maxLength={10_000}
@@ -502,18 +481,12 @@ export function SettingsCards({
               htmlFor="auto-doc-title-pattern"
               status={status("titlePattern")}
               error={commits.error.titlePattern}
-              caption={
-                <FormattedMessage
-                  id="autoDocs.titlePatternCaption"
-                  defaultMessage="Form field slugs in double braces. Blank uses the mapped title or the Auto-Doc name."
-                />
-              }
             >
-              <Input
+              <TitlePatternInput
                 id="auto-doc-title-pattern"
-                maxLength={2000}
+                fields={fields}
                 value={titlePattern}
-                onChange={(event) => setTitlePattern(event.target.value)}
+                onChange={setTitlePattern}
                 {...textCommit(
                   "titlePattern",
                   titlePattern,
@@ -630,7 +603,7 @@ export function SettingsCards({
               help={
                 <FormattedMessage
                   id="autoDocs.assignmentCaption"
-                  defaultMessage="The first matching rule names the Legal Owner. Without a match or a default, the Contract waits on the Inbox."
+                  defaultMessage="The first matching rule names the Legal Owner. Without a match or a default, the Contract remains unassigned."
                 />
               }
               rowStatus={Object.fromEntries(

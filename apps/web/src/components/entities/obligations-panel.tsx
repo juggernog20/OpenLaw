@@ -12,6 +12,7 @@
  * times as it takes to pass the filing day, and the row stays open.
  */
 
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useId, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -590,7 +591,7 @@ function AddObligationDialog({
           </SelectDraft>
           <div className="flex flex-col gap-1.5 @sm/dialog:col-span-2">
             <Label htmlFor="obligation-note">{labels.note}</Label>
-            <textarea
+            <AutoResizeTextarea
               id="obligation-note"
               className={TEXTAREA_CLASS}
               value={draft.note}

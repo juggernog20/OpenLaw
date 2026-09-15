@@ -2,6 +2,7 @@
 
 /** Resolving requires a note, posted to the requester-visible thread with the closure. */
 
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Check, MessageSquare } from "lucide-react";
@@ -127,7 +128,7 @@ export function ResolveDialog({
               <Label htmlFor="resolve-reply">
                 <FormattedMessage id="resolve.reply" defaultMessage="Resolution note (required)" />
               </Label>
-              <textarea
+              <AutoResizeTextarea
                 id="resolve-reply"
                 aria-required="true"
                 aria-invalid={error !== null && !reply.trim() ? true : undefined}

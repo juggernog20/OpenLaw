@@ -15,12 +15,28 @@ import { waitForMailDetails } from "./mailpit.js";
 
 test.setTimeout(120_000);
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
+let previousFrequency: string | undefined;
+test.afterEach(async ({ page }) => {
+  if (previousFrequency === undefined) return;
+  const restored = await page.request.put("/api/v1/auto-docs/settings", {
+    data: { acknowledgementFrequency: previousFrequency },
+  });
+  expect(restored.status()).toBe(200);
+  previousFrequency = undefined;
+});
 
 test("the four Portal Auto-Doc screens are accessible and deliver Word and PDF", async ({
   page,
   browser,
 }, testInfo) => {
   await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+  const settings = await page.request.get("/api/v1/auto-docs/settings");
+  expect(settings.status()).toBe(200);
+  previousFrequency = (await settings.json()).acknowledgementFrequency;
+  const policy = await page.request.put("/api/v1/auto-docs/settings", {
+    data: { acknowledgementFrequency: "every_use" },
+  });
+  expect(policy.status()).toBe(200);
   const name = `Portal NDA ${Date.now()}`;
   const email = `portal-auto-doc-${Date.now()}@example.com`;
   const created = await page.request.post("/api/v1/auto-docs", { data: { name } });
@@ -30,7 +46,6 @@ test("the four Portal Auto-Doc screens are accessible and deliver Word and PDF",
     data: {
       audience: "everyone",
       formats: "both",
-      acknowledgementFrequency: "every_use",
       acknowledgementText: "Do not edit the generated NDA. Ask Legal for changes.",
     },
   });

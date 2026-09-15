@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-001: the flat Auto-Docs destination belongs to Member+. */
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
@@ -308,7 +309,7 @@ export function AutoDocsPage() {
               <span>
                 <FormattedMessage id="autoDocs.description" defaultMessage="Description" />
               </span>
-              <textarea
+              <AutoResizeTextarea
                 maxLength={4000}
                 className={TEXTAREA_CLASS}
                 value={description}
