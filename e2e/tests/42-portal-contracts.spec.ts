@@ -4,9 +4,11 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
 import { z } from "zod";
 import {
   ADMIN,
+  choosePerson,
   completePortalFirstRun,
   ensureAdminExists,
   ensureMemberInert,
+  personField,
   signInAs,
 } from "./helpers.js";
 import { extractLink, waitForMailTo } from "./mailpit.js";
@@ -65,7 +67,15 @@ test("Business Owner is a statement, and team membership grants revocable Portal
     const me = await portal.request.get("/api/v1/me");
     expect(me.status()).toBe(200);
     const { user: owner } = z
-      .object({ user: z.object({ id: z.string(), email: z.string(), role: z.string() }) })
+      .object({
+        user: z.object({
+          id: z.string(),
+          email: z.string(),
+          role: z.string(),
+          // The picker below names people by what they display as.
+          displayName: z.string(),
+        }),
+      })
       .parse(await me.json());
     expect(owner.email).toBe(ownerEmail);
     expect(owner.role).toBe("business_user");
@@ -92,11 +102,13 @@ test("Business Owner is a statement, and team membership grants revocable Portal
     expect(uploaded.status(), await uploaded.text()).toBe(201);
 
     await page.goto(`/contracts/${contract.number}`);
-    const businessOwner = page.getByLabel("Business Owner", { exact: true });
-    const legalOwner = page.getByLabel("Legal Owner", { exact: true });
-    await businessOwner.selectOption(owner.id);
-    await expect(businessOwner).toHaveValue(owner.id);
-    await expect(legalOwner).toHaveValue("");
+    // Both owners are pickers now, not selects: the trigger carries the
+    // field's name, and the person it holds is its title.
+    const businessOwner = personField(page, "Business Owner");
+    const legalOwner = personField(page, "Legal Owner");
+    await choosePerson(page, "Business Owner", owner.displayName);
+    await expect(businessOwner).toHaveAttribute("title", owner.displayName);
+    await expect(legalOwner).toHaveAttribute("title", "Unassigned");
     expect((await portal.request.get(portalPath)).status()).toBe(404);
     await page.getByRole("button", { name: "Contract team", exact: true }).click();
     await page.getByRole("button", { name: "Add team member", exact: true }).click();
