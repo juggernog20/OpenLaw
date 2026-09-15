@@ -127,6 +127,10 @@ The built flow has nine steps, including its welcome splash: Welcome to OpenLaw 
 
 The setup checklist reports current configuration, not a stored history of skip clicks. A deployment-provided SMTP relay already completes Email, and built-in authentication already completes Authentication. The card uses Organization and Email as compact labels, and Review seeded types as the longer label that explains Review without the wizard around it. `CONTEXT.md` records both forms. The demo in `00-m33-demo.spec.ts` takes the first-run window before the unchanged bootstrap probe, skips both connectors, and finishes the AI connector's configuration in Settings without a provider call. Wizard and checklist axe checks run in E2E; `08-accessibility.spec.ts` also scans General.
 
+### Addendum (2026-09-15): outbound email is required
+
+Email must be configured before first-run setup can finish. The resolved mailer can use deployment-provided SMTP or a relay saved in the wizard. Email cannot be skipped; skipping optional steps opens Email when it is missing. The completion API rejects unconfigured instances, and an Administrator opening an app route returns to setup until email is configured. Existing completed installations do not reopen the wizard. This supersedes the earlier statements that every step is skippable. Business Users retain the existing magic-link and SSO sign-in model.
+
 ## SET-005 — User management: the Users pane, role edits, guarded user archive, session revocation
 
 - **Status** — Accepted
@@ -270,3 +274,4 @@ Department is required when submitting a Request. The submitted Department is re
 ### SET-004 amendment — independent group authentication, 2026-09-15
 
 The onboarding wizard and Authentication settings expose Legal User Authentication and Business Portal Authentication. Each group independently enables password, email magic link, and configured OIDC SSO, with a separate required two-factor toggle. TECH-008 defines enforcement and the separate sign-in URLs. Email service remains mandatory before completing instance setup.
+
