@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Edits Auto-Doc title patterns and inserts variables from the form (ADO-005). */
+
 import { useRef, useState, type KeyboardEventHandler } from "react";
 import { Zap } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";

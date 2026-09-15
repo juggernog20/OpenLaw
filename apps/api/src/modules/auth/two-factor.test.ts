@@ -436,6 +436,16 @@ describe("organization requires two-factor authentication", () => {
         const wrong = await answer(jar, "verify-totp", "invalid");
         expect(wrong.statusCode).not.toBe(200);
         expect((await me(jar)).json().user.twoFactorVerificationRequired).toBe(true);
+        for (let attempt = 1; attempt < 10; attempt++) {
+          expect((await answer(jar, "verify-totp", "invalid")).statusCode).toBe(401);
+        }
+        expect((await answer(jar, "verify-totp", await currentCode(adminSecret!))).statusCode).toBe(
+          429,
+        );
+        await harness.db
+          .update(twoFactors)
+          .set({ lockedUntil: new Date(0) })
+          .where(eq(twoFactors.userId, (await me(jar)).json().user.id));
         const verified = await answer(jar, "verify-totp", await currentCode(adminSecret!));
         expect(verified.statusCode, verified.body).toBe(200);
         expect((await me(jar)).json().user.twoFactorVerificationRequired).toBe(false);

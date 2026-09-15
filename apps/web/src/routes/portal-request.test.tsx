@@ -576,8 +576,7 @@ describe("the portal deep link", () => {
       await screen.findByRole("heading", { name: "Business Portal sign-in" }),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/portal/login");
-    // The entry screen carries the email step itself, so a stale session
-    // costs one address rather than a dead end.
+    await userEvent.setup().click(screen.getByRole("button", { name: "Email me a sign-in link" }));
     expect(screen.getByRole("button", { name: "Send link" })).toBeInTheDocument();
   });
 

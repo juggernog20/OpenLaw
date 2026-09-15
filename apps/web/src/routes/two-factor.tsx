@@ -56,7 +56,7 @@ export function TwoFactorPage() {
         }
         return;
       }
-      void navigate("/");
+      void navigate(params.get("portal") === "1" ? "/portal" : "/");
     } catch {
       setError(networkError(intl));
     } finally {

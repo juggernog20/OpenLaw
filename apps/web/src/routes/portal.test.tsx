@@ -107,6 +107,7 @@ describe("the portal front door", () => {
     stubApi({ signedIn: null });
     renderAt("/portal");
     expect(await screen.findByRole("heading", { name: PORTAL_DOOR })).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Email me a sign-in link" }));
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
   });
 
@@ -167,7 +168,7 @@ describe("the portal front door", () => {
 
   it("sends a session holder past the door and into the portal", async () => {
     stubApi({ signedIn: REQUESTER });
-    renderAt("/portal/login");
+    renderAt("/portal/enter");
     expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
   });
 });
@@ -661,4 +662,11 @@ describe("my-requests", () => {
     const block = await screen.findByRole("region", { name: "Your requests" });
     expect(within(block).getByText("R-45")).toBeInTheDocument();
   });
+});
+
+it("redirects the legacy signed-out Portal entry URL to Portal login", async () => {
+  stubApi({ signedIn: null });
+  const { router } = renderAt("/portal/enter");
+  expect(await screen.findByRole("heading", { name: PORTAL_DOOR })).toBeVisible();
+  expect(router.state.location.pathname).toBe("/portal/login");
 });

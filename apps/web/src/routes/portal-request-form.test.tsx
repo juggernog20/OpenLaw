@@ -208,12 +208,11 @@ describe("the request type's form", () => {
     expect(link).toHaveAttribute("href", "https://wiki.acme.com/review");
   });
 
-  it("sends an unauthenticated visitor to the entry screen", async () => {
+  it("sends an unauthenticated visitor to Business Portal sign-in", async () => {
     stubApi({ signedIn: null });
-    renderAt("/portal/new/contract_review");
-    expect(
-      await screen.findByRole("heading", { name: "Business Portal sign-in" }),
-    ).toBeInTheDocument();
+    const { router } = renderAt("/portal/new/contract_review");
+    expect(await screen.findByRole("heading", { name: "Business Portal sign-in" })).toBeVisible();
+    expect(router.state.location.pathname).toBe("/portal/login");
   });
 
   it("sends a requester after an archived type back to the picker", async () => {
@@ -234,6 +233,24 @@ describe("the request type's form", () => {
 });
 
 describe("submitting the form", () => {
+  it("marks a missing Department and clears its error after selection", async () => {
+    const submissions: Submissions = { bodies: [], uploads: [] };
+    stubApi({
+      signedIn: { ...REQUESTER, departmentId: null },
+      extra: portalForm({ fields: [] }, submissions),
+    });
+    renderAt("/portal/new/contract_review");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Submit request" }));
+    const department = screen.getByRole("combobox", { name: /^Department/ });
+    expect(screen.getByText("Department is required.")).toBeVisible();
+    expect(department).toHaveAttribute("aria-invalid", "true");
+    expect(submissions.bodies).toEqual([]);
+    await user.selectOptions(department, "dept-finance");
+    expect(screen.queryByText("Department is required.")).not.toBeInTheDocument();
+    expect(department).not.toHaveAttribute("aria-invalid");
+  });
+
   it("sends the basics and the values keyed by field slug", async () => {
     const user = userEvent.setup();
     const submissions = openForm();

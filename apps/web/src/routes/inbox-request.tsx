@@ -476,7 +476,7 @@ export function InboxRequestPage() {
  * one is the form the requester filled in, the other is how much of the
  * conversion is already decided (DD-018, INT-002).
  */
-function Hero({ request }: Readonly<{ request: StaffRequest }>) {
+function Hero({ request }: { request: StaffRequest }) {
   const intl = useIntl();
   return (
     // A named landmark rather than a bare strip: it carries no heading

@@ -48,7 +48,6 @@ interface Provider {
   clientId: string | null;
 }
 
-/** A mode card from ST17: radio, title, description. One per mode. */
 /** The PATCH body as the generated contract types it. A misspelled key
  * is a compile error, not a field the Zod schema silently strips. */
 type ProviderPatch = NonNullable<

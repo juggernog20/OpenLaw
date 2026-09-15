@@ -31,7 +31,11 @@ import {
 import type { MailerResolver } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 import { createProfileAuditHook } from "./audit.js";
-import { authenticationForEmail, authenticationPolicy } from "./authentication-policy.js";
+import {
+  authenticationForEmail,
+  authenticationPolicy,
+  optionsForRole,
+} from "./authentication-policy.js";
 import { readTwoFactorPolicy } from "./two-factor-policy.js";
 
 /** The slice of the app's pino logger the auth instance needs. */
@@ -495,6 +499,8 @@ export function createAuth(
                 .where(
                   and(eq(sessions.id, verified.session.id), eq(sessions.userId, verified.user.id)),
                 );
+            // Better Auth counts only sessionless challenges. Required magic-link/SSO
+            // sessions need the same failure budget; valid factor proof resets it.
             if (active)
               await db
                 .update(twoFactors)
@@ -535,7 +541,7 @@ export function createAuth(
           // repo's no-database-triggers convention (SCHEMA.md).
           before: async (session, ctx) => {
             const [row] = await db
-              .select({ archivedAt: users.archivedAt })
+              .select({ archivedAt: users.archivedAt, role: users.role })
               .from(users)
               .where(eq(users.id, session.userId))
               .limit(1);
@@ -545,23 +551,21 @@ export function createAuth(
                 ["/two-factor/verify-totp", "/two-factor/verify-backup-code"].includes(ctx.path) &&
                 !ctx.context.session)
             ) {
-              const [identity] = await db
-                .select({ email: users.email })
-                .from(users)
-                .where(eq(users.id, session.userId));
-              const { user, options } = await authenticationForEmail(db, identity?.email ?? "");
-              if (!options.password && user?.role !== "administrator")
+              const options = optionsForRole(
+                authenticationPolicy(await getOrgSettings(db)),
+                row?.role,
+              );
+              if (!options.password && row?.role !== "administrator")
                 throw new APIError("FORBIDDEN", {
                   message: "Password sign-in is disabled for this account.",
                   code: "SIGN_IN_METHOD_DISABLED",
                 });
             }
             if (ctx?.path === "/magic-link/verify" || ctx?.path.startsWith("/sso/callback")) {
-              const [identity] = await db
-                .select({ email: users.email })
-                .from(users)
-                .where(eq(users.id, session.userId));
-              const { options } = await authenticationForEmail(db, identity?.email ?? "");
+              const options = optionsForRole(
+                authenticationPolicy(await getOrgSettings(db)),
+                row?.role,
+              );
               if (!(ctx.path === "/magic-link/verify" ? options.magicLink : options.sso))
                 throw new APIError("FORBIDDEN", {
                   message: "This sign-in method is disabled for your account.",

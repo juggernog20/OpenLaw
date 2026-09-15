@@ -2,8 +2,8 @@
 
 /**
  * "Welcome to OpenLaw", the SET-004 first-run onboarding wizard: the
- * organization's identity (#697), authentication mode, the DD-010
- * portal (magic-link toggle plus domain allowlist), SMTP setup (#37:
+ * organization's identity (#697), independent Legal and Business
+ * authentication policies, the domain allowlist, SMTP setup (#37:
  * save a relay in the app unless the environment pins one; env always
  * wins), invites, the DocuSign connector (#698), and the AI connector
  * (#699), then a summary of the seeded lists (#700). Configuring steps
@@ -1309,7 +1309,7 @@ export function WelcomePage() {
                     <CardDescription>
                       <FormattedMessage
                         id="welcome.portal.hint"
-                        defaultMessage="Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
+                        defaultMessage="Choose sign-in methods and two-factor requirements for Business Users. Allow domains for email-based access; an empty list prevents new email-based access."
                       />
                     </CardDescription>
                     <AuthenticationOptionsFields

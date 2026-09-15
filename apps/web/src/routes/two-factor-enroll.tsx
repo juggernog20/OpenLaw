@@ -27,14 +27,15 @@ export async function enrollLoader() {
   if (!user) return redirect("/auth/login");
   const { data } = await authClient.getSession();
   if (!data) return redirect("/auth/login");
+  const accounts = await authClient.listAccounts();
+  if (accounts.error || !accounts.data)
+    throw new Error("The account's sign-in methods could not be read.");
   return {
     twoFactorEnabled: data.user.twoFactorEnabled === true,
     required: user.twoFactorRequired,
+    applicationUrl: user.role === "business_user" ? "/portal" : "/",
     loginUrl: user.role === "business_user" ? "/portal/login" : "/auth/login",
-    hasPassword:
-      (await authClient.listAccounts()).data?.some(
-        (account) => account.providerId === "credential",
-      ) ?? true,
+    hasPassword: accounts.data.some((account) => account.providerId === "credential"),
   };
 }
 
@@ -250,7 +251,7 @@ export function TwoFactorEnrollPage() {
         {step.name === "codes" && (
           <BackupCodes codes={step.backupCodes}>
             <Button asChild variant="link">
-              <Link to="/">
+              <Link to={loaded.applicationUrl}>
                 <FormattedMessage id="action.done" defaultMessage="Done" />
               </Link>
             </Button>
@@ -281,7 +282,7 @@ export function TwoFactorEnrollPage() {
         )}
         {step.name === "enabled" && loaded.required && (
           <Button asChild>
-            <Link to="/">
+            <Link to={loaded.applicationUrl}>
               <FormattedMessage id="action.continue" defaultMessage="Continue" />
             </Link>
           </Button>

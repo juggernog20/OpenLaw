@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Shared Legal and Business authentication-policy controls for setup and Settings (TECH-008). */
+
 import { useId } from "react";
 import { defineMessages, FormattedMessage } from "react-intl";
 import type { paths } from "@openlaw/api-client";
