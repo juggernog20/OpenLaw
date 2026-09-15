@@ -1535,9 +1535,9 @@ describe("the /contracts/:number record page", () => {
       renderAt("/contracts/42/fields");
       const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
       expect(strip.getByRole("img", { name: "1 upcoming date" })).toBeInTheDocument();
-      expect(
-        strip.getByRole("img", { name: "1 unverified date" }),
-      ).toHaveClass("text-ai-evidence-fg");
+      expect(strip.getByRole("img", { name: "1 unverified date" })).toHaveClass(
+        "text-ai-evidence-fg",
+      );
 
       await userEvent.setup().click(await screen.findByRole("button", { name: "Confirm" }));
 

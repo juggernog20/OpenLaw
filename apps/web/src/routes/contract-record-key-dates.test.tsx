@@ -24,6 +24,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -176,8 +177,10 @@ function recordApi(
     if (call.url.pathname === "/api/v1/contracts/42/analysis/confirm" && call.method === "POST") {
       writes.push({ method: call.method, path: call.url.pathname, body: call.body });
       if (refuse) return problem(refuse.status, refuse.detail);
-      const { slug } = call.body as { slug: string };
-      const flags = { ...(row.aiUnverified as Record<string, { keyDateId: string }>) };
+      const { slug } = z.object({ slug: z.string() }).parse(call.body);
+      const flags = z
+        .record(z.string(), z.object({ keyDateId: z.string() }).passthrough())
+        .parse(row.aiUnverified);
       const id = flags[slug]!.keyDateId;
       delete flags[slug];
       row = { ...row, aiUnverified: Object.keys(flags).length ? flags : null };
@@ -294,9 +297,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     });
     renderAt("/contracts/42/key-dates");
     const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
-    expect(
-      strip.getByRole("img", { name: "2 unverified dates" }),
-    ).toHaveTextContent("2");
+    expect(strip.getByRole("img", { name: "2 unverified dates" })).toHaveTextContent("2");
     expect(strip.queryByRole("img", { name: /upcoming date/ })).not.toBeInTheDocument();
   });
 

@@ -27,7 +27,11 @@ import {
 } from "../../lib/ai/provider.js";
 import { FAKE_VALID_AI_KEY, FakeAiProvider } from "../../lib/ai/fake.js";
 import { handleContractAnalysis } from "../../pipeline/contract-analysis.js";
-import { KEY_DATES_TARGET, keyDateSuggestionSlug } from "../../lib/analysis-key-dates.js";
+import {
+  KEY_DATES_TARGET,
+  keyDateSuggestionSlug,
+  sameKeyDate,
+} from "../../lib/analysis-key-dates.js";
 import {
   signInCookies,
   startHarness,
@@ -998,6 +1002,21 @@ describe("confirming AI-written Contract values", () => {
 });
 
 describe("Contract milestone extraction", () => {
+  it("keeps generic event labels distinct while matching equivalent named events", () => {
+    const date = "2028-06-30";
+    const labels = ["Due date", "Deadline", "Window opens"];
+    expect(new Set(labels.map((label) => keyDateSuggestionSlug({ date, label }))).size).toBe(3);
+    for (const label of labels) {
+      expect(sameKeyDate({ date, label }, { date, label: `${label}!` })).toBe(true);
+      for (const other of labels.filter((value) => value !== label)) {
+        expect(sameKeyDate({ date, label }, { date, label: other })).toBe(false);
+      }
+    }
+    expect(sameKeyDate({ date, label: "Delivery deadline" }, { date, label: "Delivery" })).toBe(
+      true,
+    );
+  });
+
   it("rechecks dates added while the provider is running and respects existing date Fields", async () => {
     await configureConnector();
     const contract = await newContract("Concurrent milestone review");

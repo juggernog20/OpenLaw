@@ -47,33 +47,31 @@ const SuggestedDate = DateValue.extend({
 type DateValue = z.infer<typeof DateValue>;
 type KnownDate = DateValue & { evidence?: string | null };
 
+const IGNORED_WORDS = new Set([
+  "the",
+  "a",
+  "an",
+  "for",
+  "of",
+  "on",
+  "by",
+  "at",
+  "date",
+  "deadline",
+  "due",
+  "window",
+  "opens",
+]);
+
 function words(label: string): string[] {
-  return (
+  const tokens =
     label
       .normalize("NFKC")
       .toLocaleLowerCase("en-US")
       .replace(/expiration/g, "expiry")
-      .match(/[\p{L}\p{N}]+/gu)
-      ?.filter(
-        (word) =>
-          ![
-            "the",
-            "a",
-            "an",
-            "for",
-            "of",
-            "on",
-            "by",
-            "at",
-            "date",
-            "deadline",
-            "due",
-            "window",
-            "opens",
-          ].includes(word),
-      )
-      .sort() ?? []
-  );
+      .match(/[\p{L}\p{N}]+/gu) ?? [];
+  const filtered = tokens.filter((word) => !IGNORED_WORDS.has(word));
+  return (filtered.length ? filtered : tokens).sort();
 }
 
 export function keyDateSuggestionSlug(value: DateValue): string {
