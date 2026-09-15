@@ -21,7 +21,7 @@ import { UnverifiedMarker } from "../components/contracts/ai-analysis-card";
 
 export async function portalContractLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const number = Number(params.number);
   if (!Number.isInteger(number) || number < 1) return { user, contract: null };
   const result = await api.GET("/api/v1/portal/contracts/{number}", {
@@ -39,7 +39,7 @@ export async function portalContractLoader({ params, request }: LoaderFunctionAr
 export function PortalContractPage() {
   const { user, contract, recordWork } = useLoaderData<typeof portalContractLoader>();
   const intl = useIntl();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
   const title =
     contract?.title ??
     intl.formatMessage({ id: "portal.contract.notFound", defaultMessage: "Contract not found" });

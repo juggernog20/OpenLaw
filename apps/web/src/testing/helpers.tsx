@@ -280,11 +280,19 @@ export interface ApiState {
     portalOnboardingCompletedAt?: string | null;
     /** Defaults to false — only the two-factor tests set it. */
     twoFactorEnabled?: boolean;
+    twoFactorRequired?: boolean;
+    twoFactorSetupRequired?: boolean;
+    twoFactorVerificationRequired?: boolean;
+    emailSetupRequired?: boolean;
     /** Defaults to true (a credential account exists) — SSO-only tests unset it. */
     hasPassword?: boolean;
   } | null;
   needsSetup?: boolean;
   methods?: {
+    policy?: {
+      legal: { password: boolean; magicLink: boolean; sso: boolean; requireTwoFactor: boolean };
+      business: { password: boolean; magicLink: boolean; sso: boolean; requireTwoFactor: boolean };
+    };
     mode: "built_in" | "oidc";
     magicLinkEnabled: boolean;
     /** Defaults to true — only the dead-affordance tests wire it off. */
@@ -375,6 +383,10 @@ export function stubApi(state: ApiState) {
               image: state.signedIn.image ?? null,
               timezone: state.signedIn.timezone ?? null,
               departmentId: state.signedIn.departmentId ?? null,
+              twoFactorRequired: state.signedIn.twoFactorRequired ?? false,
+              twoFactorSetupRequired: state.signedIn.twoFactorSetupRequired ?? false,
+              twoFactorVerificationRequired: state.signedIn.twoFactorVerificationRequired ?? false,
+              emailSetupRequired: state.signedIn.emailSetupRequired ?? false,
               portalOnboardingCompletedAt:
                 state.signedIn.portalOnboardingCompletedAt === undefined
                   ? "2026-09-01T00:00:00.000Z"
@@ -423,7 +435,24 @@ export function stubApi(state: ApiState) {
         magicLinkEnabled: true,
         ssoProviderId: null,
       };
-      return json(200, { ...methods, emailConfigured: methods.emailConfigured ?? true });
+      return json(200, {
+        ...methods,
+        policy: methods.policy ?? {
+          legal: {
+            password: methods.mode === "built_in",
+            magicLink: methods.magicLinkEnabled,
+            sso: methods.mode === "oidc",
+            requireTwoFactor: false,
+          },
+          business: {
+            password: methods.mode === "built_in",
+            magicLink: methods.magicLinkEnabled,
+            sso: methods.mode === "oidc",
+            requireTwoFactor: false,
+          },
+        },
+        emailConfigured: methods.emailConfigured ?? true,
+      });
     }
     if (
       /^\/api\/v1\/portal\/(contracts|matters)\/\d+\/work$/.test(call.url.pathname) &&

@@ -3,8 +3,9 @@
 /**
  * M5 milestone acceptance (#68): the demo, end to end, in one browser
  * session. An Administrator opens /settings, changes their own theme,
- * switches the organization's auth mode, and revokes another user's
- * session — the revocation proven by that user's next request failing.
+ * closes one of the organization's sign-in methods, and revokes another
+ * user's session — the revocation proven by that user's next request
+ * failing.
  * A second journey proves the SET-002 rail split from the other side:
  * a Legal Team Member sees Personal only and is bounced from
  * Organization URLs, with the API's 403 standing behind the bounce.
@@ -19,7 +20,6 @@ import {
   ADMIN,
   ensureAdminExists,
   ensureMemberInert,
-  ensureSsoProviderExists,
   onboardActivatedMember,
   signInAs,
   switchTheme,
@@ -31,8 +31,9 @@ const rootTheme = (page: Page) =>
   page.evaluate(() => document.documentElement.getAttribute("data-theme"));
 
 // Serial like 10-settings.spec.ts: both tests drive the same
-// Administrator's theme and auth mode on the never-reset instance, so
-// they must never share a wall clock even if fullyParallel turns on.
+// Administrator's theme and authentication policy on the never-reset
+// instance, so they must never share a wall clock even if
+// fullyParallel turns on.
 test.describe.serial("M5 demo path", () => {
   test.beforeAll(async ({ request }) => {
     await ensureAdminExists(request);
@@ -50,32 +51,32 @@ test.describe.serial("M5 demo path", () => {
     await expect.poll(() => rootTheme(page)).toBe("light");
   });
 
-  test("open /settings, change theme, switch auth mode, revoke a session — one journey", async ({
+  test("open /settings, change theme, close a sign-in method, revoke a session — one journey", async ({
     page,
     browser,
   }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
-    // Known starting state on the never-reset instance (TECH-018): a
-    // crashed earlier run may have left oidc mode behind — the admin
-    // still signs in (break-glass), and this puts the mode back. The
-    // mode switch below also needs a registered provider to exist.
-    const reset = await page.request.patch("/api/v1/auth/mode", { data: { mode: "built_in" } });
+    /** The Legal card's settled state: the methods every other spec
+     * signs in with. Also the known starting state on the never-reset
+     * instance (TECH-018), where a crashed earlier run may have left a
+     * method switched off. */
+    const SETTLED = { password: true, magicLink: true, sso: false, requireTwoFactor: false };
+    const applySettled = () => page.request.patch("/api/v1/auth/policy/legal", { data: SETTLED });
+
+    const reset = await applySettled();
     expect(reset.ok()).toBe(true);
-    await ensureSsoProviderExists(page.request);
 
     // The demo's "another user": a per-run member onboarded through the
     // real flows, with a live session of their own to revoke.
     const email = `e2e-m5-demo-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
 
-    /** Leaves the shared instance in built-in mode and the per-run
+    /** Leaves the shared instance on the settled policy and the per-run
      * member inert (TECH-018), whatever happened above. */
     const leaveInert = async () => {
       await member?.context.close();
-      const reverted = await page.request.patch("/api/v1/auth/mode", {
-        data: { mode: "built_in" },
-      });
+      const reverted = await applySettled();
       expect(reverted.status(), await reverted.text()).toBe(200);
       await ensureMemberInert(page.request, email);
     };
@@ -107,22 +108,26 @@ test.describe.serial("M5 demo path", () => {
       await expect.poll(() => rootTheme(page)).toBe("warm");
       expect((await persisted).ok()).toBe(true);
 
-      // Switches the organization's auth mode: rail → Security group →
-      // Authentication, then the OIDC mode card. Immediate (SET-003) —
-      // the portal magic-link toggle unlocking is the visible proof.
+      // Closes a sign-in method for Legal Users: rail → Security group
+      // → Authentication, then the Legal card's own switch. Immediate
+      // (SET-003) — the switch PATCHes its group and reports in place.
+      // The pane draws Legal first and Business second, and the two
+      // cards carry the same switch labels, so the card is what tells
+      // them apart.
       await rail.getByRole("button", { name: "Security" }).click();
       await rail.getByRole("link", { name: "Authentication" }).click();
       await expect(page).toHaveURL(/\/settings\/authentication$/);
-      const toggle = page.getByRole("switch", { name: "Magic-link sign-in" });
-      await expect(toggle).toBeDisabled();
+      const legalMagicLink = page.getByRole("switch", { name: "Email magic link" }).first();
+      await expect(legalMagicLink).toBeChecked();
       const switched = page.waitForResponse(
         (response) =>
-          response.url().includes("/api/v1/auth/mode") && response.request().method() === "PATCH",
+          response.url().includes("/api/v1/auth/policy/legal") &&
+          response.request().method() === "PATCH",
       );
-      await page.getByRole("radio", { name: "Identity provider (OIDC)" }).check();
+      await legalMagicLink.click();
       expect((await switched).ok()).toBe(true);
       await expect(page.getByText("Saved").first()).toBeVisible();
-      await expect(toggle).toBeEnabled();
+      await expect(legalMagicLink).not.toBeChecked();
 
       // Revokes the member's session from the Users pane (SET-005) —
       // proven the only way that matters: the member's next request

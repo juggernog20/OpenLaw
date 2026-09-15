@@ -471,7 +471,14 @@ export function SettingsProfilePage() {
               )}
             </span>
             <div className="flex shrink-0 items-center gap-2">
-              {totpEnabled ? (
+              {loaded.user.twoFactorRequired ? (
+                <span className="text-sm text-muted">
+                  <FormattedMessage
+                    id="settings.profile.twoFactorRequired"
+                    defaultMessage="Required by your organization"
+                  />
+                </span>
+              ) : totpEnabled ? (
                 <>
                   <Button variant="secondary" size="sm" onClick={() => openTotpDialog("enroll")}>
                     <FormattedMessage id="settings.profile.reenroll" defaultMessage="Re-enroll" />

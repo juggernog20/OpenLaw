@@ -8,9 +8,10 @@
  */
 
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { authClient } from "../lib/auth-client";
+import { useSignOut } from "../lib/session";
 import { networkError } from "../lib/messages";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
@@ -22,6 +23,8 @@ import { PageTitle } from "../components/page-title";
 export function TwoFactorPage() {
   const intl = useIntl();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const signOut = useSignOut(params.get("portal") === "1" ? "/portal/login" : "/auth/login");
   const [useBackup, setUseBackup] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -127,6 +130,9 @@ export function TwoFactorPage() {
           ) : (
             <FormattedMessage id="auth.twoFactor.useBackup" defaultMessage="Use a backup code" />
           )}
+        </Button>
+        <Button variant="link" disabled={busy} onClick={() => void signOut()}>
+          <FormattedMessage id="auth.signOut" defaultMessage="Sign out" />
         </Button>
       </CardContent>
     </Card>

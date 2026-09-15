@@ -11,6 +11,7 @@
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";
 import { Link, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
+import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
@@ -25,6 +26,10 @@ export function SetPasswordPage() {
   const intl = useIntl();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const loginUrl =
+    token?.startsWith("business.") || searchParams.get("portal") === "1"
+      ? "/portal/login"
+      : "/auth/login";
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -46,6 +51,23 @@ export function SetPasswordPage() {
     setBusy(true);
     setError(null);
     try {
+      if (token.startsWith("business.")) {
+        const result = await api.POST("/api/v1/auth/password-setup/complete", {
+          body: { token, password: newPassword },
+        });
+        if (!result.data) {
+          setError(
+            result.error?.detail ??
+              intl.formatMessage({
+                id: "auth.setPassword.error.generic",
+                defaultMessage: "The password could not be set. Try again.",
+              }),
+          );
+          return;
+        }
+        setDone(true);
+        return;
+      }
       const res = await authClient.resetPassword({ newPassword, token });
       if (res.error) {
         // Only a dead token gets the expired copy; anything else (e.g. a
@@ -98,7 +120,7 @@ export function SetPasswordPage() {
         </CardHeader>
         <CardContent>
           <Button asChild>
-            <Link to="/auth/login">
+            <Link to={loginUrl}>
               <FormattedMessage id="auth.login.title" defaultMessage="Sign in" />
             </Link>
           </Button>

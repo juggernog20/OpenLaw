@@ -508,7 +508,9 @@ describe("who reaches the detail", () => {
     stubApi({ signedIn: null });
     renderAt("/portal/requests/45");
 
-    expect(await screen.findByRole("heading", { name: "Legal portal" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Business Portal sign-in" }),
+    ).toBeInTheDocument();
   });
 
   it("sends a reference that is not the caller's back to their own list", async () => {
@@ -570,8 +572,10 @@ describe("the portal deep link", () => {
     stubApi({ signedIn: null });
     const { router } = renderAt("/portal/requests/45");
 
-    expect(await screen.findByRole("heading", { name: "Legal portal" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/portal/enter");
+    expect(
+      await screen.findByRole("heading", { name: "Business Portal sign-in" }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/portal/login");
     // The entry screen carries the email step itself, so a stale session
     // costs one address rather than a dead end.
     expect(screen.getByRole("button", { name: "Send link" })).toBeInTheDocument();

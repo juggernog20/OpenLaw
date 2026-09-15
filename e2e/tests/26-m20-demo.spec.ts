@@ -198,8 +198,9 @@ async function enterPortalByMagicLink(
   api: APIRequestContext,
 ): Promise<Page> {
   const page = await context.newPage();
-  await page.goto("/portal/enter");
-  await expect(page.getByText("Legal portal")).toBeVisible();
+  await page.goto("/portal/login");
+  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  await expect(page.getByText("Business Portal sign-in")).toBeVisible();
   await page.getByLabel("Email").fill(REQUESTER);
   await page.getByRole("button", { name: "Send link" }).click();
   // The sent screen says the same thing whether or not mail goes out;
@@ -446,7 +447,9 @@ test.describe.serial("M20 demo path", () => {
       await thread.getByRole("button", { name: "Comment", exact: true }).click();
       expect((await posted).status()).toBe(201);
       await expect(thread.getByText(REQUESTER_REPLY)).toBeVisible();
-      await expect(thread.getByText("Full thread", { exact: true }).first()).toBeVisible();
+      await expect(
+        thread.getByText("Shared with requester", { exact: true }).first(),
+      ).toBeVisible();
 
       // Legal answers. There is no staff surface for a Request until
       // M21's Inbox, so the Administrator posts at the seam — the same
@@ -486,7 +489,7 @@ test.describe.serial("M20 demo path", () => {
       await portal.reload();
       await expect((await conversation(portal)).getByText(STAFF_REPLY)).toBeVisible();
       await expect(
-        (await conversation(portal)).getByText("Full thread", { exact: true }).first(),
+        (await conversation(portal)).getByText("Shared with requester", { exact: true }).first(),
       ).toBeVisible();
 
       // Second as email, because a requester does not live in the app and

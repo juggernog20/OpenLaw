@@ -54,7 +54,13 @@ beforeAll(async () => {
     payload: TEST_ADMIN,
   });
   expect(setup.statusCode, setup.body).toBe(201);
-  await harness.db.update(orgSettings).set({ allowedEmailDomains: ALLOWED_DOMAINS });
+  await harness.db.update(orgSettings).set({
+    allowedEmailDomains: ALLOWED_DOMAINS,
+    authenticationPolicy: {
+      legal: { password: true, magicLink: true, sso: true, requireTwoFactor: false },
+      business: { password: true, magicLink: true, sso: true, requireTwoFactor: false },
+    },
+  });
   adminCookies = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
 
   // A real (in-process) OIDC issuer: discovery, authorize, token, JWKS
@@ -653,4 +659,27 @@ describe("the DD-017 audit trail (#64)", () => {
     );
     expect(JSON.stringify(rows.map((row) => row.payload))).not.toContain("rotated-client-secret");
   });
+});
+
+it("rejects SSO when it is disabled for the authenticated user's group", async () => {
+  const [settings] = await harness.db.select().from(orgSettings);
+  await harness.db.update(orgSettings).set({
+    authenticationPolicy: {
+      ...settings!.authenticationPolicy!,
+      business: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+    },
+  });
+  try {
+    idpIdentity = {
+      sub: "disabled-business-sso",
+      email: "disabled-sso@acme.example",
+      name: "Disabled SSO",
+    };
+    const result = await ssoRoundTrip(idpIdentity, { providerId: PROVIDER.providerId });
+    expect(sessionCookies(result)).toBeNull();
+  } finally {
+    await harness.db
+      .update(orgSettings)
+      .set({ authenticationPolicy: settings!.authenticationPolicy });
+  }
 });

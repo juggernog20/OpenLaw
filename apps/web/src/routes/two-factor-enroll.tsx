@@ -12,6 +12,7 @@ import { useState, type FormEvent } from "react";
 import { Link, redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { authClient } from "../lib/auth-client";
+import { currentUser, useSignOut } from "../lib/session";
 import { networkError } from "../lib/messages";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
@@ -22,9 +23,19 @@ import { PageTitle } from "../components/page-title";
 import { BackupCodes, TotpQr } from "../components/two-factor";
 
 export async function enrollLoader() {
+  const user = await currentUser({ allowTwoFactorSetup: true, allowEmailSetup: true });
+  if (!user) return redirect("/auth/login");
   const { data } = await authClient.getSession();
   if (!data) return redirect("/auth/login");
-  return { twoFactorEnabled: data.user.twoFactorEnabled === true };
+  return {
+    twoFactorEnabled: data.user.twoFactorEnabled === true,
+    required: user.twoFactorRequired,
+    loginUrl: user.role === "business_user" ? "/portal/login" : "/auth/login",
+    hasPassword:
+      (await authClient.listAccounts()).data?.some(
+        (account) => account.providerId === "credential",
+      ) ?? true,
+  };
 }
 
 type Step =
@@ -39,6 +50,7 @@ export function TwoFactorEnrollPage() {
     Response
   >;
   const intl = useIntl();
+  const signOut = useSignOut(loaded.loginUrl);
   const [step, setStep] = useState<Step>(
     loaded.twoFactorEnabled ? { name: "enabled" } : { name: "password" },
   );
@@ -59,7 +71,9 @@ export function TwoFactorEnrollPage() {
     setBusy(true);
     setError(null);
     try {
-      const res = await authClient.twoFactor.enable({ password });
+      const res = await authClient.twoFactor.enable({
+        ...(loaded.hasPassword ? { password } : {}),
+      });
       if (res.error || !res.data) {
         wrongPassword();
         return;
@@ -178,22 +192,32 @@ export function TwoFactorEnrollPage() {
         )}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {loaded.required && (
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="auth.enroll.required"
+              defaultMessage="Your organization requires two-factor authentication."
+            />
+          </p>
+        )}
         {error && <Alert variant="danger">{error}</Alert>}
 
         {step.name === "password" && (
           <form className="flex flex-col gap-4" onSubmit={(e) => void enable(e)}>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">
-                <FormattedMessage id="auth.field.password" defaultMessage="Password" />
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            </div>
+            {loaded.hasPassword && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password">
+                  <FormattedMessage id="auth.field.password" defaultMessage="Password" />
+                </Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+            )}
             <Button type="submit" disabled={busy}>
               <FormattedMessage id="auth.enroll.enable" defaultMessage="Turn on two-factor" />
             </Button>
@@ -233,7 +257,7 @@ export function TwoFactorEnrollPage() {
           </BackupCodes>
         )}
 
-        {step.name === "enabled" && (
+        {step.name === "enabled" && !loaded.required && (
           <form className="flex flex-col gap-4" onSubmit={(e) => void disable(e)}>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">
@@ -254,6 +278,18 @@ export function TwoFactorEnrollPage() {
               <FormattedMessage id="auth.enroll.disable" defaultMessage="Turn off two-factor" />
             </Button>
           </form>
+        )}
+        {step.name === "enabled" && loaded.required && (
+          <Button asChild>
+            <Link to="/">
+              <FormattedMessage id="action.continue" defaultMessage="Continue" />
+            </Link>
+          </Button>
+        )}
+        {loaded.required && (
+          <Button variant="link" disabled={busy} onClick={() => void signOut()}>
+            <FormattedMessage id="action.signOut" defaultMessage="Sign out" />
+          </Button>
         )}
       </CardContent>
     </Card>

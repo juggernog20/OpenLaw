@@ -424,6 +424,6 @@ describe("the portal notification settings (NOT-001)", () => {
     stubApi({ signedIn: null });
     const { router } = renderAt("/portal/settings");
 
-    await waitFor(() => expect(router.state.location.pathname).toBe("/portal/enter"));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/portal/login"));
   });
 });

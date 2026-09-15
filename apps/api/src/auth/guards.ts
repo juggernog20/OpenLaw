@@ -12,6 +12,11 @@ import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyRequest } from "fastify";
 import { httpError } from "../lib/problem.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./user.js";
+import {
+  readTwoFactorPolicy,
+  TWO_FACTOR_SETUP_REQUIRED,
+  TWO_FACTOR_VERIFICATION_REQUIRED,
+} from "./two-factor-policy.js";
 
 /** Re-exported so every importer keeps asking the guard module for the
  * shape it guards. The declarations live one file over, in
@@ -48,7 +53,7 @@ export const userColumns = {
   image: users.image,
 } as const;
 
-export async function requireAuth(request: FastifyRequest): Promise<void> {
+export async function requireSession(request: FastifyRequest): Promise<void> {
   const session = await request.server.auth.api.getSession({
     headers: fromNodeHeaders(request.headers),
   });
@@ -74,6 +79,19 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
     id: session.session.id,
     expiresAt: session.session.expiresAt,
   };
+}
+
+export async function requireAuth(request: FastifyRequest): Promise<void> {
+  await requireSession(request);
+  const policy = await readTwoFactorPolicy(request.server.db, request.user.id, request.session.id);
+  if (policy.verificationRequired)
+    throw httpError(403, "Verify your authenticator code before continuing.", {
+      type: TWO_FACTOR_VERIFICATION_REQUIRED,
+    });
+  if (policy.setupRequired)
+    throw httpError(403, "Set up two-factor authentication before continuing.", {
+      type: TWO_FACTOR_SETUP_REQUIRED,
+    });
 }
 
 /**

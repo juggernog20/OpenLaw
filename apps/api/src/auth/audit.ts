@@ -101,7 +101,7 @@ function entriesFor(ctx: {
       // Reached only with a session (see the hook below), so this is the
       // enrolment-completion verify. A sign-in challenge carries no
       // session cookie. Covers first enrolment and re-enrolment alike.
-      return [{ ...about, action: "user.two_factor_enrolled" }];
+      return user.twoFactorEnabled ? [] : [{ ...about, action: "user.two_factor_enrolled" }];
     default:
       return [];
   }

@@ -106,8 +106,16 @@ export async function ensureAdminExists(request: APIRequestContext): Promise<voi
  * on the account — home, or the two-factor challenge — so callers
  * assert the destination themselves.
  */
-export async function submitLogin(page: Page, email: string, password: string): Promise<void> {
-  await page.goto("/auth/login");
+export async function submitLogin(
+  page: Page,
+  email: string,
+  password: string,
+  /** Which door: the path decides the audience, and the audience decides
+   * where a successful sign-in lands. Business Users come in through
+   * /portal/login and land on the Portal. */
+  path: "/auth/login" | "/portal/login" = "/auth/login",
+): Promise<void> {
+  await page.goto(path);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();

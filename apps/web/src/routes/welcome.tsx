@@ -16,7 +16,7 @@
  * integrations label files a product feature under plumbing, and one
  * combined step would put it back.
  *
- * Every step is skippable. Configuring steps save on Continue; Review
+ * Email is required. Other steps are skippable. Configuring steps save on Continue; Review
  * records its acknowledgement on Finish, then completes onboarding.
  * Per-field commit on blur governs the Settings panes, where a field
  * stands alone. Here a step is the unit an Administrator moves through.
@@ -25,6 +25,7 @@
  * wizard never shows again.
  */
 
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { HelpLink } from "../components/documentation/help-link";
 import {
   useId,
@@ -44,7 +45,7 @@ import { networkError } from "../lib/messages";
 import { problem as readProblem } from "../lib/problem";
 import { ROLE_MESSAGES } from "../lib/roles";
 import { requireUser } from "../lib/session";
-import { cn } from "../lib/utils";
+import { AuthenticationOptionsFields } from "../components/authentication-options";
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
 import { TimezonePicker } from "../components/timezone-picker";
@@ -199,7 +200,7 @@ const REVIEW_TAXONOMIES = [
 ] as const;
 
 export async function welcomeLoader() {
-  const user = await requireUser();
+  const user = await requireUser({ allowEmailSetup: true });
   if (user.role !== "administrator") return redirect("/");
   // Completion decides the redirect before anything else is fetched.
   // Most visits to this loader are bounces off a finished instance.
@@ -283,31 +284,6 @@ const SHIPPED_LOCALES = ["en-US"] as const;
 const selectClassName =
   "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50";
 
-/** Selectable option row (aria-pressed carries the state for readers). */
-function OptionButton(
-  props: Readonly<{
-    selected: boolean;
-    onClick: () => void;
-    title: ReactNode;
-    description: ReactNode;
-  }>,
-) {
-  return (
-    <button
-      type="button"
-      aria-pressed={props.selected}
-      onClick={props.onClick}
-      className={cn(
-        "rounded-card border bg-raised p-4 text-start focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link",
-        props.selected ? "border-link" : "border-border-default hover:bg-control",
-      )}
-    >
-      <span className="block text-md font-medium text-primary">{props.title}</span>
-      <span className="mt-1 block text-sm text-muted">{props.description}</span>
-    </button>
-  );
-}
-
 export function WelcomePage() {
   const loaded = useLoaderData<typeof welcomeLoader>() as Exclude<
     Awaited<ReturnType<typeof welcomeLoader>>,
@@ -332,13 +308,12 @@ export function WelcomePage() {
   // What the server holds right now. Starts from the loader and moves
   // only when a save lands, so a step revisit compares against the
   // saved answer and not the loader's stale copy.
-  const [savedMethods, setSavedMethods] = useState(loaded.methods);
-  const [mode, setMode] = useState(loaded.methods.mode);
+  const [savedPolicy, setSavedPolicy] = useState(loaded.methods.policy);
+  const [policy, setPolicy] = useState(loaded.methods.policy);
   const [ssoProviderId, setSsoProviderId] = useState(loaded.methods.ssoProviderId);
   const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
 
   // Portal step.
-  const [magicLinkEnabled, setMagicLinkEnabled] = useState(loaded.methods.magicLinkEnabled);
   const [domains, setDomains] = useState<string[]>(loaded.domains);
   const [domainInput, setDomainInput] = useState("");
 
@@ -458,6 +433,10 @@ export function WelcomePage() {
   }
 
   async function finish(reviewed = false) {
+    if (!emailConfigured) {
+      goTo("email");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -620,38 +599,24 @@ export function WelcomePage() {
   }
 
   async function applyAuthentication() {
-    // Switching to OIDC without a registered IdP would leave everyone but
-    // Administrators without a sign-in method. Refuse client-side.
-    if (mode === "oidc" && !ssoProviderId) {
-      setError(
-        intl.formatMessage({
-          id: "welcome.auth.error.noProvider",
-          defaultMessage: "Register an identity provider before switching to single sign-on.",
-        }),
-      );
-      return;
-    }
-    if (mode === savedMethods.mode) {
-      await advance();
-      return;
-    }
+    if (JSON.stringify(policy.legal) === JSON.stringify(savedPolicy.legal)) return advance();
     setBusy(true);
     setError(null);
     try {
-      const result = await api.PATCH("/api/v1/auth/mode", { body: { mode } });
-      const { data } = result;
-      if (data) {
-        setSavedMethods((current) => ({ ...current, mode: data.mode }));
-        await advance();
+      const result = await api.PATCH("/api/v1/auth/policy/{group}", {
+        params: { path: { group: "legal" } },
+        body: policy.legal,
+      });
+      if (!result.data) {
+        setError((await readProblem(result)).detail ?? networkError(intl));
         return;
       }
-      setError(
-        (await readProblem(result)).detail ??
-          intl.formatMessage({
-            id: "welcome.auth.error.mode",
-            defaultMessage: "The authentication mode could not be saved.",
-          }),
-      );
+      setSavedPolicy(result.data);
+      if (policy.legal.requireTwoFactor) {
+        void navigate("/welcome", { replace: true });
+        return;
+      }
+      await advance();
     } catch {
       setError(networkError(intl));
     } finally {
@@ -681,20 +646,16 @@ export function WelcomePage() {
         );
         return;
       }
-      if (magicLinkEnabled !== savedMethods.magicLinkEnabled) {
-        const toggled = await api.PATCH("/api/v1/auth/portal", { body: { magicLinkEnabled } });
-        if (!toggled.data) {
-          setError(
-            (await readProblem(toggled)).detail ??
-              intl.formatMessage({
-                id: "welcome.portal.error.toggle",
-                defaultMessage: "The magic-link setting could not be saved.",
-              }),
-          );
+      if (JSON.stringify(policy.business) !== JSON.stringify(savedPolicy.business)) {
+        const result = await api.PATCH("/api/v1/auth/policy/{group}", {
+          params: { path: { group: "business" } },
+          body: policy.business,
+        });
+        if (!result.data) {
+          setError((await readProblem(result)).detail ?? networkError(intl));
           return;
         }
-        const saved = toggled.data.magicLinkEnabled;
-        setSavedMethods((current) => ({ ...current, magicLinkEnabled: saved }));
+        setSavedPolicy(result.data);
       }
       await advance();
     } catch {
@@ -1054,7 +1015,7 @@ export function WelcomePage() {
                 <CardDescription>
                   <FormattedMessage
                     id="welcome.intro"
-                    defaultMessage="A few choices get this instance ready for your team. Every step is skippable and stays editable later."
+                    defaultMessage="A few choices get this instance ready for your team. Email is required to finish setup. You can skip the other steps and return to them later."
                   />
                 </CardDescription>
               )}
@@ -1072,7 +1033,7 @@ export function WelcomePage() {
                       <FormattedMessage id="welcome.start" defaultMessage="Get started" />
                     </Button>
                     <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
-                      <FormattedMessage id="welcome.skipAll" defaultMessage="Set up later" />
+                      <FormattedMessage id="welcome.skipAll" defaultMessage="Skip optional steps" />
                     </Button>
                   </div>
                 )}
@@ -1225,42 +1186,14 @@ export function WelcomePage() {
 
                 {step === "authentication" && (
                   <>
-                    <div className="flex flex-col gap-2">
-                      <OptionButton
-                        selected={mode === "built_in"}
-                        onClick={() => setMode("built_in")}
-                        title={
-                          <FormattedMessage
-                            id="welcome.auth.builtIn"
-                            defaultMessage="Built-in sign-in"
-                          />
-                        }
-                        description={
-                          <FormattedMessage
-                            id="welcome.auth.builtIn.hint"
-                            defaultMessage="Email and password, with optional two-factor authentication. The default."
-                          />
-                        }
-                      />
-                      <OptionButton
-                        selected={mode === "oidc"}
-                        onClick={() => setMode("oidc")}
-                        title={
-                          <FormattedMessage
-                            id="welcome.auth.oidc"
-                            defaultMessage="Single sign-on (OIDC)"
-                          />
-                        }
-                        description={
-                          <FormattedMessage
-                            id="welcome.auth.oidc.hint"
-                            defaultMessage="Bring your own identity provider. Administrators keep password sign-in as break-glass."
-                          />
-                        }
-                      />
-                    </div>
+                    <AuthenticationOptionsFields
+                      value={policy.legal}
+                      onChange={(legal) => setPolicy({ ...policy, legal })}
+                      disabled={busy}
+                      ssoConfigured={!!ssoProviderId}
+                    />
 
-                    {mode === "oidc" && !ssoProviderId && (
+                    {!ssoProviderId && (
                       <form
                         className="flex flex-col gap-3 rounded-card border border-border-default p-4"
                         onSubmit={(e) => void registerProvider(e)}
@@ -1350,7 +1283,7 @@ export function WelcomePage() {
                       </form>
                     )}
 
-                    {mode === "oidc" && ssoProviderId && (
+                    {ssoProviderId && (
                       <Alert variant="success">
                         <FormattedMessage
                           id="welcome.auth.registered"
@@ -1379,28 +1312,11 @@ export function WelcomePage() {
                         defaultMessage="Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
                       />
                     </CardDescription>
-                    <OptionButton
-                      selected={magicLinkEnabled}
-                      onClick={() => setMagicLinkEnabled(!magicLinkEnabled)}
-                      title={
-                        magicLinkEnabled ? (
-                          <FormattedMessage
-                            id="welcome.portal.enabled"
-                            defaultMessage="Magic-link sign-in is on"
-                          />
-                        ) : (
-                          <FormattedMessage
-                            id="welcome.portal.disabled"
-                            defaultMessage="Magic-link sign-in is off"
-                          />
-                        )
-                      }
-                      description={
-                        <FormattedMessage
-                          id="welcome.portal.toggle.hint"
-                          defaultMessage="In built-in mode, turning off magic links closes Portal entry. With OIDC, business users can still sign in with SSO."
-                        />
-                      }
+                    <AuthenticationOptionsFields
+                      value={policy.business}
+                      onChange={(business) => setPolicy({ ...policy, business })}
+                      disabled={busy}
+                      ssoConfigured={!!ssoProviderId}
                     />
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="domain">
@@ -1553,7 +1469,7 @@ export function WelcomePage() {
                           <Alert variant="warning">
                             <FormattedMessage
                               id="welcome.email.unset"
-                              defaultMessage="Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
+                              defaultMessage="Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications."
                             />
                           </Alert>
                         )}
@@ -1847,7 +1763,7 @@ export function WelcomePage() {
                               defaultMessage="RSA private key"
                             />
                           </Label>
-                          <textarea
+                          <AutoResizeTextarea
                             id="welcome-ds-private-key"
                             rows={4}
                             value={privateKey}
@@ -2256,15 +2172,15 @@ export function WelcomePage() {
                     <FormattedMessage id="welcome.back" defaultMessage="Back" />
                   </Button>
                   <div className="flex items-center gap-2">
-                    {/* Every step defers, none is required (SET-004).
-                        Only the Administrator account is, and that was
-                        first-run setup, before this flow. Deferring the
-                        last step ends the wizard, which is what the two
-                        buttons share there. */}
-                    <Button variant="ghost" disabled={busy} onClick={() => void advance()}>
-                      <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
-                    </Button>
-                    <Button disabled={busy} onClick={() => void continueStep()}>
+                    {step !== "email" && (
+                      <Button variant="ghost" disabled={busy} onClick={() => void advance()}>
+                        <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
+                      </Button>
+                    )}
+                    <Button
+                      disabled={busy || (step === "email" && !emailConfigured)}
+                      onClick={() => void continueStep()}
+                    >
                       {isLastStep ? (
                         <FormattedMessage id="welcome.finish" defaultMessage="Finish" />
                       ) : (

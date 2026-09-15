@@ -6,8 +6,8 @@
  * instantly and persists on the user record across a reload. The
  * Administrator's rail also carries the Organization group (SET-002),
  * whose General pane commits org identity per field (DES-017) and
- * whose Security group holds the Authentication pane — from which the
- * auth mode itself is switched. The Users pane (#65, #66) lists
+ * whose Security group holds the Authentication pane — from which each
+ * audience's sign-in methods are turned on and off. The Users pane (#65, #66) lists
  * everyone with pending invites as rows and carries invite/resend/
  * revoke plus the people-management half of SET-005: in-place role
  * edits, session revocation, and the guarded archive with restore —
@@ -23,7 +23,6 @@ import {
   ADMIN,
   ensureAdminExists,
   ensureMemberInert,
-  ensureSsoProviderExists,
   onboardActivatedMember,
   signInAs,
   sweepOrSay,
@@ -142,25 +141,22 @@ test.describe.serial("the settings destination", () => {
     await expect(page.getByLabel("Organization name")).toHaveValue(name);
   });
 
-  test("the Authentication pane switches the auth mode and back (#64)", async ({ page }) => {
+  test("the Authentication pane turns a sign-in method off and back (#64)", async ({ page }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
-    // Known starting state on the never-reset instance (TECH-018): a
-    // crashed earlier run may have left oidc mode behind — the admin
-    // still signs in (break-glass), and this puts the mode back.
-    const reset = await page.request.patch("/api/v1/auth/mode", { data: { mode: "built_in" } });
+    /** The Legal card's settled state: the methods every other spec
+     * signs in with. Also the known starting state on the never-reset
+     * instance (TECH-018), where a crashed earlier run may have left a
+     * method switched off. */
+    const SETTLED = { password: true, magicLink: true, sso: false, requireTwoFactor: false };
+    const applySettled = () => page.request.patch("/api/v1/auth/policy/legal", { data: SETTLED });
+
+    const reset = await applySettled();
     expect(reset.ok()).toBe(true);
 
-    // The pane refuses to switch until a provider is registered, so
-    // make sure one exists — through the API; the pane's own provider
-    // form is covered at the unit seam.
-    await ensureSsoProviderExists(page.request);
-
-    /** Leaves the shared instance in built-in mode whatever happened. */
+    /** Leaves the shared instance on the settled policy whatever happened. */
     const leaveInert = async () => {
-      const reverted = await page.request.patch("/api/v1/auth/mode", {
-        data: { mode: "built_in" },
-      });
+      const reverted = await applySettled();
       expect(reverted.status(), await reverted.text()).toBe(200);
     };
 
@@ -174,31 +170,38 @@ test.describe.serial("the settings destination", () => {
       await expect(page).toHaveURL(/\/settings\/authentication$/);
       await expect(page).toHaveTitle("Authentication · OpenLaw");
 
-      // Switching is immediate (SET-003): picking the OIDC card PATCHes
-      // the mode, and the portal toggle unlocks with it.
-      const toggle = page.getByRole("switch", { name: "Magic-link sign-in" });
-      await expect(toggle).toBeDisabled();
-      const switched = page.waitForResponse(
-        (response) =>
-          response.url().includes("/api/v1/auth/mode") && response.request().method() === "PATCH",
-      );
-      await page.getByRole("radio", { name: "Identity provider (OIDC)" }).check();
-      expect((await switched).ok()).toBe(true);
-      await expect(page.getByText("Saved").first()).toBeVisible();
-      await expect(toggle).toBeEnabled();
+      // One card per audience, Legal first and Business second. Their
+      // switches carry the same labels, so the card is what tells two
+      // controls of the same name apart.
+      const legalMagicLink = page.getByRole("switch", { name: "Email magic link" }).first();
+      await expect(legalMagicLink).toBeChecked();
 
-      // The switch survives a reload — and reverses the same way.
+      // Each switch applies on its own, immediately (SET-003): it
+      // PATCHes its own group and reports the result in place.
+      const saved = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/v1/auth/policy/legal") &&
+          response.request().method() === "PATCH",
+      );
+      await legalMagicLink.click();
+      expect((await saved).ok()).toBe(true);
+      await expect(page.getByText("Saved").first()).toBeVisible();
+      await expect(legalMagicLink).not.toBeChecked();
+
+      // The change survives a reload — and reverses the same way.
       await page.reload();
-      await expect(page.getByRole("radio", { name: "Identity provider (OIDC)" })).toBeChecked();
+      const reloaded = page.getByRole("switch", { name: "Email magic link" }).first();
+      await expect(reloaded).not.toBeChecked();
       const reverted = page.waitForResponse(
         (response) =>
-          response.url().includes("/api/v1/auth/mode") && response.request().method() === "PATCH",
+          response.url().includes("/api/v1/auth/policy/legal") &&
+          response.request().method() === "PATCH",
       );
-      await page.getByRole("radio", { name: "Built-in" }).check();
+      await reloaded.click();
       expect((await reverted).ok()).toBe(true);
-      await expect(page.getByRole("radio", { name: "Built-in" })).toBeChecked();
+      await expect(reloaded).toBeChecked();
     } catch (error) {
-      await sweepOrSay("the auth-mode journey", leaveInert);
+      await sweepOrSay("the authentication-policy journey", leaveInert);
       throw error;
     }
     await leaveInert();

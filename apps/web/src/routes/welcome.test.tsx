@@ -225,7 +225,9 @@ describe("welcome wizard portal step", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     // Email step reflects the unconfigured instance loudly.
-    expect(await screen.findByText(/Outbound email is not set up/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Set up outbound email to finish instance setup/),
+    ).toBeInTheDocument();
     expect(putBody).toEqual({ domains: ["acme.example"] });
   });
 });
@@ -523,7 +525,7 @@ describe("welcome wizard email step (#37)", () => {
     expect(await screen.findByText(/Relay cleared/)).toBeInTheDocument();
     expect(putBody).toEqual({ smtpUrl: null, smtpFrom: null });
     // Back on the setup form, warned that mail cannot be delivered.
-    expect(screen.getByText(/Outbound email is not set up/)).toBeInTheDocument();
+    expect(screen.getByText(/Set up outbound email to finish instance setup/)).toBeInTheDocument();
     expect(screen.getByLabelText("SMTP relay URL")).toBeInTheDocument();
   });
 });
@@ -1289,4 +1291,25 @@ describe("welcome wizard Review step (#700)", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Get started" })).not.toBeInTheDocument();
   });
+});
+
+it("requires email even when optional setup is skipped or an app route is opened directly", async () => {
+  const writes: string[] = [];
+  stubApi({
+    signedIn: { ...ADMIN, emailSetupRequired: true },
+    onboarding: { completed: false, steps: { email: false } },
+    emailSettings: { source: "unset", fromAddress: null },
+    extra: (call) => {
+      if (call.method === "POST") writes.push(call.url.pathname);
+      return wizardExtra()(call);
+    },
+  });
+  const { router } = renderAt("/settings/general");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Skip optional steps" }));
+  expect(await screen.findByRole("heading", { name: "Outbound email" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "Set up later" })).not.toBeInTheDocument();
+  expect(writes).not.toContain("/api/v1/onboarding/complete");
+  expect(router.state.location.pathname).toBe("/welcome");
 });

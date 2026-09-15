@@ -58,7 +58,8 @@ const MatterRowsEnvelope = z.object({
 
 async function enterPortal(context: BrowserContext, api: APIRequestContext): Promise<Page> {
   const page = await context.newPage();
-  await page.goto("/portal/enter");
+  await page.goto("/portal/login");
+  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
   await page.getByLabel("Email").fill(REQUESTER);
   await page.getByRole("button", { name: "Send link" }).click();
   await expect(page.getByText("Check your email")).toBeVisible();

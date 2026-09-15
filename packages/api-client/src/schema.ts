@@ -21,6 +21,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/policy/{group}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["setAuthenticationPolicy"];
+    trace?: never;
+  };
+  "/api/v1/auth/password-setup": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["requestPasswordSetup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/password-setup/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["completePasswordSetup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/me": {
     parameters: {
       query?: never;
@@ -53,6 +101,23 @@ export interface paths {
     head?: never;
     /** Update the signed-in user's preferences (theme #44, timezone SET-006) */
     patch: operations["updateMyPreferences"];
+    trace?: never;
+  };
+  "/api/v1/auth/two-factor-policy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Require two-factor authentication for built-in staff sign-in */
+    patch: operations["setTwoFactorPolicy"];
     trace?: never;
   };
   "/api/v1/auth/setup": {
@@ -6742,6 +6807,135 @@ export interface operations {
       };
     };
   };
+  setAuthenticationPolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        group: "legal" | "business";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          password: boolean;
+          magicLink: boolean;
+          sso: boolean;
+          requireTwoFactor: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            legal: {
+              password: boolean;
+              magicLink: boolean;
+              sso: boolean;
+              requireTwoFactor: boolean;
+            };
+            business: {
+              password: boolean;
+              magicLink: boolean;
+              sso: boolean;
+              requireTwoFactor: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  requestPasswordSetup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: email */
+          email: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            message: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  completePasswordSetup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          token: string;
+          password: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            success: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getMe: {
     parameters: {
       query?: never;
@@ -6770,6 +6964,10 @@ export interface operations {
               timezone: string | null;
               departmentId: string | null;
               portalOnboardingCompletedAt: string | null;
+              twoFactorRequired: boolean;
+              twoFactorSetupRequired: boolean;
+              twoFactorVerificationRequired: boolean;
+              emailSetupRequired: boolean;
             };
             session: {
               id: string;
@@ -6825,6 +7023,43 @@ export interface operations {
               image: string | null;
               timezone: string | null;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setTwoFactorPolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          requireTwoFactor: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            requireTwoFactor: boolean;
           };
         };
       };
@@ -6936,9 +7171,24 @@ export interface operations {
         };
         content: {
           "application/json": {
+            policy: {
+              legal: {
+                password: boolean;
+                magicLink: boolean;
+                sso: boolean;
+                requireTwoFactor: boolean;
+              };
+              business: {
+                password: boolean;
+                magicLink: boolean;
+                sso: boolean;
+                requireTwoFactor: boolean;
+              };
+            };
             /** @enum {string} */
             mode: "built_in" | "oidc";
             magicLinkEnabled: boolean;
+            requireTwoFactor: boolean;
             emailConfigured: boolean;
             ssoProviderId: string | null;
           };
@@ -7421,6 +7671,8 @@ export interface operations {
         "application/json": {
           /** Format: email */
           email: string;
+          /** @enum {string} */
+          group?: "legal" | "business";
         };
       };
     };
