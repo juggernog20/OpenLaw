@@ -3272,6 +3272,9 @@
   "departments.archived": {
     "defaultMessage": "{name} (archived)"
   },
+  "departments.choose": {
+    "defaultMessage": "Choose a Department"
+  },
   "departments.none": {
     "defaultMessage": "No Department"
   },
@@ -8448,7 +8451,7 @@
     "defaultMessage": "{count, plural, one {# Department} other {# Departments}}"
   },
   "settings.departments.help": {
-    "defaultMessage": "Departments are listed alphabetically. Archiving a Department removes it from pickers and keeps existing references."
+    "defaultMessage": "Find Departments in alphabetical order. Archive a Department to remove it from pickers and keep existing references."
   },
   "settings.departments.inUse": {
     "defaultMessage": "{count, plural, one {# reference} other {# references}}"

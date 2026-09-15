@@ -82,6 +82,12 @@ it.each(["matter", "contract"] as const)(
       payload: { departmentId: sales },
     });
     expect(forbidden.statusCode).toBe(404);
+    expect(forbidden.headers["content-type"]).toContain("application/problem+json");
+    expect(forbidden.json()).toMatchObject({
+      status: 404,
+      title: expect.any(String),
+      detail: expect.any(String),
+    });
     const changed = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/requests/${request.number}/department`,
@@ -89,6 +95,12 @@ it.each(["matter", "contract"] as const)(
       payload: { departmentId: sales },
     });
     expect(changed.statusCode, changed.body).toBe(404);
+    expect(changed.headers["content-type"]).toContain("application/problem+json");
+    expect(changed.json()).toMatchObject({
+      status: 404,
+      title: expect.any(String),
+      detail: expect.any(String),
+    });
     const converted = await harness.app.inject({
       method: "POST",
       url: `/api/v1/requests/${request.number}/convert`,
@@ -120,6 +132,12 @@ it.each(["matter", "contract"] as const)(
       payload: { departmentId: null },
     });
     expect(tooLate.statusCode).toBe(404);
+    expect(tooLate.headers["content-type"]).toContain("application/problem+json");
+    expect(tooLate.json()).toMatchObject({
+      status: 404,
+      title: expect.any(String),
+      detail: expect.any(String),
+    });
     const badId = await harness.app.inject({
       method: "PATCH",
       url,
@@ -127,6 +145,12 @@ it.each(["matter", "contract"] as const)(
       payload: { [idKey]: "missing-department" },
     });
     expect(badId.statusCode).toBe(400);
+    expect(badId.headers["content-type"]).toContain("application/problem+json");
+    expect(badId.json()).toMatchObject({
+      status: 400,
+      title: expect.any(String),
+      detail: "Choose a live Department.",
+    });
     const cleared = await harness.app.inject({
       method: "PATCH",
       url,
@@ -175,4 +199,10 @@ it("retains an archived Department on Matters while excluding it from new select
     payload: { title: "New assignment", matterTypeId: typeId, departmentId: finance },
   });
   expect(refused.statusCode).toBe(400);
+  expect(refused.headers["content-type"]).toContain("application/problem+json");
+  expect(refused.json()).toMatchObject({
+    status: 400,
+    title: expect.any(String),
+    detail: "Choose a live Department.",
+  });
 });

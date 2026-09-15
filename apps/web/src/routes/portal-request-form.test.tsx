@@ -234,6 +234,24 @@ describe("the request type's form", () => {
 });
 
 describe("submitting the form", () => {
+  it("marks a missing Department and clears its error after selection", async () => {
+    const submissions: Submissions = { bodies: [], uploads: [] };
+    stubApi({
+      signedIn: { ...REQUESTER, departmentId: null },
+      extra: portalForm({ fields: [] }, submissions),
+    });
+    renderAt("/portal/new/contract_review");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Submit request" }));
+    const department = screen.getByRole("combobox", { name: /^Department/ });
+    expect(screen.getByText("Department is required.")).toBeVisible();
+    expect(department).toHaveAttribute("aria-invalid", "true");
+    expect(submissions.bodies).toEqual([]);
+    await user.selectOptions(department, "dept-finance");
+    expect(screen.queryByText("Department is required.")).not.toBeInTheDocument();
+    expect(department).not.toHaveAttribute("aria-invalid");
+  });
+
   it("sends the basics and the values keyed by field slug", async () => {
     const user = userEvent.setup();
     const submissions = openForm();

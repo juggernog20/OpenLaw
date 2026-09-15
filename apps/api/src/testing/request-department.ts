@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Creates a live Department fixture for Request submission tests (TECH-019). */
+
 import { departments, eq, type Db } from "@openlaw/db";
 
-/** A real selectable Department for Request submission fixtures. */
 export async function requestDepartment(db: Db) {
   await db
     .insert(departments)

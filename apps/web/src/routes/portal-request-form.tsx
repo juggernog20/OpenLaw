@@ -409,6 +409,7 @@ export function PortalRequestFormPage() {
                 <Field
                   htmlFor="request-department"
                   required
+                  unanswered={unanswered.has("department")}
                   label={intl.formatMessage({
                     id: "records.department",
                     defaultMessage: "Department",
@@ -417,9 +418,13 @@ export function PortalRequestFormPage() {
                   <DepartmentPicker
                     id="request-department"
                     required
+                    invalid={unanswered.has("department")}
                     value={departmentId}
                     options={departments}
-                    onChange={setDepartmentId}
+                    onChange={(value) => {
+                      setDepartmentId(value);
+                      clearMark("department");
+                    }}
                     disabled={busy}
                   />
                 </Field>
