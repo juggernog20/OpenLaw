@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Contract Key date extraction (CTR-009): build the target prompt, identify
+ * repeat suggestions by date and event name, and write supported dates with
+ * Unverified markers that remain until a person reviews them.
+ */
+
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
@@ -145,7 +151,12 @@ export async function keyDatesExtractionTarget(
         effectiveDate: contract.effectiveDate,
         expiryDate: contract.expiryDate,
         noticeDeadline: noticeDeadline(contract.expiryDate, contract.noticePeriodDays),
-        customFields: contract.customFields,
+        // Only date-valued Fields matter for comparison; text Fields would just pad the prompt.
+        dateFields: Object.fromEntries(
+          Object.entries(contract.customFields).filter(
+            ([, raw]) => z.iso.date().safeParse(raw).success,
+          ),
+        ),
       }),
     ].join("\n"),
   };
