@@ -2190,3 +2190,60 @@ describe("the shared locked read under a concurrent writer (#154)", () => {
     expect(response.json().contract.statusName).toBe(redlining.displayName);
   });
 });
+
+it("saves custom value cadence, audits text changes, and clears it when switching presets", async () => {
+  const contract = await newContract("Custom cadence");
+  const value = {
+    amount: 1000000,
+    currency: "USD",
+    cadence: "other",
+    cadenceDescription: "quarter",
+  };
+  for (const cadenceDescription of [undefined, "", "  "]) {
+    expect(
+      (
+        await patchContract(memberCookies, contract.number, {
+          value: { ...value, cadenceDescription },
+        })
+      ).statusCode,
+    ).toBe(400);
+  }
+  const saved = await patchContract(memberCookies, contract.number, { value });
+  expect(saved.statusCode, saved.body).toBe(200);
+  expect((await getContract(memberCookies, contract.number)).json().contract.value).toEqual(value);
+  const changed = { ...value, cadenceDescription: "milestone" };
+  expect((await patchContract(memberCookies, contract.number, { value: changed })).statusCode).toBe(
+    200,
+  );
+  expect((await getContract(memberCookies, contract.number)).json().contract.value).toEqual(
+    changed,
+  );
+  const entries = (await auditRowsFor(contract.id)).filter(
+    (row) => row.action === "contract.updated",
+  );
+  expect(entries).toHaveLength(2);
+  expect(entries[1]!.payload).toMatchObject({ changed: { value: { from: value, to: changed } } });
+  const monthly = { amount: 1000000, currency: "USD", cadence: "monthly" };
+  expect(
+    (
+      await patchContract(memberCookies, contract.number, {
+        value: { ...monthly, cadenceDescription: "quarter" },
+      })
+    ).statusCode,
+  ).toBe(400);
+  expect((await patchContract(memberCookies, contract.number, { value: monthly })).statusCode).toBe(
+    200,
+  );
+  expect((await getContract(memberCookies, contract.number)).json().contract.value).toEqual(
+    monthly,
+  );
+  const [stored] = await harness.db
+    .select({ description: contracts.valueCadenceDescription })
+    .from(contracts)
+    .where(eq(contracts.id, contract.id));
+  expect(stored!.description).toBeNull();
+  await patchContract(memberCookies, contract.number, { value });
+  expect((await patchContract(memberCookies, contract.number, { value: null })).statusCode).toBe(
+    200,
+  );
+});

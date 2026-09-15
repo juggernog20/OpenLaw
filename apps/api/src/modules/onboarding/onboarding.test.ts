@@ -318,6 +318,20 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
     harness.mailer.configured = false;
     try {
       expect((await status(adminCookies)).steps.email.done).toBe(false);
+      const blocked = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/onboarding/complete",
+        cookies: adminCookies,
+      });
+      expect(blocked.statusCode, blocked.body).toBe(409);
+      expect(blocked.json().type).toBe("/problems/email-setup-required");
+      expect((await status(adminCookies)).completed).toBe(false);
+      const me = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/me",
+        cookies: adminCookies,
+      });
+      expect(me.json().user.emailSetupRequired).toBe(true);
     } finally {
       harness.mailer.configured = true;
     }
@@ -353,6 +367,23 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
     expect(afterSecond?.at?.getTime()).toBe(afterFirst?.at?.getTime());
 
     expect((await status(adminCookies)).completed).toBe(true);
+    harness.mailer.configured = false;
+    try {
+      const repeated = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/onboarding/complete",
+        cookies: adminCookies,
+      });
+      expect(repeated.statusCode, repeated.body).toBe(200);
+      const me = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/me",
+        cookies: adminCookies,
+      });
+      expect(me.json().user.emailSetupRequired).toBe(false);
+    } finally {
+      harness.mailer.configured = true;
+    }
   });
 
   it("refuses anonymous and non-Administrator review marks without changing state", async () => {

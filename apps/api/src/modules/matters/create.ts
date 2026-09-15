@@ -30,6 +30,7 @@ import {
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
+import { lockedRegionName } from "../regions/references.js";
 import { lockedDepartment, departmentByName } from "../departments/references.js";
 import { createMatterTask } from "../matter-tasks/create.js";
 
@@ -39,6 +40,7 @@ export interface CreateMatterInput {
   matterTypeId: string;
   managerId?: string | null;
   departmentId?: string | null;
+  region?: string | null;
   businessOwnerId?: string | null;
   priority?: SeverityLevel;
   risk?: SeverityLevel | null;
@@ -193,6 +195,7 @@ export async function createMatter(
       statusId: status.id,
       managerId: manager?.id ?? null,
       departmentId,
+      region: await lockedRegionName(tx, input.region),
       priority: input.priority ?? template?.defaultPriority ?? "medium",
       risk: input.risk !== undefined ? input.risk : (template?.defaultRisk ?? null),
       customFields,

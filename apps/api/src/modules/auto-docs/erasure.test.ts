@@ -24,6 +24,13 @@ beforeAll(async () => {
       .statusCode,
   ).toBe(201);
   admin = await signInCookies(h.app, TEST_ADMIN.email, TEST_ADMIN.password);
+  const policy = await h.app.inject({
+    method: "PUT",
+    url: "/api/v1/auto-docs/settings",
+    payload: { acknowledgementFrequency: "none" },
+    cookies: admin,
+  });
+  expect(policy.statusCode, policy.body).toBe(200);
   for (const role of ["legal_team_member", "business_user"] as const) {
     const email = `erasure-${role}@example.com`;
     const person = await provisionUser(h.app.auth, {
@@ -69,7 +76,6 @@ async function prepare(targeted = false) {
     payload: {
       formats: "docx",
       audience: "everyone",
-      acknowledgementFrequency: "none",
       ...(targeted ? { targetContractTypeId, titlePattern: "Retained generated Contract" } : {}),
     },
   });

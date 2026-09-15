@@ -21,7 +21,7 @@ import {
 import { requireRole } from "../../auth/guards.js";
 import type { MailerResolver } from "../../lib/mailer.js";
 import { getOrgSettings } from "../../lib/org-settings.js";
-import { problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** Wizard steps in order, excluding the welcome splash. */
 export const ONBOARDING_STEPS = [
@@ -198,6 +198,12 @@ export const onboardingRoutes: FastifyPluginAsyncZod = async (app) => {
       // broken instance can never be reported as onboarded.
       const settings = await getOrgSettings(app.db);
       if (settings.onboardingCompletedAt === null) {
+        const { mailer } = await app.resolveMailer();
+        if (!mailer.configured) {
+          throw httpError(409, "Configure outbound email before finishing instance setup.", {
+            type: "/problems/email-setup-required",
+          });
+        }
         // Only a NULL timestamp is written, so the recorded completion
         // time is always the first one — repeat calls change nothing.
         await app.db

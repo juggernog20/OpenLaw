@@ -43,6 +43,7 @@
  * the date, label, and note in the Add and Edit dialogs (NOT-004, #807).
  */
 
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useState, type ReactNode } from "react";
 import { KeyDateReminderFields, type KeyDateReminderDraft } from "../key-date-reminder-fields";
 import { useRecord } from "../record-context";
@@ -584,7 +585,7 @@ function KeyDateDialog({
             <Label htmlFor="key-date-note">
               <FormattedMessage id="keyDates.field.note" defaultMessage="Note" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="key-date-note"
               value={draft.note}
               rows={3}

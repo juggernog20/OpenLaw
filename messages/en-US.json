@@ -47,6 +47,9 @@
   "action.save": {
     "defaultMessage": "Save"
   },
+  "action.signOut": {
+    "defaultMessage": "Sign out"
+  },
   "activity.actor.system": {
     "defaultMessage": "OpenLaw"
   },
@@ -384,7 +387,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} autoDocAcknowledgementText {Default acknowledgement text} other {{key}}}"
+    "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -645,25 +648,25 @@
     "defaultMessage": "(untitled)"
   },
   "activity.taxonomy.archived": {
-    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}"
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.created": {
-    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}"
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.deleted": {
-    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}"
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.renamed": {
-    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}"
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.reordered": {
-    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} other {type}} list"
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} list"
   },
   "activity.taxonomy.restored": {
-    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}"
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.updated": {
-    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}"
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
@@ -998,6 +1001,9 @@
   "auth.enroll.passwordHint": {
     "defaultMessage": "Confirm your password to start enrollment."
   },
+  "auth.enroll.required": {
+    "defaultMessage": "Your organization requires two-factor authentication."
+  },
   "auth.enroll.title": {
     "defaultMessage": "Two-factor authentication"
   },
@@ -1021,9 +1027,6 @@
   },
   "auth.linkExpired.title": {
     "defaultMessage": "Sign-in link expired"
-  },
-  "auth.login.backToSso": {
-    "defaultMessage": "Back"
   },
   "auth.login.breakGlass": {
     "defaultMessage": "Administrator sign-in"
@@ -1058,6 +1061,12 @@
   "auth.login.title": {
     "defaultMessage": "Sign in"
   },
+  "auth.login.unavailable": {
+    "defaultMessage": "Sign-in is unavailable. Contact your administrator."
+  },
+  "auth.login.withPassword": {
+    "defaultMessage": "Sign in with a password"
+  },
   "auth.magic.body": {
     "defaultMessage": "Enter your work email to get a single-use sign-in link."
   },
@@ -1075,6 +1084,18 @@
   },
   "auth.magicSent.title": {
     "defaultMessage": "Check your email"
+  },
+  "auth.passwordSetup.open": {
+    "defaultMessage": "Set up or reset your password"
+  },
+  "auth.passwordSetup.send": {
+    "defaultMessage": "Send password setup link"
+  },
+  "auth.passwordSetup.sent": {
+    "defaultMessage": "If your email address is eligible, a password setup link is on its way. It expires in one hour."
+  },
+  "auth.portalLogin.title": {
+    "defaultMessage": "Business Portal sign-in"
   },
   "auth.setPassword.confirmPassword": {
     "defaultMessage": "Confirm password"
@@ -1169,11 +1190,8 @@
   "autoDocs.acknowledgementCaption": {
     "defaultMessage": "Changing the text asks everyone to acknowledge it again."
   },
-  "autoDocs.acknowledgementFrequency": {
-    "defaultMessage": "Frequency"
-  },
-  "autoDocs.acknowledgementFrequencyName": {
-    "defaultMessage": "{frequency, select, none {None} every_use {Every use} once_per_auto_doc {Once per Auto-Doc} other {Once across Auto-Docs}}"
+  "autoDocs.acknowledgementPolicyHelp": {
+    "defaultMessage": "Acknowledgement frequency can be adjusted in <settings>Organization Auto-Doc Settings</settings>."
   },
   "autoDocs.acknowledgementText": {
     "defaultMessage": "Text"
@@ -1212,7 +1230,7 @@
     "defaultMessage": "Add rule"
   },
   "autoDocs.assignmentCaption": {
-    "defaultMessage": "The first matching rule names the Legal Owner. Without a match or a default, the Contract waits on the Inbox."
+    "defaultMessage": "The first matching rule names the Legal Owner. Without a match or a default, the Contract remains unassigned."
   },
   "autoDocs.assignmentRules": {
     "defaultMessage": "Assignment rules"
@@ -1317,7 +1335,7 @@
     "defaultMessage": "Cover note"
   },
   "autoDocs.coverNoteCaption": {
-    "defaultMessage": "Sent in the email with the files. Markdown."
+    "defaultMessage": "Write a message to include in the email with the generated files."
   },
   "autoDocs.create": {
     "defaultMessage": "Create Auto-Doc"
@@ -1574,6 +1592,9 @@
   "autoDocs.includedWhen": {
     "defaultMessage": "Included when {rule}"
   },
+  "autoDocs.insertTitleVariable": {
+    "defaultMessage": "Insert title variable"
+  },
   "autoDocs.invalidUploadReply": {
     "defaultMessage": "The upload response could not be read. Reload this Auto-Doc to check its saved template."
   },
@@ -1620,7 +1641,7 @@
     "defaultMessage": "New field"
   },
   "autoDocs.newerThanLive": {
-    "defaultMessage": "{both, select, true {File version {file} and form version {form} are} file {File version {file} is} other {Form version {form} is}} newer than the live pair."
+    "defaultMessage": "{both, select, true {File version {file} and form version {form} are newer than the currently published file and form.} file {File version {file} is newer than the currently published file.} other {Form version {form} is newer than the currently published form.}}"
   },
   "autoDocs.noBlocks": {
     "defaultMessage": "This file has no Blocks."
@@ -1654,6 +1675,9 @@
   },
   "autoDocs.noTemplate": {
     "defaultMessage": "Upload a Word file to start the form."
+  },
+  "autoDocs.noTitleVariables": {
+    "defaultMessage": "Add form fields to make variables available."
   },
   "autoDocs.noValue": {
     "defaultMessage": "None"
@@ -1840,9 +1864,6 @@
   },
   "autoDocs.titlePattern": {
     "defaultMessage": "Title pattern"
-  },
-  "autoDocs.titlePatternCaption": {
-    "defaultMessage": "Form field slugs in double braces. Blank uses the mapped title or the Auto-Doc name."
   },
   "autoDocs.unavailableCatalogField": {
     "defaultMessage": "Unavailable catalog Field"
@@ -2355,7 +2376,7 @@
     "defaultMessage": "Business Owner"
   },
   "contracts.cadenceLabel": {
-    "defaultMessage": "{cadence, select, one_time {One time} monthly {Monthly} annually {Annually} other {Unknown}}"
+    "defaultMessage": "{cadence, select, one_time {One time} monthly {Monthly} annually {Annually} other {Other}}"
   },
   "contracts.column.actions": {
     "defaultMessage": "Actions"
@@ -2720,6 +2741,9 @@
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
+  "contracts.region.none": {
+    "defaultMessage": "No Region"
+  },
   "contracts.relations.addLink": {
     "defaultMessage": "Add link"
   },
@@ -2934,7 +2958,7 @@
     "defaultMessage": "Enter the amount as a number."
   },
   "contracts.value.cadence": {
-    "defaultMessage": "Cadence"
+    "defaultMessage": "Frequency"
   },
   "contracts.value.currency": {
     "defaultMessage": "Currency"
@@ -2945,14 +2969,23 @@
   "contracts.value.currencyPlaceholder": {
     "defaultMessage": "Currency…"
   },
-  "contracts.value.hint": {
-    "defaultMessage": "Empty the amount to take the value off."
+  "contracts.value.customCadence": {
+    "defaultMessage": "Custom cadence"
+  },
+  "contracts.value.customCadencePlaceholder": {
+    "defaultMessage": "e.g. quarter or milestone"
+  },
+  "contracts.value.customCadenceRequired": {
+    "defaultMessage": "Enter a custom cadence."
   },
   "contracts.valueNone": {
     "defaultMessage": "No value"
   },
   "contracts.valueWithCadence": {
     "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
+  },
+  "contracts.valueWithCustomCadence": {
+    "defaultMessage": "{amount} /{cadence}"
   },
   "conversion.attachmentOmissions": {
     "defaultMessage": "Some attachments could not be fully read. Review the source statuses and original files before converting."
@@ -3224,6 +3257,9 @@
   "datePicker.previousMonth": {
     "defaultMessage": "Previous month"
   },
+  "datePicker.today": {
+    "defaultMessage": "Today"
+  },
   "datePicker.year": {
     "defaultMessage": "Year"
   },
@@ -3250,6 +3286,9 @@
   },
   "departments.archived": {
     "defaultMessage": "{name} (archived)"
+  },
+  "departments.choose": {
+    "defaultMessage": "Choose a Department"
   },
   "departments.none": {
     "defaultMessage": "No Department"
@@ -5724,13 +5763,13 @@
     "defaultMessage": "Edit"
   },
   "knowledge.body.help": {
-    "defaultMessage": "Markdown headings, lists, emphasis, code, and links are supported."
+    "defaultMessage": "Use Preview to see how your guidance will appear to readers."
   },
   "knowledge.body.markdown": {
-    "defaultMessage": "Guidance in Markdown"
+    "defaultMessage": "Guidance"
   },
   "knowledge.body.placeholder": {
-    "defaultMessage": "Write guidance in Markdown…"
+    "defaultMessage": "Write guidance for your team…"
   },
   "knowledge.body.preview": {
     "defaultMessage": "Preview"
@@ -6839,15 +6878,6 @@
   "portal.documents.versionOf": {
     "defaultMessage": "New version of {name}"
   },
-  "portal.entry.closed": {
-    "defaultMessage": "Sign-in links are switched off. Use your organization's sign-in to reach the portal."
-  },
-  "portal.entry.lead": {
-    "defaultMessage": "Enter your work email to get a single-use link into the portal. No account and no password."
-  },
-  "portal.entry.title": {
-    "defaultMessage": "Legal portal"
-  },
   "portal.form.attachmentFailedReason": {
     "defaultMessage": "{filename} — {reason}"
   },
@@ -7907,14 +7937,11 @@
   "settings.auth.addDomain": {
     "defaultMessage": "Add"
   },
+  "settings.auth.adminRecovery": {
+    "defaultMessage": "Administrators retain emergency password sign-in. Any required two-factor authentication still applies."
+  },
   "settings.auth.authentication": {
-    "defaultMessage": "Authentication"
-  },
-  "settings.auth.builtIn": {
-    "defaultMessage": "Built-in"
-  },
-  "settings.auth.builtIn.hint": {
-    "defaultMessage": "Staff sign in with email and password. Each user can add two-factor authentication (TOTP) from their profile."
+    "defaultMessage": "Legal User Authentication"
   },
   "settings.auth.callback": {
     "defaultMessage": "Paste this callback URL into your IdP console: {url}"
@@ -7925,6 +7952,9 @@
   "settings.auth.clientSecret": {
     "defaultMessage": "Client secret"
   },
+  "settings.auth.configureSso": {
+    "defaultMessage": "Configure an identity provider below to enable single sign-on."
+  },
   "settings.auth.domain": {
     "defaultMessage": "Email domain"
   },
@@ -7934,38 +7964,32 @@
   "settings.auth.domains": {
     "defaultMessage": "Allowed email domains"
   },
+  "settings.auth.factorAllMethods": {
+    "defaultMessage": "An authenticator app is required with every enabled sign-in method. Users must complete setup before accessing OpenLaw."
+  },
+  "settings.auth.identityProvider": {
+    "defaultMessage": "Identity provider"
+  },
   "settings.auth.issuer": {
     "defaultMessage": "Issuer URL"
   },
   "settings.auth.issuerPlaceholder": {
     "defaultMessage": "https://idp.example.com"
   },
-  "settings.auth.magicLink": {
-    "defaultMessage": "Magic-link sign-in"
+  "settings.auth.method.magicLink": {
+    "defaultMessage": "Email magic link"
   },
-  "settings.auth.magicLink.hint": {
-    "defaultMessage": "Business users sign in through emailed magic links — no password or IdP account needed."
+  "settings.auth.method.password": {
+    "defaultMessage": "Email and password"
   },
-  "settings.auth.modeCaption": {
-    "defaultMessage": "Switching modes applies immediately and is recorded in the activity log."
+  "settings.auth.method.sso": {
+    "defaultMessage": "Single sign-on (SSO)"
   },
   "settings.auth.noDomains": {
     "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
-  "settings.auth.oidc": {
-    "defaultMessage": "Identity provider (OIDC)"
-  },
-  "settings.auth.oidc.hint": {
-    "defaultMessage": "Staff sign in through your identity provider — works with Okta, Microsoft Entra, Google Workspace, Keycloak, and Authentik."
-  },
   "settings.auth.portal": {
-    "defaultMessage": "Portal access"
-  },
-  "settings.auth.portalLocked": {
-    "defaultMessage": "Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
-  },
-  "settings.auth.portalOptional": {
-    "defaultMessage": "Turn off to require SSO for Business Users. They will need accounts in your identity provider to reach the Portal. Administrators retain emergency password sign-in."
+    "defaultMessage": "Business Portal Authentication"
   },
   "settings.auth.providerId": {
     "defaultMessage": "Provider ID"
@@ -7976,11 +8000,11 @@
   "settings.auth.registerProvider": {
     "defaultMessage": "Register provider"
   },
-  "settings.auth.registerToSwitch": {
-    "defaultMessage": "Register your identity provider to finish the switch."
-  },
   "settings.auth.removeDomain": {
     "defaultMessage": "Remove {domain}"
+  },
+  "settings.auth.requireTwoFactor": {
+    "defaultMessage": "Require two-factor authentication"
   },
   "settings.auth.saveProvider": {
     "defaultMessage": "Save provider"
@@ -7991,11 +8015,17 @@
   "settings.auth.secretPlaceholder": {
     "defaultMessage": "••••••••••••••••"
   },
-  "settings.auth.sessionsCaption": {
-    "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
+  "settings.autoDocs.acknowledgementFrequency": {
+    "defaultMessage": "Acknowledgement frequency"
+  },
+  "settings.autoDocs.acknowledgementFrequencyName": {
+    "defaultMessage": "{frequency, select, none {No acknowledgement required} every_use {Before every generation} once_per_auto_doc {Once per person for each Auto-Doc} other {Once per person across all Auto-Docs}}"
   },
   "settings.autoDocs.acknowledgementHelp": {
-    "defaultMessage": "This is the default statement Business Users acknowledge before generating an Auto-Doc. Each Auto-Doc can use its own text and frequency. Editing the text requires a new acknowledgement."
+    "defaultMessage": "Choose how often Business Users must acknowledge the statement before generating documents. This frequency applies to all Auto-Docs. Each Auto-Doc can use its own text. Changing the text requires a new acknowledgement."
+  },
+  "settings.autoDocs.acknowledgementScopeHelp": {
+    "defaultMessage": "When acknowledgement is required, a person must accept each distinct statement, including any custom text on an Auto-Doc."
   },
   "settings.autoDocs.defaultAcknowledgementText": {
     "defaultMessage": "Default acknowledgement text"
@@ -8436,13 +8466,10 @@
     "defaultMessage": "{count, plural, one {# Department} other {# Departments}}"
   },
   "settings.departments.help": {
-    "defaultMessage": "Drag to reorder. Archiving a Department removes it from pickers and keeps existing references."
+    "defaultMessage": "Find Departments in alphabetical order. Archive a Department to remove it from pickers and keep existing references."
   },
   "settings.departments.inUse": {
     "defaultMessage": "{count, plural, one {# reference} other {# references}}"
-  },
-  "settings.departments.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
   },
   "settings.departments.noCandidates": {
     "defaultMessage": "Departments keep existing references when archived."
@@ -8458,9 +8485,6 @@
   },
   "settings.departments.renameLabel": {
     "defaultMessage": "Rename {name}"
-  },
-  "settings.departments.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
   },
   "settings.departments.restore": {
     "defaultMessage": "Restore {name}"
@@ -9662,6 +9686,9 @@
   "settings.profile.twoFactorOn": {
     "defaultMessage": "Two-factor is on — a code is required when you sign in with your password."
   },
+  "settings.profile.twoFactorRequired": {
+    "defaultMessage": "Required by your organization"
+  },
   "settings.profile.upload": {
     "defaultMessage": "Upload"
   },
@@ -9670,6 +9697,60 @@
   },
   "settings.rail.label": {
     "defaultMessage": "Settings sections"
+  },
+  "settings.regions.add": {
+    "defaultMessage": "Add Region"
+  },
+  "settings.regions.addName": {
+    "defaultMessage": "New Region name"
+  },
+  "settings.regions.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.regions.archiveError": {
+    "defaultMessage": "The Region could not be archived."
+  },
+  "settings.regions.archiveSubmit": {
+    "defaultMessage": "Archive Region"
+  },
+  "settings.regions.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.regions.archiveWarning": {
+    "defaultMessage": "Archive {name}? Existing Matters and Contracts keep this Region. It leaves every picker."
+  },
+  "settings.regions.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.regions.count": {
+    "defaultMessage": "{count, plural, one {# Region} other {# Regions}}"
+  },
+  "settings.regions.help": {
+    "defaultMessage": "Regions are listed alphabetically. Archiving a Region removes it from pickers and keeps existing references."
+  },
+  "settings.regions.inUse": {
+    "defaultMessage": "{count, plural, one {# reference} other {# references}}"
+  },
+  "settings.regions.noCandidates": {
+    "defaultMessage": "Regions keep existing references when archived."
+  },
+  "settings.regions.pageTitle": {
+    "defaultMessage": "Regions"
+  },
+  "settings.regions.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {references} one {# reference} other {# references}} to"
+  },
+  "settings.regions.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.regions.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.regions.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.regions.title": {
+    "defaultMessage": "Regions"
   },
   "settings.reminders.add": {
     "defaultMessage": "Add lead time"
@@ -9941,6 +10022,9 @@
   "settings.section.profile": {
     "defaultMessage": "Profile"
   },
+  "settings.section.regions": {
+    "defaultMessage": "Regions"
+  },
   "settings.section.users": {
     "defaultMessage": "Users"
   },
@@ -9976,6 +10060,21 @@
   },
   "settings.title": {
     "defaultMessage": "Settings"
+  },
+  "settings.users.action.archive": {
+    "defaultMessage": "Archive"
+  },
+  "settings.users.action.resend": {
+    "defaultMessage": "Resend invite"
+  },
+  "settings.users.action.restore": {
+    "defaultMessage": "Restore"
+  },
+  "settings.users.action.revoke": {
+    "defaultMessage": "Revoke invite"
+  },
+  "settings.users.action.signOut": {
+    "defaultMessage": "Sign out user"
   },
   "settings.users.active": {
     "defaultMessage": "Active"
@@ -10448,20 +10547,8 @@
   "welcome.aiAnalysis.replace.cancel": {
     "defaultMessage": "Keep current credentials"
   },
-  "welcome.auth.builtIn": {
-    "defaultMessage": "Built-in sign-in"
-  },
-  "welcome.auth.builtIn.hint": {
-    "defaultMessage": "Email and password, with optional two-factor authentication. The default."
-  },
   "welcome.auth.callback": {
     "defaultMessage": "Paste this callback URL into your IdP console: {url}"
-  },
-  "welcome.auth.error.mode": {
-    "defaultMessage": "The authentication mode could not be saved."
-  },
-  "welcome.auth.error.noProvider": {
-    "defaultMessage": "Register an identity provider before switching to single sign-on."
   },
   "welcome.auth.error.register": {
     "defaultMessage": "The identity provider could not be registered."
@@ -10489,12 +10576,6 @@
   },
   "welcome.auth.field.providerIdPlaceholder": {
     "defaultMessage": "okta"
-  },
-  "welcome.auth.oidc": {
-    "defaultMessage": "Single sign-on (OIDC)"
-  },
-  "welcome.auth.oidc.hint": {
-    "defaultMessage": "Bring your own identity provider. Administrators keep password sign-in as break-glass."
   },
   "welcome.auth.register.submit": {
     "defaultMessage": "Register provider"
@@ -10596,7 +10677,7 @@
     "defaultMessage": "Test email sent to {email}. Check your inbox."
   },
   "welcome.email.unset": {
-    "defaultMessage": "Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
+    "defaultMessage": "Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications."
   },
   "welcome.error.complete": {
     "defaultMessage": "Onboarding could not be marked finished. Try again."
@@ -10605,7 +10686,7 @@
     "defaultMessage": "Finish"
   },
   "welcome.intro": {
-    "defaultMessage": "A few choices get this instance ready for your team. Every step is skippable and stays editable later."
+    "defaultMessage": "A few choices get this instance ready for your team. Email is required to finish setup. You can skip the other steps and return to them later."
   },
   "welcome.invites.error": {
     "defaultMessage": "The invite could not be sent."
@@ -10643,32 +10724,20 @@
   "welcome.portal.add": {
     "defaultMessage": "Add"
   },
-  "welcome.portal.disabled": {
-    "defaultMessage": "Magic-link sign-in is off"
-  },
   "welcome.portal.domains": {
     "defaultMessage": "Allowed email domains"
   },
   "welcome.portal.empty": {
     "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
   },
-  "welcome.portal.enabled": {
-    "defaultMessage": "Magic-link sign-in is on"
-  },
   "welcome.portal.error.domains": {
     "defaultMessage": "The domain allowlist could not be saved."
   },
-  "welcome.portal.error.toggle": {
-    "defaultMessage": "The magic-link setting could not be saved."
-  },
   "welcome.portal.hint": {
-    "defaultMessage": "Business users can sign in with emailed magic links from the domains you allow. An empty list prevents magic-link sign-in."
+    "defaultMessage": "Choose sign-in methods and two-factor requirements for Business Users. Allow domains for email-based access; an empty list prevents new email-based access."
   },
   "welcome.portal.remove": {
     "defaultMessage": "Remove {domain}"
-  },
-  "welcome.portal.toggle.hint": {
-    "defaultMessage": "In built-in mode, turning off magic links closes Portal entry. With OIDC, business users can still sign in with SSO."
   },
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"
@@ -10722,7 +10791,7 @@
     "defaultMessage": "Set up later"
   },
   "welcome.skipAll": {
-    "defaultMessage": "Set up later"
+    "defaultMessage": "Skip optional steps"
   },
   "welcome.start": {
     "defaultMessage": "Get started"

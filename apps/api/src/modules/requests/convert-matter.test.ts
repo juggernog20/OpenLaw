@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /** M22/8–9: Matter conversion and everything that follows it, at the HTTP seam. */
 import { createHash } from "node:crypto";
 import { readdir } from "node:fs/promises";
@@ -42,6 +44,7 @@ import {
 import { startHarness, TEST_ADMIN as ADMIN, type TestHarness } from "../../testing/harness.js";
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let cast: DispositionScaffold;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
@@ -66,6 +69,7 @@ let emptyRequiredTemplateId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -228,6 +232,7 @@ async function submit(
     url: "/api/v1/requests",
     cookies: requesterCookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: typeId,
       title,
       description: "Please open this as legal work.",

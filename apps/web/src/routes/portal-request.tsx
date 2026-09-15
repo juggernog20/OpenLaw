@@ -30,7 +30,7 @@ import { PortalRecordShell } from "../components/portal/record-shell";
 
 export async function portalRequestLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const number = Number(params.number);
   if (!Number.isInteger(number) || number < 1) return redirect("/portal");
   const res = await api.GET("/api/v1/portal/requests/{number}", {
@@ -63,7 +63,7 @@ export function PortalRequestPage() {
   const intl = useIntl();
   const reference = requestReference(intl, request.number);
 
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
 
   return (
     <PortalRecordShell

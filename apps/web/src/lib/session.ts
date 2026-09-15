@@ -12,9 +12,20 @@ import { api } from "./api";
 import { authClient } from "./auth-client";
 import { configureFormatting } from "./format";
 
-export async function currentUser() {
+export async function currentUser({ allowTwoFactorSetup = false, allowEmailSetup = false } = {}) {
   const { data, response } = await api.GET("/api/v1/me");
   if (data) {
+    if (data.user.twoFactorSetupRequired && !allowTwoFactorSetup)
+      throw redirect(
+        data.user.role === "business_user"
+          ? "/auth/two-factor/enroll?portal=1"
+          : "/auth/two-factor/enroll",
+      );
+    if (data.user.twoFactorVerificationRequired && !allowTwoFactorSetup)
+      throw redirect(
+        data.user.role === "business_user" ? "/auth/two-factor?portal=1" : "/auth/two-factor",
+      );
+    if (data.user.emailSetupRequired && !allowEmailSetup) throw redirect("/welcome");
     // DES-014 seeding lives here, not in a component: render must stay
     // pure, and every guarded route resolves this loader before its
     // first component formats a date. A timezone change re-runs it via
@@ -57,8 +68,10 @@ export function currentUserFor(request: Request): Promise<SessionUser | null> {
  * setup (no user exists yet) or login. react-router turns the thrown
  * Response into the navigation, so the loader stops on this line.
  */
-export async function requireUser(): Promise<SessionUser> {
-  const user = await currentUser();
+export async function requireUser(
+  options?: Parameters<typeof currentUser>[0],
+): Promise<SessionUser> {
+  const user = await currentUser(options);
   if (!user) throw redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   return user;
 }

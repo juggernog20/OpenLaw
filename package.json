@@ -12,6 +12,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:hot": "bash scripts/dev-hot.sh",
+    "dev:stop": "bash scripts/dev-hot.sh --stop",
+    "dev:down": "bash scripts/dev-hot.sh --down",
     "dev:seeded": "bash scripts/dev-hot.sh --seed",
     "dev:infra": "docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml up -d postgres doc-engine mailpit",
     "dev:infra:down": "docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml stop postgres doc-engine mailpit",
@@ -39,7 +41,7 @@
     "check": "pnpm check:static && pnpm test:ci-tools && turbo run test --continue",
     "check:security": "pnpm audit --audit-level=high && pnpm licenses list",
     "check:static": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && pnpm lint:migrations && pnpm lint:versions && pnpm docs:lint && turbo run lint typecheck --continue",
-    "test:ci-tools": "node --test e2e/scripts/upgrade-baseline.test.mjs scripts/documentation/*.test.mjs",
+    "test:ci-tools": "node --test scripts/dev-processes.test.mjs e2e/scripts/upgrade-baseline.test.mjs scripts/documentation/*.test.mjs",
     "docs:lint": "eslint scripts/documentation",
     "docs:check": "node scripts/documentation/build.mjs",
     "docs:complete": "node scripts/documentation/build.mjs --complete",
@@ -63,7 +65,7 @@
     "prettier": "^3.9.6",
     "sanitize-html": "2.17.7",
     "secretlint": "^13.0.5",
-    "turbo": "^2.10.12",
+    "turbo": "^2.10.13",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.70.0"
   }

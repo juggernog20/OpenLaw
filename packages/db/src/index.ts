@@ -33,6 +33,7 @@ import * as contractDefaultPeopleSchema from "./schema/contract-type-default-peo
 import * as contractTypesSchema from "./schema/contract-types.js";
 import * as contractsSchema from "./schema/contracts.js";
 import * as counterpartiesSchema from "./schema/counterparties.js";
+import * as regionsSchema from "./schema/regions.js";
 import * as departmentsSchema from "./schema/departments.js";
 import * as documentFoldersSchema from "./schema/document-folders.js";
 import * as documentComparisonsSchema from "./schema/document-comparisons.js";
@@ -94,6 +95,7 @@ export * from "./schema/contract-type-default-people.js";
 export * from "./schema/contracts.js";
 export * from "./schema/counterparties.js";
 export * from "./schema/departments.js";
+export * from "./schema/regions.js";
 export * from "./schema/document-folders.js";
 export * from "./schema/document-comparisons.js";
 export * from "./schema/document-rendition.js";
@@ -156,6 +158,7 @@ export const schema = {
   ...contractsSchema,
   ...counterpartiesSchema,
   ...departmentsSchema,
+  ...regionsSchema,
   ...documentFoldersSchema,
   ...documentComparisonsSchema,
   ...documentRenditionSchema,

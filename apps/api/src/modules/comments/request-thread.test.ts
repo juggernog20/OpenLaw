@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * The request thread (M20/7) at the HTTP seam: the `request` arm of the
  * comments audience, proved with the four people it has to tell apart.
@@ -86,6 +88,7 @@ interface CommentRow {
 }
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let adminCookies: Record<string, string>;
 let requesterCookies: Record<string, string>;
 let otherCookies: Record<string, string>;
@@ -98,6 +101,7 @@ let contractReviewTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -149,6 +153,7 @@ async function submit(cookies: Record<string, string>, title: string): Promise<s
     url: "/api/v1/requests",
     cookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: contractReviewTypeId,
       title,
       description: "They sent a redline on the liability cap.",

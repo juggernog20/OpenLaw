@@ -514,6 +514,7 @@ async function applyAnswers(
         patch.valueAmount = value.amount;
         patch.valueCurrency = value.currency;
         patch.valueCadence = value.cadence;
+        patch.valueCadenceDescription = null;
       }
       flags[slug] = flag(item.evidence, run.id, !!run.sourceContext);
       outcome.written.push(slug);

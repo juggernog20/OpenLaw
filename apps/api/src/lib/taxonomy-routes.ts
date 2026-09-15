@@ -32,7 +32,15 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { asc, eq, isNull, type Executor, type TaxonomyTable, type Transaction } from "@openlaw/db";
+import {
+  asc,
+  eq,
+  isNull,
+  sql,
+  type Executor,
+  type TaxonomyTable,
+  type Transaction,
+} from "@openlaw/db";
 import type { ChangedFields } from "@openlaw/shared";
 import { requireRole } from "../auth/guards.js";
 import { recordActivity, type TaxonomyActionPrefix } from "./activity.js";
@@ -190,6 +198,8 @@ interface TaxonomyRoutesBase<
   protectedSlug?: string;
   /** SET-010 Departments retain references when archived. */
   archiveKeepsReferences?: boolean;
+  alphabetical?: boolean;
+  uniqueNames?: boolean;
   /** The mount's own columns on the row, the PATCH body, and the
    * `updated` payload. Omitted, the mount is the plain taxonomy the
    * three type tables are. */
@@ -371,7 +381,7 @@ export function taxonomyRoutes<
         schema: {
           operationId: `list${config.idPlural}`,
           summary:
-            `The ${noun} taxonomy in display order (${config.decision}); ` +
+            `The ${noun} taxonomy in ${config.alphabetical ? "alphabetical" : "display"} order (${config.decision}); ` +
             "archived rows only with includeArchived=true",
           tags: [config.tag],
           querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
@@ -383,7 +393,11 @@ export function taxonomyRoutes<
           .select()
           .from(table)
           .where(request.query.includeArchived === "true" ? undefined : isNull(table.archivedAt))
-          .orderBy(asc(table.displayOrder), asc(table.createdAt));
+          .orderBy(
+            ...(config.alphabetical
+              ? [asc(sql`lower(${table.displayName})`), asc(table.id)]
+              : [asc(table.displayOrder), asc(table.createdAt)]),
+          );
         const [counts, projectExtras] = await Promise.all([
           usageCounts(
             app.db,
@@ -435,6 +449,12 @@ export function taxonomyRoutes<
       async (request, reply) => {
         const displayName = request.body.displayName.trim();
         const row = await app.db.transaction(async (tx) => {
+          if (config.uniqueNames) {
+            await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
+            const names = await tx.select({ name: table.displayName }).from(table);
+            if (names.some((row) => row.name.toLowerCase() === displayName.toLowerCase()))
+              throw httpError(409, `A ${noun} with this name already exists.`);
+          }
           // Slug and order derive from the full row set — archived rows
           // still hold their slugs (restore brings them back) and their
           // display orders, so both scans include them.
@@ -493,11 +513,24 @@ export function taxonomyRoutes<
       async (request) => {
         const body: Record<string, unknown> = request.body;
         const row = await app.db.transaction(async (tx) => {
+          if (config.uniqueNames)
+            await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
           const target = await lockedType(tx, request.params.id);
 
           const patch: Record<string, unknown> = {};
           const displayName = (body.displayName as string | undefined)?.trim();
           if (displayName !== undefined && displayName !== target.displayName) {
+            if (config.uniqueNames) {
+              await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
+              const names = await tx.select({ id: table.id, name: table.displayName }).from(table);
+              if (
+                names.some(
+                  (row) =>
+                    row.id !== target.id && row.name.toLowerCase() === displayName.toLowerCase(),
+                )
+              )
+                throw httpError(409, `A ${noun} with this name already exists.`);
+            }
             patch.displayName = displayName;
           }
           const rawDescription = body.description as string | null | undefined;
@@ -582,72 +615,74 @@ export function taxonomyRoutes<
       },
     );
 
-    app.put(
-      `/${path}/order`,
-      {
-        preHandler: requireRole("administrator"),
-        schema: {
-          operationId: `reorder${config.idPlural}`,
-          summary:
-            "Apply a full permutation of the live rows (SET-003 immediate " +
-            "apply); display orders renumber from 1, archived rows keep theirs",
-          tags: [config.tag],
-          body: z.object({ ids: z.array(z.string()).min(1) }),
-          response: { 200: ListEnvelope, default: problemResponse },
+    if (!config.alphabetical) {
+      app.put(
+        `/${path}/order`,
+        {
+          preHandler: requireRole("administrator"),
+          schema: {
+            operationId: `reorder${config.idPlural}`,
+            summary:
+              "Apply a full permutation of the live rows (SET-003 immediate " +
+              "apply); display orders renumber from 1, archived rows keep theirs",
+            tags: [config.tag],
+            body: z.object({ ids: z.array(z.string()).min(1) }),
+            response: { 200: ListEnvelope, default: problemResponse },
+          },
         },
-      },
-      async (request) => {
-        const { ids } = request.body;
-        const rows = await app.db.transaction(async (tx) => {
-          const live = await tx
-            .select()
-            .from(table)
-            .where(isNull(table.archivedAt))
-            .orderBy(asc(table.displayOrder), asc(table.createdAt))
-            .for("update");
-          const liveById = new Map(live.map((row) => [row.id, row]));
-          const isPermutation =
-            ids.length === live.length &&
-            new Set(ids).size === ids.length &&
-            ids.every((id) => liveById.has(id));
-          if (!isPermutation) {
-            throw httpError(400, `The order must list every live ${noun} exactly once.`);
-          }
-          if (ids.every((id, index) => live[index]!.id === id)) return live;
-
-          const reordered: TaxonomyRow[] = [];
-          for (const [index, id] of ids.entries()) {
-            const current = liveById.get(id)!;
-            if (current.displayOrder === index + 1) {
-              reordered.push(current);
-              continue;
+        async (request) => {
+          const { ids } = request.body;
+          const rows = await app.db.transaction(async (tx) => {
+            const live = await tx
+              .select()
+              .from(table)
+              .where(isNull(table.archivedAt))
+              .orderBy(asc(table.displayOrder), asc(table.createdAt))
+              .for("update");
+            const liveById = new Map(live.map((row) => [row.id, row]));
+            const isPermutation =
+              ids.length === live.length &&
+              new Set(ids).size === ids.length &&
+              ids.every((id) => liveById.has(id));
+            if (!isPermutation) {
+              throw httpError(400, `The order must list every live ${noun} exactly once.`);
             }
-            const [updated] = await tx
-              .update(table)
-              .set({ displayOrder: index + 1 })
-              .where(eq(table.id, id))
-              .returning();
-            reordered.push(updated!);
-          }
-          await recordActivity(tx, {
-            entityType: "system",
-            actorId: request.user.id,
-            action: `${config.actionPrefix}.reordered`,
-            visibility: "admin_only",
-            payload: { order: reordered.map((row) => row.slug) },
+            if (ids.every((id, index) => live[index]!.id === id)) return live;
+
+            const reordered: TaxonomyRow[] = [];
+            for (const [index, id] of ids.entries()) {
+              const current = liveById.get(id)!;
+              if (current.displayOrder === index + 1) {
+                reordered.push(current);
+                continue;
+              }
+              const [updated] = await tx
+                .update(table)
+                .set({ displayOrder: index + 1 })
+                .where(eq(table.id, id))
+                .returning();
+              reordered.push(updated!);
+            }
+            await recordActivity(tx, {
+              entityType: "system",
+              actorId: request.user.id,
+              action: `${config.actionPrefix}.reordered`,
+              visibility: "admin_only",
+              payload: { order: reordered.map((row) => row.slug) },
+            });
+            return reordered;
           });
-          return reordered;
-        });
-        const [counts, projectExtras] = await Promise.all([
-          usageCounts(
-            app.db,
-            rows.map((row) => row.id),
-          ),
-          projectExtrasFor(app.db, rows),
-        ]);
-        return { [config.keyPlural]: rows.map((row) => toRow(row, counts, projectExtras)) };
-      },
-    );
+          const [counts, projectExtras] = await Promise.all([
+            usageCounts(
+              app.db,
+              rows.map((row) => row.id),
+            ),
+            projectExtrasFor(app.db, rows),
+          ]);
+          return { [config.keyPlural]: rows.map((row) => toRow(row, counts, projectExtras)) };
+        },
+      );
+    }
 
     app.post(
       `/${path}/:id/archive`,

@@ -46,7 +46,7 @@ export function assignmentGaps(definition: AutoDocFormDefinition, rules: AutoDoc
 }
 export function legalOwnerChoices(db: Executor) {
   return db
-    .select({ id: users.id, displayName: users.displayName })
+    .select({ id: users.id, displayName: users.displayName, email: users.email })
     .from(users)
     .where(
       and(isNull(users.archivedAt), inArray(users.role, ["administrator", "legal_team_member"])),
@@ -55,7 +55,7 @@ export function legalOwnerChoices(db: Executor) {
 }
 async function readLegalOwner(db: Executor, id: string) {
   const [owner] = await db
-    .select({ id: users.id, displayName: users.displayName })
+    .select({ id: users.id, displayName: users.displayName, email: users.email })
     .from(users)
     .where(
       and(

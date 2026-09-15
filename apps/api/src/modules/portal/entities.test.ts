@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { activityLog, and, asc, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
@@ -157,13 +159,14 @@ it("accepts a required Entity from the Portal list and refuses hidden, Confident
     payload: { fieldId, isRequired: true },
   });
   expect(attached.statusCode, attached.body).toBe(201);
-  const submit = (entityId?: string) =>
+  const submit = async (entityId?: string) =>
     h.app.inject({
       method: "POST",
       url: "/api/v1/requests",
       cookies: business,
       payload: {
         requestTypeId: typeId,
+        departmentId: await requestDepartment(h.db),
         title: "NDA",
         description: "For our new supplier",
         urgency: "medium",

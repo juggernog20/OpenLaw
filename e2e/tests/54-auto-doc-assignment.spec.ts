@@ -3,7 +3,13 @@
 /** ADO-006: Legal configures Assignment and assigns a generated Contract in the browser. */
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
-import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs } from "./helpers.js";
+import {
+  ADMIN,
+  chooseAssignee,
+  ensureAdminExists,
+  reportAxeViolations,
+  signInAs,
+} from "./helpers.js";
 
 test.setTimeout(120_000);
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
@@ -74,10 +80,7 @@ test("Legal edits Assignment rules and assigns an unassigned generated Contract 
     contentType: "image/png",
   });
   await row.getByRole("button", { name: /^Assign / }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("radio", { name: ADMIN.displayName, exact: true })
-    .check();
+  await chooseAssignee(page.getByRole("dialog"), ADMIN.displayName);
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Save assignment", exact: true })

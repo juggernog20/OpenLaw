@@ -34,7 +34,7 @@ async function read(layout: Layout, cursor?: number) {
 }
 export async function portalMattersLoader(args: LoaderFunctionArgs) {
   const user = await currentUserFor(args.request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const layout = portalListLayout(
     catalogue,
     args,

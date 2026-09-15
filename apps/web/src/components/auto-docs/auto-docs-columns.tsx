@@ -118,7 +118,14 @@ export const AUTO_DOCS_CATALOGUE: TableCatalogue<AutoDocTableRow> = {
     ),
     column(
       "formats",
-      (row) => (row.formats === "both" ? "Word + PDF" : row.formats === "docx" ? "Word" : "PDF"),
+      (row, intl) =>
+        intl.formatMessage(
+          {
+            id: "autoDocs.formatName",
+            defaultMessage: "{format, select, docx {Word} pdf {PDF} other {Word and PDF}}",
+          },
+          { format: row.formats },
+        ),
       136,
     ),
     column(

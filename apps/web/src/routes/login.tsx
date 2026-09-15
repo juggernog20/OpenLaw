@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * Login (TECH-008 mode semantics): offers exactly what the public
- * discovery endpoint allows. `built_in` leads with the password form;
- * `oidc` leads with the SSO button and keeps password sign-in reachable
- * behind "Administrator sign-in" — break-glass is never hidden entirely,
- * because a dead IdP must not lock the org out. The magic-link request
- * rides its own toggle in both modes (DD-010 portal floor), and appears
- * only when the deployment can send email — an undeliverable link is a
- * dead affordance.
- */
+/** Separate Legal User and Business Portal URLs share the configured sign-in methods (TECH-008). */
 
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";
-import { redirect, useLoaderData, useNavigate, useSearchParams } from "react-router";
+import {
+  redirect,
+  useLoaderData,
+  useNavigate,
+  useSearchParams,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
@@ -32,18 +29,23 @@ const PAGE_TITLES = defineMessages({
   magicSent: { id: "auth.magicSent.title", defaultMessage: "Check your email" },
 });
 
-export async function loginLoader() {
-  if (await currentUser()) return redirect("/");
+export async function loginLoader({ request }: LoaderFunctionArgs) {
+  const group: "legal" | "business" =
+    new URL(request.url).pathname === "/portal/login" ? "business" : "legal";
+  if (new URL(request.url).searchParams.get("error") === "INVALID_TOKEN")
+    return redirect(`/auth/link-expired${group === "business" ? "?portal=1" : ""}`);
+  if (await currentUser()) return redirect(group === "business" ? "/portal" : "/");
   if (await needsSetup()) return redirect("/auth/setup");
   const { data, response } = await api.GET("/api/v1/auth/methods");
   if (!data) throw new Error(`The sign-in methods could not be read (${response.status}).`);
-  return { methods: data };
+  return { methods: data, group };
 }
 
-type View = "password" | "sso" | "magic" | "magicSent";
+type View =
+  "unavailable" | "password" | "sso" | "magic" | "magicSent" | "passwordSetup" | "passwordSent";
 
 export function LoginPage() {
-  const { methods } = useLoaderData<typeof loginLoader>() as Exclude<
+  const { methods, group } = useLoaderData<typeof loginLoader>() as Exclude<
     Awaited<ReturnType<typeof loginLoader>>,
     Response
   >;
@@ -55,13 +57,19 @@ export function LoginPage() {
   // ?error= query when the round trip failed.
   const arrivedWithError = searchParams.get("error") !== null;
 
-  // The toggle says the org wants the portal floor; `emailConfigured`
-  // says the deployment can actually deliver the link. Offering the
-  // affordance without both leaves the requester waiting for mail that
-  // can never arrive.
-  const magicLinkOffered = methods.magicLinkEnabled && methods.emailConfigured;
-
-  const primaryView: View = methods.mode === "oidc" ? "sso" : "password";
+  const options = methods.policy[group];
+  const magicLinkOffered = options.magicLink && methods.emailConfigured;
+  const initialView = (target: "legal" | "business"): View => {
+    const policy = methods.policy[target];
+    return policy.sso
+      ? "sso"
+      : policy.password
+        ? "password"
+        : policy.magicLink && methods.emailConfigured
+          ? "magic"
+          : "unavailable";
+  };
+  const primaryView = initialView(group);
   const [view, setView] = useState<View>(primaryView);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -100,10 +108,10 @@ export function LoginPage() {
         return;
       }
       if ((res.data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect) {
-        void navigate("/auth/two-factor");
+        void navigate(group === "business" ? "/auth/two-factor?portal=1" : "/auth/two-factor");
         return;
       }
-      void navigate("/");
+      void navigate(group === "business" ? "/portal" : "/");
     } catch {
       setError(networkError(intl));
     } finally {
@@ -117,7 +125,7 @@ export function LoginPage() {
     setError(null);
     try {
       const { response, error: problem } = await api.POST("/api/v1/auth/magic-link", {
-        body: { email },
+        body: { email, group },
       });
       if (response.status === 202) {
         setView("magicSent");
@@ -137,6 +145,21 @@ export function LoginPage() {
     }
   }
 
+  async function requestPassword(event: FormSubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.POST("/api/v1/auth/password-setup", { body: { email } });
+      if (result.response.status === 202) setView("passwordSent");
+      else setError(result.error?.detail ?? networkError(intl));
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function startSso() {
     if (!methods.ssoProviderId) return;
     setBusy(true);
@@ -144,8 +167,8 @@ export function LoginPage() {
     try {
       const res = await authClient.signIn.sso({
         providerId: methods.ssoProviderId,
-        callbackURL: "/",
-        errorCallbackURL: "/auth/login?error=sso",
+        callbackURL: group === "business" ? "/portal" : "/",
+        errorCallbackURL: `${group === "business" ? "/portal/login" : "/auth/login"}?error=sso`,
       });
       if (res.error || !res.data?.url) {
         setBusy(false);
@@ -169,9 +192,17 @@ export function LoginPage() {
   // The magic-link views swap the visible heading; the document
   // title follows it (DES-011).
   const pageTitleKey = view === "magicSent" || view === "magic" ? view : "login";
-  const pageTitle = <PageTitle title={intl.formatMessage(PAGE_TITLES[pageTitleKey])} />;
+  const pageTitle = (
+    <PageTitle
+      title={intl.formatMessage(
+        group === "business" && pageTitleKey === "login"
+          ? { id: "auth.portalLogin.title", defaultMessage: "Business Portal sign-in" }
+          : PAGE_TITLES[pageTitleKey],
+      )}
+    />
+  );
 
-  if (view === "magicSent") {
+  if (view === "magicSent" || view === "passwordSent") {
     return (
       <Card>
         {pageTitle}
@@ -182,11 +213,18 @@ export function LoginPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <p className="text-md text-muted">
-            <FormattedMessage
-              id="auth.magicSent.body"
-              defaultMessage="If {email} is eligible, a sign-in link is on its way. It expires in 5 minutes and works once."
-              values={{ email: <span className="text-primary">{email}</span> }}
-            />
+            {view === "passwordSent" ? (
+              <FormattedMessage
+                id="auth.passwordSetup.sent"
+                defaultMessage="If your email address is eligible, a password setup link is on its way. It expires in one hour."
+              />
+            ) : (
+              <FormattedMessage
+                id="auth.magicSent.body"
+                defaultMessage="If {email} is eligible, a sign-in link is on its way. It expires in 5 minutes and works once."
+                values={{ email: <span className="text-primary">{email}</span> }}
+              />
+            )}
           </p>
           <Button variant="link" className="self-start" onClick={() => show(primaryView)}>
             <FormattedMessage id="auth.backToSignIn" defaultMessage="Back to sign-in" />
@@ -203,12 +241,49 @@ export function LoginPage() {
         <CardTitle>
           {view === "magic" ? (
             <FormattedMessage id="auth.magic.title" defaultMessage="Get a sign-in link" />
+          ) : group === "business" ? (
+            <FormattedMessage
+              id="auth.portalLogin.title"
+              defaultMessage="Business Portal sign-in"
+            />
           ) : (
             <FormattedMessage id="auth.login.title" defaultMessage="Sign in" />
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {view === "unavailable" && (
+          <Alert variant="danger">
+            <FormattedMessage
+              id="auth.login.unavailable"
+              defaultMessage="Sign-in is unavailable. Contact your administrator."
+            />
+          </Alert>
+        )}
+        {view === "passwordSetup" && (
+          <form className="flex flex-col gap-4" onSubmit={(event) => void requestPassword(event)}>
+            <Label htmlFor="setup-email">
+              <FormattedMessage id="auth.field.email" defaultMessage="Email" />
+            </Label>
+            <Input
+              id="setup-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+            <Button disabled={busy} type="submit">
+              <FormattedMessage
+                id="auth.passwordSetup.send"
+                defaultMessage="Send password setup link"
+              />
+            </Button>
+            <Button type="button" variant="link" onClick={() => show(primaryView)}>
+              <FormattedMessage id="auth.backToSignIn" defaultMessage="Back to sign-in" />
+            </Button>
+          </form>
+        )}
         {arrivedWithError && (
           <Alert variant="danger">
             <FormattedMessage
@@ -245,12 +320,21 @@ export function LoginPage() {
                   />
                 </Button>
               )}
-              <Button variant="link" onClick={() => show("password")}>
-                <FormattedMessage
-                  id="auth.login.breakGlass"
-                  defaultMessage="Administrator sign-in"
-                />
-              </Button>
+              {(options.password || group === "legal") && (
+                <Button variant="link" onClick={() => show("password")}>
+                  {options.password ? (
+                    <FormattedMessage
+                      id="auth.login.withPassword"
+                      defaultMessage="Sign in with a password"
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="auth.login.breakGlass"
+                      defaultMessage="Administrator sign-in"
+                    />
+                  )}
+                </Button>
+              )}
             </div>
           </>
         )}
@@ -289,7 +373,15 @@ export function LoginPage() {
               </Button>
             </form>
             <div className="flex flex-col items-start gap-1">
-              {methods.mode === "built_in" && magicLinkOffered && (
+              {methods.emailConfigured && (
+                <Button variant="link" onClick={() => show("passwordSetup")}>
+                  <FormattedMessage
+                    id="auth.passwordSetup.open"
+                    defaultMessage="Set up or reset your password"
+                  />
+                </Button>
+              )}
+              {magicLinkOffered && (
                 <Button variant="link" onClick={() => show("magic")}>
                   <FormattedMessage
                     id="auth.login.magicLink"
@@ -297,9 +389,12 @@ export function LoginPage() {
                   />
                 </Button>
               )}
-              {methods.mode === "oidc" && (
+              {options.sso && (
                 <Button variant="link" onClick={() => show("sso")}>
-                  <FormattedMessage id="auth.login.backToSso" defaultMessage="Back" />
+                  <FormattedMessage
+                    id="auth.login.sso"
+                    defaultMessage="Continue with single sign-on"
+                  />
                 </Button>
               )}
             </div>
@@ -333,6 +428,22 @@ export function LoginPage() {
                 <FormattedMessage id="auth.magic.submit" defaultMessage="Send link" />
               </Button>
             </form>
+            {options.password && (
+              <Button variant="link" onClick={() => show("password")}>
+                <FormattedMessage
+                  id="auth.login.withPassword"
+                  defaultMessage="Sign in with a password"
+                />
+              </Button>
+            )}
+            {group === "legal" && !options.password && (
+              <Button variant="link" onClick={() => show("password")}>
+                <FormattedMessage
+                  id="auth.login.breakGlass"
+                  defaultMessage="Administrator sign-in"
+                />
+              </Button>
+            )}
             <Button variant="link" className="self-start" onClick={() => show(primaryView)}>
               <FormattedMessage id="auth.backToSignIn" defaultMessage="Back to sign-in" />
             </Button>

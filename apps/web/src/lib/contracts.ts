@@ -240,6 +240,7 @@ export const VALUE_CADENCES = exhaustiveList<ValueCadence>()([
   "one_time",
   "monthly",
   "annually",
+  "other",
 ] as const);
 
 export function cadenceLabel(intl: IntlShape, cadence: ValueCadence): string {
@@ -248,7 +249,7 @@ export function cadenceLabel(intl: IntlShape, cadence: ValueCadence): string {
       id: "contracts.cadenceLabel",
       defaultMessage:
         "{cadence, select, one_time {One time} monthly {Monthly} annually {Annually} " +
-        "other {Unknown}}",
+        "other {Other}}",
     },
     { cadence },
   );
@@ -267,6 +268,12 @@ export function formatContractValue(intl: IntlShape, value: ContractValue): stri
     { amount: value.amount, currency: value.currency },
     { locale: intl.locale },
   );
+  if (value.cadence === "other" && value.cadenceDescription) {
+    return intl.formatMessage(
+      { id: "contracts.valueWithCustomCadence", defaultMessage: "{amount} /{cadence}" },
+      { amount, cadence: value.cadenceDescription },
+    );
+  }
   return intl.formatMessage(
     {
       id: "contracts.valueWithCadence",

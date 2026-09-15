@@ -60,7 +60,7 @@ function setup(
 
 it.each([
   "/portal",
-  "/portal/enter",
+  "/portal/login",
   "/portal/contracts",
   "/portal/contracts/1",
   "/portal/matters/1",

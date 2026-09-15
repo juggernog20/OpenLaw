@@ -283,6 +283,23 @@ describe("the record's Key dates section (CTR-009)", () => {
     expect(strip.queryByRole("img", { name: /unverified date/ })).not.toBeInTheDocument();
   });
 
+  it("counts all suggestions awaiting review separately, including past dates", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi([
+        deadline({ unverified: true }),
+        deadline({ keyDateId: "kd-past", daysAway: -10, unverified: true }),
+        deadline({ keyDateId: "kd-confirmed-past", daysAway: -20 }),
+      ]).handler,
+    });
+    renderAt("/contracts/42/key-dates");
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(
+      strip.getByRole("img", { name: "2 unverified dates" }),
+    ).toHaveTextContent("2");
+    expect(strip.queryByRole("img", { name: /upcoming date/ })).not.toBeInTheDocument();
+  });
+
   it("edits a date with departed recipients without widening its audience", async () => {
     const api = recordApi([
       deadline({
@@ -366,8 +383,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     expect(card.getByText("3 upcoming")).toBeInTheDocument();
     expect(card.getByText("1 past")).toBeInTheDocument();
 
-    // The tab chip counts upcoming work, not the whole union — a past
-    // date is not news on the strip.
+    // Confirmed upcoming dates and suggestions awaiting review have separate counts.
     const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
     expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument();
     expect(strip.getByRole("img", { name: "1 unverified date" })).toHaveClass(

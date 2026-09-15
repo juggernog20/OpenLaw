@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { regionOptions, lockedRegionName } from "../regions/references.js";
+
 /**
  * The contract record routes (M8): list, create, the record read, the
  * DES-017 per-field update, archive, restore, and the contract team,
@@ -172,7 +174,7 @@ import {
   TERM_TYPES,
   users,
   USER_ROLES,
-  VALUE_CADENCES,
+  CONTRACT_VALUE_CADENCES,
   type AnyPgColumn,
   type Contract,
   type ContractStage,
@@ -321,7 +323,8 @@ const ISO_4217 = new Set(Intl.supportedValuesOf("currency"));
 const ContractValueSchema = z.object({
   amount: z.int().nonnegative(),
   currency: z.string(),
-  cadence: z.enum(VALUE_CADENCES),
+  cadence: z.enum(CONTRACT_VALUE_CADENCES),
+  cadenceDescription: z.string().trim().max(100).optional(),
 });
 
 /**
@@ -330,17 +333,29 @@ const ContractValueSchema = z.object({
  * the object is how the whole value is cleared. Case is normalized, so
  * "usd" and "USD" are one currency and never two rows that disagree.
  */
-const ContractValueInput = z.strictObject({
-  amount: z.int().nonnegative(),
-  currency: z
-    .string()
-    .trim()
-    .transform((code) => code.toUpperCase())
-    .refine((code) => ISO_4217.has(code), {
-      message: "Use a three-letter ISO 4217 currency code.",
-    }),
-  cadence: z.enum(VALUE_CADENCES),
-});
+const ContractValueInput = z
+  .strictObject({
+    amount: z.int().nonnegative(),
+    currency: z
+      .string()
+      .trim()
+      .transform((code) => code.toUpperCase())
+      .refine((code) => ISO_4217.has(code), {
+        message: "Use a three-letter ISO 4217 currency code.",
+      }),
+    cadence: z.enum(CONTRACT_VALUE_CADENCES),
+    cadenceDescription: z.string().trim().max(100).optional(),
+  })
+  .refine(
+    (value) =>
+      value.cadence === "other"
+        ? !!value.cadenceDescription
+        : value.cadenceDescription === undefined,
+    {
+      message: "Enter a custom cadence only when Other is selected.",
+      path: ["cadenceDescription"],
+    },
+  );
 
 /** CTR-006's three kinds of commitment. Code branches on it, so it is a
  * fixed enum rather than an admin-configurable list. */
@@ -781,7 +796,12 @@ interface ContractContext {
 function toValue(row: Contract) {
   return row.valueAmount === null || row.valueCurrency === null || row.valueCadence === null
     ? null
-    : { amount: row.valueAmount, currency: row.valueCurrency, cadence: row.valueCadence };
+    : {
+        amount: row.valueAmount,
+        currency: row.valueCurrency,
+        cadence: row.valueCadence,
+        ...(row.valueCadenceDescription ? { cadenceDescription: row.valueCadenceDescription } : {}),
+      };
 }
 
 /** One value equals another when all three parts match, and no value
@@ -796,7 +816,8 @@ function sameValue(
   return (
     left.amount === right.amount &&
     left.currency === right.currency &&
-    left.cadence === right.cadence
+    left.cadence === right.cadence &&
+    left.cadenceDescription === right.cadenceDescription
   );
 }
 
@@ -1796,6 +1817,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: {
           200: z.object({
             departments: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            regions: z.array(z.object({ id: z.string(), displayName: z.string() })),
             contractTypes: z.array(TypeChoiceSchema),
             contractStatuses: z.array(StatusOptionSchema),
             users: z.array(UserOptionSchema),
@@ -1890,6 +1912,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       );
       return {
         departments: await departmentOptions(app.db),
+        regions: await regionOptions(app.db),
         contractTypes: types.map((contractType, index) => ({
           ...contractType,
           fields: attached[index]!,
@@ -2388,7 +2411,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (body[key] === undefined) continue;
           const next = body[key]?.trim() || null;
           if (next !== target[key]) {
-            patch[key] = next;
+            patch[key] = await lockedRegionName(tx, next);
             changed[key] = { from: target[key], to: next };
           }
         }
@@ -2641,6 +2664,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             patch.valueAmount = next?.amount ?? null;
             patch.valueCurrency = next?.currency ?? null;
             patch.valueCadence = next?.cadence ?? null;
+            patch.valueCadenceDescription = next?.cadenceDescription ?? null;
             changed.value = { from: before, to: next };
           }
         }

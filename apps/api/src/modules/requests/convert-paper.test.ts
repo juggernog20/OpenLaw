@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * The paper follows a conversion (#421), at the HTTP seam both sides of
  * it read.
@@ -81,6 +83,7 @@ interface AttachmentRow {
 }
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let memberCookies: Record<string, string>;
 let requesterCookies: Record<string, string>;
 let memberId: string;
@@ -89,6 +92,7 @@ let ndaRequestTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -149,6 +153,7 @@ async function submit(title: string): Promise<{ id: string; number: number }> {
     url: "/api/v1/requests",
     cookies: requesterCookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: ndaRequestTypeId,
       title,
       description: "For the pilot kicking off next month.",

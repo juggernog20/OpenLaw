@@ -59,6 +59,7 @@ type Prefixed<P extends string, M> = { [K in keyof M & string as `${P}.${K}`]: M
 /** The taxonomy tables' audit namespaces. */
 export type TaxonomyActionPrefix =
   | "department"
+  | "region"
   | "contract_type"
   | "matter_type"
   | "entity_type"
@@ -1313,6 +1314,7 @@ export type ActivityPayloadMap = AutoDocPayloads &
   UserPayloads &
   OrgSettingsPayloads &
   Prefixed<"department", TaxonomyPayloads> &
+  Prefixed<"region", TaxonomyPayloads> &
   Prefixed<"contract_type", TaxonomyPayloads> &
   Prefixed<"matter_type", TaxonomyPayloads> &
   Prefixed<"entity_type", TaxonomyPayloads> &

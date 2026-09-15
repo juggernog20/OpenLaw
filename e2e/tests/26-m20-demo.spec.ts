@@ -53,6 +53,7 @@ import {
   ADMIN,
   completePortalFirstRun,
   ensureAdminExists,
+  ensureIntakeDepartment,
   ensureMemberInert,
   signInAs,
   sweepOrSay,
@@ -198,8 +199,9 @@ async function enterPortalByMagicLink(
   api: APIRequestContext,
 ): Promise<Page> {
   const page = await context.newPage();
-  await page.goto("/portal/enter");
-  await expect(page.getByText("Legal portal")).toBeVisible();
+  await page.goto("/portal/login");
+  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  await expect(page.getByRole("heading", { name: "Get a sign-in link" })).toBeVisible();
   await page.getByLabel("Email").fill(REQUESTER);
   await page.getByRole("button", { name: "Send link" }).click();
   // The sent screen says the same thing whether or not mail goes out;
@@ -234,6 +236,7 @@ test.describe.serial("M20 demo path", () => {
     browser,
   }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await ensureIntakeDepartment(page.request);
 
     // The compose-up acceptance, from inside the running stack: the M20
     // migrations (0061, 0062) landed, so the requests seam answers a
@@ -328,12 +331,13 @@ test.describe.serial("M20 demo path", () => {
         portal.getByRole("heading", { level: 1, name: TYPE_NAME, exact: true }),
       ).toBeVisible();
 
-      // The four basics are drawn as facts about every form (INT-002's
+      // The five basics are drawn as facts about every form (INT-002's
       // M19/4 addendum), and the attached field follows them.
       await expect(portal.getByLabel("Title")).toBeVisible();
       await expect(portal.getByLabel("Description")).toBeVisible();
       await expect(portal.getByRole("button", { name: "Choose files" })).toBeVisible();
       await expect(portal.getByLabel("Urgency")).toBeVisible();
+      await expect(portal.getByLabel("Department")).not.toHaveValue("");
       await expect(portal.getByLabel(FIELD_NAME)).toBeVisible();
 
       // One refusal names every gap, basics and attached field together
@@ -446,7 +450,9 @@ test.describe.serial("M20 demo path", () => {
       await thread.getByRole("button", { name: "Comment", exact: true }).click();
       expect((await posted).status()).toBe(201);
       await expect(thread.getByText(REQUESTER_REPLY)).toBeVisible();
-      await expect(thread.getByText("Full thread", { exact: true }).first()).toBeVisible();
+      await expect(
+        thread.getByText("Shared with requester", { exact: true }).first(),
+      ).toBeVisible();
 
       // Legal answers. There is no staff surface for a Request until
       // M21's Inbox, so the Administrator posts at the seam — the same
@@ -486,7 +492,7 @@ test.describe.serial("M20 demo path", () => {
       await portal.reload();
       await expect((await conversation(portal)).getByText(STAFF_REPLY)).toBeVisible();
       await expect(
-        (await conversation(portal)).getByText("Full thread", { exact: true }).first(),
+        (await conversation(portal)).getByText("Shared with requester", { exact: true }).first(),
       ).toBeVisible();
 
       // Second as email, because a requester does not live in the app and

@@ -50,6 +50,7 @@ import { contractTypes } from "./contract-types.js";
 import { autoDocGenerationOrigins } from "./auto-docs.js";
 import { documents } from "./documents.js";
 import { entities } from "./entities.js";
+import { regions } from "./regions.js";
 import { departments } from "./departments.js";
 import type { CustomFieldValue } from "./fields.js";
 import type { AiUnverifiedMap } from "@openlaw/shared";
@@ -74,6 +75,7 @@ export { SEVERITY_LEVELS, type SeverityLevel } from "./severity.js";
  * enum, not an admin-configurable list.
  */
 export const VALUE_CADENCES = ["one_time", "monthly", "annually"] as const;
+export const CONTRACT_VALUE_CADENCES = [...VALUE_CADENCES, "other"] as const;
 export type ValueCadence = (typeof VALUE_CADENCES)[number];
 
 /**
@@ -115,7 +117,8 @@ export const contracts = pgTable(
     /** DD-021: NULL means unassigned, at direct creation or after an explicit clear. */
     businessOwnerId: text("business_owner_id").references(() => users.id),
     owningDepartmentId: text("owning_department_id").references(() => departments.id),
-    region: text("region"),
+    /** Null means no Region is assigned. */
+    region: text("region").references(() => regions.displayName, { onUpdate: "cascade" }),
     /** CTR-011's our side of the contract: which of our own Entities
      * signs it. NULL until known — a contract is often recorded before
      * anyone decides which subsidiary is on the paper. Their side is
@@ -165,7 +168,8 @@ export const contracts = pgTable(
      * standard, so the column is too. */
     valueCurrency: char("value_currency", { length: 3 }),
     /** What the amount is per (CTR-010). */
-    valueCadence: text("value_cadence", { enum: VALUE_CADENCES }),
+    valueCadence: text("value_cadence", { enum: CONTRACT_VALUE_CADENCES }),
+    valueCadenceDescription: text("value_cadence_description"),
     /**
      * CTR-015's hierarchy: the one contract this one sits under (M16/5).
      *
@@ -333,8 +337,12 @@ export const contracts = pgTable(
     ),
     check("contracts_risk_check", sql`${table.risk} in ('low', 'medium', 'high', 'critical')`),
     check(
+      "contracts_value_cadence_description_check",
+      sql`(${table.valueCadence} = 'other' and ${table.valueCadenceDescription} is not null and length(btrim(${table.valueCadenceDescription})) between 1 and 100) or (${table.valueCadence} is distinct from 'other' and ${table.valueCadenceDescription} is null)`,
+    ),
+    check(
       "contracts_value_cadence_check",
-      sql`${table.valueCadence} in ('one_time', 'monthly', 'annually')`,
+      sql`${table.valueCadence} in ('one_time', 'monthly', 'annually', 'other')`,
     ),
     check(
       "contracts_term_type_check",

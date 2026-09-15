@@ -1432,3 +1432,68 @@ it("toggles the current and requester descriptions without replacing the saved m
   await user.click(toggle);
   expect(screen.getByLabelText("Description")).toHaveValue("Lawyer's updated description");
 });
+
+it("saves and clears Region from the organization choices", async () => {
+  let current = row({ region: null });
+  const patches: unknown[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    extra(call) {
+      if (call.url.pathname === "/api/v1/matters/options")
+        return json(200, {
+          matterTypes: TYPES,
+          matterStatuses: STATUSES,
+          users: [],
+          templates: [],
+          departments: [],
+          regions: [{ id: "emea", displayName: "EMEA" }],
+        });
+      if (call.url.pathname === "/api/v1/matters/12") {
+        if (call.method === "PATCH") {
+          patches.push(call.body);
+          current = { ...current, ...(call.body as object) };
+        }
+        return json(200, record(current));
+      }
+    },
+  });
+  renderAt("/matters/12");
+  const user = userEvent.setup();
+  const picker = await screen.findByRole("combobox", { name: "Region" });
+  await user.selectOptions(picker, "EMEA");
+  await waitFor(() => expect(patches).toEqual([{ region: "EMEA" }]));
+  expect(picker).toHaveValue("EMEA");
+  await user.selectOptions(picker, "");
+  await waitFor(() => expect(patches).toEqual([{ region: "EMEA" }, { region: null }]));
+});
+
+it("retains the saved Region when its update is refused", async () => {
+  stubApi({
+    signedIn: ADMIN,
+    extra(call) {
+      if (call.url.pathname === "/api/v1/matters/options")
+        return json(200, {
+          matterTypes: TYPES,
+          matterStatuses: STATUSES,
+          users: [],
+          templates: [],
+          departments: [],
+          regions: [
+            { id: "emea", displayName: "EMEA" },
+            { id: "apac", displayName: "APAC" },
+          ],
+        });
+      if (call.url.pathname === "/api/v1/matters/12")
+        return call.method === "PATCH"
+          ? problem(400, "Region is unavailable.")
+          : json(200, record(row({ region: "EMEA" })));
+      return undefined;
+    },
+  });
+  renderAt("/matters/12");
+  const user = userEvent.setup();
+  const picker = await screen.findByRole("combobox", { name: "Region" });
+  await user.selectOptions(picker, "APAC");
+  expect(await screen.findByText("Region is unavailable.")).toBeVisible();
+  expect(picker).toHaveValue("EMEA");
+});

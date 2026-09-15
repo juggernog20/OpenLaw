@@ -23,8 +23,14 @@ import {
   USER_ROLES,
   verifications,
 } from "@openlaw/db";
+import {
+  authenticationPolicyRoutes,
+  AuthenticationPolicySchema,
+} from "./authentication-policy-routes.js";
+import { authenticationPolicy, authenticationForEmail } from "../../auth/authentication-policy.js";
 import { provisionUser, withTrustedIssuerOrigin } from "../../auth/instance.js";
-import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
+import { requireAuth, requireRole, requireSession, userColumns } from "../../auth/guards.js";
+import { readTwoFactorPolicy } from "../../auth/two-factor-policy.js";
 import { recordActivity } from "../../lib/activity.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -113,10 +119,11 @@ function relayAuthError(error: unknown): never {
 }
 
 export const authRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(authenticationPolicyRoutes);
   app.get(
     "/me",
     {
-      preHandler: requireAuth,
+      preHandler: requireSession,
       schema: {
         operationId: "getMe",
         summary: "The signed-in user, with their live role and session",
@@ -126,6 +133,10 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
             user: UserSchema.extend({
               departmentId: z.string().nullable(),
               portalOnboardingCompletedAt: z.iso.datetime().nullable(),
+              twoFactorRequired: z.boolean(),
+              twoFactorSetupRequired: z.boolean(),
+              twoFactorVerificationRequired: z.boolean(),
+              emailSetupRequired: z.boolean(),
             }),
             session: SessionSchema,
           }),
@@ -134,6 +145,14 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      const twoFactor = await readTwoFactorPolicy(app.db, request.user.id, request.session.id);
+      let emailSetupRequired = false;
+      if (request.user.role === "administrator") {
+        const settings = await getOrgSettings(app.db);
+        if (settings.onboardingCompletedAt === null) {
+          emailSetupRequired = !(await app.resolveMailer()).mailer.configured;
+        }
+      }
       // The guard leaves the avatar out of its per-request projection —
       // a data: URI can reach ~1.4 MB. /me is the one route that returns
       // it, so it loads the column itself.
@@ -149,6 +168,10 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         user: {
           ...request.user,
+          twoFactorRequired: twoFactor.required,
+          twoFactorSetupRequired: twoFactor.setupRequired,
+          twoFactorVerificationRequired: twoFactor.verificationRequired,
+          emailSetupRequired,
           image: row?.image ?? null,
           departmentId: row?.departmentId ?? null,
           portalOnboardingCompletedAt: row?.portalOnboardingCompletedAt?.toISOString() ?? null,
@@ -225,6 +248,45 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.patch(
+    "/auth/two-factor-policy",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setTwoFactorPolicy",
+        summary: "Require two-factor authentication for built-in staff sign-in",
+        tags: ["auth"],
+        body: z.object({ requireTwoFactor: z.boolean() }).strict(),
+        response: { 200: z.object({ requireTwoFactor: z.boolean() }), default: problemResponse },
+      },
+    },
+    async (request) =>
+      app.db.transaction(async (tx) => {
+        const [current] = await tx.select().from(orgSettings).for("update");
+        if (!current) throw httpError(500, "The organization settings could not be read.");
+        if (current.authenticationPolicy)
+          throw httpError(
+            409,
+            "Use Legal User Authentication and Business Portal Authentication settings to change sign-in policy.",
+          );
+        const next = request.body.requireTwoFactor;
+        if (current.requireTwoFactor !== next) {
+          await tx
+            .update(orgSettings)
+            .set({ requireTwoFactor: next, updatedAt: new Date() })
+            .where(eq(orgSettings.id, current.id));
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "org_settings.updated",
+            visibility: "admin_only",
+            payload: { field: "requireTwoFactor", old: current.requireTwoFactor, new: next },
+          });
+        }
+        return { requireTwoFactor: next };
+      }),
+  );
+
   app.get(
     "/auth/setup",
     {
@@ -253,8 +315,10 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["auth"],
         response: {
           200: z.object({
+            policy: AuthenticationPolicySchema,
             mode: z.enum(AUTH_MODES),
             magicLinkEnabled: z.boolean(),
+            requireTwoFactor: z.boolean(),
             /**
              * Whether the deployment can send mail at all. The login screen
              * hides the magic-link affordance when this is false, because a
@@ -286,8 +350,10 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         .limit(1);
       const { mailer } = await app.resolveMailer();
       return {
+        policy: authenticationPolicy(settings),
         mode: settings.authMode,
         magicLinkEnabled: settings.magicLinkEnabled,
+        requireTwoFactor: settings.requireTwoFactor,
         emailConfigured: mailer.configured,
         ssoProviderId: provider?.providerId ?? null,
       };
@@ -880,23 +946,34 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      // A plain column flip: enforcement reads org_settings on every
-      // sign-in decision, so the switch takes effect immediately — and
-      // ONLY at sign-in. Live sessions survive in both directions;
-      // archival and revocation are the tools for ending them. The flip
-      // and its DD-017 entry commit together, old value lock-read so a
-      // concurrent switch cannot make the audit trail lie.
+      // Restore portal access in the same transaction when returning to
+      // built-in mode. A required second factor may block the administrator's
+      // next settings request until enrollment is complete.
       const mode = await app.db.transaction(async (tx) => {
         const [current] = await tx
-          .select({ id: orgSettings.id, authMode: orgSettings.authMode })
+          .select({
+            id: orgSettings.id,
+            authMode: orgSettings.authMode,
+            authenticationPolicy: orgSettings.authenticationPolicy,
+            magicLinkEnabled: orgSettings.magicLinkEnabled,
+          })
           .from(orgSettings)
           .limit(1)
           .for("update");
         if (!current) throw httpError(500, "org_settings has no row to update.");
+        if (current.authenticationPolicy)
+          throw httpError(
+            409,
+            "Use Legal User Authentication and Business Portal Authentication settings to change sign-in policy.",
+          );
         if (current.authMode === request.body.mode) return current.authMode;
         const [row] = await tx
           .update(orgSettings)
-          .set({ authMode: request.body.mode, updatedAt: new Date() })
+          .set({
+            authMode: request.body.mode,
+            updatedAt: new Date(),
+            ...(request.body.mode === "built_in" ? { magicLinkEnabled: true } : {}),
+          })
           .where(eq(orgSettings.id, current.id))
           .returning({ mode: orgSettings.authMode });
         if (!row) throw httpError(500, "org_settings has no row to update.");
@@ -907,6 +984,15 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: "admin_only",
           payload: { field: "authMode", old: current.authMode, new: row.mode },
         });
+        if (row.mode === "built_in" && !current.magicLinkEnabled) {
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "org_settings.updated",
+            visibility: "admin_only",
+            payload: { field: "magicLinkEnabled", old: false, new: true },
+          });
+        }
         return row.mode;
       });
       return { mode };
@@ -1004,11 +1090,20 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const magicLinkEnabled = await app.db.transaction(async (tx) => {
         const [current] = await tx
-          .select({ id: orgSettings.id, magicLinkEnabled: orgSettings.magicLinkEnabled })
+          .select({
+            id: orgSettings.id,
+            magicLinkEnabled: orgSettings.magicLinkEnabled,
+            authenticationPolicy: orgSettings.authenticationPolicy,
+          })
           .from(orgSettings)
           .limit(1)
           .for("update");
         if (!current) throw httpError(500, "org_settings has no row to update.");
+        if (current.authenticationPolicy)
+          throw httpError(
+            409,
+            "Use Legal User Authentication and Business Portal Authentication settings to change sign-in policy.",
+          );
         if (current.magicLinkEnabled === request.body.magicLinkEnabled) {
           return current.magicLinkEnabled;
         }
@@ -1044,7 +1139,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           "Request a portal magic link (DD-010); the response is identical " +
           "whether or not the address is eligible",
         tags: ["auth"],
-        body: z.object({ email: z.email() }),
+        body: z.object({ email: z.email(), group: z.enum(["legal", "business"]).optional() }),
         response: {
           202: z.object({ message: z.string() }),
           default: problemResponse,
@@ -1054,31 +1149,30 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const email = request.body.email.toLowerCase();
 
-      // Policy runs BEFORE issuance. The toggle and the mailer are global
-      // configuration, so refusing loudly leaks nothing; the allowlist
-      // check must not be observable, so the denied branch simply skips
-      // issuance and falls through to the same 202.
-      const settings = await getOrgSettings(app.db);
-      if (!settings.magicLinkEnabled) {
+      const { settings, user, options } = await authenticationForEmail(app.db, email);
+      const policy = authenticationPolicy(settings);
+      if (!policy.legal.magicLink && !policy.business.magicLink)
         throw httpError(403, "Magic-link sign-in is disabled.");
-      }
-      // Uniformly, and before the allowlist check. With no mailer, the
-      // send inside issuance throws — so checking later (or not at all)
-      // would answer allowlisted addresses with an error and everyone
-      // else with the neutral 202, handing an anonymous visitor exactly
-      // the allowlist oracle DD-010's identical response exists to deny.
-      const { mailer } = await app.resolveMailer();
-      if (!mailer.configured) {
+      if (!(await app.resolveMailer()).mailer.configured)
         throw httpError(
           403,
-          "Sign-in links are unavailable: this instance cannot send email. " +
-            "Contact your administrator.",
+          "Sign-in links are unavailable: this instance cannot send email. Contact your administrator.",
         );
-      }
-      if (isEmailDomainAllowed(email, settings.allowedEmailDomains)) {
+      if (
+        options.magicLink &&
+        ((user?.role !== "business_user" && user) ||
+          isEmailDomainAllowed(email, settings.allowedEmailDomains))
+      ) {
         try {
           await app.auth.api.signInMagicLink({
-            body: { email, callbackURL: "/" },
+            body: {
+              email,
+              callbackURL: request.body.group === "business" ? "/portal" : "/",
+              errorCallbackURL:
+                request.body.group === "business"
+                  ? "/portal/login?error=link"
+                  : "/auth/login?error=link",
+            },
             headers: fromNodeHeaders(request.headers),
           });
         } catch (error) {

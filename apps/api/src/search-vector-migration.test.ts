@@ -257,7 +257,7 @@ async function sourceRows(
     : sql.raw("");
   const withoutLaterContractColumns = migrated
     ? sql.raw(
-        " - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields' - 'created_by' - 'owning_department_id' - 'region' - 'created_by_generation_id'",
+        " - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields' - 'created_by' - 'owning_department_id' - 'region' - 'created_by_generation_id' - 'value_cadence_description'",
       )
     : sql.raw("");
   const withoutLaterDocumentColumns = migrated
@@ -286,7 +286,7 @@ async function sourceRows(
         jsonb_agg(to_jsonb(row)${withoutLaterEntityColumns} order by row.id) from entities row
       union all
       select 'matters',
-        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} - 'business_owner_id' - 'department_id' order by row.id) from matters row
+        jsonb_agg(to_jsonb(row)${withoutDerivedSearch} - 'business_owner_id' - 'department_id' - 'region' order by row.id) from matters row
       union all
       select 'requests',
         jsonb_agg((to_jsonb(row)${withoutLaterRequestColumns}) || ${migrated ? sql.raw("jsonb_build_object('summary', row.title)") : sql.raw("'{}'::jsonb")} order by row.id) from requests row

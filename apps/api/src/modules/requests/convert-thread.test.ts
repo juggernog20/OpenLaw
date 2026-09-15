@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * The thread follows the work (#422), at the HTTP seam every window onto
  * it reads.
@@ -88,6 +90,7 @@ const STAFF_REQUESTER = {
 } as const;
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 const cookies = new Map<string, Record<string, string>>();
 const userIds = new Map<string, string>();
 /** The seeded front door whose request type targets the NDA contract
@@ -114,6 +117,7 @@ interface Converted extends RequestRow {
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -168,6 +172,7 @@ async function submit(title: string, fixture: { email: string } = REQUESTER): Pr
     url: "/api/v1/requests",
     cookies: as(fixture),
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: ndaRequestTypeId,
       title,
       description: "They sent a redline on the liability cap.",

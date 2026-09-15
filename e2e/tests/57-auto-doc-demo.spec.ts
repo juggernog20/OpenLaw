@@ -6,6 +6,7 @@ import { z } from "zod";
 import { expect, test, request as playwrightRequest, type Page } from "@playwright/test";
 import {
   ADMIN,
+  chooseAssignee,
   ensureAdminExists,
   ensureMemberInert,
   onboardActivatedMember,
@@ -18,11 +19,32 @@ import { waitForMailDetails } from "./mailpit.js";
 test.setTimeout(360_000);
 test.use({ actionTimeout: 15_000 });
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
+
+// Acknowledgement frequency is one organization-wide setting now, not a
+// field on each Auto-Doc. The demo needs it asking every time, and the
+// never-reset instance (TECH-018) needs it put back afterwards.
+let previousFrequency: string | undefined;
+test.afterEach(async ({ page }) => {
+  if (previousFrequency === undefined) return;
+  const restored = await page.request.put("/api/v1/auto-docs/settings", {
+    data: { acknowledgementFrequency: previousFrequency },
+  });
+  expect(restored.status()).toBe(200);
+  previousFrequency = undefined;
+});
+
 test("M35: Legal publishes, Sales generates, a Member claims, and a changed live pair refuses stale answers", async ({
   page,
   browser,
 }, testInfo) => {
   await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+  const settings = await page.request.get("/api/v1/auto-docs/settings");
+  expect(settings.status()).toBe(200);
+  previousFrequency = (await settings.json()).acknowledgementFrequency;
+  const policy = await page.request.put("/api/v1/auto-docs/settings", {
+    data: { acknowledgementFrequency: "every_use" },
+  });
+  expect(policy.status()).toBe(200);
   const suffix = Date.now();
   const name = `Demo NDA ${suffix}`;
   const salesName = `Sales ${suffix}`;
@@ -227,9 +249,6 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
       .getByRole("combobox", { name: "Formats", exact: true })
       .selectOption("both");
     const acknowledgement = page.getByRole("region", { name: "Acknowledgement", exact: true });
-    await acknowledgement
-      .getByRole("combobox", { name: "Frequency", exact: true })
-      .selectOption("every_use");
     await acknowledgement.getByRole("radio", { name: "Custom text", exact: true }).check();
     const ackText = acknowledgement.getByRole("textbox", {
       name: "Acknowledgement text",
@@ -356,7 +375,7 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
       .filter({ has: lawyer.getByRole("link", { name: secondContract.title, exact: true }) });
     await expect(row).toBeVisible();
     await row.getByRole("button", { name: /^Assign / }).click();
-    await lawyer.getByRole("dialog").getByRole("radio", { name: lawyerName, exact: true }).check();
+    await chooseAssignee(lawyer.getByRole("dialog"), lawyerName);
     await lawyer
       .getByRole("dialog")
       .getByRole("button", { name: "Save assignment", exact: true })

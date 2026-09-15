@@ -829,6 +829,7 @@ The create callable writes `opened_at` once. The status write sets `closed_at` o
 | MTR-014 | Custom fields — hard-required per type at creation; conditional logic deferred                      | Accepted                                                                                         |
 | MTR-015 | Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics         | Accepted                                                                                         |
 | MTR-016 | Lifecycle timestamps — opened_at/closed_at maintained on category transitions                       | Accepted                                                                                         |
+| MTR-017 | Region uses the shared organization catalog                                                         | Accepted                                                                                         |
 
 ### MTR-007 UX review addendum — create a linked Contract (2026-09-06)
 
@@ -979,3 +980,12 @@ template default the person cleared does not come back on the saved Matter. A Fi
 untouched keeps its default, and a replacement value wins over it. A required Field still
 needs an answer at both creation seams. This matches the conversion rule already recorded
 in INT-002.
+
+## MTR-017: Region uses the shared organization catalog
+
+- **Status:** Accepted
+- **Date:** 2026-09-15
+
+The Matter details section includes an optional Region picker beside Department, using Organization Settings → Regions (SET-012). Only live Regions can be assigned; archived references remain visible. Renames update existing Matters. Existing Matter edit permissions apply, and changes are audited. The Business Portal displays the saved Region.
+
+The shared catalog couples Matter classification to Contract classification and makes a rename visible in both modules. Free text would allow inconsistent spellings; a separate Matter catalog would require Administrators to maintain the same geography twice.

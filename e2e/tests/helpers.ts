@@ -14,6 +14,7 @@ import {
   type APIRequestContext,
   type Browser,
   type BrowserContext,
+  type Locator,
   type Page,
   type TestInfo,
 } from "@playwright/test";
@@ -105,8 +106,16 @@ export async function ensureAdminExists(request: APIRequestContext): Promise<voi
  * on the account — home, or the two-factor challenge — so callers
  * assert the destination themselves.
  */
-export async function submitLogin(page: Page, email: string, password: string): Promise<void> {
-  await page.goto("/auth/login");
+export async function submitLogin(
+  page: Page,
+  email: string,
+  password: string,
+  /** Which door: the path decides the audience, and the audience decides
+   * where a successful sign-in lands. Business Users come in through
+   * /portal/login and land on the Portal. */
+  path: "/auth/login" | "/portal/login" = "/auth/login",
+): Promise<void> {
+  await page.goto(path);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -231,6 +240,40 @@ export async function ensureSsoProviderExists(request: APIRequestContext): Promi
   } finally {
     await idp.close();
   }
+}
+
+/**
+ * Sets a record's person field — Legal Owner, Business Owner — through
+ * the picker that replaced the plain select. The labelled trigger opens
+ * a popover named for the same field, and each candidate is a button
+ * carrying their display name. `null` picks Unassigned.
+ */
+export async function choosePerson(
+  page: Page,
+  field: string,
+  displayName: string | null,
+): Promise<void> {
+  await page.getByRole("button", { name: field, exact: true }).click();
+  const picker = page.getByRole("dialog", { name: field, exact: true });
+  await picker.getByRole("button", { name: displayName ?? "Unassigned", exact: true }).click();
+  await expect(picker).toBeHidden();
+}
+
+/** Reads back what a record's person field shows, for the same picker. */
+export function personField(page: Page, field: string) {
+  return page.getByRole("button", { name: field, exact: true });
+}
+
+/**
+ * Picks a person in the Inbox's assignment dialog. Each candidate is an
+ * sr-only radio inside a label drawing the avatar, the name, and the
+ * address: a person clicks the label, because the radio's own box sits
+ * under the avatar. The address rides in the radio's accessible name
+ * too, so the name is matched as a prefix rather than exactly.
+ */
+export async function chooseAssignee(dialog: Locator, displayName: string): Promise<void> {
+  await dialog.getByText(displayName, { exact: true }).click();
+  await expect(dialog.getByRole("radio", { name: displayName })).toBeChecked();
 }
 
 /** One axe finding, as the runner reports it. */
@@ -423,4 +466,20 @@ export async function sweepOrSay(label: string, sweep: () => Promise<void>): Pro
  */
 export function startsWithName(name: string): RegExp {
   return new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
+}
+
+/** INT-010: request journeys need a live Department even on a fresh install. */
+export async function ensureIntakeDepartment(request: APIRequestContext): Promise<string> {
+  const response = await request.get("/api/v1/departments");
+  expect(response.status(), await response.text()).toBe(200);
+  const { departments } = z
+    .object({ departments: z.array(z.object({ id: z.string() })) })
+    .parse(await response.json());
+  if (departments[0]) return departments[0].id;
+  const created = await request.post("/api/v1/departments", {
+    data: { displayName: "E2E Intake" },
+  });
+  expect(created.status(), await created.text()).toBe(201);
+  return z.object({ department: z.object({ id: z.string() }) }).parse(await created.json())
+    .department.id;
 }

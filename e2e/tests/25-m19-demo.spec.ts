@@ -301,14 +301,20 @@ test.describe.serial("M19 demo path", () => {
         ["Title", "Text"],
         ["Description", "Long text"],
         ["Attachments", "Files"],
+        ["Department", "Single select"],
         ["Urgency", "Single select"],
       ] as const) {
-        await expect(basics.getByText(caption, { exact: true })).toBeVisible();
+        await expect(
+          basics
+            .getByRole("listitem")
+            .filter({ has: page.getByRole("checkbox", { name: `${name} required` }) })
+            .getByText(caption, { exact: true }),
+        ).toBeVisible();
         await expect(basics.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
       }
-      // Title, Description, and Urgency are required on every form;
-      // Attachments are optional. Nobody may change any of the four.
-      expect(await basics.getByRole("checkbox", { checked: true }).count()).toBe(3);
+      // Title, Description, Department, and Urgency are required on every form;
+      // Attachments are optional. None can be changed.
+      expect(await basics.getByRole("checkbox", { checked: true }).count()).toBe(4);
 
       // Attaches two catalog fields. The Attach menu offers the
       // catalog's unattached fields the target allows — contract-scoped

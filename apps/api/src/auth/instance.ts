@@ -12,15 +12,31 @@
 import { betterAuth } from "better-auth";
 import { admin, magicLink, twoFactor } from "better-auth/plugins";
 import { userAc } from "better-auth/plugins/admin/access";
-import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from "better-auth/api";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { sso } from "@better-auth/sso";
 import { hash, verify } from "@node-rs/argon2";
 import { uuidv7 } from "uuidv7";
-import { eq, schema, ssoProviders, users, type Db } from "@openlaw/db";
+import {
+  and,
+  eq,
+  sql,
+  sessions,
+  twoFactors,
+  schema,
+  ssoProviders,
+  users,
+  type Db,
+} from "@openlaw/db";
 import type { MailerResolver } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 import { createProfileAuditHook } from "./audit.js";
+import {
+  authenticationForEmail,
+  authenticationPolicy,
+  optionsForRole,
+} from "./authentication-policy.js";
+import { readTwoFactorPolicy } from "./two-factor-policy.js";
 
 /** The slice of the app's pino logger the auth instance needs. */
 export interface AuthLogger {
@@ -107,27 +123,29 @@ async function assertAdministrator(ctx: AuthHookContext): Promise<void> {
 }
 
 /**
- * Auth-mode semantics (TECH-008): in `oidc` mode the IdP is the front
- * door, so password sign-in closes — except for Administrators, whose
- * break-glass is never disabled (a broken or misconfigured IdP must not
- * lock the org out of the install that configures it). Unknown emails
- * get the same refusal as non-administrators, so the response never
- * reveals whether an account exists. The lookup is by our lowercased
- * email column; sign-in bodies arrive in whatever case the user typed.
+ * Password-method semantics (TECH-008): when the authentication policy
+ * closes password sign-in, this door closes with it — except for
+ * Administrators, whose break-glass is never disabled (a broken or
+ * misconfigured IdP must not lock the org out of the install that
+ * configures it). Unknown emails get the same refusal as
+ * non-administrators, so the response never reveals whether an account
+ * exists. The lookup is by our lowercased email column; sign-in bodies
+ * arrive in whatever case the user typed.
  */
 async function assertPasswordSignIn(db: Db, email: string): Promise<void> {
-  const settings = await getOrgSettings(db);
-  if (settings.authMode !== "oidc") return;
-  const [account] = await db
-    .select({ role: users.role })
-    .from(users)
-    .where(eq(users.email, email.toLowerCase()))
-    .limit(1);
-  if (account?.role !== "administrator") {
-    throw new APIError("FORBIDDEN", {
-      message: "Password sign-in is disabled while single sign-on is required.",
-    });
-  }
+  const { settings, user } = await authenticationForEmail(db, email);
+  const policy = authenticationPolicy(settings);
+  // The question is org-wide on purpose, never per-account. An address
+  // with no row has no role, so a per-account read answers it from the
+  // business options while a staff address answers from the legal ones.
+  // Different group policies could refuse unknown addresses while letting
+  // staff addresses reach the credential check, revealing account existence.
+  // Enforce the actual user's policy after credentials are verified.
+  if (policy.legal.password || policy.business.password) return;
+  // Break-glass: an Administrator keeps the password door even when the
+  // policy closes it for everyone else.
+  if (user?.role === "administrator") return;
+  throw new APIError("FORBIDDEN", { message: "Password sign-in is disabled for this account." });
 }
 
 const MAGIC_LINK_PATHS = new Set(["/sign-in/magic-link", "/magic-link/verify"]);
@@ -151,27 +169,21 @@ async function magicLinkDenied(
   path: string,
   email: string,
 ): Promise<boolean> {
-  const settings = await getOrgSettings(db);
-  if (!settings.magicLinkEnabled) {
+  const { settings, user, options } = await authenticationForEmail(db, email);
+  const policy = authenticationPolicy(settings);
+  if (!policy.legal.magicLink && !policy.business.magicLink)
     throw new APIError("FORBIDDEN", { message: "Magic-link sign-in is disabled." });
-  }
   if (path !== "/sign-in/magic-link") return false;
-  // An instance with no resolved mailer cannot issue at all, so refuse
-  // uniformly here — ahead of the allowlist branch below. Were this
-  // check missing, the send would throw for allowlisted addresses only,
-  // and the denied branch's mimicked success would become a reliable
-  // allowlist oracle. Verify is deliberately left alone: a token in
-  // flight was issued while mail still worked, and refusing it would
-  // strand a link the requester already holds.
-  const { mailer } = await resolveMailer();
-  if (!mailer.configured) {
+  if (!(await resolveMailer()).mailer.configured)
     throw new APIError("FORBIDDEN", {
       message:
-        "Sign-in links are unavailable: this instance cannot send email. " +
-        "Contact your administrator.",
+        "Sign-in links are unavailable: this instance cannot send email. Contact your administrator.",
     });
-  }
-  return !isEmailDomainAllowed(email, settings.allowedEmailDomains);
+  return (
+    !options.magicLink ||
+    (!(user && user.role !== "business_user") &&
+      !isEmailDomainAllowed(email, settings.allowedEmailDomains))
+  );
 }
 
 /**
@@ -294,7 +306,7 @@ export function createAuth(
             "",
             "Set your OpenLaw password using the link below:",
             "",
-            `${config.baseUrl}/auth/set-password?token=${token}`,
+            `${config.baseUrl}/auth/set-password?token=${token}${(user as { role?: string }).role === "business_user" ? "&portal=1" : ""}`,
             "",
             "The link expires in one hour. If you did not expect this email, you can ignore it.",
           ].join("\n"),
@@ -397,6 +409,7 @@ export function createAuth(
       // secret. The e-mail OTP fallback is not configured (no sendOTP),
       // so TOTP and backup codes are the only second factors.
       twoFactor({
+        allowPasswordless: true,
         // The plugin's defaults, pinned so a dependency bump cannot
         // silently relax the lockout (NIST SP 800-63B §5.2.2 allows far
         // stricter; 10-in-a-row is generous enough to never lock out a
@@ -412,6 +425,45 @@ export function createAuth(
       // One door per policy: the dispatch below says which paths each
       // guard owns, and the guards above say what they enforce and why.
       before: createAuthMiddleware(async (ctx) => {
+        if (
+          ![
+            "/get-session",
+            "/list-accounts",
+            "/sign-out",
+            "/two-factor/enable",
+            "/two-factor/verify-totp",
+            "/two-factor/verify-backup-code",
+          ].includes(ctx.path)
+        ) {
+          const session = await getSessionFromCtx(ctx);
+          if (session) {
+            const policy = await readTwoFactorPolicy(db, session.user.id, session.session.id);
+            if (policy.required && ctx.path === "/two-factor/disable")
+              throw new APIError("FORBIDDEN", {
+                message: "Your organization requires two-factor authentication.",
+              });
+            if (policy.setupRequired || policy.verificationRequired)
+              throw new APIError("FORBIDDEN", {
+                message: "Set up two-factor authentication before continuing.",
+                code: "TWO_FACTOR_SETUP_REQUIRED",
+              });
+          }
+        }
+
+        if (["/two-factor/verify-totp", "/two-factor/verify-backup-code"].includes(ctx.path)) {
+          const session = await getSessionFromCtx(ctx);
+          if (session) {
+            const [factor] = await db
+              .select({ lockedUntil: twoFactors.lockedUntil })
+              .from(twoFactors)
+              .where(eq(twoFactors.userId, session.user.id));
+            if (factor?.lockedUntil && factor.lockedUntil > new Date())
+              throw new APIError("TOO_MANY_REQUESTS", {
+                message: "Too many attempts. Wait 15 minutes, then try again.",
+              });
+          }
+        }
+
         if (ctx.path === "/update-user") {
           assertProfileUpdate((ctx.body ?? {}) as { name?: unknown; image?: unknown });
           return;
@@ -433,7 +485,43 @@ export function createAuth(
       }),
       // DD-017 audit entries for the profile mutations better-auth owns
       // (SET-006) — see ./audit.ts for what is recorded and why here.
-      after: createProfileAuditHook(db),
+      after: createAuthMiddleware(async (ctx) => {
+        if (["/two-factor/verify-totp", "/two-factor/verify-backup-code"].includes(ctx.path)) {
+          const active = ctx.context.session;
+          const successful =
+            ctx.context.returned !== undefined && !isAPIError(ctx.context.returned);
+          if (successful) {
+            const verified = ctx.context.newSession ?? active;
+            if (verified?.session)
+              await db
+                .update(sessions)
+                .set({ secondFactorVerified: true })
+                .where(
+                  and(eq(sessions.id, verified.session.id), eq(sessions.userId, verified.user.id)),
+                );
+            // Better Auth counts only sessionless challenges. Required magic-link/SSO
+            // sessions need the same failure budget; valid factor proof resets it.
+            if (active)
+              await db
+                .update(twoFactors)
+                .set({ failedVerificationCount: 0, lockedUntil: null })
+                .where(eq(twoFactors.userId, active.user.id));
+          } else if (
+            active &&
+            isAPIError(ctx.context.returned) &&
+            ctx.context.returned.statusCode === 401
+          ) {
+            await db
+              .update(twoFactors)
+              .set({
+                failedVerificationCount: sql`${twoFactors.failedVerificationCount} + 1`,
+                lockedUntil: sql`case when ${twoFactors.failedVerificationCount} + 1 >= 10 then now() + interval '15 minutes' else ${twoFactors.lockedUntil} end`,
+              })
+              .where(eq(twoFactors.userId, active.user.id));
+          }
+        }
+        await createProfileAuditHook(db)(ctx);
+      }),
     },
     databaseHooks: {
       session: {
@@ -451,12 +539,39 @@ export function createAuth(
           // the session-revocation surface, the actual tool for cutting
           // someone off. Enforcement stays in the app layer per this
           // repo's no-database-triggers convention (SCHEMA.md).
-          before: async (session) => {
+          before: async (session, ctx) => {
             const [row] = await db
-              .select({ archivedAt: users.archivedAt })
+              .select({ archivedAt: users.archivedAt, role: users.role })
               .from(users)
               .where(eq(users.id, session.userId))
               .limit(1);
+            if (
+              ctx?.path === "/sign-in/email" ||
+              (ctx &&
+                ["/two-factor/verify-totp", "/two-factor/verify-backup-code"].includes(ctx.path) &&
+                !ctx.context.session)
+            ) {
+              const options = optionsForRole(
+                authenticationPolicy(await getOrgSettings(db)),
+                row?.role,
+              );
+              if (!options.password && row?.role !== "administrator")
+                throw new APIError("FORBIDDEN", {
+                  message: "Password sign-in is disabled for this account.",
+                  code: "SIGN_IN_METHOD_DISABLED",
+                });
+            }
+            if (ctx?.path === "/magic-link/verify" || ctx?.path.startsWith("/sso/callback")) {
+              const options = optionsForRole(
+                authenticationPolicy(await getOrgSettings(db)),
+                row?.role,
+              );
+              if (!(ctx.path === "/magic-link/verify" ? options.magicLink : options.sso))
+                throw new APIError("FORBIDDEN", {
+                  message: "This sign-in method is disabled for your account.",
+                  code: "SIGN_IN_METHOD_DISABLED",
+                });
+            }
             if (row?.archivedAt) {
               // Coded so the browser-facing SSO callback redirects to the
               // app's error page instead of dumping bare JSON.
@@ -519,7 +634,7 @@ export function createAuth(
             if (path === "/magic-link/verify") {
               const settings = await getOrgSettings(db);
               if (
-                !settings.magicLinkEnabled ||
+                !authenticationPolicy(settings).business.magicLink ||
                 !isEmailDomainAllowed(user.email, settings.allowedEmailDomains)
               ) {
                 throw new APIError("FORBIDDEN", {
@@ -544,7 +659,10 @@ export function createAuth(
             // control of the mailbox-owning account.
             if (path.startsWith("/sso/callback")) {
               const settings = await getOrgSettings(db);
-              if (!isEmailDomainAllowed(user.email, settings.allowedEmailDomains)) {
+              if (
+                !authenticationPolicy(settings).business.sso ||
+                !isEmailDomainAllowed(user.email, settings.allowedEmailDomains)
+              ) {
                 // The `code` matters: the SSO callback redirects coded
                 // APIErrors back to the app's error page; an uncoded one
                 // would surface as a bare JSON response mid-browser-flow.

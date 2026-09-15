@@ -387,7 +387,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "audience {Audience} url {Address} target {Target} " +
         "audienceUsers {Selected people} audienceDepartments {Selected Departments} " +
         "acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} " +
-        "autoDocAcknowledgementText {Default acknowledgement text} " +
+        "requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} " +
         "other {{key}}}",
     },
     { key },
@@ -465,7 +465,7 @@ function changeValue(
   // ADO-008's frequency is a stored slug, so the feed says "Every use"
   // where the column says `every_use`. Its `other` arm covers a value
   // this build no longer has.
-  if (key === "acknowledgementFrequency") {
+  if (key === "acknowledgementFrequency" || key === "autoDocAcknowledgementFrequency") {
     return intl.formatMessage(
       {
         id: "activity.autoDoc.acknowledgementFrequency",
@@ -1058,7 +1058,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
   renamed: defineMessage({
     id: "activity.taxonomy.renamed",
@@ -1067,7 +1067,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
   updated: defineMessage({
     id: "activity.taxonomy.updated",
@@ -1076,7 +1076,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
   reordered: defineMessage({
     id: "activity.taxonomy.reordered",
@@ -1085,7 +1085,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} list",
+      "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} list",
   }),
   archived: defineMessage({
     id: "activity.taxonomy.archived",
@@ -1094,7 +1094,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
   restored: defineMessage({
     id: "activity.taxonomy.restored",
@@ -1103,7 +1103,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
   deleted: defineMessage({
     id: "activity.taxonomy.deleted",
@@ -1112,7 +1112,7 @@ const TAXONOMY = {
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
       "request_type {request type} " +
       "contract_status {contract status} field {field} " +
-      "approver_group {approver group} matter_template {matter template} department {Department} other {type}} {name}",
+      "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
 } as const;
 
@@ -2744,6 +2744,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("officer_role", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("department", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("region", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("knowledge_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes

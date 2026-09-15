@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * Submission (#378): what stands between a portal form and a `requests`
  * row, at the seam a form actually posts to.
@@ -55,6 +57,7 @@ interface MyRequestRow {
 }
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let adminCookies: Record<string, string>;
 let requesterCookies: Record<string, string>;
 let otherCookies: Record<string, string>;
@@ -67,6 +70,7 @@ let fieldIds: Map<string, string>;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -156,6 +160,7 @@ afterAll(async () => {
 /** A complete submission against "Contract review". */
 function completeBody(overrides: Record<string, unknown> = {}) {
   return {
+    departmentId: requestDepartmentId,
     requestTypeId: typeIds.get("contract_review"),
     title: "MSA renewal with Orion Cloud",
     description: "They sent a redline on the liability cap. We need it back by Friday.",
@@ -393,7 +398,13 @@ describe("an archived request type", () => {
     });
     expect(archived.statusCode, archived.body).toBe(200);
     try {
-      const res = await submit(completeBody({ requestTypeId: typeId, customFields: {} }));
+      const res = await submit(
+        completeBody({
+          departmentId: requestDepartmentId,
+          requestTypeId: typeId,
+          customFields: {},
+        }),
+      );
       expect(res.statusCode, res.body).toBe(400);
       expect(res.json().detail).toContain("not taking submissions");
     } finally {
@@ -436,7 +447,10 @@ describe("an archived request type", () => {
 
   it("refuses a request type id that names nothing", async () => {
     const res = await submit(
-      completeBody({ requestTypeId: "01a01b9d-0000-0000-0000-000000000000" }),
+      completeBody({
+        departmentId: requestDepartmentId,
+        requestTypeId: "01a01b9d-0000-0000-0000-000000000000",
+      }),
     );
     expect(res.statusCode, res.body).toBe(400);
   });
@@ -801,6 +815,7 @@ describe("the two field types that name a row", () => {
    * two reference fields are attached. */
   function ndaBody(customFields: Record<string, unknown>) {
     return {
+      departmentId: requestDepartmentId,
       requestTypeId: typeIds.get("nda_request"),
       title: "Mutual NDA with Orion Cloud",
       description: "For the pilot kicking off next month.",
@@ -864,4 +879,20 @@ describe("the two field types that name a row", () => {
       { id: liveEntityId, legalName: "Orion Cloud Holdings LLC" },
     ]);
   });
+});
+
+it("requires a Department and rejects changes after submission", async () => {
+  for (const departmentId of [undefined, null, ""]) {
+    const response = await submit(completeBody({ departmentId }));
+    expect(response.statusCode, response.body).toBe(400);
+  }
+  const created = await submit(completeBody());
+  expect(created.statusCode, created.body).toBe(201);
+  const changed = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/requests/${created.json().request.number}/department`,
+    cookies: memberCookies,
+    payload: { departmentId: null },
+  });
+  expect(changed.statusCode).toBe(404);
 });

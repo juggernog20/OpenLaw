@@ -43,6 +43,13 @@ beforeAll(async () => {
   h = await startHarness({ runPipelineWorkers: false });
   await post("/auth/setup", TEST_ADMIN);
   cookies = await signInCookies(h.app, TEST_ADMIN.email, TEST_ADMIN.password);
+  const policy = await h.app.inject({
+    method: "PUT",
+    url: "/api/v1/auto-docs/settings",
+    payload: { acknowledgementFrequency: "none" },
+    cookies: cookies,
+  });
+  expect(policy.statusCode, policy.body).toBe(200);
   const [admin] = await h.db.select().from(users).where(eq(users.email, TEST_ADMIN.email));
   adminId = admin!.id;
   for (const [key, role] of [
@@ -93,7 +100,6 @@ async function prepare() {
       targetContractTypeId: typeId,
       formats: "docx",
       audience: "everyone",
-      acknowledgementFrequency: "none",
     },
   });
   expect(configured.statusCode, configured.body).toBe(200);

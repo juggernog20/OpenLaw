@@ -18,7 +18,7 @@ import { StatusNote } from "../components/status-note";
 
 export async function portalSettingsLoader({ request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const { data } = await api.GET("/api/v1/me/notification-preferences");
   // A failed read fails the pane, the staff pane's rule. Drawing the
   // catalog's defaults after a network error would show switches that
@@ -37,7 +37,7 @@ export function PortalSettingsPage() {
   const intl = useIntl();
   const state = useNotificationPreferences(groups);
 
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
 
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>

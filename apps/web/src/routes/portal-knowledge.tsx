@@ -15,7 +15,7 @@ import { Button } from "../components/ui/button";
 
 export async function portalKnowledgeLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const response = await api.GET("/api/v1/portal/knowledge/{id}", {
     params: { path: { id: params.id! } },
   });
@@ -30,7 +30,7 @@ export async function portalKnowledgeLoader({ params, request }: LoaderFunctionA
 export function PortalKnowledgePage() {
   const { user, item } = useLoaderData<typeof portalKnowledgeLoader>();
   const intl = useIntl();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
 
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>

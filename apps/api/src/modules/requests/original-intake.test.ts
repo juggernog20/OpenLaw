@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
   contracts,
@@ -19,11 +21,13 @@ import {
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let cast: DispositionScaffold;
 let requestTypeId: string;
 let contributorId: string;
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   await harness.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   cast = await dispositionScaffold(harness);
   const [type] = await harness.db
@@ -49,7 +53,13 @@ it.each(["contract", "matter"] as const)(
       method: "POST",
       url: "/api/v1/requests",
       cookies: cast.requesterCookies,
-      payload: { requestTypeId, title: "Compare descriptions", description, urgency: "medium" },
+      payload: {
+        departmentId: requestDepartmentId,
+        requestTypeId,
+        title: "Compare descriptions",
+        description,
+        urgency: "medium",
+      },
     });
     expect(submitted.statusCode, submitted.body).toBe(201);
     const original = submitted.json().request;

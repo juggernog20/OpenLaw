@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * The Inbox list (#413): the staff read of the Requests whose fate is
  * undecided, at the seam the Inbox screen calls.
@@ -74,6 +76,7 @@ interface InboxRow {
 }
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
@@ -84,6 +87,7 @@ let typeIds: Map<string, string>;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -147,6 +151,7 @@ async function plant(row: {
   const [planted] = await harness.db
     .insert(requests)
     .values({
+      departmentId: requestDepartmentId,
       requestTypeId: typeIds.get(row.slug ?? "nda_request")!,
       requesterId: row.requesterId ?? requesterId,
       title: row.title,

@@ -5054,3 +5054,13 @@ The stacked source modal remains appropriate while the Convert dialog is active 
 ### Record Overview alignment — 2026-09-13
 
 Matter and Contract core cards follow the same reading and keyboard order: Title, Type, legal responsibility (Matter Manager or Legal Owner), Business Owner, Department, Priority, Risk. Title spans the card; the remaining fields use two columns when space permits and one column on narrow layouts. Labels use the shared form label style. Both owner fields use the shared searchable avatar picker. Record-specific fields follow this core group; custom Fields remain separate.
+
+### UX review addendum (2026-09-14): multiline fields and Auto-Docs settings
+
+All multiline inputs use the shared auto-expanding textarea and have no manual resize handle. They fit saved text, grow and shrink while typing, and refit when the available width changes. User-facing labels and help do not assume Markdown knowledge.
+
+DES-087's acknowledgement Frequency control is superseded by the organisation policy described in ADO-008's UX revision. Auto-Doc records retain their text override; Settings → Auto-Docs owns frequency and the default text. Delete Auto-Doc lives in the record actions menu with its existing Administrator restriction and typed confirmation.
+
+### DES-048 amendment — Today action, 2026-09-15
+
+Calendar pickers include a Today action. The shared date picker selects today's local calendar date and closes, following the same commit and focus behavior as choosing a day. Existing Today actions, including the Home dates calendar, are retained without duplication.

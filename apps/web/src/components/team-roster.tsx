@@ -37,14 +37,11 @@ export function TeamRoster({ entries }: Readonly<{ entries: readonly TeamRosterE
   return (
     <ul className="flex flex-col py-1">
       {[...people.values()].map(({ person, statements, onRemove, removeLabel, removeDisabled }) => (
-        <li
-          key={person.id}
-          className={`flex items-center gap-2.5 px-4 py-2.5 ${person.archived ? "opacity-50" : ""}`}
-        >
+        <li key={person.id} className="flex items-center gap-2.5 px-4 py-2.5 text-primary">
           <Avatar name={person.displayName} image={person.image} className="size-6" />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             {statements.length > 0 && (
-              <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted">
+              <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-primary">
                 {statements.map((statement) => (
                   <span key={statement}>{statement}</span>
                 ))}

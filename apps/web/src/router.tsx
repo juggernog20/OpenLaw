@@ -60,7 +60,7 @@ import { PortalContractPage, portalContractLoader } from "./routes/portal-contra
 import { PortalKnowledgePage, portalKnowledgeLoader } from "./routes/portal-knowledge";
 import { guardPortalLoader } from "./lib/portal-onboarding";
 import { PortalOnboardingPage, portalOnboardingLoader } from "./routes/portal-onboarding";
-import { PortalEntryPage, portalEntryLoader } from "./routes/portal-entry";
+import { portalEntryLoader } from "./routes/portal-entry";
 import { PortalSettingsPage, portalSettingsLoader } from "./routes/portal-settings";
 import { SetPasswordPage } from "./routes/set-password";
 import { SearchPage, searchLoader } from "./routes/search";
@@ -147,6 +147,7 @@ import {
 } from "./routes/settings-request-type-editor";
 import { SettingsIntakeLinksPage, settingsIntakeLinksLoader } from "./routes/settings-intake-links";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
+import { SettingsRegionsPage, settingsRegionsLoader } from "./routes/settings-regions";
 import { SettingsDepartmentsPage, settingsDepartmentsLoader } from "./routes/settings-departments";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
@@ -447,6 +448,11 @@ export const routes: RouteObject[] = [
       { path: "general", loader: settingsGeneralLoader, element: <SettingsGeneralPage /> },
       { path: "users", loader: settingsUsersLoader, element: <SettingsUsersPage /> },
       {
+        path: "regions",
+        loader: settingsRegionsLoader,
+        element: <SettingsRegionsPage />,
+      },
+      {
         path: "departments",
         loader: settingsDepartmentsLoader,
         element: <SettingsDepartmentsPage />,
@@ -621,12 +627,19 @@ export const routes: RouteObject[] = [
     ],
   },
   {
+    path: "/portal/login",
+    element: <AuthLayout />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+    children: [{ index: true, loader: loginLoader, element: <LoginPage key="business" /> }],
+  },
+  {
     path: "/auth",
     element: <AuthLayout />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
     children: [
-      { path: "login", loader: loginLoader, element: <LoginPage /> },
+      { path: "login", loader: loginLoader, element: <LoginPage key="legal" /> },
       { path: "two-factor", element: <TwoFactorPage /> },
       { path: "two-factor/enroll", loader: enrollLoader, element: <TwoFactorEnrollPage /> },
       { path: "set-password", element: <SetPasswordPage /> },
@@ -689,7 +702,7 @@ export const routes: RouteObject[] = [
       // The front door. Its own address rather than the portal home in a
       // signed-out costume, so the emailed link, the dead-link page, and
       // the sign-out redirect all name one place.
-      { path: "enter", loader: portalEntryLoader, element: <PortalEntryPage /> },
+      { path: "enter", loader: portalEntryLoader },
       { path: "onboarding", loader: portalOnboardingLoader, element: <PortalOnboardingPage /> },
       // The lightweight settings surface NOT-001 promised a business
       // user (M20/9): NOT-002's group 5 and nothing else, reached from

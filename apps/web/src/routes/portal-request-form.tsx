@@ -117,7 +117,7 @@ type FormField = FormResponse["fields"][number];
 
 export async function portalRequestFormLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const res = await api.GET("/api/v1/portal/request-types/{slug}", {
     params: { path: { slug: params.slug! } },
   });
@@ -171,7 +171,11 @@ export function PortalRequestFormPage() {
   /** DES-018's ramp, and `medium` until the requester says otherwise —
    * the same default a contract's priority is born with. */
   const [urgency, setUrgency] = useState<(typeof SEVERITY_LEVELS)[number]>("medium");
-  const [departmentId, setDepartmentId] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(
+    departments.some((department) => department.id === user.departmentId)
+      ? user.departmentId
+      : null,
+  );
   const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
   /** The paper, chosen but not yet sent: an attachment is a row against
    * a Request, and there is no Request until Submit is pressed. */
@@ -187,7 +191,7 @@ export function PortalRequestFormPage() {
    * still going up must have been told the ask landed. */
   const [submitted, setSubmitted] = useState<Submitted | null>(null);
 
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
 
   /** A key stops being marked the moment it is answered, so a refusal
    * clears box by box rather than only on the next press. */
@@ -216,6 +220,11 @@ export function PortalRequestFormPage() {
     if (description.trim() === "") {
       missing.push(intl.formatMessage(BASIC_LABELS.description));
       marks.add("description");
+    }
+
+    if (!departmentId) {
+      missing.push(intl.formatMessage({ id: "records.department", defaultMessage: "Department" }));
+      marks.add("department");
     }
 
     const customFields: Record<string, CustomFieldValue> = {};
@@ -259,6 +268,7 @@ export function PortalRequestFormPage() {
       );
       return;
     }
+    if (!departmentId) return;
     setUnanswered(new Set());
 
     setBusy(true);
@@ -266,7 +276,7 @@ export function PortalRequestFormPage() {
       .POST("/api/v1/requests", {
         body: {
           requestTypeId: requestType.id,
-          ...(departmentId ? { departmentId } : {}),
+          departmentId,
           title: title.trim(),
           description: description.trim(),
           urgency,
@@ -398,6 +408,8 @@ export function PortalRequestFormPage() {
 
                 <Field
                   htmlFor="request-department"
+                  required
+                  unanswered={unanswered.has("department")}
                   label={intl.formatMessage({
                     id: "records.department",
                     defaultMessage: "Department",
@@ -405,9 +417,14 @@ export function PortalRequestFormPage() {
                 >
                   <DepartmentPicker
                     id="request-department"
+                    required
+                    invalid={unanswered.has("department")}
                     value={departmentId}
                     options={departments}
-                    onChange={setDepartmentId}
+                    onChange={(value) => {
+                      setDepartmentId(value);
+                      clearMark("department");
+                    }}
                     disabled={busy}
                   />
                 </Field>

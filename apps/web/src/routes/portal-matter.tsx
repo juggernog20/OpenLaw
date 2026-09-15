@@ -12,7 +12,7 @@ import { PageTitle } from "../components/page-title";
 
 export async function portalMatterLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const number = Number(params.number);
   if (!Number.isSafeInteger(number) || number < 1) return { user, matter: null };
   const result = await api.GET("/api/v1/portal/matters/{number}", { params: { path: { number } } });
@@ -24,7 +24,7 @@ export async function portalMatterLoader({ params, request }: LoaderFunctionArgs
 export function PortalMatterPage() {
   const { user, matter, recordWork } = useLoaderData<typeof portalMatterLoader>();
   const intl = useIntl();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
   const title =
     matter?.title ??
     intl.formatMessage({ id: "portal.matter.notFound", defaultMessage: "Matter not found" });
@@ -86,6 +86,12 @@ export function PortalMatterPage() {
                 />
               </dt>
               <dd>{matter.businessOwner?.displayName ?? unset}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-muted">
+                <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
+              </dt>
+              <dd>{recordWork.work.region ?? unset}</dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-muted">

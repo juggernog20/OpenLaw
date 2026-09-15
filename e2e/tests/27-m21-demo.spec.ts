@@ -51,6 +51,7 @@ import {
   ADMIN,
   completePortalFirstRun,
   ensureAdminExists,
+  ensureIntakeDepartment,
   ensureMemberInert,
   signInAs,
   sweepOrSay,
@@ -319,8 +320,9 @@ async function enterPortalByMagicLink(
   api: APIRequestContext,
 ): Promise<Page> {
   const page = await context.newPage();
-  await page.goto("/portal/enter");
-  await expect(page.getByText("Legal portal")).toBeVisible();
+  await page.goto("/portal/login");
+  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  await expect(page.getByRole("heading", { name: "Get a sign-in link" })).toBeVisible();
   await page.getByLabel("Email").fill(REQUESTER);
   await page.getByRole("button", { name: "Send link" }).click();
   await expect(page.getByText("Check your email")).toBeVisible();
@@ -370,6 +372,7 @@ test.describe.serial("M21 demo path", () => {
     browser,
   }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await ensureIntakeDepartment(page.request);
 
     // The compose-up acceptance, from inside the running stack: M21's
     // migration (0067) landed and the staff read answers, so the Inbox
@@ -529,9 +532,6 @@ test.describe.serial("M21 demo path", () => {
       await expect(row).toContainText(`Contract · ${CONTRACT_TYPE_NAME}`);
       await expect(row).toContainText(await requesterDisplayName(page.request));
       await expect(row).toContainText("High");
-      // The ordering is a product decision, so the page says it rather
-      // than leaving the reader to infer it (INT-006).
-      await expect(page.getByText("Ordered by urgency, then age")).toBeVisible();
 
       // Open the Request from its title; Assign now chooses its triager.
       await expect(row.getByRole("button", { name: `Assign ${reference}` })).toBeVisible();

@@ -127,6 +127,10 @@ The built flow has nine steps, including its welcome splash: Welcome to OpenLaw 
 
 The setup checklist reports current configuration, not a stored history of skip clicks. A deployment-provided SMTP relay already completes Email, and built-in authentication already completes Authentication. The card uses Organization and Email as compact labels, and Review seeded types as the longer label that explains Review without the wizard around it. `CONTEXT.md` records both forms. The demo in `00-m33-demo.spec.ts` takes the first-run window before the unchanged bootstrap probe, skips both connectors, and finishes the AI connector's configuration in Settings without a provider call. Wizard and checklist axe checks run in E2E; `08-accessibility.spec.ts` also scans General.
 
+### Addendum (2026-09-15): outbound email is required
+
+Email must be configured before first-run setup can finish. The resolved mailer can use deployment-provided SMTP or a relay saved in the wizard. Email cannot be skipped; skipping optional steps opens Email when it is missing. The completion API rejects unconfigured instances, and an Administrator opening an app route returns to setup until email is configured. Existing completed installations do not reopen the wizard. This supersedes the earlier statements that every step is skippable. Business Users retain the existing magic-link and SSO sign-in model.
+
 ## SET-005 — User management: the Users pane, role edits, guarded user archive, session revocation
 
 - **Status** — Accepted
@@ -255,3 +259,30 @@ Every Portal route checks the current user's completion state before its page lo
 Requests, Matters, and Contracts use **Department** for the business team responsible for the work. They select from the same Administrator-managed list. This record value is independent of a person's Department and grants no access. Department is optional, built in, and does not require a custom Field attachment. Legal can correct an open Request's Department; conversion carries it into the new record, which can then be edited independently. Existing Business unit and Owning department answers migrate into this list; legacy custom definitions are archived and their original answers retained.
 
 Matter and Request APIs use `departmentId`; Contracts retain `owningDepartmentId` for compatibility. All visible labels say Department.
+
+### SET-010 amendment — alphabetical Departments, 2026-09-15
+
+Departments are listed alphabetically by name in Settings and in pickers. Add, rename, and restore place each Department in that order automatically. Departments have no manual reorder controls or order endpoint; the shared taxonomy's manual ordering continues for the other catalogs. Archiving still removes a Department from pickers and retains existing references.
+
+### SET-010 amendment — required intake Department, 2026-09-15
+
+Department is required when submitting a Request. The submitted Department is read-only throughout intake and conversion, alongside the other original answers. Conversion carries it to the Matter or Contract, where normal record editing can change it. Historical Requests without a Department remain readable. This supersedes the earlier editable Request Department control.
+
+### SET-004 amendment — independent group authentication, 2026-09-15
+
+The onboarding wizard and Authentication settings expose Legal User Authentication and Business Portal Authentication. Each group independently enables password, email magic link, and configured OIDC SSO, with a separate required two-factor toggle. TECH-008 defines enforcement and the separate sign-in URLs. Email service remains mandatory before completing instance setup.
+
+Maintaining two group policies requires Administrators to review both sets of methods and recovery paths. This supersedes a single organization-wide authentication policy.
+
+## SET-012: Regions are an Administrator-managed Contract classification
+
+- **Status:** Accepted
+- **Date:** 2026-09-15
+- **Decision:** Organization Settings → Regions provides add, rename, archive, and restore, ordered alphabetically like Departments. Region on a Contract is an optional picker; new assignments must use a live configured Region. Region names must be unique without regard to case. Archiving retains existing Contract references and removes the Region from choices. Renaming updates referencing Contracts. Existing Contract and original intake values seed the initial catalog during migration.
+- **Compatibility:** The Contract API retains its `region` string. A foreign key to the catalog's unique display name, with update cascade, preserves this contract while enforcing catalog membership. Region settings rows retain stable IDs and slugs. Original Request answers and Auto-Doc snapshots remain historical values.
+
+### SET-012 amendment — shared Matter Region, 2026-09-15
+
+Matters also have an optional Region picker using the same organization catalog. Rename, archive, restore, and in-use checks cover both Matters and Contracts. Business Portal Matter overviews display the saved Region. Existing Matters start with no Region; custom Fields remain unchanged. Migration `0136` adds the nullable Matter reference with the same update-cascade behavior as Contracts.
+
+Region references use display names to preserve the existing Contract API. Renames therefore cascade through current records and can lock referencing rows. Stable-ID references would avoid name coupling but require migrating the public string contract; the shared catalog was chosen to keep Contract and Matter classifications consistent.

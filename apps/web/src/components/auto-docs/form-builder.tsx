@@ -6,6 +6,7 @@
  * commit here writes one form version (ADO-004); there is no Save form
  * and no dirty state.
  */
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -674,7 +675,7 @@ function FieldCard({
               <FormattedMessage id="autoDocs.optionsCaption" defaultMessage="One per line." />
             }
           >
-            <textarea
+            <AutoResizeTextarea
               id={`${id}-options`}
               className={TEXTAREA_CLASS}
               value={optionText}

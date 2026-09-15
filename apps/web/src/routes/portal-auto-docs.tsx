@@ -34,7 +34,7 @@ const CARD = "space-y-4 rounded-card border border-border-default bg-raised p-6"
 
 export async function portalAutoDocsLoader({ request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const [list, history] = await Promise.all([
     api.GET("/api/v1/portal/auto-docs"),
     api.GET("/api/v1/portal/auto-doc-generations"),
@@ -49,7 +49,7 @@ export function PortalAutoDocsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const intl = useIntl();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
   const title = intl.formatMessage({
     id: "portal.navigation.autoDocs",
     defaultMessage: "Auto-Docs",
@@ -171,7 +171,7 @@ export function PortalAutoDocsPage() {
 
 export async function portalAutoDocGenerateLoader({ request, params }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const result = await api.GET("/api/v1/portal/auto-docs/{id}/generate", {
     params: { path: { id: params.id! } },
   });
@@ -218,7 +218,7 @@ function PortalAutoDocForm({
   const heading = useRef<HTMLHeadingElement>(null);
   const navigate = useNavigate();
   const intl = useIntl();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
   const needsAck = data?.availability.ready && data.acknowledgement.required;
   const title = needsAck
     ? intl.formatMessage({
@@ -438,7 +438,7 @@ function PortalAutoDocForm({
 
 export async function portalAutoDocGenerationLoader({ request, params }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   const result = await api.GET("/api/v1/portal/auto-docs/{id}/generations/{generationId}", {
     params: { path: { id: params.id!, generationId: params.generationId! } },
   });
@@ -463,7 +463,7 @@ function PortalGeneration({
   const [error, setError] = useState(loaded.refusal);
   const [busy, setBusy] = useState(false);
   const intl = useIntl();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
   const title = intl.formatMessage({
     id: "portal.autoDocs.confirmation",
     defaultMessage: "Your generated document",

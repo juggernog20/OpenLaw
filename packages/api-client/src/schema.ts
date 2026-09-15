@@ -21,6 +21,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/policy/{group}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["setAuthenticationPolicy"];
+    trace?: never;
+  };
+  "/api/v1/auth/password-setup": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["requestPasswordSetup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/password-setup/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["completePasswordSetup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/me": {
     parameters: {
       query?: never;
@@ -53,6 +101,23 @@ export interface paths {
     head?: never;
     /** Update the signed-in user's preferences (theme #44, timezone SET-006) */
     patch: operations["updateMyPreferences"];
+    trace?: never;
+  };
+  "/api/v1/auth/two-factor-policy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Require two-factor authentication for built-in staff sign-in */
+    patch: operations["setTwoFactorPolicy"];
     trace?: never;
   };
   "/api/v1/auth/setup": {
@@ -1915,7 +1980,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Department taxonomy in display order (SET-010); archived rows only with includeArchived=true */
+    /** The Department taxonomy in alphabetical order (SET-010); archived rows only with includeArchived=true */
     get: operations["listDepartments"];
     put?: never;
     /** Add a Department: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
@@ -1943,23 +2008,6 @@ export interface paths {
     head?: never;
     /** Rename a Department's display name (DES-017 in-place rename) or edit its description; the slug never changes */
     patch: operations["updateDepartment"];
-    trace?: never;
-  };
-  "/api/v1/departments/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
-    put: operations["reorderDepartments"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
     trace?: never;
   };
   "/api/v1/departments/{id}/archive": {
@@ -2007,6 +2055,77 @@ export interface paths {
     get: operations["departmentOptions"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/regions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The Region taxonomy in alphabetical order (SET-012); archived rows only with includeArchived=true */
+    get: operations["listRegions"];
+    put?: never;
+    /** Add a Region: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createRegion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/regions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One Region — the read behind the type editor */
+    get: operations["getRegion"];
+    put?: never;
+    post?: never;
+    /** Hard-delete a Region (SET-012); a type still used by references refuses */
+    delete: operations["deleteRegion"];
+    options?: never;
+    head?: never;
+    /** Rename a Region's display name (DES-017 in-place rename) or edit its description; the slug never changes */
+    patch: operations["updateRegion"];
+    trace?: never;
+  };
+  "/api/v1/regions/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a Region; it leaves pickers and retains every reference */
+    post: operations["archiveRegion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/regions/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived Region (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreRegion"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3596,22 +3715,6 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
-    trace?: never;
-  };
-  "/api/v1/requests/{number}/department": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations["setRequestDepartment"];
     trace?: never;
   };
   "/api/v1/requests/{number}": {
@@ -6742,6 +6845,135 @@ export interface operations {
       };
     };
   };
+  setAuthenticationPolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        group: "legal" | "business";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          password: boolean;
+          magicLink: boolean;
+          sso: boolean;
+          requireTwoFactor: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            legal: {
+              password: boolean;
+              magicLink: boolean;
+              sso: boolean;
+              requireTwoFactor: boolean;
+            };
+            business: {
+              password: boolean;
+              magicLink: boolean;
+              sso: boolean;
+              requireTwoFactor: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  requestPasswordSetup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: email */
+          email: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            message: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  completePasswordSetup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          token: string;
+          password: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            success: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getMe: {
     parameters: {
       query?: never;
@@ -6770,6 +7002,10 @@ export interface operations {
               timezone: string | null;
               departmentId: string | null;
               portalOnboardingCompletedAt: string | null;
+              twoFactorRequired: boolean;
+              twoFactorSetupRequired: boolean;
+              twoFactorVerificationRequired: boolean;
+              emailSetupRequired: boolean;
             };
             session: {
               id: string;
@@ -6825,6 +7061,43 @@ export interface operations {
               image: string | null;
               timezone: string | null;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setTwoFactorPolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          requireTwoFactor: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            requireTwoFactor: boolean;
           };
         };
       };
@@ -6936,9 +7209,24 @@ export interface operations {
         };
         content: {
           "application/json": {
+            policy: {
+              legal: {
+                password: boolean;
+                magicLink: boolean;
+                sso: boolean;
+                requireTwoFactor: boolean;
+              };
+              business: {
+                password: boolean;
+                magicLink: boolean;
+                sso: boolean;
+                requireTwoFactor: boolean;
+              };
+            };
             /** @enum {string} */
             mode: "built_in" | "oidc";
             magicLinkEnabled: boolean;
+            requireTwoFactor: boolean;
             emailConfigured: boolean;
             ssoProviderId: string | null;
           };
@@ -7421,6 +7709,8 @@ export interface operations {
         "application/json": {
           /** Format: email */
           email: string;
+          /** @enum {string} */
+          group?: "legal" | "business";
         };
       };
     };
@@ -9248,6 +9538,8 @@ export interface operations {
         content: {
           "application/json": {
             acknowledgementText: string;
+            /** @enum {string} */
+            acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
           };
         };
       };
@@ -9272,7 +9564,9 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          acknowledgementText: string;
+          acknowledgementText?: string;
+          /** @enum {string} */
+          acknowledgementFrequency?: "none" | "every_use" | "once_per_auto_doc" | "once";
         };
       };
     };
@@ -9285,6 +9579,8 @@ export interface operations {
         content: {
           "application/json": {
             acknowledgementText: string;
+            /** @enum {string} */
+            acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
           };
         };
       };
@@ -9399,8 +9695,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -9593,8 +9887,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -9809,8 +10101,6 @@ export interface operations {
           audienceUserIds?: string[];
           audienceDepartmentIds?: string[];
           acknowledgementText?: string | null;
-          /** @enum {string} */
-          acknowledgementFrequency?: "none" | "every_use" | "once_per_auto_doc" | "once";
           description?: string | null;
           /** @enum {string} */
           audience?: "legal_only" | "selected" | "everyone";
@@ -9844,8 +10134,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10095,8 +10383,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10293,8 +10579,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10491,8 +10775,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10689,8 +10971,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10886,8 +11166,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -10951,8 +11229,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -11018,8 +11294,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -11264,8 +11538,6 @@ export interface operations {
               /** @enum {string} */
               audience: "legal_only" | "selected" | "everyone";
               acknowledgementText: string | null;
-              /** @enum {string} */
-              acknowledgementFrequency: "none" | "every_use" | "once_per_auto_doc" | "once";
               targetContractTypeId: string | null;
               titlePattern: string | null;
               fixedEntityId: string | null;
@@ -13145,52 +13417,6 @@ export interface operations {
       };
     };
   };
-  reorderDepartments: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          ids: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            departments: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
   archiveDepartment: {
     parameters: {
       query?: never;
@@ -13301,6 +13527,304 @@ export interface operations {
               id: string;
               displayName: string;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listRegions: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            regions: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreRegion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            region: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
           };
         };
       };
@@ -14016,6 +14540,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14083,6 +14608,7 @@ export interface operations {
           matterTypeId: string;
           managerId?: string | null;
           departmentId?: string | null;
+          region?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
           risk?: ("low" | "medium" | "high" | "critical") | null;
@@ -14131,6 +14657,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14298,6 +14825,10 @@ export interface operations {
               id: string;
               displayName: string;
             }[];
+            regions: {
+              id: string;
+              displayName: string;
+            }[];
           };
         };
       };
@@ -14357,6 +14888,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14481,6 +15013,7 @@ export interface operations {
           matterTypeId?: string;
           managerId?: string | null;
           departmentId?: string | null;
+          region?: string | null;
           businessOwnerId?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
@@ -14531,6 +15064,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14841,6 +15375,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -14933,6 +15468,7 @@ export interface operations {
               } | null;
               departmentId?: string | null;
               department?: string | null;
+              region?: string | null;
               createdBy?: string | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -18513,7 +19049,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               unverifiedFields: (
                 | "counterparty"
@@ -18598,7 +19135,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               unverifiedFields: (
                 | "counterparty"
@@ -18910,7 +19448,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               effectiveDate?: string | null;
               id: string;
@@ -19053,7 +19592,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               effectiveDate?: string | null;
               id: string;
@@ -19802,7 +20342,7 @@ export interface operations {
       content: {
         "application/json": {
           requestTypeId: string;
-          departmentId?: string | null;
+          departmentId: string;
           title: string;
           description: string;
           /** @enum {string} */
@@ -20318,6 +20858,7 @@ export interface operations {
               generator: {
                 id: string;
                 displayName: string;
+                email: string;
               } | null;
             }[];
             nextCursor: number | null;
@@ -20354,6 +20895,7 @@ export interface operations {
             people: {
               id: string;
               displayName: string;
+              email: string;
             }[];
           };
         };
@@ -20435,46 +20977,6 @@ export interface operations {
             id: string;
             number: number;
             title: string;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setRequestDepartment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          departmentId: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            departmentId: string | null;
-            department: string | null;
           };
         };
       };
@@ -22197,7 +22699,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -22350,7 +22853,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -22506,6 +23010,10 @@ export interface operations {
               id: string;
               displayName: string;
             }[];
+            regions: {
+              id: string;
+              displayName: string;
+            }[];
             contractTypes: {
               id: string;
               slug: string;
@@ -22634,7 +23142,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -22851,7 +23360,8 @@ export interface operations {
             amount: number;
             currency: string;
             /** @enum {string} */
-            cadence: "one_time" | "monthly" | "annually";
+            cadence: "one_time" | "monthly" | "annually" | "other";
+            cadenceDescription?: string;
           } | null;
           /** @enum {string} */
           termType?: "fixed" | "auto_renew" | "evergreen";
@@ -22925,7 +23435,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23157,7 +23668,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23290,7 +23802,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23432,7 +23945,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23693,7 +24207,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23833,7 +24348,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -23973,7 +24489,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -24112,7 +24629,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";
@@ -24245,7 +24763,8 @@ export interface operations {
                 amount: number;
                 currency: string;
                 /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
               } | null;
               /** @enum {string} */
               termType: "fixed" | "auto_renew" | "evergreen";

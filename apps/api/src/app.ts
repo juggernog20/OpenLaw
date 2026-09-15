@@ -74,6 +74,7 @@ import { entityLinkedRecordsRoutes } from "./modules/entities/linked-records.js"
 import { entityTypesRoutes } from "./modules/entity-types/routes.js";
 import { entityAttachedFieldsRoutes } from "./modules/entity-types/attached-fields.js";
 import { matterTypesRoutes } from "./modules/matter-types/routes.js";
+import { regionsRoutes } from "./modules/regions/routes.js";
 import { departmentsRoutes } from "./modules/departments/routes.js";
 import { officerRolesRoutes } from "./modules/officer-roles/routes.js";
 import { matterAttachedFieldsRoutes } from "./modules/matter-types/attached-fields.js";
@@ -506,6 +507,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterTypesRoutes, { prefix: "/api/v1" });
   await app.register(departmentsRoutes, { prefix: "/api/v1" });
+  await app.register(regionsRoutes, { prefix: "/api/v1" });
   await app.register(matterAttachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterStatusesRoutes, { prefix: "/api/v1" });
   await app.register(mattersRoutes, { prefix: "/api/v1" });

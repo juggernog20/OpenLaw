@@ -24,6 +24,7 @@ const REQUESTER = {
   email: "tom.iwu@acme.com",
   displayName: "Tom Iwu",
   role: "business_user",
+  departmentId: "dept-finance",
 };
 
 interface FormField {
@@ -187,7 +188,7 @@ describe("the request type's form", () => {
       expect(await screen.findByLabelText(label)).toHaveAttribute("aria-required", "true");
     }
     expect(screen.getByLabelText(/^Paper side/)).not.toHaveAttribute("aria-required", "true");
-    expect(screen.getAllByText("(required)")).toHaveLength(4);
+    expect(screen.getAllByText("(required)")).toHaveLength(5);
   });
 
   it("shows this request type's own deflection links", async () => {
@@ -207,10 +208,11 @@ describe("the request type's form", () => {
     expect(link).toHaveAttribute("href", "https://wiki.acme.com/review");
   });
 
-  it("sends an unauthenticated visitor to the entry screen", async () => {
+  it("sends an unauthenticated visitor to Business Portal sign-in", async () => {
     stubApi({ signedIn: null });
-    renderAt("/portal/new/contract_review");
-    expect(await screen.findByRole("heading", { name: "Legal portal" })).toBeInTheDocument();
+    const { router } = renderAt("/portal/new/contract_review");
+    expect(await screen.findByRole("heading", { name: "Business Portal sign-in" })).toBeVisible();
+    expect(router.state.location.pathname).toBe("/portal/login");
   });
 
   it("sends a requester after an archived type back to the picker", async () => {
@@ -231,12 +233,30 @@ describe("the request type's form", () => {
 });
 
 describe("submitting the form", () => {
+  it("marks a missing Department and clears its error after selection", async () => {
+    const submissions: Submissions = { bodies: [], uploads: [] };
+    stubApi({
+      signedIn: { ...REQUESTER, departmentId: null },
+      extra: portalForm({ fields: [] }, submissions),
+    });
+    renderAt("/portal/new/contract_review");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Submit request" }));
+    const department = screen.getByRole("combobox", { name: /^Department/ });
+    expect(screen.getByText("Department is required.")).toBeVisible();
+    expect(department).toHaveAttribute("aria-invalid", "true");
+    expect(submissions.bodies).toEqual([]);
+    await user.selectOptions(department, "dept-finance");
+    expect(screen.queryByText("Department is required.")).not.toBeInTheDocument();
+    expect(department).not.toHaveAttribute("aria-invalid");
+  });
+
   it("sends the basics and the values keyed by field slug", async () => {
     const user = userEvent.setup();
     const submissions = openForm();
     await fillComplete(user);
     await user.selectOptions(screen.getByLabelText(/^Paper side/), "Theirs");
-    await user.selectOptions(screen.getByRole("combobox", { name: "Department" }), "dept-finance");
+    await user.selectOptions(screen.getByRole("combobox", { name: /^Department/ }), "dept-finance");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
     await screen.findByRole("heading", { name: /R-42/ });
@@ -313,6 +333,7 @@ describe("submitting the form", () => {
     await screen.findByRole("heading", { name: /R-42/ });
     expect(Object.keys(submissions.bodies[0] as object).sort()).toEqual([
       "customFields",
+      "departmentId",
       "description",
       "requestTypeId",
       "title",

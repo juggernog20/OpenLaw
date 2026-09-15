@@ -29,7 +29,7 @@ const Row = z.object({
   title: z.string(),
   createdAt: z.iso.datetime(),
   autoDoc: z.object({ id: z.string(), name: z.string() }).nullable(),
-  generator: z.object({ id: z.string(), displayName: z.string() }).nullable(),
+  generator: z.object({ id: z.string(), displayName: z.string(), email: z.string() }).nullable(),
 });
 const PAGE_SIZE = 50;
 export const unassignedContractsRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -71,7 +71,7 @@ export const unassignedContractsRoutes: FastifyPluginAsyncZod = async (app) => {
               title: contracts.title,
               createdAt: contracts.createdAt,
               autoDoc: { id: autoDocs.id, name: autoDocs.name },
-              generator: { id: users.id, displayName: users.displayName },
+              generator: { id: users.id, displayName: users.displayName, email: users.email },
             })
             .from(contracts)
             .leftJoin(
@@ -107,7 +107,11 @@ export const unassignedContractsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listUnassignedContractAssignees",
         tags: ["inbox"],
         response: {
-          200: z.object({ people: z.array(z.object({ id: z.string(), displayName: z.string() })) }),
+          200: z.object({
+            people: z.array(
+              z.object({ id: z.string(), displayName: z.string(), email: z.string() }),
+            ),
+          }),
           default: problemResponse,
         },
       },
