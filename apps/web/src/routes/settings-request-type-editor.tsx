@@ -102,8 +102,8 @@ const REQUIRED_RULE: EditorRequiredRule = {
 
 /**
  * The fixed basics (INT-002): what every request form collects, whatever
- * an Administrator configures. Title, Description, and Urgency are
- * required; Attachments and Department are optional. Urgency wears the DES-018
+ * an Administrator configures. Title, Description, Department, and Urgency are
+ * required; Attachments are optional. Urgency wears the DES-018
  * severity ramp.
  */
 const BASICS = defineMessages({
@@ -155,7 +155,7 @@ const BASICS_SLOT: TypeEditorBasics = {
       caption: BASICS.attachmentsType,
       isRequired: false,
     },
-    { key: "department", name: BASICS.department, caption: BASICS.urgencyType, isRequired: false },
+    { key: "department", name: BASICS.department, caption: BASICS.urgencyType, isRequired: true },
     { key: "urgency", name: BASICS.urgency, caption: BASICS.urgencyType, isRequired: true },
   ],
 };
