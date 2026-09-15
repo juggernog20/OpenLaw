@@ -1106,7 +1106,9 @@ describe("the /contracts/:number record page", () => {
         });
       });
 
-      await waitFor(() => expect(screen.getByLabelText("1 unverified date")).toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByLabelText("1 unverified Key date")).toBeInTheDocument(),
+      );
       expect(screen.queryByLabelText("1 upcoming date")).not.toBeInTheDocument();
       await waitFor(() => {
         expect(screen.getByLabelText("Term type")).toHaveValue("auto_renew");
@@ -1535,7 +1537,7 @@ describe("the /contracts/:number record page", () => {
       renderAt("/contracts/42/fields");
       const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
       expect(strip.getByRole("img", { name: "1 upcoming date" })).toBeInTheDocument();
-      expect(strip.getByRole("img", { name: "1 unverified date" })).toHaveClass(
+      expect(strip.getByRole("img", { name: "1 unverified Key date" })).toHaveClass(
         "text-ai-evidence-fg",
       );
 
@@ -1547,7 +1549,7 @@ describe("the /contracts/:number record page", () => {
           "text-badge-count-fg",
         ),
       );
-      expect(strip.queryByRole("img", { name: /AI-suggested/ })).not.toBeInTheDocument();
+      expect(strip.queryByRole("img", { name: /unverified Key date/ })).not.toBeInTheDocument();
     });
 
     it("confirms every marker from the card header", async () => {

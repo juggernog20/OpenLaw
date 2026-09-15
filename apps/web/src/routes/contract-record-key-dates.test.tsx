@@ -257,7 +257,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     renderAt("/contracts/42/key-dates");
     const card = await section();
     const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
-    expect(strip.getByRole("img", { name: "2 unverified dates" })).toHaveClass(
+    expect(strip.getByRole("img", { name: "2 unverified Key dates" })).toHaveClass(
       "text-ai-evidence-fg",
     );
     expect(strip.queryByRole("img", { name: /upcoming date/ })).not.toBeInTheDocument();
@@ -268,7 +268,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     api.refuseNext(503, "Confirmation could not be saved.");
     await userEvent.setup().click(price.getByRole("button", { name: "Confirm" }));
     expect(await price.findByText("Confirmation could not be saved.")).toBeInTheDocument();
-    expect(strip.getByRole("img", { name: "2 unverified dates" })).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "2 unverified Key dates" })).toBeInTheDocument();
     api.clearRefusal();
     await userEvent.setup().click(price.getByRole("button", { name: "Confirm" }));
     await waitFor(() =>
@@ -276,14 +276,14 @@ describe("the record's Key dates section (CTR-009)", () => {
         "text-badge-count-fg",
       ),
     );
-    expect(strip.getByRole("img", { name: "1 unverified date" })).toBeInTheDocument();
+    expect(strip.getByRole("img", { name: "1 unverified Key date" })).toBeInTheDocument();
     expect(price.queryByRole("button", { name: "Confirm" })).not.toBeInTheDocument();
     const delivery = within(card.getByText("Delivery").closest("tr")!);
     await userEvent.setup().click(delivery.getByRole("button", { name: "Confirm" }));
     await waitFor(() =>
       expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument(),
     );
-    expect(strip.queryByRole("img", { name: /unverified date/ })).not.toBeInTheDocument();
+    expect(strip.queryByRole("img", { name: /unverified Key date/ })).not.toBeInTheDocument();
   });
 
   it("counts all suggestions awaiting review separately, including past dates", async () => {
@@ -297,7 +297,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     });
     renderAt("/contracts/42/key-dates");
     const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
-    expect(strip.getByRole("img", { name: "2 unverified dates" })).toHaveTextContent("2");
+    expect(strip.getByRole("img", { name: "2 unverified Key dates" })).toHaveTextContent("2");
     expect(strip.queryByRole("img", { name: /upcoming date/ })).not.toBeInTheDocument();
   });
 
@@ -387,7 +387,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     // Confirmed upcoming dates and suggestions awaiting review have separate counts.
     const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
     expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument();
-    expect(strip.getByRole("img", { name: "1 unverified date" })).toHaveClass(
+    expect(strip.getByRole("img", { name: "1 unverified Key date" })).toHaveClass(
       "text-ai-evidence-fg",
     );
   });

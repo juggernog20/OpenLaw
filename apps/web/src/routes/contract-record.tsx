@@ -2190,7 +2190,7 @@ function ContractRecord() {
                     {
                       id: "contracts.record.tab.keyDates.unverified",
                       defaultMessage:
-                        "{count, plural, one {# unverified date} other {# unverified dates}}",
+                        "{count, plural, one {# unverified Key date} other {# unverified Key dates}}",
                     },
                     { count: unverifiedDateCount },
                   ),
