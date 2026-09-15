@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { lockedRegionName } from "../regions/references.js";
+
 /** ADO-005 and CTR-026: resolve the form answers a targeted Contract is born with. */
 import {
   and,
@@ -261,7 +263,7 @@ export async function prepareContractDestination(
     businessOwnerId,
     legalOwnerId: await chooseLegalOwner(tx, autoDoc, definition, answers),
     owningDepartmentId,
-    region: text("region"),
+    region: await lockedRegionName(tx, text("region")),
     primaryCounterpartyName: counterparty,
     customFields,
     value,

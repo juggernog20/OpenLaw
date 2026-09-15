@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { lockedRegionName } from "../regions/references.js";
+
 /**
  * The contract create, as one callable a caller runs inside its own
  * transaction (M21/1).
@@ -328,7 +330,7 @@ export async function createContract(
       title: title.trim(),
       description: input.description?.trim() || null,
       owningDepartmentId: input.owningDepartmentId ?? null,
-      region: input.region?.trim() || null,
+      region: await lockedRegionName(tx, input.region),
       contractTypeId: contractType.id,
       statusId: draft.id,
       managerId,

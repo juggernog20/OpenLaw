@@ -52,6 +52,35 @@ test("Portal Documents keep one current row, read earlier versions and accept re
     expect(made.status(), await made.text()).toBe(201);
     return z.object({ department }).parse(await made.json()).department.id;
   }
+  const Region = z.object({
+    id: z.string(),
+    displayName: z.string(),
+    archivedAt: z.string().nullable(),
+  });
+  const regionList = z
+    .object({ regions: z.array(Region) })
+    .parse(await (await page.request.get("/api/v1/regions?includeArchived=true")).json());
+  const regionNames = new Map<string, string>();
+  for (const displayName of ["EMEA", "Americas"]) {
+    let region = regionList.regions.find(
+      (row) => row.displayName.toLowerCase() === displayName.toLowerCase(),
+    );
+    if (region?.archivedAt) {
+      const restored = await page.request.post(`/api/v1/regions/${region.id}/restore`, {
+        data: {},
+      });
+      expect(restored.status(), await restored.text()).toBe(200);
+      region = Region.parse((await restored.json()).region);
+    }
+    if (!region) {
+      const created = await page.request.post("/api/v1/regions", { data: { displayName } });
+      expect(created.status(), await created.text()).toBe(201);
+      region = Region.parse((await created.json()).region);
+    }
+    regionNames.set(displayName, region.displayName);
+  }
+  const emea = regionNames.get("EMEA")!;
+  const americas = regionNames.get("Americas")!;
   const sales = await departmentId("Sales");
   const procurement = await departmentId("Procurement");
   const records: { module: "contract" | "matter"; number: number }[] = [];
@@ -66,7 +95,7 @@ test("Portal Documents keep one current row, read earlier versions and accept re
         data: {
           title: `Portal document ${module}`,
           [`${module}TypeId`]: type.id,
-          ...(module === "contract" ? { owningDepartmentId: sales, region: "EMEA" } : {}),
+          ...(module === "contract" ? { owningDepartmentId: sales, region: emea } : {}),
         },
       });
       expect(created.status(), await created.text()).toBe(201);
@@ -91,16 +120,16 @@ test("Portal Documents keep one current row, read earlier versions and accept re
       if (module === "contract") {
         const overview = portal.getByRole("region", { name: "Overview", exact: true });
         await expect(overview.getByText("Sales", { exact: true })).toBeVisible();
-        await expect(overview.getByText("EMEA", { exact: true })).toBeVisible();
+        await expect(overview.getByText(emea, { exact: true })).toBeVisible();
         await expect(overview.getByRole("textbox", { name: "Owning department" })).toHaveCount(0);
         await expect(overview.getByRole("textbox", { name: "Region" })).toHaveCount(0);
         const updated = await page.request.patch(`/api/v1/contracts/${record.number}`, {
-          data: { owningDepartmentId: procurement, region: "Americas" },
+          data: { owningDepartmentId: procurement, region: americas },
         });
         expect(updated.status(), await updated.text()).toBe(200);
         await portal.reload();
         await expect(overview.getByText("Procurement", { exact: true })).toBeVisible();
-        await expect(overview.getByText("Americas", { exact: true })).toBeVisible();
+        await expect(overview.getByText(americas, { exact: true })).toBeVisible();
         await expect(
           portal
             .getByRole("region", { name: "Fields", exact: true })

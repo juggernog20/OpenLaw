@@ -89,6 +89,12 @@ export function PortalMatterPage() {
             </div>
             <div>
               <dt className="text-sm font-medium text-muted">
+                <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
+              </dt>
+              <dd>{recordWork.work.region ?? unset}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-muted">
                 <FormattedMessage id="records.department" defaultMessage="Department" />
               </dt>
               <dd>{matter.department ?? unset}</dd>

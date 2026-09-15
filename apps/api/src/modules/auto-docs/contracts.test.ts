@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { regions } from "@openlaw/db";
+
 import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
@@ -39,6 +41,9 @@ let fieldId: string;
 let fieldSlug: string;
 beforeAll(async () => {
   h = await startHarness({ runPipelineWorkers: false });
+  await h.db
+    .insert(regions)
+    .values([{ slug: "middle-east", displayName: "Middle East", displayOrder: 1 }]);
   await h.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   cookies = await signInCookies(h.app, TEST_ADMIN.email, TEST_ADMIN.password);
   const policy = await h.app.inject({

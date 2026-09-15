@@ -3,6 +3,7 @@
 /** The first matter surface: list, create, options, and record read. */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { regionOptions, lockedRegionName } from "../regions/references.js";
 import { departmentOptions, departmentName, lockedDepartment } from "../departments/references.js";
 import { recordPerson } from "../../lib/record-person.js";
 import { originalIntake, OriginalIntakeSchema } from "../requests/original-intake.js";
@@ -120,6 +121,7 @@ const MatterRowSchema = z.object({
   businessOwner: PersonSchema.nullable().optional(),
   departmentId: z.string().nullable().optional(),
   department: z.string().nullable().optional(),
+  region: z.string().nullable().optional(),
   createdBy: z.string().nullable().optional(),
   priority: SeveritySchema,
   risk: SeveritySchema.nullable(),
@@ -192,6 +194,7 @@ function toRow(
     id: row.id,
     createdBy: row.createdBy,
     departmentId: row.departmentId,
+    region: row.region,
     number: row.number,
     title: row.title,
     description: row.description,
@@ -611,6 +614,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             ),
             users: z.array(PersonSchema.extend({ role: z.enum(USER_ROLES) })),
             departments: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            regions: z.array(z.object({ id: z.string(), displayName: z.string() })),
           }),
           default: problemResponse,
         },
@@ -680,6 +684,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       }
       return {
         departments: await departmentOptions(app.db),
+        regions: await regionOptions(app.db),
         matterTypes: types.map((type, index) => {
           const visibleSlugs = new Set(
             attached[index]!.filter(
@@ -857,6 +862,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           matterTypeId: z.string(),
           managerId: z.string().nullable().optional(),
           departmentId: z.string().min(1).nullable().optional(),
+          region: z.string().trim().max(200).nullable().optional(),
           priority: SeveritySchema.optional(),
           risk: SeveritySchema.nullable().optional(),
           description: z.string().trim().max(10_000).nullable().optional(),
@@ -922,6 +928,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           matterTypeId: z.string().optional(),
           managerId: z.string().nullable().optional(),
           departmentId: z.string().min(1).nullable().optional(),
+          region: z.string().trim().max(200).nullable().optional(),
           businessOwnerId: z.string().nullable().optional(),
           priority: SeveritySchema.optional(),
           risk: SeveritySchema.nullable().optional(),
@@ -995,6 +1002,11 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             from: await departmentName(tx, target.departmentId),
             to: next?.displayName ?? null,
           };
+        }
+        if (body.region !== undefined && body.region !== target.region) {
+          const next = await lockedRegionName(tx, body.region);
+          patch.region = next;
+          changed.region = { from: target.region, to: next };
         }
         if (body.businessOwnerId !== undefined && body.businessOwnerId !== target.businessOwnerId) {
           const next = body.businessOwnerId ? await lockedLiveUser(tx, body.businessOwnerId) : null;

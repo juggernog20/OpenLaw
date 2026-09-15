@@ -135,8 +135,6 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { MAX_CONTRACT_CLASSIFICATION_LENGTH } from "@openlaw/shared";
-
 import { ValueField } from "../components/contracts/value-field";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
@@ -441,6 +439,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
     contractStatuses: options?.data?.contractStatuses ?? [],
     users: options?.data?.users ?? [],
     departments: options?.data?.departments ?? [],
+    regions: options?.data?.regions ?? [],
     /** The live approver-group templates the Approvals section's apply
      * picker offers (M14/4, CTR-012). Member+ only, like the rest of
      * the options answer: a read-only viewer applies nothing. */
@@ -456,9 +455,8 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
   };
 }
 
-/** The fields that commit as free text (DES-017); the Owner, our
- * signing entity, the type, the status, priority, and risk have their
- * own selects, and the counterparties have their own routes. */
+/** String drafts for title and description (DES-017), plus the selected
+ * Region name. Region commits on selection; title and description on blur. */
 type TextFieldKey = "title" | "description" | "region";
 /**
  * The four term fields that commit as typed text (CTR-006, DES-017):
@@ -681,6 +679,7 @@ function ContractRecord() {
     contractStatuses,
     users,
     departments,
+    regions,
     approverGroups,
     entities,
     relations: loadedRelations,
@@ -2520,36 +2519,40 @@ function ContractRecord() {
                       <Label htmlFor="contract-region">
                         <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
                       </Label>
-                      <div className="flex items-center gap-2">
-                        <Input
+                      <div className="flex flex-col gap-1.5">
+                        <select
                           id="contract-region"
-                          value={drafts.region}
-                          maxLength={MAX_CONTRACT_CLASSIFICATION_LENGTH}
-                          disabled={frozen}
+                          className={CONTROL_CLASS}
+                          value={saved.region ?? ""}
+                          disabled={frozen || fieldStatus.region === "saving"}
                           onChange={(event) =>
-                            setDrafts((current) => ({ ...current, region: event.target.value }))
+                            void commit("region", { region: event.target.value || null })
                           }
-                          onBlur={() => commitText("region")}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter") commitText("region");
-                            if (event.key === "Escape") revertText("region");
-                          }}
-                        />
+                        >
+                          <option value="">
+                            {intl.formatMessage({
+                              id: "contracts.region.none",
+                              defaultMessage: "No Region",
+                            })}
+                          </option>
+                          {saved.region &&
+                            !regions.some((region) => region.displayName === saved.region) && (
+                              <option value={saved.region} disabled>
+                                {saved.region}
+                              </option>
+                            )}
+                          {regions.map((region) => (
+                            <option key={region.id} value={region.displayName}>
+                              {region.displayName}
+                            </option>
+                          ))}
+                        </select>
                         <StatusNote
                           status={fieldStatus.region ?? "idle"}
                           detail={fieldError.region}
                         />
                       </div>
                     </div>
-                    <ReadOnlyField
-                      label={
-                        <FormattedMessage
-                          id="contracts.column.reference"
-                          defaultMessage="Reference"
-                        />
-                      }
-                      value={reference}
-                    />
                     <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
                       <Label htmlFor="contract-entity">
                         {/* "Our entity" as the C2 mock labels it: the Entity

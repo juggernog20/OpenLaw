@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { regions } from "@openlaw/db";
+
 import { requestDepartment } from "../../testing/request-department.js";
 
 /**
@@ -73,6 +75,7 @@ let matterTargetTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  await harness.db.insert(regions).values([{ slug: "emea", displayName: "EMEA", displayOrder: 1 }]);
   requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
