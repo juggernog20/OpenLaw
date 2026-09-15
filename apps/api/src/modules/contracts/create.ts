@@ -218,6 +218,7 @@ function businessFactsOf(predecessor: Contract) {
     valueAmount: predecessor.valueAmount,
     valueCurrency: predecessor.valueCurrency,
     valueCadence: predecessor.valueCadence,
+    valueCadenceDescription: predecessor.valueCadenceDescription,
     termType: predecessor.termType,
     effectiveDate: predecessor.effectiveDate,
     expiryDate: predecessor.expiryDate,

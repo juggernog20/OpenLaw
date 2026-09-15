@@ -23,7 +23,7 @@ import {
   CONTRACT_STAGES,
   DOCUMENT_VERSION_KINDS,
   TERM_TYPES,
-  VALUE_CADENCES,
+  CONTRACT_VALUE_CADENCES,
   desc,
   documents,
   documentVersions,
@@ -100,7 +100,12 @@ const ContractSchema = z.object({
   noticeDeadline: z.iso.date().nullable(),
   renewalPendingConfirmation: z.boolean(),
   value: z
-    .object({ amount: z.number(), currency: z.string(), cadence: z.enum(VALUE_CADENCES) })
+    .object({
+      amount: z.number(),
+      currency: z.string(),
+      cadence: z.enum(CONTRACT_VALUE_CADENCES),
+      cadenceDescription: z.string().optional(),
+    })
     .nullable(),
   unverifiedFields: z.array(z.enum(AllowedUnverified)),
 });
@@ -175,7 +180,14 @@ export const portalContractRoutes: FastifyPluginAsyncZod = async (app) => {
       renewalPendingConfirmation: renewalPending(row),
       value:
         row.valueAmount !== null && row.valueCurrency !== null && row.valueCadence !== null
-          ? { amount: row.valueAmount, currency: row.valueCurrency, cadence: row.valueCadence }
+          ? {
+              amount: row.valueAmount,
+              currency: row.valueCurrency,
+              cadence: row.valueCadence,
+              ...(row.valueCadenceDescription
+                ? { cadenceDescription: row.valueCadenceDescription }
+                : {}),
+            }
           : null,
       unverifiedFields: AllowedUnverified.filter(
         (slug) => row.aiUnverified?.[UnverifiedSlugs[slug]],

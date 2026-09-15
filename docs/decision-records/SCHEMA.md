@@ -1428,3 +1428,5 @@ Conversion drafts enforce their `pending | ready | failed` states and `matter | 
 `regions` uses the shared taxonomy columns (ID, immutable slug, display name, description, order, defaults and timestamps). Display name is unique. `contracts.region` references `regions.display_name` with `ON UPDATE CASCADE`; archive retains references and blocks new selections. Migration `0135` imports existing Contract and original Request Region values before adding this constraint. See SET-012.
 
 `matters.region` is nullable text referencing `regions.display_name` with `ON UPDATE CASCADE` (migration `0136`). Region usage counts and deletion protection include both Matters and Contracts.
+
+`contracts.value_cadence` also accepts `other`; `value_cadence_description` is required only for that choice and otherwise null (migration `0137`). The Contract Value API carries it as optional `cadenceDescription`, including portal reads and successor copies.

@@ -574,3 +574,9 @@ uses the notification catalog's `assigned_to_you` group. The notification and
 membership share a transaction. Business Users receive the Portal link; Member+
 receive the app link. Portal team additions and Task assignee additions use the
 same write. The existing actor exclusion and channel preferences still apply.
+
+### CTR-010 amendment — custom cadence and grouped amounts, 2026-09-15
+
+The Value cadence picker includes Other. Selecting it shows a custom cadence text input to its right on the same row. The description is required for Other, limited to 100 characters, and saved with amount, currency, and cadence as one value. Selecting a preset or clearing Value removes the stored custom description. Value displays use the custom text as their cadence suffix. Contract copies and successors retain it.
+
+The amount input displays comma thousands separators when not being edited, retains decimal precision, and accepts pasted amounts with valid comma grouping. Currency and minor-unit storage rules are unchanged.
