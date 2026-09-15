@@ -31,7 +31,7 @@ const MESSAGES = defineMessages({
   help: {
     id: "settings.departments.help",
     defaultMessage:
-      "Departments are listed alphabetically. Archiving a Department removes it from pickers and keeps existing references.",
+      "Find Departments in alphabetical order. Archive a Department to remove it from pickers and keep existing references.",
   },
   renameLabel: { id: "settings.departments.renameLabel", defaultMessage: "Rename {name}" },
   inUse: {

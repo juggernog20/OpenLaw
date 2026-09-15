@@ -71,7 +71,7 @@ test("a Business User completes each accessible first-run step and keeps complet
     };
     const stamp = await readStamp();
     await portal.getByRole("button", { name: "Sign out" }).click();
-    await expect(portal).toHaveURL(/\/portal\/enter$/);
+    await expect(portal).toHaveURL(/\/portal\/login$/);
     await submitLogin(portal, email, password, "/portal/login");
     await expect(portal).toHaveURL(/\/portal$/);
     await portal.goto("/portal/onboarding");
