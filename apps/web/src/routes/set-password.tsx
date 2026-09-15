@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Set-password activation: the landing page for invite emails and
- * forgotten-password resets alike (both ride the reset-password flow,
- * TECH-008). The token arrives in the query string and is posted to
- * better-auth's reset endpoint; it proves inbox control, so no session
- * is required here.
+ * TECH-008 password activation. Business setup tokens use the API's
+ * password-setup/complete endpoint; invite and forgotten-password tokens
+ * use Better Auth's reset endpoint. Both prove inbox control without a session.
  */
 
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";

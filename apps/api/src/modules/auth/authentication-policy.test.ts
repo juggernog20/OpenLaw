@@ -70,6 +70,15 @@ it("returns the same response for ineligible addresses without creating accounts
   expect(denied.statusCode).toBe(allowed.statusCode);
   expect(denied.json()).toEqual(allowed.json());
   expect(harness.mailer.messagesTo("outsider@other.example")).toHaveLength(0);
+  expect(
+    await harness.db.select().from(users).where(eq(users.email, "outsider@other.example")),
+  ).toHaveLength(0);
+  expect(
+    await harness.db
+      .select()
+      .from(verifications)
+      .where(eq(verifications.value, "outsider@other.example")),
+  ).toHaveLength(0);
 });
 it("rechecks the group policy at password creation and on every sign-in", async () => {
   const email = "revoked-policy@example.com";
@@ -98,7 +107,10 @@ it("rejects expired setup links", async () => {
 });
 it("retains administrator password recovery even if Legal Users use magic links only", async () => {
   await policy("legal", { ...basic, password: false });
-  expect(await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password)).toBeTruthy();
+  const cookies = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
+  const me = await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies });
+  expect(me.statusCode, me.body).toBe(200);
+  expect(me.json().user).toMatchObject({ email: TEST_ADMIN.email, role: "administrator" });
   await policy("legal", basic);
 });
 
@@ -119,7 +131,10 @@ it("adds a password to an existing Business User who originally used a magic lin
     payload: { token: tokenFor(email), newPassword: "business-test-password" },
   });
   expect(reset.statusCode, reset.body).toBe(200);
-  expect(await signInCookies(harness.app, email, "business-test-password")).toBeTruthy();
+  const cookies = await signInCookies(harness.app, email, "business-test-password");
+  const me = await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies });
+  expect(me.statusCode, me.body).toBe(200);
+  expect(me.json().user).toMatchObject({ email, role: "business_user" });
 });
 
 it("refuses legacy policy setters once independent group policies are saved", async () => {
@@ -135,5 +150,28 @@ it("refuses legacy policy setters once independent group policies are saved", as
       payload,
     });
     expect(result.statusCode, result.body).toBe(409);
+  }
+});
+
+it("limits password setup by address and does not resend a live signup token", async () => {
+  const email = "limited-setup@example.com";
+  for (let attempt = 0; attempt < 3; attempt++)
+    expect((await requestLink(email)).statusCode).toBe(202);
+  expect(harness.mailer.messagesTo(email)).toHaveLength(1);
+  const refused = await requestLink(email);
+  expect(refused.statusCode).toBe(429);
+  expect(refused.headers["content-type"]).toContain("application/problem+json");
+  expect(refused.json()).toMatchObject({ status: 429 });
+});
+
+it("limits password setup across addresses sharing an IP", async () => {
+  for (let attempt = 0; attempt <= 30; attempt++) {
+    const response = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/password-setup",
+      remoteAddress: "192.0.2.90",
+      payload: { email: `denied-${attempt}@unlisted.example` },
+    });
+    expect(response.statusCode, response.body).toBe(attempt < 30 ? 202 : 429);
   }
 });

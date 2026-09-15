@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Resolves Legal and Business authentication methods under TECH-008. Unsaved policies use the legacy mode settings; unknown accounts use the Business policy. */
+
 import { eq, users, type AuthenticationPolicy, type Executor, type UserRole } from "@openlaw/db";
 import { getOrgSettings } from "../lib/org-settings.js";
 

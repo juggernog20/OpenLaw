@@ -92,5 +92,7 @@ it("requires an identity provider before either group can enable SSO", async () 
   setup({ provider: false });
   const legal = await screen.findByRole("region", { name: "Legal User Authentication" });
   expect(within(legal).getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
+  const business = screen.getByRole("region", { name: "Business Portal Authentication" });
+  expect(within(business).getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
   expect(screen.getByRole("region", { name: "Identity provider" })).toBeVisible();
 });

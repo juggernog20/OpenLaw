@@ -598,15 +598,16 @@ it("applies the organisation's frequency to existing Auto-Docs and refuses recor
   expect((await formFor(second.id)).json().acknowledgement.text).toBe(
     "Ask Legal before editing this document.",
   );
-  const audit = await h.db
-    .select()
-    .from(activityLog)
-    .where(eq(activityLog.action, "org_settings.updated"));
+  const audit = await get("/audit-log?action=org_settings.updated", admin);
+  expect(audit.statusCode, audit.body).toBe(200);
+  expect(audit.headers["content-type"]).toContain("application/json");
   expect(
-    audit.some(
-      (entry) =>
-        entry.payload.field === "autoDocAcknowledgementFrequency" &&
-        entry.payload.new === "every_use",
-    ),
+    audit
+      .json()
+      .entries.some(
+        (entry: { payload: Record<string, unknown> }) =>
+          entry.payload.field === "autoDocAcknowledgementFrequency" &&
+          entry.payload.new === "every_use",
+      ),
   ).toBe(true);
 });
