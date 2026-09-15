@@ -2,7 +2,7 @@
 
 /** SET-010 Department pickers, assignment checks, and names for retained references. */
 
-import { and, asc, departments, eq, isNull, type Executor } from "@openlaw/db";
+import { and, asc, departments, eq, isNull, sql, type Executor } from "@openlaw/db";
 import { httpError } from "../../lib/problem.js";
 
 export function departmentOptions(db: Executor) {
@@ -10,7 +10,7 @@ export function departmentOptions(db: Executor) {
     .select({ id: departments.id, displayName: departments.displayName })
     .from(departments)
     .where(isNull(departments.archivedAt))
-    .orderBy(asc(departments.displayOrder), asc(departments.id));
+    .orderBy(asc(sql`lower(${departments.displayName})`), asc(departments.id));
 }
 
 export async function lockedDepartment(db: Executor, id: string) {
@@ -34,7 +34,7 @@ export async function departmentByName(db: Executor, value: unknown) {
     .select()
     .from(departments)
     .where(and(eq(departments.displayName, value.trim()), isNull(departments.archivedAt)))
-    .orderBy(asc(departments.displayOrder), asc(departments.id))
+    .orderBy(asc(sql`lower(${departments.displayName})`), asc(departments.id))
     .limit(1)
     .for("share");
   return row?.id ?? null;

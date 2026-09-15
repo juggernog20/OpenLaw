@@ -831,3 +831,9 @@ One provider call is bounded at five minutes, not two. A 50,000-character Reques
 - **Date** — 2026-09-12
 - **Decision** — Rename the Request's ~~Summary~~ **Title** field throughout the app, API, database schema, seed data, tests and current user guides. Its prompt is **Enter a descriptive title for your request**. This amends INT-002's fixed basics: Title, Description, Attachments and Urgency. Title remains required and retains the existing values and validation.
 - **Migration** — Rename `requests.summary` to `requests.title` in place. Preserve the generated search expression and GIN index. Inbox columns and sort keys use `title`; saved Inbox layouts retain column order and widths. New notifications use `requestTitle`. Readers continue to understand older notification payloads and saved AI evidence identities without rewriting historical evidence. Original Request blocks, conversion, search, Home and audit references all use Title.
+
+## INT-010 — Department is required and fixed during intake
+
+- **Status:** Accepted
+- **Date:** 2026-09-15
+- **Decision:** Every new Request requires a live Department selected in its form. The Request overview displays that submitted value without an edit control. Conversion retains it in the original Request and copies it to the resulting Matter or Contract, where normal record permissions permit later changes. Existing Requests with no Department remain readable and convertible. This amends INT-002's required basics and supersedes the Request-edit portion of SET-010's 2026-09-13 amendment.

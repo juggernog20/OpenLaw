@@ -138,3 +138,49 @@ it("redirects a Member out of Department settings", async () => {
   renderAt("/settings/departments");
   expect(await screen.findByRole("heading", { name: "Profile" })).toBeInTheDocument();
 });
+
+it("keeps Departments alphabetical after creating and renaming, without reorder controls", async () => {
+  let departments = [SALES, { ...SALES, id: "legal", displayName: "legal", displayOrder: 2 }];
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/departments") {
+        if (call.method === "POST") {
+          const body = call.body as { displayName: string };
+          const department = {
+            ...SALES,
+            id: "new",
+            displayName: body.displayName,
+            displayOrder: 3,
+          };
+          departments.push(department);
+          return json(201, { department });
+        }
+        return json(200, { departments });
+      }
+      if (call.url.pathname === "/api/v1/departments/sales" && call.method === "PATCH") {
+        const body = call.body as { displayName: string };
+        const department = { ...SALES, displayName: body.displayName };
+        departments = departments.map((row) => (row.id === "sales" ? department : row));
+        return json(200, { department });
+      }
+      return undefined;
+    },
+  });
+  const user = userEvent.setup();
+  renderAt("/settings/departments");
+  await screen.findByRole("button", { name: "Rename Sales" });
+  const names = () =>
+    screen.getAllByRole("button", { name: /^Rename / }).map((button) => button.textContent);
+  expect(names()).toEqual(["legal", "Sales"]);
+  expect(screen.queryByRole("button", { name: /^Reorder / })).not.toBeInTheDocument();
+  expect(document.querySelector('[draggable="true"]')).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Add Department" }));
+  await user.type(screen.getByRole("textbox", { name: "New Department name" }), "Marketing{Enter}");
+  await waitFor(() => expect(names()).toEqual(["legal", "Marketing", "Sales"]));
+  await user.click(screen.getByRole("button", { name: "Rename Sales" }));
+  const input = screen.getByRole("textbox", { name: "Rename Sales" });
+  await user.clear(input);
+  await user.type(input, "Accounting{Enter}");
+  await waitFor(() => expect(names()).toEqual(["Accounting", "legal", "Marketing"]));
+});

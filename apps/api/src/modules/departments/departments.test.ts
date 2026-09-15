@@ -54,7 +54,7 @@ it("keeps Department management Administrator-only and offers live names to Memb
   expect(options.json()).toEqual({ departments: [] });
 });
 
-it("renames and orders Departments, preserves archived references, and audits user assignment", async () => {
+it("renames and alphabetizes Departments, preserves archived references, and audits user assignment", async () => {
   async function create(displayName: string) {
     const response = await harness.app.inject({
       method: "POST",
@@ -66,7 +66,7 @@ it("renames and orders Departments, preserves archived references, and audits us
     return response.json().department as { id: string; slug: string };
   }
   const sales = await create("Sales");
-  const legal = await create("Legal");
+  const legal = await create("legal");
   const renamed = await harness.app.inject({
     method: "PATCH",
     url: `/api/v1/departments/${sales.id}`,
@@ -81,8 +81,15 @@ it("renames and orders Departments, preserves archived references, and audits us
     cookies: admin,
     payload: { ids: [legal.id, sales.id] },
   });
-  expect(order.statusCode, order.body).toBe(200);
-  expect(order.json().departments.map((d: { id: string }) => d.id)).toEqual([legal.id, sales.id]);
+  expect(order.statusCode, order.body).toBe(404);
+  for (const url of ["/api/v1/departments", "/api/v1/departments/options"]) {
+    const listed = await harness.app.inject({ url, cookies: admin });
+    expect(listed.statusCode, listed.body).toBe(200);
+    expect(listed.json().departments.map((d: { id: string }) => d.id)).toEqual([
+      legal.id,
+      sales.id,
+    ]);
+  }
 
   const assign = (departmentId: string | null, cookies = admin) =>
     harness.app.inject({
@@ -209,7 +216,7 @@ it("renames and orders Departments, preserves archived references, and audits us
       payload: {
         email: "departments@example.com",
         from: "Sales operations",
-        to: "Legal",
+        to: "legal",
         fromId: sales.id,
         toId: legal.id,
       },
@@ -218,7 +225,7 @@ it("renames and orders Departments, preserves archived references, and audits us
       visibility: "admin_only",
       payload: {
         email: "departments@example.com",
-        from: "Legal",
+        from: "legal",
         to: null,
         fromId: legal.id,
         toId: null,

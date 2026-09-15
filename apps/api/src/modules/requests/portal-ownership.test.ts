@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { eq, requestTypes } from "@openlaw/db";
 import {
@@ -11,10 +13,12 @@ import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harnes
 import { StaffRequestSchema } from "./projection.js";
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let cast: DispositionScaffold;
 let typeId: string;
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   await harness.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   cast = await dispositionScaffold(harness);
   const [type] = await harness.db
@@ -32,6 +36,7 @@ async function submit() {
     url: "/api/v1/requests",
     cookies: cast.requesterCookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: typeId,
       title: "Review this NDA",
       description: "Review the proposed NDA.",

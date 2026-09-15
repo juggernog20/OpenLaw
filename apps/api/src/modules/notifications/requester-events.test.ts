@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * NOT-002's group 5 (#382, M20/8) at the HTTP seam, over the real-Postgres
  * harness, the real pg-boss queue, and the harness's capturing mailer.
@@ -83,6 +85,7 @@ const STAFF = {
 } as const;
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 const cookies = new Map<string, Record<string, string>>();
 const userIds = new Map<string, string>();
 /** The seeded "Contract review" front door, which every Request here is
@@ -109,6 +112,7 @@ interface RequestRow {
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -157,6 +161,7 @@ async function submit(fixture: { email: string }, title: string): Promise<Reques
     url: "/api/v1/requests",
     cookies: as(fixture),
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: contractReviewTypeId,
       title,
       description: "They sent a redline on the liability cap.",

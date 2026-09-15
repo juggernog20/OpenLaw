@@ -12,6 +12,7 @@ export function DepartmentPicker({
   currentName,
   options,
   disabled,
+  required = false,
   onChange,
 }: Readonly<{
   id?: string;
@@ -20,6 +21,7 @@ export function DepartmentPicker({
   currentName?: string | null;
   options: readonly { id: string; displayName: string }[];
   disabled?: boolean;
+  required?: boolean;
   onChange: (value: string | null) => void;
 }>) {
   const intl = useIntl();
@@ -29,11 +31,17 @@ export function DepartmentPicker({
       aria-label={label}
       className={CONTROL_CLASS}
       disabled={disabled}
+      required={required}
+      aria-required={required || undefined}
       value={value ?? ""}
       onChange={(event) => onChange(event.target.value || null)}
     >
-      <option value="">
-        {intl.formatMessage({ id: "departments.none", defaultMessage: "No Department" })}
+      <option value="" disabled={required}>
+        {intl.formatMessage(
+          required
+            ? { id: "departments.choose", defaultMessage: "Choose a Department" }
+            : { id: "departments.none", defaultMessage: "No Department" },
+        )}
       </option>
       {value && !options.some((option) => option.id === value) && (
         <option value={value} disabled>

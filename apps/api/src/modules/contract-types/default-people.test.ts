@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /** CTR-026 and NOT-009 at the settings, creation, and notification HTTP seams. */
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { activityLog, and, asc, contracts, eq, notifications, users } from "@openlaw/db";
@@ -257,6 +259,7 @@ it("copies the current list on Request conversion and both renewal vehicles", as
     cookies: portal,
     payload: {
       requestTypeId,
+      departmentId: await requestDepartment(h.db),
       title: "Defaults conversion",
       description: "An NDA",
       urgency: "medium",

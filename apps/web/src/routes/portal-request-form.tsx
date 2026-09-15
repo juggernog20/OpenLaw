@@ -171,7 +171,11 @@ export function PortalRequestFormPage() {
   /** DES-018's ramp, and `medium` until the requester says otherwise —
    * the same default a contract's priority is born with. */
   const [urgency, setUrgency] = useState<(typeof SEVERITY_LEVELS)[number]>("medium");
-  const [departmentId, setDepartmentId] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(
+    departments.some((department) => department.id === user.departmentId)
+      ? user.departmentId
+      : null,
+  );
   const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
   /** The paper, chosen but not yet sent: an attachment is a row against
    * a Request, and there is no Request until Submit is pressed. */
@@ -218,6 +222,11 @@ export function PortalRequestFormPage() {
       marks.add("description");
     }
 
+    if (!departmentId) {
+      missing.push(intl.formatMessage({ id: "records.department", defaultMessage: "Department" }));
+      marks.add("department");
+    }
+
     const customFields: Record<string, CustomFieldValue> = {};
     for (const field of fields) {
       const parsed = toValue(field, drafts[field.slug] ?? emptyDraft(field));
@@ -259,6 +268,7 @@ export function PortalRequestFormPage() {
       );
       return;
     }
+    if (!departmentId) return;
     setUnanswered(new Set());
 
     setBusy(true);
@@ -266,7 +276,7 @@ export function PortalRequestFormPage() {
       .POST("/api/v1/requests", {
         body: {
           requestTypeId: requestType.id,
-          ...(departmentId ? { departmentId } : {}),
+          departmentId,
           title: title.trim(),
           description: description.trim(),
           urgency,
@@ -398,6 +408,7 @@ export function PortalRequestFormPage() {
 
                 <Field
                   htmlFor="request-department"
+                  required
                   label={intl.formatMessage({
                     id: "records.department",
                     defaultMessage: "Department",
@@ -405,6 +416,7 @@ export function PortalRequestFormPage() {
                 >
                   <DepartmentPicker
                     id="request-department"
+                    required
                     value={departmentId}
                     options={departments}
                     onChange={setDepartmentId}

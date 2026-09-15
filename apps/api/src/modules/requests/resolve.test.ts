@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * Resolve (#419): the disposition that answers in the thread and closes
  * — asserted at the HTTP seam the screen presses.
@@ -32,6 +34,7 @@ import {
 import { startHarness, TEST_ADMIN as ADMIN, type TestHarness } from "../../testing/harness.js";
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let cast: DispositionScaffold;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
@@ -44,6 +47,7 @@ let ndaTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -80,6 +84,7 @@ async function submit(title: string): Promise<{ id: string; number: number }> {
     url: "/api/v1/requests",
     cookies: requesterCookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: ndaTypeId,
       title,
       description: "For the pilot kicking off next month.",

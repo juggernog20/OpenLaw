@@ -81,15 +81,14 @@ it.each(["matter", "contract"] as const)(
       cookies: cast.requesterCookies,
       payload: { departmentId: sales },
     });
-    expect(forbidden.statusCode).toBe(403);
+    expect(forbidden.statusCode).toBe(404);
     const changed = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/requests/${request.number}/department`,
       cookies: cast.memberCookies,
       payload: { departmentId: sales },
     });
-    expect(changed.statusCode, changed.body).toBe(200);
-    expect(changed.json()).toEqual({ departmentId: sales, department: "Sales" });
+    expect(changed.statusCode, changed.body).toBe(404);
     const converted = await harness.app.inject({
       method: "POST",
       url: `/api/v1/requests/${request.number}/convert`,
@@ -104,23 +103,23 @@ it.each(["matter", "contract"] as const)(
     const record = await harness.app.inject({ method: "GET", url, cookies: cast.memberCookies });
     const idKey = module === "matter" ? "departmentId" : "owningDepartmentId";
     const nameKey = module === "matter" ? "department" : "owningDepartment";
-    expect(record.json()[module][idKey]).toBe(sales);
+    expect(record.json()[module][idKey]).toBe(finance);
     const updated = await harness.app.inject({
       method: "PATCH",
       url,
       cookies: cast.memberCookies,
-      payload: { [idKey]: finance },
+      payload: { [idKey]: sales },
     });
     expect(updated.statusCode, updated.body).toBe(200);
-    expect(updated.json()[module][nameKey]).toBe("Finance");
-    expect(stored!.departmentId).toBe(sales);
+    expect(updated.json()[module][nameKey]).toBe("Sales");
+    expect(stored!.departmentId).toBe(finance);
     const tooLate = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/requests/${request.number}/department`,
       cookies: cast.memberCookies,
       payload: { departmentId: null },
     });
-    expect(tooLate.statusCode).toBe(409);
+    expect(tooLate.statusCode).toBe(404);
     const badId = await harness.app.inject({
       method: "PATCH",
       url,

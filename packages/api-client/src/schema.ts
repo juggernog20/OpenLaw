@@ -1980,7 +1980,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Department taxonomy in display order (SET-010); archived rows only with includeArchived=true */
+    /** The Department taxonomy in alphabetical order (SET-010); archived rows only with includeArchived=true */
     get: operations["listDepartments"];
     put?: never;
     /** Add a Department: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
@@ -2008,23 +2008,6 @@ export interface paths {
     head?: never;
     /** Rename a Department's display name (DES-017 in-place rename) or edit its description; the slug never changes */
     patch: operations["updateDepartment"];
-    trace?: never;
-  };
-  "/api/v1/departments/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
-    put: operations["reorderDepartments"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
     trace?: never;
   };
   "/api/v1/departments/{id}/archive": {
@@ -3661,22 +3644,6 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
-    trace?: never;
-  };
-  "/api/v1/requests/{number}/department": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations["setRequestDepartment"];
     trace?: never;
   };
   "/api/v1/requests/{number}": {
@@ -13379,52 +13346,6 @@ export interface operations {
       };
     };
   };
-  reorderDepartments: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          ids: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            departments: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
   archiveDepartment: {
     parameters: {
       query?: never;
@@ -20036,7 +19957,7 @@ export interface operations {
       content: {
         "application/json": {
           requestTypeId: string;
-          departmentId?: string | null;
+          departmentId: string;
           title: string;
           description: string;
           /** @enum {string} */
@@ -20671,46 +20592,6 @@ export interface operations {
             id: string;
             number: number;
             title: string;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setRequestDepartment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          departmentId: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            departmentId: string | null;
-            department: string | null;
           };
         };
       };

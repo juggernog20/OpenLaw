@@ -24,6 +24,7 @@ const REQUESTER = {
   email: "tom.iwu@acme.com",
   displayName: "Tom Iwu",
   role: "business_user",
+  departmentId: "dept-finance",
 };
 
 interface FormField {
@@ -187,7 +188,7 @@ describe("the request type's form", () => {
       expect(await screen.findByLabelText(label)).toHaveAttribute("aria-required", "true");
     }
     expect(screen.getByLabelText(/^Paper side/)).not.toHaveAttribute("aria-required", "true");
-    expect(screen.getAllByText("(required)")).toHaveLength(4);
+    expect(screen.getAllByText("(required)")).toHaveLength(5);
   });
 
   it("shows this request type's own deflection links", async () => {
@@ -210,7 +211,9 @@ describe("the request type's form", () => {
   it("sends an unauthenticated visitor to the entry screen", async () => {
     stubApi({ signedIn: null });
     renderAt("/portal/new/contract_review");
-    expect(await screen.findByRole("heading", { name: "Legal portal" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Business Portal sign-in" }),
+    ).toBeInTheDocument();
   });
 
   it("sends a requester after an archived type back to the picker", async () => {
@@ -236,7 +239,7 @@ describe("submitting the form", () => {
     const submissions = openForm();
     await fillComplete(user);
     await user.selectOptions(screen.getByLabelText(/^Paper side/), "Theirs");
-    await user.selectOptions(screen.getByRole("combobox", { name: "Department" }), "dept-finance");
+    await user.selectOptions(screen.getByRole("combobox", { name: /^Department/ }), "dept-finance");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
     await screen.findByRole("heading", { name: /R-42/ });
@@ -313,6 +316,7 @@ describe("submitting the form", () => {
     await screen.findByRole("heading", { name: /R-42/ });
     expect(Object.keys(submissions.bodies[0] as object).sort()).toEqual([
       "customFields",
+      "departmentId",
       "description",
       "requestTypeId",
       "title",

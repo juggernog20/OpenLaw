@@ -301,9 +301,15 @@ test.describe.serial("M19 demo path", () => {
         ["Title", "Text"],
         ["Description", "Long text"],
         ["Attachments", "Files"],
+        ["Department", "Single select"],
         ["Urgency", "Single select"],
       ] as const) {
-        await expect(basics.getByText(caption, { exact: true })).toBeVisible();
+        // Two basics are Single select now, so the caption is read on
+        // its own row rather than anywhere in the list.
+        const row = basics
+          .getByRole("listitem")
+          .filter({ has: page.getByText(name, { exact: true }) });
+        await expect(row.getByText(caption, { exact: true })).toBeVisible();
         await expect(basics.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
       }
       // Title, Description, and Urgency are required on every form;

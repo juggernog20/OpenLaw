@@ -59,7 +59,7 @@ export interface TaxonomyPaneRow {
 export interface TaxonomyPaneApi<Row extends TaxonomyPaneRow = TaxonomyPaneRow> {
   create(displayName: string): Promise<ProblemResult<Row>>;
   rename(id: string, displayName: string): Promise<ProblemResult<Row>>;
-  reorder(ids: string[]): Promise<ProblemResult<Row[]>>;
+  reorder?(ids: string[]): Promise<ProblemResult<Row[]>>;
   archive(id: string, reassignToId?: string): Promise<ProblemResult<Row>>;
   restore(id: string): Promise<ProblemResult<Row>>;
 }
@@ -83,8 +83,8 @@ export interface TaxonomyPaneMessages {
   inUse?: MessageDescriptor;
   archive: MessageDescriptor;
   restore: MessageDescriptor;
-  reorder: MessageDescriptor;
-  moved: MessageDescriptor;
+  reorder?: MessageDescriptor;
+  moved?: MessageDescriptor;
   archiveTitle: MessageDescriptor;
   archiveWarning: MessageDescriptor;
   reassignLabel: MessageDescriptor;
@@ -333,8 +333,14 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   const listRef = useRef<HTMLUListElement>(null);
   const createInFlight = useRef(false);
 
-  const live = rows.filter((row) => !row.archivedAt).sort(byDisplayOrder);
-  const archived = rows.filter((row) => row.archivedAt).sort(byDisplayOrder);
+  const compareRows = api.reorder
+    ? byDisplayOrder
+    : (a: Row, b: Row) =>
+        a.displayName.localeCompare(b.displayName, intl.locale, { sensitivity: "base" }) ||
+        a.id.localeCompare(b.id);
+  const live = rows.filter((row) => !row.archivedAt).sort(compareRows);
+  const archived = rows.filter((row) => row.archivedAt).sort(compareRows);
+  const reorderMessage = messages.reorder;
 
   // A const binding, so the `inUse &&` guard below narrows inside the
   // rowMeta closure — a property access would not.
@@ -394,6 +400,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
 
   /** Commits a full permutation of the live rows (SET-003: immediately). */
   async function commitOrder(orderedIds: string[]) {
+    if (!api.reorder) return false;
     setOrderStatus("saving");
     setOrderError(undefined);
     const { data, detail } = await api
@@ -420,7 +427,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
     const ids = live.map(({ id }) => id);
     ids.splice(fromIndex, 1);
     ids.splice(toIndex, 0, row.id);
-    if (await commitOrder(ids)) {
+    if ((await commitOrder(ids)) && messages.moved) {
       setAnnouncement(
         intl.formatMessage(messages.moved, {
           name: row.displayName,
@@ -531,13 +538,17 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
           onArchive={setArchiveTarget}
           restoreLabel={(row) => intl.formatMessage(messages.restore, { name: row.displayName })}
           onRestore={(row) => void restore(row)}
-          reorder={{
-            status: orderStatus,
-            detail: orderError,
-            gripLabel: (row, position, total) =>
-              intl.formatMessage(messages.reorder, { name: row.displayName, position, total }),
-            onMove: (fromIndex, toIndex) => void move(fromIndex, toIndex),
-          }}
+          reorder={
+            api.reorder && reorderMessage
+              ? {
+                  status: orderStatus,
+                  detail: orderError,
+                  gripLabel: (row, position, total) =>
+                    intl.formatMessage(reorderMessage, { name: row.displayName, position, total }),
+                  onMove: (fromIndex, toIndex) => void move(fromIndex, toIndex),
+                }
+              : undefined
+          }
           adding={adding}
           addRow={
             <>

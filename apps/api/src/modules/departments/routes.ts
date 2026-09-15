@@ -25,6 +25,7 @@ export const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       actionPrefix: "department",
       recordNoun: { singular: "reference", plural: "references" },
       archiveKeepsReferences: true,
+      alphabetical: true,
       usage: {
         async counts(db, ids) {
           if (!ids.length) return new Map();

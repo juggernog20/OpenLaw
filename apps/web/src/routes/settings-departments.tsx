@@ -31,7 +31,7 @@ const MESSAGES = defineMessages({
   help: {
     id: "settings.departments.help",
     defaultMessage:
-      "Drag to reorder. Archiving a Department removes it from pickers and keeps existing references.",
+      "Departments are listed alphabetically. Archiving a Department removes it from pickers and keeps existing references.",
   },
   renameLabel: { id: "settings.departments.renameLabel", defaultMessage: "Rename {name}" },
   inUse: {
@@ -40,15 +40,6 @@ const MESSAGES = defineMessages({
   },
   archive: { id: "settings.departments.archive", defaultMessage: "Archive {name}" },
   restore: { id: "settings.departments.restore", defaultMessage: "Restore {name}" },
-  reorder: {
-    id: "settings.departments.reorder",
-    defaultMessage:
-      "Reorder {name}, position {position} of {total}. Use the arrow keys to move it.",
-  },
-  moved: {
-    id: "settings.departments.moved",
-    defaultMessage: "{name} moved to position {position} of {total}.",
-  },
   archiveTitle: { id: "settings.departments.archiveTitle", defaultMessage: "Archive {name}" },
   archiveWarning: {
     id: "settings.departments.archiveWarning",
@@ -91,12 +82,6 @@ const PANE_API: TaxonomyPaneApi = {
       })
       .catch(() => undefined);
     return { data: result?.data?.department, ...(await problem(result)) };
-  },
-  async reorder(ids) {
-    const result = await api
-      .PUT("/api/v1/departments/order", { body: { ids } })
-      .catch(() => undefined);
-    return { data: result?.data?.departments, ...(await problem(result)) };
   },
   async archive(id, reassignToId) {
     const result = await api

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * Request attachments (#380): the paper that travels with the ask, at
  * the seam the portal form actually posts it to.
@@ -51,6 +53,7 @@ interface AttachmentRow {
 }
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let adminCookies: Record<string, string>;
 let requesterCookies: Record<string, string>;
 let otherCookies: Record<string, string>;
@@ -62,6 +65,7 @@ let requestTypeId: string;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -120,6 +124,7 @@ async function submitted(cookies = requesterCookies): Promise<number> {
     url: "/api/v1/requests",
     cookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId,
       title: "MSA renewal with Orion Cloud",
       description: "They sent a redline on the liability cap.",

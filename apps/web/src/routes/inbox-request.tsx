@@ -104,8 +104,6 @@ import { useCommentApplet } from "../components/comments/comment-applet";
 import { AttachmentPreview } from "../components/comments/attachment-preview";
 import { PreparedConvertDialog } from "../components/intake/prepared-convert-dialog";
 import { CustomFieldValueText } from "../components/intake/custom-field-value";
-import { DepartmentPicker } from "../components/department-picker";
-import { problem as readProblem } from "../lib/problem";
 import { RequestAssignment } from "../components/inbox/request-assignment";
 import { ResolveDialog } from "../components/intake/resolve-dialog";
 import {
@@ -200,7 +198,6 @@ export function InboxRequestPage() {
     contractTypes,
     matterTypes,
     people,
-    departments,
     entities,
   } = useLoaderData<typeof inboxRequestLoader>();
   const intl = useIntl();
@@ -383,7 +380,7 @@ export function InboxRequestPage() {
       />
       <RecordApplets applets={request.status === "converted" ? [] : [chatApplet]}>
         <div className="flex h-full flex-col gap-4 overflow-y-auto px-page-x py-page-y">
-          <Hero request={request} departments={departments} />
+          <Hero request={request} />
           {/* The record box rather than the page: opening the thread
               takes a column out of this row, so the two columns have to
               reflow against what is left of it (DES-012, DES-016). */}
@@ -479,13 +476,7 @@ export function InboxRequestPage() {
  * one is the form the requester filled in, the other is how much of the
  * conversion is already decided (DD-018, INT-002).
  */
-function Hero({
-  request,
-  departments,
-}: Readonly<{
-  request: StaffRequest;
-  departments: readonly { id: string; displayName: string }[];
-}>) {
+function Hero({ request }: Readonly<{ request: StaffRequest }>) {
   const intl = useIntl();
   return (
     // A named landmark rather than a bare strip: it carries no heading
@@ -513,11 +504,8 @@ function Hero({
         {requestTargetLabel(intl, request.requestType)}
       </HeroItem>
       <HeroItem label={<FormattedMessage id="records.department" defaultMessage="Department" />}>
-        <RequestDepartment
-          key={`${request.id}:${request.departmentId}`}
-          request={request}
-          options={departments}
-        />
+        {request.department ??
+          intl.formatMessage({ id: "departments.none", defaultMessage: "No Department" })}
       </HeroItem>
       <HeroItem label={<FormattedMessage id="inbox.column.urgency" defaultMessage="Urgency" />}>
         <span
@@ -539,69 +527,6 @@ function Hero({
         </time>
       </HeroItem>
     </section>
-  );
-}
-
-function RequestDepartment({
-  request,
-  options,
-}: {
-  request: StaffRequest;
-  options: readonly { id: string; displayName: string }[];
-}) {
-  const intl = useIntl();
-  const [value, setValue] = useState({
-    departmentId: request.departmentId ?? null,
-    department: request.department ?? null,
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string>();
-  const revalidator = useRevalidator();
-  if (request.status !== "new")
-    return (
-      <span>
-        {value.department ??
-          intl.formatMessage({ id: "departments.none", defaultMessage: "No Department" })}
-      </span>
-    );
-  return (
-    <div>
-      <DepartmentPicker
-        label={intl.formatMessage({ id: "records.department", defaultMessage: "Department" })}
-        value={value.departmentId}
-        currentName={value.department}
-        options={options}
-        disabled={saving}
-        onChange={async (departmentId) => {
-          if (saving) return;
-          setSaving(true);
-          setError(undefined);
-          const result = await api
-            .PATCH("/api/v1/requests/{number}/department", {
-              params: { path: { number: request.number } },
-              body: { departmentId },
-            })
-            .catch(() => undefined);
-          if (result?.data) {
-            setValue(result.data);
-            void revalidator.revalidate();
-          } else
-            setError(
-              (await readProblem(result)).detail ??
-                intl.formatMessage({
-                  id: "matters.edit.error",
-                  defaultMessage: "The change could not be saved.",
-                }),
-            );
-          setSaving(false);
-        }}
-      />
-      {error && (
-        <p role="alert" className="text-xs text-status-danger-fg">
-          {error}
-        </p>
-      )}
-    </div>
   );
 }
 

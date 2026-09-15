@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { requestDepartment } from "../../testing/request-department.js";
+
 /**
  * The staff request detail (#414): the read the Inbox row opens, at the
  * seam the screen calls.
@@ -58,6 +60,7 @@ const CONTRIBUTOR = {
 } as const;
 
 let harness: TestHarness;
+let requestDepartmentId: string;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
@@ -72,6 +75,7 @@ let fieldSlugs: Map<string, string>;
 
 beforeAll(async () => {
   harness = await startHarness();
+  requestDepartmentId = await requestDepartment(harness.db);
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -156,6 +160,7 @@ async function submit(body: Record<string, unknown> = {}): Promise<{ id: string;
     url: "/api/v1/requests",
     cookies: requesterCookies,
     payload: {
+      departmentId: requestDepartmentId,
       requestTypeId: typeIds.get("nda_request"),
       title: "Mutual NDA with Orion Cloud",
       description: "For the pilot kicking off next month.",
@@ -303,10 +308,12 @@ describe("the envelope (INT-006)", () => {
 
   it("reads a module-only target as the module alone, and no target as none", async () => {
     const moduleOnly = await submit({
+      departmentId: requestDepartmentId,
       requestTypeId: typeIds.get("contract_review"),
       title: "Redline review",
     });
     const noTarget = await submit({
+      departmentId: requestDepartmentId,
       requestTypeId: typeIds.get("legal_question"),
       title: "Quick question",
     });
