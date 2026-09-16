@@ -104,7 +104,13 @@
 import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useRef, useState } from "react";
 import { useRecord } from "../record-context";
-import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
+import {
+  FormattedMessage,
+  useIntl,
+  defineMessage,
+  type IntlShape,
+  type MessageDescriptor,
+} from "react-intl";
 import {
   Check,
   Download,
@@ -185,11 +191,11 @@ const ENVELOPE_STATUS_LABEL = {
 
 /** The header's tally, one message per state so a zero is left out
  * rather than printed. */
-const COUNT_LABEL = {
+const COUNT_LABEL: Record<"approved" | "rejected" | "pending", MessageDescriptor> = {
   approved: defineMessage({ id: "approvals.count.approved", defaultMessage: "{count} approved" }),
   rejected: defineMessage({ id: "approvals.count.rejected", defaultMessage: "{count} rejected" }),
   pending: defineMessage({ id: "approvals.count.pending", defaultMessage: "{count} pending" }),
-} as const;
+};
 
 /** One person the picker may offer. */
 interface Candidate {

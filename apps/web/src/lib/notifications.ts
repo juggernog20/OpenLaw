@@ -415,25 +415,25 @@ const ARMS: Readonly<Record<string, Arm>> = {
 
 /** What an item whose slug this build does not know reads as. It names
  * the record, because that is the part the reader can act on. */
-const UNKNOWN = defineMessage({
+const UNKNOWN: MessageDescriptor = defineMessage({
   id: "notifications.unknown",
   defaultMessage: "{contract} — {event}",
 });
 
 /** What a record with no title in the payload is called. A row this old
  * is still a prompt about something, and the number addresses it. */
-const NUMBERED = defineMessage({
+const NUMBERED: MessageDescriptor = defineMessage({
   id: "notifications.contractNumber",
   defaultMessage: "contract {number}",
 });
 
-const NUMBERED_MATTER = defineMessage({
+const NUMBERED_MATTER: MessageDescriptor = defineMessage({
   id: "notifications.matterNumber",
   defaultMessage: "M-{number}",
 });
 
 /** The same for a Request, whose human reference is R-### (INT-002). */
-const NUMBERED_REQUEST = defineMessage({
+const NUMBERED_REQUEST: MessageDescriptor = defineMessage({
   id: "notifications.requestNumber",
   defaultMessage: "R-{number}",
 });

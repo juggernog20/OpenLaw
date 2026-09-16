@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ArrowRight, LoaderCircle, SearchX, TriangleAlert } from "lucide-react";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { useLocation, useNavigate } from "react-router";
 import { registerSearchTarget, SEARCH_KEY } from "../../lib/keyboard";
 import { search, type SearchOutcome } from "../../lib/search";
@@ -23,7 +23,19 @@ import {
 const SEARCH_DEBOUNCE_MS = 150;
 const MIN_QUERY_LENGTH = 2;
 
-const MESSAGES = defineMessages({
+const MESSAGES: Record<
+  | "label"
+  | "listLabel"
+  | "placeholder"
+  | "searching"
+  | "searchingBody"
+  | "noMatches"
+  | "noMatchesBody"
+  | "errorTitle"
+  | "errorBody"
+  | "seeAll",
+  MessageDescriptor
+> = defineMessages({
   label: { id: "search.header.label", defaultMessage: "Search" },
   listLabel: { id: "search.header.listLabel", defaultMessage: "Search results" },
   placeholder: {

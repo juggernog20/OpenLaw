@@ -26,7 +26,7 @@
  */
 
 import { redirect, useLoaderData } from "react-router";
-import { defineMessages, FormattedMessage } from "react-intl";
+import { defineMessages, FormattedMessage, type MessageDescriptor } from "react-intl";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
@@ -139,7 +139,17 @@ const MESSAGES = defineMessages({
 /** ST12's two mount-specific column heads and the Target cell's three
  * states. "Contract · NDA" names a type; "Contract" is the module
  * alone, which is where a hard-deleted target type leaves the row. */
-const COLUMNS = defineMessages({
+const COLUMNS: Record<
+  | "nameColumn"
+  | "targetColumn"
+  | "targetPrefix"
+  | "targetModule"
+  | "targetType"
+  | "fieldsColumn"
+  | "fieldsPrefix"
+  | "fieldsCount",
+  MessageDescriptor
+> = defineMessages({
   nameColumn: { id: "settings.requestTypes.nameColumn", defaultMessage: "Request type" },
   targetColumn: { id: "settings.requestTypes.targetColumn", defaultMessage: "Target" },
   targetPrefix: { id: "settings.requestTypes.targetPrefix", defaultMessage: "Target:" },

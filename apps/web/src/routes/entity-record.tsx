@@ -4,7 +4,13 @@
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import {
+  defineMessage,
+  FormattedMessage,
+  useIntl,
+  type IntlShape,
+  type MessageDescriptor,
+} from "react-intl";
 import { Archive, ArchiveRestore, Building2, ChevronRight } from "lucide-react";
 import { api } from "../lib/api";
 import {
@@ -858,7 +864,7 @@ const TAB_LABELS: Readonly<Record<EntityTab, ReactNode>> = {
   matters: <FormattedMessage id="entities.record.tab.matters" defaultMessage="Matters" />,
 };
 
-const COUNT_LABELS = {
+const COUNT_LABELS: Record<"contracts" | "matters", MessageDescriptor> = {
   contracts: defineMessage({
     id: "entities.record.tab.contracts.count",
     defaultMessage: "{count, plural, one {# linked Contract} other {# linked Contracts}}",
@@ -867,7 +873,7 @@ const COUNT_LABELS = {
     id: "entities.record.tab.matters.count",
     defaultMessage: "{count, plural, one {# linked Matter} other {# linked Matters}}",
   }),
-} as const;
+};
 
 function recordTabs(intl: IntlShape, id: string, counts: { contracts: number; matters: number }) {
   return [
