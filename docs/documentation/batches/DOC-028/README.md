@@ -47,3 +47,5 @@ After the walkthrough, the completion agent fixed ZIP entry timestamps in `fixtu
 While this PR was being reviewed, `dev` advanced to `7f7e917a` with dependency upgrades and message-type changes. The documentation guard refused the changed application digest in CI. [The compatibility review](compatibility-review.json) records source inspection and a 35-step automated replay for both roles in a new lab built from that commit. Every scripted check passed; journey 51 also passed with zero axe violations. The original independent review's two supplemental manual probes are retained in its original record, not counted as new observations.
 
 The article verification record keeps the original walkthrough commit and adds a hashed compatibility reference for the updated application. The edition now identifies the updated tested build.
+
+The fresh implementation reviewer then reran all six builder journeys (49, 50, 51, 53, 54, and 57) and the 35-step walkthrough script against the same updated lab on 2026-09-16. Every journey and every scripted check passed with no axe violations, and the script's Help screenshot matched `compatibility-help.png` byte for byte.
