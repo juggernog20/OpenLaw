@@ -124,6 +124,30 @@ describe("PATCH /org/general", () => {
     });
   });
 
+  it("accepts a 5 MB logo and rejects one byte more without changing it", async () => {
+    const cookies = await signInCookies(ADMIN.email, ADMIN.password);
+    const logo = "data:image/png;base64," + Buffer.alloc(5 * 1024 * 1024).toString("base64");
+    const accepted = await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/org/general",
+      cookies,
+      payload: { logo },
+    });
+    expect(accepted.statusCode).toBe(200);
+    expect(accepted.json().general.logo).toBe(logo);
+    const oversized =
+      "data:image/png;base64," + Buffer.alloc(5 * 1024 * 1024 + 1).toString("base64");
+    const rejected = await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/org/general",
+      cookies,
+      payload: { logo: oversized },
+    });
+    expect(rejected.statusCode).toBe(400);
+    const saved = await harness.app.inject({ method: "GET", url: "/api/v1/org/general", cookies });
+    expect(saved.json().general.logo).toBe(logo);
+  });
+
   it("clears the logo with null", async () => {
     const cookies = await signInCookies(ADMIN.email, ADMIN.password);
     const res = await harness.app.inject({
@@ -242,5 +266,30 @@ describe("the DD-017 audit trail", () => {
     // audit query with the encoded image.
     expect(rows[0]!.payload).toEqual({ field: "logo", old: null, new: "[image]" });
     expect(JSON.stringify(rows[0]!.payload)).not.toContain("base64");
+  });
+});
+
+describe("public sign-in branding", () => {
+  it("returns only the saved identity without a session and reflects removal", async () => {
+    const cookies = await signInCookies(ADMIN.email, ADMIN.password);
+    const saved = await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/org/general",
+      cookies,
+      payload: { name: "Wentworth Family Office", logo: PNG_LOGO },
+    });
+    expect(saved.statusCode).toBe(200);
+    const read = () => harness.app.inject({ method: "GET", url: "/api/v1/org/branding" });
+    const branded = await read();
+    expect(branded.statusCode).toBe(200);
+    expect(branded.json()).toEqual({ name: "Wentworth Family Office", logo: PNG_LOGO });
+    expect(branded.headers["cache-control"]).toBe("no-store");
+    await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/org/general",
+      cookies,
+      payload: { logo: null },
+    });
+    expect((await read()).json()).toEqual({ name: "Wentworth Family Office", logo: null });
   });
 });

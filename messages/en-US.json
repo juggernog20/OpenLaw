@@ -1067,6 +1067,9 @@
   "auth.login.withPassword": {
     "defaultMessage": "Sign in with a password"
   },
+  "auth.logo": {
+    "defaultMessage": "Organization logo"
+  },
   "auth.magic.body": {
     "defaultMessage": "Enter your work email to get a single-use sign-in link."
   },
@@ -1094,8 +1097,14 @@
   "auth.passwordSetup.sent": {
     "defaultMessage": "If your email address is eligible, a password setup link is on its way. It expires in one hour."
   },
+  "auth.portalLabel": {
+    "defaultMessage": "Legal Portal"
+  },
   "auth.portalLogin.title": {
     "defaultMessage": "Business Portal sign-in"
+  },
+  "auth.poweredBy": {
+    "defaultMessage": "Powered by OpenLaw"
   },
   "auth.setPassword.confirmPassword": {
     "defaultMessage": "Confirm password"
@@ -10713,7 +10722,7 @@
     "defaultMessage": "Organization logo"
   },
   "welcome.org.logo.rejected": {
-    "defaultMessage": "That logo must be a PNG, JPEG, WebP, or SVG image under 256 KB. Pick another file."
+    "defaultMessage": "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file."
   },
   "welcome.org.logo.unreadable": {
     "defaultMessage": "That file could not be read. Pick another one."

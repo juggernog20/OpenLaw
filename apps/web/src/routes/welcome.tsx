@@ -37,6 +37,7 @@ import {
 import { Link, redirect, useLoaderData, useNavigate } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
+import { LOGO_BYTE_LIMIT, LOGO_TYPES } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { aiPresetLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
@@ -274,10 +275,6 @@ interface General {
   defaultTimezone: string;
 }
 
-/** ~256 KB of image; matches the API's cap on the encoded data: URI. */
-const LOGO_BYTE_LIMIT = 256 * 1024;
-const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
-
 /** The locales the UI ships, as the API's own enum has them (DES-013). */
 const SHIPPED_LOCALES = ["en-US"] as const;
 
@@ -478,7 +475,7 @@ export function WelcomePage() {
         intl.formatMessage({
           id: "welcome.org.logo.rejected",
           defaultMessage:
-            "That logo must be a PNG, JPEG, WebP, or SVG image under 256 KB. Pick another file.",
+            "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.",
         }),
       );
       return;

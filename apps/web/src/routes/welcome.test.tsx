@@ -35,8 +35,8 @@ const LOGO_FILE = new File(
   { type: "image/png" },
 );
 
-/** A PNG one byte past the API's ~256 KB cap on the encoded data: URI. */
-const OVERSIZED_LOGO_FILE = new File([new Uint8Array(256 * 1024 + 1)], "huge.png", {
+/** A PNG one byte past the 5 MB upload limit. */
+const OVERSIZED_LOGO_FILE = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "huge.png", {
   type: "image/png",
 });
 
@@ -249,7 +249,10 @@ describe("welcome wizard organization step (#697)", () => {
     expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();
   });
 
-  it("saves the name, the logo, and the defaults in one PATCH on Continue", async () => {
+  it.each([
+    LOGO_FILE,
+    new File([new Uint8Array(5 * 1024 * 1024)], "large.png", { type: "image/png" }),
+  ])("saves the name, logo ($name), and defaults on Continue", async (logoFile) => {
     const patches: unknown[] = [];
     const general = captureGeneral(patches);
     stubApi({
@@ -263,7 +266,7 @@ describe("welcome wizard organization step (#697)", () => {
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     await user.type(await screen.findByLabelText("Organization name"), "Acme Legal");
     // The file input carries its own name; the Upload button drives it.
-    await user.upload(screen.getByLabelText("Upload a logo"), LOGO_FILE);
+    await user.upload(screen.getByLabelText("Upload a logo"), logoFile);
     // The preview appearing is what tells an Administrator the file was
     // read, so it is what the test waits on too.
     expect(await screen.findByRole("img", { name: "Organization logo" })).toBeInTheDocument();
@@ -271,7 +274,11 @@ describe("welcome wizard organization step (#697)", () => {
 
     expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();
     // One request, carrying only what the Administrator changed.
-    expect(patches).toEqual([{ name: "Acme Legal", logo: LOGO_DATA_URI }]);
+    expect(patches).toEqual([
+      { name: "Acme Legal", logo: expect.stringMatching(/^data:image\/png;base64,/) },
+    ]);
+    const savedLogo = (patches[0] as { logo: string }).logo;
+    expect(atob(savedLogo.split(",")[1]!).length).toBe(logoFile.size);
   });
 
   it("puts what the wizard saved on the General pane", async () => {
@@ -399,7 +406,7 @@ describe("welcome wizard organization step (#697)", () => {
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     await user.upload(await screen.findByLabelText("Upload a logo"), OVERSIZED_LOGO_FILE);
 
-    expect(await screen.findByText(/under 256 KB/)).toBeInTheDocument();
+    expect(await screen.findByText(/5 MB or smaller/)).toBeInTheDocument();
   });
 });
 

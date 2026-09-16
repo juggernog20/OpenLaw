@@ -760,6 +760,12 @@ export function stubApi(state: ApiState) {
       const list = Object.entries(lists).find(([path]) => path === call.url.pathname);
       if (list) return json(200, list[1]);
     }
+    if (call.url.pathname === "/api/v1/org/branding" && call.method === "GET") {
+      return json(200, {
+        name: state.orgGeneral?.name ?? "",
+        logo: state.orgGeneral?.logo ?? null,
+      });
+    }
     // The wizard's Organization step and the General pane read the same
     // row. Unnamed by default, which is what a fresh install holds.
     if (call.url.pathname === "/api/v1/org/general" && call.method === "GET") {

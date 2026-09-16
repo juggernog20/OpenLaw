@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+export { LOGO_BYTE_LIMIT, LOGO_DATA_URI_LIMIT, LOGO_TYPES } from "./logo.js";
+
 /**
  * @openlaw/shared — types and utilities shared between the API, worker, and web app.
  * Built to dist/ so runtime consumers load plain JS (no type stripping).

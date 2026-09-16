@@ -10,13 +10,31 @@
  */
 
 import { HelpLink } from "../components/documentation/help-link";
-import { useLayoutEffect, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { Outlet } from "react-router";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { SkipLink } from "../components/skip-link";
 import { setDocumentTheme } from "../lib/theme";
+import { api } from "../lib/api";
 
 export function AuthLayout({ children }: Readonly<{ children?: ReactNode }>) {
+  const intl = useIntl();
+  const [branding, setBranding] = useState<{ name: string; logo: string | null } | null>(null);
+  const [failedLogo, setFailedLogo] = useState<string | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    void api.GET("/api/v1/org/branding", { signal: controller.signal }).then(
+      ({ data }) => {
+        if (!controller.signal.aborted && data) setBranding(data);
+      },
+      () => {
+        // Branding is optional; a failed request must not prevent sign-in.
+      },
+    );
+    return () => controller.abort();
+  }, []);
+  const name = branding?.name.trim();
+  const logo = branding?.logo && branding.logo !== failedLogo ? branding.logo : null;
   // Pre-login screens render Light unconditionally (#44): presentation
   // only — the person's stored preference and its local mirror survive,
   // and the shell re-applies them after sign-in. The index.html boot
@@ -30,9 +48,27 @@ export function AuthLayout({ children }: Readonly<{ children?: ReactNode }>) {
       <SkipLink />
       <main id="main" className="flex flex-1 items-center justify-center px-page-x py-page-y">
         <div className="w-full max-w-sm">
-          <p className="mb-6 text-center text-lg font-semibold">
-            <FormattedMessage id="auth.brand" defaultMessage="OpenLaw" />
-          </p>
+          <div className="mb-6 flex flex-col items-center gap-3 text-center">
+            {logo && (
+              <img
+                src={logo}
+                alt={intl.formatMessage({ id: "auth.logo", defaultMessage: "Organization logo" })}
+                className="max-h-32 max-w-full object-contain"
+                onError={() => setFailedLogo(logo)}
+              />
+            )}
+            <p className="max-w-full break-words text-lg font-semibold">
+              {name || <FormattedMessage id="auth.brand" defaultMessage="OpenLaw" />}
+            </p>
+            <p className="text-md text-muted">
+              <FormattedMessage id="auth.portalLabel" defaultMessage="Legal Portal" />
+            </p>
+            {name && (
+              <p className="text-sm text-muted">
+                <FormattedMessage id="auth.poweredBy" defaultMessage="Powered by OpenLaw" />
+              </p>
+            )}
+          </div>
           {children ?? <Outlet />}
           <div className="mt-6 text-center">
             <HelpLink surface="formal" contextual />

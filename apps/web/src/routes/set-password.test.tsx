@@ -19,8 +19,12 @@ describe("set-password activation", () => {
     expect(screen.getByRole("button", { name: "Set password" })).toBeDisabled();
   });
 
-  it("catches a mismatched confirmation before any request", async () => {
-    const fetchStub = stubFetch(() => undefined);
+  it("catches a mismatched confirmation before submitting the password", async () => {
+    const passwordRequests: string[] = [];
+    stubFetch((call) => {
+      if (call.url.pathname === "/api/auth/reset-password") passwordRequests.push(call.method);
+      return undefined;
+    });
     renderAt("/auth/set-password?token=tok-123");
 
     await userEvent.type(await screen.findByLabelText("New password"), "long-enough-1");
@@ -28,7 +32,7 @@ describe("set-password activation", () => {
     await userEvent.click(screen.getByRole("button", { name: "Set password" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("The passwords do not match.");
-    expect(fetchStub).not.toHaveBeenCalled();
+    expect(passwordRequests).toEqual([]);
   });
 
   it("sets the password and hands off to sign-in", async () => {
