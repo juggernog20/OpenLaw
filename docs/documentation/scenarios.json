@@ -1078,11 +1078,11 @@
         "Invalid credentials, disabled connector, webhook/reconciliation recovery, and secret rotation are tested without treating a stand-in as provider setup."
       ],
       "requiredMethods": ["browser-walkthrough", "live-provider-check"],
-      "status": "blocked",
+      "status": "pass",
       "acceptance": {
         "task": "DOC-025",
-        "basis": "Live-provider setup required by #742; stand-ins and technical review do not satisfy it.",
-        "evidence": []
+        "basis": "DOC-029 independent live-provider walkthrough on 3fa407e3 against a real DocuSign developer account: connector configured and tested in Polling mode, a controlled Envelope signed, the executed copy filed and the Contract moved to Active. A compatibility review carries it to 432dba3a. Webhook delivery against live DocuSign Connect was not run and is tracked in #888.",
+        "evidence": ["docs/documentation/evidence/configure-signing.json"]
       }
     },
     {
@@ -1104,11 +1104,11 @@
         "Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy."
       ],
       "requiredMethods": ["browser-walkthrough", "live-provider-check"],
-      "status": "blocked",
+      "status": "pass",
       "acceptance": {
         "task": "DOC-025",
-        "basis": "Live-provider setup required by #742; stand-ins and technical review do not satisfy it.",
-        "evidence": []
+        "basis": "DOC-029 independent live-provider walkthrough on 3fa407e3 against a real OpenRouter connector, with credential-free checks repeated on 57e77e38 and a compatibility review to 432dba3a; no AI provider code changed in that range.",
+        "evidence": ["docs/documentation/evidence/configure-analysis.json"]
       }
     },
     {
