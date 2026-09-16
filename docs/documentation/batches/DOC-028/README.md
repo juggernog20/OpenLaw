@@ -33,6 +33,7 @@ The independent agent walkthrough passed V-C56 for both required roles: 37 recor
 
 - [Independent walkthrough](independent-walkthrough.json): role-specific observations, build identities, fixture hashes, screenshots, and limitations.
 - [Builder validation](builder-validation.json) and [journey output](builder-journeys.txt): six passing journeys with axe coverage across Overview, Form, Settings, and Generations.
+  That output was recorded before the journey 54 dialog wait was added. Journeys 51, 53, and 54 were rerun against the same lab build on 2026-09-16 after that edit, and all three passed with no axe violations.
 - [Help accessibility](help-accessibility.json): zero axe violations in Light, Warm, and Dark and no page overflow at 390 px.
 
 The walkthrough is an independent agent review, not a human user study. It records two minor builder usability observations: clipped Upload version text at 390 px and extra Tab presses between a selected Placeholder and its field card. Neither prevented the guide's tasks. The first walkthrough attempt had two timing/locator errors in the reviewer script; its corrected rerun and disposition are recorded in the evidence.
