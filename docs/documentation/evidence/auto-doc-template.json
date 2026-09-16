@@ -1,0 +1,66 @@
+{
+  "articleId": "auto-doc-template",
+  "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
+  "appCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+  "buildId": "app sha256:f8dd152fd10a4d21b641e04eed24773e38b2ce05849aefd763006d99ebc61692; engine sha256:2763862ff5c6fbef311720f1bc4b0f6b8ffd73b7f0fcd777d6bfd04415fc17fd",
+  "environment": "openlaw-docs-b6053521-auto-doc-875",
+  "walkthroughReviewer": "Fable independent documentation walkthrough agent (Claude Fable 5.1), a different agent from the article author and from the completion agent",
+  "reviewerKind": "agent",
+  "author": "Original Auto-Doc guide author in commit 79812286; proofreading in 019591c7",
+  "technicalReviewer": "Codex completion agent (technical source review)",
+  "verifiedAt": "2026-09-16T09:48:31.826673+00:00",
+  "status": "pass",
+  "sources": [
+    "docs/user-guides/auto-doc-template.md",
+    "docs/documentation/batches/DOC-028/technical-review.json",
+    "docs/documentation/batches/DOC-028/independent-walkthrough.json"
+  ],
+  "scenarios": [
+    {
+      "id": "V-C56",
+      "coverage": ["C56"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Signed-in fictional administrator in the disposable documentation lab.",
+        "Reviewer-created Word fixtures retained in docs/documentation/batches/DOC-028/fixtures."
+      ],
+      "expected": "Upload marks Placeholders and Blocks, field and Clause edits persist, re-upload retains and marks the orphan, and Publish pins the chosen pair. Malformed Blocks/braces and directive type mismatches are refused with the offending text.",
+      "actual": "20 recorded steps passed for this role. The pane rendered body, header, footer and footnote markers. Label/help edits and a Governing law Clause rule persisted. File version 2 retained Signing date as an orphan and created Notice address. Publication pinned file version 2/form version 8; a later form edit left that live pair unchanged. Both malformed uploads and the currency-on-Text publication were refused with the offending text. The template Help link rendered the reviewed article.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-028/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-028/walkthrough.mjs"
+      ]
+    },
+    {
+      "id": "V-C56",
+      "coverage": ["C56"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Signed-in fictional legal_team_member in the disposable documentation lab.",
+        "Reviewer-created Word fixtures retained in docs/documentation/batches/DOC-028/fixtures."
+      ],
+      "expected": "Upload marks Placeholders and Blocks, field and Clause edits persist, re-upload retains and marks the orphan, and Publish pins the chosen pair. Malformed Blocks/braces and directive type mismatches are refused with the offending text.",
+      "actual": "17 recorded steps passed for this role. The pane rendered body, header, footer and footnote markers. Label/help edits and a Governing law Clause rule persisted. File version 2 retained Signing date as an orphan and created Notice address. Publication pinned file version 2/form version 8; a later form edit left that live pair unchanged. Both malformed uploads and the currency-on-Text publication were refused with the offending text. The template Help link rendered the reviewed article.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-028/independent-walkthrough.json",
+        "docs/documentation/batches/DOC-028/walkthrough.mjs"
+      ]
+    }
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "Both roles ran the same scripted procedure; the Administrator ran the supplementary two-directives check in a separate Auto-Doc.",
+    "Slug length and character rules were checked against source only, not exercised in the browser.",
+    "Help contrast was seen in the default theme only; the Warm and Dark themes were not checked.",
+    "Keyboard and narrow-layout checks are measurements by the reviewer's script, not a screen-reader session.",
+    "The lab is shared with other automated journeys; only records named DOC-028 * and the one invited member were created by this walkthrough. Nothing was deleted or reconfigured.",
+    "Narrow-screen Upload version text is clipped and keyboard navigation from a selected chip to its card requires additional Tab presses; the controls worked. These observations are retained in the independent walkthrough.",
+    "Warm and Dark Help rendering received supplemental automated axe checks in help-accessibility.json; the independent browser walkthrough used the default theme."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null
+}

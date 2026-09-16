@@ -1,0 +1,608 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-028",
+  "issue": 875,
+  "independentReview": true,
+  "reviewerKind": "agent",
+  "walkthroughReviewer": "Fable independent documentation walkthrough agent (Claude Fable 5.1), a different agent from the article author and from the completion agent",
+  "articleId": "auto-doc-template",
+  "articlePath": "docs/user-guides/auto-doc-template.md",
+  "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
+  "articleRevisionNote": "The article bytes on branch fix/874-875-auto-doc-completion are identical to the bytes at the lab's source commit (same SHA-256), so the Help copy in the lab is the reviewed text.",
+  "scenario": "V-C56",
+  "coverage": ["C56"],
+  "appCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+  "buildId": "app sha256:f8dd152fd10a4d21b641e04eed24773e38b2ce05849aefd763006d99ebc61692; engine sha256:2763862ff5c6fbef311720f1bc4b0f6b8ffd73b7f0fcd777d6bfd04415fc17fd",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:f8dd152fd10a4d21b641e04eed24773e38b2ce05849aefd763006d99ebc61692"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:2763862ff5c6fbef311720f1bc4b0f6b8ffd73b7f0fcd777d6bfd04415fc17fd"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:f8dd152fd10a4d21b641e04eed24773e38b2ce05849aefd763006d99ebc61692"
+    }
+  ],
+  "imageIdentityCheck": "docker inspect on the running app, worker, and doc-engine containers on 2026-09-16 returned the same image IDs as .documentation-labs/auto-doc-875/lab.json.",
+  "environment": "openlaw-docs-b6053521-auto-doc-875",
+  "labManifest": ".documentation-labs/auto-doc-875/lab.json",
+  "appUrl": "http://127.0.0.1:43375",
+  "mailUrl": "http://127.0.0.1:43376",
+  "browser": "Playwright 1.63.0 Chromium from e2e/node_modules, headless, 1280x900 with a 390x844 pass for narrow layout; one isolated context per identity; script docs/documentation/batches/DOC-028/walkthrough.mjs written by the reviewer from the article text",
+  "startedAt": "2026-09-16T09:39:06.346Z",
+  "finishedAt": "2026-09-16T09:47:00Z",
+  "roles": ["administrator", "legal_team_member"],
+  "identities": [
+    {
+      "role": "administrator",
+      "account": "the repository's synthetic e2e Administrator fixture (blair@example.com), used for setup and for the Administrator walkthrough"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "doc028.member+1789551546346@example.com",
+      "displayName": "Nadia Okonkwo-Reyes",
+      "userId": "01a0a995-92fe-7245-9849-e65b918d64ea",
+      "activation": "Invited over /api/v1/auth/invites by the Administrator session; the set-password email arrived in the lab Mailpit and the account was activated on the /auth/set-password page, then signed in through /auth/login. The password was generated at run time and is not recorded."
+    }
+  ],
+  "records": [
+    {
+      "role": "administrator",
+      "name": "DOC-028 Admin Services Agreement 1789551546346",
+      "id": "01a0a995-972a-7a97-a4ff-8f0b6b208d14"
+    },
+    {
+      "role": "administrator",
+      "name": "DOC-028 Admin Two directives 1789551546346",
+      "id": "01a0a995-bae3-7d39-8b49-b6fe52c166ad"
+    },
+    {
+      "role": "legal_team_member",
+      "name": "DOC-028 Member Services Agreement 1789551546346",
+      "id": "01a0a995-be9b-7be3-b5da-a9116fe86446"
+    }
+  ],
+  "fixtures": [
+    {
+      "path": "docs/documentation/batches/DOC-028/fixtures/doc028-bad-currency.docx",
+      "sha256": "2a336408fa540648afb39ca700d2e14dc088dda0fbe00fd038fdfd251646ebea",
+      "bytes": 1229
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/fixtures/doc028-services-v1.docx",
+      "sha256": "ade918996f29fe35769e2b1a3124a580d85621be61f587099bb791f6353ca554",
+      "bytes": 2456
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/fixtures/doc028-services-v2.docx",
+      "sha256": "fa5d1036b9f2cc1aff8941c1b962fc7bd2204737c8b479cf96fb4e893b739d7b",
+      "bytes": 2462
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/fixtures/doc028-two-directives.docx",
+      "sha256": "3bcc222033617b2e8f7d051f900f60ec6ce920593baaf19907b03d8737fb4100",
+      "bytes": 1247
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/fixtures/doc028-unclosed-block.docx",
+      "sha256": "cc48056ec5d28319a427870bccf14cf5bc05d57510bb49c546b6718fd8b2dd3e",
+      "bytes": 1263
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/fixtures/doc028-unclosed-brace.docx",
+      "sha256": "0eddee7f224d20c1d8ea683ed91c87fd35daa8f4e4bbaafc515754c954c49ecf",
+      "bytes": 1235
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/fixtures/build-fixtures.py",
+      "purpose": "Standard-library builder that regenerates every .docx above"
+    }
+  ],
+  "fixtureNotes": [
+    "doc028-services-v1.docx: body Placeholders counterparty_name, signing_date, fee_amount|currency:USD (the one directive), governing_law, and a Block arbitration holding arbitration_seat; header repeats counterparty_name, footer holds reference_code, footnote repeats counterparty_name.",
+    "doc028-services-v2.docx: drops signing_date and adds notice_address.",
+    "doc028-unclosed-block.docx, doc028-unclosed-brace.docx: the two required upload refusals. doc028-bad-currency.docx and doc028-two-directives.docx: supplementary checks of the guide's currency-code and disagreeing-directive claims."
+  ],
+  "observedRefusals": {
+    "unclosedBlock": "Unclosed Block: \"{{#block arbitration}}\"",
+    "unclosedBrace": "Unclosed Placeholder brace: \"{{counterparty_name on the date below.\"",
+    "unsupportedCurrency": "Use a supported currency code: \"{{fee_amount|currency:ZZZ}}\"",
+    "directiveTypeMismatchAtPublish": "This pair cannot be published. Set \"Fee amount\" to a currency or number field for Placeholder \"{{fee_amount|currency:USD}}\".",
+    "twoDisagreeingDirectivesAtPublish": "This pair cannot be published. Set \"Fee amount\" to a currency or number field for Placeholder \"{{fee_amount|currency:USD}}\". Set \"Fee amount\" to a date field for Placeholder \"{{fee_amount|date:YYYY-MM-DD}}\"."
+  },
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Sign in as the lab Administrator (setup)",
+      "actual": "Signed in through /auth/login; the banner shows the Administrator's display name.",
+      "startedAt": "2026-09-16T09:39:06.469Z",
+      "at": "2026-09-16T09:39:07.096Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Setup: invite a fictional Legal Team Member and activate the account through the set-password email",
+      "actual": "Administrator invited doc028.member+1789551546346@example.com as legal_team_member over the API; Mailpit delivered \"Set your OpenLaw password\"; the member set a password on the activation page and signed in through /auth/login.",
+      "startedAt": "2026-09-16T09:39:07.117Z",
+      "at": "2026-09-16T09:39:07.949Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: open Auto-Docs and create an Auto-Doc, then open its Form section",
+      "actual": "Created Auto-Doc \"DOC-028 Admin Services Agreement 1789551546346\" (id 01a0a995-972a-7a97-a4ff-8f0b6b208d14) with Create Auto-Doc > Name > Create; it opened on its record. The Form tab shows the template pane reading \"Upload a Word file to start the form.\" beside the form, with an Upload version button as the guide says.",
+      "startedAt": "2026-09-16T09:39:07.950Z",
+      "at": "2026-09-16T09:39:08.370Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Upload a .docx with Placeholders, one directive, and one Block with Upload version",
+      "actual": "Dialog caption read \"Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place.\". After Upload the dialog reported \"File version 1: 8 Placeholders, 1 Block. 6 form fields created.\" and closed with Close.",
+      "startedAt": "2026-09-16T09:39:08.370Z",
+      "at": "2026-09-16T09:39:08.627Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Read the template pane: every Placeholder and Block is marked, including header, footer, and footnote",
+      "actual": "Pane heading shows the filename with pill \"File version 1\" and summary \"8 Placeholders, 1 Block\". Chips: [\"{{counterparty_name}}\",\"{{signing_date}}\",\"{{fee_amount|currency:USD}}\",\"{{governing_law}}\",\"{{arbitration_seat}}\",\"{{reference_code}}\",\"{{counterparty_name}}\",\"{{counterparty_name}}\"]. Header chips [\"Placeholder counterparty_name\"], Footer chips [\"Placeholder reference_code\"], Footnotes chips [\"Placeholder counterparty_name\"]. Block tag reads \"arbitration \u00b7 always\" and the close reads \"end arbitration\". Form fields in list order: [\"Counterparty name\",\"Signing date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Reference code\",\"the rule for arbitration\"]. At 1280 px the file pane (x=49) sits left of the Fields region (x=720).",
+      "startedAt": "2026-09-16T09:39:08.627Z",
+      "at": "2026-09-16T09:39:08.740Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A directive decides the new field's type: currency directive created a Currency field, others Text",
+      "actual": "Selecting the fee_amount chip opened its card; Type shows \"Currency\". The governing_law card's Type shows \"Text\".",
+      "startedAt": "2026-09-16T09:39:08.740Z",
+      "at": "2026-09-16T09:39:08.837Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Select a field from its chip and edit the label, type, and help from its card; the form follows each commit",
+      "actual": "Clicking the chip marked it selected (aria-pressed) and opened the field card with controls [\"Label:1\",\"Slug:1\",\"Type:1\",\"Help text:1\"]. Changing Label to \"Counterparty legal name\" and pressing Enter renamed the card and the Fields list ([\"Counterparty legal name\",\"Signing date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Reference code\",\"the rule for arbitration\"]). Help text saved as \"Use the registered company name.\".",
+      "startedAt": "2026-09-16T09:39:08.837Z",
+      "at": "2026-09-16T09:39:09.800Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Write a Clause rule: open the Block under Clauses, choose When a rule matches, pick field, operator, value",
+      "actual": "Clauses section notes \"A Block with no rule is always included.\". Block tag read \"arbitration \u00b7 always\" before the rule. Include offered [\"Always\",\"When a rule matches\"]; after choosing \"When a rule matches\", Form field \"Governing law\", Operator \"Equals\", Value \"England and Wales\" the tag reads \"arbitration \u00b7 when Governing law equals England and Wales\" and the Clauses row reads \"Included when Governing law equals England and Wales\".",
+      "startedAt": "2026-09-16T09:39:09.800Z",
+      "at": "2026-09-16T09:39:11.161Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Negative: Publish refuses a field that cannot print its directive and names it (currency directive on a Text field)",
+      "actual": "With Fee amount set to Text, Publish offered [\"File version 1\"] / [\"Form version 6\",\"Form version 5\",\"Form version 4\",\"Form version 3\",\"Form version 2\",\"Form version 1\"] and refused with \"This pair cannot be published. Set \\\"Fee amount\\\" to a currency or number field for Placeholder \\\"{{fee_amount|currency:USD}}\\\".\". State stayed \"Draft\". Type was then set back to Currency.",
+      "startedAt": "2026-09-16T09:39:11.161Z",
+      "at": "2026-09-16T09:39:13.475Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Negative: an upload with an open Block is refused and the refusal quotes the text",
+      "actual": "Upload version refused doc028-unclosed-block.docx with \"Unclosed Block: \\\"{{#block arbitration}}\\\"\"; the pane still shows \"File version 1\".",
+      "startedAt": "2026-09-16T09:39:13.475Z",
+      "at": "2026-09-16T09:39:13.629Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Negative: an upload with an unclosed brace is refused and the refusal quotes the text",
+      "actual": "Upload version refused doc028-unclosed-brace.docx with \"Unclosed Placeholder brace: \\\"{{counterparty_name on the date below.\\\"\"; the pane still shows \"File version 1\".",
+      "startedAt": "2026-09-16T09:39:13.629Z",
+      "at": "2026-09-16T09:39:13.809Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supplementary: an unknown currency code is refused and the refusal quotes the text",
+      "actual": "Upload version refused doc028-bad-currency.docx with \"Use a supported currency code: \\\"{{fee_amount|currency:ZZZ}}\\\"\".",
+      "startedAt": "2026-09-16T09:39:13.809Z",
+      "at": "2026-09-16T09:39:13.988Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Upload a new version that drops a Placeholder; the orphaned field is kept and marked",
+      "actual": "Dialog reported \"File version 2: 8 Placeholders, 1 Block. 1 form field created. 1 field has no Placeholder now.\". Pane shows \"File version 2\" with \"Earlier versions (1)\". Fields list [\"Counterparty legal name\",\"Signing date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Reference code\",\"Notice address\",\"the rule for arbitration\"]; the Signing date row is marked \"No Placeholder in file version 2\" and the Form tab reads \"Form1\".",
+      "startedAt": "2026-09-16T09:39:13.988Z",
+      "at": "2026-09-16T09:39:14.263Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Publish pins one file version and one form version together",
+      "actual": "Publish dialog offered file versions [\"File version 2\",\"File version 1\"] and form versions [\"Form version 8\",\"Form version 7\",\"Form version 6\",\"Form version 5\",\"Form version 4\",\"Form version 3\",\"Form version 2\",\"Form version 1\"] with caption \"Later edits leave this pair unchanged until you publish again.\"; the newest form \"Form version 8\" was preselected (checked option \"Form version 8\"). Chose File version 2 and published; the header state reads Published and Overview reads \"Live since Sep 16, 2026: file version 2, form version 8.\".",
+      "startedAt": "2026-09-16T09:39:14.264Z",
+      "at": "2026-09-16T09:39:14.578Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Later edits change nothing live until you publish again",
+      "actual": "After editing a Help text, Overview still reads \"Live since Sep 16, 2026: file version 2, form version 8.\" and warns \"Form version 9 is newer than the currently published form.\".",
+      "startedAt": "2026-09-16T09:39:14.579Z",
+      "at": "2026-09-16T09:39:15.843Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The Help link on the template pane resolves to this article",
+      "actual": "Link href \"/help/auto-doc-template\" opened /auto-docs/01a0a995-972a-7a97-a4ff-8f0b6b208d14/form with h1 \"Write an Auto-Doc template\" and sections [\"Before you start\",\"Mark a Placeholder\",\"Format a value\",\"Mark a Block\",\"Upload a new version\"].",
+      "startedAt": "2026-09-16T09:39:15.843Z",
+      "at": "2026-09-16T09:39:16.098Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard: reach a Placeholder chip with Tab and select it with Enter; open and close Upload version with the keyboard",
+      "actual": "Tab reached \"Placeholder counterparty_name\" after 3 presses (focus outline style \"solid\"); Enter set aria-pressed=\"true\" and its card visible=false. Enter on Upload version opened the dialog (focus inside: true); Escape closed it.",
+      "startedAt": "2026-09-16T09:39:16.098Z",
+      "at": "2026-09-16T09:39:16.326Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Narrow layout: the Form section and the Help article at 390 px wide",
+      "actual": "Form section at 390 px: scrollWidth 390 vs clientWidth 390; Upload version visible=true, Help link visible=true, 8 chips rendered. Help article at 390 px: scrollWidth 390 vs clientWidth 390.",
+      "startedAt": "2026-09-16T09:39:16.326Z",
+      "at": "2026-09-16T09:39:17.123Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supplementary: two directives that disagree on one name create a Text field and Publish names the gap",
+      "actual": "Upload reported \"File version 1: 2 Placeholders, 0 Blocks. 1 form field created.\"; Fee amount Type shows \"Text\"; Publish refused with \"This pair cannot be published. Set \\\"Fee amount\\\" to a currency or number field for Placeholder \\\"{{fee_amount|currency:USD}}\\\". Set \\\"Fee amount\\\" to a date field for Placeholder \\\"{{fee_amount|date:YYYY-MM-DD}}\\\".\".",
+      "startedAt": "2026-09-16T09:39:17.123Z",
+      "at": "2026-09-16T09:39:17.987Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Before you start: open Auto-Docs and create an Auto-Doc, then open its Form section",
+      "actual": "Created Auto-Doc \"DOC-028 Member Services Agreement 1789551546346\" (id 01a0a995-be9b-7be3-b5da-a9116fe86446) with Create Auto-Doc > Name > Create; it opened on its record. The Form tab shows the template pane reading \"Upload a Word file to start the form.\" beside the form, with an Upload version button as the guide says.",
+      "startedAt": "2026-09-16T09:39:17.988Z",
+      "at": "2026-09-16T09:39:18.474Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Upload a .docx with Placeholders, one directive, and one Block with Upload version",
+      "actual": "Dialog caption read \"Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place.\". After Upload the dialog reported \"File version 1: 8 Placeholders, 1 Block. 6 form fields created.\" and closed with Close.",
+      "startedAt": "2026-09-16T09:39:18.474Z",
+      "at": "2026-09-16T09:39:18.676Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Read the template pane: every Placeholder and Block is marked, including header, footer, and footnote",
+      "actual": "Pane heading shows the filename with pill \"File version 1\" and summary \"8 Placeholders, 1 Block\". Chips: [\"{{counterparty_name}}\",\"{{signing_date}}\",\"{{fee_amount|currency:USD}}\",\"{{governing_law}}\",\"{{arbitration_seat}}\",\"{{reference_code}}\",\"{{counterparty_name}}\",\"{{counterparty_name}}\"]. Header chips [\"Placeholder counterparty_name\"], Footer chips [\"Placeholder reference_code\"], Footnotes chips [\"Placeholder counterparty_name\"]. Block tag reads \"arbitration \u00b7 always\" and the close reads \"end arbitration\". Form fields in list order: [\"Counterparty name\",\"Signing date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Reference code\",\"the rule for arbitration\"]. At 1280 px the file pane (x=49) sits left of the Fields region (x=720).",
+      "startedAt": "2026-09-16T09:39:18.676Z",
+      "at": "2026-09-16T09:39:18.733Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A directive decides the new field's type: currency directive created a Currency field, others Text",
+      "actual": "Selecting the fee_amount chip opened its card; Type shows \"Currency\". The governing_law card's Type shows \"Text\".",
+      "startedAt": "2026-09-16T09:39:18.733Z",
+      "at": "2026-09-16T09:39:18.820Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Select a field from its chip and edit the label, type, and help from its card; the form follows each commit",
+      "actual": "Clicking the chip marked it selected (aria-pressed) and opened the field card with controls [\"Label:1\",\"Slug:1\",\"Type:1\",\"Help text:1\"]. Changing Label to \"Counterparty legal name\" and pressing Enter renamed the card and the Fields list ([\"Counterparty legal name\",\"Signing date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Reference code\",\"the rule for arbitration\"]). Help text saved as \"Use the registered company name.\".",
+      "startedAt": "2026-09-16T09:39:18.820Z",
+      "at": "2026-09-16T09:39:19.778Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Write a Clause rule: open the Block under Clauses, choose When a rule matches, pick field, operator, value",
+      "actual": "Clauses section notes \"A Block with no rule is always included.\". Block tag read \"arbitration \u00b7 always\" before the rule. Include offered [\"Always\",\"When a rule matches\"]; after choosing \"When a rule matches\", Form field \"Governing law\", Operator \"Equals\", Value \"England and Wales\" the tag reads \"arbitration \u00b7 when Governing law equals England and Wales\" and the Clauses row reads \"Included when Governing law equals England and Wales\".",
+      "startedAt": "2026-09-16T09:39:19.778Z",
+      "at": "2026-09-16T09:39:21.107Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Publish refuses a field that cannot print its directive and names it (currency directive on a Text field)",
+      "actual": "With Fee amount set to Text, Publish offered [\"File version 1\"] / [\"Form version 6\",\"Form version 5\",\"Form version 4\",\"Form version 3\",\"Form version 2\",\"Form version 1\"] and refused with \"This pair cannot be published. Set \\\"Fee amount\\\" to a currency or number field for Placeholder \\\"{{fee_amount|currency:USD}}\\\".\". State stayed \"Draft\". Type was then set back to Currency.",
+      "startedAt": "2026-09-16T09:39:21.107Z",
+      "at": "2026-09-16T09:39:23.348Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: an upload with an open Block is refused and the refusal quotes the text",
+      "actual": "Upload version refused doc028-unclosed-block.docx with \"Unclosed Block: \\\"{{#block arbitration}}\\\"\"; the pane still shows \"File version 1\".",
+      "startedAt": "2026-09-16T09:39:23.348Z",
+      "at": "2026-09-16T09:39:23.530Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: an upload with an unclosed brace is refused and the refusal quotes the text",
+      "actual": "Upload version refused doc028-unclosed-brace.docx with \"Unclosed Placeholder brace: \\\"{{counterparty_name on the date below.\\\"\"; the pane still shows \"File version 1\".",
+      "startedAt": "2026-09-16T09:39:23.530Z",
+      "at": "2026-09-16T09:39:23.745Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Supplementary: an unknown currency code is refused and the refusal quotes the text",
+      "actual": "Upload version refused doc028-bad-currency.docx with \"Use a supported currency code: \\\"{{fee_amount|currency:ZZZ}}\\\"\".",
+      "startedAt": "2026-09-16T09:39:23.745Z",
+      "at": "2026-09-16T09:39:24.007Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Upload a new version that drops a Placeholder; the orphaned field is kept and marked",
+      "actual": "Dialog reported \"File version 2: 8 Placeholders, 1 Block. 1 form field created. 1 field has no Placeholder now.\". Pane shows \"File version 2\" with \"Earlier versions (1)\". Fields list [\"Counterparty legal name\",\"Signing date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Reference code\",\"Notice address\",\"the rule for arbitration\"]; the Signing date row is marked \"No Placeholder in file version 2\" and the Form tab reads \"Form1\".",
+      "startedAt": "2026-09-16T09:39:24.007Z",
+      "at": "2026-09-16T09:39:24.339Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Publish pins one file version and one form version together",
+      "actual": "Publish dialog offered file versions [\"File version 2\",\"File version 1\"] and form versions [\"Form version 8\",\"Form version 7\",\"Form version 6\",\"Form version 5\",\"Form version 4\",\"Form version 3\",\"Form version 2\",\"Form version 1\"] with caption \"Later edits leave this pair unchanged until you publish again.\"; the newest form \"Form version 8\" was preselected (checked option \"Form version 8\"). Chose File version 2 and published; the header state reads Published and Overview reads \"Live since Sep 16, 2026: file version 2, form version 8.\".",
+      "startedAt": "2026-09-16T09:39:24.339Z",
+      "at": "2026-09-16T09:39:24.643Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Later edits change nothing live until you publish again",
+      "actual": "After editing a Help text, Overview still reads \"Live since Sep 16, 2026: file version 2, form version 8.\" and warns \"Form version 9 is newer than the currently published form.\".",
+      "startedAt": "2026-09-16T09:39:24.643Z",
+      "at": "2026-09-16T09:39:25.909Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "The Help link on the template pane resolves to this article",
+      "actual": "Link href \"/help/auto-doc-template\" opened /auto-docs/01a0a995-be9b-7be3-b5da-a9116fe86446/form with h1 \"Write an Auto-Doc template\" and sections [\"Before you start\",\"Mark a Placeholder\",\"Format a value\",\"Mark a Block\",\"Upload a new version\"].",
+      "startedAt": "2026-09-16T09:39:25.909Z",
+      "at": "2026-09-16T09:39:26.183Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard: reach a Placeholder chip with Tab and select it with Enter; open and close Upload version with the keyboard",
+      "actual": "Tab reached \"Placeholder counterparty_name\" after 3 presses (focus outline style \"solid\"); Enter set aria-pressed=\"true\" and its card visible=false. Enter on Upload version opened the dialog (focus inside: true); Escape closed it.",
+      "startedAt": "2026-09-16T09:39:26.183Z",
+      "at": "2026-09-16T09:39:26.387Z",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Narrow layout: the Form section and the Help article at 390 px wide",
+      "actual": "Form section at 390 px: scrollWidth 390 vs clientWidth 390; Upload version visible=true, Help link visible=true, 8 chips rendered. Help article at 390 px: scrollWidth 390 vs clientWidth 390.",
+      "startedAt": "2026-09-16T09:39:26.387Z",
+      "at": "2026-09-16T09:39:27.202Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Follow-up keyboard probe: after Enter on a Placeholder chip, where is the card and where does focus go",
+      "actual": "Tab reached \"Placeholder counterparty_name\" from the pane's Open button; Enter set aria-pressed=\"true\" and the field card titled with the field's current label (\"Counterparty legal name\") became visible near the bottom of a 1280x900 viewport (top at 815 px). Focus stayed on the chip; the next Tab moved to the next chip (\"Placeholder notice_address\"), not into the card, so a keyboard user must Tab past every chip and pane control to reach the card's Label input.",
+      "startedAt": "2026-09-16T09:44:00Z",
+      "at": "2026-09-16T09:45:30Z",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Follow-up narrow-layout probe at 390 px: measure the pane header controls and the record title",
+      "actual": "No page-level horizontal scroll (scrollWidth 390 = clientWidth 390). The form stacks below the file pane (Fields region starts at y=958), so \"file on the left and its form on the right\" only describes the desktop layout. The pane header wraps to two rows; the Upload version button's right edge (355 px) extends 13 px past its scroll container's right edge (342 px), so its label is partly clipped (\"Upload versio\") although the button remains clickable. The record title truncates to \"DOC\" with an ellipsis (title box 32 px wide for a 375 px name).",
+      "startedAt": "2026-09-16T09:45:30Z",
+      "at": "2026-09-16T09:47:00Z",
+      "result": "pass"
+    }
+  ],
+  "summary": {
+    "stepsRun": 37,
+    "passed": 37,
+    "failed": 0,
+    "requiredNegativeChecks": {
+      "unclosedBlock": {
+        "administrator": "pass",
+        "legal_team_member": "pass"
+      },
+      "unclosedBrace": {
+        "administrator": "pass",
+        "legal_team_member": "pass"
+      },
+      "directiveOnMismatchedFieldType": {
+        "administrator": "pass",
+        "legal_team_member": "pass",
+        "where": "Refused at Publish, as the guide states; an upload is not refused for it."
+      }
+    }
+  },
+  "evidence": [
+    {
+      "path": "docs/documentation/batches/DOC-028/admin-template-pane-v1.png",
+      "purpose": "Administrator, Form section after file version 1: chips for every Placeholder including Footer, Footnotes, and Header sections, Block tag 'arbitration \u00b7 always', six fields, Clauses card"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/admin-clause-rule.png",
+      "purpose": "Administrator, Clause rule card with Include 'When a rule matches', Form field 'Governing law', Operator 'Equals', Value 'England and Wales'; Block tag updated"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/admin-publish-directive-refusal.png",
+      "purpose": "Administrator, Publish dialog refusing the currency directive on a Text field and naming the field and Placeholder"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/member-orphaned-field.png",
+      "purpose": "Legal Team Member, file version 2 with the Signing date field kept and marked 'No Placeholder in file version 2', Form tab count 1, new Notice address field"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/member-help-article.png",
+      "purpose": "Legal Team Member, /help/auto-doc-template rendering the article inside the staff Help reader with the 'Validation in progress' badge"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-028/member-narrow-form.png",
+      "purpose": "Legal Team Member, Form section at 390 px: pane and form stacked, pane header wrapped, Upload version button clipped at the right edge"
+    }
+  ],
+  "articleClaimsChecked": [
+    {
+      "claim": "Sign in as a Legal Team Member or Administrator, open Auto-Docs, and create an Auto-Doc or open one.",
+      "observed": "Both roles created an Auto-Doc with Create Auto-Doc > Name > Create and landed on the record.",
+      "result": "pass"
+    },
+    {
+      "claim": "The Form section shows the file on the left and its form on the right. Upload a .docx file with Upload version.",
+      "observed": "True at 1280 px (pane x=49, Fields x=720). At 390 px the form stacks below the file.",
+      "result": "pass",
+      "note": "Desktop-only wording"
+    },
+    {
+      "claim": "Type a Placeholder anywhere in the document, including headers, footers, and footnotes.",
+      "observed": "Header, Footer, and Footnotes sections in the pane each showed their Placeholder chip and the header/footer/footnote Placeholders were counted (8 Placeholders, 1 Block).",
+      "result": "pass"
+    },
+    {
+      "claim": "Each new Placeholder gets its own form field on upload, in document order.",
+      "observed": "Six fields in body order, then the footer-only reference_code. Header-only, footer-only, or footnote-only Placeholders come after all body fields; the pane lists Footer, Footnotes, then Header after the Body.",
+      "result": "pass",
+      "note": "Order across parts is body first"
+    },
+    {
+      "claim": "Edit the field's label, type, and help from its card.",
+      "observed": "Card has Label, Slug, Type, Help text; Label and Help text committed on Enter and the Fields list followed.",
+      "result": "pass"
+    },
+    {
+      "claim": "A directive also decides the new field's type.",
+      "observed": "fee_amount|currency:USD minted a Currency field; other Placeholders minted Text.",
+      "result": "pass"
+    },
+    {
+      "claim": "Two directives that disagree on one name create a text field, and Publish then names the gap.",
+      "observed": "doc028-two-directives.docx minted Fee amount as Text; Publish named both gaps.",
+      "result": "pass"
+    },
+    {
+      "claim": "Publish refuses a field that cannot print its directive and names it.",
+      "observed": "This pair cannot be published. Set \"Fee amount\" to a currency or number field for Placeholder \"{{fee_amount|currency:USD}}\".",
+      "result": "pass"
+    },
+    {
+      "claim": "An upload is refused when ... a currency code is not one OpenLaw knows. The refusal quotes the text to fix.",
+      "observed": "Use a supported currency code: \"{{fee_amount|currency:ZZZ}}\"",
+      "result": "pass"
+    },
+    {
+      "claim": "Open the Block under Clauses, choose When a rule matches, and pick the form field, the operator, and the value.",
+      "observed": "The control is labelled Include with options Always / When a rule matches; Form field, Operator, Value followed; tag read 'arbitration \u00b7 when Governing law equals England and Wales'.",
+      "result": "pass"
+    },
+    {
+      "claim": "A Block with no rule is always included.",
+      "observed": "Clauses caption and tag 'arbitration \u00b7 always' / 'Always included'.",
+      "result": "pass"
+    },
+    {
+      "claim": "An upload with an open Block, an unclosed brace ... is refused, and the refusal quotes the text to fix.",
+      "observed": "Unclosed Block: \"{{#block arbitration}}\" and Unclosed Placeholder brace: \"{{counterparty_name on the date below.\"; File version stayed 1.",
+      "result": "pass"
+    },
+    {
+      "claim": "A field whose Placeholder is gone stays on the form, marked No Placeholder in file version N.",
+      "observed": "Signing date kept, marked 'No Placeholder in file version 2'; upload report said '1 field has no Placeholder now.'",
+      "result": "pass"
+    },
+    {
+      "claim": "Publish pins one file version and one form version together. Later uploads and edits change nothing live until you publish again.",
+      "observed": "Publish dialog offered File version 1/2 and Form version 1..8; after publishing File version 2 + Form version 8 the Overview read 'Live since Sep 16, 2026: file version 2, form version 8.' and a later Help text edit produced 'Form version 9 is newer than the currently published form.'",
+      "result": "pass"
+    },
+    {
+      "claim": "Keep it to 120 characters. Start the name with a lowercase letter, then use lowercase letters, digits, and underscores.",
+      "observed": "Not exercised in the browser; matches AUTO_DOC_SLUG in apps/api/src/lib/auto-doc-template.ts (source inspection only).",
+      "result": "not-run"
+    },
+    {
+      "claim": "Help link 'How to write an Auto-Doc template' resolves to this article.",
+      "observed": "href /help/auto-doc-template; h1 'Write an Auto-Doc template' with sections Before you start, Mark a Placeholder, Format a value, Mark a Block, Upload a new version, for both roles.",
+      "result": "pass"
+    }
+  ],
+  "mismatches": [],
+  "observations": [
+    "The guide's 'file on the left and its form on the right' describes the desktop layout only; at 390 px the form stacks under the file. Not a defect, but the sentence could say 'beside' or note narrow screens.",
+    "The pane lists the Header section after Footer and Footnotes. Fields for Placeholders that exist only in a header, footer, or footnote are appended after every body field.",
+    "Keyboard: activating a chip selects its field and opens the card, but focus stays on the chip; reaching the card's inputs needs many further Tab presses.",
+    "At 390 px the Upload version button label is clipped by about 13 px in the pane header and the record title truncates to a few characters. The control still works.",
+    "The Help copy carries a 'Validation in progress' badge because the catalog status is review."
+  ],
+  "previousAttempt": "A first run on 2026-09-16 (records DOC-028 * 1789551331157) passed every product check but the reviewer's own Help-link check read the record page heading before the lazily loaded Help route rendered, and the keyboard check depended on it. Both checks were rewritten to wait for the article heading and to start from the Form section; the second run (this record) passed all checks. The first run's records remain in the lab as fictional DOC-028 records.",
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "Both roles ran the same scripted procedure; the Administrator ran the supplementary two-directives check in a separate Auto-Doc.",
+    "Slug length and character rules were checked against source only, not exercised in the browser.",
+    "Help contrast was seen in the default theme only; the Warm and Dark themes were not checked.",
+    "Keyboard and narrow-layout checks are measurements by the reviewer's script, not a screen-reader session.",
+    "The lab is shared with other automated journeys; only records named DOC-028 * and the one invited member were created by this walkthrough. Nothing was deleted or reconfigured."
+  ],
+  "notForThisFile": "This is the independent reviewer's evidence. The completion agent fills the article verification record and changes the catalog status."
+}

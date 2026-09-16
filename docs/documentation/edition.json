@@ -3,9 +3,15 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": null,
+  "supportedAppCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
   "publicationTarget": "development-app",
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "testedAppCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+    "applicationSha256": "ab96f32def5a71e998b1636fe9d59f0c3b5cb9b03e16840af9cc62880ef878dd",
+    "reviewer": "Codex completion agent, supported by the independent Fable V-C56 walkthrough",
+    "reviewedAt": "2026-09-16T09:48:31.826673+00:00",
+    "summary": "The application files match the clean committed lab build used for auto-doc-template. Source proofreading and the independent Administrator and Legal Team Member walkthrough passed for this article; DOC-028 retains the observations and build identities. This review verifies only auto-doc-template. Other articles retain their existing validation status."
+  },
   "publication": {
     "status": "validation-pending",
     "approvedBy": "Blair Wentworth",
@@ -236,10 +242,6 @@
       {
         "id": "approver-groups",
         "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c"
-      },
-      {
-        "id": "auto-doc-template",
-        "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66"
       }
     ]
   }

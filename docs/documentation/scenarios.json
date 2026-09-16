@@ -1492,7 +1492,7 @@
         "An unclosed Block, an unclosed brace, and a directive on a mismatched field type are refused with the offending text named."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "pending"
+      "status": "pass"
     }
   ]
 }
