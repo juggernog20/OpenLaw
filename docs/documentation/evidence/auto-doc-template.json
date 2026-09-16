@@ -62,5 +62,29 @@
     "Warm and Dark Help rendering received supplemental automated axe checks in help-accessibility.json; the independent browser walkthrough used the default theme."
   ],
   "previousEvidence": null,
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+    "toAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+    "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
+    "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
+    "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T10:03:12.494489+00:00",
+    "summary": "Source review and 35 passing automated replay checks across both roles establish compatibility after dependency and message-type updates. The original independent walkthrough is retained at its original tested commit.",
+    "evidence": [
+      {
+        "path": "batches/DOC-028/compatibility-review.json",
+        "sha256": "8251693f611cac2448ab95df09240b2631bb67a2769bcf5f173c1890e40a818a"
+      },
+      {
+        "path": "batches/DOC-028/compatibility-replay.json",
+        "sha256": "52c09f826f016bdcef0df073ac6a0394b5c200a56b547a7fb30d96e68b5ae7a9"
+      },
+      {
+        "path": "batches/DOC-028/compatibility-help.png",
+        "sha256": "e6c8bc24b2e609581f5eefaf13f1774678269877a0c471c2b713cce1c772f71e"
+      }
+    ]
+  }
 }

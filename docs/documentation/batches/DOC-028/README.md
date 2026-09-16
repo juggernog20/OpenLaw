@@ -33,7 +33,7 @@ The independent agent walkthrough passed V-C56 for both required roles: 37 recor
 
 - [Independent walkthrough](independent-walkthrough.json): role-specific observations, build identities, fixture hashes, screenshots, and limitations.
 - [Builder validation](builder-validation.json) and [journey output](builder-journeys.txt): six passing journeys with axe coverage across Overview, Form, Settings, and Generations.
-  That output was recorded before the journey 54 dialog wait was added. Journeys 51, 53, and 54 were rerun against the same lab build on 2026-09-16 after that edit, and all three passed with no axe violations.
+  The fresh implementation reviewer also reran journeys 51, 53, and 54 against the same lab build on 2026-09-16, and all three passed with no axe violations. The earlier run tested uncommitted changes; its timestamp precedes their commit, not their implementation.
 - [Help accessibility](help-accessibility.json): zero axe violations in Light, Warm, and Dark and no page overflow at 390 px.
 
 The walkthrough is an independent agent review, not a human user study. It records two minor builder usability observations: clipped Upload version text at 390 px and extra Tab presses between a selected Placeholder and its field card. Neither prevented the guide's tasks. The first walkthrough attempt had two timing/locator errors in the reviewer script; its corrected rerun and disposition are recorded in the evidence.
@@ -41,3 +41,9 @@ The walkthrough is an independent agent review, not a human user study. It recor
 Only this article is promoted. The edition compatibility record retains the exact application digest of the tested build; the other guides retain their existing verification status.
 
 After the walkthrough, the completion agent fixed ZIP entry timestamps in `fixtures/build-fixtures.py` following CodeRabbit review. All six regenerated files match the recorded fixture bytes and SHA-256 hashes exactly.
+
+## Compatibility with updated dev
+
+While this PR was being reviewed, `dev` advanced to `7f7e917a` with dependency upgrades and message-type changes. The documentation guard refused the changed application digest in CI. [The compatibility review](compatibility-review.json) records source inspection and a 35-step automated replay for both roles in a new lab built from that commit. Every scripted check passed; journey 51 also passed with zero axe violations. The original independent review's two supplemental manual probes are retained in its original record, not counted as new observations.
+
+The article verification record keeps the original walkthrough commit and adds a hashed compatibility reference for the updated application. The edition now identifies the updated tested build.
