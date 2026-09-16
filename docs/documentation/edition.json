@@ -3,14 +3,14 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+  "supportedAppCommit": "d64309f5d1b89e17e27ff3f589759d5dcb3850c1",
   "publicationTarget": "development-app",
   "compatibilityReview": {
-    "testedAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
-    "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
-    "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
-    "reviewedAt": "2026-09-16T10:03:12.494489+00:00",
-    "summary": "DOC-028 compatibility review covers the dependency and message-type changes since the independent walkthrough. Both roles passed a 35-step automated guide replay on the committed updated lab build, and journey 51 passed with zero axe violations. Original walkthrough evidence retains its tested commit. Only auto-doc-template is verified; other articles retain their existing status."
+    "testedAppCommit": "d64309f5d1b89e17e27ff3f589759d5dcb3850c1",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "Codex UI/UX regression test agent (independent of the Auto-Doc template guide author)",
+    "reviewedAt": "2026-09-16T15:02:06.433Z",
+    "summary": "The Auto-Doc template guide is unchanged. The intervening UI changes cover onboarding, sign-in branding, SMTP configuration, settings catalogs, and archived-person colors. They do not change the guide’s placeholder syntax, directives, blocks, upload/version workflow, clause rules, or publication semantics. Original independent walkthrough observations and limitations remain valid for these unchanged instructions."
   },
   "publication": {
     "status": "validation-pending",
