@@ -8,6 +8,14 @@ The blessed path is Docker Compose (TECH-005): one documented `docker compose up
 - Outbound SMTP if you want email flows (invites, magic links) — see [Email](#email)
 - A reverse proxy for TLS in any real deployment — see [the proxy contract](#reverse-proxy-contract)
 
+## Private company VM
+
+OpenLaw can run entirely behind the company network or VPN. Use an internal DNS hostname, a trusted HTTPS reverse proxy, and firewall rules permitting only office/VPN access. Bind the app port to loopback behind a host proxy and keep Postgres and the document engine unpublished. No public app endpoint is required for outbound SMTP or Signing in Polling mode.
+
+Follow [Deploy on a private VM](user-guides/deployment-configuration.md#deploy-on-a-private-vm) for the Compose override, internal DNS and VPN requirements, certificates, firewall boundaries, SSO callback, and verification steps. Apply those settings **before starting the stack**: the base Compose mapping publishes port 3000 on all host interfaces.
+
+Set `BASE_URL` to the HTTPS address employees use, such as `https://openlaw.company.example`, in both app and worker. Email recipients must be on the office network or VPN to open links. `localhost` points to the recipient's own computer; changing the origin requires recreating the containers and issuing fresh email links.
+
 ## Quickstart
 
 ```bash
@@ -36,7 +44,7 @@ Deployment configuration uses environment variables in `.env`; [`.env.example`](
 | `OPENLAW_SECRET_KEY`            | yes      | Encrypts the credentials saved in Settings — the DocuSign key, the Connect secret, the SMTP relay URL, the SSO client secret, and the AI provider key. Keep it out of the database backup — see [The credential encryption key](#the-credential-encryption-key).                                                 |
 | `OPENLAW_SECRET_KEY_PREVIOUS`   | no       | The retiring key while `OPENLAW_SECRET_KEY` is being rotated. Set it for one boot, then remove it — see [The credential encryption key](#the-credential-encryption-key).                                                                                                                                         |
 | `DATABASE_URL`                  | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                                                                                                  |
-| `BASE_URL`                      | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                                                                                                         |
+| `BASE_URL`                      | in prod  | The browser-facing origin (e.g. `https://legal.example.com`), which may be private to the office network or VPN. Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                                              |
 | `SMTP_URL` / `SMTP_FROM`        | no       | Outbound email; setting `SMTP_URL` pins SMTP to the environment, overriding anything saved in the app (see [Email](#email)). Unset = configurable in the app; with neither, email flows report "unconfigured" instead of sending.                                                                                |
 | `STORAGE_DRIVER`                | no       | Where uploaded files go (DOC-009): `local` (the default — a directory, no extra service), `s3` (an S3-compatible object store), or `azure-blob` (Azure Blob Storage). See [Files](#files).                                                                                                                       |
 | `STORAGE_PATH`                  | no       | The `local` driver's root. Defaults to `/var/lib/openlaw/files`, the mount point of the `openlaw-files` named volume. Keep the default under Compose — see [Files](#files).                                                                                                                                      |
@@ -51,10 +59,10 @@ Deployment configuration uses environment variables in `.env`; [`.env.example`](
 
 ## Reverse proxy contract
 
-The stack serves plain HTTP on one port and ships no proxy (TECH-017): TLS and the public hostname belong to _your_ ingress. Any proxy works if it honors this contract:
+The stack serves plain HTTP on one port and ships no proxy (TECH-017): TLS and the browser-facing hostname belong to _your_ ingress. Any proxy works if it honors this contract:
 
 1. **Terminate TLS** and forward to the app port (default `3000`).
-2. **Set `BASE_URL`** in `.env` to the public origin the proxy serves.
+2. **Set `BASE_URL`** in `.env` to the browser-facing origin the proxy serves. Public internet access is not required.
 3. **Pass `Origin` and `Host` through unmodified** — the auth layer's CSRF protection compares the `Origin` header against `BASE_URL` (TECH-008); a proxy that rewrites or strips it breaks sign-in.
 4. **No path rewriting.** The app owns the whole path space; serve it at the domain root.
 5. **Don't buffer `/api/events`.** Live surfaces use Server-Sent Events (TECH-009); response buffering turns them into nothing.
@@ -66,7 +74,7 @@ Everything else — HTTP/2, compression, request logging — is your choice.
 
 The app sets only the headers that are about the bytes one route returns: `nosniff` on every file download, and a locked-down `Content-Security-Policy` on the routes that render an uploaded file inline. Those protect you from other people's uploads and the app is the only thing that knows which responses those are.
 
-**The origin-wide headers are yours**, because they are claims about the public origin — which you configured and the app knows only as a `BASE_URL` string. Add them at the proxy:
+**The origin-wide headers are yours**, because they are claims about the browser-facing origin — which you configured and the app knows only as a `BASE_URL` string. Add them at the proxy:
 
 | Header                      | Suggested value                       | Why                                                                                                            |
 | --------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -91,7 +99,7 @@ The right numbers depend on your instance: how many people use it, and how much 
 
 ### Example: Caddy
 
-Caddy meets the contract with nothing but a site address (automatic HTTPS, no buffering that breaks SSE, headers passed through by default). The `header` block adds the origin-wide security headers from the section above, and Caddy sets HSTS itself whenever it manages the certificate:
+Caddy meets the contract with nothing but a site address (automatic HTTPS, no buffering that breaks SSE, headers passed through by default). The `header` block adds the origin-wide security headers from the section above, and you can add HSTS once the hostname is HTTPS-only:
 
 ```caddy
 legal.example.com {
@@ -104,7 +112,7 @@ legal.example.com {
 }
 ```
 
-With `BASE_URL=https://legal.example.com` in `.env`, that is the whole configuration.
+Set `BASE_URL=https://legal.example.com` in `.env`. This example assumes DNS and network access meet Caddy's automatic certificate issuance requirements. For an installation without public inbound access, use the [private VM certificate and port-binding example](user-guides/deployment-configuration.md#deploy-on-a-private-vm).
 
 ### Example: nginx
 

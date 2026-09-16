@@ -17,7 +17,7 @@
     "approvedBy": "Blair Wentworth",
     "approvedAt": "2026-09-09T07:31:08.623029Z",
     "sourceCommit": "1ab2a82055e4de20e215b28a46150e9010c7aea9",
-    "reason": "User instruction: \"Okay lets publish the documentation and help guides to the app\". Publication follows disclosure that the 56-guide suite still awaits independent verification and proofreading. This authorizes availability in the development app, not a claim that those checks have passed.",
+    "reason": "User instruction: \"Okay lets publish the documentation and help guides to the app\". Publication follows disclosure that the 56-guide suite still awaits independent verification and proofreading. This authorizes availability in the development app, not a claim that those checks have passed. On 2026-09-16, the user requested updated documentation for structured SMTP setup in the wizard; first-run and authentication-and-email now describe server, port, security, authentication, and sender fields. Their development publication hashes are refreshed; independent validation remains pending. On 2026-09-16, the user requested the private VM deployment walkthrough, including internal DNS/VPN access, TLS, restricted ports, and the origin used by email and SSO. The install and deployment-configuration publication hashes are refreshed; independent validation remains pending. On 2026-09-16, the user requested consistent add controls in settings; the type, status, and reminder instructions now describe explicit Save and Cancel buttons. Their publication hashes are refreshed; independent validation remains pending.",
     "articles": [
       {
         "id": "staff-sign-in",
@@ -161,7 +161,7 @@
       },
       {
         "id": "first-run",
-        "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4"
+        "contentSha256": "352423ff2dfe280b2a60ec2f786265c31e643ba7e9bc97e80f40c5999225676d"
       },
       {
         "id": "organisation-and-users",
@@ -169,11 +169,11 @@
       },
       {
         "id": "authentication-and-email",
-        "contentSha256": "a47a3665df8e885bd034226de107c182564f6048ea74aa6707f2f1eaff6df8db"
+        "contentSha256": "efe958f99c351718fecbfef19e1c4b47abcf9f5a46286edfb8bb72b7ac512249"
       },
       {
         "id": "types-statuses-fields",
-        "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+        "contentSha256": "d2e00c94c8bf7ded986c5992996d01b8f1cae997d6e08944c76cbaa37cdc73b7"
       },
       {
         "id": "matter-templates",
@@ -185,7 +185,7 @@
       },
       {
         "id": "reminders-and-audit",
-        "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+        "contentSha256": "a9f8731fa7dd6110ba1c4d90856dab0a272d51d1558d0ab195c016c0ab213efc"
       },
       {
         "id": "configure-signing",
@@ -197,11 +197,11 @@
       },
       {
         "id": "install",
-        "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f"
+        "contentSha256": "feaeef8166e60e210e00c47abc7118faf4347281d7c7d93fad96837c16074acc"
       },
       {
         "id": "deployment-configuration",
-        "contentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468"
+        "contentSha256": "68c0ccbe653fb61d93fc522ff8c5adaa14d2029a3cf1b216e7bc55afbcc3ac85"
       },
       {
         "id": "upgrade",
