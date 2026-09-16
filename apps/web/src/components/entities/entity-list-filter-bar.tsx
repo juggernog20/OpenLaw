@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The URL-backed filter row and chips for M27/9's Entity registry. */
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { X } from "lucide-react";
 import {
   ENTITY_STATUSES,
@@ -19,7 +19,24 @@ import { Switch } from "../ui/switch";
 type FilterKey = keyof EntityListFilters;
 type ChipKey = Exclude<FilterKey, "includeArchived">;
 
-const MESSAGES = defineMessages({
+const MESSAGES: Record<
+  | "type"
+  | "typeAll"
+  | "status"
+  | "statusAll"
+  | "jurisdiction"
+  | "jurisdictionAll"
+  | "majorityOwner"
+  | "majorityOwnerAll"
+  | "active"
+  | "chip"
+  | "remove"
+  | "clear"
+  | "clearLabel"
+  | "matchedNone"
+  | "showArchived",
+  MessageDescriptor
+> = defineMessages({
   type: { id: "entities.list.filter.type", defaultMessage: "Type" },
   typeAll: { id: "entities.list.filter.type.all", defaultMessage: "All types" },
   status: { id: "entities.list.filter.status", defaultMessage: "Status" },

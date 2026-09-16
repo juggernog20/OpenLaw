@@ -19,7 +19,7 @@ export type Role = "administrator" | "legal_team_member" | "business_user";
 
 /** DD-023 removed the Contributor account type. Audit entries written
  * before the migration still carry it, so the label stays readable. */
-const HISTORICAL_CONTRIBUTOR = defineMessage({
+const HISTORICAL_CONTRIBUTOR: MessageDescriptor = defineMessage({
   id: "role.contributorHistorical",
   defaultMessage: "Contributor",
 });

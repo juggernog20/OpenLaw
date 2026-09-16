@@ -80,7 +80,7 @@
 import { HelpLink } from "../components/documentation/help-link";
 import { useEffect, useRef, useState } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { defineMessage, FormattedMessage, useIntl } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { CircleCheck, FileText, Mail, TriangleAlert, Upload, X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
@@ -709,7 +709,7 @@ function AttachmentsField({
 
 /** Said once: the row's accessible name and its tooltip are the same
  * sentence, and two spellings would be two controls. */
-const REMOVE_ATTACHMENT = defineMessage({
+const REMOVE_ATTACHMENT: MessageDescriptor = defineMessage({
   id: "portal.form.attachmentRemove",
   defaultMessage: "Remove {filename}",
 });

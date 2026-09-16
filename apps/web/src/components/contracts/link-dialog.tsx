@@ -24,7 +24,7 @@
  */
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -45,7 +45,27 @@ import {
   CONTRACT_SELF_LINK_PROBLEM_TYPE,
 } from "@openlaw/shared";
 
-const MESSAGES = defineMessages({
+const MESSAGES: Record<
+  | "dialogTitle"
+  | "parentDialogTitle"
+  | "pickerPlaceholder"
+  | "typeLabel"
+  | "linkError"
+  | "parentError"
+  | "duplicateError"
+  | "cycleError"
+  | "selfLinkError"
+  | "nudgeTitle"
+  | "nudgeBody"
+  | "nudgeAccept"
+  | "nudgeDismiss"
+  | "nudgeError"
+  | "clearSelection"
+  | "pickerListLabel"
+  | "pickerSearching"
+  | "pickerNoMatches",
+  MessageDescriptor
+> = defineMessages({
   dialogTitle: {
     id: "contracts.relations.dialogTitle",
     defaultMessage: "Link contract",

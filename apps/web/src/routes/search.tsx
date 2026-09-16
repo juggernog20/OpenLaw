@@ -8,7 +8,7 @@
  */
 import { useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { search, type SearchKind, type SearchOutcome, type SearchResult } from "../lib/search";
 import { requireUser, useSignOut } from "../lib/session";
@@ -26,7 +26,18 @@ import { Button } from "../components/ui/button";
 
 const PAGE_SIZE = 25;
 
-const MESSAGES = defineMessages({
+const MESSAGES: Record<
+  | "prompt"
+  | "resultsFor"
+  | "allKinds"
+  | "filterLabel"
+  | "noMatches"
+  | "noMatchesBody"
+  | "error"
+  | "moreError"
+  | "showMore",
+  MessageDescriptor
+> = defineMessages({
   prompt: {
     id: "search.page.prompt",
     defaultMessage: "Search contracts, matters, documents, entities, counterparties, and requests",

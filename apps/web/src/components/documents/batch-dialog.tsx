@@ -57,7 +57,7 @@
  */
 
 import { useRef, useState } from "react";
-import { defineMessage, FormattedMessage, useIntl } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import {
   CircleAlert,
   CircleCheck,
@@ -149,7 +149,10 @@ export interface BatchDestination {
  * Descriptors rather than a ternary in the `id` prop: the message
  * extractor reads ids statically and drops any it cannot see.
  */
-const BATCH_COPY = {
+const BATCH_COPY: Record<
+  "contract" | "matter" | "entity" | "knowledge_item",
+  { failures: MessageDescriptor; onRecord: MessageDescriptor }
+> = {
   contract: {
     failures: defineMessage({
       id: "documents.batch.failures",
@@ -198,7 +201,7 @@ const BATCH_COPY = {
         "{count, plural, =0 {Nothing was added to the Knowledge Item.} one {# file is already on the Knowledge Item.} other {# files are already on the Knowledge Item.}}",
     }),
   },
-} as const;
+};
 
 export function BatchDialog({
   record,

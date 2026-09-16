@@ -10,7 +10,7 @@ import {
   useSearchParams,
   type LoaderFunctionArgs,
 } from "react-router";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { field } from "../lib/forms";
@@ -23,7 +23,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { PageTitle } from "../components/page-title";
 
-const PAGE_TITLES = defineMessages({
+const PAGE_TITLES: Record<"login" | "magic" | "magicSent", MessageDescriptor> = defineMessages({
   login: { id: "auth.login.title", defaultMessage: "Sign in" },
   magic: { id: "auth.magic.title", defaultMessage: "Get a sign-in link" },
   magicSent: { id: "auth.magicSent.title", defaultMessage: "Check your email" },

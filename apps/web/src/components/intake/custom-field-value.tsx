@@ -16,12 +16,18 @@
  * showing that it holds something.
  */
 
-import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import {
+  defineMessage,
+  FormattedMessage,
+  useIntl,
+  type IntlShape,
+  type MessageDescriptor,
+} from "react-intl";
 import type { CustomFieldValue } from "../../lib/custom-fields";
 import { formatFullDate } from "../../lib/format";
 import type { StaffRequestField, StaffRequestFieldRefs } from "../../lib/requests";
 
-const BOOLEAN_VALUE = defineMessage({
+const BOOLEAN_VALUE: MessageDescriptor = defineMessage({
   id: "inbox.request.booleanValue",
   defaultMessage: "{value, select, true {Yes} other {No}}",
 });
