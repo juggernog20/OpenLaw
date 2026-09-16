@@ -25,6 +25,9 @@
  * wizard never shows again.
  */
 
+import { AiModelSelector } from "../components/ai-model-selector";
+import { isFieldRow } from "../lib/field-catalog";
+import { canReuseAiKey } from "../lib/ai-connector-config";
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { HelpLink } from "../components/documentation/help-link";
 import {
@@ -34,10 +37,11 @@ import {
   type ReactNode,
   type SubmitEvent as FormSubmitEvent,
 } from "react";
-import { Link, redirect, useLoaderData, useNavigate } from "react-router";
+import { Link, redirect, useLoaderData, useNavigate, useSearchParams } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
+import { LOGO_BYTE_LIMIT, LOGO_TYPES } from "@openlaw/shared";
 import { aiPresetLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
@@ -49,6 +53,7 @@ import { AuthenticationOptionsFields } from "../components/authentication-option
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
 import { TimezonePicker } from "../components/timezone-picker";
+import { SmtpSettingsFields } from "../components/smtp-settings-fields";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -136,7 +141,9 @@ async function readReview() {
       officerRoles: officerRoles.data.officerRoles.length,
       knowledgeTypes: knowledgeTypes.data.knowledgeTypes.length,
       requestTypes: requestTypes.data.requestTypes.length,
-      fields: fields.data.fields.length,
+      matterFields: fields.data.fields.filter((field) => isFieldRow(field, "matter")).length,
+      contractFields: fields.data.fields.filter((field) => isFieldRow(field, "contract")).length,
+      entityFields: fields.data.fields.filter((field) => isFieldRow(field, "entity")).length,
     },
     offsets: reminders.data.offsets,
   };
@@ -157,6 +164,11 @@ const REVIEW_TAXONOMIES = [
     settingsPath: "/settings/matters/statuses",
   },
   {
+    key: "matterFields",
+    label: defineMessage({ id: "welcome.review.matterFields", defaultMessage: "Matter fields" }),
+    settingsPath: "/settings/matters/fields",
+  },
+  {
     key: "contractTypes",
     label: defineMessage({ id: "welcome.review.contractTypes", defaultMessage: "Contract types" }),
     settingsPath: "/settings/contracts/types",
@@ -170,6 +182,14 @@ const REVIEW_TAXONOMIES = [
     settingsPath: "/settings/contracts/statuses",
   },
   {
+    key: "contractFields",
+    label: defineMessage({
+      id: "welcome.review.contractFields",
+      defaultMessage: "Contract fields",
+    }),
+    settingsPath: "/settings/contracts/fields",
+  },
+  {
     key: "entityTypes",
     label: defineMessage({ id: "welcome.review.entityTypes", defaultMessage: "Entity types" }),
     settingsPath: "/settings/entities/types",
@@ -178,6 +198,11 @@ const REVIEW_TAXONOMIES = [
     key: "officerRoles",
     label: defineMessage({ id: "welcome.review.officerRoles", defaultMessage: "Officer roles" }),
     settingsPath: "/settings/entities/officer-roles",
+  },
+  {
+    key: "entityFields",
+    label: defineMessage({ id: "welcome.review.entityFields", defaultMessage: "Entity fields" }),
+    settingsPath: "/settings/entities/fields",
   },
   {
     key: "knowledgeTypes",
@@ -191,11 +216,6 @@ const REVIEW_TAXONOMIES = [
     key: "requestTypes",
     label: defineMessage({ id: "welcome.review.requestTypes", defaultMessage: "Request types" }),
     settingsPath: "/settings/intake/request-types",
-  },
-  {
-    key: "fields",
-    label: defineMessage({ id: "welcome.review.fields", defaultMessage: "Fields" }),
-    settingsPath: "/settings/contracts/fields",
   },
 ] as const;
 
@@ -274,10 +294,6 @@ interface General {
   defaultTimezone: string;
 }
 
-/** ~256 KB of image; matches the API's cap on the encoded data: URI. */
-const LOGO_BYTE_LIMIT = 256 * 1024;
-const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
-
 /** The locales the UI ships, as the API's own enum has them (DES-013). */
 const SHIPPED_LOCALES = ["en-US"] as const;
 
@@ -292,7 +308,8 @@ export function WelcomePage() {
   const intl = useIntl();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<Step>("welcome");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const step = STEPS.find((candidate) => candidate === searchParams.get("step")) ?? "welcome";
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const stepTitleId = useId();
@@ -373,6 +390,12 @@ export function WelcomePage() {
   );
   const [aiModel, setAiModel] = useState(loaded.aiConnector.model ?? chosenPreset.defaultModel);
   const [aiApiKey, setAiApiKey] = useState("");
+  const [manualAiModel, setManualAiModel] = useState(aiPreset === "azure_openai");
+  const canKeepAiKey = canReuseAiKey(aiConnector, {
+    preset: aiPreset,
+    protocol: aiProtocol,
+    baseUrl: aiBaseUrl,
+  });
   /** Whether a configured connector's form is open for a new key. */
   const [replacingAiConnector, setReplacingAiConnector] = useState(false);
   const aiFormOpen = !aiConnector.configured || replacingAiConnector;
@@ -406,6 +429,7 @@ export function WelcomePage() {
     const definition = loaded.aiPresets.find((option) => option.preset === next);
     if (!definition) return;
     setAiPreset(definition.preset);
+    setManualAiModel(definition.preset === "azure_openai");
     setAiProtocol(definition.protocol);
     setAiBaseUrl(definition.baseUrl ?? "");
     setAiModel(definition.defaultModel);
@@ -419,7 +443,14 @@ export function WelcomePage() {
   function goTo(next: Step) {
     setError(null);
     setEmailNotice(null);
-    setStep(next);
+    setSearchParams(
+      (current) => {
+        const updated = new URLSearchParams(current);
+        updated.set("step", next);
+        return updated;
+      },
+      { replace: true },
+    );
   }
 
   /** Onward from this step: the next one, or the end of the wizard. */
@@ -478,7 +509,7 @@ export function WelcomePage() {
         intl.formatMessage({
           id: "welcome.org.logo.rejected",
           defaultMessage:
-            "That logo must be a PNG, JPEG, WebP, or SVG image under 256 KB. Pick another file.",
+            "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.",
         }),
       );
       return;
@@ -674,8 +705,19 @@ export function WelcomePage() {
     try {
       const result = await api.PUT("/api/v1/email-settings", {
         body: {
-          smtpUrl: String(form.get("smtpUrl") ?? ""),
-          smtpFrom: String(form.get("smtpFrom") ?? ""),
+          host: field(form, "smtpHost"),
+          port: Number(field(form, "smtpPort")),
+          security: field(form, "smtpSecurity") as "starttls" | "tls" | "none",
+          authentication:
+            field(form, "smtpAuthentication") === "none"
+              ? { type: "none" }
+              : {
+                  type: "password",
+                  username: field(form, "smtpUsername"),
+                  password: field(form, "smtpPassword"),
+                },
+          senderName: field(form, "smtpSenderName"),
+          senderEmail: field(form, "smtpSenderEmail"),
         },
       });
       const { data } = result;
@@ -1147,15 +1189,6 @@ export function WelcomePage() {
                           })}
                         </option>
                       </select>
-                      {/* One option today is honest, not broken: DES-013
-                        ships en-US alone, and the select comes alive
-                        with locale #2. */}
-                      <p className="text-sm text-muted">
-                        <FormattedMessage
-                          id="settings.general.locale.hint"
-                          defaultMessage="English (United States) is the only available locale for now."
-                        />
-                      </p>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
@@ -1174,12 +1207,6 @@ export function WelcomePage() {
                             setOrgDraft((current) => ({ ...current, defaultTimezone: zone }));
                         }}
                       />
-                      <p className="text-sm text-muted">
-                        <FormattedMessage
-                          id="settings.general.timezone.hint"
-                          defaultMessage="Used for the daily digest and date displays until a user signs in."
-                        />
-                      </p>
                     </div>
                   </>
                 )}
@@ -1477,51 +1504,7 @@ export function WelcomePage() {
                           className="flex flex-col gap-3"
                           onSubmit={(e) => void saveEmailSettings(e)}
                         >
-                          <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="smtpUrl">
-                              <FormattedMessage
-                                id="welcome.email.field.url"
-                                defaultMessage="SMTP relay URL"
-                              />
-                            </Label>
-                            <Input
-                              id="smtpUrl"
-                              name="smtpUrl"
-                              autoComplete="off"
-                              required
-                              placeholder={intl.formatMessage({
-                                id: "welcome.email.field.urlPlaceholder",
-                                defaultMessage: "smtp://user:password@mail.example.com:587",
-                              })}
-                            />
-                            <p className="text-sm text-muted">
-                              <FormattedMessage
-                                id="welcome.email.field.url.hint"
-                                defaultMessage="Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
-                              />
-                            </p>
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="smtpFrom">
-                              <FormattedMessage
-                                id="welcome.email.field.from"
-                                defaultMessage="From address"
-                              />
-                            </Label>
-                            <Input
-                              id="smtpFrom"
-                              name="smtpFrom"
-                              autoComplete="off"
-                              required
-                              placeholder={intl.formatMessage({
-                                id: "welcome.email.field.fromPlaceholder",
-                                // ICU MessageFormat parses bare `<...>` as a
-                                // rich-text tag; escape the angle brackets so
-                                // the literal placeholder text survives.
-                                defaultMessage: "OpenLaw '<'openlaw@example.com'>'",
-                              })}
-                            />
-                          </div>
+                          <SmtpSettingsFields disabled={busy} />
                           <div className="flex items-center gap-2">
                             <Button type="submit" variant="secondary" disabled={busy}>
                               <FormattedMessage
@@ -1859,7 +1842,7 @@ export function WelcomePage() {
                     <CardDescription>
                       <FormattedMessage
                         id="welcome.aiAnalysis.hint"
-                        defaultMessage="Optional. Connect your own AI provider and an Analysis run reads a Contract's primary Document for you and fills its Fields, each marked Unverified until a person confirms it. Skip it and Contract analysis does not run. Every Field you would have got automatically stays manual, and nothing else is lost. Contract text reaches your provider only while an Analysis run is working."
+                        defaultMessage="Optional. Connect an AI provider to analyze Contract documents and suggest Field values. You can also enable AI to prepare Matter and Contract conversions from Requests and fill Contract Fields using Request answers, conversations, and supporting documents. AI-generated Field values stay Unverified until reviewed. Enable conversion workflows in AI analysis Settings. Relevant content is sent to your provider when an AI task runs."
                       />
                     </CardDescription>
 
@@ -1872,7 +1855,7 @@ export function WelcomePage() {
                           {aiConnector.enabled ? (
                             <FormattedMessage
                               id="welcome.aiAnalysis.configured"
-                              defaultMessage="Contract analysis runs through {provider}, on model {model}."
+                              defaultMessage="AI features use {provider}, on model {model}."
                               values={{
                                 provider: aiPresetLabel(intl, aiConnector.preset ?? ""),
                                 model: aiConnector.model ?? "",
@@ -1881,7 +1864,7 @@ export function WelcomePage() {
                           ) : (
                             <FormattedMessage
                               id="welcome.aiAnalysis.configured.disabled"
-                              defaultMessage="{provider} is configured on model {model}, but analysis is turned off. Every Field stays manual until it is turned back on."
+                              defaultMessage="{provider} is configured on model {model}, but AI features are turned off."
                               values={{
                                 provider: aiPresetLabel(intl, aiConnector.preset ?? ""),
                                 model: aiConnector.model ?? "",
@@ -2028,20 +2011,29 @@ export function WelcomePage() {
                           </p>
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="welcome-ai-model">
-                            <FormattedMessage
-                              id="settings.aiAnalysis.model"
-                              defaultMessage="Model"
-                            />
-                          </Label>
-                          <Input
-                            id="welcome-ai-model"
-                            autoComplete="off"
-                            value={aiModel}
-                            onChange={(event) => setAiModel(event.target.value)}
-                          />
-                        </div>
+                        <AiModelSelector
+                          key={JSON.stringify([
+                            aiPreset,
+                            aiProtocol,
+                            aiBaseUrl,
+                            aiApiKey,
+                            aiConnector.updatedAt,
+                          ])}
+                          config={{
+                            preset: aiPreset,
+                            protocol: aiProtocol,
+                            baseUrl: aiBaseUrl,
+                            ...(aiApiKey.trim() ? { apiKey: aiApiKey } : {}),
+                          }}
+                          canLoad={
+                            (!chosenPreset.requiresApiKey || canKeepAiKey || !!aiApiKey.trim()) &&
+                            (!chosenPreset.requiresBaseUrl || !!aiBaseUrl.trim())
+                          }
+                          value={aiModel}
+                          onChange={setAiModel}
+                          manualEntry={manualAiModel}
+                          onManualEntryChange={setManualAiModel}
+                        />
 
                         {/* The way back from Replace credentials, the
                             E-signature step's own shape. Without it the
@@ -2057,6 +2049,7 @@ export function WelcomePage() {
                                 const baseline = aiBaseline(aiConnector);
                                 setReplacingAiConnector(false);
                                 setAiPreset(baseline.preset);
+                                setManualAiModel(baseline.preset === "azure_openai");
                                 setAiProtocol(baseline.protocol);
                                 setAiBaseUrl(baseline.baseUrl);
                                 setAiModel(baseline.model);
@@ -2110,6 +2103,7 @@ export function WelcomePage() {
                             <th scope="row" className="py-2 text-left font-normal">
                               <Link
                                 to={settingsPath}
+                                state={{ returnToSetup: true }}
                                 className="text-link underline underline-offset-2"
                               >
                                 <FormattedMessage {...label} />
@@ -2124,6 +2118,7 @@ export function WelcomePage() {
                           <th scope="row" className="py-2 text-left font-normal">
                             <Link
                               to="/settings/reminders"
+                              state={{ returnToSetup: true }}
                               className="text-link underline underline-offset-2"
                             >
                               <FormattedMessage
@@ -2152,12 +2147,6 @@ export function WelcomePage() {
                         </tr>
                       </tbody>
                     </table>
-                    <p className="text-sm text-muted">
-                      <FormattedMessage
-                        id="welcome.review.reminders.address"
-                        defaultMessage="Reminder offsets live at Settings → Organization → Notifications."
-                      />
-                    </p>
                   </>
                 )}
               </section>

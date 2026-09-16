@@ -109,7 +109,7 @@ describe("Organization · Notifications (#322)", () => {
 
     await user.click(await screen.findByRole("button", { name: "Add lead time" }));
     await user.type(screen.getByLabelText("days before the date"), "30");
-    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(writes).toEqual([[7, 1, 0, 30]]));
     expect(await screen.findByText("Saved")).toBeVisible();

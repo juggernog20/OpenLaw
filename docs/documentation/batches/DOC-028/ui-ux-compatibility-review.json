@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "articleId": "auto-doc-template",
+  "reviewedAt": "2026-09-16T15:02:06.433Z",
+  "reviewer": "Codex UI/UX regression test agent (independent of the Auto-Doc template guide author)",
+  "fromAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+  "toAppCommit": "d64309f5d1b89e17e27ff3f589759d5dcb3850c1",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "workingChanges": true,
+  "classification": "Compatibility source review; no new independent guide walkthrough",
+  "summary": "The Auto-Doc template guide is unchanged. The intervening UI changes cover onboarding, sign-in branding, SMTP configuration, settings catalogs, and archived-person colors. They do not change the guide’s placeholder syntax, directives, blocks, upload/version workflow, clause rules, or publication semantics. Original independent walkthrough observations and limitations remain valid for these unchanged instructions.",
+  "inspectedSources": [
+    "docs/user-guides/auto-doc-template.md",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/user-identity.tsx",
+    "apps/web/src/components/comments/comment-applet.tsx"
+  ],
+  "validation": {
+    "webTests": 2173,
+    "apiTests": 3337,
+    "toolingTests": 58,
+    "autoDocBrowserJourneys": "49–57 passed on the fresh built test instance before the subsequent archived-person color-only correction. No template authoring or generation code changed in that correction."
+  },
+  "limitations": [
+    "This compatibility review is not a fresh independent guide walkthrough or a live-provider verification.",
+    "Other draft/review articles retain their existing validation status."
+  ],
+  "previousEditionReview": {
+    "testedAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+    "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
+    "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
+    "reviewedAt": "2026-09-16T10:03:12.494489+00:00",
+    "summary": "DOC-028 compatibility review covers the dependency and message-type changes since the independent walkthrough. Both roles passed a 35-step automated guide replay on the committed updated lab build, and journey 51 passed with zero axe violations. Original walkthrough evidence retains its tested commit. Only auto-doc-template is verified; other articles retain their existing status."
+  },
+  "previousArticleReview": {
+    "fromAppCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+    "toAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+    "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
+    "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
+    "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T10:24:31.190939+00:00",
+    "summary": "Source review and 35 passing automated replay checks across both roles establish compatibility after dependency and message-type updates. The original independent walkthrough is retained at its original tested commit. A later 35-step replay corrected the Help destination and renamed-card visibility diagnostics; the original logs are retained.",
+    "evidence": [
+      {
+        "path": "batches/DOC-028/compatibility-review.json",
+        "sha256": "8251693f611cac2448ab95df09240b2631bb67a2769bcf5f173c1890e40a818a"
+      },
+      {
+        "path": "batches/DOC-028/compatibility-replay.json",
+        "sha256": "52c09f826f016bdcef0df073ac6a0394b5c200a56b547a7fb30d96e68b5ae7a9"
+      },
+      {
+        "path": "batches/DOC-028/compatibility-help.png",
+        "sha256": "e6c8bc24b2e609581f5eefaf13f1774678269877a0c471c2b713cce1c772f71e"
+      },
+      {
+        "path": "batches/DOC-028/observation-corrections.json",
+        "sha256": "67854a208f2e8c10e0994c05e562fc59fee5fd3b362196955d8d01c53992122c"
+      }
+    ]
+  }
+}

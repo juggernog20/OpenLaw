@@ -131,7 +131,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
     sortKey: "uploader",
     render: (row) => (
       <span
-        className={`flex min-w-0 items-center gap-2 ${row.currentVersion.uploadedBy.archived ? "opacity-50" : ""}`}
+        className={`flex min-w-0 items-center gap-2 ${row.currentVersion.uploadedBy.archived ? "text-muted" : ""}`}
       >
         <Avatar
           name={row.currentVersion.uploadedBy.displayName}

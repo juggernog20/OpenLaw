@@ -174,8 +174,7 @@ test.describe.serial("M6 demo path", () => {
         page.getByRole("img", { name: "Other is system-protected and can't be archived" }),
       ).toBeVisible();
 
-      // Adds a contract type: the inline draft row is the form
-      // (DES-020) — Enter creates, immediately (SET-003).
+      // Save the inline draft explicitly, as offered by every type catalog.
       await page.getByRole("button", { name: "Add type" }).click();
       const created = page.waitForResponse(
         (response) =>
@@ -183,7 +182,7 @@ test.describe.serial("M6 demo path", () => {
           response.request().method() === "POST",
       );
       await page.getByRole("textbox", { name: "New type name" }).fill(typeName);
-      await page.keyboard.press("Enter");
+      await page.getByRole("button", { name: "Save", exact: true }).click();
       expect((await created).ok()).toBe(true);
       await expect(page.getByRole("button", { name: `Rename ${typeName}` })).toBeVisible();
 

@@ -807,7 +807,7 @@ function CommentRow({
       <div className="flex items-center gap-2">
         <Avatar name={comment.author.displayName} image={comment.author.image} className="size-6" />
         <span
-          className={cn("truncate text-sm font-semibold", comment.author.archived && "opacity-50")}
+          className={cn("truncate text-sm font-semibold", comment.author.archived && "text-muted")}
         >
           {comment.author.displayName}
         </span>

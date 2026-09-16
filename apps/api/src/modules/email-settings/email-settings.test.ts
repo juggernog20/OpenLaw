@@ -9,6 +9,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { orgSettings, sql } from "@openlaw/db";
 import {
   signInCookies,
   startHarness,
@@ -32,6 +33,15 @@ const STAFF = {
 const RELAY = {
   smtpUrl: "smtp://mailer:sekret-cred@relay.acme.example:587",
   smtpFrom: "Acme Legal <legal@acme.example>",
+} as const;
+
+const STRUCTURED_RELAY = {
+  host: "relay.acme.example",
+  port: 587,
+  security: "starttls",
+  authentication: { type: "password", username: "mailer@acme.example", password: "pass@:/%40?#" },
+  senderName: 'Acme, "Legal"',
+  senderEmail: "legal@acme.example",
 } as const;
 
 beforeAll(async () => {
@@ -287,5 +297,119 @@ describe("resolved from the database when the environment sets no SMTP", () => {
       cookies: adminCookies,
     });
     expect(status.json().steps.email.done).toBe(false);
+  });
+});
+
+describe("structured SMTP settings", () => {
+  beforeAll(() => {
+    harness.smtpEnv = null;
+  });
+  afterAll(() => {
+    harness.smtpEnv = TEST_SMTP_ENV;
+  });
+
+  it("saves credentials encrypted without exposing them and applies the sender immediately", async () => {
+    const saved = await harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/email-settings",
+      cookies: adminCookies,
+      payload: STRUCTURED_RELAY,
+    });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect(saved.json()).toEqual({
+      source: "app",
+      fromAddress: '"Acme, \\"Legal\\"" <legal@acme.example>',
+    });
+    const [row] = await harness.db.select().from(orgSettings).limit(1);
+    const url = new URL(row!.smtpUrl!);
+    expect(decodeURIComponent(url.username)).toBe(STRUCTURED_RELAY.authentication.username);
+    expect(decodeURIComponent(url.password)).toBe(STRUCTURED_RELAY.authentication.password);
+    const raw = await harness.db.execute<{ smtp_url: string }>(
+      sql`SELECT smtp_url FROM org_settings`,
+    );
+    expect(String(raw.rows[0]!.smtp_url)).not.toContain("smtp:");
+    expect(String(raw.rows[0]!.smtp_url)).not.toContain(STRUCTURED_RELAY.authentication.password);
+    const state = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/email-settings",
+      cookies: adminCookies,
+    });
+    expect(state.body).not.toContain(STRUCTURED_RELAY.authentication.password);
+    expect(saved.body).not.toContain(STRUCTURED_RELAY.authentication.password);
+    const sent = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/email-settings/test",
+      cookies: adminCookies,
+    });
+    expect(sent.statusCode, sent.body).toBe(200);
+  });
+
+  it("rejects invalid fields and mixed legacy payloads without replacing the saved relay", async () => {
+    const [before] = await harness.db.select().from(orgSettings).limit(1);
+    for (const change of [
+      { host: "smtp://relay.example.com" },
+      { host: "relay.example.com:587" },
+      { host: "relay.example.com/path" },
+      { host: "user@relay.example.com" },
+      { host: "" },
+      { port: 0 },
+      { port: 65536 },
+      { port: 1.5 },
+      { security: "automatic" },
+      { authentication: { type: "password", username: "u", password: "" } },
+      { authentication: { type: "none", password: "unused" } },
+      { senderEmail: "invalid" },
+      { senderName: "Acme\r\nBcc: attacker@example.com" },
+      { smtpUrl: RELAY.smtpUrl, smtpFrom: RELAY.smtpFrom },
+    ]) {
+      const res = await harness.app.inject({
+        method: "PUT",
+        url: "/api/v1/email-settings",
+        cookies: adminCookies,
+        payload: { ...STRUCTURED_RELAY, ...change },
+      });
+      expect(res.statusCode).toBe(400);
+      expect(res.body).not.toContain(STRUCTURED_RELAY.authentication.password);
+    }
+    const [after] = await harness.db.select().from(orgSettings).limit(1);
+    expect(after!.smtpUrl).toBe(before!.smtpUrl);
+  });
+
+  it("replaces password authentication with an internal relay that needs no credentials", async () => {
+    const res = await harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/email-settings",
+      cookies: adminCookies,
+      payload: {
+        ...STRUCTURED_RELAY,
+        host: "::1",
+        port: 2525,
+        security: "none",
+        authentication: { type: "none" },
+        senderName: "",
+      },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const [row] = await harness.db.select().from(orgSettings).limit(1);
+    const url = new URL(row!.smtpUrl!);
+    expect(url.hostname).toBe("[::1]");
+    expect(url.username).toBe("");
+    expect(url.password).toBe("");
+    expect(row!.smtpFrom).toBe(STRUCTURED_RELAY.senderEmail);
+  });
+
+  it("still refuses structured saves when the environment pins the relay", async () => {
+    harness.smtpEnv = TEST_SMTP_ENV;
+    try {
+      const res = await harness.app.inject({
+        method: "PUT",
+        url: "/api/v1/email-settings",
+        cookies: adminCookies,
+        payload: STRUCTURED_RELAY,
+      });
+      expect(res.statusCode).toBe(409);
+    } finally {
+      harness.smtpEnv = null;
+    }
   });
 });

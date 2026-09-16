@@ -26,6 +26,7 @@ import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { History, Pencil, TriangleAlert } from "lucide-react";
 import { problem, type ProblemResult } from "../lib/problem";
 import { field } from "../lib/forms";
+import { InlineAddForm } from "./inline-add-form";
 import { ListEditor } from "./list-editor";
 import { PageTitle } from "./page-title";
 import { StatusNote, type FieldStatus } from "./status-note";
@@ -326,6 +327,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   const [orderStatus, setOrderStatus] = useState<FieldStatus>("idle");
   const [orderError, setOrderError] = useState<string | undefined>(undefined);
   const [adding, setAdding] = useState(false);
+  const [addDraft, setAddDraft] = useState("");
   const [addStatus, setAddStatus] = useState<FieldStatus>("idle");
   const [addError, setAddError] = useState<string | undefined>(undefined);
   const [archiveTarget, setArchiveTarget] = useState<Row | null>(null);
@@ -369,8 +371,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   }
 
   async function create(draft: string) {
-    // Enter commits and the input then blurs — a ref, set synchronously,
-    // keeps the pair from posting the same draft twice.
+    // Guard repeated submissions while the request is in flight.
     if (createInFlight.current) return;
     const displayName = draft.trim();
     if (displayName === "") {
@@ -464,6 +465,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
           addLabel={<FormattedMessage {...messages.add} />}
           onAdd={() => {
             setAdding(true);
+            setAddDraft("");
             setAddStatus("idle");
             setAddError(undefined);
           }}
@@ -551,21 +553,23 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
           }
           adding={adding}
           addRow={
-            <>
+            <InlineAddForm
+              saving={addStatus === "saving"}
+              canSave={!!addDraft.trim()}
+              onSave={() => void create(addDraft)}
+              onCancel={() => setAdding(false)}
+            >
               <Input
                 autoFocus
                 aria-label={intl.formatMessage(messages.addName)}
                 className="h-7 w-64 max-w-full"
-                onBlur={(event) => void create(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") void create(event.currentTarget.value);
-                  if (event.key === "Escape") setAdding(false);
-                }}
+                value={addDraft}
+                onChange={(event) => setAddDraft(event.target.value)}
               />
               <span className="ps-1">
                 <StatusNote status={addStatus} detail={addError} />
               </span>
-            </>
+            </InlineAddForm>
           }
           announcement={announcement}
           listRef={listRef}

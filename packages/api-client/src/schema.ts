@@ -362,6 +362,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/org/branding": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Organization name and logo displayed before sign-in */
+    get: operations["getOrgBranding"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/org/general": {
     parameters: {
       query?: never;
@@ -541,7 +558,7 @@ export interface paths {
     };
     /** Where outbound email is configured (#37): environment, app, or not at all — and the effective from-address. Never the relay URL */
     get: operations["getEmailSettings"];
-    /** Save the app SMTP relay (#37): smtp:// or smtps:// URL with credentials inline, plus a from-address; both null clears. Takes effect on the next send. Refused while the environment pins SMTP — env always wins over app configuration */
+    /** Save the app SMTP server, port, security, authentication, and sender. Legacy smtpUrl/smtpFrom requests remain supported; both null clears. Takes effect on the next send. Refused while the environment pins SMTP — env always wins over app configuration */
     put: operations["saveEmailSettings"];
     post?: never;
     delete?: never;
@@ -7932,6 +7949,38 @@ export interface operations {
       };
     };
   };
+  getOrgBranding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            name: string;
+            logo: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getOrgGeneral: {
     parameters: {
       query?: never;
@@ -8485,10 +8534,30 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          smtpUrl: string | null;
-          smtpFrom: string | null;
-        };
+        "application/json":
+          | {
+              host: string;
+              port: number;
+              /** @enum {string} */
+              security: "starttls" | "tls" | "none";
+              authentication:
+                | {
+                    /** @enum {string} */
+                    type: "none";
+                  }
+                | {
+                    /** @enum {string} */
+                    type: "password";
+                    username: string;
+                    password: string;
+                  };
+              senderName: string;
+              senderEmail: string;
+            }
+          | {
+              smtpUrl: string | null;
+              smtpFrom: string | null;
+            };
       };
     };
     responses: {

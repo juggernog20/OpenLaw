@@ -2,8 +2,8 @@
 
 /**
  * Organization settings routes (SET-001 General pane, #63; the
- * Notifications pane's reminder-offset list, #322). Everything here sits
- * behind SET-002's single role gate — Administrators only — and every
+ * Notifications pane's reminder-offset list, #322). Settings sit
+ * behind SET-002's role gate; only the sign-in branding is public. Every
  * write appends to the activity log (SET-003 / DD-017) inside the same
  * transaction, so no change can land unrecorded.
  */
@@ -11,6 +11,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { eq, orgSettings } from "@openlaw/db";
+import { LOGO_BYTE_LIMIT, LOGO_DATA_URI_LIMIT } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { MAX_REMINDER_OFFSET_DAYS, savedOffsets } from "../../lib/notifications/offsets.js";
@@ -20,17 +21,17 @@ import { TimezoneSchema } from "../../lib/timezones.js";
 /** Locales the UI actually ships (DES-013: one until a second exists). */
 const SHIPPED_LOCALES = ["en-US"] as const;
 
-/**
- * An inline image as a data: URI — the logo has no file store to live in
- * yet (documents arrive in M7), so it rides the org_settings row. The
- * cap bounds the row, not the rendered size: ~256 KB of image.
- */
+/** The logo is stored inline in org_settings, with a 5 MB decoded image limit. */
 const LogoSchema = z
   .string()
-  .max(360_000)
+  .max(LOGO_DATA_URI_LIMIT)
   .regex(
     /^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/]+={0,2}$/,
     "A base64 data: URI of type image/png, image/jpeg, image/webp, or image/svg+xml.",
+  )
+  .refine(
+    (value) => Buffer.byteLength(value.slice(value.indexOf(",") + 1), "base64") <= LOGO_BYTE_LIMIT,
+    "The logo must be 5 MB or smaller.",
   );
 
 const GeneralSchema = z.object({
@@ -80,6 +81,29 @@ const OffsetsEnvelope = z.object({
 
 export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
+    "/org/branding",
+    {
+      schema: {
+        operationId: "getOrgBranding",
+        summary: "Organization name and logo displayed before sign-in",
+        tags: ["org"],
+        response: {
+          200: z.object({ name: z.string(), logo: z.string().nullable() }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (_request, reply) => {
+      const [branding] = await app.db
+        .select({ name: orgSettings.name, logo: orgSettings.logo })
+        .from(orgSettings)
+        .limit(1);
+      reply.header("Cache-Control", "no-store");
+      return branding ?? { name: "", logo: null };
+    },
+  );
+
+  app.get(
     "/org/general",
     {
       preHandler: requireRole("administrator"),
@@ -109,6 +133,8 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     "/org/general",
     {
+      // Leave room for the other settings fields around the encoded logo.
+      bodyLimit: LOGO_DATA_URI_LIMIT + 16 * 1024,
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "updateOrgGeneral",

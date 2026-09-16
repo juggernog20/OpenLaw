@@ -17,6 +17,7 @@ import { orgSettings } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { MAILER_SOURCES } from "../../lib/mailer.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { SmtpSettingsSchema, smtpSettingsToStorage } from "./config.js";
 
 const StateSchema = z.object({
   /** Where the effective configuration lives: env-pinned, app, or nowhere. */
@@ -53,17 +54,23 @@ function describeSendFailure(error: unknown): string {
   switch (err.code) {
     case "EDNS":
     case "ENOTFOUND":
-      return "The relay host could not be found. Check the host name in the relay URL.";
+      return "The relay host could not be found. Check the SMTP server name.";
     case "ECONNREFUSED":
       return "The relay refused the connection. Check the host and port in the relay URL.";
     case "ETIMEDOUT":
     case "ESOCKET":
     case "ECONNECTION":
-      return "The relay did not respond in time. Check the host, port, and smtp/smtps scheme.";
+      return "The relay did not respond in time. Check the SMTP server, port, and connection security.";
     case "EAUTH":
-      return "The relay rejected the credentials. Check the user and password in the relay URL.";
+      return "The relay rejected the credentials. Check the SMTP username and password.";
+    case "ETLS":
+    case "CERT_HAS_EXPIRED":
+    case "DEPTH_ZERO_SELF_SIGNED_CERT":
+    case "UNABLE_TO_VERIFY_LEAF_SIGNATURE":
+    case "ERR_TLS_CERT_ALTNAME_INVALID":
+      return "A secure connection could not be established. Check the connection security setting and the relay's TLS certificate.";
     default:
-      return "The relay reported an unexpected error. Check the relay URL, credentials, and from-address.";
+      return "The relay reported an unexpected error. Check the SMTP server, credentials, and sender email.";
   }
 }
 
@@ -94,16 +101,19 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "saveEmailSettings",
         summary:
-          "Save the app SMTP relay (#37): smtp:// or smtps:// URL with " +
-          "credentials inline, plus a from-address; both null clears. " +
+          "Save the app SMTP server, port, security, authentication, and sender. " +
+          "Legacy smtpUrl/smtpFrom requests remain supported; both null clears. " +
           "Takes effect on the next send. Refused while the environment " +
           "pins SMTP — env always wins over app configuration",
         tags: ["email-settings"],
-        body: z.object({
-          /** The relay URL, credentials inline. Write-only, never echoed. */
-          smtpUrl: z.string().nullable(),
-          smtpFrom: z.string().nullable(),
-        }),
+        body: z.union([
+          SmtpSettingsSchema,
+          z.strictObject({
+            /** The relay URL, credentials inline. Write-only, never echoed. */
+            smtpUrl: z.string().nullable(),
+            smtpFrom: z.string().nullable(),
+          }),
+        ]),
         response: { 200: StateSchema, default: problemResponse },
       },
     },
@@ -120,8 +130,9 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
             "which always wins over settings saved here. Change it in the environment instead.",
         );
       }
-      const smtpUrl = request.body.smtpUrl?.trim() || null;
-      const smtpFrom = request.body.smtpFrom?.trim() || null;
+      const stored = "host" in request.body ? smtpSettingsToStorage(request.body) : request.body;
+      const smtpUrl = stored.smtpUrl?.trim() || null;
+      const smtpFrom = stored.smtpFrom?.trim() || null;
       if ((smtpUrl === null) !== (smtpFrom === null)) {
         throw httpError(400, "Provide both the relay URL and the from-address, or neither.");
       }

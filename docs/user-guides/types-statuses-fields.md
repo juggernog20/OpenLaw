@@ -5,7 +5,7 @@ Configure the choices and information your organization uses on its records. Sig
 ## Add and maintain types
 
 1. Under **Organization**, select **Contracts**, **Matters**, **Entities**, or **Knowledge**, then **Types**.
-2. Select **Add type**, enter a name, and press Enter. Use a fictional example such as **Supplier assessment** while testing.
+2. Select **Add type**, enter a name, and select **Save**. Select **Cancel** to discard the draft. Use a fictional example such as **Supplier assessment** while testing.
 3. Select the row's **Rename** control to change its display name. Where **Edit** is available, open it to change the description and attached Fields. Leave a text field to save, and check the saved result.
 4. Drag a reorder handle, or focus it and use the arrow keys, to change the display order.
 
@@ -17,7 +17,7 @@ Request types have their own form and target settings. See [Configure request ty
 
 ## Configure Statuses
 
-For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuses, open **Matters**, then **Statuses**. Select **Add status**, enter a name, choose its Stage or Category, and press Enter. For a Matter Status in the Open Category, also choose its group: **Open**, **In progress**, or **Waiting**. A new Status uses **In progress** unless you choose another group. Rename and reorder existing rows with their row controls.
+For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuses, open **Matters**, then **Statuses**. Select **Add status**, enter a name, and choose its Stage or Category. For a Matter Status in the Open Category, also choose its group: **Open**, **In progress**, or **Waiting**. A new Status uses **In progress** unless you choose another group. Select **Save status**, or select **Cancel** to discard the draft. Rename and reorder existing rows with their row controls.
 
 | Setting         | Fixed structure                                                                                                                                      | Archive behavior                                                                                                                                                                                                                                                      |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -27,6 +27,8 @@ For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuse
 Renaming a Status changes its label, not its Stage, Category, or group. A Matter Status group sets how the Status is grouped and colored on Matter lists and records. It does not change whether the Matter is open or closed. To use a different mapping, create a new Status with the intended mapping and move the work deliberately. See [Change a Contract Status](contract-stages.md) and [Close, reopen, and archive Matters](matter-status-and-archive.md) for record-level consequences.
 
 ## Create a Field
+
+Matter and Contract Fields settings show **Default fields** as locked, read-only rows. These built-in definitions cannot be renamed or archived here; their values are managed on each record. **Default fields** starts collapsed; select its heading to expand it. **Custom Fields** starts expanded underneath with the controls to add and manage your own Fields.
 
 1. Open **Contracts**, **Matters**, or **Entities**, then **Fields**.
 2. Select **Add field**. Enter **Name** and, if useful, **Description** as help for the person completing it.

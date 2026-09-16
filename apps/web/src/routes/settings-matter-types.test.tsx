@@ -190,10 +190,10 @@ describe("the matter endpoints behind the shared machinery", () => {
     renderAt("/settings/matters/types");
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add type" }));
-    await user.type(
-      screen.getByRole("textbox", { name: "New type name" }),
-      "Data Governance{Enter}",
-    );
+    await user.type(screen.getByRole("textbox", { name: "New type name" }), "Data Governance");
+    await user.tab();
+    expect(calls.creates).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(calls.creates).toEqual([{ displayName: "Data Governance" }]));
     expect(
       await screen.findByRole("button", { name: "Rename Data Governance" }),

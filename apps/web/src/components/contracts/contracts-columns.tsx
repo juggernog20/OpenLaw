@@ -217,7 +217,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     render: (row) =>
       row.manager ? (
         <span
-          className={`flex min-w-0 items-center gap-2 ${row.manager.archived ? "opacity-50" : ""}`}
+          className={`flex min-w-0 items-center gap-2 ${row.manager.archived ? "text-muted" : ""}`}
         >
           <Avatar name={row.manager.displayName} image={row.manager.image} className="size-6" />
           <span className="truncate">{row.manager.displayName}</span>

@@ -94,6 +94,8 @@ That sends real Envelopes through the real driver: some still out, some signed w
 
 It writes a lot and cleans up nothing. Point it at a database you are willing to lose. Dates are anchored to the day it runs, so deadlines stay overdue, due and upcoming however long ago you seeded. A heavy run takes two to three minutes on a laptop; the long pole is the seed waiting on the document queue, because an Analysis run cannot start until the text extraction it reads has finished.
 
+To walk through SMTP setup in the wizard, stop the loop and run `pnpm dev:hot --smtp-in-app`. This uses the relay saved in the app and overrides any `SMTP_URL` / `SMTP_FROM` environment values for the host processes. For local testing, enter server `127.0.0.1`, port `1025`, connection security **None**, authentication **None**, and sender email `openlaw@example.test`; messages appear at http://localhost:8025. Use the corresponding SMTP port if running an isolated instance. The usual dev loop still pins mail to Mailpit.
+
 `pnpm dev:infra` brings up only the containers, for when you start the watch processes yourself; `pnpm dev:infra:down` stops **only those containers**, leaving host watch processes running. Ports move with `POSTGRES_PORT`, `DOC_ENGINE_PORT`, `MAILPIT_SMTP_PORT`. All of it is [`compose.hostdev.yml`](compose.hostdev.yml) plus [`scripts/dev-hot.sh`](scripts/dev-hot.sh), and none of it touches what a deployment runs.
 
 Everything E2E and every milestone acceptance runs against the built Compose stack instead (TECH-018):

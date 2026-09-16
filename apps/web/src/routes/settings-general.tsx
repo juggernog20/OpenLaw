@@ -18,6 +18,7 @@ import { useRef, useState } from "react";
 import { Link, redirect, useLoaderData, useRevalidator } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { LOGO_BYTE_LIMIT, LOGO_TYPES } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { problem, type ProblemResult } from "../lib/problem";
 import { requireUser } from "../lib/session";
@@ -171,10 +172,6 @@ async function patchGeneral(body: {
   return { data: result?.data?.general, ...(await problem(result)) };
 }
 
-/** ~256 KB of image; matches the API's cap on the encoded data: URI. */
-const LOGO_BYTE_LIMIT = 256 * 1024;
-const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
-
 const selectClassName =
   "h-8 w-80 max-w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50";
 
@@ -227,6 +224,14 @@ export function SettingsGeneralPage() {
     if (!file) return;
     if (!LOGO_TYPES.includes(file.type) || file.size > LOGO_BYTE_LIMIT) {
       setStatus((s) => ({ ...s, logo: "error" }));
+      setDetail((s) => ({
+        ...s,
+        logo: intl.formatMessage({
+          id: "welcome.org.logo.rejected",
+          defaultMessage:
+            "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.",
+        }),
+      }));
       return;
     }
     const reader = new FileReader();

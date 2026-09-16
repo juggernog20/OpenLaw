@@ -17,10 +17,15 @@
  */
 
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
-import { CONTRACT_OVERVIEW_FIELD_SLUGS } from "@openlaw/shared";
+import {
+  isFieldRow,
+  type ModuleScope,
+  type Scope,
+  type ApiField,
+  type FieldRow,
+} from "../lib/field-catalog";
 
 import { useRef, useState, type ReactNode } from "react";
-import type { paths } from "@openlaw/api-client";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, Pencil, Sparkles, TriangleAlert } from "lucide-react";
@@ -30,6 +35,7 @@ import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { EntitiesSettingsTabs } from "../components/entities-settings-tabs";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
+import { DefaultFields } from "../components/default-fields";
 import { ListEditor } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
 import { type FieldStatus } from "../components/status-note";
@@ -80,23 +86,8 @@ type FieldType = (typeof FIELD_TYPES)[number];
 /** The select types — the only ones that carry an options list. */
 const SELECT_TYPES = new Set<FieldType>(["single_select", "multi_select"]);
 
-/** Each settings mount offers its module scope plus global fields. */
-type ModuleScope = "contract" | "matter" | "entity";
-type Scope = ModuleScope | "global";
-
 const TAGS = ["business", "legal"] as const;
 type Tag = (typeof TAGS)[number];
-
-type ApiField =
-  paths["/api/v1/fields"]["get"]["responses"]["200"]["content"]["application/json"]["fields"][number];
-type FieldRow = ApiField & { moduleScope: Scope };
-
-function isFieldRow(field: ApiField, module: ModuleScope): field is FieldRow {
-  return (
-    (module !== "contract" || !CONTRACT_OVERVIEW_FIELD_SLUGS.includes(field.slug)) &&
-    (field.moduleScope === module || field.moduleScope === "global")
-  );
-}
 
 function fieldRow(field: ApiField, module: ModuleScope): FieldRow {
   if (!isFieldRow(field, module)) {
@@ -818,10 +809,19 @@ function SettingsFieldsPage({
       />
       <div className="flex w-full max-w-(--width-settings-card) flex-col gap-4">
         {tabs}
+        {module !== "entity" && <DefaultFields module={module} />}
         <ListEditor
+          region
+          collapsible={module !== "entity"}
           rows={live}
           archivedRows={archived}
-          title={<FormattedMessage id="settings.contractFields.title" defaultMessage="Fields" />}
+          title={
+            module === "entity" ? (
+              <FormattedMessage id="settings.contractFields.title" defaultMessage="Fields" />
+            ) : (
+              <FormattedMessage id="settings.fields.custom" defaultMessage="Custom Fields" />
+            )
+          }
           headerCaption={
             <FormattedMessage
               id="settings.contractFields.scopeCaption"
@@ -840,16 +840,6 @@ function SettingsFieldsPage({
             <FormattedMessage id="settings.contractFields.add" defaultMessage="Add field" />
           }
           onAdd={() => setEditor({ target: null })}
-          help={
-            <FormattedMessage
-              id="settings.contractFields.help"
-              defaultMessage={
-                "Field type is immutable after creation. Archiving a field keeps stored " +
-                "values. Global fields are shared across modules — the sparkle marks fields " +
-                "with a contract AI extraction prompt."
-              }
-            />
-          }
           columnsHeader={
             <div className="flex h-8 items-center border-b border-border-default pe-3 text-xs font-semibold text-muted">
               <span className="flex min-w-0 flex-1 items-center gap-2 ps-4">

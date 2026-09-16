@@ -257,7 +257,7 @@ describe("add (the inline draft row, with the stage picked at creation)", () => 
     await user.click(await screen.findByRole("button", { name: "Add status" }));
     await user.type(screen.getByRole("textbox", { name: "New status name" }), "On hold");
     await user.selectOptions(screen.getByRole("combobox", { name: "New status stage" }), "review");
-    await user.type(screen.getByRole("textbox", { name: "New status name" }), "{Enter}");
+    await user.click(screen.getByRole("button", { name: "Save status" }));
     await waitFor(() =>
       expect(calls.creates).toEqual([{ displayName: "On hold", stage: "review" }]),
     );

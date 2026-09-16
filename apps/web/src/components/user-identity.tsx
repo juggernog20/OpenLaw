@@ -25,7 +25,7 @@ export function UserIdentity({
   archived?: boolean;
 }>) {
   return (
-    <div className={cn("flex items-center gap-2.5", archived && "opacity-50")}>
+    <div className={cn("flex items-center gap-2.5", archived && "text-muted")}>
       {/* One avatar treatment everywhere (DES-018): render through
           Avatar, never a re-styled copy of its initials branch. */}
       <Avatar name={displayName} image={image} className="size-7" />

@@ -27,6 +27,9 @@
 #               instance starts empty, so this seeds it.
 #   --offset N  place that block by hand, if the derived one collides.
 #
+#   --smtp-in-app  configure email through the wizard instead of pinning
+#                  Mailpit in the environment. Uses any saved app relay.
+#
 # Without --isolated every checkout reaches the same instance, which is
 # the point: a worktree is a branch of the code, not a second database.
 #
@@ -52,6 +55,7 @@ action=start
 seed=false
 fresh=false
 isolated=false
+smtp_in_app=false
 offset=""
 seed_args=()
 while [[ $# -gt 0 ]]; do
@@ -60,6 +64,7 @@ while [[ $# -gt 0 ]]; do
     --down) action=down ;;
     --seed) seed=true ;;
     --fresh) fresh=true; seed=true ;;
+    --smtp-in-app) smtp_in_app=true ;;
     # An instance of its own starts with an empty database. Seeding it
     # is the only way it has anything on its screens, and the seed only
     # touches an empty instance, so asking for one asks for the other.
@@ -234,8 +239,15 @@ done
 # there either way.
 export DATABASE_URL="${DATABASE_URL:-postgres://openlaw:openlaw@127.0.0.1:${POSTGRES_PORT:-55432}/openlaw}"
 export DOC_ENGINE_URL="${DOC_ENGINE_URL:-http://127.0.0.1:${DOC_ENGINE_PORT:-8080}}"
-export SMTP_URL="${SMTP_URL:-smtp://127.0.0.1:${MAILPIT_SMTP_PORT:-1025}}"
-export SMTP_FROM="${SMTP_FROM:-OpenLaw <openlaw@localhost>}"
+if $smtp_in_app; then
+  # Empty exports also override values read from .env by the watch processes.
+  export SMTP_URL=""
+  export SMTP_FROM=""
+  echo "==> email configured in app; local test relay smtp://127.0.0.1:$MAILPIT_SMTP_PORT"
+else
+  export SMTP_URL="${SMTP_URL:-smtp://127.0.0.1:${MAILPIT_SMTP_PORT:-1025}}"
+  export SMTP_FROM="${SMTP_FROM:-OpenLaw <openlaw@localhost>}"
+fi
 # Where the seed reads the mail the loop sends. Moves with MAILPIT_PORT,
 # like everything else here.
 export SEED_MAILPIT_URL="${SEED_MAILPIT_URL:-http://127.0.0.1:${MAILPIT_PORT:-8025}}"

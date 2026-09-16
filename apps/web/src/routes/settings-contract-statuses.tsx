@@ -24,6 +24,7 @@ import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+import { InlineAddForm } from "../components/inline-add-form";
 import { ListEditor } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -491,7 +492,18 @@ export function SettingsContractStatusesPage() {
           }}
           adding={adding}
           addRow={
-            <>
+            <InlineAddForm
+              saving={addStatus === "saving"}
+              canSave={!!addDraft.name.trim()}
+              onSave={() => void create()}
+              onCancel={() => setAdding(false)}
+              saveLabel={
+                <FormattedMessage
+                  id="settings.matterStatuses.saveNew"
+                  defaultMessage="Save status"
+                />
+              }
+            >
               <Input
                 autoFocus
                 value={addDraft.name}
@@ -503,10 +515,6 @@ export function SettingsContractStatusesPage() {
                 onChange={(event) =>
                   setAddDraft((current) => ({ ...current, name: event.target.value }))
                 }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") void create();
-                  if (event.key === "Escape") setAdding(false);
-                }}
               />
               {/* The creation-time immutable dimension (CTR-001): the
                   stage is picked here, once. */}
@@ -527,10 +535,6 @@ export function SettingsContractStatusesPage() {
                     setAddError(undefined);
                   }
                 }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") void create();
-                  if (event.key === "Escape") setAdding(false);
-                }}
               >
                 <option value="">
                   {intl.formatMessage({
@@ -547,7 +551,7 @@ export function SettingsContractStatusesPage() {
               <span className="ps-1">
                 <StatusNote status={addStatus} detail={addError} />
               </span>
-            </>
+            </InlineAddForm>
           }
           announcement={announcement}
           listRef={listRef}

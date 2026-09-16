@@ -32,6 +32,7 @@ import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
+import { InlineAddForm } from "../components/inline-add-form";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -332,7 +333,12 @@ export function SettingsRemindersPage() {
           }}
           adding={adding}
           addRow={
-            <>
+            <InlineAddForm
+              saving={addStatus === "saving"}
+              canSave={draft.trim() !== ""}
+              onSave={() => void add()}
+              onCancel={closeAdd}
+            >
               <Input
                 autoFocus
                 type="number"
@@ -349,10 +355,6 @@ export function SettingsRemindersPage() {
                     setAddError(undefined);
                   }
                 }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") void add();
-                  if (event.key === "Escape") closeAdd();
-                }}
               />
               {/* The unit names the input, so a reader hears "days before
                   the date, spin button" rather than a bare number box. */}
@@ -365,7 +367,7 @@ export function SettingsRemindersPage() {
               <span className="ps-1">
                 <StatusNote status={addStatus} detail={addError} />
               </span>
-            </>
+            </InlineAddForm>
           }
           announcement={announcement}
         />

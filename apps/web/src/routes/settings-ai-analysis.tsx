@@ -11,6 +11,7 @@ import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent }
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { canReuseAiKey } from "../lib/ai-connector-config";
 import { AiModelSelector } from "../components/ai-model-selector";
 import { AiFieldPromptsCard } from "../components/ai-field-prompts-card";
 import { PageTitle } from "../components/page-title";
@@ -87,23 +88,7 @@ export function SettingsAiAnalysisPage() {
   const changingLifecycle = useRef(false);
   const selected = loaded.presets.find((option) => option.preset === preset)!;
 
-  const sameDestination = (() => {
-    if (connector.preset !== preset || connector.protocol !== protocol || !connector.baseUrl)
-      return false;
-    try {
-      const normalize = (value: string) => {
-        const url = new URL(value);
-        url.hash = "";
-        url.pathname = url.pathname.replace(/\/$/, "");
-        url.searchParams.sort();
-        return url.toString();
-      };
-      return normalize(connector.baseUrl) === normalize(baseUrl);
-    } catch {
-      return false;
-    }
-  })();
-  const canKeepKey = connector.hasApiKey && sameDestination;
+  const canKeepKey = canReuseAiKey(connector, { preset, protocol, baseUrl });
 
   function note(field: Field, value: FieldStatus, message?: string) {
     setStatus((current) => ({ ...current, [field]: value }));
@@ -258,7 +243,7 @@ export function SettingsAiAnalysisPage() {
         <p className="text-sm text-muted">
           <FormattedMessage
             id="settings.aiAnalysis.intro"
-            defaultMessage="Connect your own AI provider for contract analysis. OpenLaw sends contract text only when an analysis runs."
+            defaultMessage="Connect your AI provider for Contract analysis and AI-assisted Request conversion. Relevant document text, Request answers, and conversations are sent to the provider when an AI task runs."
           />
         </p>
         <form className="flex flex-col gap-3" onSubmit={(event) => void save(event)}>
