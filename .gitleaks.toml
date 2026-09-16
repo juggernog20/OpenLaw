@@ -33,7 +33,23 @@ description = "Fixture values that look like credentials and are not"
 # as one long secret. The header is followed here by the close of the
 # `user.type()` call that typed it, which is why the pattern ends in
 # `");` — a real key carries base64 there, never a string terminator.
+#
+# DOC-029 documentation walkthrough logs under
+# docs/documentation/batches/DOC-029/. Five sha256 digests of guide
+# Markdown, recorded as "<article-id>": "<digest>" so each run names the
+# exact text it followed. The generic-api-key rule reads the article ID
+# as a key name. Then three fictional stand-in values: the AI key the
+# credential-free checks type into a connector form, and the integration
+# key of the local DocuSign stand-in server.
 regexes = [
+  '''^72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1$''',
+  '''^b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208$''',
+  '''^4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8$''',
+  '''^e6b84c136d32049a04b1827512c6afcea0c1771d79d23a4829517bdec8de8042$''',
+  '''^f6d077cc3b817a0c097844fb00d800525777503bab0ba0bff52b222f14b1ea2f$''',
+  '''^fictional-doc029-key$''',
+  '''^fictional-doc029r2-key$''',
+  '''^doc029-standin-integration-key$''',
   '''bm90LWEtcmVhbC1rZXk=''',
   '''openlawfixturekeyneverused''',
   '''openlawonboardingfixturekey''',
