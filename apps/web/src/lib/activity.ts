@@ -3396,7 +3396,10 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
  * both are shown rather than neither. Throwing here would take the
  * whole panel down over one old row.
  */
-const UNKNOWN = defineMessage({ id: "activity.unknown", defaultMessage: "{actor} — {action}" });
+const UNKNOWN: MessageDescriptor = defineMessage({
+  id: "activity.unknown",
+  defaultMessage: "{actor} — {action}",
+});
 
 /**
  * The arm for a slug read off the wire, if this build has one.

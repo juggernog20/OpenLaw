@@ -4,14 +4,14 @@
 import { ListChecks } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import type { TasksHomeSection } from "../../lib/home";
 import { formatDeadline, formatFullDate, formatShortDate } from "../../lib/format";
 import { ConfidentialMarker } from "../confidential-marker";
 import { HomeSectionCard } from "./section-card";
 import { Checkbox } from "../ui/checkbox";
 
-const taskActions = defineMessages({
+const taskActions: Record<"reopen" | "complete", MessageDescriptor> = defineMessages({
   reopen: { id: "home.tasks.reopen", defaultMessage: "Reopen Task: {title}" },
   complete: { id: "home.tasks.complete", defaultMessage: "Complete Task: {title}" },
 });

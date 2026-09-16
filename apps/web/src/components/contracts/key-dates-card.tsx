@@ -47,7 +47,13 @@ import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useState, type ReactNode } from "react";
 import { KeyDateReminderFields, type KeyDateReminderDraft } from "../key-date-reminder-fields";
 import { useRecord } from "../record-context";
-import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
+import {
+  FormattedMessage,
+  useIntl,
+  defineMessage,
+  type IntlShape,
+  type MessageDescriptor,
+} from "react-intl";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { MAX_KEY_DATE_LABEL_LENGTH, MAX_KEY_DATE_NOTE_LENGTH } from "@openlaw/shared";
 import {
@@ -75,13 +81,13 @@ import {
 
 /** The head's tally, one message per state so a zero is left out rather
  * than printed — the shape the Approvals head's tally already takes. */
-const COUNT_LABEL = {
+const COUNT_LABEL: Record<"upcoming" | "past", MessageDescriptor> = {
   upcoming: defineMessage({
     id: "keyDates.count.upcoming",
     defaultMessage: "{count} upcoming",
   }),
   past: defineMessage({ id: "keyDates.count.past", defaultMessage: "{count} past" }),
-} as const;
+};
 
 /** What the Source chip says (C6's own two readings). The expiry and
  * the notice deadline share one word, because what the chip answers is

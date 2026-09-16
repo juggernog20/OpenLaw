@@ -18,7 +18,7 @@ import {
   BookOpen,
   type LucideProps,
 } from "lucide-react";
-import { defineMessages, type IntlShape, useIntl } from "react-intl";
+import { defineMessages, type IntlShape, type MessageDescriptor, useIntl } from "react-intl";
 import { Link } from "react-router";
 import { contractReference } from "../../lib/contracts";
 import { matterReference } from "../../lib/matters";
@@ -37,7 +37,19 @@ export const SEARCH_KIND_ORDER = [
   "knowledge_item",
 ] as const satisfies readonly SearchKind[];
 
-const MESSAGES = defineMessages({
+const MESSAGES: Record<
+  | "contract"
+  | "matter"
+  | "document"
+  | "entity"
+  | "counterparty"
+  | "request"
+  | "knowledge_item"
+  | "version"
+  | "ownedBy"
+  | "draftKnowledge",
+  MessageDescriptor
+> = defineMessages({
   contract: { id: "search.kind.contract", defaultMessage: "Contract" },
   matter: { id: "search.kind.matter", defaultMessage: "Matter" },
   document: { id: "search.kind.document", defaultMessage: "Document" },

@@ -21,7 +21,7 @@
  */
 
 import * as Toolbar from "@radix-ui/react-toolbar";
-import { defineMessage, useIntl } from "react-intl";
+import { defineMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { cn } from "../../lib/utils";
 import type { Applet } from "./applets";
 
@@ -29,7 +29,7 @@ const BAR_LABEL = defineMessage({ id: "applets.barLabel", defaultMessage: "Apple
 
 /** Folds the badge count into the icon's accessible name. The badge
  * itself is decorative, so the count would otherwise go unannounced. */
-const LABEL_WITH_BADGE = defineMessage({
+const LABEL_WITH_BADGE: MessageDescriptor = defineMessage({
   id: "applets.labelWithBadge",
   defaultMessage: "{label} ({count})",
 });

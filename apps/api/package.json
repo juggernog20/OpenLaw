@@ -21,8 +21,8 @@
     "openapi:emit": "tsx scripts/emit-openapi.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1132.0",
-    "@aws-sdk/lib-storage": "^3.1132.0",
+    "@aws-sdk/client-s3": "^3.1133.0",
+    "@aws-sdk/lib-storage": "^3.1133.0",
     "@azure/identity": "^4.13.3",
     "@azure/storage-blob": "^12.33.0",
     "@better-auth/drizzle-adapter": "~1.7.5",
@@ -57,6 +57,6 @@
     "oauth2-mock-server": "^9.2.0",
     "testcontainers": "^12.1.0",
     "tsx": "^4.23.13",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   }
 }
