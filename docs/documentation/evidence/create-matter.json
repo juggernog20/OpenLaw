@@ -92,5 +92,20 @@
     "verifiedAt": "2026-09-07T19:22:19.461Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "af9e06defbb30c1ea2fe16489aeb6f423922837eea8ac718eedbe8ebe5ec01c1",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (matters)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:57:50.686Z",
+    "summary": "I inspected the 3fa407e3..57e77e38 app diff and found no change to Matter creation, templates, Overview, Matter team or Confidential audience; the changes are archived-person styling, sign-in branding, first-run and Settings list rows. I replayed the round 1 V-C22 walkthrough on the work2 lab as Administrator and Legal Team Member, and all 26 steps passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/matters.json",
+        "sha256": "db5bb595a0c7560d99a22ae7d5ec90a0f3eeaa011344cae0fe0c62aa5c901542"
+      }
+    ]
+  }
 }

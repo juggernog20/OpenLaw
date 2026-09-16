@@ -4,7 +4,7 @@ Use the Portal to send Requests to Legal, follow your own conversations, and wor
 
 ## Get a sign-in link
 
-1. Open the Portal address. The sign-in page says **Business Portal sign-in**.
+1. Open the Portal address. The sign-in page shows your organization's name, and its logo if one is saved, above **Business Portal sign-in**. If you do not see your organization's name, check the address with Legal.
 2. If the page shows a password form, select **Email me a sign-in link**. The page changes to **Get a sign-in link**.
 3. Enter your work address in **Email**.
 4. Select **Send link**.

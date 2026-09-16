@@ -1,0 +1,188 @@
+{
+  "phase": "live-provider round 2, walkthrough round 1 (credential-free)",
+  "reviewer": "DOC-029r2 independent walkthrough agent (live-provider, round 1)",
+  "reviewerKind": "agent",
+  "article": "configure-analysis",
+  "app": "http://127.0.0.1:23300",
+  "lab": "openlaw-docs-41255c61-admin2",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "note": "Sanitized. Fictional provider values only. No password, cookie, key value or hash is recorded.",
+  "startedAt": "2026-09-16T18:01:19.737Z",
+  "steps": [
+    {
+      "id": "A01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Settings > Organization > AI analysis; check the page before a connector is saved",
+      "at": "2026-09-16T18:01:20.631Z",
+      "actual": "AI analysis is its own link in the Organization rail group. Provider starts collapsed=true with Not connected=true. Card headings: Personal > Organization > Provider > Field prompts. Field prompts has no collapse control and holds 7 prompts, with a Contracts \u2192 Fields link to /settings/contracts/fields. No Request conversion card before a connector is saved.",
+      "result": "pass"
+    },
+    {
+      "id": "A02",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Expand Provider; check presets, the default form and the Provider card intro",
+      "at": "2026-09-16T18:01:20.691Z",
+      "actual": "Provider options match the article table: Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, Ollama, Custom endpoint. Default Anthropic with prefilled model claude-sonnet-5. The API key hint says it is required. Load models is disabled until a key is typed. Test connection is disabled. Provider card intro: \"Connect your AI provider for Contract analysis and AI-assisted Request conversion. Relevant document text, Request answers, and conversations are sent to the provider when an AI task runs.\"",
+      "result": "pass"
+    },
+    {
+      "id": "A03",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Select Save connector with no API key",
+      "at": "2026-09-16T18:01:21.528Z",
+      "actual": "The browser refused the submit because API key is required. No request reached the API.",
+      "result": "pass"
+    },
+    {
+      "id": "A04",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Check the OpenRouter, Azure OpenAI, Ollama and Custom endpoint forms",
+      "at": "2026-09-16T18:01:21.571Z",
+      "actual": "OpenRouter: model \"~openai/gpt-latest\", Base URL shown=false, Load models shown=true. Azure OpenAI: Deployment endpoint=true, manual model input=true, Load models buttons=0. Ollama: key optional hint=true, Base URL shown=false. Custom endpoint: Protocol options=Anthropic Messages / OpenAI-compatible chat completions / Gemini, Base URL shown=true",
+      "result": "pass"
+    },
+    {
+      "id": "A05",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Custom endpoint: save a Base URL with embedded credentials",
+      "at": "2026-09-16T18:01:21.689Z",
+      "actual": "The pane showed \"The provider base URL must not contain credentials.\" No connector was created.",
+      "result": "pass"
+    },
+    {
+      "id": "A06",
+      "role": "administrator",
+      "method": "automated-test",
+      "action": "API refusals for incomplete or invalid AI saves, and Test with no connector",
+      "at": "2026-09-16T18:01:21.717Z",
+      "actual": "OpenRouter without key: 400 \"Paste the API key for this provider.\". Custom with ftp URL: 400 \"The provider base URL must use HTTP or HTTPS.\". Blank model: 400. Azure Load models: 400 \"Enter the deployment name from Azure manually. This endpoint does not list deployments.\". Test with no connector: 400 \"No enabled AI connector is configured. Save it first.\". No connector was created.",
+      "result": "pass"
+    },
+    {
+      "id": "A07",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Load models against a closed loopback endpoint (Model list cannot be loaded)",
+      "at": "2026-09-16T18:01:21.894Z",
+      "actual": "Load models showed \"The provider model list could not be reached or read.\" beside the control. Enter model ID manually stays available. Nothing was saved.",
+      "result": "pass"
+    },
+    {
+      "id": "A08",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Save the fictional Custom endpoint; check Connected, the switch, Request conversion; Test connection fails; turn off at once",
+      "at": "2026-09-16T18:01:22.169Z",
+      "actual": "A new connector saved enabled (API enabled=true) and the chip reads Connected before any successful test. Request conversion appeared with three switches off (matter-preparation: checked=false, enabled=true; contract-preparation: checked=false, enabled=true; contract-conversion-analysis: checked=false, enabled=true). Card order: Personal > Organization > Provider > Request conversion > Field prompts. Test connection showed \"The connection test failed. The provider could not be reached. bad port\" (Endpoint or connection failure row). The connector was then turned off.",
+      "result": "pass"
+    },
+    {
+      "id": "A09",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Turned off: Test connection and switches disabled; save a change while off; API refusals",
+      "at": "2026-09-16T18:01:23.905Z",
+      "actual": "Chip reads Turned off; hint \"Off since Sep 16. Turn it on to make AI analysis available again.\". Test connection and the three Request conversion switches are disabled. The API key input is blank with \"Leave blank to keep the current key. Paste a new one to rotate.\" Saving a changed Model with a blank key for the same destination stored it and left the connector off. The test API answers 400 \"No enabled AI connector is configured. Save it first.\".",
+      "result": "pass"
+    },
+    {
+      "id": "A10",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Changed destination requires a new API key",
+      "at": "2026-09-16T18:01:24.766Z",
+      "actual": "Changing Base URL switches the key hint to required, and the browser blocks a save without a new key. No request was sent.",
+      "result": "pass"
+    },
+    {
+      "id": "A11",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Field prompt: Enter saves, Shift+Enter inserts a line break, clearing restores, Reset to default, maxlength",
+      "at": "2026-09-16T18:01:26.667Z",
+      "actual": "On ai-field-prompt-term_type (term_type): Shift+Enter inserted a line break, Enter saved the two-line text (read back from the API) and showed Reset to default. Clearing the box and leaving restored the saved text. Reset to default restored the built-in prompt and the reset control left. maxlength is 2000.",
+      "result": "pass"
+    },
+    {
+      "id": "A12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Known issue #887 re-check: Escape in a Field prompt (the article makes no Escape claim)",
+      "at": "2026-09-16T18:01:28.335Z",
+      "actual": "After Escape and reload the abandoned text was stored (defect #887 is still present). Reset to default restored the built-in prompt. The article has no Escape sentence, so this is not a step failure.",
+      "result": "pass"
+    },
+    {
+      "id": "A13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Follow Contracts \u2192 Fields; open Add field and find Scope and AI prompt (cancel without saving)",
+      "at": "2026-09-16T18:01:28.489Z",
+      "actual": "The link opened /settings/contracts/fields. Card headings: Personal > Organization > Contracts > Default fields > Custom Fields. Add field opened a dialog with Scope and AI prompt controls. The agent closed it without saving. Attaching a Field to a Type and running Analysis need a live provider and were not run.",
+      "result": "pass"
+    },
+    {
+      "id": "A14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Turn Use AI analysis on and off again; Remove connector",
+      "at": "2026-09-16T18:01:28.819Z",
+      "actual": "Turning the switch on showed Connected and enabled Test connection; the agent turned it off again at once. The remove dialog says \"Remove the AI connector The API key is deleted with the connector. Reconnecting means entering it again. Cancel Remove connector\". After confirming, the chip reads Not connected, the Request conversion card is gone, and the API reports configured false.",
+      "result": "pass"
+    },
+    {
+      "id": "R01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Open AI analysis settings as a Legal Team Member (Settings is unavailable row)",
+      "at": "2026-09-16T18:01:29.331Z",
+      "actual": "/settings/ai-analysis forwards to /settings/profile. The Organization rail group is absent. The connector API answers 403, the prompt read API answers 403, and the prompt save API answers 403.",
+      "result": "pass"
+    },
+    {
+      "id": "OB01",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Signed out, open /documentation/configure-analysis and follow the deployment configuration link",
+      "at": "2026-09-16T18:01:29.768Z",
+      "actual": "Signed out, the reader opened /documentation/configure-analysis. Its deployment configuration link opened /documentation/deployment-configuration, which says to allow outbound provider traffic from both the app and worker and has \"Preserve and rotate encryption keys\" naming OPENLAW_SECRET_KEY. The reader serves the article bytes built into the lab image; this proves the link and its target, not the reviewed wording.",
+      "result": "pass"
+    },
+    {
+      "id": "O01",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "App and worker share OPENLAW_SECRET_KEY; no provider credential or proxy in the environment",
+      "at": "2026-09-16T18:01:29.808Z",
+      "actual": "Both containers set a non-empty OPENLAW_SECRET_KEY with equal values (compared by hash equality; nothing printed). No AI provider credential variable is set. Proxy variables: none. Outbound reach to a real provider was not tested (no live credentials).",
+      "result": "pass"
+    },
+    {
+      "id": "O02",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "App and worker logs contain no fictional key or bearer text",
+      "at": "2026-09-16T18:01:29.902Z",
+      "actual": "Since the run started: app 295 lines, worker 1 lines. The fictional API key and \"bearer \" appear 0 times in both.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T18:01:29.926Z",
+  "verdict": {
+    "result": "blocked",
+    "summary": "All 18 credential-free steps passed on 57e77e38 (attempt 1 in walkthrough-r2-1-attempt1.json failed only R01, because the script sent an invalid prompt slug and got 400 validation instead of the role refusal). V-C43 requires browser-walkthrough and live-provider-check for administrator and operator. The round 2 labs have no live provider credentials, so these parts were not run: Test connection that shows Connection successful., Load models and Refresh models against a real provider, an Analysis run with Version, model, evidence and Unverified values, a catalog Field with an AI prompt in a run, Legal Team Member Run analysis while on and off, and worker reach to a real provider. The evidence file was not rewritten.",
+    "blockedParts": [
+      "administrator/live-provider-check",
+      "operator/live-provider-check",
+      "administrator/browser-walkthrough (provider success and Analysis run steps)"
+    ],
+    "knownIssues": [
+      "#887 still present: Escape in a Field prompt saves the abandoned edit (A12). The article has no Escape sentence."
+    ]
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "live-provider",
+  "reviewer": "DOC-029r2 compatibility reviewer (live-provider)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T18:00:00Z",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "lab": {
+    "name": "admin2",
+    "project": "openlaw-docs-41255c61-admin2",
+    "app": "http://127.0.0.1:23300",
+    "mail": "http://127.0.0.1:23400",
+    "source": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "seed": "Helix light, seed 7",
+    "images": {
+      "app": "openlaw-docs-41255c61-admin2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "engine": "openlaw-docs-41255c61-admin2-engine:57e77e386be3 sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    },
+    "credentials": "No live DocuSign credentials exist on round 2 labs. Only fictional provider values were used. No secret was read, copied or recorded.",
+    "stateAfter": "The replay started with no signing connector and removed its fictional connector at the end (S13). The API reports configured false."
+  },
+  "diffInspection": {
+    "command": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles messages",
+    "commits": [
+      "1ea249dd Show organization branding on sign-in and raise the logo limit",
+      "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+      "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+      "e3800b43 Show locked default fields above each custom field catalog",
+      "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+      "57e77e38 Update user and comment display styles to use 'text-muted' for archived users"
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "configure-signing",
+      "contentSha256": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc",
+      "scenario": "V-C42",
+      "diffFilesInspected": [
+        "full diff --stat for apps, packages, styles (43 files)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/testing/helpers.tsx",
+        "apps/api/openapi.json and packages/api-client/src/schema.ts (grep for sign, docusign, envelope, integration, e-signature)",
+        "messages/en-US.json (grep for sign, integration, connector, webhook, polling, docusign)",
+        ".env.example and docs/user-guides/deployment-configuration.md (BASE_URL wording, not app code)",
+        "git diff --quiet confirmed no change in: apps/web/src/routes/settings-e-signature.tsx, apps/web/src/components/settings-card.tsx, apps/web/src/components/integrations-settings-tabs.tsx, apps/api/src/modules/signing-connector, apps/api/src/modules/signing-webhook, apps/api/src/modules/contract-envelopes, apps/api/src/lib/signing, apps/api/src/pipeline, apps/api/src/auth, packages/db"
+      ],
+      "diffFindings": "No file that renders, validates or runs the E-signature Settings page, the signing connector API, the webhook route, reconciliation, executed-copy filing or the Envelope send route changed. settings.tsx adds a Return to setup link that shows only when an Administrator arrives from the setup wizard; the rail, the Integrations entry and the role gate are unchanged. list-editor.tsx gains optional collapsible props; settings-e-signature.tsx does not use ListEditor. The sign-in page now shows organization branding; the Email, Password and Sign in controls are unchanged. The AI connector refactor and the new intro text belong to configure-analysis. d64309f5 rewords BASE_URL as browser-facing and allows a private origin, but changes no app code. The article already says a blank Public callback URL uses the app address, which must then be publicly reachable for Webhook, so it stays correct. No message id used by the E-signature pane changed.",
+      "replay": {
+        "source": "batches/DOC-029/live-provider/credential-free-checks.mjs (round 1)",
+        "script": {
+          "path": "batches/DOC-029/compat-r2/live-provider-r2/credential-free-checks-r2.mjs",
+          "sha256": "da5d0cb19733de23b66f3a294d0767999f14d94d0a977e74b91af740f07994c5"
+        },
+        "observations": {
+          "path": "batches/DOC-029/compat-r2/live-provider-r2/credential-free-observations-r2.json",
+          "sha256": "daf2fdff91a742b686e152884d035eb1717722a562a5e884dc4d8f1ee5e908f5"
+        },
+        "adaptations": "Default lab URL changed to admin2 (23300). The configure-analysis steps A01 to A13 were left out because they belong to another article. The start guard checks only the signing connector. R01 checks only the E-signature page and the signing connector API. Step logic and assertions for S01 to S13 are unchanged.",
+        "comparison": "Every S01 to S13 result text equals the round 1 text, except the lab port in the S09 Webhook URL.",
+        "notReplayed": "walkthrough/walkthrough-live.mjs, walkthrough-send.mjs and operator-browser.mjs (the live DocuSign Demo round trip, Test connection success and the Polling reconciliation of a signed Envelope) need live provider credentials, which round 2 labs do not hold. Source inspection covers them: the signing connector, signing library, reconciliation pipeline, executed-copy filing and Envelope routes have no diff.",
+        "startedAt": "2026-09-16T17:59:20.468Z",
+        "finishedAt": "2026-09-16T17:59:27.065Z",
+        "steps": [
+          {
+            "id": "S01",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Open Settings > Organization > Integrations > E-signature; check the unconfigured card",
+            "result": "pass"
+          },
+          {
+            "id": "S02",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Expand DocuSign; check default controls in Polling mode",
+            "result": "pass"
+          },
+          {
+            "id": "S03",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Select Save connector with every field blank (Polling)",
+            "result": "pass"
+          },
+          {
+            "id": "S04",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Choose Webhook; check the extra fields and the missing-HMAC refusal",
+            "result": "pass"
+          },
+          {
+            "id": "S05",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Webhook: enter a non-HTTPS Public callback URL and save",
+            "result": "pass"
+          },
+          {
+            "id": "S06",
+            "role": "administrator",
+            "method": "automated-test",
+            "action": "API refusals for incomplete saves (authenticated requests, no browser navigation)",
+            "result": "pass"
+          },
+          {
+            "id": "S07",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Save a fictional connector in Polling mode; reload; check the saved state",
+            "result": "pass"
+          },
+          {
+            "id": "S08",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Test connection with the unreadable fictional key",
+            "result": "pass"
+          },
+          {
+            "id": "S09",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Change the saved Polling connector to Webhook without an HMAC secret, then with one",
+            "result": "pass"
+          },
+          {
+            "id": "S10",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Webhook mode: post an unsigned and a signed fictional delivery for an unknown Envelope",
+            "result": "pass"
+          },
+          {
+            "id": "S11",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Switch back to Polling; check the Webhook fields leave and a signed delivery is refused",
+            "result": "pass"
+          },
+          {
+            "id": "S12",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Turn off Send for signature from records; test; save a change while off",
+            "result": "pass"
+          },
+          {
+            "id": "S13",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Turn the connector back on, then remove it",
+            "result": "pass"
+          },
+          {
+            "id": "R01",
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Open the E-signature Settings page as a Legal Team Member",
+            "result": "pass"
+          }
+        ]
+      },
+      "conclusion": "compatible"
+    }
+  ],
+  "needsRewalk": []
+}

@@ -68,5 +68,20 @@
     "verifiedAt": "2026-09-16T09:48:31.826673+00:00"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "8b4d7dd36dcacac05d9d375655cb6455d3abf0c5663d95edcbe285d3c726e191",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (auto-docs)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:58:00Z",
+    "summary": "The app diff from 3fa407e3 to 57e77e38 changes no Auto-Doc code; the shared ListEditor change adds optional props and an inline add-row guard that the Fields and Clauses cards do not use, and no label the article names changed. The full round 1 V-C56 walkthrough replayed on the admin2 lab built from 57e77e38 and passed all 44 steps for the Administrator, the Legal Team Member and the non-legal check.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/auto-docs.json",
+        "sha256": "d5152129264d2d52e670673a04ea4460a74491f73923bc2311a352b07f585101"
+      }
+    ]
+  }
 }

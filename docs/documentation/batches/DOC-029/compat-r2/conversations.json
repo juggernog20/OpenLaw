@@ -1,0 +1,604 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "group": "conversations",
+  "round": 2,
+  "issues": [
+    745,
+    747
+  ],
+  "reviewer": "DOC-029r2 compatibility reviewer (conversations)",
+  "reviewerKind": "agent",
+  "independence": "The reviewer did not write or edit either article and is not the round 1 author, technical reviewer, or walkthrough reviewer. No article text changed.",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "appDiffCommand": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+  "appDiffCommits": [
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "1ea249dd Show organization branding on sign-in and raise the logo limit"
+  ],
+  "appDiffChangedFiles": [
+    "apps/api/openapi.json",
+    "apps/api/src/modules/email-settings/config.test.ts",
+    "apps/api/src/modules/email-settings/config.ts",
+    "apps/api/src/modules/email-settings/email-settings.test.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/org/general.test.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/web/src/components/comments/comment-applet.tsx",
+    "apps/web/src/components/contracts/contracts-columns.tsx",
+    "apps/web/src/components/default-fields.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/components/inline-add-form.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/matters/matters-columns.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/components/taxonomy-types-pane.tsx",
+    "apps/web/src/components/user-identity.tsx",
+    "apps/web/src/lib/ai-connector-config.ts",
+    "apps/web/src/lib/field-catalog.ts",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/auth-layout.test.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/routes/set-password.test.tsx",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/web/src/routes/settings-contract-fields.test.tsx",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/web/src/routes/settings-contract-statuses.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "apps/web/src/routes/settings-contract-types.test.tsx",
+    "apps/web/src/routes/settings-default-fields.test.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-matter-statuses.test.tsx",
+    "apps/web/src/routes/settings-matter-statuses.tsx",
+    "apps/web/src/routes/settings-matter-types.test.tsx",
+    "apps/web/src/routes/settings-reminders.test.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/welcome.test.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/testing/helpers.tsx",
+    "packages/api-client/src/schema.ts",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/logo.ts"
+  ],
+  "lab": {
+    "project": "openlaw-docs-41255c61-work2",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appUrl": "http://127.0.0.1:23301",
+    "mailUrl": "http://127.0.0.1:23401",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-16T17:45:41.767Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-16T17:46:02.188Z"
+    },
+    "appImage": "openlaw-docs-41255c61-work2-app:57e77e386be3",
+    "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImage": "openlaw-docs-41255c61-work2-engine:57e77e386be3",
+    "engineImageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "containerImages": [
+      {
+        "service": "app",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      },
+      {
+        "service": "doc-engine",
+        "imageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+      },
+      {
+        "service": "mailpit",
+        "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+      },
+      {
+        "service": "postgres",
+        "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+      },
+      {
+        "service": "worker",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      }
+    ]
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, 1440x900, one isolated browser context per identity",
+  "replayMethod": "The round 1 scripts conversations/walkthrough-r1.mjs (comment sections) and conversations/walkthrough-r2.mjs (all sections) were copied to compat-r2/conversations-r2 and run against work2. The copies change only the lab project and lab.json name (work2), the repository-root, fixture, and helper paths, the reviewer label, and record names (DOC-029r2 conversations, doc029r2-conv-*). The check logic is unchanged. Magic links, cookies, and passwords stayed in memory.",
+  "replayFiles": [
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/replay-walkthrough-r1.mjs",
+      "sha256": "f14afa49076ad937a5aecd648ee3c7ed8eb46ba19413476aa283b65091597d43"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/replay-walkthrough-r2.mjs",
+      "sha256": "1c969fd443616bf42226b8f24d9667cb45a2db26c6d026949f79eac05b44d4ef"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/lib-r2.mjs",
+      "sha256": "0a0a51d821c8843993c806373b5bac42a4b06ad7f56f2cb789ee3fb563b31192"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/replay-r1-comments.json",
+      "sha256": "940747cdb666c4a664456648093d6f44f383d911b661828041b412cb6c55d9eb"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/replay-r2-notifications.json",
+      "sha256": "3770d5a316039409ab7f2eccf518c48ab64cc5f72155de0064d2540efe769a74"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/fixtures-r1.json",
+      "sha256": "37a9516ecc9043a1bf9aebdf54b738506cc956f701f9d5aa5911e86457dcc4fa"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/fixtures-r2.json",
+      "sha256": "473ed82f74538e32fdbfac4c1e35c4591b647093936792b3895aab3aa89ad399"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/r2-portal-bell-converted-contract-reply.png",
+      "sha256": "9ba4b153ec1b8d7be5d3b7c77318503cf3ea2c8896c85f358bfba935f8484a4b"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/conversations-r2/r2-portal-notification-settings.png",
+      "sha256": "a64ccc5c01897bb557ebe9cf407013941e579afec6ed768402dd6648b5091b2f"
+    }
+  ],
+  "articles": [
+    {
+      "articleId": "comments-and-activity",
+      "articlePath": "docs/user-guides/comments-and-activity.md",
+      "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f",
+      "scenario": "V-C07",
+      "diffFilesInspected": [
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json (comment, attachment, History, Portal, and redaction keys)"
+      ],
+      "diffFindings": "The only change in the comments code is in comment-applet.tsx. An archived author's name now uses the text-muted colour instead of 50% opacity. The article does not describe how an archived author looks. No comment, attachment, activity, or Portal route, API path, permission, or message key changed. The new public /api/v1/org/branding endpoint and the sign-in branding change the sign-in page only, and the article does not describe sign-in.",
+      "conclusion": "compatible",
+      "replay": {
+        "script": "docs/documentation/batches/DOC-029/compat-r2/conversations-r2/replay-walkthrough-r1.mjs",
+        "log": "docs/documentation/batches/DOC-029/compat-r2/conversations-r2/replay-r1-comments.json",
+        "sections": [
+          "setup",
+          "member-comments",
+          "member-comments2",
+          "admin-comments",
+          "portal-comments",
+          "admin-redact",
+          "portal-after",
+          "supplement"
+        ],
+        "supplementChecks": [
+          "wt",
+          "errors",
+          "six"
+        ],
+        "stamp": "135085",
+        "startedAt": "2026-09-16T17:52:15.084Z",
+        "finishedAt": "2026-09-16T17:53:33.618Z",
+        "summary": {
+          "total": 30,
+          "pass": 30,
+          "fail": 0
+        },
+        "notReplayed": "The round 1 notification sections of this script were superseded by walkthrough-r2.mjs and were replayed from that script for the notifications article. The round 1 comments screenshot was not retaken.",
+        "steps": [
+          {
+            "role": "legal_team_member",
+            "step": "Choose an audience on a record: open the Contract, select Comments, read the audience options and descriptions",
+            "result": "pass",
+            "at": "2026-09-16T17:52:18.333Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Post one Legal Only and one Contract Team comment on the Contract and check name and audience badge",
+            "result": "pass",
+            "at": "2026-09-16T17:52:18.591Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Choose an audience on a Matter: Matter Team first, Legal Only available, post both",
+            "result": "pass",
+            "at": "2026-09-16T17:52:19.799Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Mention a person: type @ and part of a name, pick on the People tab, check Mentioned, Remove, pick again, Comment",
+            "result": "pass",
+            "at": "2026-09-16T17:52:23.555Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Typing a name as ordinary text alone does not select a recipient",
+            "result": "pass",
+            "at": "2026-09-16T17:52:24.096Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Widen the audience? on a Legal Only mention of a Business User: Cancel keeps editing without posting, Widen and post posts at the proposed audience",
+            "result": "pass",
+            "at": "2026-09-16T17:52:28.591Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Attach paper: Attach files, choose files, check filenames, Remove one, post, open the preview and use Download",
+            "result": "pass",
+            "at": "2026-09-16T17:52:30.522Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "A failed post: keep the draft, check the error, check for an existing post, retry once",
+            "result": "pass",
+            "at": "2026-09-16T17:52:34.535Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "File to Contract on an unfiled attachment: the preview also offers it; file as a new Document; the attachment stays and shows Filed to",
+            "result": "pass",
+            "at": "2026-09-16T17:52:35.044Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Edit or remove a post: Edit then Cancel, Edit then Save shows edited, Delete asks for confirmation and leaves the author tombstone; no Redact for a Legal Team Member",
+            "result": "pass",
+            "at": "2026-09-16T17:52:35.917Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Show older and the unread Comments badge on a Matter with more comments than one page",
+            "result": "pass",
+            "at": "2026-09-16T17:52:44.965Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Read the Activity feed: History on the Matter, entries in order, Show older",
+            "result": "pass",
+            "at": "2026-09-16T17:52:48.642Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Choose an audience in the Inbox: a Request offers Legal only and Shared with requester, starting on Legal only; the Inbox Request has no History",
+            "result": "pass",
+            "at": "2026-09-16T17:52:49.914Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "A converted Request in the Inbox has no conversation; open its linked record instead",
+            "result": "pass",
+            "at": "2026-09-16T17:52:52.121Z"
+          },
+          {
+            "role": "administrator",
+            "step": "Choose an audience on a record and post at both audiences, one with Legal Only paper",
+            "result": "pass",
+            "at": "2026-09-16T17:52:53.581Z"
+          },
+          {
+            "role": "administrator",
+            "step": "Another author's comment: Comment actions offers Redact and no Edit",
+            "result": "pass",
+            "at": "2026-09-16T17:52:53.697Z"
+          },
+          {
+            "role": "administrator",
+            "step": "File to Matter on a Matter conversation attachment",
+            "result": "pass",
+            "at": "2026-09-16T17:52:55.023Z"
+          },
+          {
+            "role": "administrator",
+            "step": "Legal Request conversation: Comment actions on his own live comment edits and deletes; no File control on Request paper",
+            "result": "pass",
+            "at": "2026-09-16T17:52:57.660Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Reply from the Portal on a never-converted Request: Comments applet, no audience picker, Legal only comments absent, mention and attach, Comment",
+            "result": "pass",
+            "at": "2026-09-16T17:53:01.646Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Portal: Comment actions edits and deletes his own words",
+            "result": "pass",
+            "at": "2026-09-16T17:53:02.060Z"
+          },
+          {
+            "role": "business_user",
+            "step": "After conversion the Request address opens the Contract; its Comments hold team comments and their paper but no Legal Only content, no filing, no audience picker",
+            "result": "pass",
+            "at": "2026-09-16T17:53:03.069Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Portal Matter: Show older and the unread badge; Legal Only bulk note absent",
+            "result": "pass",
+            "at": "2026-09-16T17:53:06.049Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Portal History on the Contract: shared comment activity only",
+            "result": "pass",
+            "at": "2026-09-16T17:53:08.250Z"
+          },
+          {
+            "role": "administrator",
+            "step": "Redact a reached comment with paper, an author-deleted comment, and the comment whose attachment was filed",
+            "result": "pass",
+            "at": "2026-09-16T17:53:13.759Z"
+          },
+          {
+            "role": "administrator",
+            "step": "Archived record: the attachment offers no File to Contract",
+            "result": "pass",
+            "at": "2026-09-16T17:53:16.104Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Archived destination: the Request address shows the original request with no conversation",
+            "result": "pass",
+            "at": "2026-09-16T17:53:18.213Z"
+          },
+          {
+            "role": "business_user",
+            "step": "A later-added Business User reads earlier team comments; a removed person loses them, including through the old Request link",
+            "result": "pass",
+            "at": "2026-09-16T17:53:26.020Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Internal team: an older Working Team comment stays readable to Legal with its label, cannot be chosen, and stays out of the Business User view",
+            "result": "pass",
+            "at": "2026-09-16T17:53:30.061Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "If the conversation or History cannot load: follow the message to reopen; retry Show older when only the earlier page failed",
+            "result": "pass",
+            "at": "2026-09-16T17:53:31.531Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Attach files accepts up to five files",
+            "result": "pass",
+            "at": "2026-09-16T17:53:33.617Z"
+          }
+        ]
+      }
+    },
+    {
+      "articleId": "notifications",
+      "articlePath": "docs/user-guides/notifications.md",
+      "contentSha256": "4a4ea2e07dbe4ca65c8765623fc7aafbbac0625ad5db496b3acb07475003255b",
+      "scenario": "V-C08",
+      "diffFilesInspected": [
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json (notification, bell, briefing, and reminder keys)"
+      ],
+      "diffFindings": "No notification, bell, preference, briefing, morning round, or Key date code changed. The Reminders settings page now adds a lead time with explicit Save and Cancel buttons. The article sends Administrators to the reminders guide for that procedure and does not describe it. The initial lead-time list is unchanged. SMTP settings now use separate fields. The article only tells readers to ask their Administrator to check email configuration, and that is still correct.",
+      "conclusion": "compatible",
+      "replay": {
+        "script": "docs/documentation/batches/DOC-029/compat-r2/conversations-r2/replay-walkthrough-r2.mjs",
+        "log": "docs/documentation/batches/DOC-029/compat-r2/conversations-r2/replay-r2-notifications.json",
+        "sections": [
+          "all"
+        ],
+        "stamp": "221497",
+        "startedAt": "2026-09-16T17:53:41.497Z",
+        "finishedAt": "2026-09-16T17:56:12.308Z",
+        "summary": {
+          "total": 29,
+          "pass": 29,
+          "fail": 0
+        },
+        "notes": "Timezones for the morning round checks were chosen by the script at run time, as in round 2. Preference switches changed during checks were restored by the script. Amara Nwosu was removed from the fixture Contract team afterwards.",
+        "steps": [
+          {
+            "role": "legal_team_member",
+            "step": "Open a notification: badge with 9+, unread dots, opening the panel marks nothing read, selecting an item opens its record and marks it read",
+            "result": "pass",
+            "at": "2026-09-16T17:53:52.660Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Show older loads earlier items; Mark all read clears unread and then disappears",
+            "result": "pass",
+            "at": "2026-09-16T17:53:56.841Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Change preferences: profile menu, Settings, Personal, Notifications; groups and initial choices match the table; Briefing switches",
+            "result": "pass",
+            "at": "2026-09-16T17:53:57.278Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Assigned to you: Email off keeps the bell item and sends no mail; Email on sends mail; In-app off stops both; each choice survives a reload; a mention gives one item, not a second comment item",
+            "result": "pass",
+            "at": "2026-09-16T17:54:14.840Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "A failed preference save shows the error and the switch returns to its earlier value",
+            "result": "pass",
+            "at": "2026-09-16T17:54:15.759Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "New requests: a new Request reaches the Legal user's bell and opens the Inbox Request",
+            "result": "pass",
+            "at": "2026-09-16T17:54:16.775Z"
+          },
+          {
+            "role": "administrator",
+            "step": "Activity on your records as the Owner: Email off gives a bell item and no mail; Email on sends New comment mail; own comment gives no item; the item opens the Contract",
+            "result": "pass",
+            "at": "2026-09-16T17:54:31.392Z"
+          },
+          {
+            "role": "administrator",
+            "step": "If an update is missing: a failed bell read and a failed older page show their messages and recover",
+            "result": "pass",
+            "at": "2026-09-16T17:54:34.258Z"
+          },
+          {
+            "role": "administrator",
+            "step": "Settings page for an Administrator matches the guide's groups and Briefing sections",
+            "result": "pass",
+            "at": "2026-09-16T17:54:34.852Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Portal bell: a Request receipt opens the Request; a converted Request's record item opens the Contract",
+            "result": "pass",
+            "at": "2026-09-16T17:54:43.275Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Change Portal preferences: Notification settings offers Request updates, Assigned to you, Activity on your records with the documented initial choices and no Briefing",
+            "result": "pass",
+            "at": "2026-09-16T17:54:43.420Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Portal Request updates: Email off keeps the bell item with no mail; Email on sends mail; In-app off stops both; choices survive reload",
+            "result": "pass",
+            "at": "2026-09-16T17:54:56.415Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Portal Assigned to you: a team mention on his converted Contract gives one mention item and You were mentioned mail; a Legal Only comment gives nothing",
+            "result": "pass",
+            "at": "2026-09-16T17:55:04.206Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Converted record, the Requester: a shared comment on the Contract converted from his Request reaches him as a reply under Request updates, with the bell item saying replied on your request and the email subject starting Legal replied on, although Activity on your records Email is off",
+            "result": "pass",
+            "at": "2026-09-16T17:55:09.554Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Converted record, the Requester: turn off Email for Request updates in Notification settings; the next shared comment keeps the bell item and sends no Legal replied on mail",
+            "result": "pass",
+            "at": "2026-09-16T17:55:15.375Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Team member who did not raise the Request: Contract team addition under Assigned to you; the same shared comment under Activity on your records; Email off gives no mail, Email on gives mail, In-app off stops both",
+            "result": "pass",
+            "at": "2026-09-16T17:55:34.583Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Activity on your records also covers supporting Documents and Contract status changes on the records whose team you are on",
+            "result": "pass",
+            "at": "2026-09-16T17:55:40.021Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Portal: a Business User receives no Legal Only comment item and a mention takes Assigned to you, not a second comment item (Amara, team member)",
+            "result": "pass",
+            "at": "2026-09-16T17:55:44.254Z"
+          },
+          {
+            "role": "business_user",
+            "step": "A failed Portal preference save shows the error and keeps the earlier value",
+            "result": "pass",
+            "at": "2026-09-16T17:55:44.621Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Removing team membership removes record notifications from the Portal bell; restoring brings them back",
+            "result": "pass",
+            "at": "2026-09-16T17:55:45.584Z"
+          },
+          {
+            "role": "administrator",
+            "step": "Fixture: invite fresh fictional accounts and check the initial Notification preferences on each",
+            "result": "pass",
+            "at": "2026-09-16T17:55:51.593Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Key date reminders: the Add a key date dialog shows global reminders and the combined schedule, bounds additional lead times, offers team members but not Business Users, and narrows recipients",
+            "result": "pass",
+            "at": "2026-09-16T17:55:52.457Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Set the daily briefing and group switches on the fresh accounts before the morning",
+            "result": "pass",
+            "at": "2026-09-16T17:55:53.830Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "Understand reminder timing: a morning round after 8:00 in the saved timezone serves the briefing and date reminders; before 8:00 it defers",
+            "result": "pass",
+            "at": "2026-09-16T17:56:01.458Z"
+          },
+          {
+            "role": "administrator",
+            "step": "The daily bell summary opens Home; a second round the same local day sends no second briefing or reminder",
+            "result": "pass",
+            "at": "2026-09-16T17:56:08.726Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "When the selected recipient has left the team, editing the Key date offers Use the usual audience",
+            "result": "pass",
+            "at": "2026-09-16T17:56:11.201Z"
+          },
+          {
+            "role": "business_user",
+            "step": "A Business User on the team receives no date reminders or briefing from the morning rounds",
+            "result": "pass",
+            "at": "2026-09-16T17:56:11.222Z"
+          },
+          {
+            "role": "legal_team_member",
+            "step": "The briefing lines name each Key date",
+            "result": "pass",
+            "at": "2026-09-16T17:56:11.233Z"
+          },
+          {
+            "role": "business_user",
+            "step": "Screenshot: Portal Notification settings with the three groups",
+            "result": "pass",
+            "at": "2026-09-16T17:56:12.289Z"
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Agent replay of the round 1 checks on a shared seeded lab, not a human user study.",
+    "The work2 lab is shared with other DOC-029 round 2 agents. Only records and accounts named DOC-029r2 conversations or doc029r2-conv-* were created."
+  ],
+  "reviewedAt": "2026-09-16T17:56:52.396Z"
+}

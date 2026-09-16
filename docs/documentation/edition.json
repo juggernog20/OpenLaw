@@ -3,11 +3,11 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "supportedAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
   "publicationTarget": "development-app",
   "compatibilityReview": {
-    "testedAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
+    "testedAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
     "reviewer": "DOC-029 independent walkthrough agents (one per article group, independent of the source-review authors)",
     "reviewedAt": "2026-09-16T16:48:55.535Z",
     "summary": "DOC-029 re-verified the suite against labs built from 3fa407e3. Each article received a source review, then an independent agent walkthrough for every required role and method on that build. Articles whose walkthrough did not pass keep their earlier evidence and do not receive credit."
@@ -21,15 +21,15 @@
     "articles": [
       {
         "id": "staff-sign-in",
-        "contentSha256": "3ccb318e546bb50e7a4e59b279afed761f688e99936c3eed10ad48b65060b961"
+        "contentSha256": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c"
       },
       {
         "id": "portal-sign-in",
-        "contentSha256": "a555e87dab0938a09ace19041372365c5f0f10c1c348d83625dc2428badb5b8b"
+        "contentSha256": "a4658df9a8f1da02cfef7751c256b9b520a9b7065739c9987d8be154adacebcf"
       },
       {
         "id": "find-your-work",
-        "contentSha256": "08a83fe4409541e18683a1ab88ced39c11c94b2936ac3c550fd395901b0837ab"
+        "contentSha256": "8edac6aa2252dc6105a8dd59fef0cd367e78487c7286f3e08844decd7ada22e1"
       },
       {
         "id": "search-and-views",
@@ -37,27 +37,27 @@
       },
       {
         "id": "personal-settings",
-        "contentSha256": "fca8d64c3b2db4a7a0f780b4f1e5fb12d561e5e7705259b9324a2c6c826c027e"
+        "contentSha256": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803"
       },
       {
         "id": "roles-and-access",
-        "contentSha256": "c9853977f0f25dd7b8ca17da4b8e0726d65481ec35f970b33d6d092fd705122f"
+        "contentSha256": "4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8"
       },
       {
         "id": "comments-and-activity",
-        "contentSha256": "9cb944814fe79ce300a9a392da25723d9433a51d8bc228774c563078580c7313"
+        "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f"
       },
       {
         "id": "notifications",
-        "contentSha256": "c8486d900c84f91f186fb20b74e3d67bb9167533b8f5e6835b63ef2a45744269"
+        "contentSha256": "4a4ea2e07dbe4ca65c8765623fc7aafbbac0625ad5db496b3acb07475003255b"
       },
       {
         "id": "submit-request",
-        "contentSha256": "2cc92e608c6096e0413c41d0ff4f01e01561fa63472c70a85601b8f11660cc64"
+        "contentSha256": "5f564beb8c997e68464baff73fc3a6c094c100307b346e0e929d453c9969b22b"
       },
       {
         "id": "follow-request",
-        "contentSha256": "1db0631e8dde4911fa0c122d09b42771e88937d37c1a85d445fafac0f60a1880"
+        "contentSha256": "7104110814c3a789f3d1fc02240f6d2f40e509813d636c2c196a833fc53aee8f"
       },
       {
         "id": "portal-knowledge",
@@ -65,15 +65,15 @@
       },
       {
         "id": "triage-requests",
-        "contentSha256": "44f6535e37d1c2f73b88f2f447615e781061c1db91edfe8f08aac774e50cbc5f"
+        "contentSha256": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d"
       },
       {
         "id": "convert-request",
-        "contentSha256": "9b436e80cf0ff44066848a3e019f9f2a35fe96ec605136536b8e4b0a76d9167f"
+        "contentSha256": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee"
       },
       {
         "id": "create-contract",
-        "contentSha256": "afb8ea67417505206901e7c21ffc7e8a9d9bdad606b3500604f43e086e00c819"
+        "contentSha256": "9ddc15162c743f9502cd7bf98f7d3c1229895b9e275a730bc203e860d4f316d1"
       },
       {
         "id": "contract-stages",
@@ -81,163 +81,163 @@
       },
       {
         "id": "contract-approvals",
-        "contentSha256": "9a39427514d7da51be37644a56dfc401eac96f42eb96a34e409d42f008011438"
+        "contentSha256": "d33d268780abc6592242a140452187a3233bad9a1bb337a15dcd24e5ecf3b3d3"
       },
       {
         "id": "manual-signing",
-        "contentSha256": "2415ba7d5c22ff900dd3b3fd67a5012f86fd276dfc4eb7f299e59e3419e3d5ae"
+        "contentSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0"
       },
       {
         "id": "electronic-signing",
-        "contentSha256": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc"
+        "contentSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c"
       },
       {
         "id": "terms-and-renewals",
-        "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e"
+        "contentSha256": "d983f5c33254ca98c261ad00ccb66242a4861a64f75965d9c66c00c13018e085"
       },
       {
         "id": "contract-tasks-and-dates",
-        "contentSha256": "a5256a681d03905eae65846155b23ed396aa33ad3d7de0d5b3f894332303aa21"
+        "contentSha256": "a277d41d51e94aa2c850bebfc96f7e6e107c287cda273c3c302f7ab21e74a9f2"
       },
       {
         "id": "contract-relations-and-ending",
-        "contentSha256": "ca10c84a725573c1e32fdae19502056cfd0075a0223131a3dc54d32d75272b47"
+        "contentSha256": "6108b0fdf48999c06cf2e50cdea4ed766f5142fe58f1fb25d35218ce08a1e475"
       },
       {
         "id": "contract-analysis",
-        "contentSha256": "611dabad2ff2d85dfc8fe32336093f2c5a00f8a8edb6633e146e3c240f27ed24"
+        "contentSha256": "ce182804fbd35ffb2e8ba24cff6bc848963a56f1b04a10222dea23aedebbee39"
       },
       {
         "id": "create-matter",
-        "contentSha256": "c4638e5e5912426fd5aa405b0584d78ac4686664c8940974a837109fb3c4929d"
+        "contentSha256": "af9e06defbb30c1ea2fe16489aeb6f423922837eea8ac718eedbe8ebe5ec01c1"
       },
       {
         "id": "matter-status-and-archive",
-        "contentSha256": "eeba1f69102da8b5e651f182204073287bcb44ee60ce55a0c453ca6ee6383bde"
+        "contentSha256": "42b5a0bcdbce561a30d998a493cdacac31e89c3abfb8f53d9175fff5c95076a3"
       },
       {
         "id": "matter-work",
-        "contentSha256": "b5abfe2987b49c0f592a60bff598e8a682b45f94c0b30910aa3b28df3d70dd0a"
+        "contentSha256": "0c4586d601262514f49a617fa47f6bd3c45accadd851fd6bfb9a2f3d817d8d9b"
       },
       {
         "id": "contributor-guide",
-        "contentSha256": "d84194b7f65c1ce66efc23313811846d50f30091ca9b16e8479c17a4e52292d7"
+        "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a"
       },
       {
         "id": "document-versions",
-        "contentSha256": "ff9491d656f4914deba6ea4c0199f781589bd881b3a63dc37288676dbf010896"
+        "contentSha256": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14"
       },
       {
         "id": "document-folders",
-        "contentSha256": "81be2aedf4c123245e8a4c01b21b70d99ca5da67b169ed159cbd4a7dcfb08d02"
+        "contentSha256": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7"
       },
       {
         "id": "document-previews",
-        "contentSha256": "ac427a494698a887a7686ea94878d3d6be626310fda1b2576a2f8e8b59d72484"
+        "contentSha256": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b"
       },
       {
         "id": "compare-versions",
-        "contentSha256": "df58421f3e06f43f8c58696d48e68e3a3d91b0e747b7bf76c95459dae6e36205"
+        "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63"
       },
       {
         "id": "document-repository",
-        "contentSha256": "c6fafe2c6ea61e0af66726e4ea1c46c71fdee1731064bea0ceb3f5b8c8b050cc"
+        "contentSha256": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3"
       },
       {
         "id": "entities-and-counterparties",
-        "contentSha256": "71c5ae01033d3e5915b96d318f1eb0dd77faf2eac37c766a6051856734a224d0"
+        "contentSha256": "ddbbf1cfcd46f72fc735c67dcd9162a47480641221e06d2fcd2362d660607c35"
       },
       {
         "id": "entity-records",
-        "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc"
+        "contentSha256": "e8bd443312eb75490ecd396313913b1a050ea9751aa63e03ca55d43e22c7e56d"
       },
       {
         "id": "create-knowledge",
-        "contentSha256": "682617bd3bf6192cceeb79380e3f16d9ada32b17e5efd83c913b7e9fb118ea80"
+        "contentSha256": "5e0e6144f49cefdeae01ca7744488350531630d3a2f230e9695e75edb8f85a4c"
       },
       {
         "id": "publish-knowledge",
-        "contentSha256": "3a7163f03a40c780284fda079b55711e64c08c32c707aef4328cf0e4c26fb177"
+        "contentSha256": "18918ce410b68ee48ca7bfc2217bc187ef24da783f5817298c0cf1188336e7bd"
       },
       {
         "id": "first-run",
-        "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4"
+        "contentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5"
       },
       {
         "id": "organisation-and-users",
-        "contentSha256": "95e899099892882f6a7c3c412275c82df92f7181be2c24e4acee316a52bdd7f4"
+        "contentSha256": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72"
       },
       {
         "id": "authentication-and-email",
-        "contentSha256": "a47a3665df8e885bd034226de107c182564f6048ea74aa6707f2f1eaff6df8db"
+        "contentSha256": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208"
       },
       {
         "id": "types-statuses-fields",
-        "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe"
+        "contentSha256": "6959a5dfd5960d5bf12d807ec1fadf7c8197ca91b1c7dcbb2f003026c3b4d604"
       },
       {
         "id": "matter-templates",
-        "contentSha256": "7fa37fb4f73082478f758fbbf3f78123ec4e6db572bb14558dd1186f422867d4"
+        "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed"
       },
       {
         "id": "request-forms",
-        "contentSha256": "ad0e8401b4e97c88c138b69a0f1d992ba9da06f133b9e5796bbe372541b457fa"
+        "contentSha256": "b7be99eb4442a012c4e00fbe17cc964a74d347ac4195e5b28b3faafb11be64fd"
       },
       {
         "id": "reminders-and-audit",
-        "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c"
+        "contentSha256": "8ca186fcbb821a59d6b0591a467fac3674421df48337d519d3e7ff0d9593648d"
       },
       {
         "id": "configure-signing",
-        "contentSha256": "13d8d4eab928e2b2a9ecc1c82865b4c4577f262416211aadf712d6cfb97042cc"
+        "contentSha256": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc"
       },
       {
         "id": "configure-analysis",
-        "contentSha256": "ab577b5a9a1c749fe8836e2e68d3af36624585103bb4d77660293eb36247c738"
+        "contentSha256": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431"
       },
       {
         "id": "install",
-        "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f"
+        "contentSha256": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc"
       },
       {
         "id": "deployment-configuration",
-        "contentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468"
+        "contentSha256": "e50a783f16931ee6132b052fd520ee348b6dd73952cdf687e3cdce31366cd622"
       },
       {
         "id": "upgrade",
-        "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d"
+        "contentSha256": "8ede534213fe2e4e33beef06f32b8da1d0d54327d37ef593c9136dd0ed3655cc"
       },
       {
         "id": "backup-and-restore",
-        "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361"
+        "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811"
       },
       {
         "id": "operator-troubleshooting",
-        "contentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab"
+        "contentSha256": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9"
       },
       {
         "id": "troubleshooting",
-        "contentSha256": "6663ad0a44d46bc234943d5834e21b3f909545a4d54a2b98b88face9ccd72aec"
+        "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa"
       },
       {
         "id": "reference",
-        "contentSha256": "e931e7b629b6b4f89d0f888d44d3e6388b2ec4d7630fa1bc6a7de753dbe0637b"
+        "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd"
       },
       {
         "id": "versions-and-support",
-        "contentSha256": "7574eb78939dd4eabb69bd1ebd798f762c1e4c32d8efa5785e56dfaaf1dc101e"
+        "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b"
       },
       {
         "id": "entity-obligations",
-        "contentSha256": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604"
+        "contentSha256": "9e66336f58ac640455e2953d4231f4cb5e05c30dc9eee207e33908f372206b66"
       },
       {
         "id": "entity-structure-and-access",
-        "contentSha256": "60720b9e39912ec6e2aa74265d583fa90647a1d847ccbb89313b5d320b2953ed"
+        "contentSha256": "f6d077cc3b817a0c097844fb00d800525777503bab0ba0bff52b222f14b1ea2f"
       },
       {
         "id": "archive-and-delete-documents",
-        "contentSha256": "92eb2c110a4a53c470defc675e1289244c6a9813af5bb3862abc84ca1541ac36"
+        "contentSha256": "9b7236766f07ea15cba334194bf2b4d638e65663627ea6c004b417ecd318f01e"
       },
       {
         "id": "approver-groups",

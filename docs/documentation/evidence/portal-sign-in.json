@@ -1,19 +1,20 @@
 {
   "articleId": "portal-sign-in",
-  "contentSha256": "2a39b552d5f47a670af64352a71bd075dd38c26feb7f89b419affde901b85c93",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (access, round 1)",
+  "contentSha256": "a4658df9a8f1da02cfef7751c256b9b520a9b7065739c9987d8be154adacebcf",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "environment": "openlaw-docs-41255c61-work2",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (access, round 1)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (access)",
-  "technicalReviewer": "DOC-029 source-review author agent (access)",
-  "verifiedAt": "2026-09-16T16:23:21Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (access); round 2 corrections by DOC-029r2 source-review author agent (access)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (access)",
+  "verifiedAt": "2026-09-16T18:13:19Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/portal-sign-in.md",
     "docs/documentation/batches/DOC-029/access/technical-review.json",
-    "docs/documentation/batches/DOC-029/access/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-029/access/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/access/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
@@ -23,32 +24,34 @@
       "method": "browser-walkthrough",
       "prerequisites": [
         "Business Portal policy on the seeded lab: password and magic links on, allowed domain helix.example.",
-        "A new DOC-029 access Business User created by its first sign-in, plus seeded Jonas Weber and Amara Nwosu in separate browser contexts with fresh Mailpit links."
+        "A new DOC-029r2 access Business User created by its first sign-in, plus seeded Jonas Weber and Amara Nwosu in separate browser contexts with fresh Mailpit links.",
+        "Test preparation only: the seeded Administrator created 8 DOC-029r2 access Contracts with Jonas Weber on the team, so that his current-team Contracts exceed the 25-row page and Show more appears."
       ],
       "expected": "Only the intended Business User session opens; the portal shows that person's Requests. An unapproved domain gets the supported refusal/neutral response; a bad link offers a working recovery route.",
-      "actual": "15 recorded steps passed on 3fa407e3. Signed out, /portal and /portal/enter both opened /portal/login titled Business Portal sign-in with the password form first. Email me a sign-in link opened Get a sign-in link, and Send link showed Check your email with the neutral 5-minute, works-once text. The new Business User's link (5-minute token) opened We need to learn a little about you. Continue stayed disabled until a Department was chosen and that step had no Skip; the later steps offered Skip, and Finish opened the Portal with the new name and email in the header. Sign out in the Portal header returned to /portal/login. The old email link then opened /auth/link-expired?portal=1 titled Sign-in link expired with Email and Send link, and the new link opened the Portal without repeating onboarding. An address outside the allowed domains got Check your email and no message. For another new address, Set up or reset your password, Send password setup link, the one-hour link, Password set, then Email and Password with Sign in opened the Portal. Jonas saw his own Request. Amara's Request number sent him back to /portal without its title, and /inbox, /contracts and /matters sent him to /portal. Contracts opened Your Contracts without his archived team Contract, and Show more loaded more rows. A Contract page showed its C- reference, Counterparty, Stage, Business Owner, Legal Owner, Value, dates, Fields and Documents. The Primary Document label marked the primary row, the Document name opened the reader panel, the Download {name}, version 15 control downloaded the file, the applet bar held Comments, History and Contract team, and Your Contracts returned to the list. A Matter page showed its M- reference, Matter Type, Status, Matter Manager, Business Owner and the Comments, History and Matter team applets. A converted Request address redirected to its Contract, which showed Original request. Amara's separate context showed only her own Request and could not open Jonas's. Supplementary, with a mocked methods answer in the browser only: with links off there is no Email me a sign-in link and Set up or reset your password shows; with no method the page says Sign-in is unavailable. Contact your administrator.; the expired-link page offers only Back to sign-in.",
+      "actual": "18 recorded steps passed on 57e77e38. Signed out, /portal and /portal/enter both opened /portal/login. The page showed Helix Software Group above Business Portal sign-in, with no Organization logo image, which matches the public branding answer (name saved, no logo), and the password form came first. Email me a sign-in link opened Get a sign-in link, and Send link showed Check your email with the neutral 5-minute, works-once text. The new Business User's link (5-minute token) opened We need to learn a little about you. Continue stayed disabled until a Department was chosen and that step had no Skip; the later steps offered Skip, and Finish opened the Portal with the new name and email in the header. Sign out in the Portal header returned to /portal/login. The old email link then opened /auth/link-expired?portal=1 titled Sign-in link expired with Email and Send link, and the new link opened the Portal without repeating onboarding. An address outside the allowed domains got Check your email and no message. For another new address, Set up or reset your password, Send password setup link, the one-hour link, Password set, then Email and Password with Sign in opened the Portal. Jonas saw his own Request. Amara's open Request number sent him back to /portal without its title, and /inbox, /contracts and /matters sent him to /portal. Contracts opened Your Contracts without his archived team Contract; with more than 25 current-team Contracts (8 DOC-029r2 access fixture Contracts added through the API), Show more loaded more rows (25 to 27). A Contract page showed its C- reference, Counterparty, Stage, Business Owner, Legal Owner, Value, dates, Fields and Documents. The Primary Document label marked the primary row, the Document name opened the reader panel, the Download control downloaded the file, the applet bar held Comments, History and Contract team, and Your Contracts returned to the list. A Matter page showed its M- reference, Matter Type, Status, Matter Manager, Business Owner and the Comments, History and Matter team applets. A converted Request address redirected to its Contract, which showed Original request. Amara's separate context showed her own open Request, did not show Jonas's, and could not open Jonas's Request. Supplementary, with mocked answers in the browser only: with links off there is no Email me a sign-in link and Set up or reset your password shows; with no method the page says Sign-in is unavailable. Contact your administrator.; the expired-link page offers only Back to sign-in; a saved logo shows above Business Portal sign-in, a logo that fails to load is hidden, and with no saved name the page shows OpenLaw.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-portal-sign-in-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/r1-business-user-onboarding.png"
+        "docs/documentation/batches/DOC-029/access/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/access/walkthrough-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/access/lib-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/access/wt-portal-sign-in-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/access/r2-1-business-user-onboarding.png"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
-    "The work lab is shared with other DOC-029 agents. Seeded records and counts changed during the run. The walkthrough created only accounts and records named DOC-029 access and changed no organisation settings. Nothing was deleted. Two earlier full runs are kept as walkthrough-r1-attempt1.json and walkthrough-r1-attempt2.json; their dispositions (a reviewer script timing error and shared-lab data drift) are in walkthrough-r1.json.",
+    "The work2 lab is shared with other DOC-029 round 2 agents. Seeded records and counts changed during the run. The walkthrough created only accounts and Contracts named DOC-029r2 access and changed no organization settings. Nothing was deleted. Three earlier attempts are kept as walkthrough-r2-1-attempt1.json, walkthrough-r2-1-attempt2.portal.json and walkthrough-r2-1-attempt3.json; their dispositions (reviewer script errors and too few rows for Show more) are in walkthrough-r2-1.json.",
     "The lab app container runs with AUTH_RATE_LIMIT=off (lab configuration).",
-    "Email links switched off, no enabled method, and required Portal two-factor authentication need an organisation-wide policy change, which the shared lab does not allow. The links-off and no-method pages were checked only as browser rendering with a mocked methods answer. The password setup steps in that section were followed for real while links were still on. Portal two-factor was not exercised.",
+    "The seeded organization has no saved logo, and adding one needs an organization setting change that the shared lab does not allow. The live pages showed the organization name and no logo. A saved logo, a logo that fails to load, and no saved name were checked only as browser rendering with a mocked branding answer.",
+    "Email links switched off, no enabled method, and required Portal two-factor authentication need an organization-wide policy change, which the shared lab does not allow. The links-off and no-method pages were checked only as browser rendering with a mocked methods answer. The password setup steps in that section were followed for real while links were still on. Portal two-factor was not exercised.",
     "No Portal Contract with an Unverified value was on Jonas's team, so the Unverified marker was not observed.",
     "The archived-record exclusion was observed for Contracts only; no archived Matter was on Jonas's team."
   ],
   "previousEvidence": {
-    "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-    "contentSha256": "9d419eb6c397fcaca5aac93331cb5dd06905f8152446485705714e07995adf7d",
-    "verifiedAt": "2026-09-07T04:12:15.835Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "2a39b552d5f47a670af64352a71bd075dd38c26feb7f89b419affde901b85c93",
+    "verifiedAt": "2026-09-16T16:23:21Z"
   },
   "copyOnlyReview": null,
   "compatibilityReview": null

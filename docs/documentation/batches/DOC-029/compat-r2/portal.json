@@ -1,0 +1,531 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "portal",
+  "reviewer": "DOC-029r2 compatibility reviewer (portal)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-41255c61-work2",
+    "app": "http://127.0.0.1:23301",
+    "mail": "http://127.0.0.1:23401",
+    "source": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "seed": "Helix light, seed 7",
+    "images": {
+      "app": "openlaw-docs-41255c61-work2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "engine": "openlaw-docs-41255c61-work2-engine:57e77e386be3 sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    }
+  },
+  "diffInspection": {
+    "command": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles messages",
+    "commits": [
+      "1ea249dd Show organization branding on sign-in and raise the logo limit",
+      "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+      "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+      "e3800b43 Show locked default fields above each custom field catalog",
+      "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+      "57e77e38 Update user and comment display styles to use text-muted for archived users"
+    ],
+    "finding": "No changed file is a Portal route, Portal component, Request, Knowledge, Department or comments API module. The diff touches no styles/ file. The only shared component in the Portal path is comment-applet.tsx, where an archived author name changes from opacity-50 to text-muted. auth-layout.tsx adds organization name, logo, Legal Portal and Powered by OpenLaw above the sign-in form; the sign-in controls are unchanged and these articles do not describe the sign-in page. The new API route is GET /org/branding; the openapi and api-client changes add it and change the email-settings and org general logo schemas only. No removed or changed message string is used by the three articles (removed strings are AI analysis, contract field help, welcome email and logo, welcome review). The remaining files are Administrator settings and welcome pages."
+  },
+  "replay": {
+    "method": "Replayed the round 1 fixture and walkthrough scripts (portal/fixtures-r1.mjs, portal/walkthrough-r1.mjs, phases submit, follow, knowledge, then supplement) against work2. Adaptations: record and fixture names DOC-029 portal became DOC-029r2 portal, the log header names this reviewer and commit, and file paths moved to compat-r2/portal-r2. No check, selector or expectation changed. The recheck phase was not needed because the first Your requests read passed.",
+    "runs": [
+      {
+        "phases": [
+          "submit",
+          "follow",
+          "knowledge"
+        ],
+        "startedAt": "2026-09-16T17:51:50.116Z",
+        "finishedAt": "2026-09-16T17:52:37.398Z"
+      },
+      {
+        "phases": [
+          "supplement"
+        ],
+        "startedAt": "2026-09-16T17:52:51.046Z",
+        "finishedAt": "2026-09-16T17:52:54.124Z"
+      }
+    ],
+    "stepsTotal": 55,
+    "stepsFailed": 0,
+    "files": [
+      {
+        "path": "batches/DOC-029/compat-r2/portal-r2/lib-r2.mjs",
+        "sha256": "a9acaeb14ebb99c2c41050c8ca62fdb928efde0d1f6ba306dfa7efbcdc2ce1c1"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/portal-r2/fixtures-r2.mjs",
+        "sha256": "9a114015f22455dcc78b9fbea24101488c528d2885b9005a22d810834d6b1ce5"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/portal-r2/pdf-r2.mjs",
+        "sha256": "34e59b84b678b53e593a86669624b107c41482d7be222a67d43be033199da413"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/portal-r2/walkthrough-r2.mjs",
+        "sha256": "ed7fe7b235610e7c5339b084b2de43a7954bf39f5e129e715f45c9799ecb6a23"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/portal-r2/walkthrough-r2.json",
+        "sha256": "d16145fc0f82fc9ebefe535c2be074be235a2f71da76c9501f69c25acb282e39"
+      }
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "submit-request",
+      "scenario": "V-C09",
+      "contentSha256": "5f564beb8c997e68464baff73fc3a6c094c100307b346e0e929d453c9969b22b",
+      "diffFilesInspected": [
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/router.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "packages/shared/src/logo.ts",
+        "packages/shared/src/index.ts",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json (removed and changed strings)"
+      ],
+      "conclusion": "compatible",
+      "reason": "The diff changes nothing in the Portal home, request form, Department picker, attachments, confirmation or Your requests. The replay passed every round 1 step.",
+      "replaySteps": [
+        {
+          "step": "Portal home: read Before you submit, then select the request type",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Home listed Before you submit links [How to ask legal for help; Contract review turnaround times; When you need a DPA; Using customer names in marketing; Helix intranet - Legal (opens in a new tab)] and Your requests; the NDA request card opened /portal/new/nda_request"
+        },
+        {
+          "step": "Form labels, asterisks, Department default, and Urgency default",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Labels: Title* (required) | Description* (required) | Attachments | Department* (required) | Urgency* (required) | Counterparty name* (required) | Needed by. Starred: 5; without asterisk: Attachments | Needed by. Department started at \"Engineering\" (Jonas's Department). Urgency started at Medium; options Low, Medium, High, Critical."
+        },
+        {
+          "step": "Submit request with required answers missing",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Alert \"Fill Title, Description, and Counterparty name first — the form requires them.\"; field marks: Title is required. / Description is required. / Counterparty name is required.; POST /api/v1/requests sent: 0"
+        },
+        {
+          "step": "Attachments: Choose files beyond 20, then remove unintended files",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Chose 21 files: 20 listed, the 21st dropped, with \"A request carries at most 20 files.\". Remove took each listed file off; 0 remain."
+        },
+        {
+          "step": "Attachments: select one file with Choose files and drop another onto the form",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Listed doc029-northstar-terms-1789581110115.pdf (Choose files) and doc029-northstar-dropped-1789581110115.pdf (dropped onto the form)."
+        },
+        {
+          "step": "Complete the form and Submit request once; keep the confirmation open",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "\"Request R-32 is with Legal\"; \"Attaching your files…\" shown while the two uploads were held, then cleared; no failure; one POST /api/v1/requests; Open request offered."
+        },
+        {
+          "step": "Open request and check saved answers and attachments",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Meta \"R-32 · NDA request · Submitted Sep 16\"; What you submitted: \"What you submitted Description DOC-029r2 portal: Northstar proposes a 60-day evaluation. Counterparty Northstar Evaluation Ltd. Please review the evaluation terms. Attachments doc029-northstar-terms-1789581110115.pdf doc029-northstar-dropped-1789581110115.pdf Department Procurement Urgency High Counterparty name Northstar Evaluation Ltd\"; downloads doc029-northstar-terms-1789581110115.pdf, doc029-northstar-dropped-1789581110115.pdf matched the original bytes; 0 buttons in the card (no edit control)."
+        },
+        {
+          "step": "Check Your requests on the Portal home",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Your requests: \"R-32 DOC-029r2 portal Review the Northstar evaluation terms 1789581110115 NDA request · this minute Owner: Not assigned yet Open\" (1 row)."
+        },
+        {
+          "step": "Legal receives the Request to triage; no Contract or Matter exists until conversion",
+          "role": "legal_team_member",
+          "run": 1,
+          "result": "pass",
+          "actual": "Nadia's Inbox /inbox/32 shows the Request; API status \"new\", convertedRecord null."
+        },
+        {
+          "step": "Department: a Requester without a listed Department must choose one",
+          "role": "legal_team_member",
+          "run": 1,
+          "result": "pass",
+          "actual": "Nadia (no Department on her profile) saw Department start at \"Choose a Department\"; Submit request answered \"Fill Department first — the form requires it.\". Nothing was submitted."
+        },
+        {
+          "step": "An attachment fails: the Request still exists and the failure is named",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Confirmation \"This file did not attach. Quote R-33 and send it to Legal another way. doc029-failing-1789581110115.pdf\". R-33 opened without the file; Jonas sent doc029-failing-1789581110115.pdf on a reply in Comments and it appeared in the conversation."
+        },
+        {
+          "step": "Legal decides the Request while its files upload",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Confirmation \"This file did not attach. Add it to a reply on R-34. doc029-race-1789581110115.pdf — This Request has already been dispositioned. Attach new paper to a reply in its thread.\"; the link opened /portal/requests/34#portal-request-composer with the Comments composer visible; Jonas sent doc029-race-1789581110115.pdf on a reply there; status Declined; What you submitted kept the description."
+        },
+        {
+          "step": "A form address that does not exist returns to the Portal home",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "/portal/new/doc029-no-such-form went to /portal."
+        },
+        {
+          "step": "Submission reports an error without confirmation; Your requests shows no new Request",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Alert \"The request could not be submitted.\"; Title kept; no confirmation; Your requests carries 0 Request with that title."
+        }
+      ]
+    },
+    {
+      "articleId": "follow-request",
+      "scenario": "V-C10",
+      "contentSha256": "7104110814c3a789f3d1fc02240f6d2f40e509813d636c2c196a833fc53aee8f",
+      "diffFilesInspected": [
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/router.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "packages/shared/src/logo.ts",
+        "packages/shared/src/index.ts",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json (removed and changed strings)"
+      ],
+      "conclusion": "compatible",
+      "reason": "The diff changes only the colour class of an archived author name in the Comments applet; the article does not describe that. Request page, Owner, status, conversions, replies, Show older and access checks passed in the replay.",
+      "replaySteps": [
+        {
+          "step": "Setup: Jonas has Requests to follow (created through the API; the form itself is V-C09)",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "open: R-35; contract: R-36; matter: R-37; resolved: R-38; declined: R-39; older: R-40"
+        },
+        {
+          "step": "Setup: Legal replies at every audience before any decision, and assigns the open Request",
+          "role": "legal_team_member",
+          "run": 1,
+          "result": "pass",
+          "actual": "R-35: full+file, legal_only, working_team HTTP 201; R-36: full+file, legal_only, working_team HTTP 201; R-37: full+file, legal_only, working_team HTTP 201; R-38: full+file, legal_only, working_team HTTP 201; R-39: full+file, legal_only, working_team HTTP 201; R-35 assigned to Nadia Haddad."
+        },
+        {
+          "step": "Setup: Legal converts, resolves, and declines through the API",
+          "role": "legal_team_member",
+          "run": 1,
+          "result": "pass",
+          "actual": "R-36 converted to {\"module\":\"contract\",\"number\":36}; R-37 converted to {\"module\":\"matter\",\"number\":20}; R-38 resolved with a reply; R-39 declined with a reason."
+        },
+        {
+          "step": "Setup: Legal posts later replies with paper after the decisions, and 55 extra replies on R-older",
+          "role": "legal_team_member",
+          "run": 1,
+          "result": "pass",
+          "actual": "Later replies posted on request open, request resolved, request declined, contract contract, matter matter; 55 Full thread markers on R-40."
+        },
+        {
+          "step": "Your requests lists open, resolved, and declined Requests with Owner; converted ones leave the list",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Rows: R-35 DOC-029r2 portal follow open 1789581110115 Contract review · this minute Owner: Nadia Haddad Open || R-38 DOC-029r2 portal follow resolved 1789581110115 Legal question · this minute Owner: Not assigned yet Resolved || R-39 DOC-029r2 portal follow declined 1789581110115 Legal question · this minute Owner: Not assigned yet Declined; converted R-36 and R-37 not listed."
+        },
+        {
+          "step": "R-open: open from Your requests; check title, reference, status, Owner, and banner",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Meta \"R-35 · Contract review · Submitted Sep 16\"; status \"Open\"; \"Owner: Nadia Haddad\"; banner \"Legal has received your request. You'll get an email when the status changes.\"; reply link count 0."
+        },
+        {
+          "step": "R-open: Comments shows Legal's shared replies and paper only",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Comments showed \"DOC-029r2 portal Legal full thread open 1789581110115\" and \"DOC-029r2 portal Legal later reply open 1789581110115\"; Legal only and Working team texts absent; radios 0, Audience label 0; doc029-legal-later-open-1789581110115.pdf downloaded with matching bytes."
+        },
+        {
+          "step": "R-open: What you submitted shows the saved answers and the original attachment",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "What you submitted: \"What you submitted Description DOC-029r2 portal description for open. Attachments doc029-original-open-1789581110115.pdf Department Engineering Urgency High Counterparty name Northstar Evaluation Ltd\"; doc029-original-open-1789581110115.pdf downloaded with the original bytes."
+        },
+        {
+          "step": "R-open: reply with further paper",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Comment disabled when empty (true) and with only a file (true); posted \"DOC-029r2 portal Jonas reply open 1789581110115\" once with doc029-jonas-reply-open-1789581110115.pdf (download bytes match); after reload the status stayed Open; Nadia's API read shows the reply with its file."
+        },
+        {
+          "step": "R-resolved: open from Your requests; check title, reference, status, Owner, and banner",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Meta \"R-38 · Legal question · Submitted Sep 16\"; status \"Resolved\"; \"Owner: Not assigned yet\"; banner \"Legal has answered this request and closed it. Attach new files to a reply.\"; reply link count 1."
+        },
+        {
+          "step": "R-resolved: Comments shows Legal's shared replies and paper only",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Comments showed \"DOC-029r2 portal Legal full thread resolved 1789581110115\" and \"DOC-029r2 portal Legal later reply resolved 1789581110115\" and the resolution reply; Legal only and Working team texts absent; radios 0, Audience label 0; doc029-legal-later-resolved-1789581110115.pdf downloaded with matching bytes."
+        },
+        {
+          "step": "R-resolved: What you submitted shows the saved answers and the original attachment",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "What you submitted: \"What you submitted Description DOC-029r2 portal description for resolved. Attachments doc029-original-resolved-1789581110115.pdf Department Engineering Urgency High\"; doc029-original-resolved-1789581110115.pdf downloaded with the original bytes."
+        },
+        {
+          "step": "R-resolved: reply with further paper",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Attach new files to a reply opened #portal-request-composer. Comment disabled when empty (true) and with only a file (true); posted \"DOC-029r2 portal Jonas reply resolved 1789581110115\" once with doc029-jonas-reply-resolved-1789581110115.pdf (download bytes match); after reload the status stayed Resolved; Nadia's API read shows the reply with its file."
+        },
+        {
+          "step": "R-declined: open from Your requests; check title, reference, status, Owner, and banner",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Meta \"R-39 · Legal question · Submitted Sep 16\"; status \"Declined\"; \"Owner: Not assigned yet\"; banner \"Legal declined this request. DOC-029r2 portal decline reason 1789581110115 Attach new files to a reply.\"; reply link count 1."
+        },
+        {
+          "step": "R-declined: Comments shows Legal's shared replies and paper only",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Comments showed \"DOC-029r2 portal Legal full thread declined 1789581110115\" and \"DOC-029r2 portal Legal later reply declined 1789581110115\"; Legal only and Working team texts absent; radios 0, Audience label 0; doc029-legal-later-declined-1789581110115.pdf downloaded with matching bytes."
+        },
+        {
+          "step": "R-declined: What you submitted shows the saved answers and the original attachment",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "What you submitted: \"What you submitted Description DOC-029r2 portal description for declined. Attachments doc029-original-declined-1789581110115.pdf Department Engineering Urgency High\"; doc029-original-declined-1789581110115.pdf downloaded with the original bytes."
+        },
+        {
+          "step": "R-declined: reply with further paper",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Attach new files to a reply opened #portal-request-composer. Comment disabled when empty (true) and with only a file (true); posted \"DOC-029r2 portal Jonas reply declined 1789581110115\" once with doc029-jonas-reply-declined-1789581110115.pdf (download bytes match); after reload the status stayed Declined; Nadia's API read shows the reply with its file."
+        },
+        {
+          "step": "R-contract: the converted Request address opens the resulting contract",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "/portal/requests/36 went to /portal/contracts/36; Original request: \"Original request DOC-029r2 portal follow contract 1789581110115 R-36 · Jonas Weber · Submitted Sep 16 Urgency: High doc029-original-contract-1789581110115.pdf DOC-029r2 portal description for contract\"; Contract team: \"Contract team NH Legal Owner Creator Nadia Haddad JW Business Owner Jonas Weber\"; Comments showed the Full thread replies and not the Legal only or Working team notes; reply \"DOC-029r2 portal Jonas reply on contract 1789581110115\" posted on the record."
+        },
+        {
+          "step": "R-matter: the converted Request address opens the resulting matter",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "/portal/requests/37 went to /portal/matters/20; Original request: \"Original request DOC-029r2 portal follow matter 1789581110115 R-37 · Jonas Weber · Submitted Sep 16 Urgency: High doc029-original-matter-1789581110115.pdf DOC-029r2 portal description for matter. Coun\"; Matter team: \"Matter team NH Matter Manager Creator Nadia Haddad JW Business Owner Jonas Weber\"; Comments showed the Full thread replies and not the Legal only or Working team notes; reply \"DOC-029r2 portal Jonas reply on matter 1789581110115\" posted on the record."
+        },
+        {
+          "step": "Show older loads earlier replies",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "R-40: 50 markers before Show older (marker 01 absent), 55 after."
+        },
+        {
+          "step": "Recovery: a failed reply keeps its text and files; Comment again posts once",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Error \"The comment could not be posted. Try again.\"; text kept, doc029-retry-1789581110115.pdf kept; retry posted 1 reply."
+        },
+        {
+          "step": "Recovery: the conversation could not be read; close and reopen Comments",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Error \"The conversation could not be read. Reopen the panel to try again.\"; after Close and reopening Comments the conversation showed Legal's replies."
+        },
+        {
+          "step": "Clearing triage assignment shows Not assigned yet",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Request page \"Owner: Not assigned yet\"; list row \"R-35 DOC-029r2 portal follow open 1789581110115 Contract review · this minute Owner: Not assigned yet Open\"."
+        },
+        {
+          "step": "Negative: a second Business User cannot open Jonas's Requests or files",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "R-35 -> /portal; R-36 -> /portal; R-37 -> /portal; API detail 404, attachment 404; /portal/contracts/36 left Amara at /portal/contracts/36 without the record title (page text: \"Your Contracts Contract not found This Contract does not exist, or you cannot open it.\")."
+        },
+        {
+          "step": "Negative: staff addresses are not a substitute for the Portal link",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Staff Request read HTTP 403; /contracts/36 ended at /portal; /matters/20 ended at /portal."
+        },
+        {
+          "step": "Team row removed: the old Request link no longer opens the live record",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "DELETE team row HTTP 200; /portal/requests/37 returned to /portal."
+        },
+        {
+          "step": "Archived destination: the Request address shows the original ask and an archived notice",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Archive HTTP 200; notice \"The record created from this Request was archived. Your original request is shown below.\"; What you submitted \"What you submitted Description DOC-029r2 portal description for contract. Department Engineering Urgency High Counterparty name Northstar Evaluation Ltd\"; Comments applet buttons 0; attachment links 0."
+        },
+        {
+          "step": "Supplement: Attach new files to a reply opens the Comments composer by itself",
+          "role": "business_user",
+          "run": 2,
+          "result": "pass",
+          "actual": "R-39: the link opened the Comments panel with New comment visible (text box focused: false)."
+        },
+        {
+          "step": "Supplement: selecting a conversation attachment",
+          "role": "business_user",
+          "run": 2,
+          "result": "pass",
+          "actual": "Selecting the filename \"doc029-jonas-reply-declined-1789581110115.pdf\" started no download (none); it opened an attachment preview dialog whose Download link gave the file. The row's separate \"Download doc029-jonas-reply-declined-1789581110115.pdf\" control downloaded it directly. Both copies matched the original bytes."
+        }
+      ]
+    },
+    {
+      "articleId": "portal-knowledge",
+      "scenario": "V-C11",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+      "diffFilesInspected": [
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/router.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "packages/shared/src/logo.ts",
+        "packages/shared/src/index.ts",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json (removed and changed strings)"
+      ],
+      "conclusion": "compatible",
+      "reason": "The diff changes nothing in Portal Knowledge, Before you submit, downloads or Portal navigation. The replay passed every round 1 step.",
+      "replaySteps": [
+        {
+          "step": "Setup: the DOC-029 guidance fixture is published for Everyone",
+          "role": "legal_team_member",
+          "run": 1,
+          "result": "pass",
+          "actual": "DOC-029r2 portal guidance 1789581097246: published, everyone, 2 Documents, primary doc029-primary-1789581097246.pdf."
+        },
+        {
+          "step": "Portal home: Before you submit lists only eligible guidance",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Links: How to ask legal for help -> /portal/knowledge/01a0ab53-2c53-7097-adc7-e5c87836cf04; Contract review turnaround times -> /portal/knowledge/01a0ab53-2c74-7bd6-97c0-a608178e01f3; When you need a DPA -> /portal/knowledge/01a0ab53-2c9d-7fe5-bf0f-ff5045a81232; Using customer names in marketing -> /portal/knowledge/01a0ab53-2cac-7477-9c80-2e0685b4481a; Helix intranet - Legal -> https://intranet.helix.example/legal (target _blank, domain intranet.helix.example). Each Knowledge link names a published Everyone item."
+        },
+        {
+          "step": "A request form shows its own Before you submit links, which can differ from the home",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "The Contract review form shows 0 Before you submit links (no panel) against 5 on the home. The seed configures no form-specific links."
+        },
+        {
+          "step": "Open guidance from Before you submit: same tab, From Legal, title, Guidance, Your requests",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "\"How to ask legal for help\" opened /portal/knowledge/01a0ab53-2c53-7097-adc7-e5c87836cf04 in the same tab; \"From Legal\" above \"How to ask legal for help\"; Guidance: \"Guidance Use the portal. Pick the closest request type, say what you need and by when, and attach whatever the counterpa\"; Your requests returned to /portal."
+        },
+        {
+          "step": "A shared Portal Knowledge link: Documents lists the primary first; Download gives the current Version; Guidance shows",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Documents order: doc029-primary-1789581097246.pdf | doc029-supporting-1789581097246.pdf; doc029-primary-1789581097246.pdf matched staff current Version 1; doc029-supporting-1789581097246.pdf matched staff current Version 1; buttons in main: []; version pickers 0; Guidance \"Guidance Read this DOC-029r2 portal guidance before you ask Legal for a review. Send the latest draft with your Request.\"."
+        },
+        {
+          "step": "A new Version: Download gives the new current file",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Version upload HTTP 201; the page listed doc029-primary-v2-1789581110115.pdf; Download and the earlier saved address both served the new bytes."
+        },
+        {
+          "step": "Draft, restricted, archived, and unknown items and their files do not open",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "draft: page -> /portal, item 404, file 404; restricted: page -> /portal, item 404, file 404; archived: page -> /portal, item 404, file 404; unknown: page -> /portal, item 404, file n/a; seed draft Everyone: page -> /portal, item 404, file n/a"
+        },
+        {
+          "step": "A saved download address follows the item's availability",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Unpublished: page returned to /portal, saved address HTTP 404. Republished: saved address HTTP 200."
+        },
+        {
+          "step": "A broken external link opens in a new tab and does not block the Request form",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "\"Helix intranet - Legal\" (domain shown: intranet.helix.example) opened a new tab at chrome-error://chromewebdata/ (page text: \"\"); the original tab stayed on /portal; the Legal question form then confirmed \"Request R-47 is with Legal\"."
+        },
+        {
+          "step": "The Portal has no staff Knowledge library or editing controls",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Portal nav: Requests, Contracts, Matters, Auto-Docs; /knowledge ended at /portal; staff list API HTTP 403; editing buttons on the Portal item page 0."
+        },
+        {
+          "step": "Signed out: Everyone guidance is not an anonymous public page",
+          "role": "anonymous",
+          "run": 1,
+          "result": "pass",
+          "actual": "Page went to /portal/login; item API 401; file 401."
+        },
+        {
+          "step": "Help search does not search organization Knowledge",
+          "role": "business_user",
+          "run": 1,
+          "result": "pass",
+          "actual": "Help search for \"DOC-029r2 portal guidance 1789581097246\" (search box value \"DOC-029r2 portal guidance 1789581097246\") showed no link to it; page text after the search starts \"Browse guides Overview BROWSE GUIDES Business Portal Working with Legal Documents Reference and troubleshooting Help All documentation Guides for Business User Help Find the steps you need, then get b\"."
+        }
+      ]
+    }
+  ],
+  "cleanup": "No lab or Compose project was created; work2 belongs to the orchestrator. DOC-029r2 portal Requests, Knowledge Items, a converted Contract and Matter were left on work2. Storage state, cookies and magic links stayed in memory only."
+}

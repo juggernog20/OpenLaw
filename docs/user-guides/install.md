@@ -6,9 +6,9 @@ Start a new OpenLaw instance, check its services, and hand its address to the pe
 
 Use a Linux host with Git, OpenSSL, and [Docker Engine with the Compose plugin](https://docs.docker.com/engine/install/). Check `docker version` and `docker compose version`, and confirm that `docker context show` identifies your intended host. The operator needs permission to run Docker and enough disk space for the source checkout, builds, database, uploaded files, and backups.
 
-Prepare a browser-facing hostname and TLS reverse proxy for a team deployment. The hostname can be private to the office network and VPN; public internet access is not required. Follow [Deploy on a private VM](deployment-configuration.md#deploy-on-a-private-vm) to arrange DNS, certificates, and restricted port bindings before starting the stack. You also need an SMTP relay for invitations, sign-in links, and the welcome wizard. Creating the initial Administrator account does not send email, but the welcome wizard cannot finish until outbound email is configured. Choose an unused app port and an installation directory that will stay in place. The Compose project name identifies the installation's database and file volumes: keep it stable across restarts and upgrades.
+Prepare a browser-facing hostname and TLS reverse proxy for a team deployment. The hostname can be private to the office network and VPN; public internet access is not required. For a private installation, follow [Deploy on a private VM](deployment-configuration.md#deploy-on-a-private-vm) to arrange DNS, certificates, and restricted port bindings before you start the stack. You also need an SMTP relay for invitations, sign-in links, and the welcome wizard. Creating the initial Administrator account does not send email, but the welcome wizard cannot finish until outbound email is configured. Choose an unused app port and an installation directory that will stay in place. The Compose project name identifies the installation's database and file volumes: keep it stable across restarts and upgrades.
 
-This documentation candidate uses a committed source build, not an assumed published release. Its application revision is `3fa407e3a846559914aa1a63249741f30cfb4f69`. The commands below build that revision and give its app and document-engine images their own tags. Do not substitute a moving branch or `latest` tag when reproducing this edition.
+This documentation candidate uses a committed source build, not an assumed published release. Its application revision is `57e77e386be31b2a319f7143dd54d00123e65efe`. The commands below build that revision and give its app and document-engine images their own tags. Do not substitute a moving branch or `latest` tag when reproducing this edition.
 
 ## Prepare the source and configuration
 
@@ -17,7 +17,7 @@ This documentation candidate uses a committed source build, not an assumed publi
    ```bash
    git clone https://github.com/juggernog20/OpenLaw.git openlaw
    cd openlaw
-   git checkout --detach 3fa407e3a846559914aa1a63249741f30cfb4f69
+   git checkout --detach 57e77e386be31b2a319f7143dd54d00123e65efe
    ```
 
 2. Copy the example environment file. If `.env` already exists, inspect the existing installation before proceeding; do not replace its keys.
@@ -40,7 +40,7 @@ This documentation candidate uses a committed source build, not an assumed publi
    ```dotenv
    COMPOSE_PROJECT_NAME=openlaw
    COMPOSE_FILE=compose.yml:compose.operator.yml
-   OPENLAW_BUILD_COMMIT=3fa407e3a846559914aa1a63249741f30cfb4f69
+   OPENLAW_BUILD_COMMIT=57e77e386be31b2a319f7143dd54d00123e65efe
    OPENLAW_BUILD_DIRTY=false
    BASE_URL=https://legal.example.com
    PORT=3000

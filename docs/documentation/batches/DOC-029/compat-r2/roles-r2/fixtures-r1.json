@@ -1,0 +1,358 @@
+{
+  "createdAt": "2026-09-16T17:52:01.128Z",
+  "ids": {
+    "daniel": "01a0ab53-0e0b-7225-9d4d-2a29904eac73",
+    "nadia": "01a0ab53-0e11-73b7-a3b0-4181047d1b6c",
+    "priya": "01a0ab53-0e12-79cf-b777-300fc14e8529",
+    "ravi": "01a0ab53-1098-7fd6-b2c4-9e1b8635a0c3",
+    "jonas": "01a0ab53-110b-73e3-bde4-4e0d0d097603",
+    "amara": "01a0ab53-110a-749f-b5ba-31f742272eee"
+  },
+  "openContract": {
+    "number": 39,
+    "id": "01a0ab58-d677-7463-897d-a715a312190f"
+  },
+  "openMatter": {
+    "number": 22,
+    "id": "01a0ab58-d6aa-7e12-b7d1-2e7b8f52fd06"
+  },
+  "confContract": {
+    "number": 40,
+    "id": "01a0ab58-d6c7-7d82-98f5-d914d26e171c"
+  },
+  "confMatter": {
+    "number": 23,
+    "id": "01a0ab58-d716-79a3-b5f8-1d4c777f2333"
+  },
+  "openContractDocs": {
+    "baseline": {
+      "document": {
+        "id": "01a0ab58-d744-719e-b787-8ceac6976176",
+        "title": "doc029-roles-baseline.txt",
+        "description": null,
+        "isPrimary": true,
+        "versions": [
+          {
+            "id": "01a0ab58-d744-719e-b787-8ceb2e7dcb98",
+            "versionNumber": 1,
+            "kind": "draft_ours",
+            "source": "uploaded",
+            "comparedFromVersionNumber": null,
+            "comparedToVersionNumber": null,
+            "note": null,
+            "originalFilename": "doc029-roles-baseline.txt",
+            "mimeType": "text/plain",
+            "renderFamily": "other",
+            "byteSize": 63,
+            "checksumSha256": "f52862ae1b7de9099bdb7aacc5f4512b3075a7fda207f78a48b42fe7696ecc32",
+            "uploadedBy": {
+              "id": "01a0ab53-0e0b-7225-9d4d-2a29904eac73",
+              "displayName": "Daniel Okafor",
+              "image": null,
+              "archived": false
+            },
+            "createdAt": "2026-09-16T17:52:01.364Z",
+            "isCurrent": true,
+            "isExecuted": false
+          }
+        ],
+        "archivedAt": null,
+        "isConfidential": false,
+        "folderId": null,
+        "createdBy": {
+          "id": "01a0ab53-0e0b-7225-9d4d-2a29904eac73",
+          "displayName": "Daniel Okafor",
+          "image": null,
+          "archived": false
+        },
+        "createdAt": "2026-09-16T17:52:01.364Z",
+        "updatedAt": "2026-09-16T17:52:01.364Z"
+      }
+    },
+    "note": {
+      "document": {
+        "id": "01a0ab58-d77a-7ec7-bc33-364f0f9cc3d8",
+        "title": "doc029-roles-confidential-note.txt",
+        "description": null,
+        "isPrimary": false,
+        "versions": [
+          {
+            "id": "01a0ab58-d77a-7ec7-bc33-3650a4306916",
+            "versionNumber": 1,
+            "kind": "draft_ours",
+            "source": "uploaded",
+            "comparedFromVersionNumber": null,
+            "comparedToVersionNumber": null,
+            "note": null,
+            "originalFilename": "doc029-roles-confidential-note.txt",
+            "mimeType": "text/plain",
+            "renderFamily": "other",
+            "byteSize": 43,
+            "checksumSha256": "99b3bf65278910217d2673f65fc3687cefca1a789ed0f307addd48884c7ead4e",
+            "uploadedBy": {
+              "id": "01a0ab53-0e0b-7225-9d4d-2a29904eac73",
+              "displayName": "Daniel Okafor",
+              "image": null,
+              "archived": false
+            },
+            "createdAt": "2026-09-16T17:52:01.413Z",
+            "isCurrent": true,
+            "isExecuted": false
+          }
+        ],
+        "archivedAt": null,
+        "isConfidential": false,
+        "folderId": null,
+        "createdBy": {
+          "id": "01a0ab53-0e0b-7225-9d4d-2a29904eac73",
+          "displayName": "Daniel Okafor",
+          "image": null,
+          "archived": false
+        },
+        "createdAt": "2026-09-16T17:52:01.413Z",
+        "updatedAt": "2026-09-16T17:52:01.413Z"
+      }
+    }
+  },
+  "openMatterDocs": {
+    "note": {
+      "document": {
+        "id": "01a0ab58-d79d-7c79-a2a2-32fe667c4d33",
+        "title": "doc029-roles-confidential-note.txt",
+        "description": null,
+        "isPrimary": false,
+        "versions": [
+          {
+            "id": "01a0ab58-d79d-7c79-a2a2-32ffb9cf33eb",
+            "versionNumber": 1,
+            "kind": "general",
+            "source": "uploaded",
+            "comparedFromVersionNumber": null,
+            "comparedToVersionNumber": null,
+            "note": null,
+            "originalFilename": "doc029-roles-confidential-note.txt",
+            "mimeType": "text/plain",
+            "renderFamily": "other",
+            "byteSize": 43,
+            "checksumSha256": "99b3bf65278910217d2673f65fc3687cefca1a789ed0f307addd48884c7ead4e",
+            "uploadedBy": {
+              "id": "01a0ab53-0e0b-7225-9d4d-2a29904eac73",
+              "displayName": "Daniel Okafor",
+              "image": null,
+              "archived": false
+            },
+            "createdAt": "2026-09-16T17:52:01.442Z",
+            "isCurrent": true,
+            "isExecuted": false
+          }
+        ],
+        "archivedAt": null,
+        "isConfidential": false,
+        "folderId": null,
+        "createdBy": {
+          "id": "01a0ab53-0e0b-7225-9d4d-2a29904eac73",
+          "displayName": "Daniel Okafor",
+          "image": null,
+          "archived": false
+        },
+        "createdAt": "2026-09-16T17:52:01.442Z",
+        "updatedAt": "2026-09-16T17:52:01.442Z"
+      }
+    }
+  },
+  "confEntity": {
+    "id": "01a0ab58-d7ed-7cd6-9ba7-53848b99e68b"
+  },
+  "jonasRequest": {
+    "number": 41,
+    "converted": {
+      "id": "01a0ab58-dd6a-7e0a-8c80-65dbc130339d",
+      "number": 41,
+      "status": "converted",
+      "title": "DOC-029r2 roles Jonas request",
+      "description": "DOC-029r2 roles fictional ask from Jonas.",
+      "departmentId": "01a0ab53-2f7a-768f-95fb-fbe5628317bc",
+      "department": "Sales",
+      "urgency": "medium",
+      "customFields": {
+        "counterparty_name": "DOC-029r2 Fictional Counterparty Ltd"
+      },
+      "declinedReason": null,
+      "createdAt": "2026-09-16T17:52:02.921Z",
+      "requestType": {
+        "id": "01a01b9d-aabb-70d4-a098-784763327ff0",
+        "displayName": "Contract review",
+        "targetModule": "contract",
+        "targetTypeId": null,
+        "targetTypeName": null
+      },
+      "requester": {
+        "id": "01a0ab53-110b-73e3-bde4-4e0d0d097603",
+        "displayName": "Jonas Weber",
+        "email": "jonas.weber@helix.example",
+        "image": null
+      },
+      "assignee": null,
+      "convertedContract": {
+        "number": 41
+      },
+      "convertedRecord": {
+        "module": "contract",
+        "number": 41
+      }
+    }
+  },
+  "raviRequest": {
+    "number": 42,
+    "converted": {
+      "id": "01a0ab58-e358-7505-9ca5-94007e47ad04",
+      "number": 42,
+      "status": "converted",
+      "title": "DOC-029r2 roles Ravi request",
+      "description": "DOC-029r2 roles fictional ask from Ravi.",
+      "departmentId": "01a0ab53-2f7a-768f-95fb-fbe5628317bc",
+      "department": "Sales",
+      "urgency": "medium",
+      "customFields": {
+        "counterparty_name": "DOC-029r2 Fictional Counterparty Ltd"
+      },
+      "declinedReason": null,
+      "createdAt": "2026-09-16T17:52:04.439Z",
+      "requestType": {
+        "id": "01a01b9d-aabb-70d4-a098-784763327ff0",
+        "displayName": "Contract review",
+        "targetModule": "contract",
+        "targetTypeId": null,
+        "targetTypeName": null
+      },
+      "requester": {
+        "id": "01a0ab53-1098-7fd6-b2c4-9e1b8635a0c3",
+        "displayName": "Ravi Menon",
+        "email": "ravi.menon@helix.example",
+        "image": null
+      },
+      "assignee": null,
+      "convertedContract": {
+        "number": 42
+      },
+      "convertedRecord": {
+        "module": "contract",
+        "number": 42
+      }
+    }
+  },
+  "raviMatter": {
+    "number": 27,
+    "id": "01a0ab58-ff3f-70ab-9640-4986f408bb3c"
+  },
+  "pagingMatters": [
+    {
+      "number": 28,
+      "id": "01a0ab58-ff57-7cd1-b30b-11f550708404"
+    },
+    {
+      "number": 29,
+      "id": "01a0ab58-ff7e-7e14-a967-1ef72b0b6208"
+    },
+    {
+      "number": 30,
+      "id": "01a0ab58-ff9b-75f3-b43d-faece736cd91"
+    },
+    {
+      "number": 31,
+      "id": "01a0ab58-ffb4-79f4-9f6e-0077462ed1ae"
+    },
+    {
+      "number": 32,
+      "id": "01a0ab58-ffd2-765a-a521-27d6988dd89a"
+    },
+    {
+      "number": 33,
+      "id": "01a0ab58-fff4-79f0-b62f-11a2509c0b61"
+    },
+    {
+      "number": 34,
+      "id": "01a0ab59-0021-71c8-8905-1e19bcfa61c1"
+    },
+    {
+      "number": 35,
+      "id": "01a0ab59-0042-7672-b0c9-6313aa5b9bfb"
+    },
+    {
+      "number": 36,
+      "id": "01a0ab59-0066-7172-b41e-71727f3d1ab2"
+    },
+    {
+      "number": 37,
+      "id": "01a0ab59-0085-714a-860a-dac6d6d3c799"
+    },
+    {
+      "number": 38,
+      "id": "01a0ab59-00a2-7c1d-bca0-b5af7cf829b2"
+    },
+    {
+      "number": 39,
+      "id": "01a0ab59-00c2-76f9-b128-7a7538716962"
+    },
+    {
+      "number": 40,
+      "id": "01a0ab59-00dc-703b-aed3-527589c10b01"
+    },
+    {
+      "number": 41,
+      "id": "01a0ab59-00fd-7931-acf2-5c888eda970e"
+    },
+    {
+      "number": 43,
+      "id": "01a0ab59-0139-7e90-ad9f-149e28864341"
+    },
+    {
+      "number": 44,
+      "id": "01a0ab59-0174-7076-8ea3-36ee8fe06fa7"
+    },
+    {
+      "number": 45,
+      "id": "01a0ab59-01b2-7d03-b716-59a180f0d047"
+    },
+    {
+      "number": 46,
+      "id": "01a0ab59-01e0-7039-9eab-dcf4a1d13846"
+    },
+    {
+      "number": 47,
+      "id": "01a0ab59-0216-71b9-a07f-26ab78fb9e3d"
+    },
+    {
+      "number": 48,
+      "id": "01a0ab59-0240-7342-b691-8e011876a9ce"
+    },
+    {
+      "number": 49,
+      "id": "01a0ab59-0270-70d1-a36d-4400f9d27bb5"
+    },
+    {
+      "number": 50,
+      "id": "01a0ab59-0299-7d33-9963-a7b07c2d9ec8"
+    },
+    {
+      "number": 51,
+      "id": "01a0ab59-02c0-7030-90ec-4f4a9b557321"
+    },
+    {
+      "number": 52,
+      "id": "01a0ab59-02e8-78d9-bb2c-8923f6adfa30"
+    },
+    {
+      "number": 53,
+      "id": "01a0ab59-031b-785a-abc5-a5c0973d7cf6"
+    }
+  ],
+  "docPagingMatter": {
+    "number": 54,
+    "id": "01a0ab59-033d-7eb1-9dfe-197e873a8358"
+  },
+  "raviPrimary": {
+    "id": "01a0ab59-0797-7c27-bbd5-87e2d29feaa1",
+    "v1": "01a0ab59-0797-7c27-bbd5-87e3d2484b7f"
+  }
+}

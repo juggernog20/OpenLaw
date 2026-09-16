@@ -1,19 +1,19 @@
 {
   "articleId": "upgrade",
-  "contentSha256": "4ef9d09163a7db9453fdbf3a237aad580c345b3461d8c02ad2f74d1a47d2cd6d",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52; engine sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26 (candidate in openlaw-docs-41255c61-lc-upgrade); starting build d1d098ba app sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2",
-  "environment": "openlaw-docs-41255c61-lc-upgrade; openlaw-docs-41255c61-lc-recovery",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle)",
-  "technicalReviewer": "DOC-029 source-review author agent (operator-lifecycle)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (operator-lifecycle, round 1)",
+  "contentSha256": "8ede534213fe2e4e33beef06f32b8da1d0d54327d37ef593c9136dd0ed3655cc",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:79ac46d4f83803ecc29b11af1f885281154598930404d0a9bc54476b739c7719; engine sha256:d7bc25991932159bc7e0727fd639db8500592c3f72f294dd06d0f5973b991fec (candidate in openlaw-docs-d029r21-lc-upgrade); starting build d1d098ba app sha256:e7cb4e0daa0c57deb0dd84ae6fc003dac3a7b39f8c8e4dc502841f3c48a2aeb5",
+  "environment": "openlaw-docs-d029r21-lc-upgrade; openlaw-docs-d029r21-lc-recovery",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle); round 2 corrections by DOC-029r2 source-review author agent (operator-lifecycle)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (operator-lifecycle)",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (operator-lifecycle, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:29:13Z",
+  "verifiedAt": "2026-09-16T18:17:16Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/upgrade.md",
-    "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review.json",
-    "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
@@ -22,35 +22,36 @@
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
-        "Fresh clone of the public repository at the starting build d1d098ba9f4ba6557a542857d530446b76b1847c, installed with the installation guide's .env and compose.operator.yml in project openlaw-docs-41255c61-lc-upgrade on 127.0.0.1:23330.",
-        "Fixture made through the starting build's API: a fictional Administrator, an activated Legal Team Member and Contributor, a saved encrypted SMTP relay, an Entity, a custom Contract Field, three Contracts (one Confidential), a Matter, and two Documents with an original and a later Version (one a PDF); Contributor membership on one Contract."
+        "Fresh clone of the public repository at the starting build d1d098ba9f4ba6557a542857d530446b76b1847c, installed with the installation guide's .env and compose.operator.yml in project openlaw-docs-d029r21-lc-upgrade on 127.0.0.1:23338.",
+        "Fixture made through the starting build's API: a fictional Administrator, an activated Legal Team Member and Contributor, a saved encrypted SMTP relay, an Entity, a custom Contract Field, three Contracts (one Confidential), a Matter, and two Documents with an original and a later Version (one a PDF); Contributor membership on one Contract. All records are named 'DOC-029r2 operator-lifecycle ...'."
       ],
       "expected": "Accounts, permissions, records, files, and required encrypted configuration survive the supported upgrade. Exercise backup-based recovery in a separate target; do not imply that downgrading a migrated database is supported.",
-      "actual": "Followed the article from d1d098ba to 3fa407e3. Recorded the revision, image IDs, project, file list and local storage. git status --short showed only compose.operator.yml. git fetch, git checkout --detach 3fa407e3 and OPENLAW_BUILD_COMMIT were set, config --quiet passed, and the build left all four running containers unchanged; app and worker both resolved to openlaw-local:3fa407e3. The coherent backup ran at step 3 with app and worker stopped; app-source.txt held the target revision and images.json the running d1d098ba image, so the pre-upgrade revision was recorded beside it. docker compose up -d --no-build --pull never reached readiness in 6 s. The first migration line in the app log was 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'; the journal then held 139 rows. The worker restarted once in the first 2 s and then ran. The Administrator and the Legal Team Member signed in through the browser; all three Contracts kept title, Confidential flag, Entity and Field value; the Matter and Entity matched; all four Version downloads matched their pre-upgrade SHA-256. The Legal Team Member kept 200/200/404 and was refused the Confidential Document. The Contributor became a Business User (migration 0109): staff API 403 on every Contract, portal reach 200 on its member Contract and 404 on the other and the Confidential one, the same reach as before. A new PDF reached text ready, a test email through the saved relay reached the controlled recipient, pg-boss held only completed jobs and there were no Envelopes. Recovery was exercised, not assumed: the pre-upgrade backup was restored into the separate empty project openlaw-docs-41255c61-lc-recovery on the d1d098ba image (zero tables and files before import, pg_restore --exit-on-error exit 0). It came up ready with the same accounts, records, hashes, reach and relay delivery, and without the upload accepted on the upgraded instance after the backup. No older image opened the migrated database.",
+      "actual": "Followed the article from d1d098ba to 57e77e38. Recorded the revision, image IDs, project, file list and local storage. git status --short showed only compose.operator.yml. git fetch, git checkout --detach 57e77e38 and OPENLAW_BUILD_COMMIT were set, config --quiet passed, and the build left all four running containers unchanged; app and worker both resolved to openlaw-local:57e77e38. Before the pause pg-boss held 2 completed jobs and there were no Envelopes. The coherent backup ran at step 3 with app and worker stopped; app-source.txt held the target revision and images.json the running d1d098ba image, so the pre-upgrade revision was recorded beside it. docker compose up -d --no-build --pull never reached readiness in 4 s. The first migration line in the app log was 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'; the journal then held 139 rows. The worker restarted once after a failed startup query and then ran. The Administrator and the Legal Team Member signed in through the browser; all three Contracts kept title, Confidential flag, Entity and Field value; the Matter and Entity matched; all four Version downloads matched their pre-upgrade SHA-256. The Legal Team Member kept 200/200/404 and was refused the Confidential Document and its title in the browser. The Contributor became a Business User (migration 0109): staff API 403 on every Contract, portal reach 200 on its member Contract and 404 on the other and the Confidential one, the same reach as before. A new PDF reached text ready. A test email through the relay saved on the starting build as a legacy URL reached the controlled recipient. pg-boss then held only completed jobs and there were no Envelopes. Recovery was exercised, not assumed: the pre-upgrade backup was restored into the separate empty project openlaw-docs-d029r21-lc-recovery on the d1d098ba image (zero tables and files before import, pg_restore --exit-on-error exit 0, 91 journal rows). It came up ready with the same accounts, records, hashes, reach and relay delivery, and without the upload accepted on the upgraded instance after the backup. No older image opened the migrated database.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/operator-lifecycle/r1-upgrade-admin-confidential-contract.png"
+        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/r2-1-upgrade-admin-confidential-contract.png"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human operator study and not feature-owner approval.",
-    "The upgrade ran between two development revisions (d1d098ba to 3fa407e3), not between published releases.",
-    "Host Docker address pools were exhausted by other projects, so the walkthrough pre-created each project's two Compose networks with explicit subnets and Compose labels. The Compose files, services and network names were the articles' own.",
-    "The controlled relay was an owned Mailpit reachable as lc-mail on every project network, so the restored and recovered targets reached a controlled recipient under the relay name saved on the source.",
+    "The upgrade ran between two development revisions (d1d098ba to 57e77e38), not between published releases.",
+    "Compose created the upgrade project's networks. Host Docker address pools were exhausted when the recovery project started, so the walkthrough pre-created that project's two Compose networks with explicit subnets and Compose labels. The Compose files, services and network names were the articles' own.",
+    "Another agent's project held ports 23330, 23331 and 23335 when this run started. The first start failed on the port bind before any fixture existed; that project was removed and the run used 23338, 23339 and 23333.",
+    "The controlled relay was an owned Mailpit reachable as lc-mail on every project network, so the recovered target reached a controlled recipient under the relay name saved on the source.",
     "Only the bundled Postgres and the local file volume were backed up and restored. Object-store snapshot tooling was not exercised.",
-    "Docker Compose 5.5.1 labels each built image with its project, so the same source has a different image ID in each project; build steps came from the build cache.",
+    "The candidate build took 2 s from the host build cache. Docker Compose 5.5.1 labels each built image with its project, so the same source has a different image ID in each project.",
     "Provider guides and real provider checks C42/C43 stay blocked and are not waived. No human proofreading is recorded.",
     "The recovery target ran the starting build, whose web client showed 'Something went wrong. The page could not load.' at /login in headless Chromium. Its account, reach, hash and relay checks used the HTTP sign-in API through the same origin, not the browser.",
     "No two-factor enrolment, SSO provider or signing connector was in the fixture, so those were not carried across the upgrade.",
-    "Walkthrough-r1.json keeps two failed reviewer-script steps for this scenario (a sign-in rate limit on a first fixture that was destroyed and rebuilt, and a session read before sign-in completed). Their dispositions are in the log."
+    "The warning against docker compose down -v and the statement that repeated restarts do not repair an incomplete schema were not exercised destructively."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d",
-    "verifiedAt": "2026-09-08T10:04:19.834Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "4ef9d09163a7db9453fdbf3a237aad580c345b3461d8c02ad2f74d1a47d2cd6d",
+    "verifiedAt": "2026-09-16T15:29:13Z"
   },
   "copyOnlyReview": null,
   "compatibilityReview": null

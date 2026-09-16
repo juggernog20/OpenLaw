@@ -49,5 +49,20 @@
     "verifiedAt": "2026-09-08T06:32:12Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (admin-org)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:55:00Z",
+    "summary": "The app diff from 3fa407e3 to 57e77e38 changes no Approver group or Contract approval code; the shared ListEditor change adds optional props and an inline add-row guard that the Approver groups dialog does not use. The round 1 V-C55 groups walkthrough replayed on the admin2 lab built from 57e77e38 and passed all 14 steps.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/admin-org.json",
+        "sha256": "e102b5980abf3dd49ca369b4ec15da84d979292a424939f8837bea250b31b4ad"
+      }
+    ]
+  }
 }

@@ -79,5 +79,20 @@
     "verifiedAt": "2026-09-07T13:41:10.505Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "d33d268780abc6592242a140452187a3233bad9a1bb337a15dcd24e5ecf3b3d3",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T18:09:19.625Z",
+    "summary": "Inspected the 3fa407e3..57e77e38 app diff; the Approvals & signing card, approver rules and Soft gate are unchanged. Replayed the round 1 V-C16 walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 14 steps passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-a.json",
+        "sha256": "7578086b8f9f87dd4dbb5388996768abcbc2fac33c3a1a087720d21d8ad596ae"
+      }
+    ]
+  }
 }

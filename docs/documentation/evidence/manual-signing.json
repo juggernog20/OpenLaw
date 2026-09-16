@@ -82,5 +82,20 @@
     "verifiedAt": "2026-09-07T13:44:06.138Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T18:09:19.625Z",
+    "summary": "Inspected the 3fa407e3..57e77e38 app diff; Document Version upload, executed designation and the Stage control are unchanged. Replayed the round 1 V-C17-manual walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 16 steps passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-a.json",
+        "sha256": "7578086b8f9f87dd4dbb5388996768abcbc2fac33c3a1a087720d21d8ad596ae"
+      }
+    ]
+  }
 }

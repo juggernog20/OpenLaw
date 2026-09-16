@@ -1,14 +1,14 @@
 {
   "articleId": "install",
-  "contentSha256": "901abfbaf0673b8ded65013bb43d10bc65fcbc6a087073ea376377c0cfadd2fe",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:1f6d836c747a2b5120bed65db3d33096b5a16392402a770ea99df67f1a17a903; engine sha256:64d1f9448e278e3ce11e2d8d82462552109ee980cce8eae93c8a5561ce398b67",
-  "environment": "doc029-opinstall-r1 (installation); doc029-opinstall-r1-fx (relay, storage, database and proxy fixtures)",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-install)",
-  "technicalReviewer": "DOC-029 source-review author agent (operator-install)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (operator-install, round 1)",
+  "contentSha256": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:14dcbdcd4165b2ad561b80d326e0021703be983c79c0bcc6deca7496c9737379; engine sha256:715963ab9b46fb39a084c1e5898239945e189d195e46c0c392ce058dd36ad740 (later recreations used sha256:79ac46d4f83803ecc29b11af1f885281154598930404d0a9bc54476b739c7719 and sha256:d7bc25991932159bc7e0727fd639db8500592c3f72f294dd06d0f5973b991fec after a parallel lab moved the revision tags; same layers, Cmd, Entrypoint and Env, only Compose build labels differ)",
+  "environment": "doc029r2-opinst1 (installation); doc029r2-opinst1-fx (relay, storage, database and proxy fixtures)",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-install); round 2 corrections by DOC-029r2 source-review author agent (operator-install)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (operator-install)",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (operator-install, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:37:39.461Z",
+  "verifiedAt": "2026-09-16T18:37:07.127Z",
   "status": "pass",
   "sources": [
     "compose.yml",
@@ -22,7 +22,10 @@
     "apps/api/src/modules/onboarding/routes.ts",
     "apps/api/src/modules/email-settings/routes.ts",
     "apps/web/src/routes/setup.tsx",
-    "docs/documentation/batches/DOC-029/operator-install/technical-review.json"
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/api/src/modules/email-settings/config.ts",
+    "docs/documentation/batches/DOC-029/operator-install/technical-review.json",
+    "docs/documentation/batches/DOC-029/operator-install/technical-review-r2.json"
   ],
   "scenarios": [
     {
@@ -31,35 +34,37 @@
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
-        "Empty disposable Compose project doc029-opinstall-r1 on the local Docker host, app port 23320.",
-        "Owned fixtures in doc029-opinstall-r1-fx: Mailpit as the SMTP relay stand-in and caddy:2-alpine serving https://openlaw-r1.localhost:23321 with its internal CA.",
-        "Fictional Administrator Avery Morgan and invited Legal Team Member Rowan Operator."
+        "Empty disposable Compose project doc029r2-opinst1 on the local Docker host, app port 23320.",
+        "Owned fixtures in doc029r2-opinst1-fx: Mailpit as the SMTP relay stand-in and caddy:2-alpine serving https://openlaw-r2.localhost:23321 with its internal CA.",
+        "Fictional Administrator Avery Morgan, invited Legal Team Member Rowan Operator, and one fictional test invitee."
       ],
       "expected": "The app reaches readiness and first-run setup with the documented production defaults and topology. Missing secrets, occupied ports, and unavailable dependencies lead to the documented recovery; the authoring lab is not counted as production install evidence.",
-      "actual": "Followed the article from an empty directory. Prerequisite commands answered. git clone of the public repository and git checkout --detach 3fa407e3 succeeded. The grouped .env commands created a mode-600 .env with two different generated keys, and a second run refused with \"cannot overwrite existing file\" and left the bytes unchanged. The origin, port, project and build settings were added once each and compose.operator.yml was written as shown. config --quiet printed nothing; config --services listed app, doc-engine, postgres and worker. pull postgres and build app doc-engine succeeded (17 s, warm cache). The first up failed because the shared host had no free Docker address pool; after the reviewer created the two project networks with explicit subnets, the article's up command started all four services. curl --fail /readyz answered 200, the worker ran and doc-engine became healthy, 119 s after the first prerequisite command. Caddy on the host forwarded the HTTPS origin to 127.0.0.1:23320 and the origin showed Set up OpenLaw. Create Administrator signed Avery Morgan in. On Outbound email, Continue was disabled, no Set up later was offered, and a direct completion request answered 409 \"Configure outbound email before finishing instance setup.\" Save relay and Send test email delivered to the owned relay. Send invite delivered an invitation whose link used the HTTPS origin. Finish on Review completed onboarding. Working-installation checks passed: password sign-in through the origin, a fictional Contract, a PDF upload whose download matched its SHA-256 and whose text reached ready, activation of the invitation link and sign-in as the colleague, and a new PDF processed after docker compose restart worker. Negative checks: a blank AUTH_SECRET made config and up exit 1 with the required-variable message while all four containers stayed up, and restoring it recovered; PORT set to a port held by an unrelated listener made up exit 1 with \"failed to bind host port 0.0.0.0:23326/tcp: address already in use\", left that listener answering and removed the app and worker containers, and restoring the port recovered; stopping postgres made /readyz answer 503 and starting it returned 200. No authoring lab, seed or dev overlay was used. Four reviewer checker faults are kept as failed entries with their retries.",
+      "actual": "Followed install.md (bytes ce45a62c) from an empty directory on the public-hostname path. The prerequisite commands answered (Docker Engine 29.8.0, Compose 5.5.1, context default). git clone and git checkout --detach 57e77e38 succeeded. The grouped .env commands created a mode-600 .env with two different generated keys; a second run refused with \"cannot overwrite existing file\" and left the bytes unchanged. The origin, port, project and build settings were added once each, and compose.operator.yml was written as shown. config --quiet printed nothing; config --services listed app, doc-engine, postgres and worker. pull postgres and build app doc-engine succeeded (2 s, cache already warm from parallel labs). up started all four services. curl --fail /readyz answered 200, the worker ran and doc-engine became healthy, 17 s after the first prerequisite command. Caddy forwarded the HTTPS origin to 127.0.0.1:23320 and the origin showed Set up OpenLaw. The first Create Administrator attempt lost its browser answer (environment; the user was created, the page said \"The server could not be reached. Try again.\", curl through the same proxy answered 201 in 0.09 s). The reviewer emptied the database and repeated the step. Create Administrator then signed Avery Morgan in. On Outbound email, Continue was disabled, no Set up later was offered, and a direct completion request answered 409 \"Configure outbound email before finishing instance setup.\" Filling SMTP server, Connection security None, Port 1025, Authentication None, Sender name and Sender email, then Save relay and Send test email, delivered to the owned relay. Send invite delivered an invitation whose link used the HTTPS origin, and Finish on Review completed onboarding. Working-installation checks passed: password sign-in through the origin; a fictional Contract; a PDF upload whose download matched its SHA-256 and whose text reached ready; a PDF processed after docker compose restart worker. The first invitation-link check stored the password but lost the page answer; a new test invitation from Settings -> Users -> Invite user reached the relay with a link on the origin, opened to Password set, and the invitee signed in. Negative checks: a blank AUTH_SECRET made config and up exit 1 with the required-variable message while all four containers stayed up, and restoring it recovered; PORT set to a port held by an unrelated listener made up exit 1 with \"failed to bind host port 0.0.0.0:23326/tcp: address already in use\", left that listener answering, and restoring the port recovered; stopping postgres made /readyz answer 503 and starting it returned 200. No authoring lab, seed or dev overlay was used. Failed attempts and their retries stay in the log.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/operator-install/r1-setup-through-proxy.png",
-        "docs/documentation/batches/DOC-029/operator-install/technical-review.json"
+        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/operator-install/r2-1-setup-through-proxy.png",
+        "docs/documentation/batches/DOC-029/operator-install/technical-review-r2.json"
       ],
-      "verifiedAt": "2026-09-16T15:37:39.461Z"
+      "verifiedAt": "2026-09-16T18:37:07.127Z"
     }
   ],
   "limitations": [
     "Independent agent container-operation walkthrough by a different agent from the source-review author; not a human operator study and not feature-owner approval.",
-    "Timing comes from one fast host with a warm image cache: 119 s to readiness including one host-network failure, 228 s to the end of the working-installation checks. It is not a claim about a cold host or about DNS, TLS and proxy provisioning.",
-    "The shared host's Docker address pools were exhausted by parallel labs, so the reviewer pre-created the two project networks with explicit subnets and Compose labels. No installation file changed.",
-    "HTTPS used Caddy's internal CA for openlaw-r1.localhost, accepted only in the reviewer's browser context. Public DNS and certificate issuance were not tested.",
-    "The SMTP relay was an owned Mailpit container, not a production relay with authentication.",
+    "Timing comes from one fast host with a warm image cache: 17 s from the first prerequisite command to readiness, with a 2 s build. First-run setup needed a database reset and the invitation-link check needed a retry, so no end-to-end time to a usable instance is claimed. It is not a claim about a cold host or about DNS, TLS and proxy provisioning.",
+    "Two browser requests through the local proxy lost their answers although the app processed them. A later probe on this shared host saw Chromium abort a request with net::ERR_NETWORK_CHANGED while parallel labs changed host networks. The reviewer reset or retried, and the repeated steps passed.",
+    "A parallel lab moved the revision image tags during the run. The recorded image pairs have identical layers and configuration and differ only in Compose build labels.",
+    "HTTPS used Caddy's internal CA for openlaw-r2.localhost, accepted only in the reviewer's browser context. Public DNS and certificate issuance were not tested.",
+    "The install path used a public-style hostname. The private VM overlay that install.md points to was walked in the same run for deployment-configuration, whose V-C45 record did not pass, so it is not credited here.",
+    "The SMTP relay was an owned Mailpit container, not a production relay with authentication. Known issue #889 is open: an invitation can report success without sending, which is why the recipient's delivery was checked.",
     "The first-run steps were followed only as far as install.md needs; first-run.md has its own evidence record.",
     "Backup and restore after installation are covered by backup-and-restore, not by this record."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f",
-    "verifiedAt": "2026-09-08T09:23:52.148Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "901abfbaf0673b8ded65013bb43d10bc65fcbc6a087073ea376377c0cfadd2fe",
+    "verifiedAt": "2026-09-16T15:37:39.461Z"
   },
   "copyOnlyReview": null,
   "compatibilityReview": null

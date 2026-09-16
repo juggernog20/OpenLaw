@@ -11,7 +11,7 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 ## Create the request type
 
 1. Open your profile menu in the header and select **Settings**, then **Intake**, then **Request types**.
-2. Select **Add request type**. Enter a display name and press Enter.
+2. Select **Add request type**. Enter a display name and select **Save**. Select **Cancel** to discard the draft.
 3. Select the new row's **Edit** control to open its form configuration.
 4. Enter a **Description** that helps a Business User choose this form. Leave the field to save it, and check that the save succeeds.
 

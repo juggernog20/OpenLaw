@@ -1,0 +1,50 @@
+{
+  "section": "emailRestored",
+  "reviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth2",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+    "authentication-and-email": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208"
+  },
+  "startedAt": "2026-09-16T18:12:38.140Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Remove the environment override and restart: the stored relay is active again",
+      "expected": "Step reads set in the app; test mail from the stored sender",
+      "startedAt": "2026-09-16T18:12:38.698Z",
+      "finishedAt": "2026-09-16T18:12:42.210Z",
+      "actual": "Check failed: Step 5 of 9 Help with this page Outbound email Outbound email is set in the app. Mail is sent from \"DOC-029r2 Stored\" <stored-relay@helix.example>. Send test email Replace relay Clear relay Back Conti {\"subject\":\"OpenLaw test email\",\"from\":\"stored-relay@helix.example\",\"fromName\":\"DOC-029r2 Stored\"}",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Replace relay with an SMTP server that includes a port; the stored relay stays active; Keep current relay",
+      "expected": "The save is refused; the stored relay stays active",
+      "startedAt": "2026-09-16T18:12:42.210Z",
+      "finishedAt": "2026-09-16T18:12:43.563Z",
+      "actual": "Saving SMTP server mailpit:1025 did not save ({\"match\":null,\"alerts\":[\"One or more request fields are invalid.\"]}); the source stayed app from \"DOC-029r2 Stored\" <stored-relay@helix.example>. Keep current relay closed the form, and a test message still arrived from stored-relay@helix.example.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Finish the wizard; it cannot be reopened and there is no separate email Settings page",
+      "expected": "Welcome redirects after completion; Settings has no email page",
+      "startedAt": "2026-09-16T18:12:43.564Z",
+      "finishedAt": "2026-09-16T18:12:47.540Z",
+      "actual": "Set up later on the remaining optional steps and Finish completed the wizard. Opening /welcome again went to /. The Settings rail read \"Personal Profile Appearance Notifications View Business Portal Organization General Regions Departments Users Security Authentication Audit log Matters Contracts Intake Entities Knowledge Auto-Docs Notifications AI analysis Integrations\" with no email entry; /settings/email showed \"Personal Profile Appearance Notifications View Business Portal Organization General Regions Departments Users Security M\".",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T18:12:47.544Z",
+  "phase": "stored again: override removed and app and worker recreated (overlay-phase-stored.json)"
+}

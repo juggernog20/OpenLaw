@@ -67,5 +67,20 @@
     ],
     "whyPriorWalkthroughsApply": "No action, prerequisite, result, control name or meaning changed. Only the visible text of one link changed, so the link now names the article it opens. The walkthrough evidence above ran against the previous bytes and is kept unchanged. No fresh walkthrough is claimed for these bytes."
   },
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (roles)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:58:32.900Z",
+    "summary": "I inspected the 43 app files and messages/en-US.json changed from 3fa407e3 to 57e77e38; none touches Portal lists, record pages, Documents, Comments or team applets. I replayed the round 1 V-C25 walkthrough on the work2 lab built from 57e77e38, and all 18 contributor-guide steps passed as Business User with Legal fixture steps.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/roles.json",
+        "sha256": "d2f0ecae51329938ff0fba0f72bc2e9337d23348c5603b96a32998e0f39bbcf1"
+      }
+    ]
+  }
 }

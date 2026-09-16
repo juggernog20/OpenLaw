@@ -1,0 +1,319 @@
+{
+  "section": "org",
+  "reviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-admin2",
+  "appUrl": "http://127.0.0.1:23300",
+  "mailUrl": "http://127.0.0.1:23400",
+  "articleHashes": {
+    "organisation-and-users": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+    "authentication-and-email": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208"
+  },
+  "startedAt": "2026-09-16T18:06:08.941Z",
+  "steps": [
+    {
+      "article": "organisation-and-users",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Unauthorized administration: open Settings General and Users as a Legal Team Member",
+      "expected": "Redirected away; the users and invite APIs refuse",
+      "startedAt": "2026-09-16T18:06:09.431Z",
+      "finishedAt": "2026-09-16T18:06:11.037Z",
+      "actual": "Settings General and Users redirected Nadia to /settings/profile. GET /api/v1/users answered 403; POST /api/v1/auth/invites answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Update organization details: Organization name saves on Enter, Escape restores, reload keeps the saved value",
+      "expected": "Saved status; Escape restores the previous name before saving; value survives reload",
+      "startedAt": "2026-09-16T18:06:11.047Z",
+      "finishedAt": "2026-09-16T18:06:11.516Z",
+      "actual": "Enter showed Saved and \"DOC-029r2 admin-org Helix mu4ewcod\" survived reload. Escape put the saved name back in the field, and after reload the saved name was still \"DOC-029r2 admin-org Helix mu4ewcod\".",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Logo: Upload a PNG, JPEG, WebP, or SVG of 5 MB or smaller; any other file shows the rejection message; retry",
+      "expected": "Text file and a PNG over 5 MB show the 5 MB message and change nothing; a 300 KB PNG and an SVG save",
+      "startedAt": "2026-09-16T18:06:11.516Z",
+      "finishedAt": "2026-09-16T18:06:12.545Z",
+      "actual": "A .txt file and a PNG of just over 5 MB each showed \"That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\" and left the logo unchanged. A 300 KB PNG then showed Saved and was stored as a PNG data URI (409718 characters). An SVG showed Saved and, after reload, was displayed beside Logo.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The saved Organization name and logo appear on the staff and Business Portal sign-in pages without an account",
+      "expected": "Both pages show the saved name and an Organization logo image",
+      "startedAt": "2026-09-16T18:06:12.546Z",
+      "finishedAt": "2026-09-16T18:06:15.152Z",
+      "actual": "In a browser with no session, /auth/login began \"DOC-029r2 admin-org Helix mu4ewcod Legal Portal Powered by OpenLaw Sign in Email Password Sign in Set up or reset your p\" with 1 image named Organization logo; /portal/login began \"DOC-029r2 admin-org Helix mu4ewcod Legal Portal Powered by OpenLaw Business Portal sign-in Email Password Sign in Set up\" with 1 such image.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restore the organization name and logo; the sign-in pages follow",
+      "expected": "Original name saved by leaving the field; logo restored; sign-in pages show the original name and no logo",
+      "startedAt": "2026-09-16T18:06:15.153Z",
+      "finishedAt": "2026-09-16T18:06:16.740Z",
+      "actual": "Typing \"Helix Software Group\" and leaving the field showed Saved and survived reload. The original logo (none) was restored through PATCH /api/v1/org/general (200) because the pane has no remove control. /auth/login then showed \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Email Password Sign\" with 0 logo images.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Default timezone saves and survives reload; Default locale offers English (United States) only",
+      "expected": "Timezone saved; one locale option",
+      "startedAt": "2026-09-16T18:06:16.740Z",
+      "finishedAt": "2026-09-16T18:06:17.312Z",
+      "actual": "Default timezone saved America/Toronto and kept it after reload. Default locale offered only [\"English (United States)\"]. The timezone was restored to Europe/London.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Invite a colleague: Invite user with Display name, Email, and Role Legal team member",
+      "expected": "Role offers Legal team member and Administrator; Send invite adds an Invited row with Resend invite and Revoke invite; email arrives",
+      "startedAt": "2026-09-16T18:06:17.312Z",
+      "finishedAt": "2026-09-16T18:06:17.824Z",
+      "actual": "Role radios were [\"Legal team member\",\"Administrator\"]. After Send invite the row read Invited with actions [\"Resend invite\",\"Revoke invite\"] and no role control. Mailpit received \"Set your OpenLaw password\" with a set-password link.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Invalid address is rejected",
+      "expected": "No row is created for an invalid address",
+      "startedAt": "2026-09-16T18:06:17.825Z",
+      "finishedAt": "2026-09-16T18:06:18.965Z",
+      "actual": "The dialog stayed open with the browser message \"Please include an '@' in the email address. 'doc029r2-org-invalid-address' is missing an '@'.\" and no row was added. The same invite route refused a malformed address with 400.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Re-invite the pending address with the same role",
+      "expected": "The invitation is resent; no duplicate row",
+      "startedAt": "2026-09-16T18:06:18.965Z",
+      "finishedAt": "2026-09-16T18:06:19.587Z",
+      "actual": "The dialog closed, a new \"Set your OpenLaw password\" email arrived, and the table still had exactly 1 row for the address.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Re-invite the pending address with a different role",
+      "expected": "Refused because the account already exists; no email",
+      "startedAt": "2026-09-16T18:06:19.589Z",
+      "finishedAt": "2026-09-16T18:06:22.568Z",
+      "actual": "The dialog showed \"This user already exists with a different role.\" and no email was sent.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Invite an already activated account",
+      "expected": "Refused",
+      "startedAt": "2026-09-16T18:06:22.568Z",
+      "finishedAt": "2026-09-16T18:06:22.824Z",
+      "actual": "The dialog showed \"This user has already activated their account.\".",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Resend invite from the pending row",
+      "expected": "A replacement link is emailed",
+      "startedAt": "2026-09-16T18:06:22.824Z",
+      "finishedAt": "2026-09-16T18:06:23.044Z",
+      "actual": "The row showed Saved and a new \"Set your OpenLaw password\" email arrived. Its link is the latest one and is used for activation below.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "invited colleague",
+      "method": "browser-walkthrough",
+      "action": "A magic-link sign-in alone does not activate the invited row",
+      "expected": "The colleague signs in; the row stays Invited with Resend invite and Revoke invite",
+      "startedAt": "2026-09-16T18:06:23.063Z",
+      "finishedAt": "2026-09-16T18:06:24.202Z",
+      "actual": "The staff sign-in page sent \"Sign in to OpenLaw\". Opening the link signed the colleague in (landed on /; /api/v1/me 200). Daniel's Users table still showed the row as Invited with [\"Resend invite\",\"Revoke invite\"] and no role control.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "invited colleague",
+      "method": "browser-walkthrough",
+      "action": "Set a password from the latest invitation link; the row becomes Active",
+      "expected": "Password set; row Active with role control",
+      "startedAt": "2026-09-16T18:06:24.202Z",
+      "finishedAt": "2026-09-16T18:06:24.867Z",
+      "actual": "\"Password set\" appeared and the colleague signed in with the new password. The row read Active with a role control and actions [\"Legal team member\",\"Sign out user\",\"Archive\"].",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "invited colleague",
+      "method": "browser-walkthrough",
+      "action": "The activated Legal team member checks their access",
+      "expected": "No administration: Users redirects and there is no Invite user",
+      "startedAt": "2026-09-16T18:06:24.867Z",
+      "finishedAt": "2026-09-16T18:06:25.476Z",
+      "actual": "Settings Users redirected to /settings/profile; no Invite user control was offered.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Revoke invite withdraws an unused invitation",
+      "expected": "The pending row is removed",
+      "startedAt": "2026-09-16T18:06:25.477Z",
+      "finishedAt": "2026-09-16T18:06:25.854Z",
+      "actual": "The Invited row for Bryn disappeared after Revoke invite, and GET /api/v1/users no longer listed the address.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Change a role: promote the colleague to Administrator; the change applies on their next action",
+      "expected": "Role control offers three roles; colleague gains administration without signing in again",
+      "startedAt": "2026-09-16T18:06:25.855Z",
+      "finishedAt": "2026-09-16T18:06:26.303Z",
+      "actual": "The role menu offered [\"Administrator\",\"Legal team member\",\"Business user\"]. Choosing Administrator showed Saved and the reloaded row read Administrator. The colleague's existing session opened Settings Users on its next navigation without signing in again.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Change the role back to Legal team member",
+      "expected": "The colleague loses administration on the next request",
+      "startedAt": "2026-09-16T18:06:26.303Z",
+      "finishedAt": "2026-09-16T18:06:26.523Z",
+      "actual": "The row saved Legal team member. The colleague's same session got 403 from GET /api/v1/users on its next request.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Promote a Portal-created Business User with no password: the row becomes Invited without a role control",
+      "expected": "Invited row; Resend invite emails a link; setting a password returns Active with role control",
+      "startedAt": "2026-09-16T18:06:26.545Z",
+      "finishedAt": "2026-09-16T18:06:30.276Z",
+      "actual": "The Portal sign-in link created an Active Business user row with a role control. Inviting that address as a Legal team member was refused with \"This user already exists with a different role.\". Promoting it to Legal team member turned the row Invited with [\"Resend invite\",\"Revoke invite\"] and no role control. Resend invite sent \"Set your OpenLaw password\"; after the password was set the row read Active with its role control back.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Return the activated account to Business user, then promote again",
+      "expected": "An already activated account stays Active and keeps its role control",
+      "startedAt": "2026-09-16T18:06:30.277Z",
+      "finishedAt": "2026-09-16T18:06:31.159Z",
+      "actual": "Returned to Business user the row stayed Active with a role control. Promoted again it stayed Active with its role control, as the article's \"If it still reads Active\" branch says. It was left as a Business user.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Your own row has no Sign out user or Archive action; self-archive is refused",
+      "expected": "No row actions on Daniel's row; API refuses self archive",
+      "startedAt": "2026-09-16T18:06:31.159Z",
+      "finishedAt": "2026-09-16T18:06:31.350Z",
+      "actual": "Daniel's own row had a role control and no Sign out user or Archive action (buttons: [\"Administrator\"]). A direct archive request for his own account was refused with 409: \"You cannot archive yourself.\".",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Sign out user ends the colleague's sessions; the account stays active and can sign in again",
+      "expected": "Colleague's next request needs sign-in; row Active; password sign-in works",
+      "startedAt": "2026-09-16T18:06:31.351Z",
+      "finishedAt": "2026-09-16T18:06:32.333Z",
+      "actual": "The visible action label was \"Sign out user\". The colleague's session went from 200 to 401 on /api/v1/me and the app sent it to /auth/login. The row stayed Active, and a password sign-in worked again (200).",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archiving does not bulk-reassign work: a Contract keeps its Owner",
+      "expected": "The archived person stays the Contract Owner until someone reassigns it",
+      "startedAt": "2026-09-16T18:06:32.334Z",
+      "finishedAt": "2026-09-16T18:06:32.378Z",
+      "actual": "Created Contract 53 with the colleague as Legal Owner (prepared through the API; the check follows in the archive step).",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive the colleague: the row leaves the ordinary list, sessions end, sign-in is blocked",
+      "expected": "Row hidden; live session ends; password sign-in refused; Contract Owner unchanged",
+      "startedAt": "2026-09-16T18:06:32.379Z",
+      "finishedAt": "2026-09-16T18:06:32.889Z",
+      "actual": "Archive removed the row from the ordinary list at once. The colleague's live session went from 200 to 401. A new password sign-in showed \"This account has been archived.\". Contract 53 still named the archived colleague as Legal Owner (archived: true); nothing was reassigned.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Show archived, Restore, and ask the user to sign in again",
+      "expected": "Restored row Active; the revoked session stays revoked; a new sign-in works",
+      "startedAt": "2026-09-16T18:06:32.889Z",
+      "finishedAt": "2026-09-16T18:06:33.363Z",
+      "actual": "With Show archived on, the row read Archived with a Restore action. Restore showed Saved and the row read Active. The old browser session still got 401; a fresh password sign-in got 200.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T18:06:33.427Z",
+  "identities": [
+    {
+      "role": "administrator",
+      "account": "Daniel Okafor (seeded)"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "Nadia Haddad (seeded), unauthorized-administration check"
+    },
+    {
+      "role": "invited colleague",
+      "account": "DOC-029r2 admin-org Avery mu4ewcod"
+    },
+    {
+      "role": "withdrawn invitation",
+      "account": "DOC-029r2 admin-org Bryn mu4ewcod"
+    },
+    {
+      "role": "business_user",
+      "account": "doc029r2-org-bu-mu4ewcod@helix.example (Portal-created)"
+    }
+  ],
+  "restoreTargets": {
+    "organizationName": "Helix Software Group",
+    "logoWasNull": true,
+    "defaultTimezone": "Europe/London"
+  },
+  "records": ["Contract 53 \"DOC-029r2 admin-org offboarding contract mu4ewcod\""]
+}

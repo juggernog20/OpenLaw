@@ -1,19 +1,19 @@
 {
   "articleId": "organisation-and-users",
-  "contentSha256": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "contentSha256": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org)",
-  "technicalReviewer": "DOC-029 source-review author agent (admin-org)",
-  "verifiedAt": "2026-09-16T15:49:45Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (admin-org)",
+  "verifiedAt": "2026-09-16T18:24:39Z",
   "status": "pass",
+  "environment": "openlaw-docs-41255c61-admin2",
   "sources": [
     "docs/user-guides/organisation-and-users.md",
-    "docs/documentation/batches/DOC-029/admin-org/technical-review.json",
-    "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-029/admin-org/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
@@ -22,35 +22,40 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded Administrator Daniel Okafor and Legal Team Member Nadia Haddad on the shared admin documentation lab, with Mailpit.",
-        "Disposable invited users, a Portal-created Business User and one Contract, all named DOC-029 admin-org * or doc029-org-*.",
-        "The last-Administrator check ran on the owned unseeded lab openlaw-docs-41255c61-adminorg-auth, which has one Administrator."
+        "Seeded Administrator Daniel Okafor and Legal Team Member Nadia Haddad on the shared admin2 documentation lab built from 57e77e38, with Mailpit.",
+        "Disposable invited users, a Portal-created Business User and one Contract, all named DOC-029r2 admin-org * or doc029r2-org-*.",
+        "The last-Administrator and no-saved-name checks ran on the owned unseeded lab openlaw-docs-41255c61-adminorg-auth2, which has one Administrator and no organization name."
       ],
       "expected": "Changes apply to the intended account and revoked sessions cease granting access. Unauthorized administration, invalid invites, and self/last-Administrator safeguards behave as implemented.",
-      "actual": "24 recorded steps passed on 3fa407e3. Nadia Haddad was redirected from Settings General and Users to /settings/profile, and the users and invite APIs answered 403. Organization name saved on Enter, Escape put the saved name back, leaving the field saved, and reload kept each value. A .txt file and a 300 KB PNG showed \"The change could not be saved. Try again.\"; a PNG then saved. Default timezone saved America/Toronto; Default locale offered only English (United States). All three were restored. Invite user offered Legal team member and Administrator; Send invite added an Invited row with Resend invite and Revoke invite and sent a set-password email. An address without @ kept the dialog open. Re-inviting the pending address with the same role resent with one row; a different role showed \"This user already exists with a different role.\" with no email; an active account showed \"This user has already activated their account.\"; a Business User's address was refused. After a magic-link sign-in the colleague's row stayed Invited with both invite actions. Setting a password from the latest link made it Active, and that Legal team member had no administration. Revoke invite removed a pending row. The role menu offered Administrator, Legal team member and Business user; promotion gave the colleague's live session Settings Users on its next navigation, and demotion made the next request 403. A Portal-created Business User promoted to Legal team member became Invited with no role control; Resend invite and a set password made it Active again; an activated account stayed Active when demoted and promoted again. Daniel's own row had no Sign out user or Archive, and self-archive was refused. Sign out user ended the colleague's session (401) while the row stayed Active and a password sign-in worked. Archive removed the row from the list, ended the session, and sign-in showed \"This account has been archived.\"; a Contract kept the archived person as Legal Owner. Show archived then Restore returned the row to Active; the old session stayed revoked and a new sign-in worked. On the owned auth lab, demoting the only Administrator showed \"You cannot demote the last Administrator.\" and archiving it was refused with \"You cannot archive the last Administrator.\" In the same lab, an invited staff account became Active by signing in through single sign-on while Legal User Authentication had it on.",
+      "actual": "27 recorded steps passed on 57e77e38. Nadia Haddad was redirected from Settings General and Users to /settings/profile, and the users and invite APIs answered 403. Organization name saved on Enter, Escape put the saved name back, and reload kept the saved value. A .txt file and a PNG just over 5 MB each showed \"That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\" and changed nothing; a 300 KB PNG and then an SVG saved. In a browser with no session, /auth/login and /portal/login showed the saved name above the sign-in form with one image named Organization logo. On the unseeded lab with no saved name both pages showed OpenLaw and no logo. Name and logo were restored and the sign-in page followed. Default timezone saved America/Toronto; Default locale offered only English (United States); the timezone was restored. Invite user offered Legal team member and Administrator; Send invite added an Invited row with Resend invite and Revoke invite and sent a set-password email. An address without @ kept the dialog open. Re-inviting the pending address with the same role resent with one row; a different role showed \"This user already exists with a different role.\" with no email; an active account showed \"This user has already activated their account.\"; a Business User's address was refused. After a magic-link sign-in the colleague's row stayed Invited with both invite actions. Setting a password from the latest link made it Active, and that Legal team member had no administration. Revoke invite removed a pending row. The role menu offered Administrator, Legal team member and Business user; promotion gave the colleague's live session Settings Users on its next navigation, and demotion made the next request 403. A Portal-created Business User promoted to Legal team member became Invited with no role control; Resend invite and a set password made it Active again; an activated account stayed Active when demoted and promoted again. Daniel's own row had no Sign out user or Archive, and self-archive was refused (409). Sign out user ended the colleague's session (401) while the row stayed Active and a password sign-in worked. Archive removed the row from the list, ended the session, and sign-in showed \"This account has been archived.\"; a Contract kept the archived person as Legal Owner. Show archived then Restore returned the row to Active; the old session stayed revoked and a new sign-in worked. On the owned auth lab, demoting the only Administrator showed \"You cannot demote the last Administrator.\" and archiving it was refused with \"You cannot archive the last Administrator.\" In the same lab, an invited staff account became Active by signing in through single sign-on while Legal User Authentication had it on.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/admin-org/runs/org-2026-09-16T15-17-05-403Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/twoFactor-2026-09-16T15-44-03-937Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/sso-2026-09-16T15-40-14-592Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/org-users-restored.png"
+        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/admin-org/lib.mjs",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/org-2026-09-16T18-06-08-941Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailStored-2026-09-16T18-18-29-961Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/sso-2026-09-16T18-20-42-380Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/twoFactor-2026-09-16T18-21-22-503Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/org-users-restored-r2.png",
+        "docs/documentation/batches/DOC-029/admin-org/fixtures-r2/doc029r2-logo.svg",
+        "docs/documentation/batches/DOC-029/admin-org/fixtures-r2/doc029r2-not-an-image.txt"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
-    "The last-Administrator safeguard was checked on the owned auth lab (one Administrator) because the shared admin lab has several Administrators and was not changed.",
+    "The last-Administrator safeguard and the no-saved-name sign-in branding were checked on the owned auth lab (one Administrator, no organization name) because the shared admin2 lab has several Administrators and a saved name that were not changed for that purpose.",
     "The pane has no logo removal control. The original empty logo was restored through PATCH /api/v1/org/general after the check.",
+    "Logo checks used a PNG, an SVG, a text file and an oversize PNG. JPEG and WebP uploads were not tried. The two PNG fixtures were a 1x1 PNG padded with zero bytes, generated at run time in a scratch directory and not retained.",
     "Offboarding reassignment was checked as the negative claim only: a Contract kept its archived Legal Owner. Reassigning Owners, Matter roles, Tasks, Obligations and Approvals belongs to the linked guides and was not replayed here.",
-    "The admin lab is shared with other DOC-029 agents. This walkthrough created only records named DOC-029 admin-org * or doc029-org-* and restored every organization setting it changed. Two early attempts were discarded after reviewer script faults; one of them left the organization name changed, and it was restored through the API at once (see walkthrough-r1.json).",
+    "The admin2 lab is shared with other DOC-029r2 agents. This walkthrough created only records named DOC-029r2 admin-org * or doc029r2-org-* and restored every organization setting it changed.",
     "Help discovery for settings.general and settings.users was not part of V-C36 and was not checked."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "2d28269f8c2f22700cab66cdba067f377fbc5477e6a6f4365650241e3a0adc5a",
-    "verifiedAt": "2026-09-08T04:13:42Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "verifiedAt": "2026-09-16T15:49:45Z"
   },
   "copyOnlyReview": null,
   "compatibilityReview": null

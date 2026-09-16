@@ -81,5 +81,20 @@
     "verifiedAt": "2026-09-08T06:33:42Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (admin-config)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T18:00:30Z",
+    "summary": "I inspected the 3fa407e3..57e77e38 app diff and found no change to the Matter template settings, the template editor, the Create matter and Convert dialogs, or the matter-templates, matters, requests and fields API modules; the shared list-editor and Settings changes do not alter any step in the article. I replayed the round 1 V-C39 walkthrough on the admin2 lab built from 57e77e38, and all eight Administrator steps and both negative role checks passed with the same outcomes.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/admin-config.json",
+        "sha256": "c898edb66cffd7d7c4fc604ee3daa7883f9b5a33f8d699bd1643c052e2f55c03"
+      }
+    ]
+  }
 }

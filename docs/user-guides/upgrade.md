@@ -6,7 +6,7 @@ Replace the application build while preserving the installation's database, file
 
 Use the operator account and installation directory from [installation](install.md). Record the existing source revision, app and engine image identities, Compose project name, file list, and storage configuration. Keep the existing authentication and credential encryption keys. A new project name creates a different set of default volumes; it is not an upgrade of the original installation.
 
-This edition uses source revision `3fa407e3a846559914aa1a63249741f30cfb4f69` as its candidate. The starting build for this procedure's checks is development revision `d1d098ba9f4ba6557a542857d530446b76b1847c`. Do not assume that every older release or database schema can be upgraded without additional work. Read the target build's migration and deployment changes first.
+This edition uses source revision `57e77e386be31b2a319f7143dd54d00123e65efe` as its candidate. The starting build for this procedure's checks is development revision `d1d098ba9f4ba6557a542857d530446b76b1847c`. Do not assume that every older release or database schema can be upgraded without additional work. Read the target build's migration and deployment changes first.
 
 Tell users when writes will pause. Check outstanding signing and processing work before the pause. Prepare enough free space for the coherent backup and the new images, and keep the old source, images, and backup until the upgraded instance has been accepted.
 
@@ -25,7 +25,7 @@ Tell users when writes will pause. Check outstanding signing and processing work
 2. Select the intended committed target and update `OPENLAW_BUILD_COMMIT` in `.env` to the same revision. Keep `COMPOSE_PROJECT_NAME`, the keys, and existing storage/database settings unchanged unless a separately planned migration requires a change.
 
    ```bash
-   git checkout --detach 3fa407e3a846559914aa1a63249741f30cfb4f69
+   git checkout --detach 57e77e386be31b2a319f7143dd54d00123e65efe
    docker compose config --quiet
    docker compose build app doc-engine
    ```

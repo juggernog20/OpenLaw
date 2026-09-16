@@ -71,5 +71,20 @@
     "verifiedAt": "2026-09-07T05:06:42.050Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "8edac6aa2252dc6105a8dd59fef0cd367e78487c7286f3e08844decd7ada22e1",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (access)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:59:07Z",
+    "summary": "I inspected the app diff from 3fa407e3 to 57e77e38, with messages/en-US.json, and found no change to Home sections, Your Tasks, keyboard shortcuts, Help or not-found pages. I replayed the round 1 V-C03 walkthrough on the work2 lab for Administrator and Legal Team Member, and all 20 steps passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/access.json",
+        "sha256": "01ade57d43cc5cc6e88e8e56f3bbbaec345dd9d750e85be6cce2f52ccb21e29b"
+      }
+    ]
+  }
 }

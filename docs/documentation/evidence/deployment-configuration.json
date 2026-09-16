@@ -1,25 +1,38 @@
 {
   "articleId": "deployment-configuration",
-  "contentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468",
-  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
-  "environment": "dev integration source review",
-  "author": "Codex integration author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "contentSha256": "e50a783f16931ee6132b052fd520ee348b6dd73952cdf687e3cdce31366cd622",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app and worker sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455 (openlaw-local:57e77e386be31b2a319f7143dd54d00123e65efe); engine sha256:20442984d67650d438966b9f82d267ea9c0297c3368dd782f061e959323a3a9f (openlaw-engine-local:57e77e386be31b2a319f7143dd54d00123e65efe); postgres:16 sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2. Built by install.md's docker compose build app doc-engine; application digest of the source revision e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1.",
+  "environment": "doc029r2-opinst2 (installation); doc029r2-opinst2-fx (relay, storage, database, public-style and private proxy fixtures)",
+  "author": "Codex integration author; round 2 corrections by DOC-029r2 source-review author agent (operator-install)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (operator-install)",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (operator-install, round 2)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "blocked",
+  "verifiedAt": "2026-09-16T19:01:46Z",
+  "status": "pass",
   "sources": [
     "compose.yml",
     "Dockerfile",
+    ".env.example",
     "docs/DEPLOYMENT.md",
     "packages/db/src/migration-journal.ts",
+    "packages/db/src/schema/org.ts",
+    "apps/api/src/app.ts",
+    "apps/api/src/auth/instance.ts",
+    "apps/api/src/lib/mailer.ts",
     "apps/api/src/lib/storage/config.ts",
+    "apps/api/src/modules/email-settings/config.ts",
     "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/auth/routes.ts",
+    "apps/api/src/modules/auth/authentication-policy-routes.ts",
+    "apps/api/src/modules/onboarding/routes.ts",
     "apps/api/src/pipeline/pg-boss.ts",
     "apps/api/src/pipeline/text-extraction.ts",
-    "e2e/scripts/upgrade-fidelity.mjs"
+    "apps/web/src/routes/login.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "e2e/scripts/upgrade-fidelity.mjs",
+    "docs/documentation/batches/DOC-029/operator-install/technical-review-r2.json"
   ],
   "scenarios": [
     {
@@ -27,66 +40,44 @@
       "coverage": ["C45"],
       "role": "operator",
       "method": "container-operation",
+      "prerequisites": [
+        "Disposable Compose project doc029r2-opinst2 installed from an empty directory with install.md at 57e77e38, app port 23320.",
+        "Owned fixtures in doc029r2-opinst2-fx: Mailpit relay, MinIO, Azurite, a separate postgres:16, caddy:2-alpine for https://openlaw-r2.localhost:23321, and a private Caddy site for openlaw-r2.company.example:23327 on 172.17.0.1 with a fictional CA.",
+        "Fictional Administrator Avery Morgan, Legal Team Member Rowan Operator, and fictional test invitees."
+      ],
       "expected": "Each claimed configuration path is demonstrated with actual requests/files and recorded effective values excluding secrets. Wrong origin, limits, unavailable storage/engine, and mismatched encryption keys fail as documented and recover after correction.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
-      "verifiedAt": "2026-09-08T10:21:38.430Z"
+      "actual": "Followed deployment-configuration.md (bytes e50a783f) as an operator on a disposable installation doc029r2-opinst2 built from 57e77e38 with install.md's own commands, with owned fixtures in doc029r2-opinst2-fx (Mailpit relay, MinIO, Azurite, a separate postgres:16, and Caddy). Apply and limits: after adding MAX_UPLOAD_MB=1, docker compose restart app left the container value empty and a 1.1 MB upload was accepted; up -d --no-build --pull never applied it, a 1.1 MB upload was refused 413 \"That file is over the 1 MB upload limit.\" and a 200 KB upload was accepted; MAX_UPLOAD_MB=ten started normally and accepted 1.1 MB. config --quiet printed nothing. App and worker ran the same image with different commands and identical DATABASE_URL, STORAGE_PATH, BASE_URL, DOC_ENGINE_URL and key (compared, not recorded); doc-engine had no database or key variables and joined only its own network; postgres and doc-engine published no ports; DOC_ENGINE_URL was http://doc-engine:8080 and the engine /tmp was a 2g tmpfs. Origin: browser sign-in through https://openlaw-r2.localhost:23321 worked; sign-in with a foreign Origin and with the direct address as Origin answered 403; upload and download through the proxy matched; a record frame for the Contract arrived on /api/events through the proxy 21 ms after a second person's comment. Storage: local wrote to the shared volume seen by app and worker; s3 (bucket created first, MinIO path style) and azure-blob (container created first, Azurite endpoint) each took new writes, kept every earlier store readable, and processed a PDF in the worker; STORAGE_DRIVER=s3 without S3_BUCKET stopped startup with \"Set S3_BUCKET when STORAGE_DRIVER is s3.\"; a wrong S3_ENDPOINT left /readyz 200 while the s3 Document download answered 500 and local still downloaded; correcting it and returning new writes to local kept all four Documents readable. Engine: DOC_ENGINE_TIMEOUT_MS=420001 and DOC_ENGINE_COMPARE_TIMEOUT_MS=840001 each stopped app and worker startup with the documented bound; with doc-engine stopped /readyz stayed 200 and a PDF stayed pending for 60 s; after start a new PDF reached ready. Database: an external postgres:16 URL migrated a fresh database (needsSetup true, 138 migration rows) and took a new Administrator that did not exist in the bundled database while the bundled service kept running; an unresolvable host stopped readiness with ENOTFOUND; removing DATABASE_URL returned the bundled records with nothing transferred. Email: the saved wizard relay delivered a test email; SMTP_URL and SMTP_FROM pinned the source to env even with an unreachable host (app relay save 409, test 502, saved relay received nothing). With SMTP_URL set to the working relay and SMTP_FROM unset: the test email answered 502 \"The test email could not be sent. SMTP is not configured \u2014 save a relay first.\"; /auth/login and /portal/login showed neither Set up or reset your password nor Email me a sign-in link; POST /api/v1/auth/magic-link answered 403 and POST /api/v1/auth/password-setup answered 503; Settings -> Users -> Invite user answered 201 with no error, listed the person as Invited before and after reload, and sent nothing (#889); on a fresh database the Outbound email step showed \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\" with no Send test email button, Continue disabled, and completion refused 409. The relay received no email in this state. Setting both values delivered an invitation from SMTP_FROM with a link on BASE_URL that set a password; removing the override restored the saved relay, and the sign-in page offered both links again. No email Settings page exists after the wizard. Keys: rotation with OPENLAW_SECRET_KEY_PREVIOUS logged \"Stored credentials resealed under the key in use: smtp_url (1).\" and the stored relay delivered, again after removing the previous key; a wrong valid key kept records readable but left the saved relay unusable, and restoring the key recovered delivery without re-entering the relay; a blank key failed Compose interpolation and a short key stopped app and worker; a new AUTH_SECRET turned an existing session into 401. Private VM: Compose 5.5.1; a plain loopback mapping kept the all-interfaces mapping while ports: !override left only 127.0.0.1; with compose.private.yml appended, BASE_URL set to the private origin and PORT=3000, restart left the old BASE_URL and up applied it to app and worker; the app listened only on 127.0.0.1:23320 and was unreachable on 172.17.0.1 and the LAN address; the adapted Caddyfile validated, served HTTPS on the private bind with the three headers and a fictional corporate CA, and refused a client without that CA; sign-in worked at the private origin, the old origin answered 403, / served the web app and /api/auth/sso/callback answered from the API on the same origin; new invitation, password-setup and sign-in emails linked to the private origin while the earlier invitation still linked to the old origin; upload, download, processing and a live-update record frame worked through the private proxy. Two failed attempts stay in the log with passing repeats: a lost browser answer on an invitation (the app sent it) and a sign-in rate-limit hit caused by the checker.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-2.json",
+        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-2.mjs",
+        "docs/documentation/batches/DOC-029/operator-install/r2-2-setup-through-proxy.png",
+        "docs/documentation/batches/DOC-029/operator-install/r2-2-invite-without-smtp-from.png",
+        "docs/documentation/batches/DOC-029/operator-install/r2-2-wizard-email-without-smtp-from.png",
+        "docs/documentation/batches/DOC-029/operator-install/technical-review-r2.json"
+      ],
+      "verifiedAt": "2026-09-16T19:01:46Z"
     }
   ],
   "authorEvidence": [],
   "limitations": [
-    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
-    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+    "Independent agent container-operation walkthrough by a different agent from the source-review author; not a human operator study and not feature-owner approval.",
+    "HTTPS on the public-style path used Caddy's internal CA for openlaw-r2.localhost, accepted only in the reviewer's browser context. Public certificate issuance, the short automatic-HTTPS example on a real public hostname, and DNS-01 were not tested.",
+    "The private VM path used a fictional CA and the placeholder hostname openlaw-r2.company.example:23327 bound to the host bridge address 172.17.0.1, resolved by browser and Node mappings instead of internal DNS. Host port 3000 was in use by an unrelated service, so the loopback mapping and proxy upstream were changed together to 23320 as the article allows. VPN routing, firewall and IPv6 rules, corporate CA trust on employee devices, and access from a real second device were not tested.",
+    "No OIDC provider was configured. /api/auth/sso/callback answered from the API on the private origin, but an SSO return was not tested. Signing Polling and Webhook modes, AI provider traffic, and outbound firewall rules for providers were not exercised.",
+    "The live-update checks proved that a named record frame for the Contract arrived through each proxy. The comment text did not appear in the visible Contract page within 10 s, so on-screen rendering is not claimed.",
+    "The SMTP relay was an owned Mailpit container without authentication. S3 and Azure used MinIO and Azurite with explicit keys; provider identity-based credentials were not tested.",
+    "Known issue #889 is open: an invitation reports success when SMTP_FROM is unset. The run confirmed the behavior the article describes.",
+    "With SMTP_URL set and SMTP_FROM unset, POST /api/v1/auth/password-setup answers 503 with title Internal server error and no detail. The article does not quote a message for this refusal, and the sign-in page hides the entry point in that state.",
+    "Two attempts failed for reasons outside the article and passed on repeat: a browser answer lost on this shared host (the app had sent the invitation) and a sign-in rate-limit hit caused by the checker's own rapid sign-ins. Both stay in walkthrough-r2-2.json.",
+    "The round 1 record for this article (appCommit 67dbe788, bytes b661e8eb) was blocked and had no top-level verifiedAt. Its older DOC-023 independent records and docs/documentation/batches/dev-integration/previous-deployment-configuration.json cover earlier builds and bytes only, so this record does not rely on them.",
+    "No full-suite acceptance, human proofreading or publication is claimed."
   ],
-  "previousEvidence": "docs/documentation/batches/dev-integration/previous-deployment-configuration.json",
+  "previousEvidence": {
+    "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+    "contentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468",
+    "verifiedAt": null
+  },
   "copyOnlyReview": null,
-  "independentEvidence": [
-    "docs/documentation/batches/DOC-023/independent-storage-local.json",
-    "docs/documentation/batches/DOC-023/independent-storage-s3.json",
-    "docs/documentation/batches/DOC-023/independent-storage-azure-blob.json",
-    "docs/documentation/batches/DOC-023/independent-upload-limit.json",
-    "docs/documentation/batches/DOC-023/independent-proxy.json",
-    "docs/documentation/batches/DOC-023/independent-proxy-sse-retry.json",
-    "docs/documentation/batches/DOC-023/independent-proxy-invite.json",
-    "docs/documentation/batches/DOC-023/independent-proxy-live-update.json",
-    "docs/documentation/batches/DOC-023/independent-proxy-live-update-retry.json",
-    "docs/documentation/batches/DOC-023/independent-proxy-live-update-retry2.json",
-    "docs/documentation/batches/DOC-023/independent-external-database-external.json",
-    "docs/documentation/batches/DOC-023/independent-external-database-external-retry.json",
-    "docs/documentation/batches/DOC-023/independent-external-database-write.json",
-    "docs/documentation/batches/DOC-023/independent-external-database-bundled.json",
-    "docs/documentation/batches/DOC-023/independent-mail-saved-relay.json",
-    "docs/documentation/batches/DOC-023/independent-mail-env-override.json",
-    "docs/documentation/batches/DOC-023/independent-mail-override-removed.json",
-    "docs/documentation/batches/DOC-023/independent-mail-rotation-with-previous.json",
-    "docs/documentation/batches/DOC-023/independent-mail-rotation-retired.json",
-    "docs/documentation/batches/DOC-023/independent-mail-wrong-key-first-attempt.json",
-    "docs/documentation/batches/DOC-023/independent-mail-wrong-key.json",
-    "docs/documentation/batches/DOC-023/independent-mail-key-restored.json",
-    "docs/documentation/batches/DOC-023/independent-diagnostics.json"
-  ],
-  "verifiedAtBasis": "The latest observation in the independent records that cover this article: independent-proxy-live-update-retry2, whose last recorded action is 2026-09-08T10:21:38.430Z. Each article carries its own time rather than one batch-wide maximum.",
-  "independentBuild": {
-    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-    "note": "Images the reviewer built from the same sources with the installation article's own commands. They are not the author's images: the same source builds to a different digest here.",
-    "candidate": {
-      "source": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-      "app": "sha256:a7d883a0682569f98af530d0fccba8714f607fbf57fbb8711c91bce4e390e6f5",
-      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856"
-    },
-    "baseline": {
-      "source": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-      "app": "sha256:f065f6cd830092da90a4958c1e7ea75e6f992bc8eda1c9b6cadf086c4727c16e",
-      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856",
-      "note": "The document-engine image is byte-identical across the two revisions; only its tag differs."
-    },
-    "projects": [
-      "openlaw-docs-b8e31260-rev-install",
-      "openlaw-docs-b8e31260-rev-upgrade",
-      "openlaw-docs-b8e31260-rev-restore",
-      "openlaw-docs-b8e31260-rev-recovery"
-    ],
-    "postgres": "postgres:16"
-  }
+  "compatibilityReview": null
 }

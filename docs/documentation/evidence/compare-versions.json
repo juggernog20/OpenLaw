@@ -76,5 +76,20 @@
     "verifiedAt": "2026-09-07T17:32:59.448Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (analysis-standin)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T18:07:30.000Z",
+    "summary": "I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Comparison, Document reader, Document access or export file; the Documents list only restyles an archived uploader name. I replayed the round 1 V-C29 walkthrough and its archived-pair supplement on lab analysis-r2, and all 20 steps passed for the Administrator and the Legal Team Member.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/analysis-standin.json",
+        "sha256": "23c4b2773f1ea02986f233803e49f17bffa1e089e3e5fbe429a2c0f28c914d0e"
+      }
+    ]
+  }
 }

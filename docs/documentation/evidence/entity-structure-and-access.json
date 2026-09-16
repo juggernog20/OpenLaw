@@ -93,5 +93,20 @@
     "verifiedAt": "2026-09-08T01:14:28.623Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "f6d077cc3b817a0c097844fb00d800525777503bab0ba0bff52b222f14b1ea2f",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (entities)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T18:01:20.493Z",
+    "summary": "Inspected git diff 3fa407e3..57e77e38 (apps, packages, messages); it changes no share capital, ownership chart, linked-record, or Grant code or label. Replayed the round 1 V-C53 walkthrough on lab entities2 as Legal Team Member and Administrator: 40 of 40 steps passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/entities.json",
+        "sha256": "67630ac2f8bde3b2e27c6dca0723e34af14522f82ae71687514e760a53d24593"
+      }
+    ]
+  }
 }

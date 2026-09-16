@@ -1,57 +1,64 @@
 {
   "articleId": "request-forms",
-  "contentSha256": "417d8285bde34a0849db9f57bd573957b12c00979ec343ae12ff608c3a97d82d",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (admin-config, round 1)",
+  "contentSha256": "b7be99eb4442a012c4e00fbe17cc964a74d347ac4195e5b28b3faafb11be64fd",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "environment": "openlaw-docs-41255c61-admin2",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-config, round 1)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-config)",
-  "technicalReviewer": "DOC-029 source-review author agent (admin-config)",
-  "verifiedAt": "2026-09-16T16:26:15Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-config); round 2 corrections by DOC-029r2 source-review author agent (admin-config)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (admin-config)",
+  "verifiedAt": "2026-09-16T18:12:47Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/request-forms.md",
     "docs/documentation/batches/DOC-029/admin-config/technical-review.json",
-    "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-029/admin-config/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
       "id": "V-C40",
-      "coverage": ["C40"],
+      "coverage": [
+        "C40"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Administrator signed in on the admin documentation lab; seeded Business User signed in to the Portal with a fresh emailed link.",
+        "Seeded fictional Administrator signed in on the admin2 documentation lab built from 57e77e38; seeded Business User signed in to the Portal with a fresh emailed link.",
         "Reviewer-created Contract and Matter destination types, Global Entity and User Fields, a Portal-listed fictional Entity, and three request types added in Settings."
       ],
-      "expected": "A request type added in Settings shows No target and offers only Global Fields; the editor has no Target control. Description, turnaround, Required, order and deflection links save and appear on the Portal. A missing required answer is refused. Conversion carries attached answers, lists unattached answers under Does not carry, refuses a blank type, and never uses an archived configured type or another module silently. Archiving a request type removes its Portal card and form but keeps its Requests readable.",
-      "actual": "12 recorded steps passed on 3fa407e3 for the Administrator and the Business User. Add request type with Enter showed \"Target: No target\"; the editor had only Display name, Description and Target turnaround (business days). 36501 was refused with \"Enter a whole number from 0 to 36,500 business days, or leave it blank.\"; 5 saved. The No target Attach field menu listed only \"· global\" Fields, while seeded Contract- and Matter-targeted types also offered their module Fields. Required and ArrowUp reorder persisted; Department is a required basic; a User Field's Required is disabled with \"... can't be required. A requester cannot pick a person in the Portal.\"; an Entity Field's Required saved. An address without https:// was refused; an External address link and a Knowledge item link saved with per-form Placement, Edit and reorder. On the Portal both cards showed the description and \"Estimated turnaround: 5 business days\" / \"0 business days\", each form showed only its own Before you submit link, Fields showed in the configured order with \"(required)\", a missing Deal value was refused with \"Deal value (USD) is required.\", and the Entity Field offered only the Portal-listed Entity. Converting to a Contract refused a blank type with \"Pick a contract type.\", carried Deal value 125000 and listed Country under \"Does not carry into the contract\". With the configured Target type archived, conversion offered only live types, refused a blank type, and created a Contract of the chosen live type. Archiving a request type removed its card, sent its form address to /portal, kept R-52 readable, and Restore brought the card back. Remove deleted the links with no archive and the Knowledge Item stayed published.",
+      "expected": "Add request type saves with Save and Cancel discards a draft. A request type added in Settings shows No target and offers only Global Fields; the editor has no Target control. Description, turnaround, Required, order and deflection links save and appear on the Portal. A missing required answer is refused. Conversion to a Contract and to a Matter carries attached answers, lists unattached answers under Does not carry, refuses a blank type, and never uses an archived configured type or another module silently. Archiving a request type removes its Portal card and form but keeps its Requests readable.",
+      "actual": "13 recorded steps passed on 57e77e38 for the Administrator and the Business User. Cancel on a named request type draft created no row (checked after reload). Add request type with a display name and Save showed \"Target: No target\"; the editor had only Display name, Description and Target turnaround (business days). 36501 was refused with \"Enter a whole number from 0 to 36,500 business days, or leave it blank.\"; 5 saved. The No target Attach field menu listed only \"\u00b7 global\" Fields, while seeded Contract- and Matter-targeted types also offered their module Fields. Required and ArrowUp reorder persisted; Department is a required basic; a User Field's Required is disabled with \"... can't be required. A requester cannot pick a person in the Portal.\"; an Entity Field's Required saved. An address without https:// was refused; an External address link and a Knowledge item link saved with per-form Placement, Edit and reorder. On the Portal both cards showed the description and \"Estimated turnaround: 5 business days\" / \"0 business days\", each form showed only its own Before you submit link, Fields showed in the configured order with \"(required)\", a missing Deal value was refused with \"Deal value (USD) is required.\", and the Entity Field offered only the Portal-listed Entity. Converting to a Contract refused a blank type with \"Pick a contract type.\", carried Deal value 125000 and listed Country under \"Does not carry into the contract\". Converting the Matter form Request to the Matter type showed no Does not carry list, and the new Matter holds the Entity answer and the Request title. With the configured Target type archived, conversion offered only live types, refused a blank type, and created a Contract of the chosen live type. Archiving a request type removed its card, sent its form address to /portal, kept R-29 readable, and Restore brought the card back. Remove deleted the links with no archive and the Knowledge Item stayed published.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
       ]
     },
     {
       "id": "V-C40",
-      "coverage": ["C40"],
+      "coverage": [
+        "C40"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Legal Team Member signed in on the admin documentation lab in a separate browser context."
+        "Seeded fictional Legal Team Member signed in on the admin2 documentation lab in a separate browser context."
       ],
       "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
       "actual": "Role confirmed as legal_team_member from /api/v1/me. /settings/intake/request-types sent the browser to /settings/profile. POST /api/v1/request-types answered 403 (\"You do not have permission to perform this action.\").",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
       ]
     },
     {
       "id": "V-C40",
-      "coverage": ["C40"],
+      "coverage": [
+        "C40"
+      ],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -61,25 +68,27 @@
       "actual": "Role confirmed as business_user from /api/v1/me. /settings/intake/request-types sent the browser to /portal. POST /api/v1/request-types answered 403 (\"You do not have permission to perform this action.\").",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not feature-owner approval.",
-    "The admin lab is shared with other DOC-029 agents. Records were named DOC-029 admin-config. Organisation reminder lead times were changed during the run and restored to 30, 14, 7, 1, and On the day; this was confirmed after reload.",
-    "Earlier development runs of the same script (logs not kept) failed only on reviewer script errors and left extra DOC-029 admin-config records with other suffixes; walkthrough-r1.json reviewerNotes lists them.",
+    "The admin2 lab was shared with other DOC-029r2 agents. Records were named DOC-029r2 admin-config walk. Records named DOC-029r2 admin-config compat came from another agent and were not changed. Organisation reminder lead times were changed during the run and restored to 30, 14, 7, 1, and On the day; this was confirmed after reload.",
+    "Two development runs of single sections of the same script (logs not kept in the repository) left extra fictional records with the suffixes mu4erz3c and mu4ev57k. The one failure in those runs was a reviewer script error; walkthrough-r2-1.json reviewerNotes describes it.",
     "Negative access checks used the seeded Legal Team Member (nadia.haddad) and Business User (jonas.weber), each in its own browser context; roles were confirmed from /api/v1/me.",
+    "The round 2 source-review author agent changed Create the request type, step 2, from 'press Enter' to 'select Save' and 'select Cancel to discard the draft'. This walkthrough followed the changed text.",
     "The editor has no Target control, so the archived-target check set a reviewer request type's Target with PATCH /api/v1/request-types/<id> as a fixture; everything after that used the browser.",
-    "No seeded Entity in the admin lab is Portal-listed. The reviewer turned Portal-listed on for its own Entity for the check and off again afterwards.",
+    "No seeded Entity in the admin2 lab is Portal-listed. The reviewer turned Portal-listed on for its own Entity for the check and off again afterwards.",
+    "The Matter conversion used No template; Matter template defaults are covered by matter-templates.",
     "Not checked: renaming and reordering request types, Department carry-through to the record, and what a turnaround of 0 displays after submission.",
     "The external deflection link was checked by its address and target only; the external site was not opened."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "5981f17a9afc7dc219cf98d35d603f7c5491eed8c253b7fbd9e5fab294bd873b",
-    "verifiedAt": "2026-09-08T06:41:52Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "417d8285bde34a0849db9f57bd573957b12c00979ec343ae12ff608c3a97d82d",
+    "verifiedAt": "2026-09-16T16:26:15Z"
   },
   "copyOnlyReview": null,
   "compatibilityReview": null

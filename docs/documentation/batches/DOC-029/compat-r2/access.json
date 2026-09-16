@@ -1,0 +1,721 @@
+{
+  "batch": "DOC-029",
+  "round": 2,
+  "group": "access",
+  "issues": [
+    745,
+    747
+  ],
+  "reviewer": "DOC-029r2 compatibility reviewer (access)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "reviewedAt": "2026-09-16T17:58:54Z",
+  "commitsInRange": [
+    "1ea249dd Show organization branding on sign-in and raise the logo limit",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users"
+  ],
+  "diffFilesInRange": [
+    "apps/api/openapi.json",
+    "apps/api/src/modules/email-settings/config.test.ts",
+    "apps/api/src/modules/email-settings/config.ts",
+    "apps/api/src/modules/email-settings/email-settings.test.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/org/general.test.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/web/src/components/comments/comment-applet.tsx",
+    "apps/web/src/components/contracts/contracts-columns.tsx",
+    "apps/web/src/components/default-fields.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/components/inline-add-form.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/matters/matters-columns.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/components/taxonomy-types-pane.tsx",
+    "apps/web/src/components/user-identity.tsx",
+    "apps/web/src/lib/ai-connector-config.ts",
+    "apps/web/src/lib/field-catalog.ts",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/auth-layout.test.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/routes/set-password.test.tsx",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/web/src/routes/settings-contract-fields.test.tsx",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/web/src/routes/settings-contract-statuses.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "apps/web/src/routes/settings-contract-types.test.tsx",
+    "apps/web/src/routes/settings-default-fields.test.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-matter-statuses.test.tsx",
+    "apps/web/src/routes/settings-matter-statuses.tsx",
+    "apps/web/src/routes/settings-matter-types.test.tsx",
+    "apps/web/src/routes/settings-reminders.test.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/welcome.test.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/testing/helpers.tsx",
+    "packages/api-client/src/schema.ts",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/logo.ts"
+  ],
+  "method": "Source inspection of the app diff, then a replay of the round 1 independent walkthrough modules against a lab built from the new commit. The replay scripts are the round 1 scripts with only the lab project, lab record path, record names (DOC-029r2 access) and screenshot location changed. Screenshots went to private scratch space and are not part of the evidence.",
+  "lab": {
+    "project": "openlaw-docs-41255c61-work2",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appUrl": "http://127.0.0.1:23301",
+    "mailUrl": "http://127.0.0.1:23401",
+    "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "runningImages": {
+      "app": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "doc-engine": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    },
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-16T17:45:41.767Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-16T17:46:02.188Z"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  "replayFiles": [
+    {
+      "path": "batches/DOC-029/compat-r2/access-r2/run-r2.mjs",
+      "sha256": "44464f3394c7abf96650dd9d5f644847e6243a838feba44e9553a870bca2463d"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/access-r2/lib-r2.mjs",
+      "sha256": "d394d865732c8cbf0fe49aa87bc8ca8be1679f2423a41c1da3740a58fb544b34"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/access-r2/wt-find-your-work-r2.mjs",
+      "sha256": "74553bdc79d5c7a0888210dd1bc7e4fe6e22d12cad9b6bda11cb288f9124f113"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/access-r2/wt-search-and-views-r2.mjs",
+      "sha256": "ac866d5cc09596d36ae38c79acaec0ca7edda7243b9ede87c594650dfb78c35f"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/access-r2/wt-personal-settings-r2.mjs",
+      "sha256": "d37b2c3e0e81c801304bccda74ce9b82bc42d55d8b5fc1a4b6ea95e6bb139634"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json",
+      "sha256": "c4dc6c73a48bfcaec634a02929eb102c23a7d5dda74cfc40eb83a3daa8932e90"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json",
+      "sha256": "5270d65c79d215d0a2db165c0e39ad796fe64508b814b9af1a333f370899969a"
+    }
+  ],
+  "attempts": [
+    {
+      "file": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json",
+      "modules": [
+        "home",
+        "search",
+        "settings"
+      ],
+      "summary": {
+        "total": 38,
+        "passed": 37,
+        "failed": 1
+      },
+      "startedAt": "2026-09-16T17:51:48.715Z",
+      "finishedAt": "2026-09-16T17:53:57.759Z",
+      "disposition": "find-your-work and personal-settings passed every step. The search module stopped at its Show more step. The script searches for DOC-029 and needs more than one page of 25 results. The new lab was freshly seeded and held too few DOC-029 records at that time, so no Show more button appeared. This is lab data volume, not an article or product failure. The search module was run again unchanged in the attempt below."
+    },
+    {
+      "file": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json",
+      "modules": [
+        "search"
+      ],
+      "summary": {
+        "total": 17,
+        "passed": 17,
+        "failed": 0
+      },
+      "startedAt": "2026-09-16T17:54:17.733Z",
+      "finishedAt": "2026-09-16T17:57:00.335Z",
+      "disposition": "Unchanged search module rerun after other records named DOC-029 existed on the lab. All 17 steps passed."
+    }
+  ],
+  "fixtures": {
+    "attempt1": {
+      "accounts": {
+        "administrator": {
+          "email": "doc029r2.access.admin.1789581109183@helix.example",
+          "displayName": "DOC-029r2 access Administrator 9183"
+        },
+        "legal_team_member": {
+          "email": "doc029r2.access.member.1789581109183@helix.example",
+          "displayName": "DOC-029r2 access Legal Team Member 9183"
+        }
+      },
+      "created": [
+        "administrator account doc029r2.access.admin.1789581109183@helix.example (DOC-029r2 access Administrator 9183)",
+        "legal_team_member account doc029r2.access.member.1789581109183@helix.example (DOC-029r2 access Legal Team Member 9183)",
+        "Contract C-34 DOC-029r2 access Home contract 1789581110179",
+        "Confidential Contract C-35 DOC-029r2 access confidential contract 1789581110179 (Daniel's team only)",
+        "55 Tasks on C-34 assigned to doc029r2.access.admin.1789581109183@helix.example",
+        "55 Tasks on C-34 assigned to doc029r2.access.member.1789581109183@helix.example",
+        "Contracts C-58 (PDF with the unique word), C-59, Confidential C-60 for search",
+        "legal_team_member account doc029r2.access.nopassword.1789581188982@helix.example without a password"
+      ]
+    },
+    "searchRerun": {
+      "accounts": {
+        "administrator": {
+          "email": "doc029r2.access.admin.1789581258686@helix.example",
+          "displayName": "DOC-029r2 access Administrator 58686"
+        },
+        "legal_team_member": {
+          "email": "doc029r2.access.member.1789581258686@helix.example",
+          "displayName": "DOC-029r2 access Legal Team Member 58686"
+        }
+      },
+      "created": [
+        "administrator account doc029r2.access.admin.1789581258686@helix.example (DOC-029r2 access Administrator 58686)",
+        "legal_team_member account doc029r2.access.member.1789581258686@helix.example (DOC-029r2 access Legal Team Member 58686)",
+        "Contracts C-84 (PDF with the unique word), C-85, Confidential C-86 for search"
+      ]
+    }
+  },
+  "sanitization": "No passwords, cookies, sign-in links, set-password tokens or mail bodies are stored. The seed password came from the environment. Fixture passwords existed only in memory.",
+  "articles": [
+    {
+      "articleId": "find-your-work",
+      "scenario": "V-C03",
+      "contentSha256": "8edac6aa2252dc6105a8dd59fef0cd367e78487c7286f3e08844decd7ada22e1",
+      "diffFilesInspected": [
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json"
+      ],
+      "sourceFindings": [
+        "router.tsx only stops /welcome from reloading data when its step query changes. The Home redirect to /welcome for an incomplete onboarding is unchanged.",
+        "user-identity.tsx and the Contracts and Matters Owner columns change an archived person's name from 50% opacity to the muted text color. The article does not describe that style.",
+        "openapi.json and schema.ts add GET /api/v1/org/branding and change email settings. The /home, /home/tasks and Task completion endpoints are unchanged.",
+        "Every file in the diff was listed and classified. The Home, Your Tasks, search, list-view, filter, profile, appearance, app-view, session and password code paths have no change in this range."
+      ],
+      "conclusion": "compatible",
+      "conclusionReason": "No change in the range touches Home sections, Your Tasks, Show completed, Undo, keyboard shortcuts, Help, or the not-found pages. The replay of all 20 round 1 steps passed for Administrator and Legal Team Member.",
+      "replaySteps": [
+        {
+          "role": "administrator",
+          "step": "Open work from Home, steps 1-5",
+          "expected": "Home lists only sections with work, in the documented order; a Task title opens its record; the record shows its number and title; Fields and Documents section links work; Home returns",
+          "result": "pass",
+          "at": "2026-09-16T17:51:53.733Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "section contents: Your contracts by Owner, Your matters by Matter Manager, Tasks open and assigned",
+          "expected": "Your contracts rows have you as Owner; Your matters rows have you as Matter Manager; Tasks rows are open",
+          "result": "pass",
+          "at": "2026-09-16T17:51:54.023Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Task due dates do not feed Dates approaching; View all opens Your dates",
+          "expected": "The reviewer Task's due date is absent from Dates approaching and Your dates; View all opens Your dates",
+          "result": "pass",
+          "at": "2026-09-16T17:51:54.608Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "keyboard: ?, Escape, /, Tab and Enter; typing in a field keeps the characters",
+          "expected": "? opens Keyboard shortcuts; Escape closes a dialog and a menu; / focuses record search; Tab moves focus; Enter activates a link; ? and / typed in a field stay in the field",
+          "result": "pass",
+          "at": "2026-09-16T17:51:55.518Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Help in the header opens product instructions and its search searches guides",
+          "expected": "Help opens from Home; its search finds the guide, not records",
+          "result": "pass",
+          "at": "2026-09-16T17:51:55.771Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "unavailable record pages",
+          "expected": "Contract not found or Matter not found says the record does not exist or you cannot open it; Back to Contracts or Back to Matters returns to the list",
+          "result": "pass",
+          "at": "2026-09-16T17:51:56.156Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Open work from Home, steps 1-5",
+          "expected": "Home lists only sections with work, in the documented order; a Task title opens its record; the record shows its number and title; Fields and Documents section links work; Home returns",
+          "result": "pass",
+          "at": "2026-09-16T17:52:00.433Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "section contents: Your contracts by Owner, Your matters by Matter Manager, Tasks open and assigned",
+          "expected": "Your contracts rows have you as Owner; Your matters rows have you as Matter Manager; Tasks rows are open",
+          "result": "pass",
+          "at": "2026-09-16T17:52:00.981Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Task due dates do not feed Dates approaching; View all opens Your dates",
+          "expected": "The reviewer Task's due date is absent from Dates approaching and Your dates; View all opens Your dates",
+          "result": "pass",
+          "at": "2026-09-16T17:52:01.587Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "keyboard: ?, Escape, /, Tab and Enter; typing in a field keeps the characters",
+          "expected": "? opens Keyboard shortcuts; Escape closes a dialog and a menu; / focuses record search; Tab moves focus; Enter activates a link; ? and / typed in a field stay in the field",
+          "result": "pass",
+          "at": "2026-09-16T17:52:02.538Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Help in the header opens product instructions and its search searches guides",
+          "expected": "Help opens from Home; its search finds the guide, not records",
+          "result": "pass",
+          "at": "2026-09-16T17:52:02.784Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "unavailable record pages",
+          "expected": "Contract not found or Matter not found says the record does not exist or you cannot open it; Back to Contracts or Back to Matters returns to the list",
+          "result": "pass",
+          "at": "2026-09-16T17:52:03.510Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "empty Tasks list and absent Home card",
+          "expected": "No open Tasks assigned to you. on Your Tasks; no Tasks assigned to you card on Home",
+          "result": "pass",
+          "at": "2026-09-16T17:52:06.742Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Open all your Tasks: View all, Your Tasks, Load more Tasks, due-date order with undated last",
+          "expected": "View all with the count opens Your Tasks; Load more Tasks adds the next page; Tasks follow due date with undated Tasks last",
+          "result": "pass",
+          "at": "2026-09-16T17:52:12.123Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "complete, Undo, Show completed / Hide completed, reopen by clearing the control",
+          "expected": "Completion shows Completed with Undo; Undo reopens; Show completed adds completed Tasks and the label says Hide completed; clearing a completed Task's control shows Reopened",
+          "result": "pass",
+          "at": "2026-09-16T17:52:20.824Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Your Tasks: Task title opens its owning record; Home in the app navigation returns",
+          "expected": "Task title opens the Contract; Home returns",
+          "result": "pass",
+          "at": "2026-09-16T17:52:21.245Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "empty Tasks list and absent Home card",
+          "expected": "No open Tasks assigned to you. on Your Tasks; no Tasks assigned to you card on Home",
+          "result": "pass",
+          "at": "2026-09-16T17:52:24.667Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Open all your Tasks: View all, Your Tasks, Load more Tasks, due-date order with undated last",
+          "expected": "View all with the count opens Your Tasks; Load more Tasks adds the next page; Tasks follow due date with undated Tasks last",
+          "result": "pass",
+          "at": "2026-09-16T17:52:30.444Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "complete, Undo, Show completed / Hide completed, reopen by clearing the control",
+          "expected": "Completion shows Completed with Undo; Undo reopens; Show completed adds completed Tasks and the label says Hide completed; clearing a completed Task's control shows Reopened",
+          "result": "pass",
+          "at": "2026-09-16T17:52:39.336Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Your Tasks: Task title opens its owning record; Home in the app navigation returns",
+          "expected": "Task title opens the Contract; Home returns",
+          "result": "pass",
+          "at": "2026-09-16T17:52:39.651Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        }
+      ]
+    },
+    {
+      "articleId": "search-and-views",
+      "scenario": "V-C04",
+      "contentSha256": "605b3ebe1621d9e7e4d4449c32f12e5e35302d6d22392e7860375e3f512ffa1f",
+      "diffFilesInspected": [
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json"
+      ],
+      "sourceFindings": [
+        "The Contracts, Documents and Matters column files change only the archived-person style in the Owner and uploader cells. Filters, sort keys, columns and their order are unchanged.",
+        "list-editor.tsx and inline-add-form.tsx belong to Settings list panes (types and statuses). They are not the record lists, Filter, Columns or saved-view menu that the article describes.",
+        "No file under the search module, the list-views API, or the saved-view menu changed.",
+        "Every file in the diff was listed and classified. The Home, Your Tasks, search, list-view, filter, profile, appearance, app-view, session and password code paths have no change in this range."
+      ],
+      "conclusion": "compatible",
+      "conclusionReason": "The article's search, filter, sort, Back and Forward, and saved-view steps use code that did not change. The unchanged replay passed all 17 steps for Administrator and Legal Team Member after one lab data-volume stop that is recorded under attempts.",
+      "replaySteps": [
+        {
+          "role": "administrator",
+          "step": "fixture: Document text processed and searchable",
+          "expected": "The PDF's word becomes searchable",
+          "result": "pass",
+          "at": "2026-09-16T17:54:22.352Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Search across your work, steps 1-4, and the Document result",
+          "expected": "/ focuses Search; results include the reachable records and the Document whose words match; the Document result names its owning record and Version; the kind filter narrows; opening the result shows the matching Version with find filled; the Confidential record outside reach never appears",
+          "result": "pass",
+          "at": "2026-09-16T17:54:33.921Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "administrator",
+          "step": "the Confidential record outside reach stays hidden",
+          "expected": "Direct link and search do not reveal it",
+          "result": "pass",
+          "at": "2026-09-16T17:54:34.075Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Show more, failed reads and No matches",
+          "expected": "Show more adds a page; a failed next page keeps the rows and Show more retries; a failed search says Search could not load and a retry after recovery works; an unmatched query says No matches",
+          "result": "pass",
+          "at": "2026-09-16T17:54:37.957Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Filter and sort a list, steps 1-6, with Back and Forward",
+          "expected": "Owner filter with Apply shows a chip and matching rows; another filter narrows; the Title heading cycles sort states; Back and Forward restore chips and sort; remove control and Clear all clear filters",
+          "result": "pass",
+          "at": "2026-09-16T17:54:58.648Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "administrator",
+          "step": "No contracts match these filters",
+          "expected": "An empty filter answer shows the empty message; removing filters restores rows",
+          "result": "pass",
+          "at": "2026-09-16T17:55:03.450Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Save a view, steps 1-6, Modified, Save, Discard unsaved changes, Default view",
+          "expected": "Save as… with a Name stores filters, sort and column order; a change marks Modified; Discard unsaved changes restores; Save replaces; Default view shows the built-in layout; selecting the view restores it",
+          "result": "pass",
+          "at": "2026-09-16T17:55:26.322Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Set as default, Rename…, duplicate name, another device",
+          "expected": "Set as default opens the list with the view; Rename… changes the name; a duplicate name is refused; the view follows the account to another browser",
+          "result": "pass",
+          "at": "2026-09-16T17:55:38.789Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Delete… removes the saved view after confirmation and does not delete records",
+          "expected": "Confirmation says the records are not touched; the view is gone; records remain",
+          "result": "pass",
+          "at": "2026-09-16T17:55:41.790Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Search across your work, steps 1-4, and the Document result",
+          "expected": "/ focuses Search; results include the reachable records and the Document whose words match; the Document result names its owning record and Version; the kind filter narrows; opening the result shows the matching Version with find filled; the Confidential record outside reach never appears",
+          "result": "pass",
+          "at": "2026-09-16T17:55:53.381Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "the Confidential record outside reach stays hidden",
+          "expected": "Direct link and search do not reveal it",
+          "result": "pass",
+          "at": "2026-09-16T17:55:53.618Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Show more, failed reads and No matches",
+          "expected": "Show more adds a page; a failed next page keeps the rows and Show more retries; a failed search says Search could not load and a retry after recovery works; an unmatched query says No matches",
+          "result": "pass",
+          "at": "2026-09-16T17:55:57.556Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Filter and sort a list, steps 1-6, with Back and Forward",
+          "expected": "Owner filter with Apply shows a chip and matching rows; another filter narrows; the Title heading cycles sort states; Back and Forward restore chips and sort; remove control and Clear all clear filters",
+          "result": "pass",
+          "at": "2026-09-16T17:56:18.352Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "No contracts match these filters",
+          "expected": "An empty filter answer shows the empty message; removing filters restores rows",
+          "result": "pass",
+          "at": "2026-09-16T17:56:23.107Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Save a view, steps 1-6, Modified, Save, Discard unsaved changes, Default view",
+          "expected": "Save as… with a Name stores filters, sort and column order; a change marks Modified; Discard unsaved changes restores; Save replaces; Default view shows the built-in layout; selecting the view restores it",
+          "result": "pass",
+          "at": "2026-09-16T17:56:45.589Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Set as default, Rename…, duplicate name, another device",
+          "expected": "Set as default opens the list with the view; Rename… changes the name; a duplicate name is refused; the view follows the account to another browser",
+          "result": "pass",
+          "at": "2026-09-16T17:56:57.495Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Delete… removes the saved view after confirmation and does not delete records",
+          "expected": "Confirmation says the records are not touched; the view is gone; records remain",
+          "result": "pass",
+          "at": "2026-09-16T17:57:00.311Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2.search.json"
+        }
+      ],
+      "earlierAttemptSteps": [
+        {
+          "role": "administrator",
+          "step": "fixture: Document text processed and searchable",
+          "expected": "The PDF's word becomes searchable",
+          "result": "pass",
+          "at": "2026-09-16T17:52:42.217Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Search across your work, steps 1-4, and the Document result",
+          "expected": "/ focuses Search; results include the reachable records and the Document whose words match; the Document result names its owning record and Version; the kind filter narrows; opening the result shows the matching Version with find filled; the Confidential record outside reach never appears",
+          "result": "pass",
+          "at": "2026-09-16T17:52:53.426Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "the Confidential record outside reach stays hidden",
+          "expected": "Direct link and search do not reveal it",
+          "result": "pass",
+          "at": "2026-09-16T17:52:53.602Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        }
+      ]
+    },
+    {
+      "articleId": "personal-settings",
+      "scenario": "V-C05",
+      "contentSha256": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803",
+      "diffFilesInspected": [
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "packages/shared/src/logo.ts",
+        "packages/shared/src/index.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/router.tsx",
+        "messages/en-US.json"
+      ],
+      "sourceFindings": [
+        "settings.tsx adds a Return to setup link above Settings pages only for an Administrator who arrives from the setup wizard with returnToSetup router state. The Personal rail, Profile, Appearance and View Business Portal entries are unchanged.",
+        "The new 5 MB limit in packages/shared/src/logo.ts applies to the organization logo in General settings and org routes. The profile photo limit of 1 MB is separate and unchanged; the replay confirmed that a 1,470,983-byte PNG still fails.",
+        "auth-layout.tsx shows the organization name, logo, Legal Portal and Powered by OpenLaw on the sign-in page. The article only says that Sign out ends the session and does not describe the sign-in page.",
+        "No change to settings-profile, appearance, app-view, password change or session routes.",
+        "Every file in the diff was listed and classified. The Home, Your Tasks, search, list-view, filter, profile, appearance, app-view, session and password code paths have no change in this range."
+      ],
+      "conclusion": "compatible",
+      "conclusionReason": "The profile, photo, theme, Portal view, password and session steps use unchanged code. The replay passed all 14 steps for Administrator, Legal Team Member, and the Business User refusal check.",
+      "replaySteps": [
+        {
+          "role": "administrator",
+          "step": "Update your profile, steps 1-5, with Email and Role read-only",
+          "expected": "Settings from the name menu; Profile under Personal; Full name saves on leaving the field; Timezone search and select saves; reload keeps both; Use browser timezone removes the preference; Email and Role are read-only",
+          "result": "pass",
+          "at": "2026-09-16T17:53:12.636Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Profile photo: Upload a PNG within 1 MB; a larger file fails",
+          "expected": "A JPG or PNG no larger than 1 MB saves; a failed update is reported",
+          "result": "pass",
+          "at": "2026-09-16T17:53:14.150Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Choose a theme, steps 1-3; another account unchanged",
+          "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing theme does not sign out; the other account's preferences stay the same",
+          "result": "pass",
+          "at": "2026-09-16T17:53:18.127Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Open your own Portal view, steps 1-4",
+          "expected": "View Business Portal under Personal; View as business user opens the Portal with the Viewing as business user banner; it is your own identity and role; Return to legal view returns to View Business Portal",
+          "result": "pass",
+          "at": "2026-09-16T17:53:20.906Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "Change your password, steps 1-3",
+          "expected": "Password & two-factor shows Change password; a wrong current password or a short new password is refused; Save changes the password, keeps this session, and signs out other devices",
+          "result": "pass",
+          "at": "2026-09-16T17:53:25.477Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "administrator",
+          "step": "End sessions: Sign out other devices and Sign out",
+          "expected": "Sign out other devices saves and ends every other session; this one stays; Sign out ends the current session",
+          "result": "pass",
+          "at": "2026-09-16T17:53:30.070Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Update your profile, steps 1-5, with Email and Role read-only",
+          "expected": "Settings from the name menu; Profile under Personal; Full name saves on leaving the field; Timezone search and select saves; reload keeps both; Use browser timezone removes the preference; Email and Role are read-only",
+          "result": "pass",
+          "at": "2026-09-16T17:53:34.089Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Profile photo: Upload a PNG within 1 MB; a larger file fails",
+          "expected": "A JPG or PNG no larger than 1 MB saves; a failed update is reported",
+          "result": "pass",
+          "at": "2026-09-16T17:53:35.487Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Choose a theme, steps 1-3; another account unchanged",
+          "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing theme does not sign out; the other account's preferences stay the same",
+          "result": "pass",
+          "at": "2026-09-16T17:53:39.471Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Open your own Portal view, steps 1-4",
+          "expected": "View Business Portal under Personal; View as business user opens the Portal with the Viewing as business user banner; it is your own identity and role; Return to legal view returns to View Business Portal",
+          "result": "pass",
+          "at": "2026-09-16T17:53:42.257Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Change your password, steps 1-3",
+          "expected": "Password & two-factor shows Change password; a wrong current password or a short new password is refused; Save changes the password, keeps this session, and signs out other devices",
+          "result": "pass",
+          "at": "2026-09-16T17:53:46.838Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "End sessions: Sign out other devices and Sign out",
+          "expected": "Sign out other devices saves and ends every other session; this one stays; Sign out ends the current session",
+          "result": "pass",
+          "at": "2026-09-16T17:53:51.367Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Password & two-factor is absent for an account without a password",
+          "expected": "Profile shows Password & two-factor only when the account has a password",
+          "result": "pass",
+          "at": "2026-09-16T17:53:52.529Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        },
+        {
+          "role": "business_user",
+          "step": "Business Users do not have the View Business Portal control",
+          "expected": "A Business User cannot open the staff Settings view control",
+          "result": "pass",
+          "at": "2026-09-16T17:53:57.730Z",
+          "log": "batches/DOC-029/compat-r2/access-r2/replay-r2-attempt1.json"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Agent walkthrough replay, not a human user study.",
+    "The lab is shared with other DOC-029 round 2 reviewers, so seeded counts on Home and lists differ from round 1; the replay checks behaviour, not those counts.",
+    "Screenshots were not refreshed as evidence in this round."
+  ],
+  "otherFilesInRange": {
+    "messages/en-US.json": "The UI message catalog. Added and changed messages cover sign-in branding (Organization logo, Legal Portal, Powered by OpenLaw), AI analysis settings copy, Default fields and Custom Fields in Settings, Save status, Return to setup, setup wizard email fields and review headings, and the logo size message. No message used by Home, Your Tasks, Search, Filter, Columns, saved views, Profile, Appearance, View Business Portal, Change password or Sessions changed.",
+    "e2e/tests/00-m33-demo.spec.ts, e2e/tests/08-accessibility.spec.ts, e2e/tests/12-m6-demo.spec.ts, scripts/dev-hot.sh": "Test and developer tooling. No product behaviour."
+  }
+}

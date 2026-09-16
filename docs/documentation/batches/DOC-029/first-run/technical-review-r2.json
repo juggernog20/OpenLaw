@@ -1,0 +1,106 @@
+{
+  "articleId": "first-run",
+  "author": "DOC-029r2 source-review author agent (first-run)",
+  "reviewer": "DOC-029r2 source-review author agent (first-run)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T16:30:00Z",
+  "method": "source-inspection",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousContentSha256": "3d052434904b6a3c013702492a360d21b25b3e942f3ee8ef99403a613fb0d177",
+  "mergedContentSha256": "9c6519b2f627af3ce5385084dbba5fbbba390fd8c9f5b0b4ad8a38b89bfab168",
+  "contentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
+  "result": "corrected",
+  "classification": "behavior change. Commits 1ea249dd and 2b6d167f changed the logo limit, the Outbound email form, wizard step persistence on reload, and the Review step. The merge from dev already replaced the SMTP relay URL fields in step 6, so the evidence hash no longer matches. The round 1 walkthrough does not cover the corrected text, and the V-C35 browser walkthrough must run again.",
+  "sources": [
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/routes/home.tsx",
+    "apps/web/src/lib/session.ts",
+    "apps/web/src/routes/two-factor-enroll.tsx",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/email-settings/config.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "packages/shared/src/logo.ts",
+    "messages/en-US.json",
+    "docs/user-guides/install.md",
+    "docs/user-guides/deployment-configuration.md"
+  ],
+  "corrections": [
+    {
+      "where": "Before you start",
+      "before": "Use the intended public address so emailed links return to the right instance.",
+      "after": "Use the address that people will open in their browsers, so emailed links return to the right instance. This address can be private to your office network or VPN.",
+      "sources": [
+        "docs/user-guides/install.md (browser-facing hostname, private to the office network and VPN, from d64309f5)",
+        "docs/user-guides/deployment-configuration.md#deploy-on-a-private-vm"
+      ]
+    },
+    {
+      "where": "Work through the welcome steps, step 2 (Your organization)",
+      "before": "PNG, JPEG, WebP, or SVG logo under 256 KB",
+      "after": "PNG, JPEG, WebP, or SVG logo of 5 MB or smaller. Added: the sign-in pages then show the saved organization name and logo.",
+      "sources": [
+        "packages/shared/src/logo.ts (LOGO_BYTE_LIMIT = 5 * 1024 * 1024)",
+        "apps/web/src/routes/welcome.tsx (welcome.org.logo.rejected: 5 MB or smaller)",
+        "apps/api/src/modules/org/routes.ts (LogoSchema refine, GET /org/branding)",
+        "apps/web/src/routes/auth-layout.tsx (branding name and logo replace the OpenLaw brand text)"
+      ]
+    },
+    {
+      "where": "Work through the welcome steps, step 6 (Outbound email)",
+      "before": "enter SMTP server, Port, Connection security, Authentication, and Sender email, plus an optional sender name, then select Save relay.",
+      "after": "Same fields, plus SMTP username and SMTP password when Authentication is Username and password, and the exact label Sender name (optional).",
+      "sources": [
+        "apps/web/src/components/smtp-settings-fields.tsx (authentication default password; smtpUsername and smtpPassword required)",
+        "apps/api/src/modules/email-settings/config.ts (SmtpSettingsSchema)",
+        "messages/en-US.json (welcome.email.field.*, welcome.email.authentication.password)"
+      ]
+    },
+    {
+      "where": "Work through the welcome steps, step 10 (Review)",
+      "before": "check the row counts of the seeded lists and the reminder offsets. Select Finish to record the review and enter the app.",
+      "after": "Matter fields, Contract fields, and Entity fields have separate rows. Selecting a list name opens Settings, which shows Return to setup; that link opens Review again.",
+      "sources": [
+        "apps/web/src/routes/welcome.tsx (REVIEW_TAXONOMIES matterFields, contractFields, entityFields; Link state returnToSetup)",
+        "apps/web/src/routes/settings.tsx (Return to setup link to /welcome?step=review, Administrators only)"
+      ]
+    },
+    {
+      "where": "Resume or finish later, first paragraph",
+      "before": "Reloading an unfinished wizard returns to its Welcome step. Select Get started again. Saved settings remain, but unsaved form entries and the current step do not.",
+      "after": "Reloading the wizard page keeps the current step, because the step is part of the page address. Unsaved form entries do not remain. Home, and every app page while email is not configured, open the wizard at its Welcome step; select Get started to continue.",
+      "sources": [
+        "apps/web/src/routes/welcome.tsx (step from useSearchParams; goTo sets ?step=)",
+        "apps/web/src/router.tsx (/welcome shouldRevalidate)",
+        "apps/web/src/routes/home.tsx (redirect /welcome without step)",
+        "apps/web/src/lib/session.ts (emailSetupRequired redirect /welcome)"
+      ]
+    }
+  ],
+  "confirmed": [
+    "The wizard still has nine steps in the same order, and Set up later is still absent on Welcome to OpenLaw and Outbound email.",
+    "Continue on Outbound email stays disabled until email is configured; Send test email and Save relay labels are unchanged.",
+    "Turning on Require two-factor authentication still navigates to /welcome without a step, so the wizard opens again at its Welcome step after two-factor setup.",
+    "Skip optional steps, Set up later on Review, and Finish on Review behave as the article states; finish() still sends the Administrator to Outbound email when email is unset.",
+    "The Setup checklist card in Settings → Organization → General is unchanged apart from the logo rejection message.",
+    "The AI analysis step now offers a model selector and a broader hint, but a missing connector still means Contract analysis does not run.",
+    "Create the first Administrator is unchanged in this diff.",
+    "Title, headings, linked anchors and scope are unchanged; no inbound first-run.md heading anchors exist."
+  ],
+  "needsWalkthroughConfirmation": [
+    "Reload on /welcome?step=email keeps Outbound email open, and Home opens /welcome at Welcome to OpenLaw.",
+    "A Review list link opens Settings with Return to setup, and that link opens Review.",
+    "With Authentication set to Username and password, Save relay requires SMTP username and SMTP password.",
+    "The sign-in page shows the saved organization name and logo after the Your organization step."
+  ],
+  "limitations": [
+    "Source inspection only. No browser walkthrough was run by this agent.",
+    "The evidence file and catalog status were not changed; the article hash differs from evidence/first-run.json until the walkthrough refreshes it."
+  ]
+}

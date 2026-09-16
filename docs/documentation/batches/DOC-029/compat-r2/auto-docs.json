@@ -1,0 +1,323 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "auto-docs",
+  "reviewer": "DOC-029r2 compatibility reviewer (auto-docs)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "lab": {
+    "name": "admin2",
+    "project": "openlaw-docs-41255c61-admin2",
+    "app": "http://127.0.0.1:23300",
+    "mail": "http://127.0.0.1:23400",
+    "source": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "seed": "Helix light, seed 7",
+    "images": {
+      "app": "openlaw-docs-41255c61-admin2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "engine": "openlaw-docs-41255c61-admin2-engine:57e77e386be3 sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    }
+  },
+  "diffInspection": {
+    "command": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles messages",
+    "commits": [
+      "1ea249dd Show organization branding on sign-in and raise the logo limit",
+      "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+      "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+      "e3800b43 Show locked default fields above each custom field catalog",
+      "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+      "57e77e38 Update user and comment display styles to use 'text-muted' for archived users"
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "auto-doc-template",
+      "articlePath": "docs/user-guides/auto-doc-template.md",
+      "contentSha256": "8b4d7dd36dcacac05d9d375655cb6455d3abf0c5663d95edcbe285d3c726e191",
+      "scenario": "V-C56",
+      "diffFilesInspected": [
+        "full diff --stat for apps, packages, styles, messages (44 files) checked for auto-docs and auto-doc-* files",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/router.tsx",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json"
+      ],
+      "diffFindings": "No file under apps/api/src/modules/auto-docs, apps/api/src/lib/auto-doc-*, apps/api/src/lib/auto-doc-fill, apps/web/src/components/auto-docs, apps/web/src/routes/auto-docs.tsx, auto-doc-record.tsx, destinations.ts or roles.ts changed. The only shared component that Auto-Docs uses and that changed is ListEditor (form-builder.tsx uses it for Fields and Clauses). The change adds optional collapsible and defaultOpen props, makes help optional, disables the add button while an inline add row is open, and lets the inline add row grow. Form builder passes help and no adding or addRow, so its Fields and Clauses cards do not change. InlineAddForm is new and only settings lists use it. user-identity.tsx changes archived-user styling only. router.tsx changes only /welcome revalidation. The openapi, api-client and shared changes cover org branding, logo limits and email settings. The removed message strings are AI analysis, contract fields help and welcome/SMTP strings; none is a label the article names (Auto-Docs, Form, Upload version, Clauses, When a rule matches, No Placeholder in file version N, Publish).",
+      "conclusion": "compatible",
+      "replay": {
+        "method": "Replayed batches/DOC-029/auto-docs/walkthrough-r1.mjs in full against admin2 as compat-r2/auto-docs-r2/walkthrough-r2.mjs. Adaptations: lab project openlaw-docs-41255c61-admin2, app commit, reviewer name, round, record names DOC-029r2 auto-docs *, output and screenshot names, repository root one level higher, fixture folder pointed at the unchanged round 1 fixtures, and the round 1 priorAttempts list removed. No check, selector or expectation changed. Every step's recorded actual text matched round 1 once record ids and timestamps were masked.",
+        "script": {
+          "path": "batches/DOC-029/compat-r2/auto-docs-r2/walkthrough-r2.mjs",
+          "sha256": "1bbf9d776bf79ebd75c726d20cda49197b15ec18206f8ffda7752b10853a186c"
+        },
+        "runFile": {
+          "path": "batches/DOC-029/compat-r2/auto-docs-r2/walkthrough-r2.json",
+          "sha256": "b53fc1c20b36228fa6528c05fd99a6b8a1a06d0526286d8f6491bffb5de2b54a"
+        },
+        "fixtures": {
+          "doc029-services-v1.docx": "91eb385f62460479f535dbdca6f41071aea79ef29de5d7a918406ff3c687dbca",
+          "doc029-services-v2.docx": "e035a093cf8e1d9dffe24a9201a059f2428102ff2add3494d4b8d94de5767f3c",
+          "doc029-unclosed-block.docx": "e4c93c4b4edd918d4e28725d0a231e67e83b65a8c54407f522b756ec23b9549e",
+          "doc029-unclosed-brace.docx": "dc5156764c88f4a532b53f8b2433f52458c76e02592289a3a881e9fced4688ed",
+          "doc029-bad-slug.docx": "455596cdc178bd0f74d809f23c86fcd4c70ca6011fd314e8226b57f93ef09c96",
+          "doc029-bad-directive.docx": "841db688bf57eac378cddfe9a68a7f4c1132f28e883b45b0b1e757005fd8e8c1",
+          "doc029-bad-currency.docx": "c971e07a0078e28c6399fae821948bf3912fb5bf06e3f3dea00aeb6c3d02c684",
+          "doc029-two-directives-one-placeholder.docx": "28b330f5e3cafa38891dedf660772bc42c60d4598a4a0e9a5684c133e1b710a4",
+          "doc029-two-directives.docx": "ff17742c1f6355da13ada01bb1c3c2e6173e39782d2b5ea66a4cabd279d13a75"
+        },
+        "startedAt": "2026-09-16T17:56:32.141Z",
+        "finishedAt": "2026-09-16T17:57:01.975Z",
+        "stepsTotal": 44,
+        "stepsFailed": 0,
+        "records": [
+          {
+            "role": "administrator",
+            "name": "DOC-029r2 auto-docs Admin Services Agreement 1789581392140"
+          },
+          {
+            "role": "administrator",
+            "name": "DOC-029r2 auto-docs Admin Two directives 1789581392140"
+          },
+          {
+            "role": "legal_team_member",
+            "name": "DOC-029r2 auto-docs Member Services Agreement 1789581392140"
+          }
+        ],
+        "steps": [
+          {
+            "role": "administrator",
+            "action": "Before you start: sign in as an Administrator",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Before you start: sign in as a Legal Team Member",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Before you start: open Auto-Docs and create an Auto-Doc, then open its Form section",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Upload a .docx with Placeholders, one directive, and one Block with Upload version",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Read the template pane: every Placeholder and Block is marked in the body, header, footer, footnote, and endnote; new fields follow the pane order, body first",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "A directive decides the new field's type: date directive creates a Date field, currency directive a Currency field, others Text; upper is accepted",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Select a field from its chip and edit the label, type, and help from its card; the form follows each commit",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Write a Clause rule: open the Block under Clauses, choose When a rule matches, pick field, operator, value",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Negative: Publish refuses a field that cannot print its directive and names it (currency directive on a Text field)",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Negative: an upload with an open Block is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Negative: an upload with an unclosed brace is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Negative: an upload with a name that is not a valid slug is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Negative: an upload with a directive that is not one of the three is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Negative: a Placeholder with two directives is refused (a Placeholder takes one directive, not two)",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Supplementary: an unknown currency code is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Upload a new version that drops a Placeholder; the orphaned field is kept and marked",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Publish pins one file version and one form version together",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Later edits change nothing live until you publish again",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Remove the field or put the Placeholder back: a field whose Placeholder remains asks first; the orphaned field is removed directly",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "The Help link on the template pane resolves to this article",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Keyboard: reach a Placeholder chip with Tab and select it with Enter; open and close Upload version with the keyboard",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Narrow layout: the Form section and the Help article at 390 px wide",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Supplementary: two directives that disagree on one name create a Text field and Publish names the gap",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Before you start: open Auto-Docs and create an Auto-Doc, then open its Form section",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Upload a .docx with Placeholders, one directive, and one Block with Upload version",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Read the template pane: every Placeholder and Block is marked in the body, header, footer, footnote, and endnote; new fields follow the pane order, body first",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "A directive decides the new field's type: date directive creates a Date field, currency directive a Currency field, others Text; upper is accepted",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Select a field from its chip and edit the label, type, and help from its card; the form follows each commit",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Write a Clause rule: open the Block under Clauses, choose When a rule matches, pick field, operator, value",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Negative: Publish refuses a field that cannot print its directive and names it (currency directive on a Text field)",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Negative: an upload with an open Block is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Negative: an upload with an unclosed brace is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Negative: an upload with a name that is not a valid slug is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Negative: an upload with a directive that is not one of the three is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Negative: a Placeholder with two directives is refused (a Placeholder takes one directive, not two)",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Supplementary: an unknown currency code is refused and the refusal quotes the text",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Upload a new version that drops a Placeholder; the orphaned field is kept and marked",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Publish pins one file version and one form version together",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Later edits change nothing live until you publish again",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Remove the field or put the Placeholder back: a field whose Placeholder remains asks first; the orphaned field is removed directly",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "The Help link on the template pane resolves to this article",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Keyboard: reach a Placeholder chip with Tab and select it with Enter; open and close Upload version with the keyboard",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Narrow layout: the Form section and the Help article at 390 px wide",
+            "result": "pass"
+          },
+          {
+            "role": "non-legal",
+            "action": "Negative (supplementary): a seeded non-legal account (ravi.menon), who is not a Legal Team Member or Administrator, cannot open Auto-Docs",
+            "result": "pass"
+          }
+        ]
+      },
+      "limitations": [
+        "Agent replay of a scripted walkthrough, not a human session.",
+        "The lab Help route serves the article as committed at 57e77e38 (sha256 13355e7d...), not the reviewed bytes, so the Help link check proves the route only, as in round 1.",
+        "Printed output of directives was not checked, as in round 1. The replay created Auto-Docs named DOC-029r2 auto-docs * on admin2 and changed no organisation settings."
+      ]
+    }
+  ]
+}

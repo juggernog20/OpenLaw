@@ -84,5 +84,20 @@
     "verifiedAt": "2026-09-07T13:51:32.114Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "d983f5c33254ca98c261ad00ccb66242a4861a64f75965d9c66c00c13018e085",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (contracts-b)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:59:01Z",
+    "summary": "I inspected the app diff 3fa407e3..57e77e38 and found only Settings, sign-in, first-run and archived-user styling changes, none in the Contract record surfaces this article describes. I replayed the round 1 V-C18 (term fields, derived Key dates, Renew dialog routes, stale and competing confirmations, banner, archived refusal) walkthrough for Legal Team Member and Administrator on lab openlaw-docs-41255c61-work2 built from 57e77e38, and every step passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-b.json",
+        "sha256": "e6a1ae313501eebf0fd1a669c10c36e8fd4046b9ec55967c8763bad958501077"
+      }
+    ]
+  }
 }

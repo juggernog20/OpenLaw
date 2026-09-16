@@ -1,0 +1,249 @@
+{
+  "requests": {
+    "administrator:triage-review": {
+      "number": 16,
+      "reference": "R-16",
+      "id": "01a0ab58-4b95-7b14-8450-150ca3a3ab34",
+      "title": "DOC-029r2 inbox Admin triage-review 085415",
+      "module": "contract",
+      "urgency": "high",
+      "files": [
+        {
+          "name": "doc029-inbox-admin-triage-review-1.pdf",
+          "bytes": 954
+        },
+        {
+          "name": "doc029-inbox-admin-triage-review-2.docx",
+          "bytes": 1092
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.630Z"
+    },
+    "administrator:triage-resolve": {
+      "number": 17,
+      "reference": "R-17",
+      "id": "01a0ab58-4bc4-72df-a5d9-37487b900dd0",
+      "title": "DOC-029r2 inbox Admin triage-resolve 085415",
+      "module": "contract",
+      "urgency": "medium",
+      "files": [
+        {
+          "name": "doc029-inbox-admin-triage-resolve-1.pdf",
+          "bytes": 956
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.656Z"
+    },
+    "administrator:triage-race": {
+      "number": 18,
+      "reference": "R-18",
+      "id": "01a0ab58-4bdd-78a5-8405-640093e2959a",
+      "title": "DOC-029r2 inbox Admin triage-race 085415",
+      "module": "matter",
+      "urgency": "low",
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.671Z"
+    },
+    "administrator:conv-contract": {
+      "number": 19,
+      "reference": "R-19",
+      "id": "01a0ab58-4bef-7aa8-910b-d8da344c770f",
+      "title": "DOC-029r2 inbox Admin conv-contract 085415",
+      "module": "contract",
+      "urgency": "high",
+      "files": [
+        {
+          "name": "doc029-inbox-admin-conv-contract-1.pdf",
+          "bytes": 954
+        },
+        {
+          "name": "doc029-inbox-admin-conv-contract-2.pdf",
+          "bytes": 954
+        }
+      ],
+      "carriesArchivedEntity": true,
+      "createdAt": "2026-09-16T17:51:25.708Z"
+    },
+    "administrator:conv-matter": {
+      "number": 20,
+      "reference": "R-20",
+      "id": "01a0ab58-4c11-75c5-802d-1f010a8079de",
+      "title": "DOC-029r2 inbox Admin conv-matter 085415",
+      "module": "matter",
+      "urgency": "high",
+      "files": [
+        {
+          "name": "doc029-inbox-admin-conv-matter-1.pdf",
+          "bytes": 950
+        },
+        {
+          "name": "doc029-inbox-admin-conv-matter-2.pdf",
+          "bytes": 950
+        }
+      ],
+      "carriesArchivedEntity": true,
+      "createdAt": "2026-09-16T17:51:25.741Z"
+    },
+    "administrator:conv-retarget": {
+      "number": 21,
+      "reference": "R-21",
+      "id": "01a0ab58-4c32-7ea3-beb0-9c672663d5ad",
+      "title": "DOC-029r2 inbox Admin conv-retarget 085415",
+      "module": "contract",
+      "urgency": "medium",
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.756Z"
+    },
+    "administrator:conv-race": {
+      "number": 22,
+      "reference": "R-22",
+      "id": "01a0ab58-4c41-7513-ac54-79cc13c86df2",
+      "title": "DOC-029r2 inbox Admin conv-race 085415",
+      "module": "contract",
+      "urgency": "medium",
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.770Z"
+    },
+    "administrator:conv-stale": {
+      "number": 23,
+      "reference": "R-23",
+      "id": "01a0ab58-4c50-7c4e-9d77-f760f7239abc",
+      "title": "DOC-029r2 inbox Admin conv-stale 085415",
+      "module": "matter",
+      "urgency": "low",
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.790Z"
+    },
+    "legal_team_member:triage-review": {
+      "number": 24,
+      "reference": "R-24",
+      "id": "01a0ab58-4c64-7965-97f2-7f2ba18ceaab",
+      "title": "DOC-029r2 inbox Member triage-review 085415",
+      "module": "contract",
+      "urgency": "high",
+      "files": [
+        {
+          "name": "doc029-inbox-member-triage-review-1.pdf",
+          "bytes": 956
+        },
+        {
+          "name": "doc029-inbox-member-triage-review-2.docx",
+          "bytes": 1093
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.832Z"
+    },
+    "legal_team_member:triage-resolve": {
+      "number": 25,
+      "reference": "R-25",
+      "id": "01a0ab58-4c8f-78fd-bbed-11200fad3d9f",
+      "title": "DOC-029r2 inbox Member triage-resolve 085415",
+      "module": "contract",
+      "urgency": "medium",
+      "files": [
+        {
+          "name": "doc029-inbox-member-triage-resolve-1.pdf",
+          "bytes": 958
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.862Z"
+    },
+    "legal_team_member:triage-race": {
+      "number": 26,
+      "reference": "R-26",
+      "id": "01a0ab58-4cab-72c8-95f7-0b74b5a71acf",
+      "title": "DOC-029r2 inbox Member triage-race 085415",
+      "module": "matter",
+      "urgency": "low",
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.874Z"
+    },
+    "legal_team_member:conv-contract": {
+      "number": 27,
+      "reference": "R-27",
+      "id": "01a0ab58-4cb7-731c-a5bb-39210d859da4",
+      "title": "DOC-029r2 inbox Member conv-contract 085415",
+      "module": "contract",
+      "urgency": "high",
+      "files": [
+        {
+          "name": "doc029-inbox-member-conv-contract-1.pdf",
+          "bytes": 956
+        },
+        {
+          "name": "doc029-inbox-member-conv-contract-2.pdf",
+          "bytes": 956
+        }
+      ],
+      "carriesArchivedEntity": true,
+      "createdAt": "2026-09-16T17:51:25.909Z"
+    },
+    "legal_team_member:conv-matter": {
+      "number": 28,
+      "reference": "R-28",
+      "id": "01a0ab58-4cdb-7422-b899-98bd3fa252ac",
+      "title": "DOC-029r2 inbox Member conv-matter 085415",
+      "module": "matter",
+      "urgency": "high",
+      "files": [
+        {
+          "name": "doc029-inbox-member-conv-matter-1.pdf",
+          "bytes": 952
+        },
+        {
+          "name": "doc029-inbox-member-conv-matter-2.pdf",
+          "bytes": 952
+        }
+      ],
+      "carriesArchivedEntity": true,
+      "createdAt": "2026-09-16T17:51:25.946Z"
+    },
+    "legal_team_member:conv-retarget": {
+      "number": 29,
+      "reference": "R-29",
+      "id": "01a0ab58-4d00-76b2-8e4b-4f6270e19bd3",
+      "title": "DOC-029r2 inbox Member conv-retarget 085415",
+      "module": "contract",
+      "urgency": "medium",
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.961Z"
+    },
+    "legal_team_member:conv-race": {
+      "number": 30,
+      "reference": "R-30",
+      "id": "01a0ab58-4d0e-7196-92bb-3ec1a3076213",
+      "title": "DOC-029r2 inbox Member conv-race 085415",
+      "module": "contract",
+      "urgency": "medium",
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.974Z"
+    },
+    "legal_team_member:conv-stale": {
+      "number": 31,
+      "reference": "R-31",
+      "id": "01a0ab58-4d1c-767a-9c65-0995e535c6f2",
+      "title": "DOC-029r2 inbox Member conv-stale 085415",
+      "module": "matter",
+      "urgency": "low",
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-16T17:51:25.987Z"
+    }
+  },
+  "oldEntityArchive": {
+    "status": 200,
+    "at": "2026-09-16T17:51:26.020Z"
+  },
+  "departmentId": "01a0ab53-2f96-771b-9200-5f35cf3076d8"
+}

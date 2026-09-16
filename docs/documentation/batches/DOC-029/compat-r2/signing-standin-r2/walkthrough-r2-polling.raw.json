@@ -1,0 +1,44 @@
+{
+  "kind": "independent-article-walkthrough-raw",
+  "phase": "polling",
+  "article": "electronic-signing",
+  "articleSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
+  "scenario": "V-C17-electronic",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "environment": "openlaw-docs-41255c61-sign-r2",
+  "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+  "engineImageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "providerMode": "isolated local DocuSign protocol stand-in (rewalk/signing/server.mjs, a copy of signing-standin/fixture/server.mjs that also keeps posted Signer tabs); no real provider account",
+  "stamp": "20260916180004",
+  "startedAt": "2026-09-16T18:00:04.437Z",
+  "steps": [
+    {
+      "role": "administrator",
+      "actor": "Daniel Okafor",
+      "method": "browser-walkthrough",
+      "expected": "Setup: the Administrator switches Signing updates to Polling",
+      "startedAt": "2026-09-16T18:00:05.166Z",
+      "actual": "Saved updateMode polling; the Polling hint about 15 to 20 minutes is shown (1)",
+      "result": "pass",
+      "at": "2026-09-16T18:00:05.361Z"
+    },
+    {
+      "role": "legal_team_member",
+      "actor": "Nadia Haddad",
+      "method": "browser-walkthrough",
+      "expected": "Polling: the live row still carries the webhook note; a completion reported only at the provider reaches the row without a webhook, within about 15 to 20 minutes while the worker runs",
+      "startedAt": "2026-09-16T18:00:05.397Z",
+      "actual": "C-36: webhook note under the live row shown (0); a signed delivery in Polling mode answered 401; with no delivery accepted, the record read Signed 0.5 minutes after the provider completion (0.5 minutes after sending); row \"DOC-029 Signer One p1 signer.one.polling.p1@counterparty.example DOC-029 Signer Two p1 signer.two.polling.p1@counterparty.example doc029-polling.pdf Version 1 Signed Sep 16 by Nadia Haddad Sep 16 Executed copy\"; Status Active",
+      "result": "pass",
+      "at": "2026-09-16T18:00:37.274Z"
+    }
+  ],
+  "finishedAt": "2026-09-16T18:00:37.281Z",
+  "contracts": [
+    {
+      "role": "polling",
+      "number": 36,
+      "title": "DOC-029r2 signing-standin polling 20260916180004"
+    }
+  ]
+}

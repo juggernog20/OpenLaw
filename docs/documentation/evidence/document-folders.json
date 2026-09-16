@@ -76,5 +76,20 @@
     "verifiedAt": "2026-09-07T21:17:26.874Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (documents)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:56:57.125Z",
+    "summary": "I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/documents.json",
+        "sha256": "7272db57b414d7ff067e8891c526335284edc6f2c3e5436415d024b996c0f4e2"
+      }
+    ]
+  }
 }

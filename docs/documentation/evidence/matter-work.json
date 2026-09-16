@@ -99,5 +99,20 @@
     "verifiedAt": null
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "0c4586d601262514f49a617fa47f6bd3c45accadd851fd6bfb9a2f3d817d8d9b",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (matters)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:57:50.686Z",
+    "summary": "I inspected the 3fa407e3..57e77e38 app diff and found no change to Tasks, Key dates, reminders, Related Matters or Linked Contracts; the changes are archived-person styling, sign-in branding, first-run and Settings list rows. I replayed the round 1 V-C24 walkthrough on the work2 lab as Administrator and Legal Team Member, and all 32 steps passed after one rerun of a Set parent step that failed on shared-lab search data.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/matters.json",
+        "sha256": "db5bb595a0c7560d99a22ae7d5ec90a0f3eeaa011344cae0fe0c62aa5c901542"
+      }
+    ]
+  }
 }

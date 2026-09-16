@@ -1,0 +1,93 @@
+{
+  "batch": "DOC-029",
+  "round": 2,
+  "group": "access",
+  "issues": [745, 747],
+  "author": "DOC-029r2 source-review author agent (access)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (access)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T17:52:20Z",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "method": "source-inspection",
+  "appDiff": {
+    "command": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+    "commits": ["1ea249dd", "2b6d167f", "6d34ac59", "e3800b43", "d64309f5", "57e77e38"],
+    "relevantToGroup": [
+      "1ea249dd Show organization branding on sign-in and raise the logo limit: AuthLayout (apps/web/src/routes/auth-layout.tsx) now reads the public GET /api/v1/org/branding and shows the organization logo (alt 'Organization logo', hidden when missing or when the image fails to load), the organization name (or 'OpenLaw' when no name is saved or the request fails), the label 'Legal Portal', and 'Powered by OpenLaw' when a name is saved. AuthLayout wraps /auth/login, /auth/set-password, /auth/two-factor, /auth/two-factor/enroll, /auth/link-expired and /portal/login."
+    ],
+    "notRelevantToGroup": [
+      "2b6d167f SMTP discrete fields and first-run step in the URL (welcome.tsx, email-settings): no sign-in, two-factor, magic-link or Portal copy changed.",
+      "6d34ac59 and e3800b43 settings list rows and default field catalogs: Settings panes outside these articles.",
+      "57e77e38 archived-user display style (text-muted instead of opacity): no label change.",
+      "d64309f5 install documentation only; the article group names no application revision."
+    ],
+    "unchangedSources": "login.tsx, set-password.tsx, link-expired.tsx, two-factor.tsx, two-factor-enroll.tsx, components/two-factor.tsx, authentication-options.tsx, magic-link-request.tsx, settings-profile.tsx, portal-entry.tsx, portal-onboarding.tsx, the portal record pages and the API auth modules have no diff in this range."
+  },
+  "labObservations": [
+    "Read-only GET /api/v1/org/branding on the admin2, work2 and entities2 labs returned HTTP 200 with name 'Helix Software Group' and logo null.",
+    "Headless render without sign-in on work2 (http://127.0.0.1:23301): /auth/login main text starts 'Helix Software Group', 'Legal Portal', 'Powered by OpenLaw', 'Sign in', 'Email', 'Password'; /portal/login starts 'Helix Software Group', 'Legal Portal', 'Powered by OpenLaw', 'Business Portal sign-in', 'Email', 'Password'. No 'Organization logo' image because the seed saves no logo. No account signed in and no settings or records changed."
+  ],
+  "limitations": [
+    "Source inspection plus an unauthenticated page render only. No walkthrough was run. Both articles changed, so the independent walkthrough agent must re-run V-C01 (staff-sign-in) and the portal-sign-in scenario against the new content hashes.",
+    "The logo display was source-checked only (auth-layout.test.tsx covers a saved logo, no logo, and a logo that fails to load). The seeded labs have no saved logo, and adding one needs an organization setting change.",
+    "The articles do not name the 'Legal Portal' label that the shared sign-in layout shows on both the staff and the Business Portal sign-in pages. The label is not an action or a result the reader depends on, and naming it on the Business Portal page could confuse a Business User.",
+    "Round 1 limitations for single sign-on, Administrator sign-in, required two-factor and the repeated-failure wait time still apply; no source for them changed in this range."
+  ],
+  "articles": [
+    {
+      "articleId": "staff-sign-in",
+      "previousContentSha256": "b22aca8fd72c0407831c1314910999c3773ecb789912f9859b63516218d20725",
+      "contentSha256": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
+      "changed": true,
+      "classification": "behaviour change (new visible result on the sign-in page; fresh walkthrough needed)",
+      "sources": [
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/auth-layout.test.tsx",
+        "apps/api/src/modules/org/routes.ts (GET /org/branding)",
+        "apps/web/src/router.tsx (AuthLayout routes)",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/routes/set-password.tsx",
+        "apps/web/src/routes/set-password.test.tsx"
+      ],
+      "corrections": [
+        {
+          "before": "The introduction says only to ask the Administrator for the OpenLaw address and an invitation; the article did not say what identifies the organization's sign-in page.",
+          "after": "The introduction says the sign-in page shows the organization's name above the form, and its logo if the Administrator saved one, and tells the reader to check the address with the Administrator if the name is missing. Source: AuthLayout branding (1ea249dd); observed on work2 as 'Helix Software Group' above 'Sign in'."
+        }
+      ],
+      "confirmed": [
+        "Set-password page labels and messages are unchanged: New password, Confirm password, Set password, Password set, Sign in, 'The passwords do not match.' (set-password.test.tsx changed only how the test counts password requests, because the page now also requests branding).",
+        "Sign-in page still shows Email, Password, Sign in and 'Set up or reset your password' on the seeded labs.",
+        "Single sign-on, Administrator sign-in, Email me a sign-in link, two-factor enrollment, challenge, Re-enroll, Turn off two-factor, Required by your organization, Sign out and Sign out other devices sources have no diff in this range.",
+        "Branding shows on the set-password and two-factor pages too, because they share AuthLayout; the article statement names the sign-in page only, which stays true."
+      ]
+    },
+    {
+      "articleId": "portal-sign-in",
+      "previousContentSha256": "2a39b552d5f47a670af64352a71bd075dd38c26feb7f89b419affde901b85c93",
+      "contentSha256": "a4658df9a8f1da02cfef7751c256b9b520a9b7065739c9987d8be154adacebcf",
+      "changed": true,
+      "classification": "behaviour change (new visible result on the Business Portal sign-in page; fresh walkthrough needed)",
+      "sources": [
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/auth-layout.test.tsx",
+        "apps/api/src/modules/org/routes.ts (GET /org/branding)",
+        "apps/web/src/router.tsx (/portal/login uses AuthLayout)",
+        "apps/web/src/routes/login.tsx ('Business Portal sign-in')"
+      ],
+      "corrections": [
+        {
+          "before": "Step 1: 'Open the Portal address. The sign-in page says Business Portal sign-in.'",
+          "after": "Step 1 says the sign-in page shows the organization's name, and its logo if one is saved, above 'Business Portal sign-in', and tells the reader to check the address with Legal if the name is missing. Source: AuthLayout branding (1ea249dd); observed on work2 as 'Helix Software Group' above 'Business Portal sign-in'."
+        }
+      ],
+      "confirmed": [
+        "'Business Portal sign-in' title, the policy-ordered first view, 'Email me a sign-in link', 'Get a sign-in link', Send link and 'Check your email' are unchanged (login.tsx and magic-link-request.tsx have no diff).",
+        "Sign-in link expired page, portal onboarding, Portal two-factor, Portal navigation, Your Contracts, Your Matters, record pages and conversion redirect sources have no diff in this range.",
+        "The link to personal-settings.md#open-your-own-portal-view and the link to contributor-guide.md are unchanged."
+      ]
+    }
+  ]
+}

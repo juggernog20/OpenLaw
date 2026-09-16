@@ -1,19 +1,19 @@
 {
   "articleId": "authentication-and-email",
-  "contentSha256": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-adminorg-auth",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "contentSha256": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org)",
-  "technicalReviewer": "DOC-029 source-review author agent (admin-org)",
-  "verifiedAt": "2026-09-16T15:49:45Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (admin-org)",
+  "verifiedAt": "2026-09-16T18:24:39Z",
   "status": "pass",
+  "environment": "openlaw-docs-41255c61-adminorg-auth2",
   "sources": [
     "docs/user-guides/authentication-and-email.md",
-    "docs/documentation/batches/DOC-029/admin-org/technical-review.json",
-    "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-029/admin-org/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
@@ -22,25 +22,23 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Owned unseeded scenario-fixture lab openlaw-docs-41255c61-adminorg-auth built from 3fa407e3 with Mailpit, a local OpenID Connect fixture (oauth2-mock-server 9.2.0) on the lab network, and the first Administrator created through /auth/setup.",
-        "Fictional staff and Business User accounts named doc029-auth-*; allowed domain northwind.example."
+        "Owned unseeded scenario-fixture lab openlaw-docs-41255c61-adminorg-auth2 built from 57e77e38 with Mailpit, a local OpenID Connect fixture (oauth2-mock-server 9.2.0) on the lab network, and the first Administrator created through /auth/setup.",
+        "Fictional staff and Business User accounts named doc029-auth-*; allowed domain northwind.example; records named DOC-029r2 admin-org Auth *."
       ],
       "expected": "Allowed users can sign in and test mail reaches the controlled sink through the active configuration source. Invalid issuer/relay, denied domain, and locked environment settings have recoverable outcomes without exposing secrets.",
-      "actual": "34 recorded steps passed on 3fa407e3 for the Administrator, Legal Team Member and Business User identities in the owned unseeded lab. First-run: Skip optional steps on Welcome opened Outbound email, which had no Set up later and a disabled Continue. An http:// relay URL was refused with \"The relay URL must start with smtp:// or smtps://.\" Save relay showed \"Relay saved.\", never displayed the URL, and Send test email delivered to the signed-in Administrator from the stored From address. A saved unreachable relay failed its test (\"The test email could not be sent. The relay host could not be found...\") until Replace relay fixed it. Clear relay showed \"Relay cleared. This instance can no longer send email.\", disabled Continue and stopped mail until a replacement was saved. After Finish, /welcome redirected to / and Settings had no email page. Settings, Security, Authentication showed Legal User Authentication and Business Portal Authentication, each with Email and password, Email magic link, Single sign-on (SSO) and Require two-factor authentication; SSO was unavailable before registration. Turning off the last method showed \"Enable at least one sign-in method.\" With Legal password sign-in off, the Administrator still signed in with a password and a Legal Team Member was refused, including on the Portal page; a Business User signed in with a password on the staff page. Existing staff on non-allowed domains got magic links, and an invited row stayed Invited after one. An allowed northwind.example entrant got a link and became a Business User; an unapproved address got no link and no password setup link. After Remove northwind.example: no new link for the existing Business User, but its held session, an earlier unused link and its password sign-in still worked; a password setup link issued earlier failed at completion with \"Password setup is no longer available for this address.\"; a never-seen address's earlier link gave no session and no account; staff still got links. Turning off Email magic link for the Portal made an earlier link fail and removed the magic-link choice. An unreachable issuer was refused. Registering http://oidc:8080 showed the callback http://127.0.0.1:23310/api/auth/sso/callback, turned on no group, and fixed the Provider ID. With SSO on for Legal users, an invited staff account signed in through the fixture, kept Legal team member, and became Active; an uninvited identity got no account. Save provider with a blank secret and with a new secret both kept sign-in working; an unreachable issuer update was refused and the provider kept working. With Portal SSO on, an existing Business User on the provider domain signed in, and still could after that domain was removed, while a new identity on it was refused. Recovery with only SSO on for Legal users: the Administrator signed in with a password, then turned password on and SSO off. With Require two-factor authentication on, an Administrator and a Legal Team Member (after a magic-link sign-in) were sent to enrolment with \"Your organization requires two-factor authentication.\" and API calls were refused; a new session asked for a code; turning the switch on as an Administrator without an authenticator went straight to enrolment.",
+      "actual": "34 recorded steps passed on 57e77e38 for the Administrator, Legal Team Member and Business User identities in the owned unseeded lab. First-run: Skip optional steps on Welcome opened Outbound email (/welcome?step=email), which had no Set up later and a disabled Continue. Port started at 587, moved to 465 for TLS, 25 for None and back to 587 for STARTTLS, and stayed at 2525 after a manual change. Connection security offered STARTTLS, TLS and None; Authentication offered Username and password and None, and None hid SMTP username and SMTP password. An SMTP server of smtp://mailpit or mailpit:1025 was not saved (alert \"One or more request fields are invalid.\") and the source stayed unset. Save relay with STARTTLS and Username and password showed \"Relay saved. The next email this instance sends will use it.\"; the page and GET /email-settings (source and fromAddress only) showed no credentials, and the stored column held no plain host, username or password. Send test email then failed with \"The test email could not be sent. A secure connection could not be established...\" because Mailpit offers no STARTTLS, and nothing arrived. Replace relay opened an empty form (Port 587, STARTTLS, Username and password); Keep current relay closed it with no change. A relay with Connection security None, Authentication None, Sender email and Sender name delivered a test message from DOC-029r2 Stored <stored-relay@helix.example>, and Continue became available. An unreachable SMTP server saved but its test failed (\"The relay host could not be found. Check the SMTP server name.\") until Replace relay with all details again fixed it. Clear relay showed \"Relay cleared. This instance can no longer send email.\", disabled Continue and stopped mail until a replacement was saved. An SMTP server with a port was refused while the stored relay stayed active. After Finish, /welcome redirected to / and Settings had no email page. Settings, Security, Authentication showed Legal User Authentication and Business Portal Authentication, each with Email and password, Email magic link, Single sign-on (SSO) and Require two-factor authentication; SSO was unavailable before registration. Turning off the last method showed \"Enable at least one sign-in method.\" With Legal password sign-in off, the Administrator still signed in with a password and a Legal Team Member was refused, including on the Portal page; a Business User signed in with a password on the staff page. Existing staff on non-allowed domains got magic links, and an invited row stayed Invited after one. An allowed northwind.example entrant got a link and became a Business User; an unapproved address got no link and no password setup link. After Remove northwind.example: no new link for the existing Business User, but its held session, an earlier unused link and its password sign-in still worked; a password setup link issued earlier failed at completion with \"Password setup is no longer available for this address.\"; a never-seen address's earlier link gave no session and no account; staff still got links. Turning off Email magic link for the Portal made an earlier link fail and removed the magic-link choice. An unreachable issuer was refused. Registering http://oidc:8080 showed the callback http://127.0.0.1:23310/api/auth/sso/callback, turned on no group, and fixed the Provider ID. With SSO on for Legal users, an invited staff account signed in through the fixture, kept Legal team member, and became Active; an uninvited identity got no account. Save provider with a blank secret and with a new secret both kept sign-in working; an unreachable issuer update was refused and the provider kept working. With Portal SSO on, an existing Business User on the provider domain signed in, and still could after that domain was removed, while a new identity on it was refused. Recovery with only SSO on for Legal users: the Administrator signed in with a password, then turned password on and SSO off. Selecting Require two-factor authentication as an Administrator without an authenticator went straight to enrolment with \"Your organization requires two-factor authentication.\" and API calls were refused until enrolment; a new session asked for a code; a Legal Team Member was sent to enrolment after a magic-link sign-in; a second Administrator without an authenticator was also sent straight to enrolment.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/admin-org/runs/emailStored-2026-09-16T15-26-32-159Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/emailEnv-2026-09-16T15-27-34-812Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/emailIncomplete-2026-09-16T15-29-09-555Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/emailRestored-2026-09-16T15-29-43-485Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/policy-2026-09-16T15-35-12-254Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/sso-2026-09-16T15-36-40-543Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/sso-2026-09-16T15-40-14-592Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/twoFactor-2026-09-16T15-44-03-937Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/crossPage-2026-09-16T15-45-55-946Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/phase.sh",
+        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/admin-org/lib.mjs",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailStored-2026-09-16T18-18-29-961Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailRestored-2026-09-16T18-20-06-101Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/policy-2026-09-16T18-20-15-711Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/sso-2026-09-16T18-20-42-380Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/twoFactor-2026-09-16T18-21-22-503Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/crossPage-2026-09-16T18-21-28-702Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/phase-r2.sh",
         "docs/documentation/batches/DOC-029/admin-org/overlay-networks.json",
         "docs/documentation/batches/DOC-029/admin-org/overlay-phase-stored.json",
         "docs/documentation/batches/DOC-029/admin-org/overlay-phase-env.json",
@@ -55,19 +53,20 @@
       "method": "browser-walkthrough",
       "prerequisites": [
         "The same owned lab with its unfinished welcome wizard and a complete stored relay.",
-        "Hashed Compose overlays applied by phase.sh to the owned project only."
+        "Compose overlays applied by phase-r2.sh to the owned project only; hashes recorded in walkthrough-r2-1.json."
       ],
       "expected": "Allowed users can sign in and test mail reaches the controlled sink through the active configuration source. Invalid issuer/relay, denied domain, and locked environment settings have recoverable outcomes without exposing secrets.",
-      "actual": "3 recorded steps passed on 3fa407e3. Operator responsibility was performed with deployment tools on the owned lab, not through an app role. Each phase recreated only the owned app and worker with a hashed overlay, recorded in walkthrough-r1.json. Phase env (overlay-phase-env.json sha256 23eb5607...) set SMTP_URL and SMTP_FROM while a complete stored relay existed: Outbound email read \"Outbound email is set by the deployment environment. Mail is sent from DOC-029 Environment <env-relay@helix.example>.\" with no Save relay, Replace relay, Clear relay or Send test email, a direct save answered 409, and an invitation from Invite your team arrived from env-relay@helix.example rather than the stored sender. Phase incomplete (overlay-phase-incomplete.json sha256 fa2209f8...) set SMTP_URL without SMTP_FROM: the step warned \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent.\", the source was env with no from address, Continue was disabled, and an invitation the Users API accepted (201) produced no message. Removing the override (overlay-phase-stored.json sha256 98d274e9...) and recreating app and worker returned \"Outbound email is set in the app. Mail is sent from DOC-029 Stored <stored-relay@helix.example>.\" and a delivered test message from the stored sender.",
+      "actual": "3 recorded steps passed on 57e77e38. Operator responsibility was performed with deployment tools on the owned lab, not through an app role. Each phase recreated only the owned app and worker with an overlay, and printenv in the containers confirmed the values. Phase env (overlay-phase-env.json sha256 811f47b2...) set SMTP_URL and SMTP_FROM while a complete stored relay existed: Outbound email read \"Outbound email is set by the deployment environment. Mail is sent from DOC-029 Environment <env-relay@helix.example>.\" with only Back and Continue, a direct save answered 409, and an invitation from Invite your team arrived from env-relay@helix.example rather than the stored sender. Phase incomplete (overlay-phase-incomplete.json sha256 d6dfd1cc...) set SMTP_URL without SMTP_FROM: the step warned \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\", the source was env with no from address, Continue was disabled, and an invitation the Users API accepted (201) produced no message. Removing the override (overlay-phase-stored.json sha256 4d07234f...) and recreating app and worker returned \"Outbound email is set in the app. Mail is sent from \"DOC-029r2 Stored\" <stored-relay@helix.example>.\" and a delivered test message from the stored sender.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/admin-org/runs/emailStored-2026-09-16T15-26-32-159Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/emailEnv-2026-09-16T15-27-34-812Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/emailIncomplete-2026-09-16T15-29-09-555Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs/emailRestored-2026-09-16T15-29-43-485Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/phase.sh",
+        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/admin-org/lib.mjs",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailStored-2026-09-16T18-18-29-961Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailEnv-2026-09-16T18-19-21-074Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailIncomplete-2026-09-16T18-19-41-990Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailRestored-2026-09-16T18-20-06-101Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/phase-r2.sh",
         "docs/documentation/batches/DOC-029/admin-org/overlay-networks.json",
         "docs/documentation/batches/DOC-029/admin-org/overlay-phase-stored.json",
         "docs/documentation/batches/DOC-029/admin-org/overlay-phase-env.json",
@@ -78,17 +77,19 @@
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
+    "Outbound email delivery was proven with Connection security None and Authentication None against Mailpit. Username and password was saved and checked as never returned and not stored in plain text, and STARTTLS was checked as refusing delivery when the relay offers no TLS upgrade. Delivery through TLS, through a successful STARTTLS upgrade, or with SMTP credentials was not proven, because the lab relay has no TLS and no SMTP authentication.",
     "Single sign-on was verified against a local OpenID Connect fixture with real discovery, authorize, token, JWKS and userinfo endpoints and the real OpenLaw callback. It is not certification of a real provider. The fixture accepts any client secret, so secret retention and rotation were checked as successful saves followed by working sign-ins, not as proof of which secret is stored.",
-    "Single sign-on links or creates accounts only for emails on the provider's Email domain. Portal single sign-on was therefore checked with a Business User on the provider domain; a first attempt with a northwind.example Business User failed for that reason and is kept in runs/superseded.",
+    "Single sign-on links or creates accounts only for emails on the provider's Email domain. Portal single sign-on was therefore checked with a Business User on the provider domain.",
     "Require two-factor authentication was checked with password and email magic-link sign-ins, not with single sign-on.",
-    "lab.mjs up could not create the lab networks because the host's Docker address pools were exhausted by other projects. The same images ran through phase.sh with explicit subnets (overlay-networks.json). The lab source/.env and overlay.json were not modified, and the app and engine image IDs match the shared admin lab.",
-    "The dev worktree text of this article was verified. Another session edits the same article in the main checkout; that text was not verified. The lab Help route serves the article bytes committed at 3fa407e3, and Help discovery was not checked.",
-    "Some runs had reviewer script faults; they and their dispositions are kept in walkthrough-r1.json and runs/superseded. Every observation cited here passed in a retained run."
+    "lab.mjs up built the images but could not create the lab networks because the host's Docker address pools were exhausted by other projects. The same images ran through phase-r2.sh with explicit subnets (overlay-networks.json). The lab source/.env and overlay.json were not modified, and the app and engine image IDs match the shared admin2 lab.",
+    "Invitation sending without SMTP_FROM still answers 201 with no message (issue #889). The article does not describe that response.",
+    "Help discovery was not checked.",
+    "Some runs had reviewer script faults; they and their dispositions are kept in walkthrough-r2-1.json and runs-r2/superseded. Every observation cited here passed in the retained chain, which ran once, in order, on a freshly reset lab."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "a47a3665df8e885bd034226de107c182564f6048ea74aa6707f2f1eaff6df8db",
-    "verifiedAt": "2026-09-08T04:13:42Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1",
+    "verifiedAt": "2026-09-16T15:49:45Z"
   },
   "copyOnlyReview": null,
   "compatibilityReview": null

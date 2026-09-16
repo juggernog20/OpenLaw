@@ -1,0 +1,112 @@
+{
+  "task": "DOC-029 round 2 (#745, #747), live-provider group",
+  "coverage": ["C43"],
+  "reviewer": "DOC-029r2 source-review author agent (live-provider)",
+  "reviewerKind": "agent",
+  "reviewRole": "author source review of the application diff. This is not an independent compatibility review or walkthrough.",
+  "reviewedAt": "2026-09-16T17:51:21Z",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "diffCommand": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+  "commitsReviewed": [
+    "1ea249dd Show organization branding on sign-in and raise the logo limit",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users"
+  ],
+  "result": "pass-no-change",
+  "articles": [
+    {
+      "articleId": "configure-analysis",
+      "changed": false,
+      "contentSha256Before": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
+      "contentSha256After": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
+      "checks": [
+        {
+          "claim": "The AI back end did not change: connector, model listing, test probe, Field prompts, Analysis targets, data sent, and the 200,000 character limit",
+          "sources": [
+            "apps/api/src/modules/ai-connector",
+            "apps/api/src/modules/ai-field-prompts",
+            "apps/api/src/modules/contract-analysis",
+            "apps/api/src/lib",
+            "apps/api/src/pipeline",
+            "packages/shared/src/analysis.ts",
+            "packages/db"
+          ],
+          "actual": "git diff --quiet between the two commits reports no change for these paths. The openapi.json change adds /api/v1/org/branding and changes /api/v1/org/general and /api/v1/email-settings only.",
+          "correction": null
+        },
+        {
+          "claim": "Key retention only for the same provider, protocol and endpoint (Disable, rotate, or remove)",
+          "sources": [
+            "apps/web/src/lib/ai-connector-config.ts",
+            "apps/web/src/routes/settings-ai-analysis.tsx"
+          ],
+          "actual": "Commit 2b6d167f moved the page's sameDestination check into canReuseAiKey() so the welcome wizard can share it. The function checks hasApiKey, preset, protocol and the normalized base URL, as the old inline code did. canKeepKey gives the same result. The API rule is unchanged.",
+          "correction": null
+        },
+        {
+          "claim": "Settings -> Organization -> AI analysis page, card order, labels, switches and badges",
+          "sources": ["apps/web/src/routes/settings-ai-analysis.tsx", "apps/web/src/routes/settings.tsx"],
+          "actual": "Only the Provider card intro text changed. It now reads 'Connect your AI provider for Contract analysis and AI-assisted Request conversion. Relevant document text, Request answers, and conversations are sent to the provider when an AI task runs.' The article does not quote the intro. Its Request conversion section already says that Fill Contract Fields after conversion uses Request answers, conversation and supporting sources. The labels Provider, Protocol, Deployment endpoint, Base URL, API key, Save connector, Test connection, Connection successful., Use AI analysis, Remove connector, Request conversion, the three switch labels, Connected and Turned off are unchanged. SettingsLayout now shows a 'Return to setup' link only for an Administrator who arrives from the welcome wizard's review step. The review step does not link to AI analysis, so the article's route is not affected.",
+          "correction": null
+        },
+        {
+          "claim": "Model selector controls: Load models, Refresh models, Search models, Enter model ID manually, Azure manual entry",
+          "sources": ["apps/web/src/components/ai-model-selector.tsx", "apps/web/src/routes/welcome.tsx"],
+          "actual": "ai-model-selector.tsx did not change. Commit 2b6d167f also uses AiModelSelector in the welcome wizard's AI analysis step, with Azure OpenAI starting in manual entry. The article covers the Settings page only, so no change is needed.",
+          "correction": null
+        },
+        {
+          "claim": "Field prompts card: seven prompts, not collapsible, Enter saves, Shift+Enter, clear and leave restores, Reset to default, link to Contracts -> Fields",
+          "sources": ["apps/web/src/components/ai-field-prompts-card.tsx", "apps/web/src/lib/field-commit.ts"],
+          "actual": "Neither file changed. The link text 'Contracts → Fields' still goes to /settings/contracts/fields. The Escape handler still calls revertText() and then blur(), so defect #887 is still present. The article must continue to leave out the Escape sentence.",
+          "correction": null
+        },
+        {
+          "claim": "Add a catalog Field to Analysis: create or edit a Field whose Scope is Contract and enter its AI prompt",
+          "sources": [
+            "apps/web/src/routes/settings-contract-fields.tsx",
+            "apps/web/src/components/default-fields.tsx",
+            "apps/web/src/lib/field-catalog.ts",
+            "apps/web/src/components/list-editor.tsx",
+            "apps/web/src/components/settings-card.tsx"
+          ],
+          "actual": "Commit e3800b43 adds a collapsed, read-only 'Default fields' card above the catalog on Contracts -> Fields. It renames the catalog card from 'Fields' to 'Custom Fields' and makes it collapsible. SettingsCard defaults defaultOpen to true, so the catalog starts open. The page no longer shows the help caption under the card. The Add field button, the editor labels Scope and AI prompt, and the isFieldRow() filter are the same (the filter moved to lib/field-catalog.ts). The Field editor opens in a dialog and does not use the new InlineAddForm. The article names no card title, so its steps stay correct.",
+          "correction": null
+        },
+        {
+          "claim": "Linked articles exist",
+          "sources": [
+            "docs/user-guides/contract-analysis.md",
+            "docs/user-guides/types-statuses-fields.md",
+            "docs/user-guides/document-previews.md",
+            "docs/user-guides/deployment-configuration.md",
+            "docs/user-guides/convert-request.md"
+          ],
+          "actual": "All five files exist. The article links to whole articles and uses no anchors.",
+          "correction": null
+        }
+      ],
+      "observations": [
+        "The new Provider card intro names Request answers and conversations as data sent. 'Before you start' asks the reader to confirm rules for sending Contract text only. That sentence is not wrong for the Analysis setup that the article covers, and the Request conversion section names the other data. So this review makes no change. A later editorial pass can widen the sentence as a copy-only correction."
+      ]
+    }
+  ],
+  "defects": [
+    {
+      "summary": "Escape on a core Field prompt saves the abandoned edit",
+      "article": "configure-analysis",
+      "status": "still present at 57e77e386be31b2a319f7143dd54d00123e65efe; ai-field-prompts-card.tsx is unchanged",
+      "action": "Tracked as #887. Keep the Escape sentence out of the article."
+    }
+  ],
+  "limitations": [
+    "Author source review of the diff only. No walkthrough ran in this round, and no lab or provider account was used.",
+    "The live-provider walkthrough evidence stays at 3fa407e3a846559914aa1a63249741f30cfb4f69. An independent reviewer must record the compatibility review in the evidence file.",
+    "install.md and upgrade.md are not in this group, so this review does not change them."
+  ]
+}

@@ -1,6 +1,6 @@
 # Set up your account and sign in
 
-Use these steps for an Administrator or Legal Team Member account. Ask your Administrator for the OpenLaw address and an invitation. Business Users should follow [Sign in to the Business Portal](portal-sign-in.md).
+Use these steps for an Administrator or Legal Team Member account. Ask your Administrator for the OpenLaw address and an invitation. The sign-in page shows your organization's name above the form, and its logo if the Administrator saved one. If you do not see your organization's name, check the address with your Administrator before you enter a password. Business Users should follow [Sign in to the Business Portal](portal-sign-in.md).
 
 ## Accept a password invitation
 

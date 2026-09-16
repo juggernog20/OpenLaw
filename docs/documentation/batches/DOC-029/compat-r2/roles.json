@@ -1,0 +1,673 @@
+{
+  "batch": "DOC-029",
+  "group": "roles",
+  "round": "compat-r2",
+  "reviewer": "DOC-029r2 compatibility reviewer (roles)",
+  "reviewerKind": "agent",
+  "independence": "This reviewer did not write, correct or technically review either article, and did not run the round 1 walkthroughs.",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "diffCommand": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+  "commits": [
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "1ea249dd Show organization branding on sign-in and raise the logo limit"
+  ],
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-41255c61-work2",
+    "source": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appUrl": "http://127.0.0.1:23301",
+    "mailpitUrl": "http://127.0.0.1:23401",
+    "appImage": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "workerImage": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImage": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "seed": "Helix light seed 7"
+  },
+  "replay": {
+    "method": "Round 1 scripts copied from batches/DOC-029/roles (lib-r1.mjs, setup-r1.mjs, setup-r1-part2.mjs, walkthrough-r2.mjs) into compat-r2/roles-r2. Changes: the folder depth of the root path, the lab name work to work2 in the lab status call, the recorded reviewer name and round, and record names DOC-029 roles to DOC-029r2 roles (also the fictional Counterparty and supplier names). Selectors, checks, fixture files and step order are unchanged. The lab URL and Mailpit URL came from LAB_APP_URL and LAB_MAIL_URL. The password came from the environment only; magic links were read from the work2 Mailpit and not stored.",
+    "fixtures": {
+      "openContract": "C-39",
+      "openMatter": "M-22",
+      "confidentialContract": "C-40",
+      "confidentialMatter": "M-23",
+      "confidentialEntity": "DOC-029r2 roles confidential entity Ltd",
+      "jonasContract": "C-41 from R-41",
+      "raviContract": "C-98 from R-53",
+      "raviMatter": "M-27",
+      "documentPagingMatter": "M-54",
+      "pagingMatters": "M-28 to M-53"
+    },
+    "fixtureNote": "The lab was fresh, so setup-r1.mjs and setup-r1-part2.mjs created the fixtures again on work2. Another agent created M-42 during setup, so the 25 paging Matters are M-28 to M-53 without M-42. Z0 restore answered 409 for all 25 because they were not archived, which the script accepts. Z1 archived them at the end (200).",
+    "startedAt": "2026-09-16T17:52:20.379Z",
+    "finishedAt": "2026-09-16T17:57:10.017Z",
+    "totals": {
+      "steps": 48,
+      "pass": 48,
+      "fail": 0
+    },
+    "transientErrors": [
+      {
+        "at": "2026-09-16T17:54:06.343Z",
+        "url": "/contracts/39",
+        "consoleErrors": []
+      }
+    ],
+    "files": [
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/fixtures-r1.json",
+        "sha256": "71727717bf361d28c3b6d308eb25d80d980c39e07a178eefe33fcefe5569270e"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/lib-r1.mjs",
+        "sha256": "7f4c6d931619e8ce6b4d16fa48ab3f8fba42e03dd13a80b496f94b8a4a53babb"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/setup-r1.mjs",
+        "sha256": "9b8a891960c21cf6031dd45b29fb38e05acc788f8d4f13a5b10dc73f60929b55"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/setup-r1-part2.mjs",
+        "sha256": "548c77f2f7b54d43269b43d85bdd37fcc5a74711814346312427a0e3594f4022"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/walkthrough-r2.mjs",
+        "sha256": "063a24cf2d3364e5d4e8cb9f85d7e608a9317187614aac9a4b19c2ef1c57890d"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/walkthrough-r2.json",
+        "sha256": "a65f7ec1865fed0b7adbb2417280448d1cecd8d5ba6d1ba9712d5fe637034568"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/walkthrough-r2.log",
+        "sha256": "77be2967630b836a249693e4e5dc05b530744e05b9c67ac0de97145c6cb63d49"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/r1-portal-preview.png",
+        "sha256": "7e9dd2152ca2bf4f2dd02f8ccc58370dde999d75b9420ebf503846c81a5fb392"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/r2-legal-audience-labels.png",
+        "sha256": "613079becc7f7bd6bd0b72c98ef13a756e08abb0507d532808250c4cda558546"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/r2-portal-history.png",
+        "sha256": "56b098f9f7927964c70ab04aebc0be002a4d38e2f09d101c34f00dccd071e3f2"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/roles-r2/r2-portal-reply-tier-label.png",
+        "sha256": "0d43dd662b321c35aa8ea5918f5fc2a3bd2821308205e623564b6368b38278f4"
+      }
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "roles-and-access",
+      "contentSha256": "4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "scenario": "V-C06",
+      "roles": [
+        "administrator",
+        "legal_team_member",
+        "business_user"
+      ],
+      "diffFilesInspected": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/email-settings/config.test.ts",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/email-settings.test.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/general.test.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.test.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/set-password.test.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/routes/settings-contract-fields.test.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.test.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-contract-types.test.tsx",
+        "apps/web/src/routes/settings-default-fields.test.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-matter-statuses.test.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-matter-types.test.tsx",
+        "apps/web/src/routes/settings-reminders.test.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.test.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/testing/helpers.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json"
+      ],
+      "diffFinding": "The diff changes organization sign-in branding (GET /org/branding, auth layout logo, name, Legal Portal and Powered by OpenLaw lines, 5 MB logo limit), SMTP settings as discrete fields, the first-run welcome flow and Return to setup link, explicit Save and Cancel on new settings list rows, locked default fields on Contract and Matter field catalogs, AI analysis settings copy, and archived-user styling (opacity-50 to text-muted in comment rows, owner columns, uploader column and UserIdentity). None of these files touches access scopes, team rosters, Grants, Portal routes, comment tiers, Portal History, Documents or Portal lists. messages/en-US.json removes or changes only AI analysis, contract field help, welcome email, logo and welcome review strings; no label the article names changed. The archived-user style change in comment-applet.tsx and user-identity.tsx is visual only; the article does not describe archived-user styling. The settings list-row change does not reach Settings > Users or the team applets.",
+      "conclusion": "compatible",
+      "replaySteps": [
+        {
+          "id": "A1.accounts",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "expected": "Users lists Administrator, Legal Team Member and Business User account types; no Contributor type exists; an Administrator can pick Legal Team Member for a Business User.",
+          "actual": "Settings > Users showed Administrator, Legal team member, Business user in the Role column and no Contributor. The role control for Ravi Menon offered: Administrator Legal team member Business user. Escape closed it without a change.",
+          "result": "pass",
+          "at": "2026-09-16T17:52:26.184Z"
+        },
+        {
+          "id": "A2.settings",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Organization settings remain Administrator-only.",
+          "actual": "Nadia at /settings/users landed on /settings/profile; Invite user absent; Users link count 0; page says: Skip to content openlaw / workspace / Help 9+ NH Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Docs Settings Personal Profile Appearan",
+          "result": "pass",
+          "at": "2026-09-16T17:52:27.566Z"
+        },
+        {
+          "id": "B1.open-records",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "A Legal Team Member opens non-Confidential Contracts and Matters without a team row.",
+          "actual": "Nadia opened C-39 \"DOC-029r2 roles open contract\" and M-22 \"DOC-029r2 roles open matter\" with no team row.",
+          "result": "pass",
+          "at": "2026-09-16T17:52:30.167Z"
+        },
+        {
+          "id": "B2.admin-refused",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "expected": "Administrator status does not bypass the Confidential rule: without a team row or Legal Owner / Matter Manager, Daniel is refused; a copied link and a reload do not restore access.",
+          "actual": "Daniel saw \"Contract not found\" / \"C-40 does not exist, or you cannot open it.\" on the copied link and again after reload; M-23 showed \"Matter not found\".",
+          "result": "pass",
+          "at": "2026-09-16T17:52:34.540Z"
+        },
+        {
+          "id": "B3.related-links",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "expected": "A link to a related record does not grant reach: the parent Matter shows the Confidential child and linked Contract without a link.",
+          "actual": "On M-22, Daniel saw \"Restricted Matter\" under Children and \"Restricted contract\" under Linked Contracts, with no link to either title.",
+          "result": "pass",
+          "at": "2026-09-16T17:52:36.318Z"
+        },
+        {
+          "id": "B4.list-search",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "expected": "Search and lists omit Confidential records the person cannot reach.",
+          "actual": "Daniel's header Search for \"DOC-029r2 roles\" offered \"Contract C-42 DOC-029r2 roles Ravi converted contract C-41 DOC-029r2 roles Jonas converted contract C-39 DOC-029r2 roles open contract Matter M-27 DOC-029r2 roles Ravi matter M-54 DOC-029r2 roles docu\" and no Confidential title; the full Contracts list (45 rows) and Matters list (48 rows) omitted C-40 and M-23.",
+          "result": "pass",
+          "at": "2026-09-16T17:52:40.323Z"
+        },
+        {
+          "id": "B5.team-add-admin",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Nadia (Creator, Legal Owner) opens Contract team, selects Add team member, chooses Daniel in Person and selects Add. Each person appears once with no role picker. Daniel then reaches the record.",
+          "actual": "Add team member dialog had one control (Person) and no role picker; Nadia (already on the team) was not offered. Roster: NH Legal Owner Creator Nadia Haddad | DO Daniel Okafor. Daniel then opened C-40 \"DOC-029r2 roles confidential contract\".",
+          "result": "pass",
+          "at": "2026-09-16T17:52:44.496Z"
+        },
+        {
+          "id": "B6.admin-audience",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "expected": "An Administrator who can reach the Confidential record may change its audience.",
+          "actual": "Daniel, on the team as an Administrator, had Add team member enabled and the Confidential switch enabled on C-40.",
+          "result": "pass",
+          "at": "2026-09-16T17:52:46.470Z"
+        },
+        {
+          "id": "B7.reader-no-audience-right",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Being able to read a Confidential record does not give the right to change its audience (Priya, Legal Team Member on the team, not Creator or Legal Owner).",
+          "actual": "Priya opened C-40; Add team member disabled, the Confidential switch disabled, and 3 remove controls all disabled or absent.",
+          "result": "pass",
+          "at": "2026-09-16T17:52:50.624Z"
+        },
+        {
+          "id": "B8.remove-ends-access",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Removing a team row with the person's remove control ends Confidential access on the next read.",
+          "actual": "Nadia removed Priya and Daniel; on reload both saw \"does not exist, or you cannot open it\" for C-40.",
+          "result": "pass",
+          "at": "2026-09-16T17:52:55.886Z"
+        },
+        {
+          "id": "B9.legal-owner",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "On a Confidential Contract, being Legal Owner admits an Administrator without a team row; changing the owner back refuses them again.",
+          "actual": "After Nadia set Legal Owner to Daniel on Overview, Daniel opened C-40 with no team row (roster: DO Legal Owner Daniel Okafor | NH Creator Nadia Haddad). Daniel set Legal Owner back to Nadia; Nadia kept access and Daniel's reload was refused.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:04.129Z"
+        },
+        {
+          "id": "B10.matter-manager-and-team",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "On a Confidential Matter, a team row or Matter Manager admits the person; removal refuses them.",
+          "actual": "Daniel opened M-23 through a Matter team row, was refused after Nadia removed it, opened it again as Matter Manager, and was refused after he returned Matter Manager to Nadia.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:14.677Z"
+        },
+        {
+          "id": "B11.ltm-removal-open",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Removing a Legal Team Member from an open record does not end their ordinary access; a Confidential Document narrows to the named audience.",
+          "actual": "Nadia opened C-39 after Daniel added and removed her team row. The Confidential Document doc029-roles-confidential-note.txt was hidden from her before, shown while she was on the team, hidden after removal, and shown to Daniel on the team throughout.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:25.270Z"
+        },
+        {
+          "id": "C1.entity-admin-refused",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "expected": "Every person needs a Grant for a Confidential Entity, Administrators too.",
+          "actual": "Daniel saw \"Entity not found\" and Priya saw \"Entity not found\" for the Confidential Entity; neither has a Grant.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:27.716Z"
+        },
+        {
+          "id": "C2.entity-grant",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "The creator has a Grant. A Legal Team Member with a Grant uses Manage access to give and remove Grants. A Grant applies to that Entity only.",
+          "actual": "Dialog: \"Confidential access Only people listed here can access this entity when it is confidential. Administrators also need a grant. Nadia Haddad Pick a person Blair Wentworth Daniel Okafor DOC-029r2 access Administrator 9183 D\". Nadia's creator Grant was listed. Person offered only Administrators and Legal Team Members (9 people). After Grant access, Daniel opened the Entity and saw Manage access. After Remove Daniel Okafor, Daniel's reload was refused. Entity list for Daniel with the Grant: 200.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:31.609Z"
+        },
+        {
+          "id": "C3.last-grant",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "A Confidential Entity must keep at least one active person with a Grant.",
+          "actual": "Removing the only Grant was refused (Grant another person access before removing the last person from a confidential entity.); Nadia still opens the Entity.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:36.338Z"
+        },
+        {
+          "id": "C4.open-entity-manage",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "expected": "An Administrator can manage access on an Entity that is not Confidential; a Legal Team Member without a Grant cannot.",
+          "actual": "On the non-Confidential Entity \"Helix Analytics, Inc.\", Daniel saw Manage access and Nadia did not. No Grant was changed.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:38.886Z"
+        },
+        {
+          "id": "D1.full-app-closed",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Business Users use the Portal; they cannot open the Entities module or full-app records and search.",
+          "actual": "/contracts/39 -> /portal; /search -> /portal; /entities -> /portal; /entities/01a0ab58-d7ed-7cd6-9ba7-53848b99e68b -> /portal; /settings/users -> /portal. Portal navigation: Requests Contracts Matters Auto-Docs. Entity read answered 403.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:45.087Z"
+        },
+        {
+          "id": "D2.not-on-team",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "A Business User reaches only records whose teams include them.",
+          "actual": "/portal/contracts/39: Contract not found; /portal/contracts/40: Contract not found; /portal/matters/22: Matter not found; /portal/matters/23: Matter not found",
+          "result": "pass",
+          "at": "2026-09-16T17:53:49.896Z"
+        },
+        {
+          "id": "D3.conversion",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "At conversion the Requester becomes Business Owner and a team member; the old Request address leads to the record.",
+          "actual": "/portal/requests/41 showed \"DOC-029r2 roles Jonas converted contract\" (address /portal/contracts/41). Contract team rows: NH Legal Owner Creator Nadia Haddad | JW Business Owner Jonas Weber. Your Contracts lists C-41.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:53.975Z"
+        },
+        {
+          "id": "D4.add-business-user",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Adding a Business User to the team gives them Portal access to the record.",
+          "actual": "After Nadia added Jonas through Contract team, Jonas opened /portal/contracts/39 \"DOC-029r2 roles open contract\" and Your Contracts listed C-39.",
+          "result": "pass",
+          "at": "2026-09-16T17:53:59.807Z"
+        },
+        {
+          "id": "D5.comments-tiers",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Business Users read and post Full thread comments; they do not see Legal only or Working team; a later-added member reads the Full Thread history.",
+          "actual": "Jonas joined the C-39 team after the three fixture notes were posted. His Comments showed the earlier Full Thread note with the Contract Team label (\"NH Nadia Haddad Contract Team 2 minutes ago DOC-029r2 roles Full thread note\") and neither the Legal Only note nor the older Working Team note; no Legal Only or Internal team label and no audience picker. His reply posted. Nadia saw it as \"JW Jonas Weber Contract Team this minute DOC-029r2 roles reply from Jonas 239807\". Nadia's audience choices read \"Audience Legal Only Contract Team\".",
+          "result": "pass",
+          "at": "2026-09-16T17:54:05.114Z"
+        },
+        {
+          "id": "D5b.tier-labels",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "In the Comments applet a Full Thread comment shows Contract Team on a Contract and Matter Team on a Matter; Legal Only and older Internal team comments show those labels; Legal chooses Contract Team or Matter Team above New comment, not Legal Only.",
+          "actual": "Contract Audience, above New comment, offered \"Audience Legal Only Contract Team\"; Matter Audience offered \"Audience Legal Only Matter Team\". Row labels without the bodies: Full Thread note \"NH Nadia Haddad Contract Team 2 minutes ago \"; Legal Only note \"NH Nadia Haddad Legal Only 2 minutes ago \"; older Working Team note \"NH Nadia Haddad Internal team 2 minutes ago \". See r2-legal-audience-labels.png.",
+          "result": "pass",
+          "at": "2026-09-16T17:54:10.559Z"
+        },
+        {
+          "id": "D6.history-portal-limits",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "The Portal History applet shows Contract Team comment activity and excludes Legal Only and Internal team activity. The Portal excludes legal Fields, Tasks, Key dates, Approvals and signing controls.",
+          "actual": "Jonas's Portal History top row read \"Jonas Weber commented\". Daniel posted a comment with Audience Legal Only (row label \"DO Daniel Okafor Legal Only this minute \") and an older-tier Working Team comment (API stand-in, 201); the top row stayed \"Jonas Weber commented\" and the newest Portal activity entry did not change. Daniel then posted with Audience Contract Team (label \"DO Daniel Okafor Contract Team this minute \"); the top row became \"Daniel Okafor commented\" (comment.posted). No Tasks, Key dates, Approvals or signing controls, and no Stage move buttons, on the Portal record.",
+          "result": "pass",
+          "at": "2026-09-16T17:54:26.036Z"
+        },
+        {
+          "id": "D6b.history-no-record-changes",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Record changes do not appear in Portal History; the record details and Fields show the current values.",
+          "actual": "Nadia changed Region to APAC and the Description in the full app; her History read \"History Nadia Haddad changed Description Not set → DOC-029r2 roles r2 shared description 272699 this minute Nadia Haddad\". Jonas's Portal Overview showed APAC and Fields showed the new Description. His Portal History top row stayed \"Daniel Okafor commented\", no row said \"changed\", and the Portal activity read had no contract.updated entry. See r2-portal-history.png. Nadia returned Region to EMEA.",
+          "result": "pass",
+          "at": "2026-09-16T17:54:41.614Z"
+        },
+        {
+          "id": "D7.portal-team-add",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Business Users may add existing people from the Portal on non-Confidential records.",
+          "actual": "Jonas added Amara Nwosu (existing members were not offered). Portal roster: DO Legal Owner Creator Daniel Okafor | AN Amara Nwosu | JW Jonas Weber; no remove control in the Portal. Nadia saw Amara on the same team in the full app and removed her to restore the fixture.",
+          "result": "pass",
+          "at": "2026-09-16T17:54:47.278Z"
+        },
+        {
+          "id": "D8.business-owner-statements",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Owner statements appear on the person's row in both apps. Changing Business Owner does not add or remove membership. Removing membership leaves statements visible, and statements alone do not grant Portal access; removal ends access on the next read, including old links.",
+          "actual": "Full-app row: JW Business Owner Jonas Weber; Portal row: JW Business Owner Jonas Weber. After Nadia removed Jonas's membership the full-app roster showed: DO Legal Owner Creator Daniel Okafor | JW Business Owner Jonas Weber. Jonas's reload of the old link showed \"Contract not found\" and the Documents read answered 404 and the Comments read answered 404. Setting Jonas as Business Owner on M-22 left him outside the team (DO Matter Manager Creator Daniel Okafor | JW Business Owner Jonas Weber) and the Portal refused \"Matter not found\". Both Business Owners were returned to Unassigned.",
+          "result": "pass",
+          "at": "2026-09-16T17:55:05.957Z"
+        },
+        {
+          "id": "D9.related-no-reach",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Legal chooses Matter Team for a message to the business; a Full Thread comment shows Matter Team on a Matter and appears in Portal History; Legal Only stays hidden. A link or parent relation does not grant a Business User access to the related record.",
+          "actual": "Nadia posted with Audience Matter Team (label \"NH Nadia Haddad Matter Team this minute \") and with Legal Only on M-22. Jonas saw the Matter Team comment (\"NH Nadia Haddad Matter Team this minute DOC-029r2 roles r2 Matter Team note 308086\"), not the Legal Only one, and his Portal History top row read \"Nadia Haddad commented\". With Jonas on the M-22 team he opened it (no Confidential record title appeared), but the linked C-40 showed \"Contract not found\" and the child M-23 showed \"Matter not found\". Nadia removed him afterwards.",
+          "result": "pass",
+          "at": "2026-09-16T17:55:21.856Z"
+        },
+        {
+          "id": "D10.confidential-portal",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "A Business User always needs a team row on a Confidential record; Confidential team changes stay with Legal.",
+          "actual": "With a team row Jonas opened C-40 in the Portal; Add team member was disabled with \"Ask Legal to add members to a Confidential record.\" After Nadia removed the row, his reload showed Contract not found.",
+          "result": "pass",
+          "at": "2026-09-16T17:55:29.807Z"
+        },
+        {
+          "id": "D11.archived-request",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "An archived record leaves the Portal; the old Request link shows the original ask and an archived notice, without Documents or a conversation.",
+          "actual": "Legal archived C-41 (API stand-in for Contract actions). Your Contracts no longer listed it and the direct link showed \"Contract not found\". /portal/requests/41 read: \"Your requests DOC-029r2 roles Jonas request In progress R-41 · Contract review · Submitted Sep 16 Help with this page The record created from this Request was archived. Your original request is shown below. What you submitted Description DOC-029r2 roles fictio\" with no Documents region and no comment controls. Legal restored C-41 afterwards (200).",
+          "result": "pass",
+          "at": "2026-09-16T17:55:34.384Z"
+        }
+      ],
+      "limitations": [
+        "Agent replay of the round 1 script, not a human user study.",
+        "The Contributor conversion, Stakeholder list removal and upgrade preservation of Confidential audiences were not replayed, as in round 1; the seeded lab has no pre-upgrade data.",
+        "Notification delivery after removal was not checked, as in round 1."
+      ]
+    },
+    {
+      "articleId": "contributor-guide",
+      "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "scenario": "V-C25",
+      "roles": [
+        "business_user"
+      ],
+      "diffFilesInspected": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/email-settings/config.test.ts",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/email-settings.test.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/general.test.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.test.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/set-password.test.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/routes/settings-contract-fields.test.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.test.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-contract-types.test.tsx",
+        "apps/web/src/routes/settings-default-fields.test.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-matter-statuses.test.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-matter-types.test.tsx",
+        "apps/web/src/routes/settings-reminders.test.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.test.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/testing/helpers.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json"
+      ],
+      "diffFinding": "The diff changes organization sign-in branding (GET /org/branding, auth layout logo, name, Legal Portal and Powered by OpenLaw lines, 5 MB logo limit), SMTP settings as discrete fields, the first-run welcome flow and Return to setup link, explicit Save and Cancel on new settings list rows, locked default fields on Contract and Matter field catalogs, AI analysis settings copy, and archived-user styling (opacity-50 to text-muted in comment rows, owner columns, uploader column and UserIdentity). None of these files touches access scopes, team rosters, Grants, Portal routes, comment tiers, Portal History, Documents or Portal lists. messages/en-US.json removes or changes only AI analysis, contract field help, welcome email, logo and welcome review strings; no label the article names changed. The auth layout now shows organization branding and Legal Portal above the sign-in form; the article says only to sign in with the Business User account and names no sign-in page text. Portal lists, record pages, Documents, Comments and team applets have no changes.",
+      "conclusion": "compatible",
+      "replaySteps": [
+        {
+          "id": "Z0.restore-paging",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Fixture: restore the 25 paging Matters archived at the end of round 1.",
+          "actual": "Restore answered 409 for 25 paging Matters.",
+          "result": "pass",
+          "at": "2026-09-16T17:55:36.400Z"
+        },
+        {
+          "id": "G0.fixture",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Fixture: Ravi submits a fresh Contract review Request; Legal converts it and uploads the primary Document (API stand-ins for the Portal form, the Inbox conversion and the Legal upload).",
+          "actual": "Ravi submitted R-53; Nadia converted it to C-98 and uploaded doc029-roles-supporting-v1.txt (primary: true).",
+          "result": "pass",
+          "at": "2026-09-16T17:55:36.646Z"
+        },
+        {
+          "id": "G1.before-start",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Before Legal adds Ravi, the Matter is absent and refused. After Legal adds him, he selects Matters in the Portal navigation, chooses the record, and checks title and M- reference. A link or related record does not grant access.",
+          "actual": "Before: \"Matter not found\". After Nadia added Ravi, Portal > Matters listed it; the record showed \"DOC-029r2 roles Ravi matter\" and M-27. The comparable M-22 showed \"Matter not found\".",
+          "result": "pass",
+          "at": "2026-09-16T17:55:44.853Z"
+        },
+        {
+          "id": "G2.find-search",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Enter a title or reference in Search and press Enter or select Search. Contract search also matches the primary Counterparty.",
+          "actual": "Search \"DOC-029r2 roles Ravi\" + Enter listed M-27 (address ?q=DOC-029r2+roles+Ravi); \"M-27\" + Search listed only M-27; Contracts search \"Roles Fictional Supplier\" listed C-98 by its primary Counterparty (added by Legal, 201).",
+          "result": "pass",
+          "at": "2026-09-16T17:55:49.319Z"
+        },
+        {
+          "id": "G3.filter",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Select Filter, choose a property and value, select Apply. Contracts offer Stage, Type, Legal Owner and Expiry date; Matters offer Status, Type, Matter Manager and open or closed lifecycle. Filters combine with search; remove a chip or Clear all.",
+          "actual": "Contracts Filter offered Type, Legal Owner, Stage, Expiry date; Matters Filter offered Type, Matter Manager, Status, Lifecycle. Lifecycle choices: \"Lifecycle Open Closed Choose one value Apply\". Lifecycle Open plus search \"DOC-029r2 roles\" showed \"25 of 27 records\" with one filter chip (address ?q=DOC-029r2+roles&category=open). Clear all removed the chip.",
+          "result": "pass",
+          "at": "2026-09-16T17:55:54.549Z"
+        },
+        {
+          "id": "G4.sort-columns-more-back",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Heading sort cycles ascending, descending, default. Columns chooses and reorders columns; a heading edge resizes. Show more adds the next page. Search, filters and sort stay in the address for Back and bookmarks.",
+          "actual": "Your Matters first showed \"25 of 27 records\" (25 rows); Show more raised it to 27 rows. Title heading: ascending (?sort=title&dir=asc), descending (?sort=title&dir=desc), then default (no query). Back from a record returned to ?sort=title&dir=asc, and opening that address again kept aria-sort ascending. Columns showed \"Columns Reference Title Type Status Matter Manager Business Owner Reset columns\". Dragging the Reference heading edge changed its width from 112 to 230 px; Home on the handle returned it to 112 px.",
+          "result": "pass",
+          "at": "2026-09-16T17:56:03.781Z"
+        },
+        {
+          "id": "G5.read-record",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Record details and Fields show current full-app values; Contracts and Matters both show Department and Region; a Contract shows Overview with Value and dates. Business Fields and Description are read-only; Legal's change appears on reload. Original request is read-only and does not change when Legal edits the live Description.",
+          "actual": "M-27 details showed Department and Region. C-98 Overview: \"Overview Counterparty DOC-029r2 Roles Fictional Supplier Ltd Stage Draft Business Owner Ravi Menon Legal Owner Nadia Haddad Department Sales Region Not recorded Term type Fixed term Value Not recorded\". No editable value controls in the record body (0). After Nadia changed the Description in the full app, Ravi's reload showed it under Fields, while Original request still read \"Original request DOC-029r2 roles Ravi request 336401 R-53 · Ravi Menon · Submitted Sep 16 Urgency: Medium DOC-029r2 roles fictional ask from Ravi.\". Portal History read \"History No shared history yet.\" (the History claim is scored in roles-and-access D6b).",
+          "result": "pass",
+          "at": "2026-09-16T17:56:11.577Z"
+        },
+        {
+          "id": "G6.documents-read",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Documents lists the Primary Document first with current Version, kind, uploader and date; the name opens a preview (processing may finish after upload); the download control downloads.",
+          "actual": "First row: \"Primary Document doc029-roles-supporting-v1.txt Version 1 Draft · ours Current 53 byte NH Nadia Haddad · Sep 16 Add version\". Selecting doc029-roles-preview.pdf opened its viewer panel (\"doc029-roles-preview.pdf v1 doc029-roles-preview.pdf Download Page 1 of 1 100% DOC-029 roles fiction\", 1 rendered page element(s)); see r1-portal-preview.png. The download control answered 200.",
+          "result": "pass",
+          "at": "2026-09-16T17:56:15.982Z"
+        },
+        {
+          "id": "G7.upload-new-documents",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Select Upload documents, choose New documents under Add as, choose Kind and optional Note, select Upload. Kind and Note apply to every file. Successful files stay if another fails; Retry failed uploads retries only the failures.",
+          "actual": "Add as offered: New documents, New version of doc029-roles-supporting-v1.txt, New version of doc029-roles-preview.pdf. Kind offered 7 kinds. With one upload failure injected by the reviewer's browser route, the dialog showed \"Upload documents Add as New documents New version of doc029-roles-supporting-v1.txt New version of doc029-roles-preview.pdf Drop files or choose files doc029-roles-business-upload.txt 56 byte Uploaded doc029-roles-confid\". Retry failed uploads sent only the failed file (3 POSTs in total). Both Documents exist once, each with the note. Documents now read: \"Documents Upload documents Drop files here or click to upload Search 2 files uploaded. Primary Document doc029-roles-supporting-v1.txt Version 1 Draft · ours Current 53 byte NH Nad\".",
+          "result": "pass",
+          "at": "2026-09-16T17:56:18.061Z"
+        },
+        {
+          "id": "G8.add-version-signed-copy",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Add version opens the dialog with that Document selected and takes one file; it works on the primary Contract Document. Earlier versions expand; Signed copy marks the Version Legal pinned. Uploading a Version changes neither designation.",
+          "actual": "Legal pinned Version 1 as the signed copy (API stand-in, 200). Before, the one-Version Document had no earlier versions control. Add version opened Upload documents with \"New version of doc029-roles-supporting-v1.txt\" and a single-file input. After upload the row read \"Primary Document doc029-roles-supporting-v1.txt Version 2 General Current 71 byte RM Ravi Menon · Sep 16 Add version 1 earlier version doc029-roles-supporting-v1.txt Version 1 Draft · ours Signed copy 53 byte NH Nadia Haddad · Sep 16\". The first row is still the Primary Document.",
+          "result": "pass",
+          "at": "2026-09-16T17:56:20.726Z"
+        },
+        {
+          "id": "G9.drop-and-no-folders",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Files can be dropped onto Documents; Business Users cannot manage folders or archive paper.",
+          "actual": "Dropping doc029-roles-dropped.txt on \"Drop files here or click to upload\" opened Upload documents with the file listed (cancelled). No folder or archive controls in Documents.",
+          "result": "pass",
+          "at": "2026-09-16T17:56:22.057Z"
+        },
+        {
+          "id": "G10.search-documents",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Search Documents finds a Document by name or any Version's filename; Show more loads another page.",
+          "actual": "Searching \"supporting-v1\" (the Version 1 filename) listed the Document whose current Version is 2. On M-54, Documents showed 50 rows; Show more added the rest (51). Searching \"page-37\" listed doc029-roles-page-37.txt.",
+          "result": "pass",
+          "at": "2026-09-16T17:56:26.454Z"
+        },
+        {
+          "id": "G11.comments",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Open Comments, write a reply, attach a file, select Comment; @ mentions people who can hear it; Comment actions edits or deletes own comment; unread badge clears after load; draft and attachments survive switching applets; no audience picker.",
+          "actual": "Comments badge before opening: \"1 Comments (1)\"; after the comments loaded and a reload: \" Comments\". No audience picker (0 radios). The draft stayed after switching to History and back, and the draft and its attachment stayed after closing and reopening Comments (a full reload did not keep the draft). Typing @Nad offered NH Nadia Haddad. The posted reply read \"RM Ravi Menon Matter Team this minute DOC-029r2 roles ask 386455 @Nadia Haddad doc029-roles-business-upload.txt\". Comment actions > Edit > Save changed it; Delete removed it (\"Comments 2 NH Nadia Haddad Matter Team this minute DOC-029r2 roles Legal reply for Ravi RM Ravi Menon Matter Team this minute Comment deleted by its author. Att\").",
+          "result": "pass",
+          "at": "2026-09-16T17:56:37.789Z"
+        },
+        {
+          "id": "G11b.reply-tier-label",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Your reply shows Contract Team on a Contract or Matter Team on a Matter (the Full Thread audience); the text below the composer names it; Legal Only and older Internal team messages stay outside this view.",
+          "actual": "On M-27 Ravi's reply row read \"RM Ravi Menon Matter Team this minute \" and the composer text read \"Visible to Legal and all Matter team members.\"; on C-98 the row read \"RM Ravi Menon Contract Team this minute \" and the composer text read \"Visible to Legal and all Contract team members.\". Legal Only and Working Team comments posted by Nadia on M-27 (API stand-ins, 201/201) did not appear, and no Legal Only or Internal team label appeared. See r2-portal-reply-tier-label.png.",
+          "result": "pass",
+          "at": "2026-09-16T17:56:43.950Z"
+        },
+        {
+          "id": "G12.team-add",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Open Matter team, Add team member, choose an existing person, Add; existing members are excluded; for a Confidential record ask Legal; no Portal remove control.",
+          "actual": "Picker excluded Ravi and Nadia; Ravi added Amara Nwosu, who appeared in the full-app Matter team (NH Matter Manager Creator Nadia Haddad | AN Amara Nwosu | RM Ravi Menon); no Portal remove control. On Confidential M-23, Add team member was disabled: \"Matter team NH Matter Manager Creator Nadia Haddad RM Ravi Menon Ask Legal to add members to a Confidential record.\". Nadia removed Amara and Ravi afterwards.",
+          "result": "pass",
+          "at": "2026-09-16T17:56:55.475Z"
+        },
+        {
+          "id": "G13.legal-limits",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Stage/Status moves, owners, parties, confidentiality, relationships, Tasks, Key dates, Approvals and signatures stay with Legal.",
+          "actual": "Neither Portal record offered Stage or Status moves, owner, party, confidentiality or relationship controls, or Tasks, Key dates or Approvals sections. A direct record write answered 403.",
+          "result": "pass",
+          "at": "2026-09-16T17:56:57.922Z"
+        },
+        {
+          "id": "G14.close-archive-remove",
+          "role": "business_user",
+          "method": "browser-walkthrough",
+          "expected": "Closing a Matter or Ending a Contract does not remove Portal work; archiving removes the record from the Portal; removing Ravi's membership stops access.",
+          "actual": "Legal moved M-27 to \"Closed\" (API stand-in, 200); Ravi still found and opened it with Upload documents enabled. After Legal archived it (200) it left Your Matters and the link showed \"Matter not found\". Legal restored it (200) and Ravi opened it again; Legal then reopened it (200). Legal moved C-98 to the ended status \"Expired\" (API stand-in, 200); Ravi still opened it with Upload documents and the Comments composer available; Legal moved it back (200). After Nadia removed Ravi through Matter team, his reload showed Matter not found and the Documents read answered 404.",
+          "result": "pass",
+          "at": "2026-09-16T17:57:09.774Z"
+        },
+        {
+          "id": "Z1.cleanup",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "expected": "Fixture cleanup: archive the 25 paging Matters.",
+          "actual": "Archive answered 200 for 25 paging Matters.",
+          "result": "pass",
+          "at": "2026-09-16T17:57:09.984Z"
+        }
+      ],
+      "limitations": [
+        "Agent replay of the round 1 script, not a human user study.",
+        "The replay ran against the current article bytes 41061cf9, which include the copy-only link label change. The replay checks do not read that link label.",
+        "The upload failure was injected by the browser route and the drop was a synthetic event, as in round 1.",
+        "Legal-side changes used the API stand-ins named in each step."
+      ]
+    }
+  ],
+  "reviewedAt": "2026-09-16T17:58:20.837Z"
+}

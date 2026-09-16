@@ -89,7 +89,22 @@
     "evidence": "docs/documentation/batches/DOC-029/signing-standin/walkthrough-r1.json"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (signing-standin)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T18:03:20.517Z",
+    "summary": "I inspected the app diff 3fa407e3..57e77e38 and found no change to the signing, Envelope, executed-copy or Approvals card code, or to their UI copy. I then replayed the V-C17-electronic walkthrough in full on lab sign-r2 (57e77e38) with the local DocuSign stand-in: 35 main steps, 2 Polling steps and 1 webhook-note check passed for Legal Team Member and Administrator.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/signing-standin.json",
+        "sha256": "34343fbf1ed480eac757b80bafe1f378f908869eefbe16db463c08565985dbfe"
+      }
+    ]
+  },
   "publicationBlockers": [
     "Live-provider C42/C43 acceptance remains blocked under #742; this local stand-in walkthrough does not change that."
   ]

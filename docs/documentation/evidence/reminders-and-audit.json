@@ -1,57 +1,64 @@
 {
   "articleId": "reminders-and-audit",
-  "contentSha256": "d1430853a0de13ac67a359a7bc447d48a08bd5193bb494ddcb34d3cabe44dec8",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (admin-config, round 1)",
+  "contentSha256": "8ca186fcbb821a59d6b0591a467fac3674421df48337d519d3e7ff0d9593648d",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "environment": "openlaw-docs-41255c61-admin2",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-config, round 1)",
   "reviewerKind": "agent",
   "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-config)",
-  "technicalReviewer": "DOC-029 source-review author agent (admin-config)",
-  "verifiedAt": "2026-09-16T16:26:15Z",
+  "technicalReviewer": "DOC-029r2 source-review author agent (admin-config)",
+  "verifiedAt": "2026-09-16T18:12:47Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/reminders-and-audit.md",
     "docs/documentation/batches/DOC-029/admin-config/technical-review.json",
-    "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-029/admin-config/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
       "id": "V-C41",
-      "coverage": ["C41"],
+      "coverage": [
+        "C41"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Administrator signed in on the admin documentation lab; seeded Legal Team Member in a separate context.",
+        "Seeded fictional Administrator signed in on the admin2 documentation lab built from 57e77e38; seeded Legal Team Member in a separate context.",
         "Two reviewer-invited fictional Legal Team Members with saved timezones Asia/Dubai (past 08:00) and Asia/Tokyo (before 08:00), each managing a fictional Matter with Key dates; the real morning round queued in the lab worker; Mailpit."
       ],
-      "expected": "Reminder lead times add, refuse duplicates, values over 730 and a 21st entry, reorder, persist, and keep at least one entry. After the morning round an eligible colleague past 08:00 gets one reminder per listed Key date, including two Key dates on one date and a Key date's own lead time, and none for an unlisted distance or a Key date that selects only another recipient; a colleague before 08:00 gets nothing yet. The Audit log filters, dates, Search, Show older, Clear filters and Export CSV work, Confidential Matter entries appear only for its audience, and other roles cannot open the log or the reminder settings.",
-      "actual": "9 recorded steps passed on 3fa407e3. Organization > Notifications opened /settings/reminders (Reminder lead times); Personal > Notifications opened Notification preferences. Add lead time 9 with Enter saved; a second 9 was refused with \"9 days before is already on the list.\", 731 with \"Enter a whole number of days between 0 and 730.\", and a 21st entry with \"The list holds at most 20 lead times. Remove one first.\"; ArrowUp reorder persisted; with one entry left no Remove was available. After the real morning round, the Asia/Dubai colleague had key_date_approaching bell items and a \"Your daily briefing\" mail for the 9-day Key date, both 7-day Key dates on the same date, and the Key date with its own 12-day lead time, and none for the 11-day Key date or the 3-day Key date that selected only Daniel Okafor. The Asia/Tokyo colleague at local hour 1 had no reminder and no briefing. The list was restored afterwards. In Settings > Security > Audit log, Person + Action + Record showed Daniel Okafor's org_settings.updated entries with before and after lead times; a range ending yesterday showed \"No entry matches these filters.\"; Clear filters reset every filter; Show older grew the page from 50 to 100 rows; Search narrowed to the walkthrough's records; Export CSV downloaded only matching entries. A Confidential Matter created by Nadia Haddad had 0 entries in the page and the CSV for Daniel Okafor until she added him to the Matter team, then 4.",
+      "expected": "Add lead time saves with Save and Cancel discards a draft. The list refuses duplicates, values over 730 and a 21st entry, reorders, persists, and keeps at least one entry. After the morning round an eligible colleague past 08:00 gets one reminder per listed Key date, including two Key dates on one date and a Key date's own lead time, and none for an unlisted distance or a Key date that selects only another recipient; a colleague before 08:00 gets nothing yet. The Audit log filters, dates, Search, Show older, Clear filters and Export CSV work, Confidential Matter entries appear only for its audience, and other roles cannot open the log or the reminder settings.",
+      "actual": "9 recorded steps passed on 57e77e38. Organization > Notifications opened /settings/reminders (Reminder lead times); Personal > Notifications opened Notification preferences. Add lead time with 33 and Cancel saved nothing. Add lead time 9 with Save saved; a second 9 was refused with \"9 days before is already on the list.\", 731 with \"Enter a whole number of days between 0 and 730.\", and a 21st entry with \"The list holds at most 20 lead times. Remove one first.\"; each refused draft stayed open beside Save and Cancel. ArrowUp reorder persisted after reload; with one entry left no Remove was available. After the real morning round, the Asia/Dubai colleague had key_date_approaching bell items and a \"Your daily briefing\" mail for the 9-day Key date, both 7-day Key dates on the same date, and the Key date with its own 12-day lead time, and none for the 11-day Key date or the 3-day Key date that selected only Daniel Okafor. The Asia/Tokyo colleague at local hour 3 had no reminder and no briefing. The list was restored afterwards. In Settings > Security > Audit log, Person + Action + Record showed Daniel Okafor's org_settings.updated entries with before and after lead times; a range ending yesterday showed \"No entry matches these filters.\"; Clear filters reset every filter; Show older grew the page from 50 to 100 rows; Search narrowed to the walkthrough's records; Export CSV downloaded only the 46 matching entries. A Confidential Matter created by Nadia Haddad had 0 entries in the page and the CSV for Daniel Okafor until she added him to the Matter team, then 4.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
       ]
     },
     {
       "id": "V-C41",
-      "coverage": ["C41"],
+      "coverage": [
+        "C41"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Legal Team Member signed in on the admin documentation lab in a separate browser context."
+        "Seeded fictional Legal Team Member signed in on the admin2 documentation lab in a separate browser context."
       ],
       "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
       "actual": "Role confirmed as legal_team_member from /api/v1/me. /settings/reminders sent the browser to /settings/profile. PUT /api/v1/org/reminder-offsets answered 403 (\"You do not have permission to perform this action.\"). /settings/audit-log sent the browser to /settings/profile. GET /api/v1/audit-log answered 403 (\"You do not have permission to perform this action.\").",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
       ]
     },
     {
       "id": "V-C41",
-      "coverage": ["C41"],
+      "coverage": [
+        "C41"
+      ],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -61,25 +68,26 @@
       "actual": "Role confirmed as business_user from /api/v1/me. /settings/reminders sent the browser to /portal. PUT /api/v1/org/reminder-offsets answered 403 (\"You do not have permission to perform this action.\"). /settings/audit-log sent the browser to /portal. GET /api/v1/audit-log answered 403 (\"You do not have permission to perform this action.\").",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not feature-owner approval.",
-    "The admin lab is shared with other DOC-029 agents. Records were named DOC-029 admin-config. Organisation reminder lead times were changed during the run and restored to 30, 14, 7, 1, and On the day; this was confirmed after reload.",
-    "Earlier development runs of the same script (logs not kept) failed only on reviewer script errors and left extra DOC-029 admin-config records with other suffixes; walkthrough-r1.json reviewerNotes lists them.",
+    "The admin2 lab was shared with other DOC-029r2 agents. Records were named DOC-029r2 admin-config walk. Records named DOC-029r2 admin-config compat came from another agent and were not changed. Organisation reminder lead times were changed during the run and restored to 30, 14, 7, 1, and On the day; this was confirmed after reload.",
+    "Two development runs of single sections of the same script (logs not kept in the repository) left extra fictional records with the suffixes mu4erz3c and mu4ev57k. The one failure in those runs was a reviewer script error; walkthrough-r2-1.json reviewerNotes describes it.",
     "Negative access checks used the seeded Legal Team Member (nadia.haddad) and Business User (jonas.weber), each in its own browser context; roles were confirmed from /api/v1/me.",
+    "Dev commit 6d34ac59 changed this article on dev (select Save and Cancel in step 3). The round 2 source-review author agent made no further change; technical-review-r2.json records the source check.",
     "The morning round was queued as notification.morning-round in the lab worker through pg-boss on the real clock (container-operation support for the browser checks). Bell contents were read from GET /api/v1/notifications as the colleague; the browser checked the header bell count and Mailpit held the briefing.",
     "Expiry, notice deadline and Entity Obligation reminders, email preference switches, and Search not covering record content were not checked.",
     "The Reminder lead times page note still says 'One list covers every tracked date'; the article's per-Key-date lead times match the observed behaviour.",
-    "The 20-entry check added 14 temporary organisation entries for about 20 seconds in the shared lab before removing them."
+    "The 20-entry check added 14 temporary organisation entries for a few seconds in the shared lab before removing them."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c",
-    "verifiedAt": "2026-09-08T06:33:00Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "d1430853a0de13ac67a359a7bc447d48a08bd5193bb494ddcb34d3cabe44dec8",
+    "verifiedAt": "2026-09-16T16:26:15Z"
   },
   "copyOnlyReview": null,
   "compatibilityReview": null

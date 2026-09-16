@@ -103,5 +103,20 @@
     "verifiedAt": null
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (support)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T18:02:54.052Z",
+    "summary": "I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to roles, access scopes, Stages, Key dates, Documents, the upload limit or file reading; the new 5 MB limit is for the organization logo only. I replayed the round 1 V-C50 walkthrough on the admin2 lab and all 11 steps passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/support.json",
+        "sha256": "00befc825cc6bbe60e5397dbae8f776bcf59782d97191ca0a23fea89c39a50d2"
+      }
+    ]
+  }
 }

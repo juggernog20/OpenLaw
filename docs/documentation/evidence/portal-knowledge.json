@@ -53,5 +53,20 @@
     "verifiedAt": "2026-09-07T10:07:20.254Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (portal)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:54:17.979Z",
+    "summary": "I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Portal Knowledge, Before you submit, downloads or Portal navigation. I replayed the round 1 V-C11 walkthrough on the work2 lab and all 12 steps passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/portal.json",
+        "sha256": "3689cb2fbeae37cdfde1d0d60687e07dbda52f59743356853635ab68b077c8e8"
+      }
+    ]
+  }
 }

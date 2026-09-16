@@ -91,5 +91,20 @@
     "verifiedAt": "2026-09-07T17:20:09.933Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "ce182804fbd35ffb2e8ba24cff6bc848963a56f1b04a10222dea23aedebbee39",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (analysis-standin)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T18:07:30.000Z",
+    "summary": "I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Analysis, AI analysis card, Key dates or Contract record file and no string this article quotes. I replayed the round 1 V-C21 walkthrough, with Request-context Analysis, on lab analysis-r2 with the local provider stand-in, and all 34 steps passed for the Administrator and the Legal Team Member.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/analysis-standin.json",
+        "sha256": "23c4b2773f1ea02986f233803e49f17bffa1e089e3e5fbe429a2c0f28c914d0e"
+      }
+    ]
+  }
 }

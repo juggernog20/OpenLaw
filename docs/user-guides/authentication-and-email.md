@@ -39,11 +39,14 @@ Under **Business Portal Authentication**, turn off **Email magic link** to requi
 
 During [first-run setup](first-run.md), the **Outbound email** step shows the active configuration source.
 
-1. If email is unset, enter the **SMTP server** and **Port** supplied by your email administrator. Choose **Connection security**: STARTTLS (usually port 587), TLS (usually port 465), or None for a relay configured without encryption. Choose **Authentication**: Username and password, or None when your internal relay authorizes the app without credentials. Enter the SMTP credentials if required, a **Sender email** accepted by your relay, and an optional **Sender name**.
-2. Select **Save relay**. Credentials are stored encrypted and are never returned to the browser. STARTTLS requires a successful TLS upgrade before authentication or delivery.
-3. Select **Send test email**, then check the signed-in Administrator's inbox. A saved relay alone does not prove delivery works.
-4. If delivery fails, use **Replace relay**, correct the connection or sender details, save, and send another test. Check relay connectivity and its authentication and sender restrictions with your operator.
-5. **Clear relay** removes the saved relay and stops email delivery when there is no environment override. Save a valid replacement before depending on invitations, magic links, or password reset emails.
+1. If email is unset, enter the **SMTP server** supplied by your email administrator. Enter only the host name or IP address, with no `smtp://` prefix and no port. Enter the **Port**.
+2. Choose **Connection security**: STARTTLS (usually port 587), TLS (usually port 465), or None for a relay configured without encryption. **Port** starts at 587. If you have not changed it, it follows your **Connection security** choice.
+3. Choose **Authentication**. Keep **Username and password** and enter **SMTP username** and **SMTP password**, or choose **None** when your internal relay accepts the app without credentials.
+4. Enter a **Sender email** that your relay accepts. **Sender name (optional)** sets the display name on sent email.
+5. Select **Save relay**. OpenLaw stores the credentials encrypted and never returns them to the browser. With STARTTLS, the TLS upgrade must succeed before authentication or delivery.
+6. Select **Send test email**, then check the signed-in Administrator's inbox. A saved relay alone does not prove delivery works.
+7. If delivery fails, use **Replace relay**. The form opens empty, so enter all the connection, authentication, and sender details again. Save, and send another test. **Keep current relay** closes the form without a change. Check relay connectivity and its authentication and sender restrictions with your operator.
+8. **Clear relay** removes the saved relay and stops email delivery when there is no environment override. Save a valid replacement before depending on invitations, magic links, or password reset emails.
 
 The wizard cannot finish until email is configured. The **Outbound email** step has no **Set up later**, and **Continue** stays unavailable until email is configured. **Skip optional steps** on the Welcome step opens **Outbound email** while email is not configured. A configured relay does not prove delivery, so complete these checks before you continue. The completed welcome wizard cannot be reopened in this version, and there is no separate email Settings page. After completion, use the operator-managed deployment configuration to change or recover email delivery.
 

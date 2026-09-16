@@ -95,5 +95,20 @@
     "verifiedAt": "2026-09-07T11:33:34.068Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (inbox)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:56:44.635Z",
+    "summary": "I inspected the 3fa407e3..57e77e38 app diff and messages/en-US.json; no change touches the Convert dialog, conversion, paper and thread moves, Matter templates or the AI conversion switches, only a refactor and new intro text on the AI analysis settings page. I replayed the round 1 V-C13 manual-conversion walkthrough on the work2 lab built from 57e77e38, and all 26 steps passed for the Administrator and Legal Team Member; AI preparation was not exercised because no AI connector is configured.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/inbox.json",
+        "sha256": "1a8b19ae8e07b77d936fc3aa98a818a7f96aa41d357d3bfd0a8091dca4d2f237"
+      }
+    ]
+  }
 }

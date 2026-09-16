@@ -74,5 +74,20 @@
     ],
     "whyPriorWalkthroughsApply": "No action, prerequisite, result, control name or meaning changed. Only the visible text of one link changed, so the link now names the article it opens. The walkthrough evidence above ran against the previous bytes and is kept unchanged. No fresh walkthrough is claimed for these bytes."
   },
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "7104110814c3a789f3d1fc02240f6d2f40e509813d636c2c196a833fc53aee8f",
+    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+    "reviewer": "DOC-029r2 compatibility reviewer (portal)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:54:17.979Z",
+    "summary": "I inspected the app diff from 3fa407e3 to 57e77e38; the only Portal-path change is the colour of an archived author name in Comments, which the article does not state. I replayed the round 1 V-C10 walkthrough and supplement on the work2 lab and all 29 steps passed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/portal.json",
+        "sha256": "3689cb2fbeae37cdfde1d0d60687e07dbda52f59743356853635ab68b077c8e8"
+      }
+    ]
+  }
 }
