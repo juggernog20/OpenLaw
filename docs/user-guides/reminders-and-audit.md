@@ -6,7 +6,7 @@ Set the organization's reminder lead times and inspect recorded changes. Both ta
 
 1. Open your profile menu and select **Settings**.
 2. Under **Organization**, select **Notifications**. Check that the page is **Reminder lead times**; **Personal**, **Notifications** changes only your preferences.
-3. Select **Add lead time**, enter a whole number of days before the date, and press Enter. Zero means **On the day**.
+3. Select **Add lead time**, enter a whole number of days before the date, and select **Save**. Select **Cancel** to discard the draft. Zero means **On the day**.
 4. Use a row's **Remove** control to remove an unwanted lead time. Drag its reorder handle, or focus the handle and use the arrow keys, to change the list's display order.
 5. Wait for each save, then reload and confirm the final list.
 

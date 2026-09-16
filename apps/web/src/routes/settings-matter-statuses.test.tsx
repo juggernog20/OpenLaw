@@ -117,6 +117,30 @@ describe("the Matters Statuses pane", () => {
     );
   });
 
+  it("creates a status with the visible Save button and cancels a draft without saving", async () => {
+    const calls = { creates: [] as unknown[], archives: [] as unknown[] };
+    stubApi({ signedIn: ADMIN, extra: statusApi(calls) });
+    renderAt("/settings/matters/statuses");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Add status" }));
+    expect(screen.getByRole("button", { name: "Save status" })).toBeDisabled();
+    await user.type(screen.getByRole("textbox", { name: "New status name" }), "Awaiting input");
+    await user.click(screen.getByRole("button", { name: "Save status" }));
+    expect(await screen.findByText("Pick a category for the new status.")).toBeVisible();
+    await user.selectOptions(screen.getByRole("combobox", { name: "New status category" }), "open");
+    await user.selectOptions(screen.getByRole("combobox", { name: "New status group" }), "waiting");
+    await user.click(screen.getByRole("button", { name: "Save status" }));
+    expect(await screen.findByRole("button", { name: "Rename Awaiting input" })).toBeVisible();
+    expect(calls.creates).toEqual([
+      { displayName: "Awaiting input", category: "open", progressionGroup: "waiting" },
+    ]);
+    await user.click(screen.getByRole("button", { name: "Add status" }));
+    await user.type(screen.getByRole("textbox", { name: "New status name" }), "Discard this");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("textbox", { name: "New status name" })).not.toBeInTheDocument();
+    expect(calls.creates).toHaveLength(1);
+  });
+
   it("shows the live guard count and posts the chosen same-category replacement", async () => {
     const calls = { creates: [] as unknown[], archives: [] as unknown[] };
     stubApi({ signedIn: ADMIN, extra: statusApi(calls) });

@@ -9077,6 +9077,9 @@
   "settings.matterStatuses.restore": {
     "defaultMessage": "Restore {name}"
   },
+  "settings.matterStatuses.saveNew": {
+    "defaultMessage": "Save status"
+  },
   "settings.matterStatuses.title": {
     "defaultMessage": "Matter statuses"
   },

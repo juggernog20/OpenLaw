@@ -5,7 +5,7 @@ Configure the choices and information your organization uses on its records. Sig
 ## Add and maintain types
 
 1. Under **Organization**, select **Contracts**, **Matters**, **Entities**, or **Knowledge**, then **Types**.
-2. Select **Add type**, enter a name, and press Enter. Use a fictional example such as **Supplier assessment** while testing.
+2. Select **Add type**, enter a name, and select **Save**. Select **Cancel** to discard the draft. Use a fictional example such as **Supplier assessment** while testing.
 3. Select the row's **Rename** control to change its display name. Where **Edit** is available, open it to change the description and attached Fields. Leave a text field to save, and check the saved result.
 4. Drag a reorder handle, or focus it and use the arrow keys, to change the display order.
 
@@ -17,7 +17,7 @@ Request types have their own form and target settings. See [Configure request ty
 
 ## Configure Statuses
 
-For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuses, open **Matters**, then **Statuses**. Select **Add status**, enter a name, choose its Stage or Category, and press Enter. Rename and reorder existing rows with their row controls.
+For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuses, open **Matters**, then **Statuses**. Select **Add status**, enter a name, choose its Stage or Category, and select **Save status**. Select **Cancel** to discard the draft. Rename and reorder existing rows with their row controls.
 
 | Setting         | Fixed structure                                                                                            | Archive behavior                                                                                                                                                                                                                                                      |
 | --------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

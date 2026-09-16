@@ -211,6 +211,25 @@ describe("add (the inline draft row)", () => {
     expect(screen.getByText("9 types")).toBeInTheDocument();
   });
 
+  it("saves and cancels with visible buttons without creating on blur", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: typesApi(calls) });
+    renderAt("/settings/contracts/types");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Add type" }));
+    await user.type(screen.getByRole("textbox", { name: "New type name" }), "Discard this");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(calls.creates).toEqual([]);
+    expect(screen.queryByRole("textbox", { name: "New type name" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add type" }));
+    await user.type(screen.getByRole("textbox", { name: "New type name" }), "Real Estate");
+    await user.tab();
+    expect(calls.creates).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByRole("button", { name: "Rename Real Estate" })).toBeVisible();
+    expect(calls.creates).toEqual([{ displayName: "Real Estate" }]);
+  });
+
   it("discards on Escape without a request", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: typesApi(calls) });

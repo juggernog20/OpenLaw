@@ -28,6 +28,7 @@ import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
+import { InlineAddForm } from "../components/inline-add-form";
 import { ListEditor } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -492,6 +493,7 @@ export function SettingsMatterStatusesPage() {
             <FormattedMessage id="settings.matterStatuses.add" defaultMessage="Add status" />
           }
           onAdd={() => {
+            if (adding) return;
             setAdding(true);
             setAddDraft({ name: "", category: "", progressionGroup: "in_progress" });
             setAddStatus("idle");
@@ -565,7 +567,18 @@ export function SettingsMatterStatusesPage() {
           }}
           adding={adding}
           addRow={
-            <>
+            <InlineAddForm
+              saving={addStatus === "saving"}
+              canSave={!!addDraft.name.trim()}
+              onSave={() => void create()}
+              onCancel={() => setAdding(false)}
+              saveLabel={
+                <FormattedMessage
+                  id="settings.matterStatuses.saveNew"
+                  defaultMessage="Save status"
+                />
+              }
+            >
               <Input
                 autoFocus
                 value={addDraft.name}
@@ -577,10 +590,6 @@ export function SettingsMatterStatusesPage() {
                 onChange={(event) =>
                   setAddDraft((current) => ({ ...current, name: event.target.value }))
                 }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") void create();
-                  if (event.key === "Escape") setAdding(false);
-                }}
               />
               {/* The creation-time immutable dimension (MTR-002): the
                   category is picked here, once. */}
@@ -600,10 +609,6 @@ export function SettingsMatterStatusesPage() {
                     setAddStatus("idle");
                     setAddError(undefined);
                   }
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") void create();
-                  if (event.key === "Escape") setAdding(false);
                 }}
               >
                 <option value="">
@@ -643,7 +648,7 @@ export function SettingsMatterStatusesPage() {
               <span className="ps-1">
                 <StatusNote status={addStatus} detail={addError} />
               </span>
-            </>
+            </InlineAddForm>
           }
           announcement={announcement}
           listRef={listRef}

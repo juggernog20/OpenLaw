@@ -74,11 +74,13 @@ export interface ListEditorProps<Row extends ListEditorRow> {
    * a Block is detected from the file, never added by hand). */
   onAdd?: () => void;
   /** The help caption below the card (DES-020's two non-obvious behaviors). */
-  help: ReactNode;
+  help?: ReactNode;
   /** An optional column-header strip above the rows (DES-021 tables). */
   columnsHeader?: ReactNode;
   /** Draws the card as a named landmark; see `SettingsCard`'s `region`. */
   region?: boolean;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
   /** An optional class per row: DES-087's builder washes the selected row. */
   rowClassName?: (row: Row) => string | undefined;
   /** Per-row save state, keyed by row id; drives the row's StatusNote. */
@@ -144,6 +146,8 @@ export function ListEditor<Row extends ListEditorRow>({
   help,
   columnsHeader,
   region,
+  collapsible,
+  defaultOpen,
   rowClassName,
   rowStatus,
   rowError,
@@ -312,6 +316,8 @@ export function ListEditor<Row extends ListEditorRow>({
         title={title}
         flush
         region={region}
+        collapsible={collapsible}
+        defaultOpen={defaultOpen}
         actions={
           <div className="flex items-center gap-3">
             {headerCaption && (
@@ -333,7 +339,12 @@ export function ListEditor<Row extends ListEditorRow>({
             <span className="text-sm whitespace-nowrap text-muted">{count}</span>
             {reorder && <StatusNote status={reorder.status} detail={reorder.detail} />}
             {onAdd && (
-              <Button size="sm" className="px-3 whitespace-nowrap" disabled={busy} onClick={onAdd}>
+              <Button
+                size="sm"
+                className="px-3 whitespace-nowrap"
+                disabled={busy || adding}
+                onClick={onAdd}
+              >
                 <Plus size={16} aria-hidden="true" />
                 {addLabel}
               </Button>
@@ -406,7 +417,7 @@ export function ListEditor<Row extends ListEditorRow>({
           ))}
           {adding && addRow && (
             <li
-              className={`flex h-11 items-center gap-2 border-b border-border-muted pe-3 ${reorder ? "ps-9" : "ps-4"}`}
+              className={`flex min-h-11 items-center gap-2 border-b border-border-muted py-2 pe-3 ${reorder ? "ps-9" : "ps-4"}`}
             >
               {addRow}
             </li>
@@ -455,7 +466,7 @@ export function ListEditor<Row extends ListEditorRow>({
             ))}
         </ul>
       </SettingsCard>
-      <p className="text-sm text-muted">{help}</p>
+      {help != null && <p className="text-sm text-muted">{help}</p>}
     </div>
   );
 }
