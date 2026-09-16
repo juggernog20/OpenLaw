@@ -558,7 +558,7 @@ export interface paths {
     };
     /** Where outbound email is configured (#37): environment, app, or not at all — and the effective from-address. Never the relay URL */
     get: operations["getEmailSettings"];
-    /** Save the app SMTP relay (#37): smtp:// or smtps:// URL with credentials inline, plus a from-address; both null clears. Takes effect on the next send. Refused while the environment pins SMTP — env always wins over app configuration */
+    /** Save the app SMTP server, port, security, authentication, and sender. Legacy smtpUrl/smtpFrom requests remain supported; both null clears. Takes effect on the next send. Refused while the environment pins SMTP — env always wins over app configuration */
     put: operations["saveEmailSettings"];
     post?: never;
     delete?: never;
@@ -8534,10 +8534,30 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          smtpUrl: string | null;
-          smtpFrom: string | null;
-        };
+        "application/json":
+          | {
+              host: string;
+              port: number;
+              /** @enum {string} */
+              security: "starttls" | "tls" | "none";
+              authentication:
+                | {
+                    /** @enum {string} */
+                    type: "none";
+                  }
+                | {
+                    /** @enum {string} */
+                    type: "password";
+                    username: string;
+                    password: string;
+                  };
+              senderName: string;
+              senderEmail: string;
+            }
+          | {
+              smtpUrl: string | null;
+              smtpFrom: string | null;
+            };
       };
     };
     responses: {

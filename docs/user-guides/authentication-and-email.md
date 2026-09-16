@@ -32,8 +32,8 @@ In OIDC mode, **Magic-link sign-in** can be turned off to require identity-provi
 
 During [first-run setup](first-run.md), the **Outbound email** step shows the active configuration source.
 
-1. If email is unset, enter an **SMTP relay URL** beginning with `smtp://` or `smtps://`, and a **From address** accepted by your relay. Credentials, if required, are part of the URL; obtain them from your operator and keep them out of screenshots and support messages.
-2. Select **Save relay**. The saved URL is not displayed again.
+1. If email is unset, enter the **SMTP server** and **Port** supplied by your email administrator. Choose **Connection security**: STARTTLS (usually port 587), TLS (usually port 465), or None for a relay configured without encryption. Choose **Authentication**: Username and password, or None when your internal relay authorizes the app without credentials. Enter the SMTP credentials if required, a **Sender email** accepted by your relay, and an optional **Sender name**.
+2. Select **Save relay**. Credentials are stored encrypted and are never returned to the browser. STARTTLS requires a successful TLS upgrade before authentication or delivery.
 3. Select **Send test email**, then check the signed-in Administrator's inbox. A saved relay alone does not prove delivery works.
 4. If delivery fails, use **Replace relay**, correct the connection or sender details, save, and send another test. Check relay connectivity and its authentication and sender restrictions with your operator.
 5. **Clear relay** removes the saved relay and stops email delivery when there is no environment override. Save a valid replacement before depending on invitations, magic links, or password reset emails.

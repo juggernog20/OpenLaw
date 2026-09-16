@@ -7713,7 +7713,7 @@
     "defaultMessage": "Turn this off to hide AI analysis without deleting the connector."
   },
   "settings.aiAnalysis.intro": {
-    "defaultMessage": "Connect your own AI provider for contract analysis. OpenLaw sends contract text only when an analysis runs."
+    "defaultMessage": "Connect your AI provider for Contract analysis and AI-assisted Request conversion. Relevant document text, Request answers, and conversations are sent to the provider when an AI task runs."
   },
   "settings.aiAnalysis.model": {
     "defaultMessage": "Model"
@@ -9983,6 +9983,9 @@
   "settings.requestTypes.title": {
     "defaultMessage": "Request types"
   },
+  "settings.returnToSetup": {
+    "defaultMessage": "Return to setup"
+  },
   "settings.section.aiAnalysis": {
     "defaultMessage": "AI analysis"
   },
@@ -10536,10 +10539,10 @@
     "defaultMessage": "This connector lives at Settings → Organization → AI analysis. Set it up there whenever you like."
   },
   "welcome.aiAnalysis.configured": {
-    "defaultMessage": "Contract analysis runs through {provider}, on model {model}."
+    "defaultMessage": "AI features use {provider}, on model {model}."
   },
   "welcome.aiAnalysis.configured.disabled": {
-    "defaultMessage": "{provider} is configured on model {model}, but analysis is turned off. Every Field stays manual until it is turned back on."
+    "defaultMessage": "{provider} is configured on model {model}, but AI features are turned off."
   },
   "welcome.aiAnalysis.error.noModel": {
     "defaultMessage": "Enter the model to analyze with, or choose Set up later."
@@ -10548,7 +10551,7 @@
     "defaultMessage": "The AI connector could not be saved."
   },
   "welcome.aiAnalysis.hint": {
-    "defaultMessage": "Optional. Connect your own AI provider and an Analysis run reads a Contract's primary Document for you and fills its Fields, each marked Unverified until a person confirms it. Skip it and Contract analysis does not run. Every Field you would have got automatically stays manual, and nothing else is lost. Contract text reaches your provider only while an Analysis run is working."
+    "defaultMessage": "Optional. Connect an AI provider to analyze Contract documents and suggest Field values. You can also enable AI to prepare Matter and Contract conversions from Requests and fill Contract Fields using Request answers, conversations, and supporting documents. AI-generated Field values stay Unverified until reviewed. Enable conversion workflows in AI analysis Settings. Relevant content is sent to your provider when an AI task runs."
   },
   "welcome.aiAnalysis.replace": {
     "defaultMessage": "Replace credentials"
@@ -10628,6 +10631,12 @@
   "welcome.email.app": {
     "defaultMessage": "Outbound email is set in the app. Mail is sent from {from}."
   },
+  "welcome.email.authentication.none": {
+    "defaultMessage": "None"
+  },
+  "welcome.email.authentication.password": {
+    "defaultMessage": "Username and password"
+  },
   "welcome.email.clear": {
     "defaultMessage": "Clear relay"
   },
@@ -10652,20 +10661,29 @@
   "welcome.email.error.test": {
     "defaultMessage": "The test email could not be sent."
   },
-  "welcome.email.field.from": {
-    "defaultMessage": "From address"
+  "welcome.email.field.authentication": {
+    "defaultMessage": "Authentication"
   },
-  "welcome.email.field.fromPlaceholder": {
-    "defaultMessage": "OpenLaw '<'openlaw@example.com'>'"
+  "welcome.email.field.host": {
+    "defaultMessage": "SMTP server"
   },
-  "welcome.email.field.url": {
-    "defaultMessage": "SMTP relay URL"
+  "welcome.email.field.password": {
+    "defaultMessage": "SMTP password"
   },
-  "welcome.email.field.url.hint": {
-    "defaultMessage": "Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
+  "welcome.email.field.port": {
+    "defaultMessage": "Port"
   },
-  "welcome.email.field.urlPlaceholder": {
-    "defaultMessage": "smtp://user:password@mail.example.com:587"
+  "welcome.email.field.security": {
+    "defaultMessage": "Connection security"
+  },
+  "welcome.email.field.senderEmail": {
+    "defaultMessage": "Sender email"
+  },
+  "welcome.email.field.senderName": {
+    "defaultMessage": "Sender name (optional)"
+  },
+  "welcome.email.field.username": {
+    "defaultMessage": "SMTP username"
   },
   "welcome.email.replace": {
     "defaultMessage": "Replace relay"
@@ -10678,6 +10696,9 @@
   },
   "welcome.email.saved": {
     "defaultMessage": "Relay saved. The next email this instance sends will use it."
+  },
+  "welcome.email.security.none": {
+    "defaultMessage": "None"
   },
   "welcome.email.test": {
     "defaultMessage": "Send test email"
@@ -10751,6 +10772,9 @@
   "welcome.progress": {
     "defaultMessage": "Step {current} of {total}"
   },
+  "welcome.review.contractFields": {
+    "defaultMessage": "Contract fields"
+  },
   "welcome.review.contractStatuses": {
     "defaultMessage": "Contract statuses"
   },
@@ -10760,14 +10784,14 @@
   "welcome.review.count": {
     "defaultMessage": "Rows"
   },
+  "welcome.review.entityFields": {
+    "defaultMessage": "Entity fields"
+  },
   "welcome.review.entityTypes": {
     "defaultMessage": "Entity types"
   },
   "welcome.review.error": {
     "defaultMessage": "Review could not be saved. Try again."
-  },
-  "welcome.review.fields": {
-    "defaultMessage": "Fields"
   },
   "welcome.review.hint": {
     "defaultMessage": "Your install started with these lists and reminder offsets. These are their current counts, including archived rows. Open a list in Settings to make changes."
@@ -10777,6 +10801,9 @@
   },
   "welcome.review.list": {
     "defaultMessage": "List"
+  },
+  "welcome.review.matterFields": {
+    "defaultMessage": "Matter fields"
   },
   "welcome.review.matterStatuses": {
     "defaultMessage": "Matter statuses"
@@ -10789,9 +10816,6 @@
   },
   "welcome.review.reminders": {
     "defaultMessage": "Reminder offsets"
-  },
-  "welcome.review.reminders.address": {
-    "defaultMessage": "Reminder offsets live at Settings → Organization → Notifications."
   },
   "welcome.review.requestTypes": {
     "defaultMessage": "Request types"

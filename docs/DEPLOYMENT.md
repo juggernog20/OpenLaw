@@ -28,7 +28,7 @@ Then open `http://<host>:3000` — a fresh install lands on first-run setup, whe
 
 ## Configuration
 
-All configuration is environment variables in `.env`; [`.env.example`](../.env.example) documents every one. The short version:
+Deployment configuration uses environment variables in `.env`; [`.env.example`](../.env.example) documents every one. Administrators configure organization settings and providers in the app, including SMTP in the welcome wizard when it is not pinned by the environment. The deployment settings in brief:
 
 | Variable                        | Required | Meaning                                                                                                                                                                                                                                                                                                          |
 | ------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -257,7 +257,7 @@ The API key is write-only after save and encrypted at rest under `OPENLAW_SECRET
 
 OpenLaw sends through whatever SMTP relay you already run (TECH-011). Configure it one of two ways:
 
-- **In the app**: enter the relay URL and From address in the Welcome to OpenLaw wizard's email step (Administrator only). Saves take effect on the next send — no restart.
+- **In the app**: enter the SMTP server, port, security, authentication, and sender details in the Welcome to OpenLaw wizard's email step (Administrator only). Saves take effect on the next send — no restart.
 - **In the environment**: set `SMTP_URL` and `SMTP_FROM` in `.env`.
 
 **The environment always wins.** Setting `SMTP_URL` pins the instance: values saved in the app are ignored entirely, and the wizard shows the environment configuration read-only instead of accepting settings that would never apply. Pin via the environment when your deployment tooling is the source of truth.

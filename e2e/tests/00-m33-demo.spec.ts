@@ -189,13 +189,15 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         await expect(review.getByRole("link")).toHaveText([
           "Matter types",
           "Matter statuses",
+          "Matter fields",
           "Contract types",
           "Contract statuses",
+          "Contract fields",
           "Entity types",
           "Officer roles",
+          "Entity fields",
           "Knowledge types",
           "Request types",
-          "Fields",
           "Reminder offsets",
         ]);
         for (const label of [

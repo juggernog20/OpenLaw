@@ -12,7 +12,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import type { paths } from "@openlaw/api-client";
-import { screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -320,6 +320,49 @@ describe("welcome wizard organization step (#697)", () => {
     expect(patches).toEqual([]);
   });
 
+  it("saves an internal relay without credentials and preserves a custom port", async () => {
+    let putBody: unknown;
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false, steps: { email: false } },
+      emailSettings: { source: "unset", fromAddress: null },
+      extra: emailWizardExtra((call) => {
+        if (call.url.pathname === "/api/v1/email-settings" && call.method === "PUT") {
+          putBody = call.body;
+          return json(200, { source: "app", fromAddress: "legal@acme.example" });
+        }
+        return undefined;
+      }),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToEmailStep(user);
+    await user.type(screen.getByLabelText("SMTP server"), "mail.internal");
+    await user.selectOptions(screen.getByLabelText("Connection security"), "tls");
+    expect(screen.getByLabelText("Port")).toHaveValue(465);
+    await user.selectOptions(screen.getByLabelText("Connection security"), "none");
+    expect(screen.getByLabelText("Port")).toHaveValue(25);
+    await user.clear(screen.getByLabelText("Port"));
+    await user.type(screen.getByLabelText("Port"), "2525");
+    await user.selectOptions(screen.getByLabelText("Connection security"), "starttls");
+    expect(screen.getByLabelText("Port")).toHaveValue(2525);
+    await user.type(screen.getByLabelText("SMTP username"), "discarded");
+    await user.type(screen.getByLabelText("SMTP password"), "discarded");
+    await user.selectOptions(screen.getByLabelText("Authentication"), "none");
+    expect(screen.queryByLabelText("SMTP password")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("Sender email"), "legal@acme.example");
+    await user.click(screen.getByRole("button", { name: "Save relay" }));
+    expect(await screen.findByText(/Relay saved/)).toBeInTheDocument();
+    expect(putBody).toEqual({
+      host: "mail.internal",
+      port: 2525,
+      security: "starttls",
+      authentication: { type: "none" },
+      senderName: "",
+      senderEmail: "legal@acme.example",
+    });
+  });
+
   it("surfaces a save failure's plain-language reason", async () => {
     stubApi({
       signedIn: ADMIN,
@@ -427,7 +470,7 @@ describe("welcome wizard email step (#37)", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/SMTP_URL and SMTP_FROM/)).toBeInTheDocument();
     // Read-only: no form, no save, and nothing to test from here.
-    expect(screen.queryByLabelText("SMTP relay URL")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("SMTP server")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send test email" })).not.toBeInTheDocument();
   });
 
@@ -449,20 +492,72 @@ describe("welcome wizard email step (#37)", () => {
     const user = userEvent.setup();
     await goToEmailStep(user);
 
-    await user.type(
-      screen.getByLabelText("SMTP relay URL"),
-      "smtp://mailer:pass@relay.acme.example:587",
-    );
-    await user.type(screen.getByLabelText("From address"), "Acme <legal@acme.example>");
+    await user.type(screen.getByLabelText("SMTP server"), "relay.acme.example");
+    await user.type(screen.getByLabelText("SMTP username"), "mailer@acme.example");
+    expect(screen.getByLabelText("SMTP password")).toHaveAttribute("type", "password");
+    await user.type(screen.getByLabelText("SMTP password"), "pass@:/%40?#");
+    await user.type(screen.getByLabelText("Sender name (optional)"), "Acme");
+    await user.type(screen.getByLabelText("Sender email"), "legal@acme.example");
     await user.click(screen.getByRole("button", { name: "Save relay" }));
 
     expect(await screen.findByText(/Relay saved/)).toBeInTheDocument();
     expect(putBody).toEqual({
-      smtpUrl: "smtp://mailer:pass@relay.acme.example:587",
-      smtpFrom: "Acme <legal@acme.example>",
+      host: "relay.acme.example",
+      port: 587,
+      security: "starttls",
+      authentication: {
+        type: "password",
+        username: "mailer@acme.example",
+        password: "pass@:/%40?#",
+      },
+      senderName: "Acme",
+      senderEmail: "legal@acme.example",
     });
     expect(screen.getByText(/Outbound email is set in the app/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Send test email" })).toBeInTheDocument();
+  });
+
+  it("saves an internal relay without credentials and preserves a custom port", async () => {
+    let putBody: unknown;
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false, steps: { email: false } },
+      emailSettings: { source: "unset", fromAddress: null },
+      extra: emailWizardExtra((call) => {
+        if (call.url.pathname === "/api/v1/email-settings" && call.method === "PUT") {
+          putBody = call.body;
+          return json(200, { source: "app", fromAddress: "legal@acme.example" });
+        }
+        return undefined;
+      }),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToEmailStep(user);
+    await user.type(screen.getByLabelText("SMTP server"), "mail.internal");
+    await user.selectOptions(screen.getByLabelText("Connection security"), "tls");
+    expect(screen.getByLabelText("Port")).toHaveValue(465);
+    await user.selectOptions(screen.getByLabelText("Connection security"), "none");
+    expect(screen.getByLabelText("Port")).toHaveValue(25);
+    await user.clear(screen.getByLabelText("Port"));
+    await user.type(screen.getByLabelText("Port"), "2525");
+    await user.selectOptions(screen.getByLabelText("Connection security"), "starttls");
+    expect(screen.getByLabelText("Port")).toHaveValue(2525);
+    await user.type(screen.getByLabelText("SMTP username"), "discarded");
+    await user.type(screen.getByLabelText("SMTP password"), "discarded");
+    await user.selectOptions(screen.getByLabelText("Authentication"), "none");
+    expect(screen.queryByLabelText("SMTP password")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("Sender email"), "legal@acme.example");
+    await user.click(screen.getByRole("button", { name: "Save relay" }));
+    expect(await screen.findByText(/Relay saved/)).toBeInTheDocument();
+    expect(putBody).toEqual({
+      host: "mail.internal",
+      port: 2525,
+      security: "starttls",
+      authentication: { type: "none" },
+      senderName: "",
+      senderEmail: "legal@acme.example",
+    });
   });
 
   it("surfaces a save failure's plain-language reason", async () => {
@@ -472,7 +567,7 @@ describe("welcome wizard email step (#37)", () => {
       emailSettings: { source: "unset", fromAddress: null },
       extra: emailWizardExtra((call) => {
         if (call.url.pathname === "/api/v1/email-settings" && call.method === "PUT") {
-          return problem(400, "The relay URL must start with smtp:// or smtps://.");
+          return problem(400, "The SMTP server could not be saved.");
         }
         return undefined;
       }),
@@ -481,13 +576,12 @@ describe("welcome wizard email step (#37)", () => {
     const user = userEvent.setup();
     await goToEmailStep(user);
 
-    await user.type(screen.getByLabelText("SMTP relay URL"), "http://relay.acme.example");
-    await user.type(screen.getByLabelText("From address"), "Acme <legal@acme.example>");
+    await user.type(screen.getByLabelText("SMTP server"), "relay.acme.example");
+    await user.selectOptions(screen.getByLabelText("Authentication"), "none");
+    await user.type(screen.getByLabelText("Sender email"), "legal@acme.example");
     await user.click(screen.getByRole("button", { name: "Save relay" }));
 
-    expect(
-      await screen.findByText("The relay URL must start with smtp:// or smtps://."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("The SMTP server could not be saved.")).toBeInTheDocument();
   });
 
   it("sends a test email from the app-configured state and reports the recipient", async () => {
@@ -533,7 +627,7 @@ describe("welcome wizard email step (#37)", () => {
     expect(putBody).toEqual({ smtpUrl: null, smtpFrom: null });
     // Back on the setup form, warned that mail cannot be delivered.
     expect(screen.getByText(/Set up outbound email to finish instance setup/)).toBeInTheDocument();
-    expect(screen.getByLabelText("SMTP relay URL")).toBeInTheDocument();
+    expect(screen.getByLabelText("SMTP server")).toBeInTheDocument();
   });
 });
 
@@ -570,6 +664,82 @@ describe("welcome wizard e-signature step (#698)", () => {
     // AI analysis follows, so this step offers another one.
     expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Finish" })).not.toBeInTheDocument();
+  });
+
+  it("loads and selects provider models using the unsaved key without saving it", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    const discoveries: unknown[] = [];
+    const extra = aiWizardExtra(calls);
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/ai-connector/models") {
+          discoveries.push(call.body);
+          return json(200, {
+            models: [{ id: "legal-model", label: "Legal model" }],
+            truncated: false,
+          });
+        }
+        return extra(call);
+      },
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+    expect(screen.getByRole("combobox", { name: "Model" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Load models" })).toBeDisabled();
+    await user.type(screen.getByLabelText("API key"), "discovery-test-key");
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByRole("option", { name: "Legal model · legal-model" })).toBeVisible();
+    expect(discoveries).toEqual([
+      {
+        preset: "anthropic",
+        protocol: "anthropic_messages",
+        baseUrl: "https://api.anthropic.com/v1",
+        apiKey: "discovery-test-key",
+      },
+    ]);
+    expect(calls.saves).toEqual([]);
+    await user.selectOptions(screen.getByLabelText("Model"), "legal-model");
+    await finishFromAiAnalysis(user);
+    expect(calls.saves).toEqual([
+      { preset: "anthropic", model: "legal-model", apiKey: "discovery-test-key" },
+    ]);
+  });
+
+  it("discards the loaded list when credentials change and supports manual entry after a discovery error", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    const extra = aiWizardExtra(calls);
+    let fail = false;
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/ai-connector/models") {
+          return fail
+            ? problem(502, "The provider refused the API key.")
+            : json(200, { models: [{ id: "old-model", label: "Old model" }], truncated: false });
+        }
+        return extra(call);
+      },
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+    await user.type(screen.getByLabelText("API key"), "first-key");
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByRole("option", { name: "Old model · old-model" })).toBeVisible();
+    await user.type(screen.getByLabelText("API key"), "-changed");
+    expect(screen.queryByRole("option", { name: "Old model · old-model" })).not.toBeInTheDocument();
+    fail = true;
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByText("The provider refused the API key.")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+    expect(screen.getByRole("textbox", { name: "Model" })).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("Provider"), "openai");
+    expect(screen.getByRole("combobox", { name: "Model" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Load models" })).toBeDisabled();
   });
 
   it("saves the connector through the pane's own route and finishes", async () => {
@@ -838,13 +1008,89 @@ describe("welcome wizard AI analysis step (#699)", () => {
     expect(screen.getByRole("region", { name: "AI analysis" })).toBeInTheDocument();
     // Optional, and what an install without a connector does instead.
     expect(screen.getByText(/Optional/)).toBeInTheDocument();
-    expect(screen.getByText(/Contract analysis does not run/)).toHaveTextContent(
-      "Every Field you would have got automatically stays manual",
+    expect(screen.getByText(/Optional. Connect an AI provider/)).toHaveTextContent(
+      "prepare Matter and Contract conversions from Requests",
     );
     // And where it is finished after the first run (SET-008).
     expect(screen.getByText(/Settings → Organization → AI analysis/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Finish" })).not.toBeInTheDocument();
+  });
+
+  it("loads and selects provider models using the unsaved key without saving it", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    const discoveries: unknown[] = [];
+    const extra = aiWizardExtra(calls);
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/ai-connector/models") {
+          discoveries.push(call.body);
+          return json(200, {
+            models: [{ id: "legal-model", label: "Legal model" }],
+            truncated: false,
+          });
+        }
+        return extra(call);
+      },
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+    expect(screen.getByRole("combobox", { name: "Model" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Load models" })).toBeDisabled();
+    await user.type(screen.getByLabelText("API key"), "discovery-test-key");
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByRole("option", { name: "Legal model · legal-model" })).toBeVisible();
+    expect(discoveries).toEqual([
+      {
+        preset: "anthropic",
+        protocol: "anthropic_messages",
+        baseUrl: "https://api.anthropic.com/v1",
+        apiKey: "discovery-test-key",
+      },
+    ]);
+    expect(calls.saves).toEqual([]);
+    await user.selectOptions(screen.getByLabelText("Model"), "legal-model");
+    await finishFromAiAnalysis(user);
+    expect(calls.saves).toEqual([
+      { preset: "anthropic", model: "legal-model", apiKey: "discovery-test-key" },
+    ]);
+  });
+
+  it("discards the loaded list when credentials change and supports manual entry after a discovery error", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    const extra = aiWizardExtra(calls);
+    let fail = false;
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/ai-connector/models") {
+          return fail
+            ? problem(502, "The provider refused the API key.")
+            : json(200, { models: [{ id: "old-model", label: "Old model" }], truncated: false });
+        }
+        return extra(call);
+      },
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+    await user.type(screen.getByLabelText("API key"), "first-key");
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByRole("option", { name: "Old model · old-model" })).toBeVisible();
+    await user.type(screen.getByLabelText("API key"), "-changed");
+    expect(screen.queryByRole("option", { name: "Old model · old-model" })).not.toBeInTheDocument();
+    fail = true;
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    expect(await screen.findByText("The provider refused the API key.")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+    expect(screen.getByRole("textbox", { name: "Model" })).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("Provider"), "openai");
+    expect(screen.getByRole("combobox", { name: "Model" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Load models" })).toBeDisabled();
   });
 
   it("saves the connector through the pane's own route and finishes", async () => {
@@ -906,6 +1152,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await user.selectOptions(screen.getByLabelText("Provider"), "custom");
     await user.selectOptions(screen.getByLabelText("Protocol"), "gemini");
     await user.type(screen.getByLabelText("Base URL"), "https://ai.acme.example/v1");
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
     await user.type(screen.getByLabelText("Model"), "acme-large");
     await user.type(screen.getByLabelText("API key"), "the-api-key");
     await finishFromAiAnalysis(user);
@@ -940,7 +1187,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await goToAiAnalysisStep(user);
 
     expect(
-      screen.getByText(/Contract analysis runs through Anthropic, on model claude-sonnet-5/),
+      screen.getByText(/AI features use Anthropic, on model claude-sonnet-5/),
     ).toBeInTheDocument();
     // The key is write-only, so it is never asked for twice.
     expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
@@ -972,7 +1219,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await goToAiAnalysisStep(user);
 
     expect(screen.getByText(/Anthropic is configured on model claude-sonnet-5/)).toHaveTextContent(
-      "Every Field stays manual until it is turned back on",
+      "AI features are turned off",
     );
     expect(screen.queryByText(/Contract analysis runs through/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
@@ -1002,10 +1249,11 @@ describe("welcome wizard AI analysis step (#699)", () => {
 
     // The way back, so opening the form is not a one-way door.
     await user.click(screen.getByRole("button", { name: "Keep current credentials" }));
-    expect(screen.getByText(/Contract analysis runs through Anthropic/)).toBeInTheDocument();
+    expect(screen.getByText(/AI features use Anthropic/)).toBeInTheDocument();
     expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Replace credentials" }));
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
     await user.clear(screen.getByLabelText("Model"));
     await user.type(screen.getByLabelText("Model"), "claude-opus-5");
     await finishFromAiAnalysis(user);
@@ -1043,6 +1291,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     const user = userEvent.setup();
     await goToAiAnalysisStep(user);
 
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
     await user.clear(screen.getByLabelText("Model"));
     await user.type(screen.getByLabelText("Model"), "claude-opus-5");
     await user.click(screen.getByRole("button", { name: "Continue" }));
@@ -1061,6 +1310,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await goToAiAnalysisStep(user);
 
     await user.type(screen.getByLabelText("API key"), "the-api-key");
+    await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
     await user.clear(screen.getByLabelText("Model"));
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
@@ -1084,7 +1334,7 @@ const REVIEW_ROWS = [
   ["Officer roles", "/api/v1/officer-roles", "officerRoles", "/settings/entities/officer-roles"],
   ["Knowledge types", "/api/v1/knowledge/types", "knowledgeTypes", "/settings/knowledge/types"],
   ["Request types", "/api/v1/request-types", "requestTypes", "/settings/intake/request-types"],
-  ["Fields", "/api/v1/fields", "fields", "/settings/contracts/fields"],
+  ["Contract fields", "/api/v1/fields", "fields", "/settings/contracts/fields"],
 ] as const;
 
 type ReviewPath = (typeof REVIEW_ROWS)[number][1];
@@ -1193,16 +1443,16 @@ describe("welcome wizard Review step (#700)", () => {
         return undefined;
       }),
     });
-    renderAt("/welcome");
-    return { writes, reads, user: userEvent.setup() };
+    const { router, view } = renderAt("/welcome");
+    return { writes, reads, router, view, user: userEvent.setup() };
   }
 
-  it("is last after AI analysis, names its region, and links all ten current counts without editors", async () => {
+  it("is last after AI analysis, names its region, and links all module counts without editors", async () => {
     const { user, writes, reads } = setup();
     await goToReviewStep(user);
     expect(screen.getByText("Step 9 of 9")).toBeInTheDocument();
     const review = within(screen.getByRole("region", { name: "Review" }));
-    expect(review.getAllByRole("link")).toHaveLength(10);
+    expect(review.getAllByRole("link")).toHaveLength(12);
     for (const [index, [label, path, , address]] of REVIEW_ROWS.entries()) {
       const link = review.getByRole("link", { name: label });
       expect(link).toHaveAttribute("href", address);
@@ -1213,13 +1463,21 @@ describe("welcome wizard Review step (#700)", () => {
         reads.find((call) => call.url.pathname === path)?.url.searchParams.get("includeArchived"),
       ).toBe("true");
     }
+    for (const [label, path] of [
+      ["Matter fields", "/settings/matters/fields"],
+      ["Entity fields", "/settings/entities/fields"],
+    ]) {
+      const link = review.getByRole("link", { name: label });
+      expect(link).toHaveAttribute("href", path);
+      expect(within(link.closest("tr")!).getByRole("cell", { name: "0" })).toBeInTheDocument();
+    }
     expect(review.getByRole("link", { name: "Reminder offsets" })).toHaveAttribute(
       "href",
       "/settings/reminders",
     );
     for (const text of ["7 days before", "1 day before", "On the day"])
       expect(review.getByText(text, { exact: false })).toBeInTheDocument();
-    expect(review.getByText(/Settings → Organization → Notifications/)).toBeInTheDocument();
+    expect(review.queryByText(/Reminder offsets live at/)).not.toBeInTheDocument();
     expect(review.queryByRole("textbox")).not.toBeInTheDocument();
     expect(review.queryByRole("button")).not.toBeInTheDocument();
     expect(writes).toEqual([]);
@@ -1228,6 +1486,69 @@ describe("welcome wizard Review step (#700)", () => {
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.getByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
     expect(writes).toEqual([]);
+  });
+
+  it("counts each field catalog with globals and archived fields, excluding legacy Contract overview fields", async () => {
+    const { user } = setup((call) => {
+      if (call.method !== "GET" || call.url.pathname !== "/api/v1/fields") return undefined;
+      const base = REVIEW_RESPONSES["/api/v1/fields"].fields[0];
+      return json(200, {
+        fields: [
+          { ...base, id: "m", slug: "matter_custom", moduleScope: "matter" },
+          { ...base, id: "c", slug: "contract_custom", moduleScope: "contract" },
+          {
+            ...base,
+            id: "a",
+            slug: "archived",
+            moduleScope: "contract",
+            archivedAt: "2026-09-01T00:00:00Z",
+          },
+          { ...base, id: "e", slug: "entity_custom", moduleScope: "entity" },
+          { ...base, id: "g", slug: "shared", moduleScope: "global" },
+          { ...base, id: "r", slug: "region", moduleScope: "contract" },
+          { ...base, id: "d", slug: "owning_department", moduleScope: "contract" },
+        ],
+      });
+    });
+    await goToReviewStep(user);
+    for (const [label, count] of [
+      ["Matter fields", "2"],
+      ["Contract fields", "3"],
+      ["Entity fields", "2"],
+    ]) {
+      const row = screen.getByRole("link", { name: label }).closest("tr")!;
+      expect(within(row).getByRole("cell", { name: count })).toBeInTheDocument();
+    }
+  });
+
+  it("returns from Settings to Review with fresh counts and preserves Review on browser Back", async () => {
+    const { user, reads, router } = setup();
+    await goToReviewStep(user);
+    expect(router.state.location.search).toBe("?step=review");
+    const before = reads.filter((call) => call.url.pathname === "/api/v1/matter-types").length;
+    await user.click(screen.getByRole("link", { name: "Reminder offsets" }));
+    await user.click(await screen.findByRole("link", { name: "Return to setup" }));
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+    expect(screen.getByText("Step 9 of 9")).toBeInTheDocument();
+    expect(
+      reads.filter((call) => call.url.pathname === "/api/v1/matter-types").length,
+    ).toBeGreaterThan(before);
+    await user.click(screen.getByRole("link", { name: "Reminder offsets" }));
+    await screen.findByRole("link", { name: "Return to setup" });
+    await act(async () => {
+      await router.navigate(-1);
+    });
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+  });
+
+  it("restores the step on a fresh page mount", async () => {
+    const { user, router, view } = setup();
+    await goToReviewStep(user);
+    const address = router.state.location.pathname + router.state.location.search;
+    view.unmount();
+    renderAt(address);
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+    expect(screen.getByText("Step 9 of 9")).toBeInTheDocument();
   });
 
   it("marks reviewed before completing on Finish", async () => {

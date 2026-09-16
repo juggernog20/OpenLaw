@@ -3113,23 +3113,99 @@
       },
       "put": {
         "operationId": "saveEmailSettings",
-        "summary": "Save the app SMTP relay (#37): smtp:// or smtps:// URL with credentials inline, plus a from-address; both null clears. Takes effect on the next send. Refused while the environment pins SMTP — env always wins over app configuration",
+        "summary": "Save the app SMTP server, port, security, authentication, and sender. Legacy smtpUrl/smtpFrom requests remain supported; both null clears. Takes effect on the next send. Refused while the environment pins SMTP — env always wins over app configuration",
         "tags": ["email-settings"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "smtpUrl": {
-                    "type": ["string", "null"]
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "host": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 253
+                      },
+                      "port": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 65535
+                      },
+                      "security": {
+                        "type": "string",
+                        "enum": ["starttls", "tls", "none"]
+                      },
+                      "authentication": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["none"]
+                              }
+                            },
+                            "required": ["type"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["password"]
+                              },
+                              "username": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1024
+                              },
+                              "password": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 4096
+                              }
+                            },
+                            "required": ["type", "username", "password"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "senderName": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "senderEmail": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "host",
+                      "port",
+                      "security",
+                      "authentication",
+                      "senderName",
+                      "senderEmail"
+                    ],
+                    "additionalProperties": false
                   },
-                  "smtpFrom": {
-                    "type": ["string", "null"]
+                  {
+                    "type": "object",
+                    "properties": {
+                      "smtpUrl": {
+                        "type": ["string", "null"]
+                      },
+                      "smtpFrom": {
+                        "type": ["string", "null"]
+                      }
+                    },
+                    "required": ["smtpUrl", "smtpFrom"],
+                    "additionalProperties": false
                   }
-                },
-                "required": ["smtpUrl", "smtpFrom"]
+                ]
               }
             }
           }

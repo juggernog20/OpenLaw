@@ -416,6 +416,11 @@ export const routes: RouteObject[] = [
     // on an instance whose onboarding is still open.
     path: "/welcome",
     loader: welcomeLoader,
+    shouldRevalidate: ({ currentUrl, nextUrl, defaultShouldRevalidate }) =>
+      currentUrl.pathname === nextUrl.pathname &&
+      currentUrl.searchParams.get("step") !== nextUrl.searchParams.get("step")
+        ? false
+        : defaultShouldRevalidate,
     element: <WelcomePage />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,

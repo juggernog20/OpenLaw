@@ -259,7 +259,7 @@ test.describe("accessibility floor", () => {
       true,
     );
     await expect(page.getByRole("region", { name: "Review" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Review" }).getByRole("link")).toHaveCount(10);
+    await expect(page.getByRole("region", { name: "Review" }).getByRole("link")).toHaveCount(12);
     expect(
       await reportAxeViolations(page, testInfo, "welcome-review", { include: "main" }),
     ).toEqual([]);

@@ -49,7 +49,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { NavLink, Outlet, redirect, useLoaderData, useLocation } from "react-router";
+import { Link, NavLink, Outlet, redirect, useLoaderData, useLocation } from "react-router";
 import { FormattedMessage, useIntl, defineMessage, type MessageDescriptor } from "react-intl";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
@@ -421,6 +421,8 @@ function SettingsRail({
 
 export function SettingsLayout() {
   const { user } = useLoaderData<typeof settingsLoader>();
+  const location = useLocation();
+  const [returnToSetup] = useState(location.state?.returnToSetup === true);
 
   const signOut = useSignOut("/auth/login");
 
@@ -439,6 +441,16 @@ export function SettingsLayout() {
           canViewPortal={isMemberPlus(user.role)}
         />
         <div className="flex min-w-0 flex-1 flex-col gap-4 p-6">
+          {returnToSetup && user.role === "administrator" && (
+            <div className="rounded-card border border-border-default bg-raised px-4 py-3">
+              <Link
+                to="/welcome?step=review"
+                className="text-sm text-link underline underline-offset-2"
+              >
+                <FormattedMessage id="settings.returnToSetup" defaultMessage="Return to setup" />
+              </Link>
+            </div>
+          )}
           <Outlet />
         </div>
       </div>

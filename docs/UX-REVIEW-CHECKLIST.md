@@ -1192,7 +1192,7 @@ Route: `/welcome`
 - [ ] Select Built-in sign-in or Single sign-on (OIDC).
 - [ ] Register an identity provider with ID, issuer, domain, client ID, and secret; use the displayed callback URL.
 - [ ] Set portal magic-link availability and add/remove allowed email domains.
-- [ ] When email is app-managed, enter SMTP relay URL and From address and Save relay.
+- [ ] When email is app-managed, enter the SMTP server, port, connection security, authentication, and sender details, then Save relay.
 - [ ] Replace or clear an existing app-managed relay; cancel replacement with Keep current relay.
 - [ ] Send a test email when offered and inspect delivery feedback.
 - [ ] With environment-managed SMTP, inspect the read-only explanation and available test control.
