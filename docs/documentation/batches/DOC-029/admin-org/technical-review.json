@@ -1,0 +1,194 @@
+{
+  "batch": "DOC-029",
+  "group": "admin-org",
+  "reviewer": "DOC-029 source-review author agent (admin-org)",
+  "author": "DOC-029 source-review author agent (admin-org)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T14:59:18Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "limitations": [
+    "Source inspection only. No browser walkthrough was run. The independent walkthrough agent must replay V-C36, V-C37 and V-C55 against the recorded content hashes before any article can return to verified.",
+    "The authentication-and-email and organisation-and-users changes alter actions, prerequisites and results. They are not copy-only corrections, so earlier DOC-020 walkthrough evidence cannot be retained for them.",
+    "The dev text of authentication-and-email was reviewed. Another session edits the same article in the main checkout, and that text was not reviewed here."
+  ],
+  "articles": [
+    {
+      "articleId": "organisation-and-users",
+      "result": "corrected",
+      "contentSha256Before": "95e899099892882f6a7c3c412275c82df92f7181be2c24e4acee316a52bdd7f4",
+      "contentSha256": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-008 group authentication amendment)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-users.tsx",
+        "apps/web/src/lib/roles.ts",
+        "apps/api/src/modules/users/routes.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/auth/authentication-policy.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "messages/en-US.json",
+        "node_modules better-auth 1.7.5 dist/plugins/magic-link/index.mjs"
+      ],
+      "corrections": [
+        {
+          "location": "Invite a colleague, step 3",
+          "before": "The recipient sets a password for built-in sign-in; with OIDC configured the colleague can sign in through the identity provider.",
+          "after": "The recipient sets a password. When Legal User Authentication has Single sign-on (SSO) turned on, the colleague can sign in through the identity provider instead.",
+          "reason": "Commit fc241fcb replaced the exclusive built-in/OIDC mode with independent group policies (TECH-008 amendment). SSO sign-in for staff now depends on the legal policy's sso switch."
+        },
+        {
+          "location": "Invite a colleague, step 4",
+          "before": "The row becomes Active after activation or sign-in.",
+          "after": "The row becomes Active after the colleague sets a password or signs in through single sign-on. An email magic link sign-in alone leaves the row Invited with Resend invite and Revoke invite; do not revoke the invite of a colleague who already works in OpenLaw.",
+          "reason": "users/routes.ts statusOf derives Invited from a staff role with no accounts row. Magic-link verification creates a session but no accounts row, and the legal policy can now allow staff magic links. This is reported as a product bug."
+        },
+        {
+          "location": "Change a role or revoke sessions, promotion paragraph",
+          "before": "Where single sign-on is configured, an invited account can activate through the identity provider.",
+          "after": "Where Legal User Authentication has Single sign-on (SSO) turned on, an invited account can activate through the identity provider.",
+          "reason": "Same group policy change."
+        },
+        {
+          "location": "Change a role or revoke sessions, session paragraph",
+          "before": "Use the row's Revoke all sessions action. The account can sign in again using its configured method.",
+          "after": "Use the row's Sign out user action. The account can sign in again with a sign-in method that its group allows. Your own row has no Sign out user or Archive action.",
+          "reason": "Commit cab4dd77 gave the row action the visible label 'Sign out user' (settings.users.action.signOut). Its accessible name stays 'Revoke all sessions of {email}'. The row actions are hidden on the signed-in Administrator's own row."
+        }
+      ],
+      "confirmed": [
+        "General: Organization name commits on Enter or blur, Escape restores the saved value, an empty name reverts.",
+        "General: Upload beside Logo accepts PNG, JPEG, WebP or SVG up to 256 KB; other files show the error state.",
+        "General: Default locale offers only English (United States); Default timezone commits through the timezone picker.",
+        "General and Users loaders redirect non-Administrators to /settings/profile; the API routes require the administrator role.",
+        "Invite user dialog: Display name, Email, Role radios Legal team member and Administrator only, Send invite. Contributor was removed by DD-023 and is no longer an invitable role.",
+        "Invite refusals: 'This user has already activated their account.' and 'This user already exists with a different role.'; a same-role pending address resends without a duplicate row.",
+        "Invited rows carry Resend invite and Revoke invite; revoke deletes the pending user row.",
+        "The role dropdown appears on Active rows only and offers Administrator, Legal team member and Business user; the change applies on the target's next request.",
+        "Last-Administrator guards: 'You cannot demote the last Administrator.', 'You cannot archive the last Administrator.', 'You cannot archive yourself.'",
+        "Archive deletes the user's sessions and the session-create hook refuses archived users; Show archived appears once an archived row exists; Restore does not bring revoked sessions back.",
+        "Archiving does not reassign records, Tasks, Obligations or Approvals."
+      ]
+    },
+    {
+      "articleId": "approver-groups",
+      "result": "pass",
+      "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+      "sources": [
+        "CONTEXT.md (Approver group, Approval Request)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/contracts-settings-tabs.tsx",
+        "apps/web/src/components/shell/user-menu.tsx",
+        "apps/web/src/routes/settings-approver-groups.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/api/src/modules/approver-groups/routes.ts",
+        "apps/api/src/modules/contract-approvals/routes.ts",
+        "apps/api/src/lib/approvers.ts",
+        "messages/en-US.json"
+      ],
+      "corrections": [],
+      "confirmed": [
+        "No change to approver-groups or contract-approvals API code between 6a8873db and 3fa407e3.",
+        "Path: user menu Settings, Contracts section, Approver groups tab (/settings/contracts/approver-groups).",
+        "Add group opens 'Add approver group' with Name, Description and Members; submit label Add group; edit submit label Save; row Edit control is named 'Edit {name}'.",
+        "Member candidates are Administrators and Legal team members; ineligible saved members show 'Can no longer approve'. After DD-023 a lower role means Business user.",
+        "Groups list in name order; no reordering.",
+        "Contract record Approvals tab holds the Approvals & signing card; Apply group appears only when a live group exists and the Contract is not archived.",
+        "Apply approver group dialog: Approver group picker, 'Asks {names}.', skip count text, snapshot warning, Apply group submit.",
+        "Apply skips archived members and members with a pending request; refuses the whole action by name for a member who is not an Administrator or Legal Team Member, or who cannot see a confidential Contract; refuses an empty group or one whose members all have pending requests.",
+        "Editing saves name/description first, then members in a second request ('The member list could not be saved.').",
+        "Archive dialog confirms with Archive group and needs no replacement; Show archived and Restore return the group."
+      ]
+    },
+    {
+      "articleId": "authentication-and-email",
+      "result": "corrected",
+      "contentSha256Before": "a47a3665df8e885bd034226de107c182564f6048ea74aa6707f2f1eaff6df8db",
+      "contentSha256": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1",
+      "sources": [
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-008 group authentication amendment; TECH-011 email precedence)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-authentication.tsx",
+        "apps/web/src/components/authentication-options.tsx",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/lib/session.ts",
+        "apps/api/src/auth/authentication-policy.ts",
+        "apps/api/src/auth/two-factor-policy.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/onboarding/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "location": "Introduction",
+          "before": "Choose staff sign-in and Business Portal access.",
+          "after": "Choose how Administrators, Legal Team Members, and Business Users sign in.",
+          "reason": "The pane now holds two group policy cards."
+        },
+        {
+          "location": "Section 'Choose built-in sign-in' (renamed 'Choose sign-in methods for each group'; no inbound links used the old anchor)",
+          "before": "Select Built-in for staff password sign-in. Magic links are the Portal floor in built-in mode and the switch cannot turn them off.",
+          "after": "Legal User Authentication and Business Portal Authentication each have Email and password, Email magic link, Single sign-on (SSO) and Require two-factor authentication switches that apply immediately. At least one method is required. SSO needs a registered provider. Administrators keep emergency password sign-in. Required two-factor applies to every method. Staff magic links ignore the allowed-domain list.",
+          "reason": "Commit fc241fcb removed the Built-in / Identity provider (OIDC) mode radios and the Portal access magic-link toggle. PATCH /auth/policy/{group} refuses a policy with no method ('Enable at least one sign-in method.') and SSO without a provider."
+        },
+        {
+          "location": "Configure single sign-on, steps 3 and 5",
+          "before": "Select Identity provider (OIDC), enter the fields, Register provider; registration completes the pending switch to OIDC.",
+          "after": "Enter the fields in the Identity provider card and Register provider; registration turns on nothing. Then turn on Single sign-on (SSO) under Legal User Authentication, and under Business Portal Authentication if Business Users use it.",
+          "reason": "saveProvider no longer calls a mode switch; the SSO switch is a per-group policy value."
+        },
+        {
+          "location": "Configure single sign-on, recovery sentence",
+          "before": "Use Administrator password sign-in to recover and select Built-in.",
+          "after": "Use Administrator password sign-in, turn on Email and password under Legal User Authentication, and turn off Single sign-on (SSO) if needed.",
+          "reason": "Built-in mode no longer exists in the pane."
+        },
+        {
+          "location": "Control Business Portal entry, paragraph 1",
+          "before": "The list is checked every time a magic link is issued and blocks everyone on a removed domain.",
+          "after": "The list is checked for magic links to Business Users and to addresses with no account. It does not limit existing Administrator or Legal Team Member accounts.",
+          "reason": "POST /auth/magic-link and magicLinkDenied skip the domain check for existing non-Business-User accounts."
+        },
+        {
+          "location": "Control Business Portal entry, paragraph 2",
+          "before": "Existing Business Users keep sessions, earlier links and SSO. New entrants are refused a link or at first redemption/SSO callback. Use Revoke all sessions.",
+          "after": "Adds password sign-in for Business Users with a password (when the group allows it), refusal of password setup links and password setup completion for unapproved new addresses, and the Sign out user label.",
+          "reason": "Business password setup (authentication-policy-routes.ts) now exists and re-checks the domain on completion; the Users row action label changed."
+        },
+        {
+          "location": "Control Business Portal entry, paragraph 3",
+          "before": "In OIDC mode, Magic-link sign-in can be turned off.",
+          "after": "Under Business Portal Authentication, turn off Email magic link to require another method. Links sent earlier stop working.",
+          "reason": "The group policy replaces the OIDC-only toggle; /magic-link/verify checks the account's group magicLink option at redemption."
+        },
+        {
+          "location": "Set up email before finishing the wizard, closing paragraph",
+          "before": "Complete the checks before finishing or selecting Set up later on the Welcome or final invitation step.",
+          "after": "The wizard cannot finish until email is configured. Outbound email has no Set up later and Continue stays unavailable. Skip optional steps opens Outbound email while email is unconfigured. A configured relay does not prove delivery.",
+          "reason": "welcome.tsx hides Set up later on the email step, disables Continue until email is configured, and finish() routes to the email step; POST /onboarding/complete refuses with 'Configure outbound email before finishing instance setup.'"
+        }
+      ],
+      "confirmed": [
+        "Settings rail: Organization, Security, Authentication at /settings/authentication; loader redirects non-Administrators.",
+        "Provider form labels Provider ID, Issuer URL, Email domain, Client ID, Client secret; Register provider then Save provider; blank Client secret keeps the stored secret; Provider ID is not editable after registration.",
+        "Callback text 'Paste this callback URL into your IdP console'; redirect URI is the shared /api/auth/sso/callback.",
+        "The identity provider only authenticates; staff roles come from OpenLaw; SSO JIT creation admits only allowed-domain Business Users when Business Portal Authentication allows SSO.",
+        "Allowed email domains with Add and per-entry Remove {domain}; empty-list text 'No domains allowed yet. Magic-link sign-in is unavailable.'",
+        "Outbound email step labels: SMTP relay URL, From address, Save relay, Send test email (to the signed-in Administrator), Replace relay, Keep current relay, Clear relay.",
+        "Environment precedence: SMTP_URL makes the step read-only; SMTP_URL without SMTP_FROM shows the incomplete warning; PUT /email-settings refuses while the environment sets SMTP.",
+        "The welcome loader redirects once onboarding is complete; onboarding step email has no settingsPath, so no email Settings page exists.",
+        "Authentication Settings do not hold e-signature or AI connector settings."
+      ]
+    }
+  ]
+}

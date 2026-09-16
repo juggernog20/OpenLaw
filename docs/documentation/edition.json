@@ -3,14 +3,14 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+  "supportedAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
   "publicationTarget": "development-app",
   "compatibilityReview": {
-    "testedAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+    "testedAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
-    "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
-    "reviewedAt": "2026-09-16T10:03:12.494489+00:00",
-    "summary": "DOC-028 compatibility review covers the dependency and message-type changes since the independent walkthrough. Both roles passed a 35-step automated guide replay on the committed updated lab build, and journey 51 passed with zero axe violations. Original walkthrough evidence retains its tested commit. Only auto-doc-template is verified; other articles retain their existing status."
+    "reviewer": "DOC-029 independent walkthrough agents (one per article group, independent of the source-review authors)",
+    "reviewedAt": "2026-09-16T16:48:55.535Z",
+    "summary": "DOC-029 re-verified the suite against labs built from 3fa407e3. Each article received a source review, then an independent agent walkthrough for every required role and method on that build. Articles whose walkthrough did not pass keep their earlier evidence and do not receive credit."
   },
   "publication": {
     "status": "validation-pending",

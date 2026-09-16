@@ -1,19 +1,19 @@
 {
   "articleId": "auto-doc-template",
-  "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
-  "appCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
-  "buildId": "app sha256:f8dd152fd10a4d21b641e04eed24773e38b2ce05849aefd763006d99ebc61692; engine sha256:2763862ff5c6fbef311720f1bc4b0f6b8ffd73b7f0fcd777d6bfd04415fc17fd",
-  "environment": "openlaw-docs-b6053521-auto-doc-875",
-  "walkthroughReviewer": "Fable independent documentation walkthrough agent (Claude Fable 5.1), a different agent from the article author and from the completion agent",
+  "contentSha256": "8b4d7dd36dcacac05d9d375655cb6455d3abf0c5663d95edcbe285d3c726e191",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-admin",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (auto-docs, round 1)",
   "reviewerKind": "agent",
-  "author": "Original Auto-Doc guide author in commit 79812286; proofreading in 019591c7",
-  "technicalReviewer": "Codex completion agent (technical source review)",
-  "verifiedAt": "2026-09-16T09:48:31.826673+00:00",
+  "author": "Original Auto-Doc guide author in commit 79812286; proofreading in 019591c7; corrections by DOC-029 source-review author agent (auto-docs)",
+  "technicalReviewer": "DOC-029 source-review author agent (auto-docs)",
+  "verifiedAt": "2026-09-16T15:08:50Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/auto-doc-template.md",
-    "docs/documentation/batches/DOC-028/technical-review.json",
-    "docs/documentation/batches/DOC-028/independent-walkthrough.json"
+    "docs/documentation/batches/DOC-029/auto-docs/technical-review.json",
+    "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.json"
   ],
   "scenarios": [
     {
@@ -22,15 +22,15 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional administrator in the disposable documentation lab.",
-        "Reviewer-created Word fixtures retained in docs/documentation/batches/DOC-028/fixtures."
+        "Seeded fictional Administrator account signed in on the admin documentation lab.",
+        "Reviewer-created Word fixtures retained in docs/documentation/batches/DOC-029/auto-docs/fixtures (build-fixtures.py adds an endnote part, a header-only Placeholder, a date directive, an upper directive, and refusal files)."
       ],
-      "expected": "Upload marks Placeholders and Blocks, field and Clause edits persist, re-upload retains and marks the orphan, and Publish pins the chosen pair. Malformed Blocks/braces and directive type mismatches are refused with the offending text.",
-      "actual": "20 recorded steps passed for this role. The pane rendered body, header, footer and footnote markers. Label/help edits and a Governing law Clause rule persisted. File version 2 retained Signing date as an orphan and created Notice address. Publication pinned file version 2/form version 8; a later form edit left that live pair unchanged. Both malformed uploads and the currency-on-Text publication were refused with the offending text. The template Help link rendered the reviewed article.",
+      "expected": "Upload marks Placeholders and Blocks in the body, header, footer, footnote, and endnote; new fields follow the pane order with the body first; directives set the new field type; field and Clause edits persist; re-upload keeps and marks the orphan; Publish pins the chosen pair. An unclosed Block, an unclosed brace, an invalid slug, an unknown directive, two directives on one Placeholder, and a directive/type mismatch are refused with the offending text.",
+      "actual": "23 recorded steps passed for this role on 3fa407e3. The pane showed Body, then Endnotes, Footer, Footnotes and Header, with a chip for each Placeholder. The 8 new fields followed that order, so the endnote, footer and header-only fields came after every body field. date:DD/MM/YYYY created a Date field, currency:USD a Currency field, and the others Text; upper uploaded without refusal. Label, type and help edits and a Governing law Clause rule persisted. The upload refusals quoted {{#block arbitration}}, {{counterparty_name on the date below.\", {{Counterparty-Name}}, {{counterparty_name|lower}}, {{counterparty_name|upper|upper}} and {{fee_amount|currency:ZZZ}}. Publish with Fee amount set to Text was refused and named the field and its Placeholder. File version 2 kept Signing date marked No Placeholder in file version 2. Publish pinned file version 2 / form version 8, and a later edit left that live pair unchanged. Removing a field whose Placeholder remains opened a guard; removing the orphan did not. The template pane Help link opened /help/auto-doc-template. The Administrator also saw two directives that disagree on one name create a Text field, and Publish named both gaps.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-028/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-028/walkthrough.mjs"
+        "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.mjs"
       ]
     },
     {
@@ -39,56 +39,34 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional legal_team_member in the disposable documentation lab.",
-        "Reviewer-created Word fixtures retained in docs/documentation/batches/DOC-028/fixtures."
+        "Seeded fictional Legal Team Member account signed in on the admin documentation lab.",
+        "Reviewer-created Word fixtures retained in docs/documentation/batches/DOC-029/auto-docs/fixtures (build-fixtures.py adds an endnote part, a header-only Placeholder, a date directive, an upper directive, and refusal files)."
       ],
-      "expected": "Upload marks Placeholders and Blocks, field and Clause edits persist, re-upload retains and marks the orphan, and Publish pins the chosen pair. Malformed Blocks/braces and directive type mismatches are refused with the offending text.",
-      "actual": "17 recorded steps passed for this role. The pane rendered body, header, footer and footnote markers. Label/help edits and a Governing law Clause rule persisted. File version 2 retained Signing date as an orphan and created Notice address. Publication pinned file version 2/form version 8; a later form edit left that live pair unchanged. Both malformed uploads and the currency-on-Text publication were refused with the offending text. The template Help link rendered the reviewed article.",
+      "expected": "Upload marks Placeholders and Blocks in the body, header, footer, footnote, and endnote; new fields follow the pane order with the body first; directives set the new field type; field and Clause edits persist; re-upload keeps and marks the orphan; Publish pins the chosen pair. An unclosed Block, an unclosed brace, an invalid slug, an unknown directive, two directives on one Placeholder, and a directive/type mismatch are refused with the offending text.",
+      "actual": "20 recorded steps passed for this role on 3fa407e3. The pane showed Body, then Endnotes, Footer, Footnotes and Header, with a chip for each Placeholder. The 8 new fields followed that order, so the endnote, footer and header-only fields came after every body field. date:DD/MM/YYYY created a Date field, currency:USD a Currency field, and the others Text; upper uploaded without refusal. Label, type and help edits and a Governing law Clause rule persisted. The upload refusals quoted {{#block arbitration}}, {{counterparty_name on the date below.\", {{Counterparty-Name}}, {{counterparty_name|lower}}, {{counterparty_name|upper|upper}} and {{fee_amount|currency:ZZZ}}. Publish with Fee amount set to Text was refused and named the field and its Placeholder. File version 2 kept Signing date marked No Placeholder in file version 2. Publish pinned file version 2 / form version 8, and a later edit left that live pair unchanged. Removing a field whose Placeholder remains opened a guard; removing the orphan did not. The template pane Help link opened /help/auto-doc-template.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-028/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-028/walkthrough.mjs"
+        "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
-    "Both roles ran the same scripted procedure; the Administrator ran the supplementary two-directives check in a separate Auto-Doc.",
-    "Slug length and character rules were checked against source only, not exercised in the browser.",
-    "Help contrast was seen in the default theme only; the Warm and Dark themes were not checked.",
-    "Keyboard and narrow-layout checks are measurements by the reviewer's script, not a screen-reader session.",
-    "The lab is shared with other automated journeys; only records named DOC-028 * and the one invited member were created by this walkthrough. Nothing was deleted or reconfigured.",
-    "Narrow-screen Upload version text is clipped and keyboard navigation from a selected chip to its card requires additional Tab presses; the controls worked. These observations are retained in the independent walkthrough.",
-    "Warm and Dark Help rendering received supplemental automated axe checks in help-accessibility.json; the independent browser walkthrough used the default theme."
+    "Both roles ran the same scripted procedure. Only the Administrator ran the supplementary two-directives check.",
+    "The lab Help route serves the article as committed at 3fa407e3 (sha256 13355e7d...). The reviewed bytes (8b4d7dd3...) differ only in the Mark a Placeholder sentences on scanned parts and field order. The Help link check proves the route and title, not the new wording; the new wording was checked against the Form section.",
+    "Printed output of upper, date and currency directives was not checked, because that needs a generated document. The walkthrough checked only upload acceptance and the field type each directive creates.",
+    "The 120-character slug limit and comment parts not being scanned were checked in source only (see technical-review.json), not in the browser.",
+    "Negative access check used ravi.menon, who has the business_user role in this lab (confirmed from /api/v1/me), not a Contributor. It landed on /portal and the Auto-Doc API answered 403.",
+    "Help contrast was seen in the default theme only. Keyboard and 390 px checks are script measurements, not a screen-reader session.",
+    "The admin lab is shared with other DOC-029 agents. This walkthrough created only Auto-Docs named DOC-029 auto-docs * and changed no organisation settings. Nothing was deleted.",
+    "Three earlier round 1 runs are kept as walkthrough-r1-attempt1.json to attempt3.json. Attempts 1 and 2 failed on reviewer script errors (a chip count and a field list that counted the Clauses button; a password sign-in for an account without a password). Attempt 3 passed but looked up the role on a wrong API path. The dispositions are in walkthrough-r1.json."
   ],
-  "previousEvidence": null,
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
-    "toAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+  "previousEvidence": {
+    "appCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
     "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
-    "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
-    "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T10:24:31.190939+00:00",
-    "summary": "Source review and 35 passing automated replay checks across both roles establish compatibility after dependency and message-type updates. The original independent walkthrough is retained at its original tested commit. A later 35-step replay corrected the Help destination and renamed-card visibility diagnostics; the original logs are retained.",
-    "evidence": [
-      {
-        "path": "batches/DOC-028/compatibility-review.json",
-        "sha256": "8251693f611cac2448ab95df09240b2631bb67a2769bcf5f173c1890e40a818a"
-      },
-      {
-        "path": "batches/DOC-028/compatibility-replay.json",
-        "sha256": "52c09f826f016bdcef0df073ac6a0394b5c200a56b547a7fb30d96e68b5ae7a9"
-      },
-      {
-        "path": "batches/DOC-028/compatibility-help.png",
-        "sha256": "e6c8bc24b2e609581f5eefaf13f1774678269877a0c471c2b713cce1c772f71e"
-      },
-      {
-        "path": "batches/DOC-028/observation-corrections.json",
-        "sha256": "67854a208f2e8c10e0994c05e562fc59fee5fd3b362196955d8d01c53992122c"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T09:48:31.826673+00:00"
+  },
+  "copyOnlyReview": null,
+  "compatibilityReview": null
 }

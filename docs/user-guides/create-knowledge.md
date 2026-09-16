@@ -11,17 +11,17 @@ Knowledge contains your organization's know-how. OpenLaw **Help** contains produ
 ## Start with files
 
 1. Select **New**, then **New from files**.
-2. Use **Drop files here or choose files** to select your files. Choose a **Type** and **Folder**, or leave the folder as **Library**.
+2. Use **Drop files here or choose files** to select your files. Choose a **Type**. **Folder** starts at the folder selected in the library, or at **Library**; change it if necessary.
 3. Select **Create drafts**. Each file creates a separate draft Knowledge Item, named after the file, with its own Document selected as primary. The first item opens; return to **Knowledge** to find the others.
 4. Review **Title**, **Type**, and **Folder** on the record. A title saves when you press Enter or leave the field; a selected type or folder saves when changed. Check the saved result before moving on.
 
-Use this path for separate library entries. To put several Documents on one item, create that item first and upload its supporting files in the **Documents** section.
+Use this path for separate library entries. To put several Documents on one item, attach them in **New Knowledge Item**, or upload them later in the item's **Documents** section.
 
 ## Start with guidance
 
 1. In **Knowledge**, select **New**, then **New Knowledge Item**.
-2. Enter **Title**, choose **Type** and **Folder**, and select **Create item**. The item starts as **Draft**, with **Audience** set to **Legal Only**.
-3. Under **Guidance**, select **Add guidance**. Enter your instructions in **Guidance in Markdown**. Headings, lists, emphasis, code, and links are supported.
+2. Enter **Title**, and choose **Type** and **Folder**. To add files now, select **Attach documents** and choose a **Document kind**. Select **Create item**. The item starts as **Draft**, with **Audience** set to **Legal Only**. If a file upload fails, the item still exists; select **Retry failed uploads** or **Continue**.
+3. Under **Guidance**, select **Add guidance** and enter your instructions in the editor. The editor accepts Markdown headings, lists, emphasis, code, and links. It does not show these rules, so use **Preview** to check the result.
 4. Select **Preview** to save when the editor loses focus and inspect the rendered guidance. Select **Edit** to return to the source. Reload the item to confirm the saved text if a save is uncertain.
 
 Guidance can stand alone without a Document. Do not use raw HTML for formatting. Edits to an already published item take effect in place; there is no separate item revision awaiting publication. [Unpublish](publish-knowledge.md#withdraw-or-restrict-an-item) first if Portal readers should not see your edits yet.
@@ -29,7 +29,7 @@ Guidance can stand alone without a Document. Do not use raw HTML for formatting.
 ## Add Documents and choose the primary
 
 1. In the item's **Documents** section, [upload a new Document](document-versions.md#upload-a-new-document) or add a Version to an existing Document.
-2. Open the desired Document's **Actions** menu and select **Set as primary**. Check its **Primary** mark and the **Primary document** control above the Documents section.
+2. The first Document added to an item becomes primary automatically. To choose another, open that Document's **Actions** menu and select **Set as primary**. Check its **Primary** mark and the **Primary document** control above the Documents section.
 3. Select **Open preview** to read the primary Document's current Version. Other Documents remain supporting Documents and keep their own Version histories.
 
 The primary choice changes presentation; it does not make supporting files private. When an item becomes available in the Portal, readers can download the current Version of every available Document on it. Check all supporting files before [publishing](publish-knowledge.md).

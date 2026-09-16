@@ -1,0 +1,220 @@
+{
+  "reviewer": "DOC-029 source-review author agent (contracts-b)",
+  "author": "DOC-029 source-review author agent (contracts-b)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T15:00:30Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "sourceRange": "git diff 6a8873dbda333fd9992eb77525d4bfa3f47af20d..3fa407e3a846559914aa1a63249741f30cfb4f69 -- apps packages",
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "terms-and-renewals",
+      "scenario": "V-C18",
+      "contentSha256": "d983f5c33254ca98c261ad00ccb66242a4861a64f75965d9c66c00c13018e085",
+      "sources": [
+        "CONTEXT.md",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/lib/contracts.ts",
+        "apps/web/src/lib/roles.ts",
+        "apps/web/src/components/contracts/confirm-renewal-dialog.tsx",
+        "apps/web/src/components/contracts/renewal-banner.tsx",
+        "apps/web/src/components/contracts/create-contract-dialog.tsx",
+        "apps/web/src/components/contracts/key-dates-card.tsx",
+        "apps/web/src/components/contracts/term-timeline-card.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/contract-key-dates/routes.ts"
+      ],
+      "corrections": [
+        {
+          "before": "Step 1 said to use the 'Renewal pending confirmation' prompt.",
+          "after": "The banner reads 'Renewal date passed — pending confirmation' and its button is 'Review renewal' (Member+ writers only). 'Renewal pending confirmation' is only the banner's screen-reader region name.",
+          "source": "apps/web/src/components/contracts/renewal-banner.tsx"
+        },
+        {
+          "before": "Step 2 said to choose Confirm the roll 'under How to record it'.",
+          "after": "'How to record it' is a screen-reader-only legend, so no visible heading exists. Confirm the roll is the first and default option.",
+          "source": "apps/web/src/components/contracts/confirm-renewal-dialog.tsx"
+        },
+        {
+          "before": "Child/successor review list named 'Owner'.",
+          "after": "Uses the CONTEXT.md and Overview label 'Legal Owner'. The create dialog's Owner picker starts Unassigned for a routed renewal and the API copies no Owner.",
+          "source": "apps/web/src/components/contracts/create-contract-dialog.tsx; apps/api/src/modules/contracts/create.ts"
+        }
+      ],
+      "confirmed": [
+        "Overview 'Contract' card holds Term type (Fixed term, Auto-renewing, Evergreen), Effective date, Expiry date, Renewal period (months), Notice period (days); each commits on its own.",
+        "Evergreen draws Expiry date as a read-only blank; a non-Auto-renewing type draws Renewal period as a read-only blank.",
+        "API PATCH clears expiry when retyped to Evergreen and clears renewal period when retyped away from Auto-renewing; it refuses an expiry on Evergreen and a renewal period on non-auto-renew types.",
+        "Key dates derived rows are 'Current term expires' and 'Renewal notice deadline — N days before expiry' with source 'Derived' and no row actions; notice deadline = expiry minus notice period.",
+        "Term timeline card heading 'Term timeline'; Last renewal fact reads the newest confirmed roll.",
+        "Renew button appears on Approvals & signing only when not archived, Member+, Auto-renewing and expiry present; the banner shows only when renewalPendingConfirmation.",
+        "Dialog title 'Confirm renewal'; options Confirm the roll, Paper as amendment (only with a primary Document), Create child contract, New successor contract; field 'New expiry date'; buttons Confirm renewal / File the amendment / Open the child contract / Open the successor.",
+        "Client and API refuse a new expiry on or before the current expiry ('A roll moves the term forward. Pick a date after the current expiry.').",
+        "Confirm carries fromExpiry; a moved expiry answers RENEWAL_EXPIRY_MOVED 409 ('This contract's expiry has already moved. ...'); the page re-reads the record while the dialog keeps the typed draft; reopening reseeds the proposal.",
+        "Confirmation updates only expiryDate, records contract.renewal_confirmed, and does not change Status or Stage; Renewals rows show on Approvals & signing.",
+        "Paper as amendment navigates to Documents and opens Add version with kind amendment on the primary Document; signing.primaryDocument refreshes only on envelope and executed-copy live events, so the reload advice stays valid.",
+        "Routed create copies live Entity, value (amount, currency, cadence), term shape and Counterparties; it copies no Owner, team, Status (Draft), Priority (default medium), Risk or Confidential flag.",
+        "Archived record: API editableContract refuses; Contributor gets 403 on the renewal route."
+      ],
+      "limitations": [
+        "Source inspection only. The independent V-C18 browser walkthrough at 3fa407e3 is still required.",
+        "The amendment composer opens only when the primary Document is in the Documents page the card holds (documents-card.tsx comment); the article does not claim more."
+      ]
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "contentSha256": "a277d41d51e94aa2c850bebfc96f7e6e107c287cda273c3c302f7ab21e74a9f2",
+      "sources": [
+        "CONTEXT.md",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/contracts/tasks-card.tsx",
+        "apps/web/src/components/tasks/task-dialog.tsx",
+        "apps/web/src/components/tasks/assignee-picker.tsx",
+        "apps/web/src/components/tasks/completed-toggle.tsx",
+        "apps/web/src/components/contracts/key-dates-card.tsx",
+        "apps/web/src/components/key-date-reminder-fields.tsx",
+        "apps/web/src/lib/key-dates.ts",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/home/tasks-card.tsx",
+        "apps/web/src/components/home/dates-card.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/portal/record-work.tsx",
+        "apps/api/src/modules/contract-tasks/routes.ts",
+        "apps/api/src/modules/comments/audience.ts",
+        "apps/api/src/modules/contract-key-dates/routes.ts",
+        "apps/api/src/lib/key-date-reminders.ts",
+        "apps/api/src/lib/notifications/audience.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "apps/api/src/lib/next-deadline.ts"
+      ],
+      "corrections": [
+        {
+          "before": "'the Contract Owner'.",
+          "after": "'the Contract's Legal Owner' (CONTEXT.md; Overview label Legal Owner).",
+          "source": "CONTEXT.md; apps/web/src/routes/contract-record.tsx"
+        },
+        {
+          "before": "Step 4 implied a completed Task stays in the list after its checkbox is selected.",
+          "after": "The Tasks section hides completed Tasks by default; the header switch 'Show completed' shows them. The article now says so.",
+          "source": "apps/web/src/components/contracts/tasks-card.tsx; apps/web/src/components/tasks/completed-toggle.tsx"
+        },
+        {
+          "before": "Step 5 did not say where Edit task and Remove task are.",
+          "after": "Both are items in the row's actions menu.",
+          "source": "apps/web/src/components/contracts/tasks-card.tsx"
+        },
+        {
+          "before": "Initial note audience not stated.",
+          "after": "The Add a task dialog posts the initial note and files with the Working team audience; no audience choice exists there.",
+          "source": "apps/web/src/components/tasks/task-dialog.tsx"
+        },
+        {
+          "before": "Assignee picker 'offers active people on the Contract team, including its Owner'.",
+          "after": "It offers active non-Business-User people on the team plus the Legal Owner.",
+          "source": "apps/web/src/routes/contract-record.tsx (TasksCard assignees filter)"
+        },
+        {
+          "before": "Key date field label 'Note (optional)'.",
+          "after": "Label is now 'Note' (Date and Event carry the required marker).",
+          "source": "apps/web/src/components/contracts/key-dates-card.tsx"
+        },
+        {
+          "before": "Usual reminder audience 'the Legal Owner and its team'; recipient list not described.",
+          "after": "'the Legal Owner and the Contract team'; the checkbox list is active team members, never Business Users.",
+          "source": "apps/web/src/components/key-date-reminder-fields.tsx; apps/api/src/lib/key-date-reminders.ts"
+        },
+        {
+          "before": "The Key dates list 'identifies the next deadline'.",
+          "after": "The UI draws no next-deadline marker. The API sorts upcoming dates nearest first, then past dates; isNext is returned but not rendered.",
+          "source": "apps/web/src/components/contracts/key-dates-card.tsx; apps/api/src/modules/contract-key-dates/routes.ts"
+        },
+        {
+          "before": "'the record's Next deadline'.",
+          "after": "Next deadline is a Contracts list column; the record page does not show it.",
+          "source": "apps/web/src/components/contracts/contracts-columns.tsx; apps/api/src/lib/next-deadline.ts"
+        },
+        {
+          "before": "'Use Use the usual audience' to return to default recipients, as if always available.",
+          "after": "That button shows only when a selected recipient has left the team; otherwise clearing all recipient checkboxes returns to the usual audience.",
+          "source": "apps/web/src/components/key-date-reminder-fields.tsx"
+        }
+      ],
+      "confirmed": [
+        "Tasks section: Add task button, dialog title 'Add a task', fields Title (required), Description, Assignee, Due date, 'Comments & attachments' with 'Add a note' and file picker; submit 'Add task'; Cancel for new, Close for existing.",
+        "Existing Task opens 'Task details' with Save; its thread is the contract_task comment thread without the Full thread tier (Legal only, Working team).",
+        "Partial save shows 'Task saved. Your note and attachments could not be added.' and the button becomes 'Retry note & attachments' without creating a second Task.",
+        "Done count '{done} of {total} done'; checkbox toggles done and reopen.",
+        "Remove refuses 409 when the Task holds any comment row, including deleted or redacted ones.",
+        "Picker offers 'Add someone to the team…', then an access notice and 'Add to team and assign'; inside the dialog it offers 'Use this person' and saves membership with the Task.",
+        "No reorder control in the Contract Tasks UI; the API reorder route exists only as API.",
+        "Tasks read and write are Administrator and Legal Team Member only; Contributors lost Task read in this range; the Portal record view has no Tasks or Key dates.",
+        "Key date dialog: Date and Event required, Note, Reminders fieldset with 'Global reminders: …', 'This date will remind: …', 'Additional lead time (days before)', 'Add lead time' (0 to 730, at most 20), Remove per lead time; submit 'Add date' or 'Save'.",
+        "Row actions 'Edit date' and 'Remove date' only on Key date rows; Derived rows have no menu.",
+        "Reminders: one per Key date with its label; own offsets are unioned with the global list; a saved selection narrows to the current audience and never falls back.",
+        "Next deadline: earliest upcoming Key date, unfinished dated Task (including overdue), expiry or notice deadline, null for ended or archived Contracts.",
+        "Home sections 'Tasks assigned to you' and 'Dates approaching' exist.",
+        "Archived Contract: API answers 409 for Task and Key date writes; UI draws no controls."
+      ],
+      "limitations": [
+        "Source inspection only. The independent V-C19 browser walkthrough at 3fa407e3 is still required.",
+        "Reminder delivery timing was not exercised; notifications.md owns those rules."
+      ]
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "contentSha256": "6108b0fdf48999c06cf2e50cdea4ed766f5142fe58f1fb25d35218ce08a1e475",
+      "sources": [
+        "CONTEXT.md",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/contracts/related-contracts-card.tsx",
+        "apps/web/src/components/contracts/link-dialog.tsx",
+        "apps/web/src/components/contracts/linked-matter-card.tsx",
+        "apps/web/src/components/contracts/contract-matter-link-dialog.tsx",
+        "apps/web/src/components/contracts/record-actions-menu.tsx",
+        "apps/web/src/components/stage-pipeline.tsx",
+        "apps/web/src/components/activity/activity-applet.tsx",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/table/record-filter-definitions.ts",
+        "apps/web/src/routes/contracts.tsx",
+        "apps/api/src/modules/contract-relations/routes.ts",
+        "apps/api/src/modules/contract-matters/routes.ts",
+        "apps/api/src/modules/contracts/routes.ts"
+      ],
+      "corrections": [
+        {
+          "before": "'Check the Status and Activity.'",
+          "after": "The Activity feed opens from the record's 'History' applet; the article now names History.",
+          "source": "apps/web/src/components/activity/activity-applet.tsx"
+        },
+        {
+          "before": "Archive section did not mention the Matter side.",
+          "after": "Since this range the Matter's Linked Contracts list excludes archived Contracts; the article now says an archived Contract is not shown there.",
+          "source": "apps/api/src/modules/contract-matters/routes.ts (linkedContractsEnvelope)"
+        }
+      ],
+      "confirmed": [
+        "Overview holds the 'Matter' card and the 'Related contracts' card with 'Set parent' (only without a parent) and 'Add link'; link types Related, Renews, Amends; reverse labels Renewed by, Amended by; 'Remove parent' and 'Remove link' on rows.",
+        "Link dialog search placeholder 'Search by number or title…'; refusals for self-link, duplicate and cycle; nudge 'Flag as confidential?' names which Contract, with 'Flag as confidential' and 'No, leave it open'.",
+        "Restricted related records read 'Restricted contract'.",
+        "Relation writes are Member+, lock both Contracts, and refuse an archived one with 409; candidates exclude archived Contracts and the anchor.",
+        "Matter card: 'Link to Matter' shows only when no Matter is linked; dialog search 'Search by Matter number or title', button 'Link'; 'Unlink' on the linked row; confidentiality mismatch dialog changes neither flag.",
+        "Stage pipeline moves the Status; ended Contracts stay editable (frozen is archived or non-Member+ only).",
+        "Contracts list 'Filter' menu has 'Show ended' and 'Show archived' flags.",
+        "'Contract actions' menu holds 'Archive' or 'Restore' for Member+; archived records show the 'Archived' pill and 'This contract is archived — it is out of the contract list. Restore it to edit.'",
+        "Archive and restore change only archivedAt, not Status."
+      ],
+      "limitations": [
+        "Source inspection only. The independent V-C20 browser walkthrough at 3fa407e3 is still required."
+      ]
+    }
+  ],
+  "notes": [
+    "No catalog status, evidence file, scenario or help-context was changed.",
+    "Relations and Matter links API reads became Administrator and Legal Team Member only in this range; the articles already name only those roles."
+  ]
+}

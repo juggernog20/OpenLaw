@@ -38,7 +38,7 @@
       "pilotEntry": false
     },
     {
-      "routes": ["/portal/enter"],
+      "routes": ["/portal/enter", "/portal/login"],
       "contexts": ["portal.entry"],
       "surface": "formal",
       "pilotEntry": false
@@ -221,7 +221,12 @@
       "pilotEntry": false
     },
     {
-      "routes": ["/settings/profile", "/settings/appearance", "/settings/notifications"],
+      "routes": [
+        "/settings/profile",
+        "/settings/appearance",
+        "/settings/app-view",
+        "/settings/notifications"
+      ],
       "contexts": ["settings.personal"],
       "surface": "staff",
       "pilotEntry": false

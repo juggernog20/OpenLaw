@@ -1,0 +1,211 @@
+{
+  "batch": "DOC-029",
+  "group": "contracts-a",
+  "reviewer": "DOC-029 source-review author agent (contracts-a)",
+  "author": "DOC-029 source-review author agent (contracts-a)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T14:59:37.447502+00:00",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "create-contract",
+      "scenarios": ["V-C14"],
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-004, CTR-010, CTR-026)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-012)",
+        "messages/en-US.json",
+        "apps/web/src/routes/contracts.tsx",
+        "apps/web/src/components/contracts/create-contract-dialog.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/contracts/value-field.tsx",
+        "apps/web/src/components/department-picker.tsx",
+        "apps/web/src/components/record-person-field.tsx",
+        "apps/web/src/components/tasks/assignee-picker.tsx",
+        "apps/web/src/components/contracts/team-applet.tsx",
+        "apps/web/src/components/record-team-applet.tsx",
+        "apps/web/src/components/counterparty-picker.tsx",
+        "apps/web/src/lib/contracts.ts",
+        "apps/web/src/routes/settings.tsx",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/regions/references.ts",
+        "apps/api/src/modules/auto-docs/create-contract.ts",
+        "apps/api/src/modules/auto-docs/generations.ts"
+      ],
+      "corrections": [
+        {
+          "where": "Create the record, step 2",
+          "before": "The dialog was described with Title, Contract type, Fields, Confidential and Matter only.",
+          "after": "The dialog also has an Owner picker. It starts on the person who opens the dialog, offers Legal Team Members and Administrators, and offers Unassigned.",
+          "source": "create-contract-dialog.tsx managerId seed and contracts.form.owner"
+        },
+        {
+          "where": "Create the record, step 4",
+          "before": "When the dialog closes, open the new Contract from the list.",
+          "after": "The app opens the new Contract after Create; check its title, type, Legal Owner and C- reference.",
+          "source": "contracts.tsx onCreated navigates to contractPath(row.number)"
+        },
+        {
+          "where": "Paragraph after step 4",
+          "before": "The new Contract needs its own Owner and remaining details.",
+          "after": "The chosen Owner is the Legal Owner. The creator is on the team as Creator, and the Contract type's default people join the team.",
+          "source": "create.ts creator team row and contractTypeDefaultPeople loop (CTR-026); dialog Owner maps to managerId, shown as Legal Owner"
+        },
+        {
+          "where": "Record the parties and ownership, Region",
+          "before": "Region is free text that saves on leave or Enter; clearing it removes the value.",
+          "after": "Region is a choice from the shared Regions list; a choice saves immediately; No Region clears it; an Administrator manages the list in Settings > Regions.",
+          "source": "contract-record.tsx contract-region select with contracts.region.none; regions/references.ts lockedRegionName; SET-012; settings.tsx Organization > Regions"
+        },
+        {
+          "where": "Record the parties and ownership, Description",
+          "before": "Generic text save rule (leave or Enter).",
+          "after": "Description saves when you leave it; clearing it removes the text. Enter in the Description textarea does not save.",
+          "source": "contract-record.tsx AutoResizeTextarea onBlur commitText, no Enter handler"
+        },
+        {
+          "where": "Record the parties and ownership, Value",
+          "before": "Check Cadence; leave the group or press Enter to save all three together.",
+          "after": "The control label is Frequency. Choosing Other needs a Custom cadence. The group saves its parts together.",
+          "source": "value-field.tsx contracts.value.cadence = Frequency, contracts.value.customCadence, customCadenceRequired"
+        },
+        {
+          "where": "If a change is refused",
+          "before": "Business User Portal rights do not include creating a Contract or assigning its Owner.",
+          "after": "A Business User cannot create a Contract directly or assign its Legal Owner; a Generation of an Auto-Doc that targets a Contract type can create a Contract.",
+          "source": "auto-docs/generations.ts prepareContractDestination for any generating user; auto-docs/create-contract.ts; CONTEXT.md Auto-Doc and ADO-005"
+        }
+      ],
+      "confirmed": [
+        "Create contract button is present only for Member+ (contracts.tsx canEdit).",
+        "Dialog labels Title, Matter, Contract type, Owner, Confidential, Create, Cancel; Matter help says nothing else flows across the link.",
+        "Every attached Field appears for the picked type; required Fields block creation.",
+        "New Contract starts in the draft-slug Status; C- reference is the stable number.",
+        "Overview Contract card order: Title, Contract type, Legal Owner, Business Owner, Department, Priority, Risk, Region, Our entity, Counterparties, Value, term fields; Description is its own card.",
+        "Legal Owner offers live Member+; Business Owner offers any live person; both pickers offer Unassigned.",
+        "Our entity offers Not known yet; archived Entities are refused.",
+        "Counterparties: search, Create \"{name}\", Primary, Make primary, removing unlinks only.",
+        "Contract team applet: Add team member, Person, Add; Legal Owner, Business Owner and Creator statements are separate from membership rows.",
+        "Fields tab commit rules: text on blur or Enter, choices on change, Escape reverts, long text Enter is a newline.",
+        "Change contract type dialog with Change type and Cancel when the new type needs unanswered required Fields.",
+        "Archived note says Restore it to edit; read-only note for non-Member+."
+      ],
+      "contentSha256": "9ddc15162c743f9502cd7bf98f7d3c1229895b9e275a730bc203e860d4f316d1",
+      "changed": true,
+      "result": "pass-after-corrections"
+    },
+    {
+      "articleId": "contract-stages",
+      "scenarios": ["V-C15"],
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/stage-pipeline.tsx",
+        "apps/web/src/components/activity/activity-applet.tsx",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/lib/soft-gate.ts",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "packages/db/migrations/0009_contract_statuses.sql"
+      ],
+      "corrections": [],
+      "confirmed": [
+        "The current Stage in the sub-bar Stage pipeline is the move trigger for Member+ on an unarchived Contract; archived records and non-Member+ get no trigger.",
+        "The menu lists every Status with its Stage label as detail; moves may go backwards or skip Stages.",
+        "The Status pill beside the C- reference and title shows the Status name.",
+        "Soft gate: crossing from a Stage at or before Approval to a later Stage with Pending or Rejected approvals opens Move past approval with Cancel and Move anyway; the override is recorded.",
+        "A Status Stage is immutable after creation; rename changes only the name.",
+        "Entering Ended stamps endedAt; the record stays editable; archive is separate and returns 409 on edit.",
+        "History applet label is History."
+      ],
+      "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+      "changed": false,
+      "result": "pass"
+    },
+    {
+      "articleId": "contract-approvals",
+      "scenarios": ["V-C16"],
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/components/ui/label.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/modules/contract-approvals/routes.ts",
+        "apps/api/src/lib/approvers.ts",
+        "apps/api/src/lib/soft-gate.ts"
+      ],
+      "corrections": [
+        {
+          "where": "Give a decision",
+          "before": "Add Note (optional).",
+          "after": "The decision dialog field label is Note; it is optional.",
+          "source": "approvals.note = Note in en-US.json; Label adds no optional suffix"
+        },
+        {
+          "where": "Give a decision, cancellation",
+          "before": "The Contract Owner can cancel a pending request.",
+          "after": "The Contract's Legal Owner (managerId) can cancel; a Business Owner cannot unless they are the requester or an Administrator.",
+          "source": "contract-approvals/routes.ts mayCancel uses contractManagerId; card canCancel uses ownerId"
+        }
+      ],
+      "confirmed": [
+        "Approvals tab holds the Approvals & signing card with Add approver and, when groups exist, Apply group.",
+        "Add approver dialog: Approvers, Request approvals; everyone is asked at once in any order.",
+        "Picker offers live Administrators and Legal Team Members without a pending request; on Confidential work only the audience.",
+        "Apply approver group dialog names who it asks and how many it skips; later group edits do not change requests.",
+        "Only the named approver can decide (403 otherwise); a decision is final; re-request adds a new row.",
+        "Cancel request deletes the pending row and records approval.cancelled; decided requests cannot be cancelled.",
+        "Soft gate behaviour matches Move past approval, Cancel, Move anyway.",
+        "No sequential chain or threshold rules exist."
+      ],
+      "contentSha256": "d33d268780abc6592242a140452187a3233bad9a1bb337a15dcd24e5ecf3b3d3",
+      "changed": true,
+      "result": "pass-after-corrections"
+    },
+    {
+      "articleId": "manual-signing",
+      "scenarios": ["V-C17-manual"],
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "packages/db/migrations/0009_contract_statuses.sql",
+        "docs/user-guides/document-versions.md"
+      ],
+      "corrections": [
+        {
+          "where": "Hand off and file the executed copy, step 4",
+          "before": "Open that Document Version's actions and select Mark as executed copy.",
+          "after": "For the current Version, Mark as executed copy is in the Document's actions menu (Actions for {title}); an earlier Version has its own one-item actions menu.",
+          "source": "documents-card.tsx DocumentActions executedDesignations item and VersionActions for superseded rounds"
+        }
+      ],
+      "confirmed": [
+        "Seeded Signature Status is Out for signature; Active Status is Active.",
+        "Add version, Make primary, Mark as executed copy and Unmark as executed copy labels; executed designation is Contract-only and Member+.",
+        "Pinning sets executedVersionId and records document.executed_set; it does not change the Contract Status.",
+        "Upload kind Executed is separate from the pin.",
+        "Manual hand-off creates no Envelope row; the signing block appears only when envelopes exist.",
+        "Archived records and non-Member+ do not get the legal actions."
+      ],
+      "contentSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
+      "changed": true,
+      "result": "pass-after-corrections"
+    }
+  ],
+  "sharedFileRequests": [
+    "CONTEXT.md 'Owning department / Region': Region is no longer free text; it is a pick from the Administrator-managed Regions list (SET-012). Business Users on the team may also edit Department and Region (and value, effective date, business Fields) through the Portal per the Contract PATCH allowlist, not only read them."
+  ],
+  "limitations": [
+    "Source inspection only. No walkthrough was run; the independent V-C14, V-C15, V-C16 and V-C17-manual walkthroughs remain required before verification.",
+    "Evidence records and catalog status were not changed."
+  ]
+}

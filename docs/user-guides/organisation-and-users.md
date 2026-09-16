@@ -14,8 +14,8 @@ Keep your organization details current and give each person the access they need
 
 1. Open **Settings → Users**, then **Invite user**.
 2. Enter **Display name** and **Email**. Choose **Legal team member** or **Administrator** under **Role**. See [roles and access](roles-and-access.md) before granting administration rights.
-3. Select **Send invite** and check the new **Invited** row. The recipient follows the email link to set a password for built-in sign-in. With OIDC configured, an invited colleague can sign in through the identity provider using the matching email address.
-4. Have the colleague sign in and check their access. The row becomes **Active** after activation/sign-in.
+3. Select **Send invite** and check the new **Invited** row. The recipient follows the email link to set a password. When **Legal User Authentication** has **Single sign-on (SSO)** turned on, an invited colleague can sign in through the identity provider using the matching email address instead.
+4. Have the colleague sign in and check their access. The row becomes **Active** after the colleague sets a password or signs in through single sign-on. A sign-in with an email magic link alone does not activate the row. The row stays **Invited** and keeps its **Resend invite** and **Revoke invite** actions. Do not use **Revoke invite** on a row for a colleague who already works in OpenLaw.
 
 Business Users enter through the [Business Portal](portal-sign-in.md); they are not a fourth staff-invitation choice. An allowed email domain does not grant a staff role.
 
@@ -27,9 +27,9 @@ Select the user's role in the Users table and choose the new role. The role cont
 
 This control also offers **Business user**, which the invitation form does not. Use it to give an existing Business User a staff role in place, or to return an active staff account to Portal-only access.
 
-Check the row after you promote a Business User. If it still reads **Active**, that account was already activated and you can keep changing its role. If it reads **Invited**, the account has never set a password or signed in through your identity provider, so the promotion left a pending staff invitation and the row's role control is gone. Use the row's **Resend invite** action and ask the person to set a password from the emailed link. Where single sign-on is configured, an invited account can activate by signing in through the identity provider instead. Either route returns the row to **Active** and brings its role control back.
+Check the row after you promote a Business User. If it still reads **Active**, that account was already activated and you can keep changing its role. If it reads **Invited**, the account has never set a password or signed in through your identity provider, so the promotion left a pending staff invitation and the row's role control is gone. Use the row's **Resend invite** action and ask the person to set a password from the emailed link. Where **Legal User Authentication** has **Single sign-on (SSO)** turned on, an invited account can activate by signing in through the identity provider instead. Either route returns the row to **Active** and brings its role control back.
 
-Use the row's **Revoke all sessions** action when that person should sign in again on every device. Existing sessions stop granting access. The account remains active and can sign in again using its configured method. To prevent further sign-in, archive the account.
+Use the row's **Sign out user** action when that person should sign in again on every device. Existing sessions stop granting access. The account remains active and can sign in again with a sign-in method that its group allows. To prevent further sign-in, archive the account. Your own row has no **Sign out user** or **Archive** action.
 
 Administrators cannot archive themselves. OpenLaw also prevents removing the last active Administrator through archival or demotion. Establish and verify another Administrator before reducing the remaining Administrator's role.
 

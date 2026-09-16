@@ -1,0 +1,1274 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-029",
+  "group": "contracts-b",
+  "round": 1,
+  "issues": [745, 747],
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (contracts-b, round 1)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "labProject": "openlaw-docs-41255c61-work",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837"
+    }
+  ],
+  "appUrl": "http://127.0.0.1:23301",
+  "browser": "Playwright 1.63.0 Chromium, headless, one context per identity at 1280x1800 CSS px",
+  "articles": {
+    "terms-and-renewals": {
+      "path": "docs/user-guides/terms-and-renewals.md",
+      "contentSha256": "d983f5c33254ca98c261ad00ccb66242a4861a64f75965d9c66c00c13018e085"
+    },
+    "contract-tasks-and-dates": {
+      "path": "docs/user-guides/contract-tasks-and-dates.md",
+      "contentSha256": "a277d41d51e94aa2c850bebfc96f7e6e107c287cda273c3c302f7ab21e74a9f2"
+    },
+    "contract-relations-and-ending": {
+      "path": "docs/user-guides/contract-relations-and-ending.md",
+      "contentSha256": "6108b0fdf48999c06cf2e50cdea4ed766f5142fe58f1fb25d35218ce08a1e475"
+    }
+  },
+  "fixtures": {
+    "fixtures/doc029-services-agreement.pdf": "9dbada2f034570cab8616d8ad03c3cbee86a9a1f3da4b0a141598261e830f597",
+    "fixtures/doc029-renewal-amendment.pdf": "8ab068abcb8f33bb423203c954c2304f055d69942cf77af3f867e5bd2a1c2dbe"
+  },
+  "selection": {
+    "articles": ["C18", "C19", "C20"],
+    "roles": ["legal_team_member", "administrator"]
+  },
+  "startedAt": "2026-09-16T15:44:00.048Z",
+  "stamp": 1789573440047,
+  "steps": [
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Prepare an unarchived Contract with an Entity, a Counterparty, a value, a High priority and risk, the Confidential flag, and the other staff role and a Business User on the team",
+      "expected": "Prerequisite record exists for this role",
+      "actual": "C-262 \"DOC-029 contracts-b C18 legal_team_member 1789573440047\" created by Nadia Haddad; entity Helix Software Ltd; value GBP 9,900.00 annually; priority High; risk High; Confidential; team adds Daniel Okafor and Ravi Menon.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:01.353Z",
+      "at": "2026-09-16T15:44:01.545Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Overview Contract card: choose Term type Fixed term, then pick Effective date and Expiry date and type Notice period (days), saving one change at a time",
+      "expected": "Fixed term has no renewal-period value; each value saves on its own; the notice deadline is expiry minus the notice period",
+      "actual": "Four separate PATCH commits answered 200. Renewal period (months) was absent on Fixed term. After reload the pickers read \"Feb 1, 2026\" and \"Jan 31, 2027\", notice 30 days; the record's notice deadline is 2027-01-01 (Jan 31, 2027 minus 30 days).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:01.546Z",
+      "at": "2026-09-16T15:44:02.658Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Key dates shows the derived Current term expires and Renewal notice deadline rows, and the Term timeline draws the recorded dates",
+      "expected": "Derived rows reflect the recorded term and carry no row actions",
+      "actual": "Term timeline: \"Term timelineInitial termFeb 1 – Jan 31, 2027Jan 1, 2027Notice deadline Jan 1, 2027TodayFeb 1Jan 31, 2027Initial termNotice deadline\". Key dates rows: \"Jan 31, 2027Current term expiresDerived\" and \"Jan 1, 2027Renewal notice deadline — 30 days before expiryDerived\", each with 0 row action buttons.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:02.658Z",
+      "at": "2026-09-16T15:44:03.400Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Change Term type to Auto-renewing and type Renewal period (months)",
+      "expected": "Auto-renewing accepts a renewal period in months",
+      "actual": "Term type Auto-renewing and Renewal period 1 month saved (PATCH 200, 200); expiry still 2027-01-31.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:03.400Z",
+      "at": "2026-09-16T15:44:04.009Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Change Term type to Evergreen and review the saved values",
+      "expected": "Evergreen has no expiry date; changing to Evergreen clears the expiry and the renewal period",
+      "actual": "Evergreen saved; expiry null, renewal period null; Expiry date picker absent; effective date kept 2026-02-01; Key dates now lists: no derived term rows.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:04.010Z",
+      "at": "2026-09-16T15:44:04.945Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Change back to Auto-renewing, record expiry and renewal period, then change to Fixed term and review; finally restore Auto-renewing with a 1-month period",
+      "expected": "Changing away from Auto-renewing clears the renewal period and keeps the expiry",
+      "actual": "Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. The Contract is Auto-renewing again: expiry 2027-01-31, renewal 1 month, notice 30 days, notice deadline 2027-01-01.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:04.946Z",
+      "at": "2026-09-16T15:44:06.342Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Negative: a Task due date before the notice deadline does not feed the term-derived deadlines",
+      "expected": "Current term expires and Renewal notice deadline stay derived from the term; the Task does not show as a Key date",
+      "actual": "A Task due 2026-12-01 was added. Key dates still reads \"Jan 31, 2027Current term expiresDerived\" and \"Jan 1, 2027Renewal notice deadline — 30 days before expiryDerived\" and lists no Task row; the record's notice deadline stays 2027-01-01.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:06.342Z",
+      "at": "2026-09-16T15:44:06.992Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Approvals: select Renew; Confirm the roll is the default; an entered date on the current expiry is refused; Cancel changes nothing",
+      "expected": "Invalid new expiry is refused with the dialog's message and Cancel keeps the term",
+      "actual": "Renew opened \"Confirm renewal\" with Confirm the roll checked, \"The term currently runs to Jan 31, 2027.\", proposed New expiry date 2027-02-28, and no Paper as amendment option (no primary Document). Entering 2027-01-31 and selecting Confirm renewal showed \"A roll moves the term forward. Pick a date after the current expiry.\" Cancel left expiry 2027-01-31.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:06.992Z",
+      "at": "2026-09-16T15:44:07.735Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Confirm the roll with the proposed date and check the new expiry, notice deadline, Last renewal, the renewal row, and the unchanged Status",
+      "expected": "The term advances only through the confirmation; Status and Stage do not change",
+      "actual": "Confirm renewal (POST 200) moved expiry 2027-01-31 -> 2027-02-28; notice deadline 2027-01-29 (\"Jan 29, 2027Renewal notice deadline — 30 days before expiryDerived\"); Approvals & signing shows 1 renewal row \"Term advanced to Feb 28, 2027From Jan 31, 2027NHNadia HaddadSep 16\"; Overview \"Last renewalSep 16\"; Status stays Draft (draft).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:07.735Z",
+      "at": "2026-09-16T15:44:09.837Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Stale confirmation: with Renew open, the other staff role changes the expiry; selecting Confirm renewal is refused and the dialog shows the refreshed expiry; Cancel and reopen gives a fresh proposal",
+      "expected": "A stale roll is refused and re-read; no second roll is recorded",
+      "actual": "Dialog proposed 2027-03-28; Daniel Okafor moved expiry to 2027-04-30 through the API; Confirm renewal answered 409 with \"This contract's expiry has already moved. Read the record again before confirming the roll.\". The dialog then said \"The term currently runs to Apr 30, 2027.\" and kept the entered 2027-03-28. Cancel and reopen proposed 2027-05-30. Expiry 2027-04-30; renewal rows still 1.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:09.838Z",
+      "at": "2026-09-16T15:44:13.886Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Competing confirmations: both staff roles open Renew on the same expiry; the first Confirm renewal records the roll and the second is refused",
+      "expected": "Two competing confirmations do not record the same roll twice",
+      "actual": "Both dialogs proposed 2027-05-30 / 2027-05-30. Nadia Haddad's Confirm renewal answered 200; Daniel Okafor's answered 409 with \"This contract's expiry has already moved. Read the record again before confirming the roll.\". Expiry 2027-05-30; renewal rows 2 (one per distinct roll).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:13.887Z",
+      "at": "2026-09-16T15:44:15.466Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Paper as amendment: after the first Document is uploaded, reload and reopen Renew; File the amendment opens Add version with the Amendment kind; the new version is not executed until marked, and marking replaces the chain's designation",
+      "expected": "Amendment is a kind, not an executed designation; no new Contract and no expiry change",
+      "actual": "Before a Document existed the dialog had no Paper as amendment (previous step). Uploaded doc029-services-agreement.pdf as the primary Document and marked it executed; after reload Paper as amendment -> File the amendment moved to /contracts/262/documents and opened Add version with Kind \"Amendment\". After upload: v1 draft_ours executed=true; v2 amendment executed=false. Mark as executed copy on version 2 gave: v1 draft_ours executed=false; v2 amendment executed=true. Expiry still 2027-05-30; relations {\"parentChain\":[],\"children\":[],\"links\":[]}.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:15.466Z",
+      "at": "2026-09-16T15:44:21.533Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
+      "expected": "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential flag do not",
+      "actual": "Create child contract -> Open the child contract opened \"Create child contract\": \"Prefilled from C-262 and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-029 contracts-b C18 legal_team_member 1789573440047\", Contract type NDA, Owner Unassigned; Title edited and Create answered 201 for C-263 (/contracts/263). Copied: entity Helix Software Ltd, counterparty DOC-029 contracts-b Counterparty legal_team_member 1789573440047, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not copied: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Daniel Okafor nor Ravi Menon. Related contracts on C-263: \"Related contractsAdd linkParentC-262 DOC-029 contracts-b C18 legal_team_member 1789573440047DraftRemove parent\". C-262 still expires 2027-05-30.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:21.534Z",
+      "at": "2026-09-16T15:44:23.374Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
+      "expected": "A new Contract linked as renewing this predecessor, with the same carry-over rules",
+      "actual": "New successor contract -> Open the successor opened \"Create successor contract\": \"Prefilled from C-262 and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-029 contracts-b C18 legal_team_member 1789573440047\", Contract type NDA, Owner Unassigned; Title edited and Create answered 201 for C-264 (/contracts/264). Copied: entity Helix Software Ltd, counterparty DOC-029 contracts-b Counterparty legal_team_member 1789573440047, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not copied: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Daniel Okafor nor Ravi Menon. Related contracts on C-264: \"Related contractsSet parentAdd linkRenewsC-262 DOC-029 contracts-b C18 legal_team_member 1789573440047DraftRemove link\". C-262 still expires 2027-05-30.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:23.375Z",
+      "at": "2026-09-16T15:44:25.266Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Renewal banner: an Auto-renewing Contract whose expiry has passed shows Renewal date passed — pending confirmation with Review renewal, which opens the same dialog",
+      "expected": "The banner and Review renewal appear; the app does not advance expiry automatically",
+      "actual": "C-265 Auto-renewing, 12 months, expiry 2026-09-11: banner \"Renewal date passed — pending confirmation. The term does not advance until a human confirms.\"; Review renewal opened Confirm renewal proposing 2027-09-11; Cancel left expiry 2026-09-11 (no automatic advance).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:25.267Z",
+      "at": "2026-09-16T15:44:25.553Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Negative: an archived Contract offers no Renew and refuses a renewal write; Restore keeps the recorded rolls",
+      "expected": "Archived records are handled differently from an active renewal",
+      "actual": "Archived C-262: Approvals showed 0 Renew buttons and a renewal POST answered 409. After Restore (200) expiry 2027-05-30 and 2 renewal rows remain.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:25.553Z",
+      "at": "2026-09-16T15:44:26.938Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Prepare an unarchived Contract with the acting role as Legal Owner and the other staff role and a Business User on the Contract team",
+      "expected": "Prerequisite record exists for this role",
+      "actual": "C-266 \"DOC-029 contracts-b C19 legal_team_member 1789573440047\" with Legal Owner Nadia Haddad; team adds Daniel Okafor and Ravi Menon (Business User).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:26.939Z",
+      "at": "2026-09-16T15:44:26.998Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Add task: the Assignee picker offers active team people and the Legal Owner, not Business Users; Add someone to the team… then Use this person, then Cancel before saving",
+      "expected": "Cancel before saving creates neither the Task nor a staged team addition",
+      "actual": "The picker offered: Unassigned, DODaniel Okafor, NHNadia Haddad, Add someone to the team… (no Ravi Menon). Add someone to the team… -> Priya Raman showed \"This person will join the team, gain access to this record, and be assigned this task.\" and \"Team membership and assignment are saved when you save the task.\"; Use this person set the Assignee to \"PRPriya Raman\". Cancel: no Task saved and Priya Raman is not on the team.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:26.999Z",
+      "at": "2026-09-16T15:44:28.357Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Add task with Title, Description, a staged team addition as Assignee, a Due date, and an initial note with a file; check the new row and the note's Working team audience",
+      "expected": "The Task saves with its assignee added to the team; the initial note uses the Working team audience",
+      "actual": "Row: \"DOC-029 contracts-b C19 review notice legal_team_member 1789573440047Due Oct 6PRPriya Raman\". Task assigned to Priya Raman, due 2026-10-06; Priya Raman joined the Contract team on save. Task details shows the initial note and the attached PDF; the comment visibility is working_team.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:28.357Z",
+      "at": "2026-09-16T15:44:31.824Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Partial save: the Task saves but its initial note fails; Retry note & attachments posts the note without creating another Task",
+      "expected": "Retry note & attachments retries the pending comment only",
+      "actual": "With one comment POST answered 503 by the reviewer's route, the dialog said \"Task saved. Your note and attachments could not be added. Please try again.\" and offered Retry note & attachments; 1 Task existed. After the retry there is 1 Task named \"DOC-029 contracts-b C19 retry legal_team_member 1789573440047\" with 1 comment; the dialog closed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:31.825Z",
+      "at": "2026-09-16T15:44:32.794Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Complete a Task with its checkbox, find it with Show completed, reopen it, and check the done count",
+      "expected": "A completed Task leaves the list until Show completed is on; reopening restores it",
+      "actual": "Count \"0 of 2 done\" -> \"1 of 2 done\" after completion; the row left the list; Show completed showed it checked; selecting the checkbox again reopened it (\"0 of 2 done\", isDone false).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:32.795Z",
+      "at": "2026-09-16T15:44:35.834Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open Task details from the title and from Edit task, save an edit with Save, and remove an empty Task with Remove task; a Task with conversation history cannot be removed, also after its comment is deleted",
+      "expected": "Edits persist; Remove task removes only a Task without conversation history",
+      "actual": "Title click opened Task details; Save persisted \"DOC-029 contracts-b C19 empty legal_team_member 1789573440047 edited\". The row actions menu offered Edit task, Remove task; Edit task opened the same details. Remove task on the empty Task answered 200 and removed it. Remove task on the Task with a note answered 409 (\"Tasks20 of 2 doneShow completedThis Task has a conversation on it, so it cannot be removed.\") and kept it; after the comment was deleted (200) Remove task still answered 409 and the Task stayed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:35.834Z",
+      "at": "2026-09-16T15:44:42.604Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Change who is responsible from the row's assignee: Add someone to the team… shows the access notice and Add to team and assign; later changing to Unassigned keeps the team membership",
+      "expected": "The person joins the Contract team and is assigned; clearing the assignee does not remove team membership",
+      "actual": "Row picker -> Add someone to the team… -> Ines Duarte: \"This person will join the team, gain access to this record, and be assigned this task.\"; Add to team and assign made Ines Duarte the assignee and a team member. Choosing Unassigned cleared the assignee; Ines Duarte is still on the team.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:42.605Z",
+      "at": "2026-09-16T15:44:45.897Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Task details conversation offers only Legal only and Working team and stays separate from the record conversation; the Tasks section has no reordering control",
+      "expected": "Task comments stay separate from the record conversation; no reorder control exists",
+      "actual": "Tasks section: 0 draggable elements and 0 move/reorder buttons. Task details Audience group reads \"AudienceLegal onlyWorking team\". The Contract's own conversation does not contain the Task note.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:45.898Z",
+      "at": "2026-09-16T15:44:46.734Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Add date: Date, Event, Note; check global and combined reminders; add and remove an additional lead time; out-of-range lead times are refused; select a recipient; save and check the Key date row",
+      "expected": "The Key date saves with source Key date; lead times follow the 0 to 730 rule; recipient checkboxes list active team members and never Business Users",
+      "actual": "\"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 and -1 left Add lead time disabled; 0 enabled it. After adding 45 and 30 (Add lead time enabled for 30): \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (30 appears once). Adding 60 then Remove left \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\". The recipient checkboxes include Daniel Okafor and not Ravi Menon. Saved row \"Oct 26DOC-029 price review legal_team_member 1789573440047Fictional price review window.Key date\" with one actions button.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:46.734Z",
+      "at": "2026-09-16T15:44:48.434Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Edit date then Cancel leaves the saved date unchanged; Edit date then Save changes it; Remove date removes another Key date; derived rows have no actions and the list orders upcoming dates nearest first and past dates after",
+      "expected": "Key date edits persist, Cancel changes nothing, and the combined list keeps the stated order",
+      "actual": "Cancel kept the event; Save changed it to \"DOC-029 price review legal_team_member 1789573440047 saved\"; Remove date (no confirmation dialog) removed \"remove me\". Rows in order: Sep 26DOC-029 near check legal_team_member 1789573440047Key date | Oct 26DOC-029 price review legal_team_member 1789573440047 savedFictional price review window.Key date | Jul 13, 2027Current term expiresDerived | Sep 6DOC-029 past check legal_team_member 1789573440047Key date. 1 derived row(s), each without actions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:48.435Z",
+      "at": "2026-09-16T15:44:53.988Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A selected recipient leaves the team: the Edit date dialog says so and offers Use the usual audience, which clears the selection",
+      "expected": "The dialog names the change and returns to the default recipients",
+      "actual": "Saved selection before: \"reminderRecipientIds\":[\"01a0aaad-746c-7e44-a84c-5947852cfcf4\"]. After Daniel Okafor left the team the dialog said \"Some selected recipients have left the team and will not be reminded.Use the usual audience\"; Use the usual audience then Save stored \"reminderRecipientIds\":[]. Daniel Okafor was re-added (201).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:53.988Z",
+      "at": "2026-09-16T15:44:54.927Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Next deadline in the Contracts list picks the earliest unfinished Task due date, including an overdue Task, before Key dates and term dates",
+      "expected": "The Next deadline column shows the overdue Task, then the nearest Key date after the Task is done",
+      "actual": "view Default view (previously selected: My commercial desk). With an open Task due 2026-09-13, the C-266 Next deadline cell read \"DOC-029 contracts-b C19 overdue legal_team_member 1789573440047Sep 13 (3 days overdue)\". After the Task was completed it read \"DOC-029 near check legal_team_member 1789573440047Sep 26 (in 10 days)\" (the Key date due 2026-09-26; the review Task is due 2026-10-06, other Key dates and the 2027-07-13 expiry are later). The reviewer re-selected view \"My commercial desk\" afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:44:54.928Z",
+      "at": "2026-09-16T15:45:03.018Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Home and My Tasks show the assigned open Task and the approaching Contract date, with links back to the correct Contract",
+      "expected": "Home lists assigned open Tasks and approaching Contract dates in separate sections",
+      "actual": "Home sections: Approvals waiting on you, Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts, Your matters. Home Tasks assigned to you shows the first rows only and did not include it; View all opens My Tasks. My Tasks listed \"DOC-029 contracts-b C19 mine legal_team_member 1789573440047\" and its link opened /contracts/266/tasks. Dates approaching showed only its first rows (\"Dates approaching21View all 21DOC-029 alpha kickoffDOC-029 m…\"); View all opened Your dates, which lists \"DOC-029 near check legal_team_member 1789573440047DOC-029 contracts-b C19 legal_team_member 1789573440047·Key date·Contract C-266Sep 26 (in 10 days)\" -> /contracts/266/key-dates; the link opened /contracts/266/key-dates.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:03.019Z",
+      "at": "2026-09-16T15:45:12.448Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Negative: an archived Contract is read-only for Tasks and Key dates; Restore allows changes again",
+      "expected": "No add, complete or date controls while archived; writes are refused",
+      "actual": "Archived: Tasks had 0 Add task buttons and 0 enabled checkboxes; Key dates had 0 Add date buttons and 0 row action buttons; Task and Key date writes answered 409 and 409. After Restore (200) Add task is back.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:12.448Z",
+      "at": "2026-09-16T15:45:14.694Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Negative: a Business User on the Contract team cannot open the Tasks or Key dates sections",
+      "expected": "Tasks and Key dates remain in the full app; Business Users cannot open these sections",
+      "actual": "Ravi Menon (Business User, on the team) got 403 for Tasks and 403 for Key dates; opening /contracts/266/tasks landed on /portal without a Tasks section.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:14.694Z",
+      "at": "2026-09-16T15:45:18.415Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Prepare separate Contracts for relations, the confidentiality prompt in both directions, a restricted target, the Matter links, and ending and archiving; and two open Matters",
+      "expected": "Prerequisite records exist for this role",
+      "actual": "Open Contracts A=C-269, B=C-270, C=C-271, E=C-272, F=C-273, H=C-274, J=C-275; Confidential D=C-276, G=C-277, I=C-278; open Matters M1=M-168, M2=M-169. Priya Raman is on none of their teams.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:18.417Z",
+      "at": "2026-09-16T15:45:18.586Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Set parent: Cancel leaves no parent; Set parent places A under B; B lists A under Children; choosing A as B's parent is refused as a cycle",
+      "expected": "Parent relation saves; Cancel changes nothing; a parent choice that creates a cycle is refused",
+      "actual": "Cancel left C-269 with no parent. The picker showed \"Set parentC-270DOC-029 contracts-b C20 B legal_team_member 1789573440047CancelSet parent\"; Set parent saved. C-269: \"Related contractsAdd linkParentC-270 DOC-029 contracts-b C20 B legal_team_member 1789573440047DraftRemove parent\". C-270: \"Related contractsSet parentAdd linkChildrenC-269 DOC-029 contracts-b C20 A legal_team_member 1789573440047Draft\". Choosing C-269 as C-270's parent was refused: \"That contract already sits under this one. Pick another parent.\"; C-270 still has no parent.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:18.587Z",
+      "at": "2026-09-16T15:45:23.426Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Add link Related, Renews and Amends from A to C; check direction on both records; a duplicate Renews is refused; the picker does not offer A itself",
+      "expected": "Typed links save with the stated direction; self-links and duplicates are refused",
+      "actual": "Related, Renews and Amends answered 201, 201, 201. C-269: \"Related contractsAdd linkParentC-270 DOC-029 contracts-b C20 B legal_team_member 1789573440047DraftRemove parentRelatedC-271 DOC-029 contracts-b C20 C legal_team_member 1789573440047DraftRemove linkRenewsC-271 DOC-029 contracts-b C20 C legal_team_member 1789573440047DraftRemove linkAmendsC-271 DOC-029 contracts-b C20 C legal_team_member 1789573440047DraftRemove link\". C-271: \"Related contractsSet parentAdd linkRelatedC-269 DOC-029 contracts-b C20 A legal_team_member 1789573440047DraftRemove linkRenewed byC-269 DOC-029 contracts-b C20 A legal_team_member 1789573440047DraftRemove linkAmended byC-269 DOC-029 contracts-b C20 A legal_team_member 1789573440047DraftRemove link\". A second Renews answered 409: \"These two contracts are already linked that way.\". In C-269's own picker a title search found C-270, and a search for C-269's own title offered: \"No contracts to link.\" (not C-269 itself); a direct self-link write answered 409.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:23.426Z",
+      "at": "2026-09-16T15:45:37.475Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Remove link on the Related row removes only that relationship; Remove parent clears the parent; both records still exist",
+      "expected": "Removal affects only the chosen relationship",
+      "actual": "Links before: amends,related,renews; after Remove link on the Related row: amends,renews (3 rows had named C-271). Remove parent cleared the parent. C-269 now reads \"Related contractsSet parentAdd linkRenewsC-271 DOC-029 contracts-b C20 C legal_team_member 1789573440047DraftRemove linkAmendsC-271 DOC-029 contracts-b C20 C legal_team_member 1789573440047DraftRemove link\"; C-270 and C-271 still exist.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:37.476Z",
+      "at": "2026-09-16T15:45:41.991Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Flag as confidential? after linking Confidential D to open E: the prompt names E and Flag as confidential sets E's flag",
+      "expected": "The prompt names the Contract that is not yet Confidential and sets only that flag",
+      "actual": "Prompt: \"Flag as confidential?C-276 is confidential but C-272 is not. Flag C-272 as confidential too?No, leave it openFlag as confidential\". Flag as confidential (200) set C-272 Confidential; C-276 stays Confidential.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:41.992Z",
+      "at": "2026-09-16T15:45:44.500Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Flag as confidential? after linking open F to Confidential G: the prompt names F (this Contract) and accepting sets F's flag",
+      "expected": "The flagged Contract can be this Contract",
+      "actual": "Prompt: \"Flag as confidential?C-277 is confidential but C-273 is not. Flag C-273 as confidential too?No, leave it openFlag as confidential\". Flag as confidential (200) set this Contract C-273 Confidential.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:44.500Z",
+      "at": "2026-09-16T15:45:46.945Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "No, leave it open after linking open H to Confidential I changes nothing; a reader without access to I sees Restricted contract on H and cannot open I",
+      "expected": "The link does not change either flag or grant access; the restricted target does not leak its details",
+      "actual": "Prompt: \"Flag as confidential?C-278 is confidential but C-274 is not. Flag C-274 as confidential too?No, leave it openFlag as confidential\". No, leave it open kept C-274 open and C-278 Confidential; the link exists. Priya Raman's C-274 card: \"Related contractsSet parentAdd linkRelatedRestricted contract\" with no link to C-278; a direct read of C-278 answered 404; the relations read does not include its title.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:45:46.946Z",
+      "at": "2026-09-16T15:46:05.472Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Link to Matter: search, inspect the M- reference, Link; the card then offers Unlink and no Link to Matter; Unlink before moving to another Matter; a confidentiality mismatch warns without changing flags",
+      "expected": "One Matter at a time; the mismatch advice changes neither flag",
+      "actual": "C-275 search offered \"M-168 DOC-029 contracts-b C20 M1 legal_team_member 1789573440047\"; Link answered 201; the card then showed 1 Unlink and 0 Link to Matter buttons. A second link to M-169 answered 409. After Unlink, the Contract linked to M-169 (201). Confidential C-276 -> open M-168: the dialog warned \"These records have different Confidential flags. Linking will not change either one.\"; after Link, \"Confidentiality differsC-276 and M-168 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestion changes neither record.Leave them as they are\"; Leave them as they are kept C-276 Confidential and M-168 open.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:46:05.472Z",
+      "at": "2026-09-16T15:46:12.016Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "End: use the Stage control to choose Expired (Ended); check Status and History; the Contract remains editable; the default Contracts view excludes it until Filter -> Show ended; reopen with Active and History keeps the Expired change",
+      "expected": "Ending records the lifecycle change without freezing the record; the ended filter reveals it; reopening is another recorded change",
+      "actual": "Stage control -> Expired set Status Expired (stage ended); a Description edit then saved (200). History showed \"Nadia Haddad changed the statusDraft → Expiredthis minute\". The Contracts list (view \"Default view; previously selected My commercial desk\") did not list C-275 after paging; Filter -> Show ended (\"Filter1\") listed it. Choosing Active reopened it (Active); History still shows the Expired change and the Active change.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:46:12.017Z",
+      "at": "2026-09-16T15:46:27.017Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Archive from Contract actions: Archived marker and read-only message; Status unchanged; linked Contract and Matter are not archived and the Matter's Linked Contracts omits it; find it with Show archived plus Show ended; Restore from Contract actions and from the known C- address",
+      "expected": "Archiving is separate from ending; restore re-enables editing and keeps the Status",
+      "actual": "Related link to C-271 (201); Status Expired. Archive showed the Archived marker and \"This contract is archived — it is out of the contract list. Restore it to edit.\"; Title was not editable; Status stayed Expired. C-271 and M-169 were not archived; Before archiving M-169's Linked Contracts listed C-275; while archived it read \"Linked Contracts0New contractLink ContractNo Contracts are linked to this Matter.\". List filter started as \"Filter\"; Show archived alone (\"Filter1\") did not list the Ended record; with Show ended too (\"Filter2\") it did. Restore from Contract actions removed the marker and re-enabled editing; Status still Expired, so the default view still excludes it. Archived again (200), the known /contracts/275 address offered Restore (1) and restored it. Afterwards the reviewer cleared its list filters (\"Filter\" before) and re-selected view \"My commercial desk\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:46:27.018Z",
+      "at": "2026-09-16T15:47:00.789Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Prepare an unarchived Contract with an Entity, a Counterparty, a value, a High priority and risk, the Confidential flag, and the other staff role and a Business User on the team",
+      "expected": "Prerequisite record exists for this role",
+      "actual": "C-280 \"DOC-029 contracts-b C18 administrator 1789573440047\" created by Daniel Okafor; entity Helix Software Ltd; value GBP 9,900.00 annually; priority High; risk High; Confidential; team adds Nadia Haddad and Ravi Menon.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:00.790Z",
+      "at": "2026-09-16T15:47:00.955Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Overview Contract card: choose Term type Fixed term, then pick Effective date and Expiry date and type Notice period (days), saving one change at a time",
+      "expected": "Fixed term has no renewal-period value; each value saves on its own; the notice deadline is expiry minus the notice period",
+      "actual": "Four separate PATCH commits answered 200. Renewal period (months) was absent on Fixed term. After reload the pickers read \"Feb 1, 2026\" and \"Jan 31, 2027\", notice 30 days; the record's notice deadline is 2027-01-01 (Jan 31, 2027 minus 30 days).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:00.955Z",
+      "at": "2026-09-16T15:47:01.972Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Key dates shows the derived Current term expires and Renewal notice deadline rows, and the Term timeline draws the recorded dates",
+      "expected": "Derived rows reflect the recorded term and carry no row actions",
+      "actual": "Term timeline: \"Term timelineInitial termFeb 1 – Jan 31, 2027Jan 1, 2027Notice deadline Jan 1, 2027TodayFeb 1Jan 31, 2027Initial termNotice deadline\". Key dates rows: \"Jan 31, 2027Current term expiresDerived\" and \"Jan 1, 2027Renewal notice deadline — 30 days before expiryDerived\", each with 0 row action buttons.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:01.972Z",
+      "at": "2026-09-16T15:47:02.726Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Change Term type to Auto-renewing and type Renewal period (months)",
+      "expected": "Auto-renewing accepts a renewal period in months",
+      "actual": "Term type Auto-renewing and Renewal period 1 month saved (PATCH 200, 200); expiry still 2027-01-31.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:02.726Z",
+      "at": "2026-09-16T15:47:03.330Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Change Term type to Evergreen and review the saved values",
+      "expected": "Evergreen has no expiry date; changing to Evergreen clears the expiry and the renewal period",
+      "actual": "Evergreen saved; expiry null, renewal period null; Expiry date picker absent; effective date kept 2026-02-01; Key dates now lists: no derived term rows.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:03.331Z",
+      "at": "2026-09-16T15:47:04.217Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Change back to Auto-renewing, record expiry and renewal period, then change to Fixed term and review; finally restore Auto-renewing with a 1-month period",
+      "expected": "Changing away from Auto-renewing clears the renewal period and keeps the expiry",
+      "actual": "Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. The Contract is Auto-renewing again: expiry 2027-01-31, renewal 1 month, notice 30 days, notice deadline 2027-01-01.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:04.218Z",
+      "at": "2026-09-16T15:47:05.619Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Negative: a Task due date before the notice deadline does not feed the term-derived deadlines",
+      "expected": "Current term expires and Renewal notice deadline stay derived from the term; the Task does not show as a Key date",
+      "actual": "A Task due 2026-12-01 was added. Key dates still reads \"Jan 31, 2027Current term expiresDerived\" and \"Jan 1, 2027Renewal notice deadline — 30 days before expiryDerived\" and lists no Task row; the record's notice deadline stays 2027-01-01.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:05.620Z",
+      "at": "2026-09-16T15:47:06.262Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Approvals: select Renew; Confirm the roll is the default; an entered date on the current expiry is refused; Cancel changes nothing",
+      "expected": "Invalid new expiry is refused with the dialog's message and Cancel keeps the term",
+      "actual": "Renew opened \"Confirm renewal\" with Confirm the roll checked, \"The term currently runs to Jan 31, 2027.\", proposed New expiry date 2027-02-28, and no Paper as amendment option (no primary Document). Entering 2027-01-31 and selecting Confirm renewal showed \"A roll moves the term forward. Pick a date after the current expiry.\" Cancel left expiry 2027-01-31.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:06.263Z",
+      "at": "2026-09-16T15:47:07.028Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Confirm the roll with the proposed date and check the new expiry, notice deadline, Last renewal, the renewal row, and the unchanged Status",
+      "expected": "The term advances only through the confirmation; Status and Stage do not change",
+      "actual": "Confirm renewal (POST 200) moved expiry 2027-01-31 -> 2027-02-28; notice deadline 2027-01-29 (\"Jan 29, 2027Renewal notice deadline — 30 days before expiryDerived\"); Approvals & signing shows 1 renewal row \"Term advanced to Feb 28, 2027From Jan 31, 2027DODaniel OkaforSep 16\"; Overview \"Last renewalSep 16\"; Status stays Draft (draft).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:07.029Z",
+      "at": "2026-09-16T15:47:09.136Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Stale confirmation: with Renew open, the other staff role changes the expiry; selecting Confirm renewal is refused and the dialog shows the refreshed expiry; Cancel and reopen gives a fresh proposal",
+      "expected": "A stale roll is refused and re-read; no second roll is recorded",
+      "actual": "Dialog proposed 2027-03-28; Nadia Haddad moved expiry to 2027-04-30 through the API; Confirm renewal answered 409 with \"This contract's expiry has already moved. Read the record again before confirming the roll.\". The dialog then said \"The term currently runs to Apr 30, 2027.\" and kept the entered 2027-03-28. Cancel and reopen proposed 2027-05-30. Expiry 2027-04-30; renewal rows still 1.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:09.137Z",
+      "at": "2026-09-16T15:47:13.167Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Competing confirmations: both staff roles open Renew on the same expiry; the first Confirm renewal records the roll and the second is refused",
+      "expected": "Two competing confirmations do not record the same roll twice",
+      "actual": "Both dialogs proposed 2027-05-30 / 2027-05-30. Daniel Okafor's Confirm renewal answered 200; Nadia Haddad's answered 409 with \"This contract's expiry has already moved. Read the record again before confirming the roll.\". Expiry 2027-05-30; renewal rows 2 (one per distinct roll).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:13.168Z",
+      "at": "2026-09-16T15:47:14.797Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Paper as amendment: after the first Document is uploaded, reload and reopen Renew; File the amendment opens Add version with the Amendment kind; the new version is not executed until marked, and marking replaces the chain's designation",
+      "expected": "Amendment is a kind, not an executed designation; no new Contract and no expiry change",
+      "actual": "Before a Document existed the dialog had no Paper as amendment (previous step). Uploaded doc029-services-agreement.pdf as the primary Document and marked it executed; after reload Paper as amendment -> File the amendment moved to /contracts/280/documents and opened Add version with Kind \"Amendment\". After upload: v1 draft_ours executed=true; v2 amendment executed=false. Mark as executed copy on version 2 gave: v1 draft_ours executed=false; v2 amendment executed=true. Expiry still 2027-05-30; relations {\"parentChain\":[],\"children\":[],\"links\":[]}.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:14.798Z",
+      "at": "2026-09-16T15:47:20.845Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
+      "expected": "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential flag do not",
+      "actual": "Create child contract -> Open the child contract opened \"Create child contract\": \"Prefilled from C-280 and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-029 contracts-b C18 administrator 1789573440047\", Contract type NDA, Owner Unassigned; Title edited and Create answered 201 for C-281 (/contracts/281). Copied: entity Helix Software Ltd, counterparty DOC-029 contracts-b Counterparty administrator 1789573440047, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not copied: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Nadia Haddad nor Ravi Menon. Related contracts on C-281: \"Related contractsAdd linkParentC-280 DOC-029 contracts-b C18 administrator 1789573440047DraftRemove parent\". C-280 still expires 2027-05-30.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:20.846Z",
+      "at": "2026-09-16T15:47:22.682Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
+      "expected": "A new Contract linked as renewing this predecessor, with the same carry-over rules",
+      "actual": "New successor contract -> Open the successor opened \"Create successor contract\": \"Prefilled from C-280 and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-029 contracts-b C18 administrator 1789573440047\", Contract type NDA, Owner Unassigned; Title edited and Create answered 201 for C-282 (/contracts/282). Copied: entity Helix Software Ltd, counterparty DOC-029 contracts-b Counterparty administrator 1789573440047, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not copied: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Nadia Haddad nor Ravi Menon. Related contracts on C-282: \"Related contractsSet parentAdd linkRenewsC-280 DOC-029 contracts-b C18 administrator 1789573440047DraftRemove link\". C-280 still expires 2027-05-30.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:22.683Z",
+      "at": "2026-09-16T15:47:24.509Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Renewal banner: an Auto-renewing Contract whose expiry has passed shows Renewal date passed — pending confirmation with Review renewal, which opens the same dialog",
+      "expected": "The banner and Review renewal appear; the app does not advance expiry automatically",
+      "actual": "C-283 Auto-renewing, 12 months, expiry 2026-09-11: banner \"Renewal date passed — pending confirmation. The term does not advance until a human confirms.\"; Review renewal opened Confirm renewal proposing 2027-09-11; Cancel left expiry 2026-09-11 (no automatic advance).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:24.510Z",
+      "at": "2026-09-16T15:47:24.793Z"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Negative: an archived Contract offers no Renew and refuses a renewal write; Restore keeps the recorded rolls",
+      "expected": "Archived records are handled differently from an active renewal",
+      "actual": "Archived C-280: Approvals showed 0 Renew buttons and a renewal POST answered 409. After Restore (200) expiry 2027-05-30 and 2 renewal rows remain.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:24.794Z",
+      "at": "2026-09-16T15:47:26.088Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Prepare an unarchived Contract with the acting role as Legal Owner and the other staff role and a Business User on the Contract team",
+      "expected": "Prerequisite record exists for this role",
+      "actual": "C-284 \"DOC-029 contracts-b C19 administrator 1789573440047\" with Legal Owner Daniel Okafor; team adds Nadia Haddad and Ravi Menon (Business User).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:26.089Z",
+      "at": "2026-09-16T15:47:26.141Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Add task: the Assignee picker offers active team people and the Legal Owner, not Business Users; Add someone to the team… then Use this person, then Cancel before saving",
+      "expected": "Cancel before saving creates neither the Task nor a staged team addition",
+      "actual": "The picker offered: Unassigned, DODaniel Okafor, NHNadia Haddad, Add someone to the team… (no Ravi Menon). Add someone to the team… -> Tom Iwu showed \"This person will join the team, gain access to this record, and be assigned this task.\" and \"Team membership and assignment are saved when you save the task.\"; Use this person set the Assignee to \"TITom Iwu\". Cancel: no Task saved and Tom Iwu is not on the team.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:26.142Z",
+      "at": "2026-09-16T15:47:27.481Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Add task with Title, Description, a staged team addition as Assignee, a Due date, and an initial note with a file; check the new row and the note's Working team audience",
+      "expected": "The Task saves with its assignee added to the team; the initial note uses the Working team audience",
+      "actual": "Row: \"DOC-029 contracts-b C19 review notice administrator 1789573440047Due Oct 6TITom Iwu\". Task assigned to Tom Iwu, due 2026-10-06; Tom Iwu joined the Contract team on save. Task details shows the initial note and the attached PDF; the comment visibility is working_team.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:27.482Z",
+      "at": "2026-09-16T15:47:30.810Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Partial save: the Task saves but its initial note fails; Retry note & attachments posts the note without creating another Task",
+      "expected": "Retry note & attachments retries the pending comment only",
+      "actual": "With one comment POST answered 503 by the reviewer's route, the dialog said \"Task saved. Your note and attachments could not be added. Please try again.\" and offered Retry note & attachments; 1 Task existed. After the retry there is 1 Task named \"DOC-029 contracts-b C19 retry administrator 1789573440047\" with 1 comment; the dialog closed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:30.811Z",
+      "at": "2026-09-16T15:47:31.715Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Complete a Task with its checkbox, find it with Show completed, reopen it, and check the done count",
+      "expected": "A completed Task leaves the list until Show completed is on; reopening restores it",
+      "actual": "Count \"0 of 2 done\" -> \"1 of 2 done\" after completion; the row left the list; Show completed showed it checked; selecting the checkbox again reopened it (\"0 of 2 done\", isDone false).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:31.716Z",
+      "at": "2026-09-16T15:47:34.727Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Open Task details from the title and from Edit task, save an edit with Save, and remove an empty Task with Remove task; a Task with conversation history cannot be removed, also after its comment is deleted",
+      "expected": "Edits persist; Remove task removes only a Task without conversation history",
+      "actual": "Title click opened Task details; Save persisted \"DOC-029 contracts-b C19 empty administrator 1789573440047 edited\". The row actions menu offered Edit task, Remove task; Edit task opened the same details. Remove task on the empty Task answered 200 and removed it. Remove task on the Task with a note answered 409 (\"Tasks20 of 2 doneShow completedThis Task has a conversation on it, so it cannot be removed.\") and kept it; after the comment was deleted (200) Remove task still answered 409 and the Task stayed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:34.728Z",
+      "at": "2026-09-16T15:47:41.413Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Change who is responsible from the row's assignee: Add someone to the team… shows the access notice and Add to team and assign; later changing to Unassigned keeps the team membership",
+      "expected": "The person joins the Contract team and is assigned; clearing the assignee does not remove team membership",
+      "actual": "Row picker -> Add someone to the team… -> Marcus Oyelaran: \"This person will join the team, gain access to this record, and be assigned this task.\"; Add to team and assign made Marcus Oyelaran the assignee and a team member. Choosing Unassigned cleared the assignee; Marcus Oyelaran is still on the team.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:41.414Z",
+      "at": "2026-09-16T15:47:44.776Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Task details conversation offers only Legal only and Working team and stays separate from the record conversation; the Tasks section has no reordering control",
+      "expected": "Task comments stay separate from the record conversation; no reorder control exists",
+      "actual": "Tasks section: 0 draggable elements and 0 move/reorder buttons. Task details Audience group reads \"AudienceLegal onlyWorking team\". The Contract's own conversation does not contain the Task note.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:44.777Z",
+      "at": "2026-09-16T15:47:45.593Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Add date: Date, Event, Note; check global and combined reminders; add and remove an additional lead time; out-of-range lead times are refused; select a recipient; save and check the Key date row",
+      "expected": "The Key date saves with source Key date; lead times follow the 0 to 730 rule; recipient checkboxes list active team members and never Business Users",
+      "actual": "\"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 and -1 left Add lead time disabled; 0 enabled it. After adding 45 and 30 (Add lead time enabled for 30): \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (30 appears once). Adding 60 then Remove left \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\". The recipient checkboxes include Nadia Haddad and not Ravi Menon. Saved row \"Oct 26DOC-029 price review administrator 1789573440047Fictional price review window.Key date\" with one actions button.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:45.594Z",
+      "at": "2026-09-16T15:47:47.374Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Edit date then Cancel leaves the saved date unchanged; Edit date then Save changes it; Remove date removes another Key date; derived rows have no actions and the list orders upcoming dates nearest first and past dates after",
+      "expected": "Key date edits persist, Cancel changes nothing, and the combined list keeps the stated order",
+      "actual": "Cancel kept the event; Save changed it to \"DOC-029 price review administrator 1789573440047 saved\"; Remove date (no confirmation dialog) removed \"remove me\". Rows in order: Sep 26DOC-029 near check administrator 1789573440047Key date | Oct 26DOC-029 price review administrator 1789573440047 savedFictional price review window.Key date | Jul 13, 2027Current term expiresDerived | Sep 6DOC-029 past check administrator 1789573440047Key date. 1 derived row(s), each without actions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:47.375Z",
+      "at": "2026-09-16T15:47:52.967Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "A selected recipient leaves the team: the Edit date dialog says so and offers Use the usual audience, which clears the selection",
+      "expected": "The dialog names the change and returns to the default recipients",
+      "actual": "Saved selection before: \"reminderRecipientIds\":[\"01a0aaad-7476-705f-9805-48c41b149062\"]. After Nadia Haddad left the team the dialog said \"Some selected recipients have left the team and will not be reminded.Use the usual audience\"; Use the usual audience then Save stored \"reminderRecipientIds\":[]. Nadia Haddad was re-added (201).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:52.967Z",
+      "at": "2026-09-16T15:47:53.920Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Next deadline in the Contracts list picks the earliest unfinished Task due date, including an overdue Task, before Key dates and term dates",
+      "expected": "The Next deadline column shows the overdue Task, then the nearest Key date after the Task is done",
+      "actual": "view Default view (previously selected: Default view). With an open Task due 2026-09-13, the C-284 Next deadline cell read \"DOC-029 contracts-b C19 overdue administrator 1789573440047Sep 13 (3 days overdue)\". After the Task was completed it read \"DOC-029 near check administrator 1789573440047Sep 26 (in 10 days)\" (the Key date due 2026-09-26; the review Task is due 2026-10-06, other Key dates and the 2027-07-13 expiry are later). The reviewer made no view change.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:53.921Z",
+      "at": "2026-09-16T15:47:57.433Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Home and My Tasks show the assigned open Task and the approaching Contract date, with links back to the correct Contract",
+      "expected": "Home lists assigned open Tasks and approaching Contract dates in separate sections",
+      "actual": "Home sections: Approvals waiting on you, Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts, Your matters. Home Tasks assigned to you shows the first rows only and did not include it; View all opens My Tasks. My Tasks listed \"DOC-029 contracts-b C19 mine administrator 1789573440047\" and its link opened /contracts/284/tasks. Dates approaching showed only its first rows (\"Dates approaching35View all 35DOC-029 alpha kickoffDOC-029 m…\"); View all opened Your dates, which lists \"DOC-029 near check administrator 1789573440047DOC-029 contracts-b C19 administrator 1789573440047·Key date·Contract C-284Sep 26 (in 10 days)\" -> /contracts/284/key-dates; the link opened /contracts/284/key-dates.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:47:57.434Z",
+      "at": "2026-09-16T15:48:06.957Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Negative: an archived Contract is read-only for Tasks and Key dates; Restore allows changes again",
+      "expected": "No add, complete or date controls while archived; writes are refused",
+      "actual": "Archived: Tasks had 0 Add task buttons and 0 enabled checkboxes; Key dates had 0 Add date buttons and 0 row action buttons; Task and Key date writes answered 409 and 409. After Restore (200) Add task is back.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:06.958Z",
+      "at": "2026-09-16T15:48:09.180Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Negative: a Business User on the Contract team cannot open the Tasks or Key dates sections",
+      "expected": "Tasks and Key dates remain in the full app; Business Users cannot open these sections",
+      "actual": "Ravi Menon (Business User, on the team) got 403 for Tasks and 403 for Key dates; opening /contracts/284/tasks landed on /portal without a Tasks section.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:09.181Z",
+      "at": "2026-09-16T15:48:11.736Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Prepare separate Contracts for relations, the confidentiality prompt in both directions, a restricted target, the Matter links, and ending and archiving; and two open Matters",
+      "expected": "Prerequisite records exist for this role",
+      "actual": "Open Contracts A=C-285, B=C-286, C=C-287, E=C-288, F=C-289, H=C-290, J=C-291; Confidential D=C-292, G=C-293, I=C-294; open Matters M1=M-170, M2=M-171. Priya Raman is on none of their teams.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:11.737Z",
+      "at": "2026-09-16T15:48:11.913Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Set parent: Cancel leaves no parent; Set parent places A under B; B lists A under Children; choosing A as B's parent is refused as a cycle",
+      "expected": "Parent relation saves; Cancel changes nothing; a parent choice that creates a cycle is refused",
+      "actual": "Cancel left C-285 with no parent. The picker showed \"Set parentC-286DOC-029 contracts-b C20 B administrator 1789573440047CancelSet parent\"; Set parent saved. C-285: \"Related contractsAdd linkParentC-286 DOC-029 contracts-b C20 B administrator 1789573440047DraftRemove parent\". C-286: \"Related contractsSet parentAdd linkChildrenC-285 DOC-029 contracts-b C20 A administrator 1789573440047Draft\". Choosing C-285 as C-286's parent was refused: \"That contract already sits under this one. Pick another parent.\"; C-286 still has no parent.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:11.914Z",
+      "at": "2026-09-16T15:48:16.791Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Add link Related, Renews and Amends from A to C; check direction on both records; a duplicate Renews is refused; the picker does not offer A itself",
+      "expected": "Typed links save with the stated direction; self-links and duplicates are refused",
+      "actual": "Related, Renews and Amends answered 201, 201, 201. C-285: \"Related contractsAdd linkParentC-286 DOC-029 contracts-b C20 B administrator 1789573440047DraftRemove parentRelatedC-287 DOC-029 contracts-b C20 C administrator 1789573440047DraftRemove linkRenewsC-287 DOC-029 contracts-b C20 C administrator 1789573440047DraftRemove linkAmendsC-287 DOC-029 contracts-b C20 C administrator 1789573440047DraftRemove link\". C-287: \"Related contractsSet parentAdd linkRelatedC-285 DOC-029 contracts-b C20 A administrator 1789573440047DraftRemove linkRenewed byC-285 DOC-029 contracts-b C20 A administrator 1789573440047DraftRemove linkAmended byC-285 DOC-029 contracts-b C20 A administrator 1789573440047DraftRemove link\". A second Renews answered 409: \"These two contracts are already linked that way.\". In C-285's own picker a title search found C-286, and a search for C-285's own title offered: \"No contracts to link.\" (not C-285 itself); a direct self-link write answered 409.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:16.791Z",
+      "at": "2026-09-16T15:48:30.835Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Remove link on the Related row removes only that relationship; Remove parent clears the parent; both records still exist",
+      "expected": "Removal affects only the chosen relationship",
+      "actual": "Links before: amends,related,renews; after Remove link on the Related row: amends,renews (3 rows had named C-287). Remove parent cleared the parent. C-285 now reads \"Related contractsSet parentAdd linkRenewsC-287 DOC-029 contracts-b C20 C administrator 1789573440047DraftRemove linkAmendsC-287 DOC-029 contracts-b C20 C administrator 1789573440047DraftRemove link\"; C-286 and C-287 still exist.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:30.836Z",
+      "at": "2026-09-16T15:48:35.319Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Flag as confidential? after linking Confidential D to open E: the prompt names E and Flag as confidential sets E's flag",
+      "expected": "The prompt names the Contract that is not yet Confidential and sets only that flag",
+      "actual": "Prompt: \"Flag as confidential?C-292 is confidential but C-288 is not. Flag C-288 as confidential too?No, leave it openFlag as confidential\". Flag as confidential (200) set C-288 Confidential; C-292 stays Confidential.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:35.320Z",
+      "at": "2026-09-16T15:48:37.823Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Flag as confidential? after linking open F to Confidential G: the prompt names F (this Contract) and accepting sets F's flag",
+      "expected": "The flagged Contract can be this Contract",
+      "actual": "Prompt: \"Flag as confidential?C-293 is confidential but C-289 is not. Flag C-289 as confidential too?No, leave it openFlag as confidential\". Flag as confidential (200) set this Contract C-289 Confidential.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:37.824Z",
+      "at": "2026-09-16T15:48:40.286Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "No, leave it open after linking open H to Confidential I changes nothing; a reader without access to I sees Restricted contract on H and cannot open I",
+      "expected": "The link does not change either flag or grant access; the restricted target does not leak its details",
+      "actual": "Prompt: \"Flag as confidential?C-294 is confidential but C-290 is not. Flag C-290 as confidential too?No, leave it openFlag as confidential\". No, leave it open kept C-290 open and C-294 Confidential; the link exists. Priya Raman's C-290 card: \"Related contractsSet parentAdd linkRelatedRestricted contract\" with no link to C-294; a direct read of C-294 answered 404; the relations read does not include its title.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:40.288Z",
+      "at": "2026-09-16T15:48:45.779Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Link to Matter: search, inspect the M- reference, Link; the card then offers Unlink and no Link to Matter; Unlink before moving to another Matter; a confidentiality mismatch warns without changing flags",
+      "expected": "One Matter at a time; the mismatch advice changes neither flag",
+      "actual": "C-291 search offered \"M-170 DOC-029 contracts-b C20 M1 administrator 1789573440047\"; Link answered 201; the card then showed 1 Unlink and 0 Link to Matter buttons. A second link to M-171 answered 409. After Unlink, the Contract linked to M-171 (201). Confidential C-292 -> open M-170: the dialog warned \"These records have different Confidential flags. Linking will not change either one.\"; after Link, \"Confidentiality differsC-292 and M-170 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestion changes neither record.Leave them as they are\"; Leave them as they are kept C-292 Confidential and M-170 open.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:45.779Z",
+      "at": "2026-09-16T15:48:52.283Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "End: use the Stage control to choose Expired (Ended); check Status and History; the Contract remains editable; the default Contracts view excludes it until Filter -> Show ended; reopen with Active and History keeps the Expired change",
+      "expected": "Ending records the lifecycle change without freezing the record; the ended filter reveals it; reopening is another recorded change",
+      "actual": "Stage control -> Expired set Status Expired (stage ended); a Description edit then saved (200). History showed \"Daniel Okafor changed the statusDraft → Expiredthis minute\". The Contracts list (view \"Default view; previously selected Default view\") did not list C-291 after paging; Filter -> Show ended (\"Filter1\") listed it. Choosing Active reopened it (Active); History still shows the Expired change and the Active change.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:48:52.284Z",
+      "at": "2026-09-16T15:49:05.713Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Archive from Contract actions: Archived marker and read-only message; Status unchanged; linked Contract and Matter are not archived and the Matter's Linked Contracts omits it; find it with Show archived plus Show ended; Restore from Contract actions and from the known C- address",
+      "expected": "Archiving is separate from ending; restore re-enables editing and keeps the Status",
+      "actual": "Related link to C-287 (201); Status Expired. Archive showed the Archived marker and \"This contract is archived — it is out of the contract list. Restore it to edit.\"; Title was not editable; Status stayed Expired. C-287 and M-171 were not archived; Before archiving M-171's Linked Contracts listed C-291; while archived it read \"Linked Contracts0New contractLink ContractNo Contracts are linked to this Matter.\". List filter started as \"Filter\"; Show archived alone (\"Filter1\") did not list the Ended record; with Show ended too (\"Filter2\") it did. Restore from Contract actions removed the marker and re-enabled editing; Status still Expired, so the default view still excludes it. Archived again (200), the known /contracts/291 address offered Restore (1) and restored it. Afterwards the reviewer cleared its list filters (\"Filter\" before) and re-selected view \"Default view\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:49:05.714Z",
+      "at": "2026-09-16T15:49:33.231Z"
+    }
+  ],
+  "records": [
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "term and renewal",
+      "reference": "C-262"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "Create child contract",
+      "reference": "C-263"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "Create successor contract",
+      "reference": "C-264"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "passed renewal date",
+      "reference": "C-265"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "role": "legal_team_member",
+      "purpose": "Tasks and Key dates",
+      "reference": "C-266"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "A",
+      "reference": "C-269"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "B",
+      "reference": "C-270"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "C",
+      "reference": "C-271"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "E",
+      "reference": "C-272"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "F",
+      "reference": "C-273"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "H",
+      "reference": "C-274"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "J",
+      "reference": "C-275"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "D",
+      "reference": "C-276"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "G",
+      "reference": "C-277"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "I",
+      "reference": "C-278"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "M1",
+      "reference": "M-168"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "M2",
+      "reference": "M-169"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "term and renewal",
+      "reference": "C-280"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "Create child contract",
+      "reference": "C-281"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "Create successor contract",
+      "reference": "C-282"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "passed renewal date",
+      "reference": "C-283"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "role": "administrator",
+      "purpose": "Tasks and Key dates",
+      "reference": "C-284"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "A",
+      "reference": "C-285"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "B",
+      "reference": "C-286"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "C",
+      "reference": "C-287"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "E",
+      "reference": "C-288"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "F",
+      "reference": "C-289"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "H",
+      "reference": "C-290"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "J",
+      "reference": "C-291"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "D",
+      "reference": "C-292"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "G",
+      "reference": "C-293"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "I",
+      "reference": "C-294"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "M1",
+      "reference": "M-170"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "M2",
+      "reference": "M-171"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:49:33.232Z",
+  "summary": {
+    "total": 82,
+    "pass": 82,
+    "fail": 0
+  },
+  "priorAttempts": [
+    {
+      "summary": "Development runs per article and role, and a first full run, found reviewer-script errors only: a heading locator that matched two headings, a document-versions read shape, the successor dialog title (Create successor contract), a relation field name, a number search that also matched run stamps in titles, a Home Dates approaching list that shows only its first rows (View all opens Your dates), and an unhandled response wait. Each was corrected in the script. These runs created extra DOC-029 contracts-b records in the lab; their observations are not counted."
+    },
+    {
+      "startedAt": "2026-09-16T15:36:57.599Z",
+      "finishedAt": "2026-09-16T15:43:36.564Z",
+      "summary": {
+        "total": 82,
+        "pass": 76,
+        "fail": 6
+      },
+      "disposition": "Second full run: 76 of 82 steps passed. The 6 failures were page-render waits that passed the 30 s script timeout while many parallel agents used the shared lab (Contract Overview heading, Tasks section), plus the checks that depended on those steps. The script timeout was raised to 60 s and the full run repeated; that run is the record above. Not counted."
+    }
+  ],
+  "observations": [
+    "Nadia Haddad's Contracts list had the saved view \"My commercial desk\" selected, without the Next deadline column. The script chose Default view for the list checks, as the article's default-view statements require, and then selected \"My commercial desk\" again.",
+    "On Fixed term and Evergreen the Overview shows no Renewal period (months) control, and on Evergreen no Expiry date control. The article's \"There is no renewal-period value\" and \"There is no expiry date\" match.",
+    "The Key date Remove date action removes the row without a confirmation dialog.",
+    "Refusing Remove task shows \"This Task has a conversation on it, so it cannot be removed. Mark it done instead.\" in the Tasks section header."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
+    "Prerequisite records and some supporting actions used the acting or other staff role's API session: record creation, team changes, the competing expiry write, archiving before the C18 and C19 read-only checks, and the extra Tasks and Key dates for the ordering and Next deadline checks. The actions each article instructs were done in the browser.",
+    "The partial-save case used a reviewer route that answered one comment POST with 503; it proves the dialog's handling, not a real storage outage.",
+    "Reminder email delivery and timing were not exercised; notifications.md owns those rules. Only the saved lead times and recipient selection were checked.",
+    "The shared work lab also carried other agents' records; list, Home and calendar checks searched for this run's own DOC-029 contracts-b records."
+  ]
+}

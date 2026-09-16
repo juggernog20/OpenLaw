@@ -1,0 +1,51 @@
+{
+  "section": "emailRestored",
+  "reviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "approver-groups": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "authentication-and-email": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1"
+  },
+  "startedAt": "2026-09-16T15:29:43.485Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Remove the environment override and restart: the stored relay is active again",
+      "expected": "Step reads set in the app; test mail from the stored sender",
+      "startedAt": "2026-09-16T15:29:44.154Z",
+      "finishedAt": "2026-09-16T15:29:47.752Z",
+      "actual": "After the override was removed, the step read \"Outbound email is set in the app. Mail is sent from DOC-029 Stored <stored-relay@helix.example>.\" and a test message arrived from stored-relay@helix.example.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Replace relay with a URL that does not begin with smtp:// or smtps://",
+      "expected": "The save is refused with a message; the stored relay stays active",
+      "startedAt": "2026-09-16T15:29:47.753Z",
+      "finishedAt": "2026-09-16T15:29:50.401Z",
+      "actual": "Saving http://mailpit:1025 did not save: the step's alerts read [\"The relay URL must start with smtp:// or smtps://.\"] and the source stayed app from DOC-029 Stored <stored-relay@helix.example>. Keep current relay closed the form.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Finish the wizard; it cannot be reopened and there is no separate email Settings page",
+      "expected": "Welcome redirects after completion; Settings has no email page",
+      "startedAt": "2026-09-16T15:29:50.401Z",
+      "finishedAt": "2026-09-16T15:29:54.552Z",
+      "actual": "Set up later on the remaining optional steps and Finish completed the wizard. Opening /welcome again went to /. The Settings rail read \"Personal Profile Appearance Notifications View Business Portal Organization General Regions Departments Users Security Authentication Audit log Matters Contracts Intake Entities Knowledge Auto-Docs Notifications AI analysis Integrations\" with no email entry; /settings/email showed \"Personal Profile Appearance Notifications View Business Portal Organization General Regions Departments Users Security M\".",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:29:54.556Z",
+  "phase": "stored again: override removed and app and worker recreated (overlay-phase-stored.json)"
+}

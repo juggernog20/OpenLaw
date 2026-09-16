@@ -1,0 +1,252 @@
+{
+  "task": "DOC-022 (#742), live-provider preparation under DOC-029",
+  "coverage": ["C42", "C43"],
+  "reviewer": "Claude Opus 5 live-provider preparation agent (author for this pass)",
+  "reviewerKind": "agent",
+  "reviewRole": "author source review. This is not an independent technical review or walkthrough.",
+  "reviewedAt": "2026-09-16T15:05:08Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "sourceLocation": ".documentation-labs/live/source (the lab's committed snapshot of appCommit)",
+  "lab": {
+    "name": "live",
+    "project": "openlaw-docs-41255c61-live",
+    "appUrl": "http://127.0.0.1:23314",
+    "mailUrl": "http://127.0.0.1:23414",
+    "appImageId": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0",
+    "engineImageId": "sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+    "seed": "light, random seed 7, AI disabled, Signing unconfigured"
+  },
+  "result": "pass-with-corrections",
+  "articles": [
+    {
+      "articleId": "configure-signing",
+      "status": "draft",
+      "contentSha256Before": "13d8d4eab928e2b2a9ecc1c82865b4c4577f262416211aadf712d6cfb97042cc",
+      "contentSha256After": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc",
+      "checks": [
+        {
+          "claim": "Settings path Organization > Integrations > E-signature; DocuSign card collapsed; Administrator only",
+          "sources": [
+            "apps/web/src/routes/settings.tsx",
+            "apps/web/src/routes/settings-e-signature.tsx",
+            "apps/api/src/modules/signing-connector/routes.ts"
+          ],
+          "actual": "The Integrations rail entry opens /settings/integrations/e-signature. The DocuSign card uses defaultOpen false in every state. The loader sends non-Administrators to /settings/profile and every connector route requires the Administrator role.",
+          "correction": null
+        },
+        {
+          "claim": "New connectors default to Polling; existing connectors keep Webhook after the upgrade",
+          "sources": [
+            "packages/db/migrations/0095_signing_update_mode.sql",
+            "apps/api/src/modules/signing-connector/routes.ts"
+          ],
+          "actual": "Migration 0095 adds update_mode with default 'webhook' for existing rows, then sets the column default to 'polling'. The unconfigured read returns polling.",
+          "correction": null
+        },
+        {
+          "claim": "Public callback URL and the Webhook URL",
+          "sources": [
+            "apps/api/src/modules/signing-connector/routes.ts",
+            "apps/web/src/routes/settings-e-signature.tsx"
+          ],
+          "actual": "The API accepts only an HTTPS URL without username, password, query or fragment. A saved override is shown as the Webhook URL exactly as entered. Otherwise the Webhook URL is BASE_URL plus /api/v1/signing/docusign/webhook. The Zod refinement message does not reach the pane: the browser check showed only 'One or more request fields are invalid.'",
+          "correction": "Step 4 now says to enter the complete address, states the HTTPS and no-credentials/query/fragment rule, and warns that the pane shows only a general refusal. The 'Save is refused' row names the same check."
+        },
+        {
+          "claim": "Save requirements: Integration key, User ID, RSA private key; Connect HMAC secret for Webhook; blank secret keeps the stored value",
+          "sources": [
+            "apps/api/src/modules/signing-connector/routes.ts",
+            "apps/web/src/routes/settings-e-signature.tsx"
+          ],
+          "actual": "The form marks Integration key and User ID required, the RSA key required until one is stored, and the HMAC secret required in Webhook mode until one is stored. The API refuses a first save without a key and a Webhook save without any secret. pasted() treats blank as keep. Polling saves never send the HMAC secret.",
+          "correction": null
+        },
+        {
+          "claim": "A newly saved connector is enabled; Test connection names the default or first account; the Connected chip does not prove credentials",
+          "sources": [
+            "apps/api/src/modules/signing-connector/routes.ts",
+            "apps/api/src/lib/signing/docusign.ts"
+          ],
+          "actual": "Insert leaves disabledAt null. The account check picks is_default, else the first account. The chip reads only configured and enabled.",
+          "correction": null
+        },
+        {
+          "claim": "Polling timing and reconciliation",
+          "sources": ["apps/api/src/pipeline/reconciliation.ts"],
+          "actual": "The sweep runs every five minutes. A new Envelope has no next check time, so its first check comes at the next sweep. Each check leases the Envelope for 20 minutes and a live answer sets the next check 15 minutes out. The article's 'about 15 to 20 minutes' and 'the first check can run sooner' are accurate.",
+          "correction": null
+        },
+        {
+          "claim": "Polling refuses inbound deliveries even with a stored secret; turning the connector off stops callbacks, reconciliation and tests",
+          "sources": [
+            "apps/api/src/lib/signing/resolver.ts",
+            "apps/api/src/modules/signing-webhook/routes.ts"
+          ],
+          "actual": "The resolver returns null for a disabled row, and for a webhook purpose unless the mode is webhook with a secret. The webhook route then answers 401. The test route answers 400 'No e-signature connector is configured. Save the credentials first.' The Test button stays enabled while the connector is configured.",
+          "correction": null
+        },
+        {
+          "claim": "Saving on a disabled connector leaves it off; removal refused while any Envelope is live",
+          "sources": ["apps/api/src/modules/signing-connector/routes.ts"],
+          "actual": "Update does not touch disabledAt. Delete counts Envelopes with status 'sent' across the install and answers 409 when any exist.",
+          "correction": null
+        },
+        {
+          "claim": "Round-trip result: executed copy and Contract Status",
+          "sources": [
+            "apps/api/src/pipeline/executed-copy.ts",
+            "docs/user-guides/electronic-signing.md"
+          ],
+          "actual": "Filing appends an executed Version, sets the executed pin, and moves a Contract still in the Signature Stage to the first live Active Status. Other Stages keep their Status. The article said only to check Status separately.",
+          "correction": "Step 5 now states the Signature Stage move and that other Stages keep their Status, in the same words as electronic-signing."
+        },
+        {
+          "claim": "Legal Team Member can send but not configure",
+          "sources": ["apps/api/src/modules/contract-envelopes/routes.ts"],
+          "actual": "The send route allows administrator and legal_team_member. Connector routes are Administrator only.",
+          "correction": null
+        }
+      ],
+      "notDocumentedButRelevant": [
+        "The Envelope definition anchors the sign-here tab to the text '/sig/' with anchorIgnoreIfNotPresent true. Paper without that text reaches the Signer with no placed signature field. This affects the live round-trip fixture, not the Settings article."
+      ],
+      "webhookScope": {
+        "decision": "Webhook mode is a stated limitation, tracked in #888. C42 is assessed on Polling.",
+        "decidedBy": "user, relayed by the coordinator",
+        "articleReview": "The article gives the Webhook procedure but does not claim that Webhook, Connect delivery or HMAC rotation was verified. No text change was needed."
+      }
+    },
+    {
+      "articleId": "configure-analysis",
+      "status": "draft",
+      "contentSha256Before": "ab577b5a9a1c749fe8836e2e68d3af36624585103bb4d77660293eb36247c738",
+      "contentSha256After": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
+      "checks": [
+        {
+          "claim": "AI analysis is its own Organization destination; Provider card collapsed; seven presets",
+          "sources": [
+            "apps/web/src/routes/settings.tsx",
+            "apps/web/src/routes/settings-ai-analysis.tsx",
+            "apps/api/src/lib/ai/presets.ts"
+          ],
+          "actual": "Rail entry /settings/ai-analysis. Provider card defaultOpen false. Presets: Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, Ollama, Custom endpoint.",
+          "correction": null
+        },
+        {
+          "claim": "Model discovery: Load/Refresh models, search, kept absent selection, manual entry, Azure manual only, partial and empty explanations, no save or inference",
+          "sources": [
+            "apps/web/src/components/ai-model-selector.tsx",
+            "apps/api/src/lib/ai/models.ts",
+            "apps/api/src/modules/ai-connector/routes.ts"
+          ],
+          "actual": "Matches the article. Listing runs on the app process only, refuses Azure with 400, and never saves. OpenRouter entries without text input or output are dropped.",
+          "correction": null
+        },
+        {
+          "claim": "Prefilled model is a starting value, not proof of access",
+          "sources": ["apps/api/src/lib/ai/presets.ts"],
+          "actual": "The OpenRouter preset prefills '~openai/gpt-latest'. That id was not in OpenRouter's public /api/v1/models list on 2026-09-16 (444 models, unauthenticated read). The article's warning is correct; the live check must load models and choose one.",
+          "correction": null
+        },
+        {
+          "claim": "Test connection sends a small fixed prompt without Contract text; disabled while the connector is off",
+          "sources": [
+            "apps/api/src/lib/ai/openai-compatible.ts",
+            "apps/api/src/modules/ai-connector/routes.ts",
+            "apps/web/src/routes/settings-ai-analysis.tsx"
+          ],
+          "actual": "probe() sends 'Reply with only the JSON object {\"ok\":true}.' with a 30 second limit. The button is disabled unless the connector is enabled. OpenAI-compatible calls, including OpenRouter, request response_format json_object.",
+          "correction": null
+        },
+        {
+          "claim": "Key retention only for the same provider, protocol and endpoint; keyless Ollama clears the key",
+          "sources": ["apps/api/src/modules/ai-connector/routes.ts"],
+          "actual": "sameDestination compares preset, protocol and normalized base URL. A changed destination without a key is refused, except Ollama, which stores a null key.",
+          "correction": null
+        },
+        {
+          "claim": "Field prompts card position and behaviour",
+          "sources": [
+            "apps/web/src/routes/settings-ai-analysis.tsx",
+            "apps/web/src/components/ai-field-prompts-card.tsx",
+            "apps/web/src/lib/field-commit.ts",
+            "apps/api/src/modules/ai-field-prompts/routes.ts"
+          ],
+          "actual": "The card is not collapsible and holds seven prompts, maxlength 2000. It renders after the Request conversion card once a connector exists. Enter saves, Shift+Enter breaks a line, a cleared required prompt reverts, and Reset to default shows only for an override. Escape resets the draft and then blurs the input; the blur handler still holds the old draft and saves it. The browser check confirmed one save request after Escape and the abandoned text stored after reload.",
+          "correction": "The card position now names Request conversion. Added that clearing a prompt restores the saved text. The Escape sentence is unchanged because it describes the intended behaviour; the build contradicts it (see defects)."
+        },
+        {
+          "claim": "Catalog Field targets and data sent",
+          "sources": [
+            "apps/api/src/lib/analysis-targets.ts",
+            "apps/api/src/pipeline/automatic-contract-analysis.ts",
+            "apps/api/src/pipeline/contract-analysis.ts",
+            "packages/shared/src/analysis.ts"
+          ],
+          "actual": "Targets are the seven core prompts plus non-archived contract-scope Fields attached to the Type with an AI prompt, excluding core slugs. The target Version is the executed pin, else the highest Version number. Text is cut at AI_ANALYSIS_CHARACTER_BUDGET 200,000 characters. Automatic runs queue when that Version's text is ready and non-empty and a provider resolves.",
+          "correction": null
+        },
+        {
+          "claim": "Request conversion switches",
+          "sources": [
+            "apps/web/src/routes/settings-ai-analysis.tsx",
+            "apps/api/src/modules/ai-connector/routes.ts",
+            "packages/db/migrations/0102_high_leo.sql",
+            "packages/db/migrations/0104_contract_preparation.sql",
+            "packages/db/migrations/0105_flowery_doctor_spectrum.sql"
+          ],
+          "actual": "The card renders only when a connector is configured. All three columns default to false for every row, new or existing. The switches are disabled while the connector is off. Remove deletes the row, so the settings go with it.",
+          "correction": "The section now says the card appears only after a connector is saved, that all switches start off (not only on existing installations), that they are unavailable while Use AI analysis is off, and that Remove connector deletes them."
+        },
+        {
+          "claim": "Legal Team Member can run Analysis but not configure it",
+          "sources": [
+            "apps/api/src/modules/contract-analysis/routes.ts",
+            "apps/api/src/modules/ai-connector/routes.ts"
+          ],
+          "actual": "Analysis routes allow administrator and legal_team_member. Connector and prompt routes are Administrator only.",
+          "correction": null
+        }
+      ],
+      "laterCorrections": [
+        {
+          "recordedAt": "2026-09-16",
+          "contentSha256Before": "3bdddcb1f9535798bb39f09cff98148f1f55890e12315cc04904e61b36c5e97c",
+          "contentSha256After": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
+          "change": "Removed the sentence 'Escape restores the saved text.' from Set core Field prompts. Enter, Shift+Enter, the clear-and-leave revert and Reset to default are unchanged. The article does not describe the defect.",
+          "reason": "defect #887; restore the sentence when it is fixed",
+          "decidedBy": "user, relayed by the coordinator"
+        }
+      ]
+    }
+  ],
+  "defects": [
+    {
+      "summary": "Escape on a core Field prompt saves the abandoned edit",
+      "article": "configure-analysis",
+      "source": "apps/web/src/components/ai-field-prompts-card.tsx onKeyDown: revertText() then event.currentTarget.blur(); onBlur calls commitText() with the stale draft from the same render",
+      "observed": "credential-free-observations.json step A11: one PUT /api/v1/ai-field-prompts after Escape; the abandoned text was stored after reload. The fixture prompt was reset to its default afterwards.",
+      "effect": "The article sentence 'Escape restores the saved text.' cannot pass verification on this build. The same reset-then-blur pattern may exist in other Settings text inputs that use useFieldCommit; that was not checked.",
+      "action": "Tracked as #887. The article sentence was removed; restore it when #887 is fixed."
+    },
+    {
+      "summary": "Public callback URL refusal shows a generic message",
+      "article": "configure-signing",
+      "source": "apps/api/src/modules/signing-connector/routes.ts ConnectorBodySchema refinement message is replaced by the generic validation problem",
+      "observed": "credential-free-observations.json step S05",
+      "effect": "Usability only. The article now states the rule.",
+      "action": "Optional app follow-up."
+    }
+  ],
+  "limitations": [
+    "Author source review by the agent that edited the articles in this pass. Independent technical review and independent walkthroughs are still required.",
+    "Provider pages linked from the articles were not reopened in this pass. DOC-022 primary-sources.json records the September 8 consultation.",
+    "No real provider account was used. DocuSign authentication, Envelope round trip, OpenRouter connection, model listing with a real key and Analysis output remain for the live round trip.",
+    "The observation script was formatted with Prettier after its recorded run. The formatting change did not alter any check.",
+    "Webhook mode, Connect callbacks and Connect HMAC rotation are not verified in this pass; tracked in #888."
+  ],
+  "evidence": [
+    "docs/documentation/batches/DOC-029/live-provider/credential-free-checks.mjs",
+    "docs/documentation/batches/DOC-029/live-provider/credential-free-observations.json"
+  ]
+}

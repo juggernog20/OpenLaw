@@ -1,0 +1,254 @@
+{
+  "batch": "DOC-029",
+  "group": "admin-config",
+  "author": "DOC-029 source-review author agent (admin-config)",
+  "technicalReviewer": "DOC-029 source-review author agent (admin-config)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T15:01:25Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousEvidenceAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "limitations": [
+    "Source inspection only. No browser walkthrough was run by this agent; an independent agent runs the walkthroughs.",
+    "The author and the technical reviewer are the same agent. The independent walkthrough must come from a different agent.",
+    "Catalog status was not changed. edition.json still holds the earlier content hashes for these four articles."
+  ],
+  "articles": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256Before": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe",
+      "contentSha256After": "9e991226a487902476ed1a37590c517e8c64e7253d54ed65a1ffd9d34f9acc9d",
+      "sources": [
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/type-editor-screen.tsx",
+        "apps/web/src/components/contract-type-people.tsx",
+        "apps/web/src/routes/settings-contract-types.tsx",
+        "apps/web/src/routes/settings-matter-types.tsx",
+        "apps/web/src/routes/settings-entity-types.tsx",
+        "apps/web/src/routes/settings-knowledge-types.tsx",
+        "apps/web/src/routes/settings-contract-type-editor.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-officer-roles.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/lib/matters.ts",
+        "apps/web/src/lib/roles.ts",
+        "apps/api/src/lib/taxonomy-routes.ts",
+        "apps/api/src/lib/type-field-routes.ts",
+        "apps/api/src/lib/custom-fields.ts",
+        "apps/api/src/modules/fields/routes.ts",
+        "apps/api/src/modules/matter-statuses/routes.ts",
+        "apps/api/src/modules/contract-types/attached-fields.ts",
+        "packages/shared/src/index.ts",
+        "messages/en-US.json",
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-MATTERS.md (MTR-002 addendum 2026-09-06, status groups)"
+      ],
+      "corrections": [
+        {
+          "location": "Create a Field, step 3",
+          "before": "The Type list named nine types without Currency.",
+          "after": "The Type list includes Currency, in the order the dialog shows: Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, Entity.",
+          "source": "apps/web/src/routes/settings-contract-fields.tsx FIELD_TYPES"
+        },
+        {
+          "location": "Configure Statuses, first paragraph and table row Matter Status",
+          "before": "A Matter Status has only a Category chosen at creation.",
+          "after": "An Open-Category Matter Status also has a group (Open, In progress, Waiting). It defaults to In progress, is chosen when adding, and can change on the row.",
+          "source": "apps/web/src/routes/settings-matter-statuses.tsx (New status group, Group for {name}); apps/api/src/modules/matter-statuses/routes.ts PUT progression-group; MTR-002 addendum 2026-09-06"
+        },
+        {
+          "location": "Configure Statuses, paragraph after the table",
+          "before": "Renaming changes the label, not the Stage or Category.",
+          "after": "Renaming also keeps the group. The group sets grouping and color on Matter lists and records and does not change whether the Matter is open or closed.",
+          "source": "MTR-002 addendum 2026-09-06; apps/web/src/lib/matters.ts matterStatusPill"
+        },
+        {
+          "location": "Attach Fields and set requiredness, last paragraph",
+          "before": "A known limit said a blank Entity-valued Field on a Matter may offer no Entity choices on the Overview.",
+          "after": "Paragraph removed. Issue #774 is closed and its fix (commit 80a55366) is in the verification build; matter-record.tsx reads the Entity registry for choices.",
+          "source": "apps/web/src/routes/matter-record.tsx; git merge-base shows 80a55366 is an ancestor of 3fa407e3"
+        }
+      ],
+      "confirmed": [
+        "Settings is Administrator-only for Organization sections; loaders redirect other roles and the API requires the administrator role.",
+        "Organization rail has Contracts, Matters, Entities, and Knowledge sections. Types tabs exist for all four; Statuses for Contracts and Matters; Fields for Contracts, Matters, and Entities; Officer roles for Entities.",
+        "Add type creates on Enter or blur. Rename, Edit (Contracts, Matters, Entities), reorder handle with arrow keys, Archive, Show archived, and Restore labels match messages.",
+        "Slug is immutable and shown in the type editor. Description saves on blur or Enter.",
+        "Archiving an in-use type requires a replacement and moves the records; Other is protected on Contract, Matter, and Entity types and Officer roles.",
+        "Contract Status Stages and protected Draft, Active, and Expired seeds; Stage floor; no reassignment in the Contract Status dialog.",
+        "Matter Status Categories Open and Closed are protected; each Category keeps a live Status; in-use archive needs a same-Category replacement.",
+        "Field dialog labels Name, Description, Type, Scope, Tag (Business, Legal), Options, AI prompt (Contract scope only); Type is immutable after creation.",
+        "Promotion to Global and refused narrowing while another module attaches the Field.",
+        "Field catalog has no reorder handles; Field archive keeps attachments and values.",
+        "Type editor Attached fields, Attach field, Required checkbox, Detach, and reorder; requiredness enforced at creation and re-type.",
+        "Officer role archive reassigns current and resigned appointments; Other cannot be archived.",
+        "Contract type catalog excludes the built-in Owning department and Region attributes; this does not change any article step."
+      ],
+      "notCovered": [
+        "The Contract type editor now has a People card (default people, CTR-026). The article does not describe it. No section was added because this batch does not add sections for features the article did not cover."
+      ]
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256Before": "7fa37fb4f73082478f758fbbf3f78123ec4e6db572bb14558dd1186f422867d4",
+      "contentSha256After": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed",
+      "sources": [
+        "apps/web/src/routes/settings-matter-templates.tsx",
+        "apps/web/src/routes/settings-matter-template-editor.tsx",
+        "apps/web/src/components/matters/create-matter-dialog.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/api/src/modules/matter-templates/routes.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/lib/contract-term.ts",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-MATTERS.md (MTR-013 addendum 2026-09-10, #770)"
+      ],
+      "corrections": [
+        {
+          "location": "Test both creation paths, first paragraph",
+          "before": "Choose a Matter Manager in the creation dialog.",
+          "after": "Check Matter Manager. The dialog now starts with the person who opens it; choose another person or Unassigned to test a different Task assignment.",
+          "source": "apps/web/src/components/matters/create-matter-dialog.tsx (managerId seeded from viewerId, MTR-003 focus-group addendum 2026-09-09)"
+        }
+      ],
+      "confirmed": [
+        "Settings > Matters > Templates: Matter type select, Add template dialog with Name and Description, Edit link, Archive dialog Archive template, Show archived, Restore.",
+        "Editor sections and labels: Matter defaults (Priority, Risk, Title prefix), Custom field defaults, Tasks (Add task, due offset, Matter Manager or Unassigned role), Key dates (Add key date, label, offset, note), Save template.",
+        "Offsets are whole numbers 0 to 3650; a Task due offset may be blank; a Key date needs an offset.",
+        "Dates use the Matter creation date in UTC (civilToday on createdAt) for both direct creation and conversion.",
+        "A Matter Manager Task stays unassigned when the Matter has no manager.",
+        "Conversion: priority is the reviewed value or the Request Urgency, never the template default; risk is null; the converting person is Matter Manager; the title is the reviewed title without the template prefix; AI suggestions can prefill supported values.",
+        "Caller values override template defaults; a cleared optional Field is sent as null and stays empty (#770 fix, in the build); required Fields need values.",
+        "A template must be live and match the selected Matter type, or creation is refused.",
+        "Detached Field defaults are named in the editor as retained values.",
+        "Section save errors say earlier changes may already be saved."
+      ]
+    },
+    {
+      "articleId": "request-forms",
+      "contentSha256Before": "ad0e8401b4e97c88c138b69a0f1d992ba9da06f133b9e5796bbe372541b457fa",
+      "contentSha256After": "417d8285bde34a0849db9f57bd573957b12c00979ec343ae12ff608c3a97d82d",
+      "sources": [
+        "apps/web/src/routes/settings-request-types.tsx",
+        "apps/web/src/routes/settings-request-type-editor.tsx",
+        "apps/web/src/routes/settings-intake-links.tsx",
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/web/src/components/type-editor-screen.tsx",
+        "apps/api/src/modules/request-types/routes.ts",
+        "apps/api/src/modules/request-types/form-definition.ts",
+        "apps/api/src/modules/request-types/attached-fields.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "packages/db/migrations/0057_request_types.sql",
+        "scripts/seed/catalog.mjs",
+        "messages/en-US.json",
+        "CONTEXT.md (Portal-listed Entity)",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-002 addendum 2026-09-13, entity leaves the refusal)"
+      ],
+      "corrections": [
+        {
+          "location": "Choose the form fields, fixed basics paragraph",
+          "before": "Title, Description, and Urgency are required; attachments and Department are optional.",
+          "after": "Title, Description, Department, and Urgency are required; attachments are optional.",
+          "source": "commit d0c296d9; settings-request-type-editor.tsx BASICS_SLOT; requests/routes.ts submitRequest departmentId min(1); portal-request-form.tsx refuses a missing Department"
+        },
+        {
+          "location": "Choose the form fields, Field scope paragraph",
+          "before": "User and Entity Fields cannot be required on a Portal form.",
+          "after": "Only User Fields cannot be required. An Entity Field can be required, and the Portal offers only Portal-listed Entities for it.",
+          "source": "settings-request-type-editor.tsx REQUIRED_RULE fieldTypes ['user']; request-types attached-fields tests; INT-002 addendum 2026-09-13"
+        },
+        {
+          "location": "Choose the form fields, Field scope paragraph; Create the request type, routing paragraph; Before you start example",
+          "before": "Choose Contract-scoped or Global Fields for a Contract form and Matter-scoped or Global Fields for a Matter form, with only a vague note that existing routing defaults guide attachment. The example used a Deal value Field without a scope.",
+          "after": "The Target column shows the routing default. The editor cannot set or change it. A request type added in Settings shows No target and offers only Global Fields; Contract or Matter targets offer their module scope plus Global. The example Field is Global.",
+          "source": "settings-request-type-editor.tsx attachableScopes and no Target control (commit f2526bb3); request-types/form-definition.ts scope rule; taxonomy create inserts no target"
+        },
+        {
+          "location": "Check the result, first sentence",
+          "before": "Test one Contract form and one Matter form.",
+          "after": "Test one form that Legal converts to a Contract and one that Legal converts to a Matter.",
+          "source": "Follows from the Target correction: a new form has no fixed target, and Legal chooses the module in the Convert dialog."
+        }
+      ],
+      "confirmed": [
+        "Settings > Intake > Request types and Deflection links tabs; Add request type on Enter; Edit opens the editor; Description saves on blur.",
+        "Every submission creates a Request; conversion or resolution is Legal's choice.",
+        "The request type editor hides the Slug and has no Target control.",
+        "Archive dialog shows no usage and no replacement for request types, because the mount has no usage counter; Requests keep the type; Show archived and Restore work.",
+        "Target turnaround (business days): whole number 0 to 36,500 or blank, saves on blur or Enter, counts Monday to Friday in the organization's timezone without public holidays; the Portal card shows Estimated turnaround.",
+        "Form fields: Attach field, Required checkbox, reorder handles with arrow keys, Detach keeps the catalog Field.",
+        "Department uses the Departments list under Settings > Organization and carries into the converted Contract or Matter without a Field attachment.",
+        "Deflection links: Add link, Target (External address with http:// or https:// Address, or Knowledge item), Label, Placement (Portal home or a request type), Edit, reorder, Remove with no archive; Portal shows Before you submit.",
+        "Convert dialog lists answers under Does not carry into the contract or matter when the destination type does not attach the Field; the answer stays on the Request.",
+        "An archived configured target type needs a live choice at conversion."
+      ]
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256Before": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c",
+      "contentSha256After": "d1430853a0de13ac67a359a7bc447d48a08bd5193bb494ddcb34d3cabe44dec8",
+      "sources": [
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings-audit-log.tsx",
+        "apps/api/src/modules/audit-log/routes.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/matter-access.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/lib/notifications/offsets.ts",
+        "apps/api/src/lib/key-date-reminders.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "apps/api/src/modules/notifications/routes.ts",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-NOTIFICATIONS.md (NOT-004 addenda 2026-09-09 and 2026-09-10, #807)",
+        "docs/user-guides/contract-tasks-and-dates.md and docs/user-guides/matter-work.md (link targets only)"
+      ],
+      "corrections": [
+        {
+          "location": "Set reminder lead times, paragraph after the limits",
+          "before": "One list covers every tracked date.",
+          "after": "The organization list applies to all tracked dates. Contract and Matter Key dates can add their own lead times and select recipients; a lead time in both lists fires once; expiry, notice deadlines, and Entity Obligations use only the organization list. Links to the Key date guides.",
+          "source": "key-date-reminders.ts; morning-round.ts keyDateDue; NOT-004 addendum 2026-09-10 (#807)"
+        },
+        {
+          "location": "Check delivery, first paragraph",
+          "before": "Multiple Key dates on one record on the same date can share a reminder.",
+          "after": "Each Key date gets its own reminder, also when several share a date. Check the Key date's own lead times and selected recipients.",
+          "source": "commit 851af1f2 (#760); morning-round.ts keyDateId per reminder"
+        },
+        {
+          "location": "Check delivery, troubleshooting paragraph",
+          "before": "Checks listed date, lead time, timezone, record audience, and preferences.",
+          "after": "Also check the Key date's selected recipients, because a nonempty selection replaces the default audience.",
+          "source": "key-date-reminders.ts selectedKeyDateRecipients; NOT-004 addendum 2026-09-10"
+        },
+        {
+          "location": "Find a change in the Audit log, scope paragraph; If an entry is missing",
+          "before": "The Audit log includes all configuration and record-level events.",
+          "after": "Entries about a Confidential Contract, Matter, Entity, or Document appear only when the Administrator is in that record's audience, and Export CSV applies the same limit. The missing-entry checks now include this.",
+          "source": "apps/api/src/modules/audit-log/routes.ts auditReachScope applied to the list, paging cursor, and export"
+        }
+      ],
+      "confirmed": [
+        "Organization > Notifications opens Reminder lead times at /settings/reminders; Personal > Notifications is the person's own preferences.",
+        "Add lead time, days before the date, On the day for 0, Remove, reorder handle with arrow keys.",
+        "Lead times are distinct whole numbers 0 to 730, at most 20, and the last one cannot be removed.",
+        "The morning round runs hourly and serves each person once per local day after 08:00 in the saved timezone, UTC when unset.",
+        "Dates approaching In-app preference and the Dates and Obligations Briefing switches exist under Personal > Notifications.",
+        "Settings > Security > Audit log: Person, Action, Record, From, To, Search, Clear filters, Show older, Export CSV; columns Event, Record, Audience, When; read error text asks to change a filter.",
+        "Only Administrators open the Audit log and the reminder settings; the loader redirects others and the API requires the administrator role.",
+        "Entries now show the record reference and title where the record has them."
+      ]
+    }
+  ]
+}

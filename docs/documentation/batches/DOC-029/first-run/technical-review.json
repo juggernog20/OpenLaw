@@ -1,0 +1,153 @@
+{
+  "articleId": "first-run",
+  "author": "DOC-029 source-review author agent (first-run)",
+  "reviewer": "DOC-029 source-review author agent (first-run)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T14:56:21Z",
+  "method": "source-inspection",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "previousContentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4",
+  "contentSha256": "3d052434904b6a3c013702492a360d21b25b3e942f3ee8ef99403a613fb0d177",
+  "result": "corrected",
+  "classification": "behavior change: the wizard grew from five to nine steps, email became required, and authentication became two group policies. Prior walkthrough evidence does not cover the corrected text; the V-C35 browser walkthrough must be rerun.",
+  "sources": [
+    "apps/web/src/routes/setup.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/components/authentication-options.tsx",
+    "apps/web/src/routes/two-factor-enroll.tsx",
+    "apps/web/src/routes/home.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/router.tsx",
+    "apps/web/src/lib/session.ts",
+    "apps/web/src/lib/roles.ts",
+    "apps/api/src/modules/auth/routes.ts",
+    "apps/api/src/modules/auth/authentication-policy-routes.ts",
+    "apps/api/src/auth/authentication-policy.ts",
+    "apps/api/src/auth/two-factor-policy.ts",
+    "apps/api/src/modules/onboarding/routes.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/lib/mailer.ts",
+    "packages/db/src/schema/org.ts",
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md"
+  ],
+  "corrections": [
+    {
+      "where": "Intro and Before you start",
+      "before": "The wizard has five steps: Welcome, Authentication, Business-user portal, Outbound email, Invite your team. Organization identity and module settings are configured afterward in Settings.",
+      "after": "The wizard has nine steps: Welcome to OpenLaw, Your organization, Authentication, Business-user portal, Outbound email, Invite your team, E-signature, AI analysis, Review, shown as Step N of 9. Setup cannot finish without working outbound email. Have an authenticator app ready if two-factor authentication will be required.",
+      "sources": [
+        "apps/web/src/routes/welcome.tsx (STEPS, stepTitles, welcome.progress)",
+        "apps/api/src/modules/onboarding/routes.ts",
+        "docs/decision-records/DECISIONS-SETTINGS.md SET-004 addenda 2026-09-05 and 2026-09-15"
+      ]
+    },
+    {
+      "where": "Work through the welcome steps, new step 2",
+      "before": "No organization step.",
+      "after": "Your organization: Organization name, Upload (PNG, JPEG, WebP, SVG under 256 KB), Default locale with only English (United States), Default timezone; Continue saves.",
+      "sources": [
+        "apps/web/src/routes/welcome.tsx (applyOrganization, LOGO_TYPES, LOGO_BYTE_LIMIT)",
+        "apps/api/src/modules/org/routes.ts"
+      ]
+    },
+    {
+      "where": "Authentication step",
+      "before": "Keep Built-in sign-in or select Single sign-on (OIDC); register the provider and copy its callback URL.",
+      "after": "Switches Email and password, Email magic link, Single sign-on (SSO), Require two-factor authentication for Administrators and Legal Team Members. At least one method is required. The SSO switch is unavailable until Register your identity provider / Register provider succeeds; copy the shown callback URL. Turning on two-factor and selecting Continue forces two-factor setup, after which the wizard reopens at Welcome.",
+      "sources": [
+        "apps/web/src/components/authentication-options.tsx",
+        "apps/web/src/routes/welcome.tsx (applyAuthentication, registerProvider)",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts (Enable at least one sign-in method.; Configure an identity provider before enabling single sign-on.)",
+        "apps/api/src/auth/two-factor-policy.ts",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/routes/two-factor-enroll.tsx",
+        "apps/web/src/routes/home.tsx"
+      ]
+    },
+    {
+      "where": "Business-user portal step",
+      "before": "Review magic-link sign-in and add allowed domains; an empty allowlist admits nobody new; Continue saves.",
+      "after": "The same four switches set the Business User policy; add Allowed email domains with Add; an empty list prevents new email-based access; Continue saves the switches and the list.",
+      "sources": ["apps/web/src/routes/welcome.tsx (applyPortal, welcome.portal.hint)"]
+    },
+    {
+      "where": "Outbound email step",
+      "before": "Send test email for any source; the step can be skipped like the others.",
+      "after": "Environment source is read-only and warns when SMTP_FROM is missing; Send test email exists only for a relay saved in the app; the step has no Set up later and Continue is disabled until email is configured.",
+      "sources": [
+        "apps/web/src/routes/welcome.tsx (email step render, Continue disabled condition)",
+        "apps/api/src/lib/mailer.ts"
+      ]
+    },
+    {
+      "where": "Invite your team step",
+      "before": "Select the intended staff role and send the invitation; finish to enter the app; invite later from Settings → Users.",
+      "after": "Roles are Legal team member or Administrator; button Send invite; the step is no longer last; later invites from Settings → Organization → Users.",
+      "sources": [
+        "apps/web/src/routes/welcome.tsx (INVITE_ROLES)",
+        "apps/api/src/modules/auth/routes.ts (INVITABLE_ROLES)",
+        "apps/web/src/lib/roles.ts",
+        "apps/web/src/routes/settings.tsx"
+      ]
+    },
+    {
+      "where": "New steps 8 to 10",
+      "before": "Absent.",
+      "after": "E-signature and AI analysis can be skipped with Set up later (manual signing hand-off stays; Contract analysis does not run); Review shows seeded list counts and reminder offsets, and Finish records the review and enters the app.",
+      "sources": [
+        "apps/web/src/routes/welcome.tsx (applyESignature, applyAiAnalysis, review step, finish(true))",
+        "apps/api/src/modules/onboarding/routes.ts (/onboarding/reviewed, /onboarding/complete)"
+      ]
+    },
+    {
+      "where": "Skip paragraph",
+      "before": "Use the step's continue or skip control; skipping does not supply missing email or identity-provider configuration.",
+      "after": "Set up later exists on every step except Welcome to OpenLaw and Outbound email and saves nothing unsaved; skipping does not supply missing identity-provider or connector configuration.",
+      "sources": ["apps/web/src/routes/welcome.tsx (footer controls)"]
+    },
+    {
+      "where": "Resume or finish later",
+      "before": "Set up later on the Welcome step or the final invitation step ends onboarding; middle steps skip one step; Finish on the last step ends onboarding; authentication, domains and users remain editable.",
+      "after": "Home reopens the unfinished wizard and every app page does so while email is unconfigured; Skip optional steps on Welcome ends onboarding, or opens Outbound email if email is unset; Set up later on Review ends onboarding without recording the review; Finish on Review records it and ends onboarding; organization details, authentication, domains, users and both connectors remain editable. Added one paragraph on the Setup checklist card in Settings → Organization → General with Mark as reviewed.",
+      "sources": [
+        "apps/web/src/routes/home.tsx",
+        "apps/web/src/lib/session.ts",
+        "apps/api/src/modules/auth/routes.ts (/me emailSetupRequired)",
+        "apps/web/src/routes/welcome.tsx (finish)",
+        "apps/api/src/modules/onboarding/routes.ts (409 email-setup-required)",
+        "apps/web/src/routes/settings-general.tsx (SetupChecklist)",
+        "CONTEXT.md (Setup checklist)"
+      ]
+    },
+    {
+      "where": "Prepare the workspace",
+      "before": "Open Settings → General to set name, logo and timezone.",
+      "after": "Open Settings → Organization → General to check them, because the wizard now sets them.",
+      "sources": ["apps/web/src/routes/settings.tsx", "apps/web/src/routes/settings-general.tsx"]
+    }
+  ],
+  "confirmed": [
+    "Set up OpenLaw shows Name, Email, Password, Confirm password and Create Administrator; both password inputs require eight characters (client minLength and API z.string().min(8)).",
+    "A mismatch shows \"The passwords do not match.\" and success navigates to /welcome signed in (201 with session cookie).",
+    "Setup is available only while no user exists: setupLoader redirects to /auth/login, and the API answers 409 \"Setup has already been completed.\" with a Sign in link.",
+    "Only Administrators reach /welcome; a completed wizard redirects home and the completion API is idempotent and never reversed.",
+    "Reloading the wizard starts at the Welcome step (component state) while saved settings are re-read by the loader.",
+    "Allowed email domains are bare lower-cased domains; the Add control and removal buttons exist; the empty-list hint is \"No domains allowed yet. Magic-link sign-in is unavailable.\"",
+    "Outbound email: SMTP relay URL, From address, Save relay, Send test email (to the signed-in Administrator), Replace relay, Clear relay; environment always wins.",
+    "No email Settings pane exists (onboarding SETTINGS_PATHS email is null; router has no email pane).",
+    "Linked anchors authentication-and-email.md#configure-single-sign-on, #control-business-portal-entry and #set-up-email-before-finishing-the-wizard exist in the current file; configure-signing.md, configure-analysis.md, organisation-and-users.md, staff-sign-in.md, install.md, deployment-configuration.md, types-statuses-fields.md and request-forms.md exist.",
+    "No other article or help-contexts.json links to a first-run.md heading anchor; all headings were kept."
+  ],
+  "needsWalkthroughConfirmation": [
+    "After turning on Require two-factor authentication in the Authentication step, the enroll page Continue link goes to / and home redirects to /welcome at its Welcome step. This is source-derived; the session second-factor verification state after enrollment was not exercised.",
+    "Skip optional steps with email configured, and Set up later on Review, each complete onboarding; only one finishing action is possible per instance."
+  ],
+  "limitations": [
+    "Source inspection only. No browser walkthrough was run by this agent.",
+    "The docs:check build currently stops on another article (electronic-signing publication source changed) before reaching this article; this article's hash also changed and needs its evidence and edition records refreshed after the walkthrough."
+  ]
+}

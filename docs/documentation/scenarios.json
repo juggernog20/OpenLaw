@@ -112,10 +112,10 @@
       "environment": "pilot",
       "prerequisites": ["Separate personal accounts with known initial timezone and appearance."],
       "actions": [
-        "Change profile, timezone, and theme; exercise personal session controls. Administrators and Legal Team Members open their own Portal view; Contributors confirm that the App view control is absent."
+        "Change profile, timezone, and theme; exercise personal session controls. Administrators and Legal Team Members open their own Portal view from View Business Portal under Personal. A Business User confirms that no such control is available, because Settings sends a Business User to the Portal."
       ],
       "expectedResults": [
-        "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card."
+        "Preferences persist for the intended user. View Business Portal is its own Personal pane at /settings/app-view for Administrators and Legal Team Members, with a working Return to legal view link. Business Users have no such control."
       ],
       "negativeChecks": [
         "Another account's preferences remain unchanged; no absent M33 App view route is claimed."
@@ -138,7 +138,7 @@
         "Non-Confidential and Confidential Contracts/Matters, separate named teams, and a Confidential Entity with explicit Grants."
       ],
       "actions": [
-        "Compare the same record links as Administrator, Legal Team Member, Contributor, and Business User; add/remove permitted reach."
+        "Compare the same record links as Administrator, Legal Team Member, and Business User; add/remove permitted reach."
       ],
       "expectedResults": [
         "Each account sees only its permitted records/actions, including the Administrator exception."
@@ -605,7 +605,7 @@
         "The selected Status retains its immutable open/closed Category and lifecycle changes persist."
       ],
       "negativeChecks": [
-        "An archived Matter cannot be edited through ordinary controls; Contributor restrictions remain clear."
+        "An archived Matter cannot be edited through ordinary controls; a Business User on the Matter team cannot change its Status or archive it in the Portal."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
@@ -648,7 +648,7 @@
       ],
       "actions": ["Edit permitted business Fields, add supporting Documents, and comment as Ravi."],
       "expectedResults": [
-        "Contributor actions succeed only on reached work and the guide identifies the actual legal-action limits."
+        "Business User actions succeed only on reached work and the guide identifies the actual legal-action limits."
       ],
       "negativeChecks": [
         "Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access."
@@ -801,7 +801,7 @@
         "Our Entity and external Counterparty retain their distinct roles and labels."
       ],
       "negativeChecks": [
-        "A Contributor cannot use the Member+ Entity destination; duplicate/invalid input has a clear outcome."
+        "A Business User cannot open the staff Entities destination; duplicate/invalid input has a clear outcome."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
@@ -851,7 +851,7 @@
         "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice."
       ],
       "negativeChecks": [
-        "Unavailable/archived references and insufficient role permissions have supported outcomes."
+        "Unavailable/archived references have supported outcomes. A Business User cannot author or browse the staff Knowledge library."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
@@ -895,13 +895,13 @@
       "environment": "fresh",
       "prerequisites": ["Fresh unseeded app and Mailpit; a fictional first Administrator."],
       "actions": [
-        "Complete account setup and the baseline welcome/authentication/portal/email/invite wizard."
+        "Complete account setup and the nine-step welcome wizard: Welcome to OpenLaw, Your organization, Authentication, Business-user portal, Outbound email, Invite your team, E-signature, AI analysis, and Review."
       ],
       "expectedResults": [
-        "The Administrator reaches the app and the saved settings reflect the completed steps."
+        "The Administrator reaches the app and the saved settings reflect the completed steps. Outbound email is required. The wizard cannot finish until a relay is saved or the environment pins one."
       ],
       "negativeChecks": [
-        "Validation/retry and resumed onboarding work; no M33 checklist or Review step absent from this build is claimed."
+        "Validation/retry and resumed onboarding work. Finish is refused while outbound email is not configured. The Setup checklist and Review behave as the article states."
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
@@ -945,10 +945,10 @@
         "Separate authentication lab, Mailpit, allowed domains, and a local OIDC/SAML fixture where supported."
       ],
       "actions": [
-        "Configure supported sign-in/domain/email options and verify their actual entry flows and environment precedence."
+        "Configure the separate Legal User Authentication and Business Portal Authentication policies, allowed domains, and email options. Verify that each account follows the policy for its actual role, and verify environment precedence for email."
       ],
       "expectedResults": [
-        "Allowed users can sign in and test mail reaches the controlled sink through the active configuration source."
+        "Administrators and Legal Team Members sign in with the methods enabled under Legal User Authentication. An Administrator with a password keeps emergency password sign-in when Email and password is off. Business Users sign in only with the methods enabled under Business Portal Authentication. Test mail reaches the controlled sink through the active configuration source."
       ],
       "negativeChecks": [
         "Invalid issuer/relay, denied domain, and locked environment settings have recoverable outcomes without exposing secrets."
@@ -1378,7 +1378,7 @@
       "roles": ["legal_team_member", "administrator"],
       "environment": "conversations",
       "prerequisites": [
-        "Disposable Documents with multiple Versions and independent Administrator/Member/Contributor sessions."
+        "Disposable Documents with multiple Versions and independent Administrator, Legal Team Member, and Business User sessions."
       ],
       "actions": [
         "Archive/restore permitted Documents and permanently delete a separate Document as Administrator."

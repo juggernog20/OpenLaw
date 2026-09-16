@@ -17,20 +17,20 @@ Request types have their own form and target settings. See [Configure request ty
 
 ## Configure Statuses
 
-For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuses, open **Matters**, then **Statuses**. Select **Add status**, enter a name, choose its Stage or Category, and press Enter. Rename and reorder existing rows with their row controls.
+For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuses, open **Matters**, then **Statuses**. Select **Add status**, enter a name, choose its Stage or Category, and press Enter. For a Matter Status in the Open Category, also choose its group: **Open**, **In progress**, or **Waiting**. A new Status uses **In progress** unless you choose another group. Rename and reorder existing rows with their row controls.
 
-| Setting         | Fixed structure                                                                                            | Archive behavior                                                                                                                                                                                                                                                      |
-| --------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contract Status | Draft, Review, Approval, Signature, Active, and Ended Stages. A Status keeps the Stage chosen at creation. | The built-in Statuses initially named Draft (Draft Stage), Active (Active Stage), and Expired (Ended Stage) are protected. Every Stage must retain a live Status. Move Contracts off another Status yourself before archiving it; this dialog does not reassign them. |
-| Matter Status   | Open and Closed Categories. A Status keeps the Category chosen at creation.                                | Open and Closed are protected. Every Category must retain a live Status. For an in-use custom Status, choose a replacement in the same Category when archiving.                                                                                                       |
+| Setting         | Fixed structure                                                                                                                                      | Archive behavior                                                                                                                                                                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contract Status | Draft, Review, Approval, Signature, Active, and Ended Stages. A Status keeps the Stage chosen at creation.                                           | The built-in Statuses initially named Draft (Draft Stage), Active (Active Stage), and Expired (Ended Stage) are protected. Every Stage must retain a live Status. Move Contracts off another Status yourself before archiving it; this dialog does not reassign them. |
+| Matter Status   | Open and Closed Categories. A Status keeps the Category chosen at creation. An Open-Category Status also has a group that you can change on its row. | Open and Closed are protected. Every Category must retain a live Status. For an in-use custom Status, choose a replacement in the same Category when archiving.                                                                                                       |
 
-Renaming a Status changes its label, not its Stage or Category. To use a different mapping, create a new Status with the intended mapping and move the work deliberately. See [Change a Contract Status](contract-stages.md) and [Close, reopen, and archive Matters](matter-status-and-archive.md) for record-level consequences.
+Renaming a Status changes its label, not its Stage, Category, or group. A Matter Status group sets how the Status is grouped and colored on Matter lists and records. It does not change whether the Matter is open or closed. To use a different mapping, create a new Status with the intended mapping and move the work deliberately. See [Change a Contract Status](contract-stages.md) and [Close, reopen, and archive Matters](matter-status-and-archive.md) for record-level consequences.
 
 ## Create a Field
 
 1. Open **Contracts**, **Matters**, or **Entities**, then **Fields**.
 2. Select **Add field**. Enter **Name** and, if useful, **Description** as help for the person completing it.
-3. Choose **Type**: Text, Long text, Number, Date, Boolean, Single select, Multi select, User, or Entity. The type cannot change after creation.
+3. Choose **Type**: Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, or Entity. The type cannot change after creation.
 4. Choose **Scope** for this module or **Global**, and a **Tag** of Business or Legal. For a select Field, enter **Options**, one per line in the intended order.
 5. Select **Add field**, then check the new row.
 
@@ -48,8 +48,6 @@ The Field catalog does not have reorder handles. Set order where Fields are atta
 Requiredness belongs to this attachment. It is checked at creation and when changing a record's type; setting it does not fill missing information on old records. The Request form's requiredness is a separate setting. A Field collected on a Request must also be attached to the destination type to carry through conversion.
 
 **Detach** removes an attachment while keeping the Field definition and stored values. **Archive** in the Field catalog hides the Field from live configuration and keeps its attachments and stored values for restoration. Neither operation transfers answers to another Field. Use **Show archived**, then **Restore**, to recover the definition.
-
-In this version, an Entity-valued Field left blank when creating a Matter may offer no Entity choices on that Matter's Overview. Choose the Entity during initial creation when possible. Do not assume an empty picker means the Entity was deleted; ask your Administrator to investigate an existing Matter that needs correction.
 
 ## Maintain Officer roles
 

@@ -1,0 +1,152 @@
+{
+  "batch": "DOC-029",
+  "group": "analysis-standin",
+  "author": "DOC-029 source-review author agent (analysis-standin)",
+  "technicalReviewer": "DOC-029 source-review author agent (analysis-standin)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T14:57:14.510729+00:00",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "comparedFromAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "articles": [
+    {
+      "articleId": "contract-analysis",
+      "scenario": "V-C21",
+      "contentSha256Before": "611dabad2ff2d85dfc8fe32336093f2c5a00f8a8edb6633e146e3c240f27ed24",
+      "contentSha256": "ce182804fbd35ffb2e8ba24cff6bc848963a56f1b04a10222dea23aedebbee39",
+      "previousEvidence": "docs/documentation/evidence/contract-analysis.json",
+      "classification": "behaviour change: Analysis now extracts Key dates (DECISIONS-CONTRACTS AI Key date extraction, 2026-09-15). This is not a copy-only correction; the V-C21 walkthrough must be rerun.",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-CONTRACTS.md",
+        "docs/decision-records/DECISIONS-DESIGN.md",
+        "messages/en-US.json",
+        "apps/web/src/components/contracts/ai-analysis-card.tsx",
+        "apps/web/src/components/contracts/ai-field-evidence.tsx",
+        "apps/web/src/components/contracts/key-dates-card.tsx",
+        "apps/web/src/components/contracts/record-actions-menu.tsx",
+        "apps/web/src/components/ui/ai-field.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/api/src/modules/contract-analysis/routes.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contract-key-dates/routes.ts",
+        "apps/api/src/lib/analysis-key-dates.ts",
+        "apps/api/src/lib/ai-unverified.ts",
+        "apps/api/src/pipeline/contract-analysis.ts",
+        "apps/api/src/pipeline/automatic-contract-analysis.ts",
+        "apps/api/src/pipeline/conversion-analysis.ts",
+        "packages/db/src/schema/contracts.ts"
+      ],
+      "corrections": [
+        {
+          "section": "Run Analysis and read its outcome",
+          "before": "The results list only Contract Field values, the Counterparty and term values.",
+          "after": "Analysis also extracts named milestones with explicit dates. Result rows are labelled Key date. A written milestone is added to Key dates with an Unverified marker; a duplicate of an existing Key date or term date is Kept and adds no row.",
+          "source": "apps/api/src/lib/analysis-key-dates.ts applyKeyDateSuggestions; ai-analysis-card.tsx resultLabel"
+        },
+        {
+          "section": "Run Analysis and read its outcome",
+          "before": "Check the saved value on Overview or Fields.",
+          "after": "Check the saved value on Overview, Fields or Key dates.",
+          "source": "contract-record.tsx KeyDatesCard reviewControl"
+        },
+        {
+          "section": "Confirm or correct one value",
+          "before": "Correction happens only through Overview or Fields controls.",
+          "after": "An extracted Key date is corrected with Edit date or Remove date in Key dates. A date or event change, or removal, clears the marker and later runs do not add it again. A note-only or reminder-only change does not clear the marker.",
+          "source": "apps/api/src/modules/contract-key-dates/routes.ts (reviewKeyDate on date/label change and delete); apps/api/src/lib/ai-unverified.ts reviewKeyDate; DECISIONS-CONTRACTS AI Key date extraction"
+        },
+        {
+          "section": "Confirm or correct one value",
+          "before": "Confirm all is described without its display condition.",
+          "after": "Confirm all appears on the AI analysis card when more than one value is marked.",
+          "source": "ai-analysis-card.tsx: canConfirm && flagged.length > 1"
+        },
+        {
+          "section": "Confirm or correct one value",
+          "before": "Unverified values usable: expiry, notice period and Value.",
+          "after": "Also an extracted Key date is already in the Key dates list before confirmation.",
+          "source": "analysis-key-dates.ts inserts contract_key_dates rows at run completion"
+        },
+        {
+          "section": "Rerun after a change",
+          "before": "No statement on Key dates added by earlier runs.",
+          "after": "A later run does not change or remove a Key date that an earlier run added.",
+          "source": "applyKeyDateSuggestions only inserts; duplicates are Kept"
+        },
+        {
+          "section": "Analysis after Request conversion",
+          "before": "The first promoted primary Document does not queue a competing run.",
+          "after": "A Document Version promoted from the Request does not queue a separate automatic run.",
+          "source": "automatic-contract-analysis.ts: skip when a conversion run exists and requestAttachments.promotedVersionId matches the Version"
+        },
+        {
+          "section": "If Analysis cannot finish",
+          "before": "If the card is absent, the connector may be disabled and there may be no marked values.",
+          "after": "If the card is absent, the connector is disabled, no values are marked, and the Contract has no Analysis run.",
+          "source": "ai-analysis-card.tsx: return null only when !analysis.available && flagged.length === 0 && !analysis.latestRun (changed after 6a8873db)"
+        }
+      ],
+      "confirmedClaims": [
+        "Run analysis, Confirm and Confirm all are Administrator and Legal Team Member actions (requireMember); Business Users cannot run or confirm.",
+        "Run requires an enabled AI connector, a Contract that is neither Ended nor archived, a primary Document, and ready non-empty target text; refusal messages match.",
+        "Target is the primary Document's executed pin, else its highest Version; a newer upload does not displace the pin.",
+        "Automatic runs start when target text becomes ready or the target Version is pinned; the AI analysis card sits below the Fields card and the Contract actions menu offers Run analysis.",
+        "Card sentences: Running…, Completed {when} on Version {version} with {model}., Failed {when} on Version {version} with {model}: {reason}, and the Request-context pending, failed and completed sentences.",
+        "Outcome labels Written, Kept, Unsupported, Invalid, Unmatched; Counterparty links only one matching live Counterparty when none is linked.",
+        "Confirmation clears only the named marker and records contract.field_confirmed; an archived Contract refuses confirmation; an Ended, non-archived Contract still allows Confirm and edits.",
+        "Human writes, confirmations and explicit clears are kept in analysisHumanFields and are not overwritten; a flagged value can be replaced; Value amount, currency and cadence are written together.",
+        "Evidence sparkle opens the cited Version in the doc panel from the saved run outcome; unavailable evidence shows the unavailable message.",
+        "Fill Contract Fields after conversion is a separate switch; Retry Request-context Analysis shows only for a failed conversion run; restricted and Confidential sources are excluded.",
+        "Contract actions menu, Fields and Key dates tab labels match messages/en-US.json."
+      ]
+    },
+    {
+      "articleId": "compare-versions",
+      "scenario": "V-C29",
+      "contentSha256Before": "df58421f3e06f43f8c58696d48e68e3a3d91b0e747b7bf76c95459dae6e36205",
+      "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
+      "previousEvidence": "docs/documentation/evidence/compare-versions.json",
+      "classification": "permission change: Contributor accounts were removed (DD-023) and the Document reader guard is now Administrator and Legal Team Member only. The earlier V-C29 contributor role row no longer applies; the walkthrough must be rerun for both roles.",
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/routes/document-compare.tsx",
+        "apps/web/src/components/documents/doc-panel.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/roles.ts",
+        "apps/api/src/lib/document-access.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/pipeline/document-comparison.ts"
+      ],
+      "corrections": [
+        {
+          "section": "Choose the Versions",
+          "before": "The Document reader offers Compare when a previous eligible Version exists.",
+          "after": "Also: when a ready Comparison exists for that pair, the link shows its change count instead of Compare.",
+          "source": "doc-panel.tsx comparisonCount"
+        },
+        {
+          "section": "Export a Word Comparison",
+          "before": "Comparisons and Generated redline exports remain staff actions.",
+          "after": "Only Administrators and Legal Team Members can open Comparisons and export Generated redlines.",
+          "source": "CONTEXT.md lists staff as an avoided term; document-access.ts requireDocumentReader and document-compare.tsx loader are Member+"
+        }
+      ],
+      "confirmedClaims": [
+        "Compare with previous is in the Document and Version actions menus when a previous non-redline Version exists, including on frozen records.",
+        "Pair control reads v{from} → v{to} with Older and Newer selects that exclude Generated redlines and navigate at once.",
+        "Two Word operands use word mode; other pairs use text mode; a Version with no extractable text fails with a reason; failed text extraction fails the Comparison.",
+        "Preparing comparison, Changes, Previous change, Next change, No changes, Close comparison and the extracted-text notice match source.",
+        "A stored pair is reused (200) and is readable on archived Documents; a failed pair has no retry and offers Download links.",
+        "Export track changes needs a ready Word Comparison and an open Document and owner; it appends a generated_redline Version that names both operands, and the same pair returns the existing Version; Open redline then appears.",
+        "Text Comparisons show Export needs two Word files. to Administrators and Legal Team Members on a non-archived Document."
+      ]
+    }
+  ],
+  "limitations": [
+    "Source inspection only. No walkthrough was run by this agent; an independent agent runs V-C21 and V-C29.",
+    "No lab records were created."
+  ]
+}

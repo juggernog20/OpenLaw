@@ -1,0 +1,6 @@
+{
+  "services": {
+    "app": { "environment": { "SMTP_URL": "", "SMTP_FROM": "" } },
+    "worker": { "environment": { "SMTP_URL": "", "SMTP_FROM": "" } }
+  }
+}

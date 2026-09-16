@@ -1,0 +1,15 @@
+FICTIONAL SERVICES AGREEMENT (DOC-029 live analysis test paper)
+
+This agreement is fictional. It exists only to test document analysis.
+
+Parties: Helix Example Holdings Ltd and Northwind Fictional Services LLC.
+
+1. Effective date. This agreement starts on 1 March 2026.
+
+2. Term. This agreement has a fixed term. It ends on 28 February 2027.
+
+3. Notice. Either party may end this agreement by giving 45 days' written notice.
+
+4. Fees. Helix Example Holdings Ltd pays Northwind Fictional Services LLC USD 12,000 each year.
+
+5. Price review. The parties review the fees on 1 December 2026.

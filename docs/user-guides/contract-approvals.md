@@ -18,11 +18,11 @@ If an Administrator has configured groups, select **Apply group**, choose the **
 
 ## Give a decision
 
-As the named approver, open the Contract and find your row. Open its actions and choose **Approve** or **Reject**. Add **Note (optional)** if useful and confirm the decision. Check the resulting **Approved** or **Rejected** row and note.
+As the named approver, open the Contract and find your row. Open its actions and choose **Approve** or **Reject**. Add a **Note** if useful and confirm the decision. Check the resulting **Approved** or **Rejected** row and note.
 
 Only the named person can answer their request. A decision is final. To ask again after a decision, add a new approval request; the earlier decision stays in history.
 
-For a pending request, its requester, the Contract Owner, or an Administrator can use **Cancel request**. Cancellation removes the pending row and records the action. It does not erase a decided approval.
+For a pending request, its requester, the Contract's Legal Owner, or an Administrator can use **Cancel request**. Cancellation removes the pending row and records the action. It does not erase a decided approval.
 
 ## Move beyond Approval
 

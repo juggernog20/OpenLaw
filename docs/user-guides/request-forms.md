@@ -6,7 +6,7 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 
 - Sign in as an Administrator.
 - Have live destination types and the Fields you want to collect. A Field must be attached to the destination Contract or Matter type if its answer should carry into that record. See [Configure types, Statuses, and Fields](types-statuses-fields.md).
-- This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and a **Deal value** Field. Use the names configured in your instance.
+- This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and a Global **Deal value** Field. Use the names configured in your instance.
 
 ## Create the request type
 
@@ -15,7 +15,7 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 3. Select the new row's **Edit** control to open its form configuration.
 4. Enter a **Description** that helps a Business User choose this form. Leave the field to save it, and check that the save succeeds.
 
-Every submission creates a Request first. Legal chooses whether to convert it to a Contract or Matter, or resolve it in the thread. Existing routing defaults continue to guide conversion and which Fields can be attached; the form editor does not expose a Target selector.
+Every submission creates a Request first. Legal chooses whether to convert it to a Contract or Matter, or resolve it in the thread. The **Target** column on the list shows each request type's routing default: a Contract or Matter type, a module alone, or **No target**. That default guides conversion and which Fields the form can attach. The form editor has no control to set or change it. A request type that you add here shows **No target**, so Legal chooses the Contract or Matter type at conversion.
 
 The **Display name** can change. Rename or reorder request types from the list. Archiving a request type takes it out of the Portal's choices and closes its form. In this version the archive dialog reports no usage and offers no replacement, even when Requests still name the type. Those Requests keep that type and stay readable, so check what is still open before you archive. Use **Show archived**, then **Restore**, to offer the type again.
 
@@ -31,9 +31,9 @@ Check the Portal's request-type card for this duration as general guidance befor
 2. Turn on that Field's **Required** checkbox if the Requester must answer it. Wait for the save to finish.
 3. Repeat for the other Fields you need. Use the reorder controls to put them in a useful order; with a reorder control focused, the arrow keys move its Field.
 
-Plan the form around its fixed basics: **Title**, **Description**, **Attachments**, **Department**, and **Urgency**. Title, Description, and Urgency are required; attachments and Department are optional. Department uses the shared list managed under **Settings → Organization → Departments** and carries into the converted record without a Field attachment. These basics cannot be removed or reordered here.
+Plan the form around its fixed basics: **Title**, **Description**, **Attachments**, **Department**, and **Urgency**. Title, Description, Department, and Urgency are required; attachments are optional. Department uses the shared list managed under **Settings → Organization → Departments** and carries into the converted record without a Field attachment. These basics cannot be removed or reordered here.
 
-Choose Contract-scoped or Global Fields for a Contract form, and Matter-scoped or Global Fields for a Matter form. User and Entity Fields cannot be required on a Portal form, because the Portal does not offer those records for the Requester to choose. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
+The Target decides which Fields **Attach field** offers. A Contract target offers Contract-scoped and Global Fields. A Matter target offers Matter-scoped and Global Fields. **No target** offers only Global Fields. A User Field cannot be required on a Portal form, because the Portal does not offer people for the Requester to choose. An Entity Field can be required; the Portal offers only Portal-listed Entities for it. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
 
 ## Offer guidance before submission
 
@@ -49,7 +49,7 @@ Knowledge guidance must remain published and available to Business Users. See [P
 
 ## Check the result
 
-Test one Contract form and one Matter form. Open the Portal and select the request type. Confirm that the description, guidance, Fields, order, and required markers match your configuration. Try submitting with a required answer missing, then supply valid fictional answers and submit. Have a Legal Team Member or Administrator convert the Request and check each intended answer on the new record.
+Test one form that Legal converts to a Contract and one that Legal converts to a Matter. Open the Portal and select the request type. Confirm that the description, guidance, Fields, order, and required markers match your configuration. Try submitting with a required answer missing, then supply valid fictional answers and submit. Have a Legal Team Member or Administrator convert the Request and check each intended answer on the new record.
 
 Attaching a Field to the form does not attach it to the destination type. Check both configurations before relying on carry-through. For a Matter, also check any selected [Matter template](matter-templates.md): carried answers and explicit choices take precedence over its defaults, and its Tasks and Key dates use the new Matter's creation date.
 

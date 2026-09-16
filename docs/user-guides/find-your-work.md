@@ -26,14 +26,14 @@ Home is a personal summary. Use a module's list to browse other reachable record
 
 ## Open all your Tasks
 
-1. In **Tasks assigned to you**, select **View all** with the displayed count.
+1. Select **My Tasks** in the app navigation. You can also select **View all** with the displayed count in **Tasks assigned to you** on Home.
 2. On **Your Tasks**, select a Task title to open its owning record.
 3. Use **Load more Tasks** if the list has another page.
-4. Select **Back to Home** to return.
+4. Select **Home** in the app navigation to return.
 
-The list contains open Tasks assigned to you, ordered by due date, with undated Tasks after dated ones. **No open Tasks assigned to you.** means the list is empty. If the Home card is absent, no matching Tasks are available there.
+The list contains open Tasks assigned to you, ordered by due date, with undated Tasks after dated ones. **No open Tasks assigned to you.** means the list is empty. If the Home card is absent, no matching Tasks are available there. Turn on the **Show completed** switch to add your completed Tasks to the list. The switch label then says **Hide completed**. Turn it off to remove them again.
 
-Administrators and Legal Team Members can use a Task's completion control on **Your Tasks** when the work is done. **Undo** reopens the Task you just completed. Wait for the completion or reopened message before continuing. If saving fails, follow the displayed retry instruction.
+Administrators and Legal Team Members can use a Task's completion control on **Your Tasks** when the work is done. **Undo** reopens the Task you just completed. When completed Tasks are shown, clear a completed Task's control to reopen it. Wait for the **Completed** or **Reopened** message before continuing. If saving fails, follow the displayed retry instruction.
 
 Task due dates belong to Tasks. They do not become Key dates and do not feed **Dates approaching**. Use that section's **View all** to open **Your dates**, a calendar of record dates.
 
@@ -46,4 +46,4 @@ Task due dates belong to Tasks. They do not become Key dates and do not feed **D
 
 Typing in a field keeps these characters in that field. **Help** in the header opens product instructions. Its search searches guides. The header's record search searches work you can reach. See [Search, filter, and save views](search-and-views.md).
 
-If a record becomes unavailable, its page shows **Something went wrong.** with a **Reload** control. Reload does not restore access. Return to Home or its module list and refresh. An Administrator can check changed access. A copied record link does not grant access, and an absent result does not prove that the record was deleted.
+If a record becomes unavailable, its page shows a title such as **Contract not found** or **Matter not found**. The page says that the record does not exist or that you cannot open it. Use its link, such as **Back to Contracts**, to return to the module list. An Administrator can check changed access. A copied record link does not grant access, and an absent result does not prove that the record was deleted.

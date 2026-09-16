@@ -1,0 +1,72 @@
+{
+  "section": "twoFactor",
+  "reviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "approver-groups": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "authentication-and-email": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1"
+  },
+  "startedAt": "2026-09-16T15:40:59.289Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Require two-factor authentication under Legal User Authentication without an authenticator",
+      "expected": "OpenLaw asks the Administrator to set one up before continuing",
+      "startedAt": "2026-09-16T15:40:59.796Z",
+      "finishedAt": "2026-09-16T15:41:30.352Z",
+      "actual": "Check failed: locator.innerText: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('region', { name: 'Legal User Authentication' }).locator('[aria-live=\"polite\"]').first()\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Each new session must prove a code",
+      "expected": "A fresh password sign-in asks for a code",
+      "startedAt": "2026-09-16T15:41:30.353Z",
+      "finishedAt": "2026-09-16T15:41:30.716Z",
+      "actual": "Check failed: Invalid URL",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Required two-factor applies to email magic links too",
+      "expected": "A Legal Team Member without an authenticator is sent to set one up after a magic-link sign-in",
+      "startedAt": "2026-09-16T15:41:30.716Z",
+      "finishedAt": "2026-09-16T15:41:32.290Z",
+      "actual": "After the magic-link sign-in the Legal Team Member was sent to /auth/two-factor/enroll; /api/v1/me reported setup required (true), and a work API call (/api/v1/matters) answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Turn off Require two-factor authentication",
+      "expected": "Policy saved off",
+      "startedAt": "2026-09-16T15:41:32.291Z",
+      "finishedAt": "2026-09-16T15:42:02.327Z",
+      "actual": "Check failed: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('navigation', { name: 'Settings sections' }).getByRole('button', { name: 'Security' })\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Last Administrator safeguard: the only Administrator cannot be demoted",
+      "expected": "Refused with a message",
+      "startedAt": "2026-09-16T15:42:02.327Z",
+      "finishedAt": "2026-09-16T15:42:32.360Z",
+      "actual": "Check failed: locator.waitFor: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('heading', { name: 'Users', level: 2 }) to be visible\u001b[22m ",
+      "result": "fail"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:42:32.363Z"
+}

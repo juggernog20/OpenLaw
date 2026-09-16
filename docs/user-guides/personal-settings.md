@@ -24,13 +24,14 @@ The theme applies to your account. You can change it again at any time. Use [not
 
 ## Open your own Portal view
 
-Administrators and Legal Team Members have an **App view** card at the top of Profile. Business Users do not have this control.
+Administrators and Legal Team Members have a **View Business Portal** section under **Personal** in Settings. Business Users do not have this control.
 
-1. In Profile, select **View as business user**.
-2. Check the **Viewing as business user** banner in the Portal.
-3. Select **Return to legal view** to return to Profile.
+1. In Personal settings, select **View Business Portal**.
+2. Select **View as business user**.
+3. Check the **Viewing as business user** banner in the Portal.
+4. Select **Return to legal view** to return to **View Business Portal**.
 
-This is your own Request history. Submissions and replies are real. It does not impersonate another person or change your role.
+This is your own Portal work. Submissions, edits, and replies are real. It does not impersonate another person or change your role.
 
 ## Change your password and two-factor settings
 
@@ -40,7 +41,7 @@ If your account has a password, Profile shows **Password & two-factor**.
 2. Enter **Current password** and **New password**.
 3. Select **Save**.
 
-Saving changes the password and signs you out on your other devices. The current session stays open. If the current password is wrong, correct it and retry. For setup, replacement, or removal of an authenticator, follow [two-factor authentication](staff-sign-in.md#turn-on-two-factor-authentication).
+Saving changes the password and signs you out on your other devices. The current session stays open. If the current password is wrong or the new password has fewer than 8 characters, correct it and retry. For setup, replacement, or removal of an authenticator, follow [two-factor authentication](staff-sign-in.md#turn-on-two-factor-authentication).
 
 If this password section is absent, use your organization's sign-in support to manage that method.
 

@@ -1,0 +1,196 @@
+{
+  "batch": "DOC-029",
+  "group": "inbox",
+  "reviewer": "DOC-029 source-review author agent (inbox)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-16T14:58:19+00:00",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "comparedFrom": {
+    "previousCompatibilityTarget": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+    "previousWalkthroughBuild": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+    "lastArticleEdit": "9e228999"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "triage-requests",
+      "scenario": "V-C12",
+      "contentSha256Before": "44f6535e37d1c2f73b88f2f447615e781061c1db91edfe8f08aac774e50cbc5f",
+      "contentSha256": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-006, INT-007, INT-010)",
+        "messages/en-US.json",
+        "apps/web/src/routes/inbox.tsx",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/components/inbox/inbox-columns.tsx",
+        "apps/web/src/components/inbox/inbox-filter-definitions.ts",
+        "apps/web/src/components/inbox/request-assignment.tsx",
+        "apps/web/src/components/intake/resolve-dialog.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/lib/roles.ts",
+        "apps/web/src/components/portal/request-owner.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/api/src/modules/requests/inbox.ts",
+        "apps/api/src/modules/requests/assignment.ts",
+        "apps/api/src/modules/requests/resolve.ts",
+        "apps/api/src/modules/requests/request-detail.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/requests/projection.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Step 1, where the Inbox opens",
+          "before": "Open Inbox; the built-in view starts with Status: New.",
+          "after": "The Inbox now has Requests and Unassigned contracts tabs. The Requests tab opens first and holds the Status: New view.",
+          "source": "apps/web/src/routes/inbox.tsx (tabs added by 4f83ab49)"
+        },
+        {
+          "claim": "Step 2, Request facts to check",
+          "before": "Requester and Urgency.",
+          "after": "Requester, Department and Urgency. The hero shows Department (or No Department) since INT-010.",
+          "source": "apps/web/src/routes/inbox-request.tsx Hero; 9287c0b1"
+        },
+        {
+          "claim": "Step 6 and 'If it does not work', comment audience",
+          "before": "Choose Full thread; Business Users cannot read Legal only or Working team; use Full thread.",
+          "after": "The Request composer offers Legal only and Shared with requester only, and starts on Legal only. Older Working team comments stay readable. Use Shared with requester.",
+          "source": "apps/web/src/lib/comments.ts composerTiers/tierLabel; comment-applet.tsx default tier (695067f6)"
+        },
+        {
+          "claim": "Resolve step 2, where the note goes",
+          "before": "Shared with the Requester in the Full thread.",
+          "after": "Goes on the Request's thread, where the Requester can read it (dialog text: This goes on the request's thread, and to the requester by email).",
+          "source": "apps/web/src/components/intake/resolve-dialog.tsx; messages resolve.notifyNote"
+        },
+        {
+          "claim": "Resolve step 4 and Find a decided Request, card name",
+          "before": "Outcome.",
+          "after": "The card heading is Status. A conversion also shows Converted by {person} on {date}.",
+          "source": "inbox-request.tsx inbox.request.outcome = Status; inbox.request.convertedBy"
+        },
+        {
+          "claim": "What a decided Request keeps",
+          "before": "All decided Requests keep assignee, submitted information, attachments and conversation; the Portal address keeps serving the conversation.",
+          "after": "Resolved and declined Requests keep all of these. A converted Request hides the Attachments card and Comments on the Inbox detail because both moved to the record, and its Portal address redirects to the record when the Requester can read it.",
+          "source": "inbox-request.tsx (Attachments card and chat applet only when status is not converted); request-detail.ts (converted attachments empty and 404); routes.ts portal redirectTo (41390ca0)"
+        },
+        {
+          "claim": "Portal Owner after clearing",
+          "before": "Clearing assignment clears that name.",
+          "after": "The Portal shows Owner: Not assigned yet.",
+          "source": "apps/web/src/components/portal/request-owner.tsx"
+        }
+      ],
+      "confirmed": [
+        "Only Administrators and Legal Team Members open the Inbox and Request detail; the loader redirects others and the API refuses them.",
+        "Default order is urgency rank then age; default filter Status: New; Status choices New, Converted, Resolved, Declined; Type, Urgency, Requester and Received date filters exist.",
+        "Request detail cards Description (when not empty), Form responses, Attachments; hero has Requester, Type, Converts to, Urgency, Submitted.",
+        "Selecting an attachment filename opens AttachmentPreview; a separate Download control remains.",
+        "Assign button on the list row (Triager column) and on the Request page; dialog labels Search people, Triage assignee, Unassigned, Save assignment, Cancel, Retry on load failure, and the unavailable-person note.",
+        "Assignees are live Administrators and Legal Team Members; assignment does not change status; decided Requests show a read-only assignee.",
+        "Triage menu offers Convert to contract, Convert to matter and Resolve request without converting; no Decline item.",
+        "Resolve dialog label Resolution note (required); blank note refused client and server side; Cancel closes without writing; Resolve request button.",
+        "Lost race in Resolve and Convert dialogs shows the recorded outcome and a Close button, with no second outcome.",
+        "A declined Request shows its reason on the Status card.",
+        "Converting person becomes Legal Owner or Matter Manager, not the triage assignee."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent browser walkthrough that V-C12 and V-C13 require against 3fa407e3.",
+        "The prose changes alter results and labels, so earlier walkthrough evidence cannot be kept as a copy-only review."
+      ]
+    },
+    {
+      "articleId": "convert-request",
+      "scenario": "V-C13",
+      "contentSha256Before": "9b436e80cf0ff44066848a3e019f9f2a35fe96ec605136536b8e4b0a76d9167f",
+      "contentSha256": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-002, INT-007, INT-008, INT-010)",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-009 AI Key date extraction, 2026-09-15)",
+        "messages/en-US.json",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/components/intake/prepared-convert-dialog.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/web/src/components/intake/description-source-toggle.tsx",
+        "apps/web/src/components/intake/conversion-evidence.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/components/contracts/ai-analysis-card.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/requests/promote-paper.ts",
+        "apps/api/src/modules/requests/move-thread.ts",
+        "apps/api/src/modules/requests/request-detail.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/requests/original-intake.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/lib/portal-record-access.ts",
+        "apps/api/src/pipeline/conversion-analysis.ts",
+        "apps/api/src/pipeline/contract-analysis.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Step 3, Description control",
+          "before": "Description is always an editable dialog value.",
+          "after": "The Description box appears only with a prepared Conversion draft. Manual conversion has no Description box and the record keeps the Request's Description.",
+          "source": "convert-dialog.tsx (Description rendered only when initialDraft); convert.ts falls back to the Request description"
+        },
+        {
+          "claim": "Check the resulting work, where the link is and Department",
+          "before": "Open the reference under Outcome; check Title, Type, Priority, Description, Needed by.",
+          "after": "The reference is on the Request's Status card. The record also receives the Request's Department (INT-010); the Request keeps it.",
+          "source": "inbox-request.tsx; convert.ts owningDepartmentId/departmentId (9287c0b1)"
+        },
+        {
+          "claim": "Ownership and team",
+          "before": "Converting person becomes Contract Owner; only a Contract receives the Requester as Business Owner.",
+          "after": "Contract label is Legal Owner. The Requester becomes Business Owner on either record. On a Contract, the Contract Type's live default people join the team.",
+          "source": "convert.ts businessOwnerId on both arms; matters/create.ts; contracts/create.ts default people (ec7f72e1); messages contracts.form.legalOwner; CONTEXT.md Matter Manager/Business Owner"
+        },
+        {
+          "claim": "Original attachment links after conversion",
+          "before": "Original attachment links follow the record's current Document access.",
+          "after": "Original Request attachment downloads answer 404 after conversion, on the staff and Portal routes. Open the promoted Documents on the record.",
+          "source": "request-detail.ts and routes.ts: converted status throws 404 NO_ATTACHMENT (41390ca0)"
+        },
+        {
+          "claim": "Fill Contract Fields after conversion scope",
+          "before": "Fills Fields only.",
+          "after": "The Request-context Analysis run can also add Unverified Key dates for explicitly dated events in its sources.",
+          "source": "contract-analysis.ts keyDatesExtractionTarget on conversion runs; DECISIONS-CONTRACTS 2026-09-15 (d6fb60be)"
+        }
+      ],
+      "confirmed": [
+        "Convert to contract or Convert to matter from the Triage menu opens PreparedConvertDialog; with the module switch on and live types, the Conversion draft dialog shows Getting contract/matter ready, Cancel, Continue manually, and Retry after failure.",
+        "Three independent switches under Request conversion: Prepare Matter conversions with AI, Prepare Contract conversions with AI, Fill Contract Fields after conversion.",
+        "AI values use AiField (purple border), Unverified marker and sparkle evidence; unchanged carried values are not marked; human edits, confirmations and clears stay when the Type changes and preparation reruns.",
+        "Convert dialog controls: Title, Contract/Matter type, Matter template with No template, Priority, Counterparty (Contract, when the Type has no counterparty Field), Needed by (when the Type has no needed-by Field), attached Fields, Does not carry into the ... list, archived reference note and refusal, Convert to ... instead, Cancel, Convert to contract/matter.",
+        "Discard AI suggestions in the dialog header; Current/AI generated vs Requester switch preserves edits; requester description is read-only.",
+        "Server refuses missing title, missing type, required Fields and dead references by name; lost race returns the winning record reference.",
+        "Record born with reviewed Title and Priority, Risk unset, converting person as Legal Owner or Matter Manager, no Confidential flag; template defaults sit under carried and dialog values; template title prefix, default Priority and default Risk are not applied; template Tasks for Matter Manager go to the converting person; Task and Key date offsets from creation date in UTC.",
+        "Each Request attachment becomes a root Document at version 1; on a Contract the first becomes primary when none is set; the thread moves with tiers intact.",
+        "Portal Request address redirects to the record when the Requester can read it; converted Requests leave Your requests; archived records leave an Original request stub.",
+        "Retry Request-context Analysis label on the AI analysis card; a failed run does not undo conversion.",
+        "Contract and Matter records show the Current/Requester description switch while the original Request is reachable."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent browser walkthrough that V-C12 and V-C13 require against 3fa407e3.",
+        "The prose changes alter results and labels, so earlier walkthrough evidence cannot be kept as a copy-only review."
+      ]
+    }
+  ],
+  "productBugs": [
+    "The convertRequest OpenAPI description says Matter conversion assigns no Business Owner, and its summary says the Request remains the Requester's window. The code sets the Requester as Business Owner on Matters and redirects the Portal Request to the record."
+  ],
+  "sharedFileRequests": [
+    "docs/documentation/edition.json: the publication content hashes for triage-requests and convert-request must change to the new article hashes, or the docs:check build refuses them with 'publication source changed'.",
+    "docs/documentation/scenarios.json: V-C12 and V-C13 acceptance points at evidence for older content hashes. It needs updating after the independent walkthrough at 3fa407e3 records its result. The article evidence files are unchanged here and still describe the a28331f7 walkthrough."
+  ],
+  "statusChange": null
+}

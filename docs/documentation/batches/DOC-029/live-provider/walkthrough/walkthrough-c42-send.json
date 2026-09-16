@@ -1,0 +1,80 @@
+{
+  "phase": "c42-send",
+  "reviewer": "DOC-029 independent live-provider walkthrough agent",
+  "reviewerKind": "agent",
+  "app": "http://127.0.0.1:23314",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "note": "Sanitized. The Signer inbox belongs to the user and is not recorded. No connector secret is recorded.",
+  "contract": "C-38",
+  "subject": "DOC-029 live signing round trip C-38 (fourth send)",
+  "signerName": "DOC-029 Test Signer",
+  "startedAt": "2026-09-16T17:09:23.971Z",
+  "steps": [
+    {
+      "id": "S09a",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "action": "Void the live Envelope whose email did not arrive: row actions, Void envelope, Reason, confirm; check the row and the Contract",
+      "at": "2026-09-16T17:09:24.502Z",
+      "actual": "Dialog: \"Void envelope The signers can no longer sign this round. The contract can be sent again straight after. Reason The provider records this with the withdrawal, and the record keeps it on the row. Cancel Void envelope\". Void answered 200. The Envelope is voided with reason \"DOC-029 test: the Signer must be the DocuSign developer account login to sign from its inbox. Resending.\", completed 2026-09-16T17:09:28.284Z. Row text: DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the Signer must be the DocuSign developer account login to sign from its inbox. Resending. Sep 16 by Daniel Okafor Sep 16 || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16 || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16. Send for signature is offered again (1). Contract Status before Out for signature, after Out for signature (stage signature); it is not ended or archived (archivedAt=null).",
+      "result": "pass"
+    },
+    {
+      "id": "S09",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "action": "Send the Envelope: Version, one Signer, Subject, Send envelope; check the new row",
+      "at": "2026-09-16T17:09:29.140Z",
+      "actual": "Version chosen: \"Version 1 — doc029-live-signing.docx (current)\". Send envelope answered 201 after 3753 ms. API: status sent, Document doc029-live-signing.docx Version 1, 1 Signer, sent 2026-09-16T17:09:33.731Z. Row text: DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Out for signature Sep 16 by Daniel Okafor — || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the Signer must be the DocuSign developer account login to sign from its inbox. Resending. Sep 16 by Daniel Okafor Sep 16 || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16 || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16. Send for signature buttons now: 0.",
+      "result": "pass",
+      "sendMs": 3753,
+      "sentAt": "2026-09-16T17:09:33.731Z"
+    },
+    {
+      "id": "S10",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "action": "After the Signer completes in DocuSign and Polling runs: check Signed, Executed copy, the executed Version on the original chain, and the Contract Status",
+      "at": "2026-09-16T17:26:05.298Z",
+      "actual": "Envelope signed, completed 2026-09-16T17:10:35.400Z, executed copy ready. Row: DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Signed Sep 16 by Daniel Okafor Sep 16 Executed copy || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the Signer must be the DocuSign developer account login to sign from its inbox. Resending. Sep 16 by Daniel Okafor Sep 16 || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16 || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16. Executed copy controls: 1. Primary Document \"doc029-live-signing.docx\" versions: v1 draft_ours doc029-live-signing.docx; v2 executed executed current doc029-live-signing (executed).pdf. Contract Status moved from Out for signature to Active (stage active).",
+      "result": "pass",
+      "completedAt": "2026-09-16T17:10:35.400Z",
+      "contractStatus": "Active (active)"
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2026-09-16T17:09:29.125Z",
+      "event": "voided first Envelope",
+      "status": "voided"
+    },
+    {
+      "at": "2026-09-16T17:09:34.557Z",
+      "status": "sent",
+      "executedFetch": "pending",
+      "event": "sent"
+    },
+    {
+      "at": "2026-09-16T17:09:34.574Z",
+      "status": "sent",
+      "executedFetch": "pending",
+      "completedAt": null
+    },
+    {
+      "at": "2026-09-16T17:25:35.275Z",
+      "status": "signed",
+      "executedFetch": "pending",
+      "completedAt": "2026-09-16T17:10:35.400Z"
+    },
+    {
+      "at": "2026-09-16T17:26:05.297Z",
+      "status": "signed",
+      "executedFetch": "ready",
+      "completedAt": "2026-09-16T17:10:35.400Z"
+    }
+  ],
+  "finishedAt": "2026-09-16T17:26:06.156Z"
+}

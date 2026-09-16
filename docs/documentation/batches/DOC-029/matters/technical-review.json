@@ -1,0 +1,228 @@
+{
+  "batch": "DOC-029",
+  "group": "matters",
+  "reviewer": "DOC-029 source-review author agent (matters)",
+  "reviewerKind": "agent",
+  "roles": ["author", "technical reviewer"],
+  "reviewedAt": "2026-09-16T14:59:06Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "method": "source-inspection",
+  "comparedFrom": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "limitations": [
+    "Source inspection only. No browser walkthrough was run. The independent V-C22, V-C23 and V-C24 walkthroughs are still required before verification.",
+    "Behavior, labels and results changed for all three articles, so earlier DOC-016 walkthrough evidence does not verify these revisions.",
+    "Catalog status was not changed."
+  ],
+  "articles": [
+    {
+      "articleId": "create-matter",
+      "contentSha256": "af9e06defbb30c1ea2fe16489aeb6f423922837eea8ac718eedbe8ebe5ec01c1",
+      "result": "pass-with-corrections",
+      "sourcesChecked": [
+        "apps/web/src/components/matters/create-matter-dialog.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/department-picker.tsx",
+        "apps/web/src/components/confidential-toggle.tsx",
+        "apps/web/src/routes/matters.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/components/record-person-field.tsx",
+        "apps/web/src/components/matters/team-applet.tsx",
+        "apps/web/src/components/record-team-applet.tsx",
+        "apps/web/src/components/team-roster.tsx",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/lib/custom-fields.ts",
+        "apps/api/src/lib/matter-access.ts",
+        "apps/api/src/lib/contract-term.ts",
+        "docs/decision-records/DECISIONS-MATTERS.md (MTR-003 2026-09-09 addendum, MTR-013 addenda, MTR-017, record-controls addenda)",
+        "CONTEXT.md"
+      ],
+      "corrections": [
+        {
+          "before": "Selecting Create always opens the new Matter; the dialog had no Documents step.",
+          "after": "The dialog has a Documents area with Attach documents. If an upload fails after creation, the dialog stays open with Retry failed uploads and Continue, and the Matter already exists.",
+          "source": "create-matter-dialog.tsx (CreateAttachments, attachments.upload), create-attachments.tsx"
+        },
+        {
+          "before": "Changing or removing the template resets only that template's Priority, Risk and Field defaults.",
+          "after": "Changing or removing the template resets Priority, Risk and every attached Field value to the new template's defaults, or to empty with No template. Typed Field values are replaced. Title rule unchanged.",
+          "source": "create-matter-dialog.tsx seedTemplate() rebuilds all drafts from the new template"
+        },
+        {
+          "before": "Overview core fields: title, type, Matter Manager, Business Owner, Department, Priority, Risk, in the same sequence as Contracts.",
+          "after": "Overview also has Region (shared list or No Region). Sequence is title, type, Matter Manager, Business Owner, Department, Region, Priority, Risk. The claim that this matches Contracts was removed because Contract Overview places Region after Risk.",
+          "source": "matter-record.tsx Overview grid; contract-record.tsx field order; MTR-017 (commit 59ecab2d)"
+        }
+      ],
+      "confirmedClaims": [
+        "Only Administrators and Legal Team Members create Matters (POST /matters requireMember; New matter shown only when canCreate).",
+        "Create matter dialog fields and labels: Title, Matter type, Matter template (after a type is chosen, default No template), Matter Manager (seeded with the creator, Unassigned option, Administrators and Legal Team Members only), Department (No Department), Priority (Medium), Risk (Not assessed), type Fields, Description, Confidential toggle, Cancel, Create.",
+        "Client validation message 'Fill {fields}.' names missing required values; the API refuses a non-live type or a template that is archived or belongs to another type ('The template must be live and belong to the selected matter type.').",
+        "New Matter gets the first live open-category Status by display order and an M- number that does not change on rename.",
+        "Template hint 'Template adds N tasks and N key dates.'; title follows the template prefix only while blank or still equal to the previous prefix.",
+        "A cleared optional template Field is sent as null and stays empty (fix #770, e580e51e); required Fields must have a value.",
+        "Template Task and Key date offsets resolve from the UTC creation date; a matter_manager Task target takes the Manager chosen at creation, otherwise unassigned; the template sets no Status.",
+        "The creator gets a team row; Business Owner at creation also gets a team row.",
+        "Overview Matter type change opens 'Change matter type to {type}' with Change type when the new type has unanswered required Fields.",
+        "Matter team applet: Add team member, Person, Add; one roster row per person with Matter Manager, Business Owner and Creator statements.",
+        "Confidential audience changes are limited to Administrator, Matter Manager or Creator (canManageAudience; assertAudienceActor).",
+        "History applet label is History."
+      ]
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "42b5a0bcdbce561a30d998a493cdacac31e89c3abfb8f53d9175fff5c95076a3",
+      "result": "pass-with-corrections",
+      "sourcesChecked": [
+        "apps/web/src/routes/matter-record.tsx (MatterLifecycleDialog, LifecycleDialog, commit, openMatterLifecycle)",
+        "apps/web/src/components/matters/matter-status-progression.tsx",
+        "apps/web/src/components/status-progression.tsx",
+        "apps/web/src/components/contracts/record-actions-menu.tsx",
+        "apps/web/src/lib/matters.ts",
+        "apps/web/src/components/table/record-filter-definitions.ts",
+        "apps/web/src/components/activity/activity-applet.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/routes/portal-matter.tsx",
+        "apps/api/src/modules/matters/routes.ts (GET lifecycle, PATCH statusId/closingNote/confirmReopen, archive, restore, list includeClosed/includeArchived)",
+        "apps/api/src/lib/next-deadline.ts",
+        "docs/decision-records/DECISIONS-MATTERS.md (MTR-002 and MTR-008 UX review addenda, 2026-09-06)",
+        "CONTEXT.md (Status, Category, Closing)"
+      ],
+      "corrections": [
+        {
+          "before": "A Status control beside the title offers only Statuses in the current Category.",
+          "after": "The pill beside the title shows the Status name. The Status strip at the right of the header shows the groups Open, In progress, Waiting and Closed; each group opens a Move to menu. A same-Category choice saves at once.",
+          "source": "matter-status-progression.tsx, status-progression.tsx, matter-record.tsx onPick (commit 8598e7db)"
+        },
+        {
+          "before": "Use the Close matter or Reopen matter action to understand the lifecycle of a renamed label.",
+          "after": "The group that lists a Status shows its Category: Closed group is closed, Open, In progress and Waiting are open. There is no separate Close/Reopen header button.",
+          "source": "lib/matters.ts matterStatusGroup(); MTR-002 status groups addendum"
+        },
+        {
+          "before": "Select Close matter, choose a Closed Status in the dialog, confirm Close matter.",
+          "after": "Select Closed in the strip and choose a closed Status. The close dialog takes that Status and requires a Closing note (up to 2,000 characters) before Close matter is enabled. Open child Matters and Restricted Matter behavior unchanged.",
+          "source": "MatterLifecycleDialog; PATCH refuses closing without closingNote ('Enter a closing note before closing this Matter.'); MTR-008 closing note addendum"
+        },
+        {
+          "before": "Closing records Closed on Overview.",
+          "after": "Closing records the Closed date on Overview and shows the note under Closing note in History.",
+          "source": "activity.ts closingNote on matter.status_changed; activity-applet.tsx"
+        },
+        {
+          "before": "Select Reopen matter, choose an Open Status, confirm Reopen matter.",
+          "after": "Choose an open Status from Open, In progress or Waiting in the strip; the reopen dialog uses it; confirm Reopen matter. Overview Closed then reads Still open.",
+          "source": "commit() handles MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE; MatterLifecycleDialog reopen branch; matters.stillOpen"
+        },
+        {
+          "before": "Select Archive / Restore on the Matter.",
+          "after": "Open Matter actions (header overflow menu) and select Archive or Restore, then confirm in the dialog.",
+          "source": "record-actions-menu.tsx (aria-label Matter actions; Archive/Restore rows)"
+        },
+        {
+          "before": "Business Users can read its Status (surface unstated).",
+          "after": "Business Users read Status in the Portal. On an archived Matter the Status strip shows the current group without a Move to menu.",
+          "source": "portal-matter.tsx Status; matter-record.tsx passes onPick only when not frozen"
+        }
+      ],
+      "confirmedClaims": [
+        "Status changes, lifecycle reads, archive and restore are Administrator and Legal Team Member only (requireMember).",
+        "Category is immutable on a Status; renaming does not change it.",
+        "Closing sets closedAt and keeps openedAt; reopening clears closedAt and needs confirmReopen; same-Category moves keep both dates.",
+        "Open child Matters lists reachable children by M- reference and title and unreachable ones as Restricted Matter, with 'These child Matters will stay open. Closing this parent changes none of them.'",
+        "A closed Matter stays editable; Next deadline is null unless the Matter is open and unarchived.",
+        "Default Matters list excludes closed and archived Matters; Filter offers Show closed and Show archived as independent flags.",
+        "Archive dialog 'Archive {title}?' with 'The matter leaves the default list. Its history and M-number are kept.'; Restore dialog 'Restore {title}?' with 'The matter returns to the default list and becomes editable again.'",
+        "Archived Matter writes are refused with 409 ('This matter is archived. Restore it before editing.'); restore does not change Status.",
+        "Archive and restore do not touch children or linked Contracts."
+      ]
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": "0c4586d601262514f49a617fa47f6bd3c45accadd851fd6bfb9a2f3d817d8d9b",
+      "result": "pass-with-corrections",
+      "sourcesChecked": [
+        "apps/web/src/components/matters/tasks-card.tsx",
+        "apps/web/src/components/tasks/task-dialog.tsx",
+        "apps/web/src/components/tasks/assignee-picker.tsx",
+        "apps/web/src/components/tasks/completed-toggle.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/matters/key-dates-card.tsx",
+        "apps/web/src/components/key-date-reminder-fields.tsx",
+        "apps/web/src/components/matters/related-matters-card.tsx",
+        "apps/web/src/components/matters/relation-dialog.tsx",
+        "apps/web/src/components/matters/linked-contracts-card.tsx",
+        "apps/web/src/components/contracts/contract-matter-link-dialog.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/modules/matter-tasks/routes.ts",
+        "apps/api/src/modules/matter-tasks/create.ts",
+        "apps/api/src/lib/task-assignment.ts",
+        "apps/api/src/modules/comments/audience.ts",
+        "apps/api/src/modules/matter-key-dates/routes.ts",
+        "apps/api/src/lib/key-date-reminders.ts",
+        "apps/api/src/lib/next-deadline.ts",
+        "apps/api/src/modules/matter-relations/routes.ts",
+        "apps/api/src/modules/contract-matters/routes.ts",
+        "docs/decision-records/DECISIONS-MATTERS.md (MTR-005 team-expansion addendum, MTR-007 create linked Contract addendum)"
+      ],
+      "corrections": [
+        {
+          "before": "Add an initial note and files under Comments & attachments.",
+          "after": "The field is Add a note, and the initial note posts with the Working team audience.",
+          "source": "task-dialog.tsx (taskDetails.note, sendComment visibility working_team)"
+        },
+        {
+          "before": "Cancel before saving does neither.",
+          "after": "Cancel (add) or Close (edit) before saving does neither.",
+          "source": "task-dialog.tsx footer button is Close when a row exists"
+        },
+        {
+          "before": "Done Tasks stay in the list; Remove Task is available only for Tasks with no conversation history.",
+          "after": "The list hides done Tasks until Show completed is on. Edit Task and Remove Task are in the row's actions menu; Remove Task removes only a Task with no conversation history (the menu always shows it; the API refuses otherwise).",
+          "source": "tasks-card.tsx visibleTasks and CompletedTasksToggle (commit 9e228999); removeTaskThread TASK_HOLDS_A_CONVERSATION"
+        },
+        {
+          "before": "Key date note label is Note (optional).",
+          "after": "The label is Note.",
+          "source": "key-dates-card.tsx matterKeyDates.note"
+        },
+        {
+          "before": "Use the usual audience restores default recipients at any time.",
+          "after": "Clear every recipient checkbox to restore the default. Use the usual audience appears only when a selected person has left the team, with Remove unavailable recipients when other selected people remain. Business Users receive no reminders and are not listed.",
+          "source": "key-date-reminder-fields.tsx departed block; key-date-reminders.ts keyDateReminderOptions excludes business_user"
+        },
+        {
+          "before": "The earliest upcoming Key date is marked Next and overdue dates are marked Overdue.",
+          "after": "The Matter Key dates card has no Next or Overdue badges. Its header counts upcoming and overdue dates, and the Key dates tab shows the upcoming count. Closed Matters contribute nothing to Next deadline.",
+          "source": "key-dates-card.tsx (badges removed in 8598e7db; tally matterKeyDates.tally); matter-record.tsx tab count; next-deadline.ts"
+        },
+        {
+          "before": "A parent loop back to the Matter itself is refused.",
+          "after": "Any parent that would close a loop in the Matter hierarchy is refused.",
+          "source": "matter-relations PUT parent returns MATTER_PARENT_CYCLE_PROBLEM_TYPE; relation-dialog.tsx 'That parent would close a loop in the Matter hierarchy.'"
+        },
+        {
+          "before": "Select the Contract and confirm the link; card offered only Link Contract.",
+          "after": "Confirm with Link. New contract opens Contract creation with this Matter preselected.",
+          "source": "contract-matter-link-dialog.tsx action.link; linked-contracts-card.tsx New contract; MTR-007 addendum"
+        }
+      ],
+      "confirmedClaims": [
+        "Task, Key date, relation and link routes are Administrator and Legal Team Member only; archived Matters refuse writes with 409; closed Matters stay writable.",
+        "Task dialog labels: Add a Task, Title, Description, Assignee, Due date, Comments & attachments, Add Task, Task details, Save, Retry note & attachments.",
+        "Assignee picker: searchable, Unassigned, Add someone to the team…, Use this person in dialogs (saved with the Task), Add to team and assign on rows (immediate); Confidential team additions need audience permission (403).",
+        "Task comments use Legal only or Working team only; Full thread is removed for Task threads.",
+        "A Task with any comment, including deleted or redacted ones, cannot be removed ('This Task has a conversation on it, so it cannot be removed. Mark it done instead.').",
+        "Tasks sort by due date ascending with undated last, then display order.",
+        "Next deadline is the earliest unfinished dated Task (overdue included) or upcoming Key date on an open, unarchived Matter.",
+        "Key date dialog: Date, Event, Note, Reminders with Global reminders and 'This date will remind', Additional lead time (days before) 0 to 730, Add lead time, up to 20, Remove; Add date / Save; Edit date and Remove date with 'Remove Key date?' confirmation.",
+        "A saved recipient subset never falls back to the whole audience.",
+        "Related Matters: New sub-Matter, Set parent / Change parent, Add related Matter, Add relation, Remove on Parent and Related rows only, Restricted Matter rows without navigation.",
+        "Linked Contracts: one Matter per Contract ('This contract already belongs to a matter. Unlink it before linking it elsewhere.'), Unlink, Confidentiality differs with Leave them as they are, archived Contracts omitted, Restricted contract rows."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/api/src/modules/matter-tasks/routes.ts DELETE /matter-tasks/:taskId OpenAPI summary says a Task carrying a comment 'answers 409 and is marked done instead of removed', but the handler only returns 409 inside the rolled-back transaction and does not mark the Task done."
+  ]
+}

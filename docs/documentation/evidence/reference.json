@@ -1,25 +1,19 @@
 {
   "articleId": "reference",
-  "contentSha256": "71259a27b93b495c22a73ba251ec3224ac610ae24b6dee7b88de83a2ac809135",
-  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
-  "environment": "dev integration source review",
-  "author": "Codex integration author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-admin",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (support, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "blocked",
+  "author": "Codex integration author; corrections by DOC-029 source-review author agent (support)",
+  "technicalReviewer": "DOC-029 source-review author agent (support)",
+  "verifiedAt": "2026-09-16T16:25:31Z",
+  "status": "pass",
   "sources": [
-    "CONTEXT.md",
-    "apps/api/src/lib/render-family.ts",
-    "apps/api/src/lib/uploads.ts",
-    "apps/api/src/modules/contracts/routes.ts",
-    "apps/web/src/components/approvals/approvals-signing-card.tsx",
-    "apps/web/src/components/documentation/documentation-reader.tsx",
-    "docs/documentation/PUBLISHING.md",
-    "docs/documentation/edition.json",
-    "packages/db/src/schema/auth.ts"
+    "docs/user-guides/reference.md",
+    "docs/documentation/batches/DOC-029/support/technical-review.json",
+    "docs/documentation/batches/DOC-029/support/walkthrough-r1.json"
   ],
   "scenarios": [
     {
@@ -27,111 +21,87 @@
       "coverage": ["C50"],
       "role": "administrator",
       "method": "browser-walkthrough",
-      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
-      "verifiedAt": "2026-09-08T12:19:57.373Z"
+      "prerequisites": [
+        "Seeded fictional Administrator (Daniel Okafor) account in its own browser context on the shared admin documentation lab.",
+        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+      ],
+      "expected": "Representative terms and limits in the reference match the app: fixed concepts are separate from configured labels, and role and file limits are accurate. Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version.",
+      "actual": "3 recorded steps passed for this role on 3fa407e3. The role control for a user offered only Administrator, Legal team member and Business user. Contract statuses showed the Stages Draft, Review, Approval, Signature, Active and Ended, and a new Matter status asked for Category Open or Closed; Cancel changed nothing. A Confidential Entity answered \"Entity not found\" without a Grant, opened with one, and was refused again after removal. A Confidential Contract without named access answered \"Contract not found\". The Administrator's Document actions included Delete, and the Legal Team Member's did not.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+      ]
     },
     {
       "id": "V-C50",
       "coverage": ["C50"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
-      "verifiedAt": "2026-09-08T12:19:52.328Z"
-    },
-    {
-      "id": "V-C50",
-      "coverage": ["C50"],
-      "role": "contributor",
-      "method": "browser-walkthrough",
-      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
-      "verifiedAt": "2026-09-08T11:57:12.852Z"
+      "prerequisites": [
+        "Seeded fictional Legal Team Member (Nadia Haddad) account in its own browser context on the shared admin documentation lab.",
+        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+      ],
+      "expected": "Representative terms and limits in the reference match the app: fixed concepts are separate from configured labels, and role and file limits are accurate. Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version.",
+      "actual": "4 recorded steps passed for this role on 3fa407e3. Add a key date had no assignee, an Additional lead time and team-member reminder recipients. Add task had Assignee and Due date. The Contract showed Our entity separately from Counterparties. Version kinds included Draft · ours and Executed. The actions offered Mark as executed copy and Compare with previous, with no action to delete a single Version and no Delete. A PNG opened inline, an SVG showed \"This file type does not open here. Download it to read it.\", and an EML opened the email reader with its Subject and From. The 100 MB refusal and the 255-character filename refusal came from the troubleshooting steps on the same run. Settings > Users stayed closed.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+      ]
     },
     {
       "id": "V-C50",
       "coverage": ["C50"],
       "role": "business_user",
       "method": "browser-walkthrough",
-      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
-      "verifiedAt": "2026-09-08T11:57:19.566Z"
+      "prerequisites": [
+        "Seeded fictional Business User (Jonas Weber, fresh magic links from the lab Mailpit) account in its own browser context on the shared admin documentation lab.",
+        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+      ],
+      "expected": "Representative terms and limits in the reference match the app: fixed concepts are separate from configured labels, and role and file limits are accurate. Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version.",
+      "actual": "2 recorded steps passed for this role on 3fa407e3. Staff addresses landed on /portal. On a shared Contract the Primary Document showed Version 2 with 1 earlier version, and both Versions had Download links; Version 1 downloaded its original 57 bytes. A PNG opened in the Portal reader. A linked Matter stayed closed. A published Knowledge Item (audience everyone) with a two-Version file showed one Download and no Version control, and it returned the current Version's bytes. Record Fields were read-only, as the troubleshooting steps on the same run record.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+      ]
     },
     {
       "id": "V-C50",
       "coverage": ["C50"],
       "role": "operator",
       "method": "browser-walkthrough",
-      "expected": "Reference matches role limits, configured versus fixed concepts and actual file behavior.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"],
-      "verifiedAt": "2026-09-08T12:21:35.382Z"
+      "prerequisites": [
+        "Signed-out browser context with no app account.",
+        "The reviewed article bytes on disk for link checks."
+      ],
+      "expected": "Representative terms and limits in the reference match the app: fixed concepts are separate from configured labels, and role and file limits are accurate. Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version.",
+      "actual": "2 recorded steps passed for this role on 3fa407e3. Signed out, /documentation/reference opened \"Look up terms, permissions, and file behavior\" with the Deployment operator row and MAX_UPLOAD_MB. The only app API request was a session check. Signed-out /help landed on /documentation. All 21 internal link targets in the reviewed bytes opened in the formal reader.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+      ]
     }
   ],
-  "authorEvidence": [],
   "limitations": [
-    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
-    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+    "Independent agent walkthrough by a different agent from the source-review author; not a human user study and not feature-owner approval.",
+    "The lab Help and formal readers serve the article bytes committed at 3fa407e3, which differ from the reviewed corrected bytes. Steps followed the reviewed bytes against the app. Reader checks prove the routes, headings and UI behavior; link checks opened every internal link of the reviewed bytes in the bundled formal reader.",
+    "The admin lab is shared with other DOC-029 agents. The walkthrough created only records named DOC-029 support ... and changed no organisation settings.",
+    "Two earlier recorded attempts (walkthrough-r1-attempt1.json, walkthrough-r1-attempt2.json) each had one reviewer harness fault and are kept with their disposition. Exploratory probes and development runs before them are not evidence.",
+    "Representative terms were compared with the app; Holding, Registration, Officer, Obligation, Signer, Envelope, Comparison and Generated redline rows were checked in the article text only, not exercised in this walkthrough.",
+    "Word/PowerPoint conversion and PDF OCR were not exercised here; the Document reading groups verify them."
   ],
-  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Review then corrected the title spelling to en-US, from \"file behaviour\" to \"file behavior\", to match EDITORIAL.md and this article's own heading. Historical records retain the bytes observed; that sentence was written while independent acceptance was still pending, and it is kept as the historical note it was. Independent acceptance has since been recorded; see sourceReview and the scenario results above.",
-  "independentEvidence": [
-    "docs/documentation/batches/DOC-024/README.md",
-    "docs/documentation/batches/DOC-024/independent-discovery.json",
-    "docs/documentation/batches/DOC-024/independent-reference.json",
-    "docs/documentation/batches/DOC-024/independent-reference-retry.json",
-    "docs/documentation/batches/DOC-024/independent-comparison-and-roles.json",
-    "docs/documentation/batches/DOC-024/independent-operator-reference.json",
-    "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json",
-    "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
-    "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
-  ],
-  "verifiedAtBasis": "Each scenario's verifiedAt is the recorded time of that role's last passing observation for this article, taken from the independent records listed in its evidence. The article-level verifiedAt is the latest of those scenario times. It is not a single acceptance ceremony and no finer time is claimed.",
-  "sourceReview": {
-    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-    "reviewerKind": "agent",
-    "method": "source-inspection",
-    "completedAt": "2026-09-08T11:28:16Z",
-    "recordedIn": "commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 on docs/744-support-reference",
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "scope": [
-      "messages/en-US.json for every quoted UI label",
-      "apps/api/src/lib/uploads.ts for the upload ceiling, its MAX_UPLOAD_MB control and the 255-character filename bound",
-      "apps/api/src/lib/render-family.ts for the stored-type and preview families, including SVG as download-only",
-      "apps/api/src/lib/notifications/notifier.ts and catalog.ts for the in-app and email rule",
-      "apps/api/src/modules/contract-analysis/routes.ts and contract-envelopes/routes.ts for the Analysis target and the single live Envelope",
-      "CONTEXT.md and the canonical guides for the glossary, permission and Document rows",
-      "every internal link and heading anchor in the three articles"
-    ],
-    "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
-    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC, and that commit is the identity of this review's own correction. It does not cover any source read later in the session; those are recorded in sourceReviewAddendum or in the independent records that carry them, and none of them is backdated into this object."
+  "previousEvidence": {
+    "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+    "contentSha256": "71259a27b93b495c22a73ba251ec3224ac610ae24b6dee7b88de83a2ac809135",
+    "verifiedAt": null
   },
-  "sourceReviewAddendum": {
-    "reason": "The reference's Deployment operator row says the role is not an app account role. The first operator observation listed the roles existing users hold, which cannot establish the set of roles the app permits, so the account-role enum was read during the audit.",
-    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-    "reviewerKind": "agent",
-    "method": "source-inspection",
-    "scope": ["packages/db/src/schema/auth.ts for the USER_ROLES account-role enum"],
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "firstReadAt": "2026-09-08T12:18:42.809Z",
-    "observationsAt": ["2026-09-08T12:20:40.513Z", "2026-09-08T12:21:35.382Z"],
-    "completedAt": "2026-09-08T12:21:35.382Z",
-    "recordedIn": [
-      "docs/documentation/batches/DOC-024/independent-operator-reference.json",
-      "docs/documentation/batches/DOC-024/independent-operator-reference-retry.json"
-    ],
-    "outcome": "USER_ROLES declares administrator, legal_team_member, contributor and business_user, and the users table role column is typed to that enum. The matching browser evidence is the Administrator's role control in independent-comparison-and-roles.json.",
-    "note": "This addendum happened after the cold review and after commit 2570232a. It is dated by its own observations and is not folded into that commit's identity."
-  },
-  "previousEvidence": "docs/documentation/batches/dev-integration/previous-reference.json",
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "compatibilityReview": null
 }

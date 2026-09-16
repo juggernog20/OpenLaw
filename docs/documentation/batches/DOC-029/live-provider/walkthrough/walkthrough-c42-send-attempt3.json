@@ -1,0 +1,57 @@
+{
+  "phase": "c42-send",
+  "reviewer": "DOC-029 independent live-provider walkthrough agent",
+  "reviewerKind": "agent",
+  "app": "http://127.0.0.1:23314",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "note": "Sanitized. The Signer inbox belongs to the user and is not recorded. No connector secret is recorded.",
+  "contract": "C-38",
+  "subject": "DOC-029 live signing round trip C-38 (third send)",
+  "signerName": "DOC-029 Test Signer",
+  "startedAt": "2026-09-16T16:59:26.677Z",
+  "steps": [
+    {
+      "id": "S09a",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "action": "Void the live Envelope whose email did not arrive: row actions, Void envelope, Reason, confirm; check the row and the Contract",
+      "at": "2026-09-16T16:59:27.130Z",
+      "actual": "Dialog: \"Void envelope The signers can no longer sign this round. The contract can be sent again straight after. Reason The provider records this with the withdrawal, and the record keeps it on the row. Cancel Void envelope\". Void answered 200. The Envelope is voided with reason \"DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox.\", completed 2026-09-16T16:59:32.122Z. Row text: DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16 || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16. Send for signature is offered again (1). Contract Status before Out for signature, after Out for signature (stage signature); it is not ended or archived (archivedAt=null).",
+      "result": "pass"
+    },
+    {
+      "id": "S09",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "action": "Send the Envelope: Version, one Signer, Subject, Send envelope; check the new row",
+      "at": "2026-09-16T16:59:33.718Z",
+      "actual": "Version chosen: \"Version 1 — doc029-live-signing.docx (current)\". Send envelope answered 201 after 4437 ms. API: status sent, Document doc029-live-signing.docx Version 1, 1 Signer, sent 2026-09-16T16:59:39.032Z. Row text: DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Out for signature Sep 16 by Daniel Okafor — || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16 || DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Voided DOC-029 test: the signing email did not reach the Signer inbox. Resending to another inbox. Sep 16 by Daniel Okafor Sep 16. Send for signature buttons now: 0.",
+      "result": "pass",
+      "sendMs": 4437,
+      "sentAt": "2026-09-16T16:59:39.032Z"
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2026-09-16T16:59:33.699Z",
+      "event": "voided first Envelope",
+      "status": "voided"
+    },
+    {
+      "at": "2026-09-16T16:59:39.852Z",
+      "status": "sent",
+      "executedFetch": "pending",
+      "event": "sent"
+    },
+    {
+      "at": "2026-09-16T16:59:39.868Z",
+      "status": "sent",
+      "executedFetch": "pending",
+      "completedAt": null
+    }
+  ],
+  "finishedAt": "2026-09-16T17:09:10.298Z",
+  "abort": "apiRequestContext.get: Target page, context or browser has been closed"
+}

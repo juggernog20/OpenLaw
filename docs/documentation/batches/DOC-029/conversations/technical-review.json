@@ -1,0 +1,195 @@
+{
+  "batch": "DOC-029",
+  "group": "conversations",
+  "reviewer": "DOC-029 source-review author agent (conversations)",
+  "author": "DOC-029 source-review author agent (conversations)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "method": "source-inspection",
+  "limitations": [
+    "Source inspection only. No browser walkthrough was run. An independent agent must run V-C07 and V-C08 against the corrected content before the articles can leave review.",
+    "Catalog status, scenarios, and evidence/<id>.json were not changed. The earlier evidence was recorded on a28331f7 and does not cover the corrected content."
+  ],
+  "articles": [
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256Before": "9cb944814fe79ce300a9a392da25723d9433a51d8bc228774c563078580c7313",
+      "contentSha256After": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS.md (DD-016 amendment, DD-023)",
+        "docs/decision-records/DECISIONS-COMMENTS.md (CMT-001 amendment, CMT-003 Matter audiences addendum, CMT-002 Document references addendum, CMT-003/CMT-011 chat parity and attachment previews addendum)",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/components/comments/attachment-preview.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/activity/activity-applet.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/modules/comments/routes.ts",
+        "apps/api/src/modules/comments/audience.ts",
+        "apps/api/src/modules/comments/post.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/matter-access.ts",
+        "apps/api/src/modules/activity/routes.ts",
+        "apps/api/src/modules/portal/applets.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "packages/shared/src/index.ts",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "where": "Before you start, bullets 1 and 2",
+          "before": "Business Users need access to the record. Business Users reply on their own Request and do not need access to the Contract or Matter created from it.",
+          "after": "A Business User must be on the team of a non-archived Contract or Matter. Business Users reply on their Request until conversion; conversion adds the Requester to the new record's team, and current team membership then controls access.",
+          "basis": "contractTeamScope/matterTeamScope limit business_user to non-archived records they are on; requestArm.resolve hands a converted Request to the record arm; createContract/createMatter insert a team row for businessOwnerId, which convert.ts sets to the requester (DD-023 section 5)."
+        },
+        {
+          "where": "Choose an audience on a record, step 2, step 4, table, and paragraph",
+          "before": "Composer offers Legal only, Working team, and Full thread under Audience.",
+          "after": "On a Contract or Matter the composer offers Legal Only and Contract Team or Matter Team, starting on the team audience. Older working_team comments show as Internal team and cannot be chosen. Contract Team and Matter Team are the Full Thread tier.",
+          "basis": "composerTiers returns [legal_only, full_thread] for Member+ on matter/contract/request; useComposer defaults matter and contract to full_thread; tierLabel maps full_thread to Contract Team/Matter Team and working_team to Internal team; the Audience legend is screen-reader-only; CMT-003 addenda of 2026-09-09 and 2026-09-10."
+        },
+        {
+          "where": "Mention a person, step 2 and paragraph",
+          "before": "Choose the person from People you can mention.",
+          "after": "Choose the person on the People tab. Administrators and Legal Team Members also see a Files tab; a file reference links a Document, grants no access, and sends no notification.",
+          "basis": "The typeahead has People and Files tabs (Files only when canReadContracts); the listbox is named People and files you can mention; CMT-002 Document references addendum."
+        },
+        {
+          "where": "Attach paper to a comment, step 4",
+          "before": "Select an attachment's filename to retrieve it.",
+          "after": "Select the filename to preview it; use its Download control to retrieve the file.",
+          "basis": "CommentAttachmentRows: the filename button opens AttachmentPreview; a separate link named Download {filename} downloads."
+        },
+        {
+          "where": "Attach paper to a comment, filing paragraph",
+          "before": "Only Contract conversations offer File; Matter and Request conversations do not.",
+          "after": "Contract and Matter conversations offer File to Contract or File to Matter, also in the preview; Request conversations and archived records do not; the attachment shows Filed to with its Document and Version.",
+          "basis": "matter-record.tsx passes filing with canFile for Member+ on a non-frozen Matter; comments.attachments.fileMatter; the filing route accepts contract and matter and refuses other threads; comments.attachments.filedTo."
+        },
+        {
+          "where": "Reply from the Portal, conversion paragraph",
+          "before": "After conversion, the Request address opens its record.",
+          "after": "Added that the Requester is on the new record's team and that an archived destination shows the original request with no conversation.",
+          "basis": "portal-request.tsx redirects to redirectTo and shows portal.request.archivedRecord for an archived destination; DD-023 section 5."
+        },
+        {
+          "where": "Read the Activity feed, second paragraph",
+          "before": "A Request in the Inbox has its conversation but no History panel.",
+          "after": "Added that a converted Request in the Inbox has no conversation and the reader opens its linked record.",
+          "basis": "inbox-request.tsx passes no applets and disables the comment applet when status is converted."
+        }
+      ],
+      "confirmedClaims": [
+        "Comments applet label Comments; composer box New comment; submit Comment; Show older at the head of the thread.",
+        "Unread badge excludes the viewer's own comments, deleted and redacted comments, and tiers the viewer cannot read; opening the loaded thread marks it read.",
+        "Inbox Request composer offers Legal only and Shared with requester, starts on Legal only; older working_team Request comments read Working team and are not shared with Business Users.",
+        "Mentioned list with Remove {name}; Widen the audience? with Widen and post and Cancel; cancel posts nothing; edit keeps the mention list.",
+        "Attach files, up to five files (MAX_COMMENT_ATTACHMENTS = 5), Remove {filename} before posting; attachments carry the comment's tier.",
+        "Comment actions offers Edit and Delete to the author on a live comment; Edit comment, Save, Cancel, edited marker; Delete this comment? then Delete leaves Comment deleted by its author.; tier immutable.",
+        "Redact is Administrator-only, reaches author-deleted comments, and removes body, revisions, mentions, attachment rows and blobs; tombstone Comment removed by an Administrator.; an edit of another author's words is refused.",
+        "Portal record shell mounts the same applet with surface portal: no audience picker, Full Thread only, own edit and delete, no Redact, no filing.",
+        "Staff History is Member+ only and tier-filtered; Portal History returns Full Thread comment actions and business Field edits only, on Contracts, Matters, and never-converted Requests.",
+        "Full Thread on a Contract or Matter reaches Business Users currently on the team; removal removes access through old Request links (DD-023)."
+      ]
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256Before": "c8486d900c84f91f186fb20b74e3d67bb9167533b8f5e6835b63ef2a45744269",
+      "contentSha256After": "4a4ea2e07dbe4ca65c8765623fc7aafbbac0625ad5db496b3acb07475003255b",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS.md (DD-023)",
+        "apps/web/src/components/notification-bell.tsx",
+        "apps/web/src/lib/notifications.ts",
+        "apps/web/src/components/notification-preferences.tsx",
+        "apps/web/src/components/portal/notification-preferences.ts",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/routes/settings-notifications.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/shell/user-menu.tsx",
+        "apps/web/src/components/key-date-reminder-fields.tsx",
+        "apps/api/src/modules/notifications/routes.ts",
+        "apps/api/src/lib/notifications/catalog.ts",
+        "apps/api/src/lib/notifications/preferences.ts",
+        "apps/api/src/lib/notifications/audience.ts",
+        "apps/api/src/lib/notifications/notifier.ts",
+        "apps/api/src/lib/key-date-reminders.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-NOTIFICATIONS.md (NOT-002 addendum 2026-08-22, M21/11)",
+        "apps/api/src/lib/notifications/email.ts"
+      ],
+      "corrections": [
+        {
+          "where": "Open a notification, steps 2 to 4",
+          "before": "Opening the panel marks the displayed items read.",
+          "after": "Opening the panel marks nothing read; a dot marks unread items; selecting an item marks that item read; Mark all read appears only while unread items exist.",
+          "basis": "NotificationBell calls markRead for the one clicked item and has no read-on-open write; the read route summary cites the NOT-005 2026-09-09 amendment; Mark all read renders when unread > 0."
+        },
+        {
+          "where": "Portal bell paragraph",
+          "before": "The Portal bell concerns your own Requests and returns you to the Request after conversion.",
+          "after": "The Portal bell covers your own Requests and the Contracts and Matters whose team you are on; a converted Request item opens the record while you stay on its team.",
+          "basis": "portalScope admits requester events filtered by requestDestinationScope and shared record events through portalRecordScope; hrefFor sends Portal contract and matter items to /portal/contracts|matters/N."
+        },
+        {
+          "where": "Staff group table, Assigned to you and New requests rows",
+          "before": "Assigned to you omitted Contract team additions and generated Contracts; New requests covered only new Requests.",
+          "after": "Assigned to you names Contract team additions and generated Contracts where you are the Legal Owner; New requests names unassigned Contracts arriving in the Inbox.",
+          "basis": "EVENT_GROUP maps contract.team_added and contract.generated to assigned_to_you and contract.generated_unassigned to new_requests; GROUP_COPY detail strings."
+        },
+        {
+          "where": "Paragraph after the staff table",
+          "before": "A Business User does not receive Inbox arrivals or Legal-only Knowledge updates because a switch is present.",
+          "after": "A Business User does not receive Inbox arrivals, date reminders, or the daily briefing.",
+          "basis": "Business Users never see the staff pane; inboxAudience is Member+; the morning round selects users with role other than business_user."
+        },
+        {
+          "where": "Change Portal preferences, step 2 and paragraph",
+          "before": "Groups named Request updates, Mentions, and Activity on your records; Mentions covers shared comments that name you.",
+          "after": "Groups are Request updates, Assigned to you, and Activity on your records; Assigned to you covers Contract team additions and shared mentions on your Contracts and Matters; In-app off stops both channels for that group.",
+          "basis": "PORTAL_GROUPS and PORTAL_COPY (portal.settings.assignments = Assigned to you); EVENT_GROUP_POLICY defaults; PORTAL_SHARED_EVENTS."
+        },
+        {
+          "where": "Understand reminder timing, recipient paragraph",
+          "before": "No statement about Business Users on the team.",
+          "after": "Business Users on the team are not offered as recipients, because they receive no date reminders.",
+          "basis": "keyDateReminderOptions excludes role business_user; validateKeyDateRecipients refuses them; morning round excludes business_user."
+        },
+        {
+          "round": "correction round after independent walkthrough",
+          "contentSha256Before": "edd7436b8baac1519ed7b4b4b2a984746939ac7bfd90c1455f6137570aa6dbb2",
+          "contentSha256After": "4a4ea2e07dbe4ca65c8765623fc7aafbbac0625ad5db496b3acb07475003255b",
+          "where": "Change Portal preferences, new paragraph after the group paragraph",
+          "before": "Activity on your records covers shared comments on your Contracts and Matters. Nothing said that the Requester of a converted Request gets those comments another way.",
+          "after": "On a Contract or Matter converted from your Request, a shared comment reaches you as a reply under Request updates (bell item 'replied on your request', email subject 'Legal replied on ...'). Turning off Activity on your records Email does not stop that email; Request updates Email does. Team members who did not raise the Request get the comment under Activity on your records.",
+          "basis": "Independent walkthrough found Jonas Weber (Requester of R-123, converted to C-147) got request.replied with email, and Amara Nwosu got comment.posted. Source: commentOnRecord and fanOutToMatter in notifier.ts call requestConvertedInto (audience.ts) for both Contracts and Matters, drop the Requester from comment.posted at full_thread, and raise request.replied, whose group is requester_events (catalog.ts, default In-app and Email on). email.ts subject for request.replied is 'Legal replied on <request>'. Task comments (taskId set) do not raise the reply. Decision: NOT-002 addendum 2026-08-22 (M21/11), 'The reply promise follows the thread onto the record'. The walkthrough classed this as doc-error; the app behaviour is deliberate, so no product bug."
+        }
+      ],
+      "confirmedClaims": [
+        "Bell trigger named Notifications with unread count; badge caps at 9+; Show older pages 25 at a time; failure texts Notifications could not be read. Close this and open it again. and The older notifications could not be read. Try again.",
+        "Staff path profile menu Settings, Personal, Notifications; cards Notification preferences and Briefing; saved status note per card; failed save reverts the switch.",
+        "Staff groups and defaults: Assigned to you in-app and email on; Activity on your records in-app on, email off; Dates approaching in-app switch only; New requests in-app on, email off; Knowledge items email switch only.",
+        "In-app off suppresses the group entirely, email included (notifier returns no recipients when choice.inApp is false; settings caption).",
+        "Briefing sections Approvals, Tasks, Dates, Obligations on and Intake off by default; caption says the switches change email only and Home sections and the bell summary stay on.",
+        "Portal header control Notification settings; Portal pane has no Briefing card; defaults Request updates and Assigned to you both on, Activity on your records in-app on and email off.",
+        "Morning round runs hourly in UTC, serves a person once per local day after 08:00 in the saved timezone, and uses UTC without a saved timezone.",
+        "Key date extra lead times are whole days 0 to 730, at most 20; dialog shows Global reminders and This date will remind; Use the usual audience clears the selection; departed recipients are not reminded and the selection does not widen."
+      ]
+    }
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/contributor-guide.md line 41 links comments-and-activity.md with the old title Comments, attachments, and activity; the catalog title is Choose who can read a comment.",
+    "docs/user-guides/follow-request.md line 38 links comments-and-activity.md with the old title Comments, attachments, and activity.",
+    "docs/user-guides/triage-requests.md step 6 is consistent with the Inbox composer; no change needed."
+  ]
+}

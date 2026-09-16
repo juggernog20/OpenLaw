@@ -4,17 +4,17 @@ Register your own corporate Entities and select the external Counterparties on a
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator. Business Users do not have access to the Entities destination. A Confidential Entity requires an explicit Grant unless you are an Administrator; see [Entity structure and access](entity-structure-and-access.md).
+Sign in as a Legal Team Member or Administrator. Business Users do not have access to the Entities destination. A Confidential Entity requires a Grant for every person, including Administrators; see [Entity structure and access](entity-structure-and-access.md).
 
 Have the registered legal name and an available Entity type. Ask an Administrator to maintain missing [types and Fields](types-statuses-fields.md).
 
 ## Register and update an Entity
 
 1. Open **Entities**. Its first view is **Calendar**; select **List** to browse the registry.
-2. Check the existing records before creating another. Use **Type**, **Status**, **Jurisdiction**, or **Majority owner** to narrow the list; use **Clear all** to remove filters.
-3. Select **Register entity**. Enter **Legal name** and choose **Entity type**.
+2. Check the existing records before creating another. Use **Search entities by name** to find a name. Use **Type**, **Status**, **Jurisdiction**, or **Majority owner** to narrow the list; use **Clear all** to remove filters.
+3. Select **Add entity**. Enter **Legal name** and choose **Entity type**.
 4. Choose **Status** and enter the available identity details: **Formation jurisdiction**, **Formed on**, **Registration no.**, **Tax ID**, **Registered agent**, and **Registered address**. The Status defaults to **Active**.
-5. Select **Register** and open the new Entity. On **Overview**, change an individual field and move focus away to save it. A selection saves when you choose it. Check the saved result before leaving.
+5. Select **Register** and open the new Entity. You receive a Grant for the Entity that you add. On **Overview**, change an individual field and move focus away to save it. A selection saves when you choose it. Check the saved result before leaving.
 
 Entity names are not unique. Registering the same legal name again creates another Entity; it does not update or merge the existing record. Compare jurisdiction and registration details before selecting a record.
 

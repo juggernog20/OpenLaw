@@ -1,0 +1,83 @@
+{
+  "section": "twoFactor",
+  "reviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "approver-groups": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "authentication-and-email": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1"
+  },
+  "startedAt": "2026-09-16T15:44:03.937Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "With Require two-factor authentication on under Legal User Authentication, an Administrator without an authenticator must set one up before continuing",
+      "expected": "Sign-in leads to enrolment with the organization requirement; enrolment then reaches the app",
+      "startedAt": "2026-09-16T15:44:04.028Z",
+      "finishedAt": "2026-09-16T15:44:34.590Z",
+      "actual": "Check failed: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Done' })\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Each new session must prove a code",
+      "expected": "A fresh password sign-in asks for a code",
+      "startedAt": "2026-09-16T15:44:34.591Z",
+      "finishedAt": "2026-09-16T15:44:35.087Z",
+      "actual": "A fresh password sign-in went to /auth/two-factor with \"Enter the 6-digit code from your authenticator app.\" Before the code /api/v1/me answered 401; after Verify it answered 200.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Required two-factor applies to email magic links too",
+      "expected": "A Legal Team Member without an authenticator is sent to set one up after a magic-link sign-in",
+      "startedAt": "2026-09-16T15:44:35.087Z",
+      "finishedAt": "2026-09-16T15:44:36.682Z",
+      "actual": "After the magic-link sign-in the Legal Team Member was sent to /auth/two-factor/enroll; /api/v1/me reported setup required (true), and a work API call (/api/v1/matters) answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Turn off Require two-factor authentication",
+      "expected": "Policy saved off",
+      "startedAt": "2026-09-16T15:44:36.682Z",
+      "finishedAt": "2026-09-16T15:44:37.184Z",
+      "actual": "The switch saved off ({\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}). The Administrator's own authenticator stays enrolled.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Last Administrator safeguard: the only Administrator cannot be demoted",
+      "expected": "Refused with a message",
+      "startedAt": "2026-09-16T15:44:37.184Z",
+      "finishedAt": "2026-09-16T15:44:37.501Z",
+      "actual": "On the owned lab, where DOC-029 Auth Admin is the only active Administrator (1), choosing Legal team member on the own row showed \"You cannot demote the last Administrator.\" and the role stayed administrator. Archiving the same account through the API was refused with 409 (\"You cannot archive the last Administrator.\").",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Turn on Require two-factor authentication as an Administrator who has no authenticator",
+      "expected": "OpenLaw asks that Administrator to set one up before continuing",
+      "startedAt": "2026-09-16T15:44:37.502Z",
+      "finishedAt": "2026-09-16T15:44:39.280Z",
+      "actual": "The Legal Team Member was temporarily made an Administrator. In their own session, selecting Require two-factor authentication under Legal User Authentication took them straight to /auth/two-factor/enroll with \"Your organization requires two-factor authentication.\" The enrolled Administrator then turned the switch off (\"Saved\") and returned the colleague to Legal team member.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:44:39.284Z"
+}

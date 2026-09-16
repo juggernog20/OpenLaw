@@ -1,0 +1,169 @@
+{
+  "section": "policy",
+  "reviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "approver-groups": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "authentication-and-email": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1"
+  },
+  "startedAt": "2026-09-16T15:31:35.864Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Prepare staff: invite a Legal Team Member who sets a password, and two colleagues who stay invited",
+      "expected": "Rows exist with the expected status",
+      "startedAt": "2026-09-16T15:31:36.384Z",
+      "finishedAt": "2026-09-16T15:31:37.593Z",
+      "actual": "Rows: {\"doc029-auth-legal@helix.example\":\"Active\",\"doc029-auth-sso@helix.example\":\"Invited\",\"doc029-auth-staff@elsewhere.example\":\"Invited\"}.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Settings, Security, Authentication: two policy cards with four switches; SSO unavailable before a provider is registered",
+      "expected": "Legal User Authentication and Business Portal Authentication cards; Single sign-on (SSO) disabled",
+      "startedAt": "2026-09-16T15:31:37.593Z",
+      "finishedAt": "2026-09-16T15:31:37.896Z",
+      "actual": "Settings rail Security expanded to Authentication. Switches: {\"Legal User Authentication\":[\"Email and password:true\",\"Email magic link:true\",\"Single sign-on (SSO):false:disabled\",\"Require two-factor authentication:false\"],\"Business Portal Authentication\":[\"Email and password:true\",\"Email magic link:true\",\"Single sign-on (SSO):false:disabled\",\"Require two-factor authentication:false\"]}.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Allowed email domains: Add an approved domain and check the saved list",
+      "expected": "Saved; survives reload",
+      "startedAt": "2026-09-16T15:31:37.896Z",
+      "finishedAt": "2026-09-16T15:31:38.287Z",
+      "actual": "The empty list read \"No domains allowed yet. Magic-link sign-in is unavailable.\" After Add, northwind.example appeared with a \"Remove northwind.example\" control and stayed after reload ([\"northwind.example\"]).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A policy with no sign-in method is refused",
+      "expected": "Enable at least one sign-in method.",
+      "startedAt": "2026-09-16T15:31:38.287Z",
+      "finishedAt": "2026-09-16T15:31:39.231Z",
+      "actual": "Turning off Email magic link showed \"Saved\". Turning off Email and password as the last method showed \"Enable at least one sign-in method.\" and the stored Legal policy kept password on. Email magic link was turned back on (\"Saved\").",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Emergency password sign-in: Email and password off under Legal User Authentication",
+      "expected": "An Administrator with a password still signs in; a Legal Team Member cannot",
+      "startedAt": "2026-09-16T15:31:39.231Z",
+      "finishedAt": "2026-09-16T15:31:40.876Z",
+      "actual": "With Email and password off (\"Saved\"), the Administrator signed in with a password (me 200, role administrator). The Legal Team Member with a password was refused (Password sign-in is disabled for this account.; me 401). Email and password was turned back on.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Email magic link under Legal User Authentication: existing staff get a link even when their domain is not allowed",
+      "expected": "Staff on helix.example and elsewhere.example receive links; an invited staff row stays Invited after magic-link sign-in",
+      "startedAt": "2026-09-16T15:31:40.877Z",
+      "finishedAt": "2026-09-16T15:31:43.073Z",
+      "actual": "Allowed domains held only northwind.example. doc029-auth-legal@helix.example: link received, me 200 role legal_team_member; doc029-auth-staff@elsewhere.example: link received, me 200 role legal_team_member. The off-domain colleague's row still read Invited after the magic-link sign-in.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "New Portal entrant on an allowed domain gets a link; an unapproved address gets no link or password setup link",
+      "expected": "Allowed address becomes a Business User; unapproved address gets no mail and no account",
+      "startedAt": "2026-09-16T15:31:43.073Z",
+      "finishedAt": "2026-09-16T15:31:47.108Z",
+      "actual": "doc029-auth-portal@northwind.example got \"Sign in to OpenLaw\", opened the Portal and is a business_user. doc029-auth-unapproved@unlisted.example saw the neutral \"Check your email\" and password-setup confirmations, but Mailpit received 0 messages and no account exists.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A Business User sets a password through the Portal password setup link and signs in with Email and password",
+      "expected": "Password setup email; password sign-in reaches the Portal",
+      "startedAt": "2026-09-16T15:31:47.108Z",
+      "finishedAt": "2026-09-16T15:32:17.666Z",
+      "actual": "Check failed: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: /Sign in with a password|Administrator sign-in/ }).first()\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Remove the domain: no new links for anyone on it, but existing access continues as the article describes",
+      "expected": "Existing Business User gets no new link; held session, earlier link, and password sign-in still work; new-address setup refused at completion; staff unaffected",
+      "startedAt": "2026-09-16T15:32:17.668Z",
+      "finishedAt": "2026-09-16T15:32:53.374Z",
+      "actual": "Check failed: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: /Sign in with a password|Administrator sign-in/ }).first()\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Turn off Email magic link under Business Portal Authentication: earlier links stop working and the Portal page offers other methods",
+      "expected": "Earlier link refused; no magic-link choice on the Portal page; password sign-in still works",
+      "startedAt": "2026-09-16T15:32:53.374Z",
+      "finishedAt": "2026-09-16T15:33:06.435Z",
+      "actual": "Check failed: Cannot read properties of null (reading 'link')",
+      "result": "fail"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:33:06.443Z",
+  "identities": [
+    {
+      "key": "admin",
+      "account": "doc029-auth-admin@helix.example"
+    },
+    {
+      "key": "legal",
+      "account": "doc029-auth-legal@helix.example"
+    },
+    {
+      "key": "ssoStaff",
+      "account": "doc029-auth-sso@helix.example"
+    },
+    {
+      "key": "offDomainStaff",
+      "account": "doc029-auth-staff@elsewhere.example"
+    },
+    {
+      "key": "portalNew",
+      "account": "doc029-auth-portal@northwind.example"
+    },
+    {
+      "key": "portalPassword",
+      "account": "doc029-auth-portal-pw@northwind.example"
+    },
+    {
+      "key": "portalLate",
+      "account": "doc029-auth-portal-late@northwind.example"
+    },
+    {
+      "key": "unapproved",
+      "account": "doc029-auth-unapproved@unlisted.example"
+    },
+    {
+      "key": "jit",
+      "account": "doc029-auth-jit@northwind.example"
+    },
+    {
+      "key": "uninvitedStaff",
+      "account": "doc029-auth-uninvited@helix.example"
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "batch": "DOC-029",
+  "group": "operator-lifecycle",
+  "author": "DOC-029 source-review author agent (operator-lifecycle)",
+  "reviewer": "DOC-029 source-review author agent (operator-lifecycle)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T15:01:58Z",
+  "method": "source-inspection",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "scopeNote": "Source reading only. No walkthrough, lab, or container operation was run by this agent. The V-C46, V-C47 and V-C48 container-operation scenarios still need an independent rerun on 3fa407e3. Deployment files that did not change between the two app commits (compose.yml, Dockerfile, .env.example, services/doc-engine, packages/db/src/secrets.ts, apps/api/src/lib/storage/config.ts, apps/api/src/lib/uploads.ts, packages/db/migrations/0060_account_issuer.sql, scripts/lint-migration-journal.mjs) were confirmed unchanged with git diff and re-read where an article quotes them.",
+  "upgradePair": {
+    "baseline": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+    "baselineBasis": "The earlier build used by docs/documentation/evidence/upgrade.json. It is an ancestor of 3fa407e3.",
+    "candidate": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "migrationPathFinding": "The baseline and 6a8873db both record 0090_request_triage_assignee at 1788637394684 with hash a74c7240bdfda1ef490996e0295d81f23f6d81e53a2d79b6f4b814f6ed12af19. At 3fa407e3 that migration is renumbered 0092 (new hash), and 0090_onboarding_reviewed_types (1788630266749) plus 0091_account_issuer_retired (1788676706424) are inserted. The recorded a74c7240 row matches HOME_BRANCH_MIGRATIONS in packages/db/src/migration-journal.ts, so reconcileHomeBranch applies 0090_onboarding_reviewed_types directly and the normal migrator then applies 0091 onward. 0092 is idempotent (ADD COLUMN IF NOT EXISTS, guarded constraint, CREATE INDEX IF NOT EXISTS). packages/db/src/index.ts logs 'migrations: reconciled <tag>; continuing with pending migrations'. Covered by apps/api/src/request-assignment-migration.test.ts. The upgrade should therefore start without manual journal work; the walkthrough must confirm it."
+  },
+  "articles": [
+    {
+      "articleId": "upgrade",
+      "previousContentSha256": "96cc17166c77af291161ea34540f2c1c9683d2736cd903c42e2692ba9fe8e94d",
+      "contentSha256": "4ef9d09163a7db9453fdbf3a237aad580c345b3461d8c02ad2f74d1a47d2cd6d",
+      "result": "corrected",
+      "classification": "Behavior change. The candidate revision changed, and the target now reconciles the migration journal at startup with a new log line. Prior V-C46 evidence does not cover the corrected text; rerun the container-operation walkthrough from d1d098ba to 3fa407e3.",
+      "sources": [
+        "compose.yml",
+        "Dockerfile",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "docs/user-guides/install.md",
+        "packages/db/src/index.ts",
+        "packages/db/src/migration-journal.ts",
+        "packages/db/migrations/meta/_journal.json (at d1d098ba, 6a8873db and 3fa407e3)",
+        "packages/db/migrations/0090_onboarding_reviewed_types.sql",
+        "packages/db/migrations/0091_account_issuer_retired.sql",
+        "packages/db/migrations/0092_request_triage_assignee.sql",
+        "packages/db/migrations/0133_mandatory-two-factor.sql",
+        "packages/db/migrations/0134_authentication-methods.sql",
+        "apps/api/src/request-assignment-migration.test.ts",
+        "apps/api/src/index.ts",
+        "apps/api/src/auth/authentication-policy.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/modules/onboarding/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/lib/mailer.ts"
+      ],
+      "corrections": [
+        {
+          "where": "Before you start (candidate revision) and Prepare the target step 2 (git checkout)",
+          "before": "The candidate and checkout target is 6a8873dbda333fd9992eb77525d4bfa3f47af20d.",
+          "after": "The candidate and checkout target is 3fa407e3a846559914aa1a63249741f30cfb4f69. The starting build stays d1d098ba9f4ba6557a542857d530446b76b1847c.",
+          "sources": ["docs/documentation/evidence/upgrade.json", "docs/user-guides/install.md"]
+        },
+        {
+          "where": "Start and verify the upgrade, step 1",
+          "before": "The app runs migrations at startup; no startup log line is described.",
+          "after": "From the named starting build, the app log first shows 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'. The article says this is expected, because the starting build recorded an earlier numbering of the Request assignment migration.",
+          "sources": [
+            "packages/db/src/migration-journal.ts (HOME_BRANCH_MIGRATIONS, reconcileHomeBranch)",
+            "packages/db/src/index.ts (runMigrations warning)",
+            "packages/db/migrations/meta/_journal.json"
+          ]
+        }
+      ],
+      "confirmed": [
+        "compose.yml, Dockerfile and .env.example are unchanged since 6a8873db; the app still runs migrations at boot and the worker starts after the app without migrating.",
+        "OPENLAW_BUILD_COMMIT is a build argument; install.md defines per-revision image tags through compose.operator.yml, so building the target does not recreate running containers.",
+        "Postgres stays postgres:16; the procedure does not change its major version.",
+        "The named volumes openlaw-pgdata and openlaw-files hold the installation; 'docker compose down -v' deletes them.",
+        "Completion of first-run still depends on onboardingCompletedAt, so an upgraded instance is not sent back into the Welcome wizard.",
+        "Existing sign-in methods survive: authentication_policy is null after 0134 and authenticationPolicy() derives it from the legacy authMode and magicLinkEnabled; require_two_factor defaults to false.",
+        "0091 drops accounts.issuer, and apps/api/src/index.ts now stops the boot when better-auth's schema check fails. Both are startup refusals the 'If the upgrade cannot be accepted' section already covers.",
+        "A test email uses the saved relay through POST /email-settings/test and fails with a plain reason when the relay cannot be read, so a Settings state alone is not proof.",
+        "docs/DEPLOYMENT.md still documents no supported downgrade; restoring the pre-upgrade backup into a separate target with the old image remains the recovery path."
+      ]
+    },
+    {
+      "articleId": "backup-and-restore",
+      "previousContentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361",
+      "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
+      "result": "corrected",
+      "classification": "Copy-level completion of a warning list. No command, prerequisite or result changed. The deployment sources the commands depend on are unchanged since 6a8873db, but the recorded app build differs, so the V-C47 container-operation scenario needs a rerun on 3fa407e3 before the article is verified on this build.",
+      "sources": [
+        "compose.yml",
+        "Dockerfile",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "packages/db/src/secrets.ts",
+        "apps/api/src/index.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/lib/storage/config.ts",
+        "apps/api/src/pipeline/automatic-contract-analysis.ts",
+        "apps/api/src/pipeline/reconciliation.ts",
+        "apps/api/src/modules/signing-connector/routes.ts",
+        "packages/db/src/schema/org.ts"
+      ],
+      "corrections": [
+        {
+          "where": "Restore into a different empty target, destinations warning",
+          "before": "Saved configuration and queued work can use the original relay, object store, identity provider, or signing account.",
+          "after": "The list also names the AI provider, because the restored worker calls the saved AI connector for Contract analysis.",
+          "sources": [
+            "docs/DEPLOYMENT.md (AI analysis: the worker makes the provider calls)",
+            "apps/api/src/pipeline/automatic-contract-analysis.ts"
+          ]
+        }
+      ],
+      "confirmed": [
+        "The bundled database user and name are openlaw/openlaw on postgres:16, so the pg_dump, pg_restore and PostgreSQL 16 link match.",
+        "The local file volume mounts at STORAGE_PATH, default /var/lib/openlaw/files, on both app and worker.",
+        "The Dockerfile has CMD and no ENTRYPOINT, so 'docker compose run --rm --no-deps app tar ...' runs tar without starting the API.",
+        "The image runs as the unprivileged node user and creates /var/lib/openlaw/files owned by node.",
+        "OPENLAW_SECRET_KEY encrypts the SMTP relay URL, signing credentials, SSO client secret and AI key; the rest of the database is not encrypted.",
+        "At boot, stored credentials that no configured key opens are logged and left as they are, so they stay recoverable with the correct key.",
+        "Two-factor secrets are handled by the better-auth twoFactor plugin under AUTH_SECRET, so a missing AUTH_SECRET breaks existing two-factor sign-in.",
+        "Signing connectors in Polling mode reconcile outstanding Envelopes from the worker, which is why the target must isolate the signing account before the worker runs."
+      ]
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "previousContentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab",
+      "contentSha256": "c1b48dee9be32950c9c6356a4d87cb833494a6a5fb9b93544dd5854517acd349",
+      "result": "corrected",
+      "classification": "Behavior change. The migration guard gained a second automatic repair with a new log line, and signing connectors gained a Polling mode that needs no public callback. Rerun the V-C48 container-operation scenario on 3fa407e3.",
+      "sources": [
+        "compose.yml",
+        "Dockerfile",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "apps/api/src/index.ts",
+        "apps/worker/src/index.ts",
+        "packages/db/src/secrets.ts",
+        "packages/db/src/index.ts",
+        "packages/db/src/migration-journal.ts",
+        "packages/db/migrations/0060_account_issuer.sql",
+        "packages/db/migrations/0091_account_issuer_retired.sql",
+        "packages/db/migrations/0095_signing_update_mode.sql",
+        "packages/db/src/schema/signing-connectors.ts",
+        "scripts/lint-migration-journal.mjs",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/lib/mailer.ts",
+        "apps/api/src/modules/events/routes.ts",
+        "apps/api/src/modules/signing-connector/routes.ts",
+        "apps/api/src/lib/uploads.ts",
+        "apps/api/src/lib/storage/config.ts",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "messages/en-US.json",
+        "node_modules better-auth 1.7.5 dist/context/create-context.mjs"
+      ],
+      "corrections": [
+        {
+          "where": "Migration failures, journal repair paragraph",
+          "before": "Only the known 0049_contract_tasks timestamp repair is automatic.",
+          "after": "Two known repairs are automatic: the 0049_contract_tasks timestamp, and a database that recorded the earlier 0090_request_triage_assignee migration. The app logs 'migrations: reconciled <migration>; continuing with pending migrations'. Other inconsistencies still need a maintainer.",
+          "sources": [
+            "packages/db/src/migration-journal.ts (KNOWN_BAD_STAMPS, HOME_BRANCH_MIGRATIONS, reconcileHomeBranch)",
+            "packages/db/src/index.ts (runMigrations warning text changed from 'corrected the recorded stamp' to 'reconciled')"
+          ]
+        },
+        {
+          "where": "External providers, signing checks",
+          "before": "Check the saved environment/account, enabled state, outbound access, and public Connect callback.",
+          "after": "Also check the Signing updates mode. Polling needs outbound access only. Webhook also needs the public Connect callback.",
+          "sources": [
+            "packages/db/migrations/0095_signing_update_mode.sql",
+            "packages/db/src/schema/signing-connectors.ts (updateMode default polling)",
+            "apps/api/src/modules/signing-connector/routes.ts",
+            "messages/en-US.json (Signing updates, Polling, Webhook)",
+            "docs/DEPLOYMENT.md (Signing updates on private networks)"
+          ]
+        }
+      ],
+      "confirmed": [
+        "Compose refuses to run when AUTH_SECRET or OPENLAW_SECRET_KEY is missing (':?' interpolation in compose.yml).",
+        "OPENLAW_SECRET_KEY shorter than SECRET_KEY_MIN_LENGTH = 32 stops app and worker; better-auth 1.7.5 only logs a warning for an AUTH_SECRET shorter than 32 characters.",
+        "App and worker use restart: unless-stopped; the app healthcheck calls /readyz, which checks the database only.",
+        "The event stream route is /api/events.",
+        "'This database cannot apply the migrations it is missing.' is still the guard's first line, and it names drizzle.__drizzle_migrations.",
+        "scripts/lint-migration-journal.mjs is copied into the image and supports --hashes.",
+        "0060_account_issuer.sql is unchanged and still raises 'Cannot resolve an issuer for accounts under provider(s)' and 'Two accounts share one 1.7 identity'. Installs from before 0060 pass through it before 0091 drops the column.",
+        "SMTP_URL alone pins the mailer to the environment (source env); without SMTP_FROM the mailer is unconfigured. PUT /email-settings is refused while env pins SMTP.",
+        "A saved relay that cannot be read resolves as unset, and the test send fails with 'The test email could not be sent. SMTP is not configured — save a relay first.'",
+        "MAX_UPLOAD_MB defaults to 100; storage, uploads and doc-engine configuration files are unchanged.",
+        "The worker has no port or healthcheck in compose.yml; the doc engine is on an internal network with no published port.",
+        "AI analysis Settings still has Test connection; the API makes the test and model-list calls and the worker makes run calls, so the API probe can pass while the worker fails.",
+        "apps/api/src/index.ts now exits at boot if better-auth's schema check fails; the 'App keeps restarting' row already tells the operator to correct the first specific startup error."
+      ]
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "round": "correction after independent walkthrough",
+      "previousContentSha256": "c1b48dee9be32950c9c6356a4d87cb833494a6a5fb9b93544dd5854517acd349",
+      "contentSha256": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
+      "result": "corrected",
+      "classification": "Doc error. The independent walkthrough found that a failed port bind leaves the app and worker containers in the 'created' state, not removed. The recovery was already correct. No other row failed.",
+      "sources": [
+        "compose.yml",
+        "docs/user-guides/install.md (start command)",
+        "Independent walkthrough on Docker Compose 5.5.1: diag-startup, diag-port-recheck, and one manual run"
+      ],
+      "corrections": [
+        {
+          "where": "Startup, origin, and database table, row 'Port is already allocated'",
+          "before": "A failed bind leaves the app and worker containers removed, so the instance stays down until the port is corrected and the containers are started again.",
+          "after": "After a failed bind, `docker compose ps --all` shows the app and worker containers in the `created` state. Plain `docker compose ps` does not list them. The instance stays down until you correct the port and run the same `docker compose up -d --no-build --pull never` command again.",
+          "sources": [
+            "Walkthrough observation: 'docker compose up -d --no-build --pull never' exits 1 with 'Bind for 127.0.0.1:<port> failed: port is already allocated'; 'ps --all' shows app and worker as 'created'; after the port fix the same up command started them and /readyz returned 200",
+            "docs/user-guides/install.md line 81 uses the same start command"
+          ]
+        }
+      ],
+      "confirmed": [
+        "Prettier reformatted only the table padding. Reverting the one sentence and formatting again gives the walkthrough's hash c1b48dee..., so no other text changed."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": []
+}

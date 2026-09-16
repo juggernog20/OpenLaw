@@ -39,9 +39,9 @@ The **Connected** badge means the connector is saved and enabled, even before a 
 
 ## Set core Field prompts
 
-The **Field prompts** card sits below **Provider** on this page and holds seven prompts for core Contract values. It has no collapse control and is always open. Edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper, without inferring a period when it is absent.
+The **Field prompts** card is the last card on this page. It sits below **Provider**, and below **Request conversion** after a connector is saved. It holds seven prompts for core Contract values. It has no collapse control and is always open. Edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper, without inferring a period when it is absent.
 
-Press Enter or leave the input to save that prompt, and wait for its save result. Shift+Enter inserts a line break. Escape restores the saved text. Each prompt is required and can contain up to 2,000 characters. For an overridden prompt, **Reset to default** restores that one built-in prompt.
+Press Enter or leave the input to save that prompt, and wait for its save result. Shift+Enter inserts a line break. Each prompt is required and can contain up to 2,000 characters. If you clear a prompt and leave the input, the saved text comes back. For an overridden prompt, **Reset to default** restores that one built-in prompt.
 
 Prompt changes affect subsequent Analysis runs. They do not rewrite earlier results or confirm an existing **Unverified** value. Rerun deliberately after editing a prompt and review the resulting evidence.
 
@@ -87,10 +87,10 @@ When escalating, provide the time, provider, model, displayed error, C- referenc
 
 ## Request conversion switches
 
-Under **AI analysis**, find **Request conversion**. Three independent switches start off for existing installations:
+Under **AI analysis**, find the **Request conversion** card. It appears only after a connector is saved. Its three independent switches start off:
 
 - **Prepare Matter conversions with AI** prepares an editable Conversion draft before Matter creation.
 - **Prepare Contract conversions with AI** prepares an editable Conversion draft before Contract creation.
 - **Fill Contract Fields after conversion** starts a background Analysis run on the created Contract using its confirmed Type, current core/custom prompts and eligible Request answers, conversation and supporting sources. This also works when Contract preparation is off.
 
-Only an Administrator can save these settings. Each switch requires the connector to be enabled. Turning one off stops new application for that workflow. Existing evidence, Unverified values and individual confirm/edit remain available. Ordinary manual Contract analysis keeps its existing control. Follow [Request conversion](convert-request.md) and [Contract analysis](contract-analysis.md) to review proposals, progress, omissions and safe retries.
+Only an Administrator can save these settings. Each switch requires the connector to be enabled. While **Use AI analysis** is off, the switches are unavailable. **Remove connector** also deletes these settings, so a new connector starts with all three off. Turning one off stops new application for that workflow. Existing evidence, Unverified values and individual confirm/edit remain available. Ordinary manual Contract analysis keeps its existing control. Follow [Request conversion](convert-request.md) and [Contract analysis](contract-analysis.md) to review proposals, progress, omissions and safe retries.

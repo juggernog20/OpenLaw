@@ -1,0 +1,15 @@
+FICTIONAL MUTUAL NON-DISCLOSURE AGREEMENT (DOC-029 live signing test paper)
+
+This agreement is fictional. It exists only to test electronic signing. It has no legal effect.
+
+Parties: Helix Example Holdings Ltd and a fictional test Signer.
+
+1. Each party keeps the other party's fictional test information confidential.
+
+2. This test paper creates no obligations.
+
+Signature of the test Signer:
+
+/sig/
+
+Name: DOC-029 Test Signer

@@ -1,0 +1,129 @@
+{
+  "batch": "DOC-029",
+  "group": "knowledge",
+  "author": "DOC-029 source-review author agent (knowledge)",
+  "technicalReviewer": "DOC-029 source-review author agent (knowledge)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "note": "Source inspection only. No walkthrough was run. The independent walkthrough agent must replay V-C33 and V-C34 against the recorded content hashes. Catalog status was not changed.",
+  "articles": [
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "5e0e6144f49cefdeae01ca7744488350531630d3a2f230e9695e75edb8f85a4c",
+      "previousEvidence": "docs/documentation/evidence/create-knowledge.json",
+      "scenarios": ["V-C33"],
+      "sources": [
+        "apps/web/src/routes/knowledge.tsx",
+        "apps/web/src/routes/knowledge-record.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/knowledge/markdown.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/lib/roles.ts",
+        "packages/shared/src/markdown.ts",
+        "packages/db/src/schema/knowledge-items.ts",
+        "apps/api/src/modules/knowledge/routes.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "messages/en-US.json",
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-KNOWLEDGE.md"
+      ],
+      "corrections": [
+        {
+          "section": "Start with files, step 2",
+          "before": "Choose a Type and Folder, or leave the folder as Library (implies Library is always the default).",
+          "after": "Folder starts at the folder selected in the library, or at Library. CreateFromFilesDialog receives initialFolder={selectedFolder}.",
+          "kind": "prerequisite/result correction"
+        },
+        {
+          "section": "Start with files, closing paragraph",
+          "before": "To put several Documents on one item, create the item first and upload supporting files in the Documents section.",
+          "after": "Attach them in New Knowledge Item, or upload them later in the Documents section. CreateItemDialog now embeds CreateAttachments (Attach documents).",
+          "kind": "behavior change"
+        },
+        {
+          "section": "Start with guidance, step 2",
+          "before": "Enter Title, choose Type and Folder, select Create item.",
+          "after": "Adds the optional Attach documents control and Document kind select, and the partial-failure outcome (item exists; Retry failed uploads or Continue). Labels from createAttachments.* messages.",
+          "kind": "behavior change"
+        },
+        {
+          "section": "Start with guidance, step 3",
+          "before": "Enter instructions in Guidance in Markdown; headings, lists, emphasis, code, and links are supported.",
+          "after": "The editor's label is now the visually hidden 'Guidance', its placeholder is 'Write guidance for your team…', and its help text is 'Use Preview to see how your guidance will appear to readers.'. The UI no longer names Markdown. The shared parser (packages/shared/src/markdown.ts) still renders the same Markdown subset, so the article keeps the rules and says the editor does not show them.",
+          "kind": "label change"
+        },
+        {
+          "section": "Add Documents and choose the primary, step 2",
+          "before": "Open the desired Document's Actions menu and select Set as primary.",
+          "after": "The first Document added becomes primary automatically (POST /knowledge/:id/documents and from-files set primaryDocumentId when it is null); Set as primary is offered only on non-primary rows.",
+          "kind": "result clarification"
+        }
+      ],
+      "confirmed": [
+        "Knowledge list and record loaders redirect non-Member+ users to Home; API routes use requireRole(administrator, legal_team_member). Contributor no longer exists (DD-023); the article does not name it.",
+        "New menu offers New from files and New Knowledge Item; New from files dialog has Drop files here or choose files, Type, Folder (Library), Create drafts, and opens the first created item.",
+        "Record Title commits on Enter or blur; Type, Folder and Audience commit on change.",
+        "New items default to state draft and audience legal_only (database defaults).",
+        "Guidance: Add guidance, Preview / Edit toggle, blur commit; raw HTML is not rendered as HTML.",
+        "Primary document control with Open preview; Documents row Actions menu (Actions for {title}) with Set as primary; Primary mark.",
+        "Knowledge Documents have no folders (folders: entityType !== knowledge_item).",
+        "Folder tree: All Knowledge, Add folder (parent is selected folder), Rename or move selected folder with Folder name / Parent folder / Save folder, Move {name} up/down, Delete selected folder with 'Its folders and items move to the parent folder. Nothing is deleted.' and Delete folder.",
+        "Filters Type, State, Audience, Author, Format and Clear filters.",
+        "Manage types… appears beside Type only for Administrators and links to /settings/knowledge/types; type options exclude archived types.",
+        "Archived item: Title, Type, Folder, Audience, Add guidance and Preview disabled; Upload hidden; API answers 409 'Restore this Knowledge Item before adding Documents.' and 'Restore this Knowledge Item before editing it.'.",
+        "All linked anchors exist: document-versions.md#upload-a-new-document, document-previews.md#processing-scans-and-failed-previews, publish-knowledge.md#withdraw-or-restrict-an-item, publish-knowledge.md#archive-and-restore."
+      ]
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "18918ce410b68ee48ca7bfc2217bc187ef24da783f5817298c0cf1188336e7bd",
+      "previousEvidence": "docs/documentation/evidence/publish-knowledge.json",
+      "scenarios": ["V-C34"],
+      "sources": [
+        "apps/web/src/routes/knowledge-record.tsx",
+        "apps/web/src/routes/knowledge.tsx",
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/routes/settings-intake-links.tsx",
+        "apps/web/src/components/intake-settings-tabs.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/api/src/modules/knowledge/routes.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/intake-links/routes.ts",
+        "messages/en-US.json",
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-KNOWLEDGE.md"
+      ],
+      "corrections": [
+        {
+          "section": "Check a missing item or file, last paragraph",
+          "before": "Reopen the archive dialog to refresh its Replaced by choices.",
+          "after": "The Replaced by list loads once while the record page is open (readReplacementItems re-reads only after a failed read), so reload the record before reopening the dialog.",
+          "kind": "recovery step correction"
+        }
+      ],
+      "confirmed": [
+        "Publish, Unpublish, Archive and Restore routes use requireMember (Administrator and Legal Team Member); no approval step.",
+        "Knowledge Item actions menu offers Publish on a draft, Unpublish on a published item, Archive on a live item, Restore on an archived item.",
+        "Draft marker shows for draft; On the portal shows only for published, Everyone, not archived.",
+        "Remove this from the portal? appears on Unpublish or a change to Legal Only when deflectionLinkCount > 0, with Cancel and Continue.",
+        "Settings > Intake > Deflection links (/settings/intake/links), Add link, Target (External address / Knowledge item), Knowledge item picker limited to published, Everyone, not archived items, Label, Placement (Portal home or a request type).",
+        "Portal home and request forms render the Before you submit panel.",
+        "Portal knowledge API gates on published + everyone + not archived; primary Document sorts first; guidance renders after Documents; archived Documents are excluded; download route applies the same gate; unavailable items answer 404 and the portal page redirects to /portal.",
+        "Archive dialog: Archive Knowledge Item, Replaced by, No replacement, Archive; API refuses an archived replacement with 409.",
+        "Restore clears archivedAt only, so state and audience are preserved.",
+        "The staff Knowledge list excludes archived items and has no archived toggle; an archived record still opens by its address."
+      ]
+    }
+  ],
+  "limitations": [
+    "Source inspection proves label and rule accuracy only. It does not prove the steps can be followed.",
+    "Business User portal first run (portal onboarding, SET-011) was not examined; a walkthrough may meet it before the Portal home."
+  ]
+}

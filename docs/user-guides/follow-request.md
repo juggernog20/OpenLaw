@@ -12,7 +12,7 @@ Use your Request to follow Legal's response. Once Legal converts it, use the sam
 2. Open it and check the title and R- reference.
 3. Read its status and **Owner**. The same owner appears under **Your requests**. **Not assigned yet** means no triage assignee is recorded.
 4. Open **Comments** in the applet bar on the right for Legal's replies. Select **Show older** when you need older messages.
-5. Check **What you submitted** for the saved description, original attachments, urgency, and available additional answers. Select an attachment's filename to download it.
+5. Check **What you submitted** for the saved description, original attachments, Department, urgency, and available additional answers. Select an attachment's filename to download it.
 
 | Status       | Meaning in the Portal                                                                      |
 | ------------ | ------------------------------------------------------------------------------------------ |
@@ -35,7 +35,7 @@ The Request's **Owner** is its current triage assignee, separate from a resultin
 
 You can reply while the Request is Open, Resolved or Declined. After conversion, reply on the record. The **Attach new files to a reply** link on a Resolved or Declined Request takes you to its composer. A reply does not reopen a Resolved or Declined Request or change submitted answers; explain the correction or further help you need to Legal.
 
-The Portal shows the conversation shared with the Requester. You do not choose an audience or see Legal Only and Working Team messages. See [Comments, attachments, and activity](comments-and-activity.md) for the shared attachment limits and conversation behavior.
+The Portal shows the conversation shared with the Requester. You do not choose an audience or see Legal Only and Working Team messages. See [Choose who can read a comment](comments-and-activity.md) for the shared attachment limits and conversation behavior.
 
 ## If it does not work
 

@@ -22,7 +22,7 @@ See [Create and maintain a Contract](create-contract.md) for the optional Matter
 
 ## End or reopen a Contract
 
-Use the Stage control to choose a Status mapped to **Ended**, such as Expired or Terminated if your organization uses those names. Check the Status and Activity. Ending records the lifecycle change; the Contract remains editable for later paper and notes.
+Use the Stage control to choose a Status mapped to **Ended**, such as Expired or Terminated if your organization uses those names. Check the Status and the Activity feed in **History**. Ending records the lifecycle change; the Contract remains editable for later paper and notes.
 
 The default Contracts view excludes ended work. Open **Filter** and enable **Show ended**. Review any other active filters or saved view if the Contract remains hidden. To reopen it, select the appropriate non-ended Status. This is another recorded Status change; it does not delete the earlier history. [Change a Contract Status](contract-stages.md) covers the control and approval warning.
 
@@ -32,4 +32,4 @@ Open **Contract actions** and select **Archive** for a record you want out of th
 
 To recover it, open **Filter** in the Contracts list and enable **Show archived**. Also enable **Show ended** if the Contract is Ended. Open the Contract and choose **Contract actions** → **Restore**. You can also open its known C- address to restore it. Check that the archived marker is gone and editing is available. Its Status remains what it was, so a restored Ended Contract can still be excluded by the ended-work filter.
 
-Archiving and restoring do not archive or restore linked work. If a link or action is unavailable, check both records' access and archive state and read the refusal before retrying. [Search and saved views](search-and-views.md) explains finding records hidden by filters.
+Archiving and restoring do not archive or restore linked work. While a Contract is archived, its Matter's **Linked Contracts** list does not show it. If a link or action is unavailable, check both records' access and archive state and read the refusal before retrying. [Search and saved views](search-and-views.md) explains finding records hidden by filters.

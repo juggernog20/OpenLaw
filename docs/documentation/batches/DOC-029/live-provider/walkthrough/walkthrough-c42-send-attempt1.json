@@ -1,0 +1,41 @@
+{
+  "phase": "c42-send",
+  "reviewer": "DOC-029 independent live-provider walkthrough agent",
+  "reviewerKind": "agent",
+  "app": "http://127.0.0.1:23314",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "note": "Sanitized. The Signer inbox belongs to the user and is not recorded. No connector secret is recorded.",
+  "contract": "C-38",
+  "subject": "DOC-029 live signing round trip C-38",
+  "signerName": "DOC-029 Test Signer",
+  "startedAt": "2026-09-16T15:38:01.250Z",
+  "steps": [
+    {
+      "id": "S09",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "action": "Send the Envelope: Version, one Signer, Subject, Send envelope; check the new row",
+      "at": "2026-09-16T15:38:01.883Z",
+      "actual": "Version chosen: \"Version 1 — doc029-live-signing.docx (current)\". Send envelope answered 201 after 6177 ms. API: status sent, Document doc029-live-signing.docx Version 1, 1 Signer, sent 2026-09-16T15:38:29.428Z. Row text: DOC-029 Test Signer <signer inbox> doc029-live-signing.docx Version 1 Out for signature Sep 16 by Daniel Okafor —. Send for signature buttons now: 0.",
+      "result": "pass",
+      "sendMs": 6177,
+      "sentAt": "2026-09-16T15:38:29.428Z"
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2026-09-16T15:38:30.281Z",
+      "status": "sent",
+      "executedFetch": "pending",
+      "event": "sent"
+    },
+    {
+      "at": "2026-09-16T15:38:30.304Z",
+      "status": "sent",
+      "executedFetch": "pending",
+      "completedAt": null
+    }
+  ],
+  "finishedAt": "2026-09-16T15:38:30.304Z"
+}

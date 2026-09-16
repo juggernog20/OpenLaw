@@ -1,0 +1,86 @@
+{
+  "batch": "DOC-029",
+  "group": "signing-standin",
+  "reviewer": "DOC-029 source-review author agent (signing-standin)",
+  "author": "DOC-029 source-review author agent (signing-standin)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T14:54:33.638318+00:00",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "sourceRange": "6a8873dbda333fd9992eb77525d4bfa3f47af20d..3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "articles": [
+    {
+      "articleId": "electronic-signing",
+      "scenarios": ["V-C17-electronic"],
+      "previousEvidence": "docs/documentation/evidence/electronic-signing.json (appCommit a28331f779da3c8b9e9172dee3cc5b58c7170c7b, compatibility review to 6a8873db)",
+      "contentSha256Before": "df172df43d2efc94cbd2daa7f03cc1161332885578c353e5137b1e0ffe4c90fc",
+      "contentSha256After": "bb311a48eb2d4495ab88402b2e88ff410e03f5f2e207903e7ce10b3dcb48130c",
+      "sourcesChecked": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/contract-record-envelopes.test.tsx",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "apps/api/src/modules/contract-envelopes/reconciliation.test.ts",
+        "apps/api/src/modules/signing-connector/routes.ts",
+        "apps/api/src/modules/signing-webhook/routes.ts",
+        "apps/api/src/lib/signing/resolver.ts",
+        "apps/api/src/pipeline/reconciliation.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "apps/api/src/lib/document-access.ts",
+        "packages/db/src/schema/signing-connectors.ts",
+        "packages/db/src/schema/contract-envelopes.ts",
+        "packages/db/migrations/0095_signing_update_mode.sql",
+        "docs/user-guides/configure-signing.md"
+      ],
+      "corrections": [
+        {
+          "location": "Send the Envelope, step 4",
+          "before": "The field label is **Subject (optional)**.",
+          "after": "The field label is **Subject**. The field is still optional; a blank subject uses the C- reference and title.",
+          "source": "messages/en-US.json signing.subject = \"Subject\" (changed from \"Subject (optional)\" in approvals-signing-card.tsx); contract-envelopes/routes.ts builds `C-<number> <title>` for a blank subject."
+        },
+        {
+          "location": "Follow completion, first paragraph",
+          "before": "The provider sends status updates (implies push delivery only).",
+          "after": "OpenLaw gets status updates from the provider. With Polling, the default for new connectors, an update can take about 15 to 20 minutes while the worker runs. With Webhook, updates arrive when the provider delivers them. The article also warns that the note under a live row still says status arrives by webhook in both modes.",
+          "source": "Commit ef6af025 added Signing updates (polling|webhook), default polling (signing-connector routes, schema, migration 0095). resolver.ts refuses webhook deliveries unless updateMode is webhook with a secret. reconciliation.ts runs every 5 minutes and sets next_reconcile_at 15 or 20 minutes ahead per envelope. Settings hint: \"Updates can take about 15 to 20 minutes while the worker is running.\" The card still renders signing.statusArrives (\"...arrives by webhook...\") for every live Envelope."
+        },
+        {
+          "location": "Withdraw, decline, or send again, first paragraph",
+          "before": "the Contract Owner can void a live round.",
+          "after": "the Contract's Legal Owner can void a live round.",
+          "source": "contract-envelopes/routes.ts mayVoid uses contractManagerId; CONTEXT.md says the Contract equivalent of Matter Manager is labelled Legal Owner; activity field label owner is now \"Legal Owner\"."
+        },
+        {
+          "location": "If signing is unavailable or fails, first paragraph",
+          "before": "Send for signature is absent when ... your record is read-only.",
+          "after": "Send for signature is absent when ... the Contract is archived.",
+          "source": "contract-record.tsx: frozen = archived || !canEdit, and canEdit = isMemberPlus(role). For the article's audience (Legal Team Member, Administrator) the only frozen case is an archived Contract. Contributors no longer read Envelopes at all (requireEnvelopeReader is Member+ since this range, and the Contributor read-only card tests were removed)."
+        }
+      ],
+      "confirmedClaims": [
+        "Send for signature is on the Approvals tab, in the card headed \"Approvals & signing\" (contracts.record.tab.approvals, approvals.sectionSigning).",
+        "Send is Member+ (requireMember); Send for signature is absent (not disabled) when no connector resolves (missing or disabled), no primary Document, a live Envelope exists, or the Contract is archived (canSend).",
+        "Dialog labels: Version, Signers, Add signer, Remove signer {n}, Subject, Send envelope, Cancel. Version options show \"Version N — filename\" with \"(current)\"; only the primary Document goes out and attachments are not sent (signing.versionHelp).",
+        "Every Signer needs a name and email; duplicate addresses are refused with \"Each signer needs their own email address.\" (routes.ts).",
+        "All Signers are asked at once and sign in any order (signing.signersHelp); Signers are not users of the install (CONTEXT.md Signer).",
+        "One live Envelope per Contract; a second send answers 409 \"This contract already has an envelope out for signature. Void it before sending another.\"",
+        "Sending does not change the Contract Status (routes.ts: sending is legal at any stage; no status write).",
+        "Row statuses Out for signature, Signed, Declined, Voided; header statuses Envelope sent/signed/declined/voided; row shows \"Filing the executed copy…\", \"Executed copy\", or \"The executed copy could not be filed. Upload it to the record instead.\"",
+        "Executed filing adds an executed-kind Version on the sent Document chain, sets the executed pin, and advances to the first live Active Status only from the Signature Stage; other Stages are left unchanged (executed-copy.ts, unchanged in range).",
+        "Void is allowed for the sender, the Legal Owner, or an Administrator; Reason is required (\"Say why this envelope is being voided.\"); a provider-side ended round answers 409 \"The provider says this envelope is no longer live...\".",
+        "Declined and voided rounds stay listed and do not block another send (liveEnvelope counts only sent).",
+        "An unreachable provider during send gives the \"may still have taken the envelope — check at the provider before you send again\" message, so reloading before retry is correct.",
+        "Heading anchors are unchanged: send-the-envelope, follow-completion, withdraw-decline-or-send-again, if-signing-is-unavailable-or-fails."
+      ],
+      "result": "pass-with-corrections",
+      "limitations": [
+        "Source inspection only. The prior V-C17-electronic walkthrough recorded Contributor Ravi Menon reading Envelope rounds; at this commit a Contributor gets 403 on the Envelope routes, so that observation is stale and the independent walkthrough must re-check the Contributor negative case.",
+        "The meaning of the Follow completion paragraph changed, so the prior walkthrough evidence cannot be kept as copy-only; an independent walkthrough is required.",
+        "C17 remains a local DocuSign protocol stand-in; the Polling timing claim is from source and settings copy, not measured."
+      ]
+    }
+  ]
+}

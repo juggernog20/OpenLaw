@@ -6,7 +6,7 @@ Replace the application build while preserving the installation's database, file
 
 Use the operator account and installation directory from [installation](install.md). Record the existing source revision, app and engine image identities, Compose project name, file list, and storage configuration. Keep the existing authentication and credential encryption keys. A new project name creates a different set of default volumes; it is not an upgrade of the original installation.
 
-This edition uses source revision `6a8873dbda333fd9992eb77525d4bfa3f47af20d` as its candidate. The starting build for this procedure's checks is development revision `d1d098ba9f4ba6557a542857d530446b76b1847c`. Do not assume that every older release or database schema can be upgraded without additional work. Read the target build's migration and deployment changes first.
+This edition uses source revision `3fa407e3a846559914aa1a63249741f30cfb4f69` as its candidate. The starting build for this procedure's checks is development revision `d1d098ba9f4ba6557a542857d530446b76b1847c`. Do not assume that every older release or database schema can be upgraded without additional work. Read the target build's migration and deployment changes first.
 
 Tell users when writes will pause. Check outstanding signing and processing work before the pause. Prepare enough free space for the coherent backup and the new images, and keep the old source, images, and backup until the upgraded instance has been accepted.
 
@@ -25,7 +25,7 @@ Tell users when writes will pause. Check outstanding signing and processing work
 2. Select the intended committed target and update `OPENLAW_BUILD_COMMIT` in `.env` to the same revision. Keep `COMPOSE_PROJECT_NAME`, the keys, and existing storage/database settings unchanged unless a separately planned migration requires a change.
 
    ```bash
-   git checkout --detach 6a8873dbda333fd9992eb77525d4bfa3f47af20d
+   git checkout --detach 3fa407e3a846559914aa1a63249741f30cfb4f69
    docker compose config --quiet
    docker compose build app doc-engine
    ```
@@ -44,7 +44,7 @@ Tell users when writes will pause. Check outstanding signing and processing work
    docker compose logs --tail=100 app worker
    ```
 
-   The app runs migrations at startup. Wait for readiness before allowing writes. Review logs locally because activity and provider failures can contain record or recipient details.
+   The app runs migrations at startup. Wait for readiness before allowing writes. From the starting build named above, the app log first shows `migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations`. This line is expected: the starting build recorded an earlier numbering of the Request assignment migration, and the app applies the migration that numbering skipped. Review logs locally because activity and provider failures can contain record or recipient details.
 
 2. Sign in through the normal origin. Check an Administrator and a lower-access account against representative records. Confirm that the lower-access account still cannot reach a Confidential record outside its audience.
 3. Check known Contracts, Matters, Entities, configured Fields, and their saved values. Download representative original and later Document Versions and compare their hashes with the pre-upgrade inventory.

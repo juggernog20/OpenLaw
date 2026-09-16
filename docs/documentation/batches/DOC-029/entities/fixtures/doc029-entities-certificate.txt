@@ -1,0 +1,2 @@
+DOC-029 entities fictional certificate of incorporation.
+This file is a fictional fixture for a documentation walkthrough.

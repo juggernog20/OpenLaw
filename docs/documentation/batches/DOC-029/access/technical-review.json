@@ -1,0 +1,274 @@
+{
+  "batch": "DOC-029",
+  "group": "access",
+  "issues": [745, 747],
+  "author": "DOC-029 source-review author agent (access)",
+  "technicalReviewer": "DOC-029 source-review author agent (access)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T15:02:00Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "method": "source-inspection",
+  "labObservations": [
+    "GET /api/v1/auth/methods on the admin, work and entities labs (read-only) returned the legacy-derived policy: legal and business both password=true, magicLink=true, sso=false, requireTwoFactor=false; emailConfigured=true. No settings or records were changed."
+  ],
+  "limitations": [
+    "Source inspection only. No walkthrough was run; the independent walkthrough agent must re-run V-C01 to V-C05 against the corrected text.",
+    "The Contributor role was removed by DD-023; scenario roles that still name Contributor were not checked as a role here.",
+    "Live identity-provider and required two-factor behaviour after single sign-on are source-checked only."
+  ],
+  "articles": [
+    {
+      "articleId": "staff-sign-in",
+      "previousContentSha256": "3ccb318e546bb50e7a4e59b279afed761f688e99936c3eed10ad48b65060b961",
+      "contentSha256": "b22aca8fd72c0407831c1314910999c3773ecb789912f9859b63516218d20725",
+      "changed": true,
+      "classification": "behaviour change (reopens review; fresh walkthrough needed)",
+      "sources": [
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/components/authentication-options.tsx",
+        "apps/web/src/routes/set-password.tsx",
+        "apps/web/src/routes/link-expired.tsx",
+        "apps/web/src/components/magic-link-request.tsx",
+        "apps/web/src/routes/two-factor.tsx",
+        "apps/web/src/routes/two-factor-enroll.tsx",
+        "apps/web/src/components/two-factor.tsx",
+        "apps/web/src/routes/settings-profile.tsx",
+        "apps/web/src/lib/session.ts",
+        "apps/api/src/auth/authentication-policy.ts",
+        "apps/api/src/auth/two-factor-policy.ts",
+        "apps/api/src/auth/guards.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-008 group policy addendum)",
+        "docs/decision-records/DECISIONS-SETTINGS.md",
+        "docs/decision-records/SCHEMA.md",
+        "CONTEXT.md"
+      ],
+      "corrections": [
+        {
+          "before": "A Legal Team Member who uses Administrator sign-in sees 'Password sign-in is disabled while single sign-on is required.'; Administrator sign-in applies when single sign-on is the main method.",
+          "after": "Administrator sign-in appears when staff password sign-in is off (SSO or magic-link primary view). The refusal text is 'Password sign-in is disabled for this account.' (instance.ts assertPasswordSignIn and session.create hook)."
+        },
+        {
+          "before": "Two-factor adds a challenge only to password sign-in; the identity provider controls any challenge during single sign-on.",
+          "after": "Voluntary enrollment still challenges password sign-in only. When the organization requires two-factor (requireTwoFactor), /api/v1/me sets twoFactorSetupRequired or twoFactorVerificationRequired and the web redirects to /auth/two-factor/enroll or /auth/two-factor after every sign-in method, including magic links and SSO. The enroll page shows 'Your organization requires two-factor authentication.', asks for Password only when the account has one, and uses 'Turn on two-factor'."
+        },
+        {
+          "before": "Restart sign-in if the challenge no longer works.",
+          "after": "The challenge page now has a Sign out control (two-factor.tsx); the article names it."
+        },
+        {
+          "before": "Re-enroll replaces the authenticator; Turn off two-factor removes it.",
+          "after": "Re-enroll turns off the old authenticator before enrollment, so an abandoned re-enrollment leaves two-factor off. When two-factor is required, Profile shows 'Required by your organization' instead of Re-enroll and Turn off two-factor."
+        },
+        {
+          "before": "The sign-in page does not offer a password-reset form.",
+          "after": "The password view offers 'Set up or reset your password' when email is configured. It asks for Email, sends with 'Send password setup link', answers 'Check your email' neutrally, and the emailed link expires in one hour."
+        }
+      ],
+      "confirmed": [
+        "Invitation set-password page labels New password, Confirm password, Set password, Password set, Sign in; at least 8 characters; mismatch, expired/used and missing-token messages.",
+        "Contributor is no longer invitable (INVITABLE_ROLES) and the article scope is Administrator and Legal Team Member.",
+        "'Continue with single sign-on' and 'Single sign-on is not configured yet. Use administrator sign-in.' copy.",
+        "'Email me a sign-in link' depends on the group policy and emailConfigured; the link expires in 5 minutes and works once.",
+        "Profile enrollment dialog: Turn on two-factor, Password, Continue, QR code with manual secret, Code, Confirm, backup codes shown once, Done.",
+        "Challenge page: Two-factor authentication, Code, Verify, Use a backup code, Backup code; 15-minute lockout message after repeated failures.",
+        "Sign out in the name menu; Sign out other devices in Profile Sessions ends every other session.",
+        "An Administrator landing on Home while onboarding is incomplete goes to /welcome."
+      ]
+    },
+    {
+      "articleId": "portal-sign-in",
+      "previousContentSha256": "a555e87dab0938a09ace19041372365c5f0f10c1c348d83625dc2428badb5b8b",
+      "contentSha256": "2a39b552d5f47a670af64352a71bd075dd38c26feb7f89b419affde901b85c93",
+      "changed": true,
+      "classification": "behaviour change (reopens review; fresh walkthrough needed)",
+      "sources": [
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/portal-entry.tsx",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/routes/link-expired.tsx",
+        "apps/web/src/components/magic-link-request.tsx",
+        "apps/web/src/routes/set-password.tsx",
+        "apps/web/src/lib/portal-onboarding.ts",
+        "apps/web/src/routes/portal-onboarding.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/components/portal/record-list.tsx",
+        "apps/web/src/routes/portal-contracts.tsx",
+        "apps/web/src/routes/portal-contract.tsx",
+        "apps/web/src/routes/portal-matters.tsx",
+        "apps/web/src/routes/portal-matter.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/components/portal/record-work.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/api/src/modules/auth/routes.ts (POST /auth/magic-link)",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/lib/portal-contract-access.ts",
+        "apps/api/src/lib/portal-record-access.ts",
+        "node_modules better-auth 1.7.5 plugins/magic-link (verify error redirect)"
+      ],
+      "corrections": [
+        {
+          "before": "The entry page says 'Legal portal' and shows Email with Send link.",
+          "after": "/portal/enter redirects to /portal/login, titled 'Business Portal sign-in'. Its first view follows the Business Portal policy: SSO, then password, then magic link. On the seeded labs (legacy built-in defaults) the password form shows first, so the reader selects 'Email me a sign-in link' to reach 'Get a sign-in link'."
+        },
+        {
+          "before": "After the link, the Portal lists that person's Requests.",
+          "after": "A Business User without portalOnboardingCompletedAt is redirected to /portal/onboarding ('We need to learn a little about you'). Department is required when Departments exist; later steps offer Skip; the last step offers Finish."
+        },
+        {
+          "before": "'Sign-in links are switched off' page with a 'Sign in' control.",
+          "after": "That page no longer exists. Without magic links the page offers the other enabled methods: Email and Password with 'Set up or reset your password' (business setup token, one-hour link), or 'Continue with single sign-on'; with no method it shows 'Sign-in is unavailable. Contact your administrator.'"
+        },
+        {
+          "before": "No Portal two-factor behaviour.",
+          "after": "Business Portal Authentication can require two-factor; Business Users are redirected to enrollment (?portal=1) and then challenged each session."
+        },
+        {
+          "before": "Under 'Primary Document', select 'Read Document' or 'Download'; the page says when no primary Document exists.",
+          "after": "The Contract page has a Documents section. 'Primary Document' is a label on the primary row; the Document name opens the reader; a download icon has the name 'Download {name}, version {n}'."
+        },
+        {
+          "before": "Matter page shows 'Type'.",
+          "after": "The label is 'Matter Type'."
+        },
+        {
+          "before": "Link text 'Profile settings' for the own-Portal-view section.",
+          "after": "Link text 'Personal settings'; the anchor is unchanged."
+        }
+      ],
+      "confirmed": [
+        "'Check your email' neutral response: 'If {email} is eligible, a sign-in link is on its way. It expires in 5 minutes and works once.'",
+        "Addresses outside allowed domains without a staff account get no link (API still answers 202).",
+        "INVALID_TOKEN redirects to /auth/link-expired?portal=1, titled 'Sign-in link expired', with Email and Send link when business magic links are on, else 'Back to sign-in'.",
+        "Portal header Sign out returns to /portal/login.",
+        "Another person's Request number returns 404 and redirects to /portal.",
+        "Portal navigation bar: Requests, Contracts, Matters, Auto-Docs; list titles 'Your Contracts' and 'Your Matters'; 'Show more'.",
+        "Portal Contract and Matter lists require current team membership and exclude archived records.",
+        "Unverified marker and explanation on the Portal Contract page.",
+        "Record pages show Fields, Documents and Original request; applets Comments, History and Contract team or Matter team.",
+        "A converted Request redirects to its record (redirectTo)."
+      ]
+    },
+    {
+      "articleId": "find-your-work",
+      "previousContentSha256": "08a83fe4409541e18683a1ab88ced39c11c94b2936ac3c550fd395901b0837ab",
+      "contentSha256": "8edac6aa2252dc6105a8dd59fef0cd367e78487c7286f3e08844decd7ada22e1",
+      "changed": true,
+      "classification": "behaviour change (reopens review; fresh walkthrough needed)",
+      "sources": [
+        "apps/web/src/routes/home.tsx",
+        "apps/web/src/components/home/*.tsx",
+        "apps/web/src/routes/home-tasks.tsx",
+        "apps/web/src/components/tasks/completed-toggle.tsx",
+        "apps/web/src/components/shell/destinations.ts",
+        "apps/web/src/lib/keyboard.ts",
+        "apps/web/src/components/shell/keyboard-shortcuts.tsx",
+        "apps/web/src/routes/not-found.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/routes/help.tsx",
+        "apps/api/src/modules/home/routes.ts",
+        "apps/api/src/modules/home/sections/*.ts",
+        "CONTEXT.md"
+      ],
+      "corrections": [
+        {
+          "before": "Open Your Tasks only through View all on the Home card; return with 'Back to Home'.",
+          "after": "Member+ now has 'My Tasks' (/home/tasks) in the app navigation; the 'Back to Home' link was removed, so return through Home in the navigation."
+        },
+        {
+          "before": "Your Tasks lists only open Tasks.",
+          "after": "A 'Show completed' switch (label becomes 'Hide completed') adds completed Tasks; with completed Tasks shown, clearing a completed Task's checkbox reopens it with 'Reopened: {title}'. Completion shows 'Completed: {title}' and Undo."
+        },
+        {
+          "before": "An unavailable record shows 'Something went wrong.' with Reload.",
+          "after": "Contract, Matter, Entity, Knowledge and Auto-Doc record loaders answer 404 with a not-found page, for example 'Contract not found', '{reference} does not exist, or you cannot open it.' and 'Back to Contracts'."
+        }
+      ],
+      "confirmed": [
+        "Home and /home/tasks are Administrator and Legal Team Member only; zero-total sections are omitted; order approvals, tasks, dates, obligations, inbox, contracts, matters.",
+        "Section titles: Approvals waiting on you, Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts, Your matters; 'Welcome to OpenLaw' when empty.",
+        "Your contracts keys on the Contract Owner (manager_id); Your matters on Matter Manager.",
+        "Task due dates do not feed Dates approaching (dates.ts has no Task source); View all opens 'Your dates'.",
+        "'Your Tasks' title, 'Load more Tasks', 'No open Tasks assigned to you.', due-date order with undated last.",
+        "Keyboard: ? opens 'Keyboard shortcuts', / focuses search, Escape closes menus and dialogs, typing in fields is not intercepted."
+      ]
+    },
+    {
+      "articleId": "search-and-views",
+      "previousContentSha256": "605b3ebe1621d9e7e4d4449c32f12e5e35302d6d22392e7860375e3f512ffa1f",
+      "contentSha256": "605b3ebe1621d9e7e4d4449c32f12e5e35302d6d22392e7860375e3f512ffa1f",
+      "changed": false,
+      "classification": "no change needed",
+      "sources": [
+        "apps/web/src/components/shell/search-input.tsx",
+        "apps/web/src/routes/search.tsx",
+        "apps/web/src/components/search/search-result-row.tsx",
+        "apps/api/src/modules/search/routes.ts",
+        "apps/api/src/lib/document-access.ts",
+        "apps/web/src/routes/contracts.tsx",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/table/record-filter-definitions.ts",
+        "apps/web/src/components/table/managed-table.tsx",
+        "apps/web/src/components/table/column-menu.tsx",
+        "apps/web/src/components/table/views-menu.tsx",
+        "apps/web/src/lib/list-views.ts",
+        "apps/api/src/lib/record-filters.ts"
+      ],
+      "corrections": [],
+      "confirmed": [
+        "Header Search with / shortcut, 'See all results', kind filters, 'Show more', 'No matches', 'Search could not load'.",
+        "Business Users are redirected from /search to /portal.",
+        "Search kinds: Contracts, Matters, Documents, Entities, Counterparties, Requests, Knowledge Items; Document results now also include Auto-Doc-owned Documents, which fall under 'Documents' and do not contradict the article.",
+        "Contracts filter bar: Filter, Apply, Clear all, 'Remove {filter} filter', 'Updating…', 'Matches any selected value', 'Includes both dates'. Single-choice filters exist only on Documents, Auto-Docs and Portal Matters lists, not on the Contracts example.",
+        "Columns menu with 'Move {column} earlier/later'; views menu Default view, Modified, Save, Save as…, Rename…, Set as default, Delete…, Discard unsaved changes; delete dialog says records are not touched.",
+        "'No contracts match these filters' empty state."
+      ]
+    },
+    {
+      "articleId": "personal-settings",
+      "previousContentSha256": "fca8d64c3b2db4a7a0f780b4f1e5fb12d561e5e7705259b9324a2c6c826c027e",
+      "contentSha256": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803",
+      "changed": true,
+      "classification": "behaviour change (reopens review; fresh walkthrough needed)",
+      "sources": [
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-profile.tsx",
+        "apps/web/src/routes/settings-app-view.tsx",
+        "apps/web/src/routes/settings-appearance.tsx",
+        "apps/web/src/components/timezone-picker.tsx",
+        "apps/web/src/lib/avatar.ts",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/shell/user-menu.tsx"
+      ],
+      "corrections": [
+        {
+          "before": "An 'App view' card at the top of Profile holds 'View as business user'; 'Return to legal view' returns to Profile.",
+          "after": "Member+ has a 'View Business Portal' section under Personal (/settings/app-view) holding 'View as business user'; 'Return to legal view' links to /settings/app-view."
+        },
+        {
+          "before": "Banner meaning: your own Request history; submissions and replies are real.",
+          "after": "Banner text: 'You’re viewing your Portal work. Submissions, edits, and replies are real.'"
+        },
+        {
+          "before": "A failed password change means the current password is wrong.",
+          "after": "The error covers a wrong current password or a new password under 8 characters ('The password could not be changed. Check your current password and use at least 8 characters.')."
+        }
+      ],
+      "confirmed": [
+        "Settings from the name menu; Personal group Profile, Appearance, Notifications.",
+        "Full name saves on blur or Enter; Timezone picker with 'Use browser timezone'; Profile photo Upload, JPG or PNG, 1 MB max.",
+        "Email read-only; Role shown with 'Roles are managed in Organization → Users.'",
+        "Appearance: Light, Warm, Dark.",
+        "'Password & two-factor' card only when the account has a password; Change password dialog with Current password, New password, Save, and revocation of other sessions.",
+        "Sessions card 'Sign out other devices' ends every session except this one."
+      ]
+    }
+  ]
+}

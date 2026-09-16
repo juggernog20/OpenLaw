@@ -1,0 +1,82 @@
+{
+  "fieldRequired": {
+    "id": "01a0aac1-f44d-7de8-937a-01bc8622ffd6",
+    "slug": "doc_029_matters_required_note",
+    "displayName": "DOC-029 matters required note"
+  },
+  "fieldOptional": {
+    "id": "01a0aac1-f459-774d-bec3-0421e34443bc",
+    "slug": "doc_029_matters_optional_note",
+    "displayName": "DOC-029 matters optional note"
+  },
+  "fieldEntity": {
+    "id": "01a0aac1-f463-7642-950f-bbbb133c7cf0",
+    "slug": "doc_029_matters_entity",
+    "displayName": "DOC-029 matters Entity"
+  },
+  "fieldPerson": {
+    "id": "01a0aac1-f46c-7675-a805-c3f48b251996",
+    "slug": "doc_029_matters_person",
+    "displayName": "DOC-029 matters person"
+  },
+  "fieldNumber": {
+    "id": "01a0aac1-f476-7fc8-9082-5d61d5b0e6e5",
+    "slug": "doc_029_matters_retype_number",
+    "displayName": "DOC-029 matters retype number"
+  },
+  "typeMain": {
+    "id": "01a0aac1-f488-7548-ad9b-6d543ef777d0",
+    "displayName": "DOC-029 matters type"
+  },
+  "typeRetype": {
+    "id": "01a0aac1-f4cb-77ee-a4e4-0c693bcaa6e3",
+    "displayName": "DOC-029 matters retype"
+  },
+  "templateAlpha": {
+    "id": "01a0aac1-f4f1-713a-a387-2d08893be065",
+    "name": "DOC-029 matters alpha playbook",
+    "titlePrefix": "DOC-029 alpha review -"
+  },
+  "templateBeta": {
+    "id": "01a0aac1-f514-7f40-853d-f8bdd477fc0a",
+    "name": "DOC-029 matters beta playbook",
+    "titlePrefix": "DOC-029 beta review -"
+  },
+  "templateGamma": {
+    "id": "01a0aac1-f534-782a-a696-7755d9621e84",
+    "name": "DOC-029 matters gamma playbook",
+    "titlePrefix": "DOC-029 gamma review -"
+  },
+  "entity": {
+    "id": "01a0aaad-8e32-7ee7-a9fa-2ffd6c7b4cea",
+    "legalName": "Helix Analytics, Inc."
+  },
+  "createdAt": "2026-09-16T15:07:13.104Z",
+  "teardown": {
+    "at": "2026-09-16T15:36:08.605Z",
+    "earlier": {
+      "templateAlpha": 200,
+      "templateBeta": 200,
+      "templateGamma": 200,
+      "typeMain": 400,
+      "typeRetype": 400,
+      "fieldRequired": 200,
+      "fieldOptional": 200,
+      "fieldEntity": 200,
+      "fieldPerson": 200,
+      "fieldNumber": 200
+    },
+    "results": {
+      "templateAlpha": 409,
+      "templateBeta": 409,
+      "templateGamma": 409,
+      "typeMain": 200,
+      "typeRetype": 200,
+      "fieldRequired": 409,
+      "fieldOptional": 409,
+      "fieldEntity": 409,
+      "fieldPerson": 409,
+      "fieldNumber": 409
+    }
+  }
+}

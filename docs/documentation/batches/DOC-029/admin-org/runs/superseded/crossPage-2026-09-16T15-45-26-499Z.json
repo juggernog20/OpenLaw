@@ -1,0 +1,28 @@
+{
+  "section": "crossPage",
+  "reviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "approver-groups": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "authentication-and-email": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1"
+  },
+  "startedAt": "2026-09-16T15:45:26.499Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "OpenLaw checks the account's actual role, whichever sign-in page the person opened",
+      "expected": "With Legal password sign-in off, a Legal Team Member is refused on the Portal page too; a Business User with a password can use the staff page",
+      "startedAt": "2026-09-16T15:45:27.749Z",
+      "finishedAt": "2026-09-16T15:45:30.494Z",
+      "actual": "With Email and password off under Legal User Authentication, the Legal Team Member's password sign-in on the Business Portal page was refused (Password sign-in is disabled for this account.; me 401). With Business Portal password sign-in on, the Business User's password sign-in on the staff page succeeded (me 200, business_user, landed /portal/onboarding). Legal password sign-in was turned back on.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:45:30.497Z"
+}

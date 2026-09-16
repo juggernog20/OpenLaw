@@ -63,7 +63,7 @@ Confirm readiness and an actual operation after the pause. Copy the backup to it
 
 Use a new installation directory, a different Compose project, separate volumes, and an unused port. Keep the source installation and backup intact. Confirm that the target's database and file store are empty before importing; these instructions are not an in-place overwrite procedure.
 
-Review restored destinations before starting app or worker. Saved configuration and queued work can use the original relay, object store, identity provider, or signing account. For a recovery drill, isolate external traffic and arrange controlled recipients and storage before allowing those services to run.
+Review restored destinations before starting app or worker. Saved configuration and queued work can use the original relay, object store, identity provider, signing account, or AI provider. For a recovery drill, isolate external traffic and arrange controlled recipients and storage before allowing those services to run.
 
 1. Prepare the source and images recorded with the backup, using the [installation procedure](install.md). Before starting app or worker, supply the retained `AUTH_SECRET` and `OPENLAW_SECRET_KEY`, the target's origin and port, and its distinct project name. Configure access to every restored file store. Do not complete first-run setup on this target before importing the database.
 2. Make the retained backup available on the target host. Set `BACKUP_DIR` to its path there, then verify its hashes. The path below is a placeholder:
