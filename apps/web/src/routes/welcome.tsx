@@ -644,7 +644,9 @@ export function WelcomePage() {
       }
       setSavedPolicy(result.data);
       if (policy.legal.requireTwoFactor) {
-        void navigate("/welcome", { replace: true });
+        // Go straight to enrollment. The /welcome route skips its loader
+        // when only ?step= changes, so the loader guard never redirects.
+        void navigate("/auth/two-factor/enroll", { replace: true });
         return;
       }
       await advance();
