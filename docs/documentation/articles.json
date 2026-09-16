@@ -790,7 +790,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["auto-docs.template"],
-      "status": "draft"
+      "status": "review"
     }
   ]
 }
