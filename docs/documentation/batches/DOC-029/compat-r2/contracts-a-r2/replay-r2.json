@@ -124,9 +124,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Negative: Create contract refuses a blank Title, a missing Contract type, a blank required Field and an invalid number; archived references are not offered; Cancel creates nothing",
       "expected": "Each refusal shows an error in the dialog and no Contract is created; archived type, Entity and person are absent.",
@@ -139,9 +137,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Create the record: Title, Contract type, Fields, Owner, Confidential, optional Matter search, Create",
       "expected": "The app opens the new Contract with its title, type, Legal Owner and a new C- reference, in the Draft Status; the chosen Owner is Legal Owner and the creator is on the team as Creator.",
@@ -154,10 +150,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad",
-        "Marcus Oyelaran"
-      ],
+      "actors": ["Nadia Haddad", "Marcus Oyelaran"],
       "method": "browser-walkthrough",
       "action": "A link does not copy access: a Legal Team Member outside the Confidential team reads the Matter but not the Contract",
       "expected": "The Matter answers; the Confidential Contract is refused for the reader outside its team.",
@@ -170,9 +163,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Rename keeps the C- reference",
       "expected": "The reference stays the same after a rename.",
@@ -185,9 +176,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Record the parties and ownership on Overview: Legal Owner, Business Owner, Our entity, Department, Region, Priority, Risk, Description, Value",
       "expected": "Core fields appear in the stated order; choices save immediately; Unassigned, Not known yet, No Department and No Region clear; Description saves on leave; Value parts save together; Other needs Custom cadence; emptying Amount removes the value.",
@@ -200,9 +189,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Counterparties: search, inspect the create action, link two, Make primary, remove one link",
       "expected": "A new name offers a create action; the first linked party is primary; Make primary moves the designation; removing a link keeps the Counterparty record.",
@@ -215,9 +202,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Contract team: Add team member > Person > Add; membership rows and separate statements; removing membership keeps the Business Owner statement",
       "expected": "One row per person; Legal Owner, Business Owner and Creator show as statements; taking a person off the team leaves their Business Owner statement.",
@@ -230,9 +215,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Maintain the values on Fields: text saves on leave or Enter; a choice saves when selected; Escape abandons an unsaved edit",
       "expected": "Blur and Enter save; Escape restores the saved value without a save; choices save immediately.",
@@ -245,9 +228,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Change contract type on Overview asks for missing required Fields; Cancel keeps the type; Change type applies it; long text Enter makes a new line",
       "expected": "Change contract type opens for the missing required Field; blank is refused; Cancel keeps MSA; filling it and Change type re-types the record; C- reference unchanged.",
@@ -260,10 +241,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad",
-        "Jonas Weber (Portal)"
-      ],
+      "actors": ["Nadia Haddad", "Jonas Weber (Portal)"],
       "method": "browser-walkthrough",
       "action": "Negative: a Business User in the Portal cannot create a Contract directly or assign its Legal Owner",
       "expected": "Jonas reaches the Contract he is on in the Portal read-only for legal details, sees no create control, and the API refuses direct creation and a Legal Owner change.",
@@ -276,9 +254,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Negative: an archived Contract must be restored before editing",
       "expected": "Archive shows the archived note and read-only controls; Restore makes the record editable again.",
@@ -291,9 +267,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History",
       "expected": "The menu lists each Status with its Stage; each move shows the new Status beside the C- reference and the Stage display, and History records it.",
@@ -306,9 +280,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Move backwards and skip Stages",
       "expected": "A move back to Review and a skip from Review to Active are both accepted.",
@@ -321,10 +293,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "legal_team_member",
-      "actors": [
-        "Daniel Okafor",
-        "Nadia Haddad"
-      ],
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Negative: renaming a Status does not change its Stage",
       "expected": "After the Administrator renames the fixture Status, the menu shows the new name with the same Review Stage and the Contract in that Status keeps Stage review.",
@@ -337,10 +306,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad",
-        "Daniel Okafor"
-      ],
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override",
       "expected": "Cancel keeps the current Status; Move anyway saves and History records the override; the approval is still pending.",
@@ -353,9 +319,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Ended Contracts stay editable",
       "expected": "After moving to an Ended Status the record still accepts edits.",
@@ -368,10 +332,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad",
-        "Jonas Weber (Portal)"
-      ],
+      "actors": ["Nadia Haddad", "Jonas Weber (Portal)"],
       "method": "browser-walkthrough",
       "action": "Negative: archived records and Business Users get no Status control; Restore brings it back",
       "expected": "Archived: no Stage move control and a direct write is refused. Jonas in the Portal has no control and cannot change the Status. After Restore the control works.",
@@ -384,9 +345,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Ask for approval: Approvals > Add approver > choose two people > Request approvals",
       "expected": "Picker offers Legal Team Members and Administrators only; both new rows are Pending at once; a person with a pending request is not offered again.",
@@ -399,10 +358,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad",
-        "Daniel Okafor"
-      ],
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Apply group: choose the Approver group, inspect named and skipped people, confirm; a later group edit does not rewrite requests",
       "expected": "The dialog names who it asks and who it skips; the group's current members are asked; editing the group afterwards leaves existing requests unchanged.",
@@ -415,11 +371,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "legal_team_member",
-      "actors": [
-        "Daniel Okafor",
-        "Priya Raman",
-        "Nadia Haddad"
-      ],
+      "actors": ["Daniel Okafor", "Priya Raman", "Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Give a decision as the named approver with a Note; another person cannot answer; a decision is final",
       "expected": "Only the named approver sees Approve/Reject on their row; the other staff role approves with a Note and Priya rejects with a Note; decided rows offer no further decision; a wrong-person decision is refused.",
@@ -432,9 +384,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Ask again after a decision: a new request; the earlier decision stays",
       "expected": "A new Pending row for Priya Raman appears; the Rejected row stays.",
@@ -447,11 +397,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad",
-        "Daniel Okafor",
-        "Priya Raman"
-      ],
+      "actors": ["Nadia Haddad", "Daniel Okafor", "Priya Raman"],
       "method": "browser-walkthrough",
       "action": "Cancel request: requester, Legal Owner or Administrator can cancel a pending row; another Legal Team Member cannot; a decided approval is not erased",
       "expected": "Priya (not requester, Owner or Administrator) has no Cancel request on Marcus's row and is refused; the permitted person's Cancel request removes the pending row and History records it; decided rows stay.",
@@ -464,9 +410,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Move beyond Approval: Move past approval lists Pending and Rejected rows; Cancel keeps; Move anyway records an override and leaves decisions",
       "expected": "Dialog lists unresolved rows; Cancel keeps the Status; Move anyway saves it; the approvals keep their decisions.",
@@ -479,10 +423,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad",
-        "Daniel Okafor"
-      ],
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Negative: on Confidential work a person without access is not offered and a group with such a person is refused; applying a group does not grant access; an archived Contract offers no approval actions",
       "expected": "Picker omits Priya and Marcus; Apply group is refused by name and asks nobody; archived record shows no Add approver, Apply group or row actions.",
@@ -495,9 +436,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Step 1: Stage control to the Signature Status Out for signature without a Signing connector",
       "expected": "The Contract moves to Out for signature; no Send for signature control and no Envelope.",
@@ -510,9 +449,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Step 2: Documents; no Document yet, so upload the first Document; then Add version with the executed file and Kind Executed",
       "expected": "The first upload makes a Document; Add version adds Version 2 on the same Document.",
@@ -525,9 +462,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Step 3: read or download the uploaded Document Version and check it is the executed copy",
       "expected": "The Version downloads with the exact uploaded bytes and opens in the reader.",
@@ -540,9 +475,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Negative: the Executed kind alone does not set the executed designation",
       "expected": "After uploading with Kind Executed, no Version is designated executed.",
@@ -555,9 +488,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Step 4: Document actions > Mark as executed copy; check the designation and primary Document; the Status does not change",
       "expected": "Version 2 shows the executed designation; the Document is Primary; the Contract stays Out for signature.",
@@ -570,9 +501,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Correct the wrong selection and a later round: Add version keeps the chain; the earlier Version keeps the designation; Unmark and mark again through that Version's own actions",
       "expected": "Version 3 becomes current while Version 2 stays executed; the earlier Version's actions offer Unmark as executed copy and then Mark as executed copy.",
@@ -585,9 +514,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Step 5: Stage control to Active; check Status and Activity; no Envelope row",
       "expected": "Active is saved without a Soft gate (no approvals); History records the change; Envelopes remain zero.",
@@ -600,10 +527,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
-      "actors": [
-        "Nadia Haddad",
-        "Jonas Weber (Portal)"
-      ],
+      "actors": ["Nadia Haddad", "Jonas Weber (Portal)"],
       "method": "browser-walkthrough",
       "action": "Negative: unsupported users cannot perform the legal action; an archived record offers no legal actions",
       "expected": "Jonas (Business User on the team) has no executed-copy control and the API refuses it; the archived Contract shows no Document actions and refuses the designation; after Restore Version 2 is still designated.",
@@ -616,9 +540,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Negative: Create contract refuses a blank Title, a missing Contract type, a blank required Field and an invalid number; archived references are not offered; Cancel creates nothing",
       "expected": "Each refusal shows an error in the dialog and no Contract is created; archived type, Entity and person are absent.",
@@ -631,9 +553,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Create the record: Title, Contract type, Fields, Owner, Confidential, optional Matter search, Create",
       "expected": "The app opens the new Contract with its title, type, Legal Owner and a new C- reference, in the Draft Status; the chosen Owner is Legal Owner and the creator is on the team as Creator.",
@@ -646,10 +566,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Marcus Oyelaran"
-      ],
+      "actors": ["Daniel Okafor", "Marcus Oyelaran"],
       "method": "browser-walkthrough",
       "action": "A link does not copy access: a Legal Team Member outside the Confidential team reads the Matter but not the Contract",
       "expected": "The Matter answers; the Confidential Contract is refused for the reader outside its team.",
@@ -662,9 +579,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Rename keeps the C- reference",
       "expected": "The reference stays the same after a rename.",
@@ -677,9 +592,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Record the parties and ownership on Overview: Legal Owner, Business Owner, Our entity, Department, Region, Priority, Risk, Description, Value",
       "expected": "Core fields appear in the stated order; choices save immediately; Unassigned, Not known yet, No Department and No Region clear; Description saves on leave; Value parts save together; Other needs Custom cadence; emptying Amount removes the value.",
@@ -692,9 +605,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Counterparties: search, inspect the create action, link two, Make primary, remove one link",
       "expected": "A new name offers a create action; the first linked party is primary; Make primary moves the designation; removing a link keeps the Counterparty record.",
@@ -707,9 +618,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Contract team: Add team member > Person > Add; membership rows and separate statements; removing membership keeps the Business Owner statement",
       "expected": "One row per person; Legal Owner, Business Owner and Creator show as statements; taking a person off the team leaves their Business Owner statement.",
@@ -722,9 +631,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Maintain the values on Fields: text saves on leave or Enter; a choice saves when selected; Escape abandons an unsaved edit",
       "expected": "Blur and Enter save; Escape restores the saved value without a save; choices save immediately.",
@@ -737,9 +644,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Change contract type on Overview asks for missing required Fields; Cancel keeps the type; Change type applies it; long text Enter makes a new line",
       "expected": "Change contract type opens for the missing required Field; blank is refused; Cancel keeps MSA; filling it and Change type re-types the record; C- reference unchanged.",
@@ -752,10 +657,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Jonas Weber (Portal)"
-      ],
+      "actors": ["Daniel Okafor", "Jonas Weber (Portal)"],
       "method": "browser-walkthrough",
       "action": "Negative: a Business User in the Portal cannot create a Contract directly or assign its Legal Owner",
       "expected": "Jonas reaches the Contract he is on in the Portal read-only for legal details, sees no create control, and the API refuses direct creation and a Legal Owner change.",
@@ -768,9 +670,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Negative: an archived Contract must be restored before editing",
       "expected": "Archive shows the archived note and read-only controls; Restore makes the record editable again.",
@@ -783,9 +683,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History",
       "expected": "The menu lists each Status with its Stage; each move shows the new Status beside the C- reference and the Stage display, and History records it.",
@@ -798,9 +696,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Move backwards and skip Stages",
       "expected": "A move back to Review and a skip from Review to Active are both accepted.",
@@ -813,10 +709,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor", "Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Negative: renaming a Status does not change its Stage",
       "expected": "After the Administrator renames the fixture Status, the menu shows the new name with the same Review Stage and the Contract in that Status keeps Stage review.",
@@ -829,10 +722,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Nadia Haddad"
-      ],
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
       "method": "browser-walkthrough",
       "action": "Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override",
       "expected": "Cancel keeps the current Status; Move anyway saves and History records the override; the approval is still pending.",
@@ -845,9 +735,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Ended Contracts stay editable",
       "expected": "After moving to an Ended Status the record still accepts edits.",
@@ -860,10 +748,7 @@
       "article": "contract-stages",
       "scenario": "V-C15",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Jonas Weber (Portal)"
-      ],
+      "actors": ["Daniel Okafor", "Jonas Weber (Portal)"],
       "method": "browser-walkthrough",
       "action": "Negative: archived records and Business Users get no Status control; Restore brings it back",
       "expected": "Archived: no Stage move control and a direct write is refused. Jonas in the Portal has no control and cannot change the Status. After Restore the control works.",
@@ -876,9 +761,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Ask for approval: Approvals > Add approver > choose two people > Request approvals",
       "expected": "Picker offers Legal Team Members and Administrators only; both new rows are Pending at once; a person with a pending request is not offered again.",
@@ -891,10 +774,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor", "Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Apply group: choose the Approver group, inspect named and skipped people, confirm; a later group edit does not rewrite requests",
       "expected": "The dialog names who it asks and who it skips; the group's current members are asked; editing the group afterwards leaves existing requests unchanged.",
@@ -907,11 +787,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "administrator",
-      "actors": [
-        "Nadia Haddad",
-        "Priya Raman",
-        "Daniel Okafor"
-      ],
+      "actors": ["Nadia Haddad", "Priya Raman", "Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Give a decision as the named approver with a Note; another person cannot answer; a decision is final",
       "expected": "Only the named approver sees Approve/Reject on their row; the other staff role approves with a Note and Priya rejects with a Note; decided rows offer no further decision; a wrong-person decision is refused.",
@@ -924,9 +800,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Ask again after a decision: a new request; the earlier decision stays",
       "expected": "A new Pending row for Priya Raman appears; the Rejected row stays.",
@@ -939,11 +813,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Nadia Haddad",
-        "Priya Raman"
-      ],
+      "actors": ["Daniel Okafor", "Nadia Haddad", "Priya Raman"],
       "method": "browser-walkthrough",
       "action": "Cancel request: requester, Legal Owner or Administrator can cancel a pending row; another Legal Team Member cannot; a decided approval is not erased",
       "expected": "Priya (not requester, Owner or Administrator) has no Cancel request on Marcus's row and is refused; the permitted person's Cancel request removes the pending row and History records it; decided rows stay.",
@@ -956,9 +826,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Move beyond Approval: Move past approval lists Pending and Rejected rows; Cancel keeps; Move anyway records an override and leaves decisions",
       "expected": "Dialog lists unresolved rows; Cancel keeps the Status; Move anyway saves it; the approvals keep their decisions.",
@@ -971,10 +839,7 @@
       "article": "contract-approvals",
       "scenario": "V-C16",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor", "Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Negative: on Confidential work a person without access is not offered and a group with such a person is refused; applying a group does not grant access; an archived Contract offers no approval actions",
       "expected": "Picker omits Priya and Marcus; Apply group is refused by name and asks nobody; archived record shows no Add approver, Apply group or row actions.",
@@ -987,9 +852,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Step 1: Stage control to the Signature Status Out for signature without a Signing connector",
       "expected": "The Contract moves to Out for signature; no Send for signature control and no Envelope.",
@@ -1002,9 +865,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Step 2: Documents; no Document yet, so upload the first Document; then Add version with the executed file and Kind Executed",
       "expected": "The first upload makes a Document; Add version adds Version 2 on the same Document.",
@@ -1017,9 +878,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Step 3: read or download the uploaded Document Version and check it is the executed copy",
       "expected": "The Version downloads with the exact uploaded bytes and opens in the reader.",
@@ -1032,9 +891,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Negative: the Executed kind alone does not set the executed designation",
       "expected": "After uploading with Kind Executed, no Version is designated executed.",
@@ -1047,9 +904,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Step 4: Document actions > Mark as executed copy; check the designation and primary Document; the Status does not change",
       "expected": "Version 2 shows the executed designation; the Document is Primary; the Contract stays Out for signature.",
@@ -1062,9 +917,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Correct the wrong selection and a later round: Add version keeps the chain; the earlier Version keeps the designation; Unmark and mark again through that Version's own actions",
       "expected": "Version 3 becomes current while Version 2 stays executed; the earlier Version's actions offer Unmark as executed copy and then Mark as executed copy.",
@@ -1077,9 +930,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Step 5: Stage control to Active; check Status and Activity; no Envelope row",
       "expected": "Active is saved without a Soft gate (no approvals); History records the change; Envelopes remain zero.",
@@ -1092,10 +943,7 @@
       "article": "manual-signing",
       "scenario": "V-C17-manual",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Jonas Weber (Portal)"
-      ],
+      "actors": ["Daniel Okafor", "Jonas Weber (Portal)"],
       "method": "browser-walkthrough",
       "action": "Negative: unsupported users cannot perform the legal action; an archived record offers no legal actions",
       "expected": "Jonas (Business User on the team) has no executed-copy control and the API refuses it; the archived Contract shows no Document actions and refuses the designation; after Restore Version 2 is still designated.",

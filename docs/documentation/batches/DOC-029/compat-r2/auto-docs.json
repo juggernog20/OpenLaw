@@ -55,11 +55,11 @@
         "method": "Replayed batches/DOC-029/auto-docs/walkthrough-r1.mjs in full against admin2 as compat-r2/auto-docs-r2/walkthrough-r2.mjs. Adaptations: lab project openlaw-docs-41255c61-admin2, app commit, reviewer name, round, record names DOC-029r2 auto-docs *, output and screenshot names, repository root one level higher, fixture folder pointed at the unchanged round 1 fixtures, and the round 1 priorAttempts list removed. No check, selector or expectation changed. Every step's recorded actual text matched round 1 once record ids and timestamps were masked.",
         "script": {
           "path": "batches/DOC-029/compat-r2/auto-docs-r2/walkthrough-r2.mjs",
-          "sha256": "1bbf9d776bf79ebd75c726d20cda49197b15ec18206f8ffda7752b10853a186c"
+          "sha256": "7293fc4ade1e9906c430d9407d3ad305a7b1a37caeb8d0ef824425372dda0bb6"
         },
         "runFile": {
           "path": "batches/DOC-029/compat-r2/auto-docs-r2/walkthrough-r2.json",
-          "sha256": "b53fc1c20b36228fa6528c05fd99a6b8a1a06d0526286d8f6491bffb5de2b54a"
+          "sha256": "861e72ac29f21a56ba09d897c1f9cb9349f7b6e84dfaae9acd1cb02db535f061"
         },
         "fixtures": {
           "doc029-services-v1.docx": "91eb385f62460479f535dbdca6f41071aea79ef29de5d7a918406ff3c687dbca",

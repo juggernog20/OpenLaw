@@ -55,17 +55,21 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
     "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
-    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
-    "reviewer": "DOC-029r2 compatibility reviewer (operator-lifecycle)",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T18:19:21Z",
-    "summary": "Inspected the 3fa407e3..57e77e38 app diff (SMTP discrete fields and storage format, public sign-in branding, logo limit, welcome URL steps, BASE_URL wording) and found no change to any backup, restore or verification statement. Replayed the round 1 V-C47 script on 57e77e38 in disposable Compose projects: backup, restore into an empty target, role and Confidential checks, Version hashes, relay test email, and the wrong-key, missing-blob and missing-key negatives all passed (45 of 45 steps).",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (operator-lifecycle)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff (SMTP discrete fields and storage format, public sign-in branding, logo limit, welcome URL steps, BASE_URL wording) and found no change to any backup, restore or verification statement. Replayed the round 1 V-C47 script on 57e77e38 in disposable Compose projects: backup, restore into an empty target, role and Confidential checks, Version hashes, relay test email, and the wrong-key, missing-blob and missing-key negatives all passed (45 of 45 steps). From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article mentions two-factor authentication only for a retained AUTH_SECRET after restore. The enrollment flow and key handling did not change.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/operator-lifecycle.json",
-        "sha256": "274319adb0ca06fa6c3b1109b24f0b9526afe0bd0ec71fbbb5a6c8f4c6546847"
+        "sha256": "df6ecde75c37a04ffeb0856df7b56d0181c38de7f9e55fe056bbf194f94535d3"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
     ]
   }

@@ -1732,13 +1732,7 @@
   "articleContentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
   "summary": {
     "result": "fail",
-    "finalRuns": [
-      4,
-      8,
-      9,
-      10,
-      11
-    ],
+    "finalRuns": [4, 8, 9, 10, 11],
     "failedSteps": [
       {
         "run": 4,

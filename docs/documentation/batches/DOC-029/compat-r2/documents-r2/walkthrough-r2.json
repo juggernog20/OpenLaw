@@ -84,18 +84,8 @@
       "sha256": "c4d6267a51844dbc5c4ebb6ffdbcc72b0182cf897c06b0639af9b671b6a54460"
     }
   ],
-  "sections": [
-    "versions",
-    "folders",
-    "previews",
-    "portal",
-    "repository",
-    "archive"
-  ],
-  "roles": [
-    "administrator",
-    "legal_team_member"
-  ],
+  "sections": ["versions", "folders", "previews", "portal", "repository", "archive"],
+  "roles": ["administrator", "legal_team_member"],
   "stamp": "140665",
   "startedAt": "2026-09-16T17:52:21.040Z",
   "finishedAt": "2026-09-16T17:55:54.205Z",

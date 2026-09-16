@@ -43,7 +43,8 @@ function claims(assertion) {
 const sha = (buffer) => createHash("sha256").update(buffer).digest("hex");
 
 async function control(path, request, response) {
-  const body = request.method === "POST" ? JSON.parse((await readBody(request)).toString() || "{}") : {};
+  const body =
+    request.method === "POST" ? JSON.parse((await readBody(request)).toString() || "{}") : {};
   if (path === "/__control/state") {
     return sendJson(response, 200, {
       faults,
@@ -73,13 +74,21 @@ async function control(path, request, response) {
   if (path === "/__control/complete") {
     envelope.status = "completed";
     envelope.completedDateTime = now;
-    return sendJson(response, 200, { id: body.id, status: envelope.status, completedDateTime: now });
+    return sendJson(response, 200, {
+      id: body.id,
+      status: envelope.status,
+      completedDateTime: now,
+    });
   }
   if (path === "/__control/decline") {
     envelope.status = "declined";
     envelope.declinedReason = body.reason;
     envelope.completedDateTime = now;
-    return sendJson(response, 200, { id: body.id, status: envelope.status, completedDateTime: now });
+    return sendJson(response, 200, {
+      id: body.id,
+      status: envelope.status,
+      completedDateTime: now,
+    });
   }
   return sendJson(response, 404, { error: "unknown control" });
 }
@@ -100,7 +109,14 @@ async function handle(request, response) {
   if (path === "/oauth/userinfo") {
     return sendJson(response, 200, {
       email: USER_EMAIL,
-      accounts: [{ account_id: ACCOUNT_ID, account_name: ACCOUNT_NAME, base_uri: PUBLIC_BASE, is_default: true }],
+      accounts: [
+        {
+          account_id: ACCOUNT_ID,
+          account_name: ACCOUNT_NAME,
+          base_uri: PUBLIC_BASE,
+          is_default: true,
+        },
+      ],
     });
   }
   const base = `/restapi/v2.1/accounts/${ACCOUNT_ID}/envelopes`;
@@ -109,12 +125,17 @@ async function handle(request, response) {
     const definition = JSON.parse((await readBody(request)).toString("utf8"));
     if (faults.outage) return sendJson(response, 503, { errorCode: "SERVICE_UNAVAILABLE" });
     const signers = definition.recipients?.signers ?? [];
-    if (signers.length === 0) return sendJson(response, 400, { errorCode: "RECIPIENT_NOT_PROVIDED" });
+    if (signers.length === 0)
+      return sendJson(response, 400, { errorCode: "RECIPIENT_NOT_PROVIDED" });
     minted += 1;
     const id = `${idPrefix}-${String(minted).padStart(4, "0")}`;
     envelopes.set(id, {
       status: "sent",
-      signers: signers.map((s) => ({ name: s.name ?? "", email: s.email ?? "", routingOrder: s.routingOrder ?? null })),
+      signers: signers.map((s) => ({
+        name: s.name ?? "",
+        email: s.email ?? "",
+        routingOrder: s.routingOrder ?? null,
+      })),
       documentCount: definition.documents?.length ?? 0,
       emailSubject: definition.emailSubject ?? "",
       document: Buffer.from(definition.documents?.[0]?.documentBase64 ?? "", "base64"),
@@ -127,8 +148,10 @@ async function handle(request, response) {
     const envelope = envelopes.get(id);
     if (!envelope) return sendJson(response, 404, { errorCode: "ENVELOPE_DOES_NOT_EXIST" });
     if (tail.join("/") === "documents/combined") {
-      if (envelope.status !== "completed") return sendJson(response, 400, { errorCode: "ENVELOPE_NOT_COMPLETED" });
-      if (faults.combinedRefused) return sendJson(response, 400, { errorCode: "DOC029_STANDIN_REFUSED" });
+      if (envelope.status !== "completed")
+        return sendJson(response, 400, { errorCode: "ENVELOPE_NOT_COMPLETED" });
+      if (faults.combinedRefused)
+        return sendJson(response, 400, { errorCode: "DOC029_STANDIN_REFUSED" });
       response.writeHead(200, { "content-type": "application/pdf" });
       return response.end(executedPdf(id));
     }
@@ -137,8 +160,12 @@ async function handle(request, response) {
         envelopeId: id,
         status: envelope.status,
         ...(envelope.voidedReason === undefined ? {} : { voidedReason: envelope.voidedReason }),
-        ...(envelope.declinedReason === undefined ? {} : { declinedReason: envelope.declinedReason }),
-        ...(envelope.completedDateTime === undefined ? {} : { completedDateTime: envelope.completedDateTime }),
+        ...(envelope.declinedReason === undefined
+          ? {}
+          : { declinedReason: envelope.declinedReason }),
+        ...(envelope.completedDateTime === undefined
+          ? {}
+          : { completedDateTime: envelope.completedDateTime }),
       });
     }
     if (tail.length === 0 && request.method === "PUT") {

@@ -108,17 +108,21 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
     "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
-    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
-    "reviewer": "DOC-029r2 compatibility reviewer (support)",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T18:02:54.052Z",
-    "summary": "I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Help, the documentation reader, Edition details or the standalone export. I replayed the round 1 V-C51 walkthrough on the admin2 lab and all 15 steps passed.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Help, the documentation reader, Edition details or the standalone export. I replayed the round 1 V-C51 walkthrough on the admin2 lab and all 15 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/support.json",
-        "sha256": "00befc825cc6bbe60e5397dbae8f776bcf59782d97191ca0a23fea89c39a50d2"
+        "sha256": "2a585ecc57a52770b2a537f10edc806b7b22535f91701f6265ecef59d916f18f"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
     ]
   }

@@ -19,7 +19,9 @@ export async function passwordSignIn(browser, email) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
   await page.goto(`${BASE}/auth/login`);
-  const withPassword = page.getByRole("button", { name: /Sign in with a password|Administrator sign-in/ });
+  const withPassword = page.getByRole("button", {
+    name: /Sign in with a password|Administrator sign-in/,
+  });
   if (await withPassword.isVisible().catch(() => false)) await withPassword.click();
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);
@@ -36,15 +38,22 @@ export async function magicSignIn(browser, email) {
     await page.goto(`${BASE}/auth/login`);
     await page.getByRole("button", { name: "Email me a sign-in link" }).click();
     await page.getByLabel("Email").fill(email);
-    await page.getByRole("button", { name: /Send|Email me/ }).last().click();
+    await page
+      .getByRole("button", { name: /Send|Email me/ })
+      .last()
+      .click();
     let href = null;
     for (let i = 0; i < 40 && !href; i++) {
       await sleep(750);
-      const search = await fetch(`${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`).then((r) => r.json());
+      const search = await fetch(
+        `${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`,
+      ).then((r) => r.json());
       for (const m of search.messages ?? []) {
         if (new Date(m.Created).getTime() < since) continue;
         const message = await fetch(`${MAIL}/api/v1/message/${m.ID}`).then((r) => r.json());
-        const match = message.Text?.match(/https?:\/\/[^\s)>\]]+magic[^\s)>\]]*/i) ?? message.Text?.match(/https?:\/\/[^\s)>\]]+token=[^\s)>\]]*/);
+        const match =
+          message.Text?.match(/https?:\/\/[^\s)>\]]+magic[^\s)>\]]*/i) ??
+          message.Text?.match(/https?:\/\/[^\s)>\]]+token=[^\s)>\]]*/);
         if (match) {
           const url = new URL(match[0]);
           const lab = new URL(BASE);

@@ -52,16 +52,8 @@
   "appUrl": "http://127.0.0.1:23302",
   "mailUrl": "http://127.0.0.1:23402",
   "tag": "EGH2I",
-  "phases": [
-    "c31",
-    "c32",
-    "c52",
-    "c53"
-  ],
-  "roles": [
-    "legal_team_member",
-    "administrator"
-  ],
+  "phases": ["c31", "c32", "c52", "c53"],
+  "roles": ["legal_team_member", "administrator"],
   "startedAt": "2026-09-16T17:53:48.217Z",
   "finishedAt": "2026-09-16T18:00:01.039Z",
   "steps": [

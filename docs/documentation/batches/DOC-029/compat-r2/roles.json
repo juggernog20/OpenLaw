@@ -60,27 +60,27 @@
     "files": [
       {
         "path": "batches/DOC-029/compat-r2/roles-r2/fixtures-r1.json",
-        "sha256": "71727717bf361d28c3b6d308eb25d80d980c39e07a178eefe33fcefe5569270e"
+        "sha256": "dfaae7c1b455fda978b093add5e32a615af194b029b7a6b363ed5c7ebb3c9146"
       },
       {
         "path": "batches/DOC-029/compat-r2/roles-r2/lib-r1.mjs",
-        "sha256": "7f4c6d931619e8ce6b4d16fa48ab3f8fba42e03dd13a80b496f94b8a4a53babb"
+        "sha256": "528f50a378aba4316d25b93a1bda0cea35866f1a476de0e09f61cafb894c951f"
       },
       {
         "path": "batches/DOC-029/compat-r2/roles-r2/setup-r1.mjs",
-        "sha256": "9b8a891960c21cf6031dd45b29fb38e05acc788f8d4f13a5b10dc73f60929b55"
+        "sha256": "89574bffb77173fee484b2ec391aa0236028f0a68cde50d71089df2a16b2e4df"
       },
       {
         "path": "batches/DOC-029/compat-r2/roles-r2/setup-r1-part2.mjs",
-        "sha256": "548c77f2f7b54d43269b43d85bdd37fcc5a74711814346312427a0e3594f4022"
+        "sha256": "2bbe8ace4b5fe67438b07b4c287e12dfc85420076ba350ea1584ea6c21ea504a"
       },
       {
         "path": "batches/DOC-029/compat-r2/roles-r2/walkthrough-r2.mjs",
-        "sha256": "063a24cf2d3364e5d4e8cb9f85d7e608a9317187614aac9a4b19c2ef1c57890d"
+        "sha256": "d503a74f4a37d82cb55424f21ec0e077398ec758e535eecf1592c5cfe7b7e940"
       },
       {
         "path": "batches/DOC-029/compat-r2/roles-r2/walkthrough-r2.json",
-        "sha256": "a65f7ec1865fed0b7adbb2417280448d1cecd8d5ba6d1ba9712d5fe637034568"
+        "sha256": "984062f07c3a54503cfd36ec320344c0da5432a4142f240ddf0e48daca8ffac9"
       },
       {
         "path": "batches/DOC-029/compat-r2/roles-r2/walkthrough-r2.log",
@@ -110,11 +110,7 @@
       "contentSha256": "4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8",
       "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
       "scenario": "V-C06",
-      "roles": [
-        "administrator",
-        "legal_team_member",
-        "business_user"
-      ],
+      "roles": ["administrator", "legal_team_member", "business_user"],
       "diffFilesInspected": [
         "apps/api/openapi.json",
         "apps/api/src/modules/email-settings/config.test.ts",
@@ -446,9 +442,7 @@
       "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
       "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
       "scenario": "V-C25",
-      "roles": [
-        "business_user"
-      ],
+      "roles": ["business_user"],
       "diffFilesInspected": [
         "apps/api/openapi.json",
         "apps/api/src/modules/email-settings/config.test.ts",

@@ -66,7 +66,10 @@ export async function portalContext(person) {
     await magic.waitFor({ timeout: 20000 });
     await magic.click();
     await page.getByLabel("Email").fill(person.email);
-    await page.getByRole("button", { name: /Send link|Send|Email me/ }).last().click();
+    await page
+      .getByRole("button", { name: /Send link|Send|Email me/ })
+      .last()
+      .click();
     let link = null;
     for (let i = 0; i < 60 && !link; i++) {
       for (const id of await mailIds(person.email)) {

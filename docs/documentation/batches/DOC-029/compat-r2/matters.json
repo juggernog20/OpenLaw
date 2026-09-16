@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "round": 2,
   "group": "matters",
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "reviewer": "DOC-029r2 compatibility reviewer (matters)",
   "reviewerKind": "agent",
   "independence": "The reviewer did not write, correct, technically review or walk any article in this group in round 1, and did not edit article text.",
@@ -137,26 +134,15 @@
         "stamp": 1789581108172,
         "startedAt": "2026-09-16T17:51:48.172Z",
         "finishedAt": "2026-09-16T17:54:29.912Z",
-        "articles": [
-          "create-matter",
-          "matter-status-and-archive",
-          "matter-work"
-        ],
-        "roles": [
-          "administrator",
-          "legal_team_member"
-        ]
+        "articles": ["create-matter", "matter-status-and-archive", "matter-work"],
+        "roles": ["administrator", "legal_team_member"]
       },
       {
         "stamp": 1789581313012,
         "startedAt": "2026-09-16T17:55:13.013Z",
         "finishedAt": "2026-09-16T17:56:00.341Z",
-        "articles": [
-          "matter-work"
-        ],
-        "roles": [
-          "legal_team_member"
-        ]
+        "articles": ["matter-work"],
+        "roles": ["legal_team_member"]
       }
     ],
     "attemptNotes": [

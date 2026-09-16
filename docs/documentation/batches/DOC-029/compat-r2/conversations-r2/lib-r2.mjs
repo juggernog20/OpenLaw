@@ -22,7 +22,11 @@ export async function launch() {
 
 export async function staffContext(person) {
   const b = await launch();
-  const context = await b.newContext({ baseURL: BASE, acceptDownloads: true, viewport: { width: 1440, height: 900 } });
+  const context = await b.newContext({
+    baseURL: BASE,
+    acceptDownloads: true,
+    viewport: { width: 1440, height: 900 },
+  });
   const page = await context.newPage();
   await page.goto(`${BASE}/auth/login`);
   await page.getByRole("heading").first().waitFor({ timeout: 20000 });
@@ -36,13 +40,19 @@ export async function staffContext(person) {
 }
 
 async function newestMailId(email) {
-  const r = await fetch(`${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=1`).then((x) => x.json());
+  const r = await fetch(
+    `${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=1`,
+  ).then((x) => x.json());
   return r.messages?.[0]?.ID ?? null;
 }
 
 export async function portalContext(person) {
   const b = await launch();
-  const context = await b.newContext({ baseURL: BASE, acceptDownloads: true, viewport: { width: 1440, height: 900 } });
+  const context = await b.newContext({
+    baseURL: BASE,
+    acceptDownloads: true,
+    viewport: { width: 1440, height: 900 },
+  });
   const page = await context.newPage();
   const before = await newestMailId(person.email);
   await page.goto(`${BASE}/portal/login`);
@@ -70,7 +80,10 @@ export async function portalContext(person) {
   }
   if (!link) throw new Error(`no fresh sign-in mail for ${person.role}`);
   await page.goto(link);
-  await page.waitForURL((u) => u.pathname.startsWith("/portal") && !u.pathname.startsWith("/portal/login"), { timeout: 30000 });
+  await page.waitForURL(
+    (u) => u.pathname.startsWith("/portal") && !u.pathname.startsWith("/portal/login"),
+    { timeout: 30000 },
+  );
   link = null;
   return { context, page };
 }
@@ -82,7 +95,11 @@ export async function api(page, method, path, data, multipart) {
   const r = await page.request.fetch(`${BASE}/api/v1${path}`, { method, ...opts });
   let body = null;
   const text = await r.text();
-  try { body = JSON.parse(text); } catch { body = text; }
+  try {
+    body = JSON.parse(text);
+  } catch {
+    body = text;
+  }
   return { status: r.status(), body };
 }
 

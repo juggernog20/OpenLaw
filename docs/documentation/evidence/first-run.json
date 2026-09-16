@@ -1,19 +1,20 @@
 {
   "articleId": "first-run",
-  "contentSha256": "3d052434904b6a3c013702492a360d21b25b3e942f3ee8ef99403a613fb0d177",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-firstrun",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (first-run, round 1)",
+  "contentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
+  "appCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+  "buildId": "app sha256:4c23394e45421a1b74efb756e9db94b9b53eb94c5c3bf9de35ec55e77a87ff73; engine sha256:5af3a204e8764e6c85bf0bbe72e3571ece5218ca5d2bb424c8de15af2233c1b9",
+  "environment": "openlaw-docs-41255c61-firstrun-r3",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (first-run, round 3)",
   "reviewerKind": "agent",
   "author": "Codex documentation author; corrections by DOC-029 source-review author agent (first-run)",
-  "technicalReviewer": "DOC-029 source-review author agent (first-run)",
-  "verifiedAt": "2026-09-16T15:17:57Z",
+  "technicalReviewer": "DOC-029r2 source-review author agent (first-run)",
+  "verifiedAt": "2026-09-16T19:37:13Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/first-run.md",
     "docs/documentation/batches/DOC-029/first-run/technical-review.json",
-    "docs/documentation/batches/DOC-029/first-run/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-029/first-run/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/first-run/walkthrough-r3-1.json"
   ],
   "scenarios": [
     {
@@ -22,39 +23,42 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Fresh unseeded lab openlaw-docs-41255c61-firstrun built from 3fa407e3, with its own Mailpit. The fictional first Administrator is DOC-029 first-run Avery Morgan.",
+        "Fresh unseeded lab openlaw-docs-41255c61-firstrun-r3 with its own Mailpit. The app sources are those of 432dba3a (application digest 9e8b3163...). The lab was built from an unreferenced snapshot commit 2491a1a8 that differs from 432dba3a only under docs/, because no committed tree with that app code passed the documentation build gate at the time. walkthrough-r3-1.json records why.",
+        "The fictional first Administrator is DOC-029r3 first-run Avery Morgan.",
         "Three lab lifecycles with the same app and engine image IDs: one for the full path to Finish, one for the email phases, and one for Skip optional steps. Completion is one-way, so each finishing action needs its own instance.",
-        "Email phases recreate only app and worker with email-unset.overlay.json or email-from-missing.overlay.json from the batch folder.",
-        "A local OpenID Connect stand-in (oidc-fixture.mjs) on the lab backend network for Register provider."
+        "Email phases recreate only app and worker with email-from-missing.overlay.json or email-unset.overlay.json from the batch folder. email-from-missing is applied before the first account.",
+        "A local OpenID Connect stand-in (oidc-fixture.mjs) on the lab backend network for Register provider.",
+        "The browser runs inside a pasta network namespace, because Chromium on this shared host aborts requests with net::ERR_NETWORK_CHANGED when other labs change Docker networks."
       ],
-      "expected": "The Administrator reaches the app and the saved settings reflect the completed steps. Validation/retry and resumed onboarding work. The nine-step wizard, the Setup checklist, and Review behave as the article states.",
-      "actual": "46 recorded steps passed on 3fa407e3. Set up OpenLaw refused a seven-character password and showed \"The passwords do not match.\"; the corrected form signed the Administrator in at Welcome to OpenLaw, Step 1 of 9, and setup then redirected to Sign in and the API answered 409. Your organization offered only English (United States), refused a GIF and a 300 KB PNG, accepted a small PNG, and Continue saved name, logo and Europe/Lisbon. Authentication refused a policy with no method (\"Enable at least one sign-in method.\"), kept Single sign-on (SSO) disabled until Register provider showed a callback URL, and Require two-factor authentication forced enrollment; after a TOTP code the wizard reopened at Welcome with the saved choices. Business-user portal saved two bare domains and the magic-link switch; an address was refused. Set up later on Your organization, Authentication, Business-user portal and Invite your team saved nothing unsaved. Reload returned to Welcome with saved settings. An environment relay made Outbound email read-only; SMTP_URL without SMTP_FROM showed the SMTP_FROM warning; with email unset every app page opened the wizard, Skip optional steps opened Outbound email, Continue stayed disabled and there was no Set up later until Save relay, and Send test email delivered. Send invite delivered Legal team member and Administrator invitations. E-signature and AI analysis Set up later left both connectors unconfigured. Review showed nine list counts and three reminder offsets; Finish recorded the review and opened Home, and /welcome then redirected Home. Set up later on Review and Skip optional steps with email configured each ended onboarding without the review. The Setup checklist linked each row to its Settings page, showed Email without a link, and Mark as reviewed removed Review seeded types.",
+      "expected": "The Administrator reaches the app and the saved settings reflect the completed steps. Outbound email is required, and the wizard cannot finish until a relay is saved or the environment sets one. Validation and retry work, resumed onboarding works, and the Setup checklist and Review behave as the article states.",
+      "actual": "52 recorded steps passed on the 432dba3a app code. Set up OpenLaw refused a seven-character password and showed \"The passwords do not match.\". The corrected form signed the Administrator in at Welcome to OpenLaw, Step 1 of 9. Setup then redirected a signed-out visitor to Sign in and the API answered 409. Your organization offered only English (United States). It refused a GIF and a PNG over 5 MB, and accepted a PNG under 5 MB. Continue saved name, logo and Europe/Lisbon, and the sign-in page then showed the saved name and logo. Reload kept Your organization from the page address and dropped an unsaved name. Home opened the wizard at Welcome. Authentication refused a policy with no method (\"Enable at least one sign-in method.\"). Single sign-on (SSO) stayed unavailable until Register provider showed a callback URL. With Require two-factor authentication on, Continue opened /auth/two-factor/enroll directly, and other app addresses returned there. After a TOTP code, Done opened /welcome at Step 1 of 9, and Your organization and Authentication kept the saved choices. Business-user portal saved two bare domains and the magic-link switch, and did not save an entry with an email username. Set up later on Your organization, Authentication, Business-user portal and Invite your team saved no unsaved entries. An environment relay made Outbound email read-only. SMTP_URL without SMTP_FROM showed the SMTP_FROM warning, and Finish and Set up later on Review both opened Outbound email. With email unset, every app page opened the wizard, Skip optional steps opened Outbound email, and the step had no Set up later and a disabled Continue. Username and password required SMTP username and SMTP password, a URL as SMTP server was refused, and Save relay then Send test email delivered. Send invite delivered Legal team member and Administrator invitations, and an unsent entry was not delivered. E-signature and AI analysis Set up later left both connectors unconfigured. Review showed separate Matter fields, Contract fields and Entity fields rows and the reminder offsets, and a list link opened Settings with Return to setup, which opened Review again. Finish recorded the review and opened Home, and /welcome then redirected Home. Set up later on Review and Skip optional steps with email configured each ended onboarding without the review. The Setup checklist linked each row to its Settings page, showed Email without a link, and Mark as reviewed removed Review seeded types.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/first-run/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/first-run/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/first-run/r1-a-setup-checklist.png",
-        "docs/documentation/batches/DOC-029/first-run/r1-a-review-step.png",
-        "docs/documentation/batches/DOC-029/first-run/r1-b0-smtp-from-missing.png",
-        "docs/documentation/batches/DOC-029/first-run/r1-b2-checklist-email-row.png"
+        "docs/documentation/batches/DOC-029/first-run/walkthrough-r3-1.json",
+        "docs/documentation/batches/DOC-029/first-run/walkthrough-r3-1.mjs",
+        "docs/documentation/batches/DOC-029/first-run/r3-1-a-setup-checklist.png",
+        "docs/documentation/batches/DOC-029/first-run/r3-1-a-review-step.png",
+        "docs/documentation/batches/DOC-029/first-run/r3-1-a-return-to-setup.png",
+        "docs/documentation/batches/DOC-029/first-run/r3-1-b0-smtp-from-missing.png",
+        "docs/documentation/batches/DOC-029/first-run/r3-1-b2-checklist-email-row.png"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author. It is not a human user study and not feature-owner approval.",
+    "The lab image was built from snapshot commit 2491a1a8, not from 432dba3a. The two differ only under docs/, and both give application digest 9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c, which the edition pins. The documentation bundled into the image differs from 432dba3a, but first-run behavior does not depend on it.",
     "Single sign-on was checked only as far as Register provider, the callback URL, and the SSO switch becoming available, against a local OpenID Connect stand-in. No SSO sign-in was run and no real identity provider was used.",
     "E-signature and AI analysis were only skipped. Connecting DocuSign or an AI provider is out of scope here and belongs to the connector guides.",
     "The Email row of the Setup checklist can only show after completion, because before completion an unconfigured email sends every page to the wizard. It was seen by removing SMTP_FROM from the environment after completion (phase B2).",
-    "The email phases reused the instance from the failed first phase A attempt, whose Administrator already existed; phase B0 signed in instead of using the first-account form. The first-account form was checked on the two other fresh instances.",
+    "Phases B1 and B2 reused the phase B0 instance and signed in with the Administrator that B0 created through the first-account form.",
     "Invitation delivery was checked by Mailpit recipient and subject only. Invitation activation and Business User entry, which the article leaves to later checks, were not exercised.",
     "Contextual Help on Set up OpenLaw and the wizard was not rechecked in this round.",
-    "The first phase A attempt failed on a reviewer script fault (an ambiguous combobox locator). Its record is kept in walkthrough-r1.json with its disposition; phase A was rerun in full on a new lab and passed."
+    "Rounds 1 and 2 are kept in walkthrough-r1.json and walkthrough-r2-1.json. Round 2 failed on the two-factor product bug that 432dba3a fixes. Round 3 needed one run per phase and no rerun."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "17a32bd77a5673364e11c7ff3906b3e657a90c6750e8df6ff60e2611391bf3e4",
-    "verifiedAt": "2026-09-08T04:13:42Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "3d052434904b6a3c013702492a360d21b25b3e942f3ee8ef99403a613fb0d177",
+    "verifiedAt": "2026-09-16T15:17:57Z"
   },
-  "copyOnlyReview": null,
-  "compatibilityReview": null
+  "copyOnlyReview": null
 }

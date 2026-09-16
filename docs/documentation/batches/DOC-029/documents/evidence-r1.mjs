@@ -14,7 +14,9 @@ const rel = (p) => path.relative(root, p);
 const sha = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
 const log = JSON.parse(fs.readFileSync(path.join(here, "walkthrough-r1.json"), "utf8"));
 const review = JSON.parse(fs.readFileSync(path.join(here, "technical-review.json"), "utf8"));
-const scenarios = JSON.parse(fs.readFileSync(path.join(root, "docs/documentation/scenarios.json"), "utf8")).scenarios;
+const scenarios = JSON.parse(
+  fs.readFileSync(path.join(root, "docs/documentation/scenarios.json"), "utf8"),
+).scenarios;
 const SUMMARY = JSON.parse(fs.readFileSync(path.join(here, "evidence-summaries-r1.json"), "utf8"));
 const REVIEWER = "DOC-029 independent walkthrough agent (documents, round 1)";
 const TECH = "DOC-029 source-review author agent (documents)";
@@ -34,7 +36,8 @@ for (const article of review.articles) {
   const required = scenarios.filter((s) => s.articles.includes(id));
   const steps = log.steps.filter((s) => s.article === id);
   const problems = [];
-  if (log.articleHashes[id] !== contentSha256) problems.push("article bytes changed after the walkthrough");
+  if (log.articleHashes[id] !== contentSha256)
+    problems.push("article bytes changed after the walkthrough");
   if (steps.length === 0) problems.push("no steps");
   if (steps.some((s) => s.result !== "pass")) problems.push("a step did not pass");
   for (const s of required)

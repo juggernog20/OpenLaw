@@ -67,5 +67,20 @@
     "verifiedAt": "2026-09-16T15:37:39.461Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. It links to first-run setup for the initial account and names Set up OpenLaw, but it makes no statement about the Authentication step or two-factor enrollment.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
+  }
 }

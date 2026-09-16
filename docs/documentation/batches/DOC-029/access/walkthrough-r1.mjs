@@ -7,10 +7,21 @@ import { fileURLToPath } from "node:url";
 import { makeLog, close, PROJECT, BASE, MAIL } from "./lib-r1.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const all = { staff: "./wt-staff-sign-in-r1.mjs", portal: "./wt-portal-sign-in-r1.mjs", home: "./wt-find-your-work-r1.mjs", search: "./wt-search-and-views-r1.mjs", settings: "./wt-personal-settings-r1.mjs" };
+const all = {
+  staff: "./wt-staff-sign-in-r1.mjs",
+  portal: "./wt-portal-sign-in-r1.mjs",
+  home: "./wt-find-your-work-r1.mjs",
+  search: "./wt-search-and-views-r1.mjs",
+  settings: "./wt-personal-settings-r1.mjs",
+};
 const chosen = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(all);
 const images = Object.fromEntries(
-  ["app", "worker", "doc-engine"].map((svc) => [svc, execFileSync("docker", ["inspect", "-f", "{{.Image}}", `${PROJECT}-${svc}-1`], { encoding: "utf8" }).trim()]),
+  ["app", "worker", "doc-engine"].map((svc) => [
+    svc,
+    execFileSync("docker", ["inspect", "-f", "{{.Image}}", `${PROJECT}-${svc}-1`], {
+      encoding: "utf8",
+    }).trim(),
+  ]),
 );
 const log = makeLog({
   batch: "DOC-029",
@@ -24,10 +35,19 @@ const log = makeLog({
   mailUrl: MAIL,
   runningImages: images,
   labStatusImages: (() => {
-    const lab = JSON.parse(readFileSync(path.resolve(here, "../../../../../.documentation-labs/work/lab.json"), "utf8"));
-    return { project: lab.project, sourceCommit: lab.sourceCommit, appImageId: lab.appImageId, engineImageId: lab.engineImageId, seed: lab.seed };
+    const lab = JSON.parse(
+      readFileSync(path.resolve(here, "../../../../../.documentation-labs/work/lab.json"), "utf8"),
+    );
+    return {
+      project: lab.project,
+      sourceCommit: lab.sourceCommit,
+      appImageId: lab.appImageId,
+      engineImageId: lab.engineImageId,
+      seed: lab.seed,
+    };
   })(),
-  browser: "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  browser:
+    "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
   modules: chosen,
   startedAt: new Date().toISOString(),
 });
@@ -46,10 +66,25 @@ for (const name of chosen) {
 await close();
 log.meta.finishedAt = new Date().toISOString();
 log.meta.fixtures = {
-  accounts: Object.fromEntries(Object.entries(fx.accounts).map(([k, v]) => [k, { email: v.email, displayName: v.displayName }])),
+  accounts: Object.fromEntries(
+    Object.entries(fx.accounts).map(([k, v]) => [
+      k,
+      { email: v.email, displayName: v.displayName },
+    ]),
+  ),
   created: fx.created,
 };
-const out = chosen.length === Object.keys(all).length ? "walkthrough-r1.json" : `walkthrough-r1.${chosen.join("-")}.json`;
-const summary = { total: log.steps.length, passed: log.steps.filter((s) => s.result === "pass").length, failed: log.steps.filter((s) => s.result === "fail").length };
-writeFileSync(path.join(here, out), JSON.stringify({ ...log.meta, summary, steps: log.steps }, null, 2) + "\n");
+const out =
+  chosen.length === Object.keys(all).length
+    ? "walkthrough-r1.json"
+    : `walkthrough-r1.${chosen.join("-")}.json`;
+const summary = {
+  total: log.steps.length,
+  passed: log.steps.filter((s) => s.result === "pass").length,
+  failed: log.steps.filter((s) => s.result === "fail").length,
+};
+writeFileSync(
+  path.join(here, out),
+  JSON.stringify({ ...log.meta, summary, steps: log.steps }, null, 2) + "\n",
+);
 console.log(out, summary);

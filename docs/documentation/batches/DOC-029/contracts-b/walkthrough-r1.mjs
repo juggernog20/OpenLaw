@@ -65,11 +65,18 @@ const results = {
   appUrl: BASE,
   browser: "Playwright 1.63.0 Chromium, headless, one context per identity at 1280x1800 CSS px",
   articles: Object.fromEntries(
-    Object.entries(articleFiles).map(([id, file]) => [id, { path: file, contentSha256: sha256(path.join(root, file)) }]),
+    Object.entries(articleFiles).map(([id, file]) => [
+      id,
+      { path: file, contentSha256: sha256(path.join(root, file)) },
+    ]),
   ),
   fixtures: {
-    "fixtures/doc029-services-agreement.pdf": sha256(path.join(here, "fixtures/doc029-services-agreement.pdf")),
-    "fixtures/doc029-renewal-amendment.pdf": sha256(path.join(here, "fixtures/doc029-renewal-amendment.pdf")),
+    "fixtures/doc029-services-agreement.pdf": sha256(
+      path.join(here, "fixtures/doc029-services-agreement.pdf"),
+    ),
+    "fixtures/doc029-renewal-amendment.pdf": sha256(
+      path.join(here, "fixtures/doc029-renewal-amendment.pdf"),
+    ),
   },
   selection: { articles: ARTICLES, roles: ROLES },
   startedAt: new Date().toISOString(),
@@ -162,9 +169,12 @@ try {
   for (const role of ROLES) {
     const other = role === "administrator" ? "legal_team_member" : "administrator";
     const roleCtx = { ...ctx, role, other, actor: sessions[role], otherSession: sessions[other] };
-    if (ARTICLES.includes("C18")) await runC18(roleCtx, makeStep("terms-and-renewals", "V-C18", role));
-    if (ARTICLES.includes("C19")) await runC19(roleCtx, makeStep("contract-tasks-and-dates", "V-C19", role));
-    if (ARTICLES.includes("C20")) await runC20(roleCtx, makeStep("contract-relations-and-ending", "V-C20", role));
+    if (ARTICLES.includes("C18"))
+      await runC18(roleCtx, makeStep("terms-and-renewals", "V-C18", role));
+    if (ARTICLES.includes("C19"))
+      await runC19(roleCtx, makeStep("contract-tasks-and-dates", "V-C19", role));
+    if (ARTICLES.includes("C20"))
+      await runC20(roleCtx, makeStep("contract-relations-and-ending", "V-C20", role));
   }
 } finally {
   save();

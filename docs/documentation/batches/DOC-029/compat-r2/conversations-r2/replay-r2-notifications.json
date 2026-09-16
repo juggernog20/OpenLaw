@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "group": "conversations",
   "round": 2,
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "independentReview": true,
   "walkthroughReviewer": "DOC-029r2 compatibility reviewer (conversations)",
   "reviewerKind": "agent",
@@ -61,9 +58,7 @@
     "doc029-conv-extra-5.txt": "fcd3935b728f1c11feee0f53b4c61493c8aee3275b006a58157ef8886400abd0",
     "doc029-conv-extra-6.txt": "c6241f5f7926357a01e41c39de0e4f966d790610016471cf8a48092d43d9074a"
   },
-  "sections": [
-    "all"
-  ],
+  "sections": ["all"],
   "startedAt": "2026-09-16T17:53:41.497Z",
   "fixturePreparation": [
     {
@@ -181,10 +176,7 @@
         "mails": [
           {
             "subject": "Your daily briefing",
-            "sections": [
-              "Dates",
-              "Knowledge"
-            ]
+            "sections": ["Dates", "Knowledge"]
           }
         ],
         "otherMail": [],
@@ -215,10 +207,7 @@
         "mails": [
           {
             "subject": "Your daily briefing",
-            "sections": [
-              "Tasks",
-              "Knowledge"
-            ]
+            "sections": ["Tasks", "Knowledge"]
           }
         ],
         "otherMail": [],
@@ -234,10 +223,7 @@
         "mails": [
           {
             "subject": "Your daily briefing",
-            "sections": [
-              "Tasks",
-              "Knowledge"
-            ]
+            "sections": ["Tasks", "Knowledge"]
           }
         ],
         "otherMail": [],

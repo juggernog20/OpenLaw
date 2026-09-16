@@ -119,7 +119,7 @@
       },
       {
         "path": "batches/DOC-029/compat-r2/support-r2/walkthrough-r2.json",
-        "sha256": "01ca3c4511983b7fc04f2aea1c0464a0e6a1e90d2202a8bb2fdb0efb20a9b77a"
+        "sha256": "fdbfa37ad6dfacc6d80672b8a0a22cba21f70281b2bec6ff5db354d025d07efb"
       },
       {
         "path": "batches/DOC-029/compat-r2/support-r2/walkthrough-r2.log",
@@ -127,7 +127,7 @@
       },
       {
         "path": "batches/DOC-029/compat-r2/support-r2/walkthrough-r2.mjs",
-        "sha256": "b14237d9e7de32240dfc0adf60ec35210e5e248ee47b7b65b018f0788a7aa7b7"
+        "sha256": "53384494cf84481ac41f3f051274da0ed95c16bcf49b8b5042a721b587c51de6"
       }
     ]
   },

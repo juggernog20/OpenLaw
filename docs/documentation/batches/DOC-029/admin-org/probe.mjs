@@ -2,7 +2,9 @@
 import { chromium, signIn } from "./lib.mjs";
 const [base, email, ...paths] = process.argv.slice(2);
 const browser = await chromium.launch();
-const page = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
+const page = await (
+  await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+).newPage();
 await signIn(page, base, email);
 for (const p of paths) {
   await page.goto(`${base}${p}`);

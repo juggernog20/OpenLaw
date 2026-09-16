@@ -1,0 +1,790 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 3,
+  "reviewer": "DOC-029 round 3 compatibility reviewer",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T19:11:55Z",
+  "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+  "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+  "ranges": [
+    {
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+      "command": "git diff --name-only 57e77e386be31b2a319f7143dd54d00123e65efe 432dba3a835863091791fbac429a6a66777bdc40",
+      "commits": [
+        "432dba3a Send the wizard to two-factor enrollment after requiring it",
+        "708ea568 Merge remote-tracking branch origin/dev into docs/747-suite-verification",
+        "0e860c81 docs: re-verify the documentation suite against 3fa407e3 (DOC-029)"
+      ],
+      "applicationFiles": [
+        "apps/web/src/routes/welcome.test.tsx",
+        "apps/web/src/routes/welcome.tsx"
+      ],
+      "otherFiles": "Every other changed path is under docs/ (DOC-029 evidence and article edits), not application code.",
+      "change": "In applyAuthentication, after the wizard saves a legal policy with requireTwoFactor on, it now navigates to /auth/two-factor/enroll instead of /welcome. Before, the /welcome navigation did not rerun the loader guard, so the Administrator was not sent to enrollment. welcome.test.tsx adds a test for the new route. No API, worker, message, Settings page, enroll page or session guard code changed."
+    },
+    {
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+      "usedFor": ["configure-analysis"],
+      "command": "git diff --name-only 3fa407e3a846559914aa1a63249741f30cfb4f69 432dba3a835863091791fbac429a6a66777bdc40",
+      "applicationFiles": [
+        ".env.example",
+        "README.md",
+        "apps/api/openapi.json",
+        "apps/api/src/modules/email-settings/config.test.ts",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/email-settings.test.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/general.test.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.test.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/set-password.test.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/routes/settings-contract-fields.test.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.test.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-contract-types.test.tsx",
+        "apps/web/src/routes/settings-default-fields.test.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-matter-statuses.test.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-matter-types.test.tsx",
+        "apps/web/src/routes/settings-reminders.test.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.test.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/testing/helpers.tsx",
+        "e2e/tests/00-m33-demo.spec.ts",
+        "e2e/tests/08-accessibility.spec.ts",
+        "e2e/tests/12-m6-demo.spec.ts",
+        "messages/en-US.json",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "scripts/dev-hot.sh"
+      ]
+    }
+  ],
+  "method": "For the 45 records on 3fa407e3 I relied on their round 2 compatibility evidence for 3fa407e3 to 57e77e38 and reviewed 57e77e38 to 432dba3a on top. For the 10 records on 57e77e38 I reviewed 57e77e38 to 432dba3a. I read every article that touches the wizard, sign-in, two-factor authentication or Authentication settings. I grepped all articles for two-factor, enroll, wizard and welcome. Only first-run describes the wizard Authentication step. For configure-analysis I reviewed the full 3fa407e3 to 432dba3a diff on the AI provider path.",
+  "limitations": [
+    "Source review only. I ran no walkthrough and used no lab or provider account.",
+    "first-run is out of scope for this review."
+  ],
+  "articles": [
+    {
+      "articleId": "approver-groups",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (admin-org)",
+        "evidence": ["batches/DOC-029/compat-r2/admin-org.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "9b7236766f07ea15cba334194bf2b4d638e65663627ea6c004b417ecd318f01e",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (documents)",
+        "evidence": ["batches/DOC-029/compat-r2/documents.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "authentication-and-email",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "Read the article. The Settings pane statement that OpenLaw asks an Administrator without an authenticator to set one up is about Settings, not the wizard, and the Settings page code did not change. Its wizard section covers only the Outbound email step, which the change does not touch."
+    },
+    {
+      "articleId": "auto-doc-template",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "8b4d7dd36dcacac05d9d375655cb6455d3abf0c5663d95edcbe285d3c726e191",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (auto-docs)",
+        "evidence": ["batches/DOC-029/compat-r2/auto-docs.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "backup-and-restore",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (operator-lifecycle)",
+        "evidence": ["batches/DOC-029/compat-r2/operator-lifecycle.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article mentions two-factor authentication only for a retained AUTH_SECRET after restore. The enrollment flow and key handling did not change."
+    },
+    {
+      "articleId": "comments-and-activity",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (conversations)",
+        "evidence": ["batches/DOC-029/compat-r2/conversations.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "compare-versions",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (analysis-standin)",
+        "evidence": ["batches/DOC-029/compat-r2/analysis-standin.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "configure-analysis",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
+      "contentHashMatches": true,
+      "decision": "compatible",
+      "priorReview": null,
+      "reason": "No file on the AI provider path changed from 3fa407e3 to 432dba3a. git diff --quiet reports no change for apps/api/src/modules/ai-connector, ai-field-prompts, contract-analysis, apps/api/src/lib, apps/api/src/pipeline, apps/worker, packages/shared/src/analysis.ts, packages/db, ai-model-selector.tsx and ai-field-prompts-card.tsx. The API changes are in email-settings and org only. In apps/web, settings-ai-analysis.tsx changed only the Provider card intro text, which the article does not quote, and moved the key reuse check into lib/ai-connector-config.ts as canReuseAiKey. I compared the old and new code. Both require hasApiKey, the same preset and protocol, a saved base URL, and equal normalized base URLs, so the rule in Disable, rotate, or remove is unchanged. Two status messages in en-US.json now say AI features instead of Contract analysis. The article does not quote them. The live provider check on 3fa407e3 (V-C43, walkthrough-c43.json) used a real OpenRouter connector with deepseek/deepseek-v4.1-flash. It covered Test connection success, Load models, search and refresh with 444 models, Field prompt save, line break, restore and reset, an automatic Analysis run and a deliberate rerun with Version, model, evidence and Unverified values, the evidence panel, the no-primary-Document refusal, turning the connector off and on, the Legal Team Member view, and a Load models refusal from a missing Custom endpoint path. On 57e77e38 round 2 (walkthrough-r2-1.json) re-ran 18 credential-free steps and all passed: page and card order, presets and forms, save refusals, API refusals, Load models against a closed endpoint, a fictional Custom connector with a failing test, the turned-off state, the changed-destination key rule, Field prompts, the Contracts to Fields link, Remove connector, the Legal Team Member refusal, the signed-out help link, and operator checks of the shared OPENLAW_SECRET_KEY and key-free logs. It could not re-run the live provider steps. Those steps run only code that did not change, so I judge the article compatible. The article contentSha256 a2e55ab5 still matches its evidence. Known issue #887 remains and the article still makes no Escape claim.",
+      "evidence": [
+        "batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
+        "batches/DOC-029/live-provider/technical-review-r2.json",
+        "batches/DOC-029/live-provider/walkthrough-r2-1.json"
+      ]
+    },
+    {
+      "articleId": "configure-signing",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (live-provider)",
+        "evidence": ["batches/DOC-029/compat-r2/live-provider.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "contract-analysis",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "ce182804fbd35ffb2e8ba24cff6bc848963a56f1b04a10222dea23aedebbee39",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (analysis-standin)",
+        "evidence": ["batches/DOC-029/compat-r2/analysis-standin.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "contract-approvals",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "d33d268780abc6592242a140452187a3233bad9a1bb337a15dcd24e5ecf3b3d3",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+        "evidence": ["batches/DOC-029/compat-r2/contracts-a.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "6108b0fdf48999c06cf2e50cdea4ed766f5142fe58f1fb25d35218ce08a1e475",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (contracts-b)",
+        "evidence": ["batches/DOC-029/compat-r2/contracts-b.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "contract-stages",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+        "evidence": ["batches/DOC-029/compat-r2/contracts-a.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "a277d41d51e94aa2c850bebfc96f7e6e107c287cda273c3c302f7ab21e74a9f2",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (contracts-b)",
+        "evidence": ["batches/DOC-029/compat-r2/contracts-b.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "contributor-guide",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (roles)",
+        "evidence": ["batches/DOC-029/compat-r2/roles.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "convert-request",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (inbox)",
+        "evidence": ["batches/DOC-029/compat-r2/inbox.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "create-contract",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "9ddc15162c743f9502cd7bf98f7d3c1229895b9e275a730bc203e860d4f316d1",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+        "evidence": ["batches/DOC-029/compat-r2/contracts-a.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "create-knowledge",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "5e0e6144f49cefdeae01ca7744488350531630d3a2f230e9695e75edb8f85a4c",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (knowledge)",
+        "evidence": ["batches/DOC-029/compat-r2/knowledge.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "create-matter",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "af9e06defbb30c1ea2fe16489aeb6f423922837eea8ac718eedbe8ebe5ec01c1",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (matters)",
+        "evidence": ["batches/DOC-029/compat-r2/matters.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "deployment-configuration",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "e50a783f16931ee6132b052fd520ee348b6dd73952cdf687e3cdce31366cd622",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "Read the article. It mentions the welcome wizard only for the email relay, and AUTH_SECRET protecting enrolled two-factor material. Neither depends on where the wizard goes after the Authentication step."
+    },
+    {
+      "articleId": "document-folders",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (documents)",
+        "evidence": ["batches/DOC-029/compat-r2/documents.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "document-previews",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (documents)",
+        "evidence": ["batches/DOC-029/compat-r2/documents.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "document-repository",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (documents)",
+        "evidence": ["batches/DOC-029/compat-r2/documents.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "document-versions",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (documents)",
+        "evidence": ["batches/DOC-029/compat-r2/documents.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "electronic-signing",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (signing-standin)",
+        "evidence": ["batches/DOC-029/compat-r2/signing-standin.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "entities-and-counterparties",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "ddbbf1cfcd46f72fc735c67dcd9162a47480641221e06d2fcd2362d660607c35",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (entities)",
+        "evidence": ["batches/DOC-029/compat-r2/entities.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "entity-obligations",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "9e66336f58ac640455e2953d4231f4cb5e05c30dc9eee207e33908f372206b66",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (entities)",
+        "evidence": ["batches/DOC-029/compat-r2/entities.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "entity-records",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "e8bd443312eb75490ecd396313913b1a050ea9751aa63e03ca55d43e22c7e56d",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (entities)",
+        "evidence": ["batches/DOC-029/compat-r2/entities.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "f6d077cc3b817a0c097844fb00d800525777503bab0ba0bff52b222f14b1ea2f",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (entities)",
+        "evidence": ["batches/DOC-029/compat-r2/entities.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "find-your-work",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "8edac6aa2252dc6105a8dd59fef0cd367e78487c7286f3e08844decd7ada22e1",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (access)",
+        "evidence": ["batches/DOC-029/compat-r2/access.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "first-run",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "3d052434904b6a3c013702492a360d21b25b3e942f3ee8ef99403a613fb0d177",
+      "contentHashMatches": false,
+      "decision": "not-reviewed",
+      "reason": "A separate walkthrough agent handles first-run on 432dba3a. This review does not change its evidence."
+    },
+    {
+      "articleId": "follow-request",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "7104110814c3a789f3d1fc02240f6d2f40e509813d636c2c196a833fc53aee8f",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (portal)",
+        "evidence": ["batches/DOC-029/compat-r2/portal.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "install",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "Read the article. It links to first-run setup for the initial account and names Set up OpenLaw, but it makes no statement about the Authentication step or two-factor enrollment."
+    },
+    {
+      "articleId": "manual-signing",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+        "evidence": ["batches/DOC-029/compat-r2/contracts-a.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "42b5a0bcdbce561a30d998a493cdacac31e89c3abfb8f53d9175fff5c95076a3",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (matters)",
+        "evidence": ["batches/DOC-029/compat-r2/matters.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "matter-templates",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (admin-config)",
+        "evidence": ["batches/DOC-029/compat-r2/admin-config.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "matter-work",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "0c4586d601262514f49a617fa47f6bd3c45accadd851fd6bfb9a2f3d817d8d9b",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (matters)",
+        "evidence": ["batches/DOC-029/compat-r2/matters.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "notifications",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "4a4ea2e07dbe4ca65c8765623fc7aafbbac0625ad5db496b3acb07475003255b",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (conversations)",
+        "evidence": ["batches/DOC-029/compat-r2/conversations.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (operator-lifecycle)",
+        "evidence": ["batches/DOC-029/compat-r2/operator-lifecycle.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article mentions the saved wizard relay only. The change does not touch the Outbound email step."
+    },
+    {
+      "articleId": "organisation-and-users",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "Read the article. Invitations, roles, sessions and archive do not involve the wizard Authentication step. Organization branding on sign-in pages is unchanged by this commit."
+    },
+    {
+      "articleId": "personal-settings",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (access)",
+        "evidence": ["batches/DOC-029/compat-r2/access.json"]
+      },
+      "decision": "compatible",
+      "reason": "Read the article. Password & two-factor in Profile uses the shared two-factor component, which did not change. The wizard is not mentioned."
+    },
+    {
+      "articleId": "portal-knowledge",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (portal)",
+        "evidence": ["batches/DOC-029/compat-r2/portal.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "portal-sign-in",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "a4658df9a8f1da02cfef7751c256b9b520a9b7065739c9987d8be154adacebcf",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "Read the article. Portal two-factor setup uses the session guard redirect to /auth/two-factor/enroll?portal=1, which did not change. The wizard change affects only the Administrator in first-run setup."
+    },
+    {
+      "articleId": "publish-knowledge",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "18918ce410b68ee48ca7bfc2217bc187ef24da783f5817298c0cf1188336e7bd",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (knowledge)",
+        "evidence": ["batches/DOC-029/compat-r2/knowledge.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "reference",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (support)",
+        "evidence": ["batches/DOC-029/compat-r2/support.json"]
+      },
+      "decision": "compatible",
+      "reason": "Read the article. It makes no statement about the wizard Authentication step or two-factor enrollment."
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "8ca186fcbb821a59d6b0591a467fac3674421df48337d519d3e7ff0d9593648d",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "request-forms",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "b7be99eb4442a012c4e00fbe17cc964a74d347ac4195e5b28b3faafb11be64fd",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "roles-and-access",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (roles)",
+        "evidence": ["batches/DOC-029/compat-r2/roles.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "search-and-views",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "605b3ebe1621d9e7e4d4449c32f12e5e35302d6d22392e7860375e3f512ffa1f",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (access)",
+        "evidence": ["batches/DOC-029/compat-r2/access.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "staff-sign-in",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "Read the article. It describes required two-factor enrollment after sign-in, Profile enrollment and the code challenge. The change only moves the setup wizard to /auth/two-factor/enroll after the wizard saves a policy that requires two-factor authentication. The enroll route, its loader and the session guard in lib/session.ts did not change, so every statement stays correct."
+    },
+    {
+      "articleId": "submit-request",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "5f564beb8c997e68464baff73fc3a6c094c100307b346e0e929d453c9969b22b",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (portal)",
+        "evidence": ["batches/DOC-029/compat-r2/portal.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "d983f5c33254ca98c261ad00ccb66242a4861a64f75965d9c66c00c13018e085",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (contracts-b)",
+        "evidence": ["batches/DOC-029/compat-r2/contracts-b.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "triage-requests",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (inbox)",
+        "evidence": ["batches/DOC-029/compat-r2/inbox.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "troubleshooting",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (support)",
+        "evidence": ["batches/DOC-029/compat-r2/support.json"]
+      },
+      "decision": "compatible",
+      "reason": "Read the article. The sign-in section points to staff and Portal sign-in and to Authentication settings. It makes no claim about the wizard or two-factor enrollment."
+    },
+    {
+      "articleId": "types-statuses-fields",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "6959a5dfd5960d5bf12d807ec1fadf7c8197ca91b1c7dcbb2f003026c3b4d604",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    },
+    {
+      "articleId": "upgrade",
+      "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "contentSha256": "8ede534213fe2e4e33beef06f32b8da1d0d54327d37ef593c9136dd0ed3655cc",
+      "contentHashMatches": true,
+      "priorReview": null,
+      "decision": "compatible",
+      "reason": "Read the article. It asks the operator to sign in and check accounts after an upgrade. It makes no statement about the wizard or two-factor enrollment."
+    },
+    {
+      "articleId": "versions-and-support",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
+      "contentHashMatches": true,
+      "priorReview": {
+        "range": "3fa407e3 to 57e77e38",
+        "reviewer": "DOC-029r2 compatibility reviewer (support)",
+        "evidence": ["batches/DOC-029/compat-r2/support.json"]
+      },
+      "decision": "compatible",
+      "reason": "The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong."
+    }
+  ]
+}

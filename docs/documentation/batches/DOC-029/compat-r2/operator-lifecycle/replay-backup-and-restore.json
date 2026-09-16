@@ -14,10 +14,7 @@
     "openlaw-docs-d029c2-lcbr-recovery",
     "openlaw-docs-d029c2-lcbr-restore"
   ],
-  "supportContainers": [
-    "openlaw-docs-d029c2-lcbr-mail",
-    "openlaw-docs-d029c2-lcbr-minio"
-  ],
+  "supportContainers": ["openlaw-docs-d029c2-lcbr-mail", "openlaw-docs-d029c2-lcbr-minio"],
   "articles": {
     "backup-and-restore": {
       "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811"

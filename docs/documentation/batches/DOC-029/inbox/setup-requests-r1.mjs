@@ -28,11 +28,20 @@ async function jonasSession() {
 }
 
 const jonas = await jonasSession();
-if (process.argv.slice(2).length === 0 || process.argv.slice(2).some((p) => ["conv-contract", "conv-matter"].includes(p))) {
+if (
+  process.argv.slice(2).length === 0 ||
+  process.argv.slice(2).some((p) => ["conv-contract", "conv-matter"].includes(p))
+) {
   // The Entity must be live and Portal-listed while Jonas submits; it is archived again below.
   const admin = await apiSignIn(PEOPLE.administrator.email);
-  await admin.request("POST", `/api/v1/entities/${fx.entities.old.id}/restore`, { json: {}, expect: [200, 204, 409] });
-  await admin.request("PATCH", `/api/v1/entities/${fx.entities.old.id}`, { json: { portalListed: true }, expect: [200, 409] });
+  await admin.request("POST", `/api/v1/entities/${fx.entities.old.id}/restore`, {
+    json: {},
+    expect: [200, 204, 409],
+  });
+  await admin.request("PATCH", `/api/v1/entities/${fx.entities.old.id}`, {
+    json: { portalListed: true },
+    expect: [200, 409],
+  });
 }
 const onboarding = (await jonas.get("/api/v1/portal/onboarding")).body;
 const departmentId = onboarding.departmentId ?? fx.departments[0].id;
@@ -76,7 +85,10 @@ for (const [role, label] of Object.entries(roles)) {
       const name = `doc029-inbox-${label.toLowerCase()}-${purpose}-${i}.${format}`;
       const data =
         format === "pdf"
-          ? makePdf(`${title} attachment ${i}`, [`Fictional attachment ${i} for ${title}.`, "No real parties are named."])
+          ? makePdf(`${title} attachment ${i}`, [
+              `Fictional attachment ${i} for ${title}.`,
+              "No real parties are named.",
+            ])
           : makeDocx(`${title} attachment ${i}`, [`Fictional Word attachment ${i} for ${title}.`]);
       const form = new FormData();
       form.append("file", new File([data], name, { type: MEDIA_TYPES[format] }));

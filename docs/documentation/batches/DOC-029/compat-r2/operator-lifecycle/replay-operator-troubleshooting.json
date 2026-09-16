@@ -10,9 +10,7 @@
   "candidate": "57e77e386be31b2a319f7143dd54d00123e65efe",
   "baseline": "d1d098ba9f4ba6557a542857d530446b76b1847c",
   "script": "docs/documentation/batches/DOC-029/compat-r2/operator-lifecycle/replay-operator-troubleshooting.mjs",
-  "labProjects": [
-    "openlaw-docs-d029c2-lcdiag-diag"
-  ],
+  "labProjects": ["openlaw-docs-d029c2-lcdiag-diag"],
   "supportContainers": [
     "openlaw-docs-d029c2-lcdiag-mail",
     "openlaw-docs-d029c2-lcdiag-minio",

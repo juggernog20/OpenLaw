@@ -73,5 +73,20 @@
     "verifiedAt": "2026-09-16T16:23:21Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. It describes required two-factor enrollment after sign-in, Profile enrollment and the code challenge. The change only moves the setup wizard to /auth/two-factor/enroll after the wizard saves a policy that requires two-factor authentication. The enroll route, its loader and the session guard in lib/session.ts did not change, so every statement stays correct.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
+  }
 }

@@ -80,9 +80,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Negative: Create contract refuses a blank Title, a missing Contract type, a blank required Field and an invalid number; archived references are not offered; Cancel creates nothing",
       "expected": "Each refusal shows an error in the dialog and no Contract is created; archived type, Entity and person are absent.",
@@ -95,9 +93,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Create the record: Title, Contract type, Fields, Owner, Confidential, optional Matter search, Create",
       "expected": "The app opens the new Contract with its title, type, Legal Owner and a new C- reference, in the Draft Status; the chosen Owner is Legal Owner and the creator is on the team as Creator.",
@@ -110,10 +106,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Marcus Oyelaran"
-      ],
+      "actors": ["Daniel Okafor", "Marcus Oyelaran"],
       "method": "browser-walkthrough",
       "action": "A link does not copy access: a Legal Team Member outside the Confidential team reads the Matter but not the Contract",
       "expected": "The Matter answers; the Confidential Contract is refused for the reader outside its team.",
@@ -126,9 +119,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Rename keeps the C- reference",
       "expected": "The reference stays the same after a rename.",
@@ -141,9 +132,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Record the parties and ownership on Overview: Legal Owner, Business Owner, Our entity, Department, Region, Priority, Risk, Description, Value",
       "expected": "Core fields appear in the stated order; choices save immediately; Unassigned, Not known yet, No Department and No Region clear; Description saves on leave; Value parts save together; Other needs Custom cadence; emptying Amount removes the value.",
@@ -156,9 +145,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Counterparties: search, inspect the create action, link two, Make primary, remove one link",
       "expected": "A new name offers a create action; the first linked party is primary; Make primary moves the designation; removing a link keeps the Counterparty record.",
@@ -171,9 +158,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Contract team: Add team member > Person > Add; membership rows and separate statements; removing membership keeps the Business Owner statement",
       "expected": "One row per person; Legal Owner, Business Owner and Creator show as statements; taking a person off the team leaves their Business Owner statement.",
@@ -186,9 +171,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Maintain the values on Fields: text saves on leave or Enter; a choice saves when selected; Escape abandons an unsaved edit",
       "expected": "Blur and Enter save; Escape restores the saved value without a save; choices save immediately.",
@@ -201,9 +184,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Change contract type on Overview asks for missing required Fields; Cancel keeps the type; Change type applies it; long text Enter makes a new line",
       "expected": "Change contract type opens for the missing required Field; blank is refused; Cancel keeps MSA; filling it and Change type re-types the record; C- reference unchanged.",
@@ -216,10 +197,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor",
-        "Jonas Weber (Portal)"
-      ],
+      "actors": ["Daniel Okafor", "Jonas Weber (Portal)"],
       "method": "browser-walkthrough",
       "action": "Negative: a Business User in the Portal cannot create a Contract directly or assign its Legal Owner",
       "expected": "Jonas reaches the Contract he is on in the Portal read-only for legal details, sees no create control, and the API refuses direct creation and a Legal Owner change.",
@@ -232,9 +210,7 @@
       "article": "create-contract",
       "scenario": "V-C14",
       "role": "administrator",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "method": "browser-walkthrough",
       "action": "Negative: an archived Contract must be restored before editing",
       "expected": "Archive shows the archived note and read-only controls; Restore makes the record editable again.",

@@ -19,18 +19,12 @@
   "fixtureStamp": 1789581097246,
   "runs": [
     {
-      "phases": [
-        "submit",
-        "follow",
-        "knowledge"
-      ],
+      "phases": ["submit", "follow", "knowledge"],
       "startedAt": "2026-09-16T17:51:50.116Z",
       "finishedAt": "2026-09-16T17:52:37.398Z"
     },
     {
-      "phases": [
-        "supplement"
-      ],
+      "phases": ["supplement"],
       "startedAt": "2026-09-16T17:52:51.046Z",
       "finishedAt": "2026-09-16T17:52:54.124Z"
     }

@@ -29,7 +29,11 @@ export async function close() {
 
 export async function newContext(extra = {}) {
   const b = await launch();
-  const context = await b.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true, ...extra });
+  const context = await b.newContext({
+    viewport: { width: 1440, height: 900 },
+    acceptDownloads: true,
+    ...extra,
+  });
   const page = await context.newPage();
   return { context, page };
 }
@@ -42,13 +46,16 @@ export async function passwordSignIn(email, password = SEED_PASSWORD, { expectLe
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  if (expectLeave) await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 30000 });
+  if (expectLeave)
+    await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 30000 });
   return { context, page };
 }
 
 // ---------- Mailpit ----------
 export async function mailSince(email, sinceMs, subjectRe) {
-  const r = await fetch(`${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=50`).then((x) => x.json());
+  const r = await fetch(
+    `${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=50`,
+  ).then((x) => x.json());
   const out = [];
   for (const m of r.messages ?? []) {
     if (new Date(m.Created).getTime() < sinceMs - 1500) continue;
@@ -59,14 +66,20 @@ export async function mailSince(email, sinceMs, subjectRe) {
 }
 
 /** Waits for a new message to the address; returns {subject, link} with the link rewritten to the lab host. */
-export async function waitForLink(email, sinceMs, { subjectRe, linkRe = /https?:\/\/[^\s)>\]"]+/g, timeoutMs = 30000 } = {}) {
+export async function waitForLink(
+  email,
+  sinceMs,
+  { subjectRe, linkRe = /https?:\/\/[^\s)>\]"]+/g, timeoutMs = 30000 } = {},
+) {
   const until = Date.now() + timeoutMs;
   while (Date.now() < until) {
     const msgs = await mailSince(email, sinceMs, subjectRe);
     if (msgs.length) {
       const m = await fetch(`${MAIL}/api/v1/message/${msgs[0].ID}`).then((x) => x.json());
       const links = (m.Text ?? "").match(/https?:\/\/[^\s)>\]"]+/g) ?? [];
-      const pick = links.find((l) => (linkRe instanceof RegExp && !linkRe.global ? linkRe.test(l) : true)) ?? null;
+      const pick =
+        links.find((l) => (linkRe instanceof RegExp && !linkRe.global ? linkRe.test(l) : true)) ??
+        null;
       let link = null;
       if (pick) {
         const u = new URL(pick);
@@ -127,9 +140,13 @@ export async function api(page, method, path, data, multipart) {
 
 // ---------- Lab database (test preparation only) ----------
 export function sql(query) {
-  return execFileSync("docker", ["exec", `${PROJECT}-postgres-1`, "psql", "-U", "openlaw", "-d", "openlaw", "-At", "-c", query], {
-    encoding: "utf8",
-  }).trim();
+  return execFileSync(
+    "docker",
+    ["exec", `${PROJECT}-postgres-1`, "psql", "-U", "openlaw", "-d", "openlaw", "-At", "-c", query],
+    {
+      encoding: "utf8",
+    },
+  ).trim();
 }
 
 // ---------- Step log ----------
@@ -139,13 +156,31 @@ export function makeLog(meta) {
     meta,
     steps,
     record(article, role, step, expected, actual, pass) {
-      const s = { article, role, step, expected, actual: String(actual).slice(0, 900), result: pass ? "pass" : "fail", at: new Date().toISOString() };
+      const s = {
+        article,
+        role,
+        step,
+        expected,
+        actual: String(actual).slice(0, 900),
+        result: pass ? "pass" : "fail",
+        at: new Date().toISOString(),
+      };
       steps.push(s);
-      console.log(`${pass ? "PASS" : "FAIL"} [${article}/${role}] ${step} :: ${s.actual.slice(0, 200)}`);
+      console.log(
+        `${pass ? "PASS" : "FAIL"} [${article}/${role}] ${step} :: ${s.actual.slice(0, 200)}`,
+      );
       return pass;
     },
     notRun(article, role, step, expected, reason) {
-      const s = { article, role, step, expected, actual: reason, result: "not-run", at: new Date().toISOString() };
+      const s = {
+        article,
+        role,
+        step,
+        expected,
+        actual: reason,
+        result: "not-run",
+        at: new Date().toISOString(),
+      };
       steps.push(s);
       console.log(`NOT-RUN [${article}/${role}] ${step} :: ${reason}`);
     },

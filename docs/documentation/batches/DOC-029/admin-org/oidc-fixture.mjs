@@ -12,7 +12,12 @@ await idp.issuer.keys.generate("RS256");
 await idp.start(8080, "0.0.0.0");
 idp.issuer.url = "http://oidc:8080";
 idp.service.on("beforeUserinfo", (response) => {
-  response.body = { sub: identity.sub, email: identity.email, email_verified: true, name: identity.name };
+  response.body = {
+    sub: identity.sub,
+    email: identity.email,
+    email_verified: true,
+    name: identity.name,
+  };
 });
 idp.service.on("beforeTokenSigning", (token) => {
   token.payload.sub = identity.sub;

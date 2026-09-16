@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "group": "conversations",
   "round": 2,
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "reviewer": "DOC-029r2 compatibility reviewer (conversations)",
   "reviewerKind": "agent",
   "independence": "The reviewer did not write or edit either article and is not the round 1 author, technical reviewer, or walkthrough reviewer. No article text changed.",
@@ -113,23 +110,23 @@
   "replayFiles": [
     {
       "path": "batches/DOC-029/compat-r2/conversations-r2/replay-walkthrough-r1.mjs",
-      "sha256": "f14afa49076ad937a5aecd648ee3c7ed8eb46ba19413476aa283b65091597d43"
+      "sha256": "8300995dfc68153b49dffef280842bf612e731b10ca420713ec83b9f3f4c351c"
     },
     {
       "path": "batches/DOC-029/compat-r2/conversations-r2/replay-walkthrough-r2.mjs",
-      "sha256": "1c969fd443616bf42226b8f24d9667cb45a2db26c6d026949f79eac05b44d4ef"
+      "sha256": "897f44907484f2e1adcdbbe9aaee856d226ad64a1608a09c6bd63c2f1ea824aa"
     },
     {
       "path": "batches/DOC-029/compat-r2/conversations-r2/lib-r2.mjs",
-      "sha256": "0a0a51d821c8843993c806373b5bac42a4b06ad7f56f2cb789ee3fb563b31192"
+      "sha256": "d8131b21e44b95dc7870bdd7892ef6fa32a68f24bf166e9cebc3c8f0914ef6e2"
     },
     {
       "path": "batches/DOC-029/compat-r2/conversations-r2/replay-r1-comments.json",
-      "sha256": "940747cdb666c4a664456648093d6f44f383d911b661828041b412cb6c55d9eb"
+      "sha256": "4fa588bdc0d465301ad232b7463444018f36a32718d4e08307898bd64ac86836"
     },
     {
       "path": "batches/DOC-029/compat-r2/conversations-r2/replay-r2-notifications.json",
-      "sha256": "3770d5a316039409ab7f2eccf518c48ab64cc5f72155de0064d2540efe769a74"
+      "sha256": "479f1c8c3ac5c38141376acd81a0e8d19fdad28997c8457324ce508dfec3a252"
     },
     {
       "path": "batches/DOC-029/compat-r2/conversations-r2/fixtures-r1.json",
@@ -182,11 +179,7 @@
           "portal-after",
           "supplement"
         ],
-        "supplementChecks": [
-          "wt",
-          "errors",
-          "six"
-        ],
+        "supplementChecks": ["wt", "errors", "six"],
         "stamp": "135085",
         "startedAt": "2026-09-16T17:52:15.084Z",
         "finishedAt": "2026-09-16T17:53:33.618Z",
@@ -405,9 +398,7 @@
       "replay": {
         "script": "docs/documentation/batches/DOC-029/compat-r2/conversations-r2/replay-walkthrough-r2.mjs",
         "log": "docs/documentation/batches/DOC-029/compat-r2/conversations-r2/replay-r2-notifications.json",
-        "sections": [
-          "all"
-        ],
+        "sections": ["all"],
         "stamp": "221497",
         "startedAt": "2026-09-16T17:53:41.497Z",
         "finishedAt": "2026-09-16T17:56:12.308Z",

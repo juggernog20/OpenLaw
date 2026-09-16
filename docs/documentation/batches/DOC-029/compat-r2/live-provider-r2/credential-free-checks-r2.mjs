@@ -495,7 +495,6 @@ try {
     },
   );
 
-
   // ---------------------------------------------------------------- Legal Team Member
   const memberContext = await browser.newContext();
   const member = await memberContext.newPage();

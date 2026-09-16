@@ -90,21 +90,21 @@
   "replay": {
     "script": {
       "path": "batches/DOC-029/compat-r2/documents-r2/walkthrough-r2.mjs",
-      "sha256": "d5859435e53f86b32ca59e541ec78c0351afae5a2edd27167f985c99d85af559"
+      "sha256": "e74472b394bf9511cc68af9854e3b9084d9ba7943bebd35a15383e5dcde8e397"
     },
     "adaptedFrom": {
       "path": "batches/DOC-029/documents/walkthrough-r1.mjs",
-      "sha256": "8c98a11b2f4b41a05d988deed01cb690e7f8320a95c11e236cf2181051163fc3"
+      "sha256": "91c685f6887631d72f18a6f21ef2231ddc467ec110e1b395d10f8016e58e4cc6"
     },
     "helpers": {
       "path": "batches/DOC-029/documents/lib-r1.mjs",
-      "sha256": "224e0816b37af87670d4659bc179e8534465d8080a4d71825b35572e7c53e96b",
+      "sha256": "2a5c45e6fd6d991adf2364c1377e8a7ffdd1105d38c7364b5527567da9aa1737",
       "note": "Used unchanged; its default URLs are the work2 ports 23301 and 23401."
     },
     "adaptations": "Lab name work to work2 in the lab status call, record and folder names DOC-029 to DOC-029r2, output and screenshot paths, round metadata. No step, selector, expectation or fixture changed.",
     "results": {
       "path": "batches/DOC-029/compat-r2/documents-r2/walkthrough-r2.json",
-      "sha256": "d8f3eff50e791053ede3be0a8e8937c0d989dcf68d17fbb62221568fabea4b08"
+      "sha256": "17126ea6ac8ec39d68f48403924bc6699d76b2a3290022a406f6e848847a38ef"
     },
     "log": {
       "path": "batches/DOC-029/compat-r2/documents-r2/walkthrough-r2.log",

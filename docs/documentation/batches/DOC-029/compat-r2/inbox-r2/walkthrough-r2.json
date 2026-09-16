@@ -4,10 +4,7 @@
   "group": "inbox",
   "round": 2,
   "replayOf": "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.mjs",
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "independentReview": true,
   "walkthroughReviewer": "DOC-029r2 compatibility reviewer (inbox)",
   "reviewerKind": "agent",
@@ -26,15 +23,8 @@
     "triage-requests": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d",
     "convert-request": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee"
   },
-  "phases": [
-    "triage",
-    "convert",
-    "access"
-  ],
-  "roles": [
-    "administrator",
-    "legal_team_member"
-  ],
+  "phases": ["triage", "convert", "access"],
+  "roles": ["administrator", "legal_team_member"],
   "startedAt": "2026-09-16T17:51:36.164Z",
   "finishedAt": "2026-09-16T17:55:04.393Z",
   "steps": [

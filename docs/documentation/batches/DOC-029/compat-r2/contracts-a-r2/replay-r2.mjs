@@ -182,7 +182,9 @@ async function magicSessionOnce(email, displayName) {
     const found = await fetch(
       `${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`,
     ).then((r) => r.json());
-    const newest = [...(found.messages ?? [])].sort((a, b) => Date.parse(b.Created) - Date.parse(a.Created));
+    const newest = [...(found.messages ?? [])].sort(
+      (a, b) => Date.parse(b.Created) - Date.parse(a.Created),
+    );
     for (const m of newest) {
       if (Date.parse(m.Created) < since) continue;
       const msg = await fetch(`${MAIL}/api/v1/message/${m.ID}`).then((r) => r.json());
@@ -200,9 +202,12 @@ async function magicSessionOnce(email, displayName) {
   url.host = labUrl.host;
   await page.goto(url.toString());
   try {
-    await page.waitForURL((u) => u.pathname.startsWith("/portal") && !u.pathname.includes("login"), {
-      timeout: 30000,
-    });
+    await page.waitForURL(
+      (u) => u.pathname.startsWith("/portal") && !u.pathname.includes("login"),
+      {
+        timeout: 30000,
+      },
+    );
   } catch (error) {
     await ctx.close();
     throw error;

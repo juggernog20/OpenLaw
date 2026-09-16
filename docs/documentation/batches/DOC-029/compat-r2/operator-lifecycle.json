@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "round": 2,
   "group": "operator-lifecycle",
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "reviewer": "DOC-029r2 compatibility reviewer (operator-lifecycle)",
   "reviewerKind": "agent",
   "independence": "The reviewer did not write, correct, technically review or walk either article in round 1, and did not edit article text.",
@@ -561,9 +558,7 @@
           "openlaw-docs-d029c2-lcbr-upgrade (source, 127.0.0.1:23330)",
           "openlaw-docs-d029c2-lcbr-restore (target, 127.0.0.1:23332)"
         ],
-        "supportContainers": [
-          "openlaw-docs-d029c2-lcbr-mail (Mailpit, UI 127.0.0.1:23335)"
-        ],
+        "supportContainers": ["openlaw-docs-d029c2-lcbr-mail (Mailpit, UI 127.0.0.1:23335)"],
         "startingBuild": "d1d098ba9f4ba6557a542857d530446b76b1847c",
         "images": {
           "sourceStartingApp": "sha256:d7ccc51dd8726e14bb41b25dfa2a7d01471fafd0bce3597b9d7a0e7554043589",

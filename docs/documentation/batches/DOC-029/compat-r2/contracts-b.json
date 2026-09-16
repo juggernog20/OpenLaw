@@ -1,10 +1,7 @@
 {
   "kind": "article-compatibility-review",
   "task": "DOC-029",
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "round": 2,
   "group": "contracts-b",
   "reviewer": "DOC-029r2 compatibility reviewer (contracts-b)",

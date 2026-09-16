@@ -33,26 +33,81 @@ async function attach(typePath, typeId, fieldId, isRequired = false) {
   });
 }
 
-const contractType = await ensureTaxonomy("/api/v1/contract-types", "contractTypes", "contractType", `${P} Supplier agreement`);
-const matterType = await ensureTaxonomy("/api/v1/matter-types", "matterTypes", "matterType", `${P} Advisory`);
+const contractType = await ensureTaxonomy(
+  "/api/v1/contract-types",
+  "contractTypes",
+  "contractType",
+  `${P} Supplier agreement`,
+);
+const matterType = await ensureTaxonomy(
+  "/api/v1/matter-types",
+  "matterTypes",
+  "matterType",
+  `${P} Advisory`,
+);
 
-const fCarry = await ensureField({ displayName: `${P} Supplier name`, moduleScope: "global", fieldType: "text", fieldTag: "business" });
-const fStay = await ensureField({ displayName: `${P} Budget note`, moduleScope: "global", fieldType: "text", fieldTag: "business" });
-const fReq = await ensureField({ displayName: `${P} Cost centre`, moduleScope: "global", fieldType: "text", fieldTag: "business" });
-const fEnt = await ensureField({ displayName: `${P} Contracting entity`, moduleScope: "global", fieldType: "entity", fieldTag: "business" });
-const fChoice = await ensureField({ displayName: `${P} Region`, moduleScope: "global", fieldType: "single_select", fieldTag: "business", options: ["North", "South"] });
+const fCarry = await ensureField({
+  displayName: `${P} Supplier name`,
+  moduleScope: "global",
+  fieldType: "text",
+  fieldTag: "business",
+});
+const fStay = await ensureField({
+  displayName: `${P} Budget note`,
+  moduleScope: "global",
+  fieldType: "text",
+  fieldTag: "business",
+});
+const fReq = await ensureField({
+  displayName: `${P} Cost centre`,
+  moduleScope: "global",
+  fieldType: "text",
+  fieldTag: "business",
+});
+const fEnt = await ensureField({
+  displayName: `${P} Contracting entity`,
+  moduleScope: "global",
+  fieldType: "entity",
+  fieldTag: "business",
+});
+const fChoice = await ensureField({
+  displayName: `${P} Region`,
+  moduleScope: "global",
+  fieldType: "single_select",
+  fieldTag: "business",
+  options: ["North", "South"],
+});
 
-const contractRT = await ensureTaxonomy("/api/v1/request-types", "requestTypes", "requestType", `${P} Supplier contract request`);
-const matterRT = await ensureTaxonomy("/api/v1/request-types", "requestTypes", "requestType", `${P} Advisory matter request`);
-await admin.patch(`/api/v1/request-types/${contractRT.id}`, { targetModule: "contract", targetTypeId: contractType.id });
-await admin.patch(`/api/v1/request-types/${matterRT.id}`, { targetModule: "matter", targetTypeId: matterType.id });
+const contractRT = await ensureTaxonomy(
+  "/api/v1/request-types",
+  "requestTypes",
+  "requestType",
+  `${P} Supplier contract request`,
+);
+const matterRT = await ensureTaxonomy(
+  "/api/v1/request-types",
+  "requestTypes",
+  "requestType",
+  `${P} Advisory matter request`,
+);
+await admin.patch(`/api/v1/request-types/${contractRT.id}`, {
+  targetModule: "contract",
+  targetTypeId: contractType.id,
+});
+await admin.patch(`/api/v1/request-types/${matterRT.id}`, {
+  targetModule: "matter",
+  targetTypeId: matterType.id,
+});
 
 for (const rt of [contractRT, matterRT]) {
   await attach("/api/v1/request-types", rt.id, fCarry.id);
   await attach("/api/v1/request-types", rt.id, fStay.id);
   await attach("/api/v1/request-types", rt.id, fEnt.id);
 }
-for (const [p, t] of [["/api/v1/contract-types", contractType], ["/api/v1/matter-types", matterType]]) {
+for (const [p, t] of [
+  ["/api/v1/contract-types", contractType],
+  ["/api/v1/matter-types", matterType],
+]) {
   await attach(p, t.id, fCarry.id);
   await attach(p, t.id, fReq.id, true);
   await attach(p, t.id, fEnt.id);
@@ -76,20 +131,29 @@ const entities = (await admin.get("/api/v1/entities?includeArchived=true&limit=2
 const entityRows = entities.entities ?? entities.rows ?? [];
 async function ensureEntity(legalName) {
   let row = entityRows.find((e) => e.legalName === legalName);
-  if (!row) row = (await admin.post("/api/v1/entities", { legalName, entityTypeId: entityType.id })).body.entity;
+  if (!row)
+    row = (await admin.post("/api/v1/entities", { legalName, entityTypeId: entityType.id })).body
+      .entity;
   return row;
 }
 const liveEntity = await ensureEntity(`${P} Live Holdings Ltd`);
 const oldEntity = await ensureEntity(`${P} Old Holdings Ltd`);
 for (const e of [liveEntity, oldEntity]) {
-  await admin.request("PATCH", `/api/v1/entities/${e.id}`, { json: { portalListed: true }, expect: [200, 409] });
+  await admin.request("PATCH", `/api/v1/entities/${e.id}`, {
+    json: { portalListed: true },
+    expect: [200, 409],
+  });
 }
 
 // Matter templates on the DOC-029 Matter type.
-const templates = (await admin.get(`/api/v1/matter-templates?includeArchived=true`)).body.matterTemplates ?? [];
+const templates =
+  (await admin.get(`/api/v1/matter-templates?includeArchived=true`)).body.matterTemplates ?? [];
 async function ensureTemplate(name, extra) {
   let row = templates.find((t) => t.name === name && t.matterTypeId === matterType.id);
-  if (!row) row = (await admin.post("/api/v1/matter-templates", { matterTypeId: matterType.id, name, ...extra })).body.matterTemplate;
+  if (!row)
+    row = (
+      await admin.post("/api/v1/matter-templates", { matterTypeId: matterType.id, name, ...extra })
+    ).body.matterTemplate;
   return row;
 }
 const goodTemplate = await ensureTemplate(`${P} Advisory template`, {
@@ -115,7 +179,9 @@ const staleTemplate = await ensureTemplate(`${P} Stale template`, {
   description: "Fictional template whose Region default is later removed from the options.",
 });
 // Set its default while the option exists, then remove the option from the Field.
-const choiceNow = (await list("/api/v1/fields?includeArchived=true", "fields")).find((f) => f.id === fChoice.id);
+const choiceNow = (await list("/api/v1/fields?includeArchived=true", "fields")).find(
+  (f) => f.id === fChoice.id,
+);
 if (!(choiceNow.options ?? []).includes("West")) {
   await admin.patch(`/api/v1/fields/${fChoice.id}`, { options: ["North", "South", "West"] });
 }

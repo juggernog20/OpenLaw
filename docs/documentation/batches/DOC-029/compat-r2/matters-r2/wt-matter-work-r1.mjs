@@ -222,7 +222,11 @@ export default async function matterWork(ctx) {
       ).map((x) => x.replace(/^(Complete|Reopen) Task: /, ""));
       expectThat(
         q(order) ===
-          q(["DOC-029r2 work empty task", "DOC-029r2 work review task", "DOC-029r2 work plain task"]),
+          q([
+            "DOC-029r2 work empty task",
+            "DOC-029r2 work review task",
+            "DOC-029r2 work plain task",
+          ]),
         q(order),
       );
       await tasksRegion()
@@ -470,7 +474,9 @@ export default async function matterWork(ctx) {
       ).replace(/\s+/g, " ");
       const leave = await api(page, "DELETE", `/matters/${s.w}/team/${user("Tom Iwu").id}`);
       await page.reload();
-      await datesRegion().getByRole("button", { name: "Actions for DOC-029r2 work filing" }).click();
+      await datesRegion()
+        .getByRole("button", { name: "Actions for DOC-029r2 work filing" })
+        .click();
       await page.getByRole("menuitem", { name: "Edit date" }).click();
       const d = page.getByRole("dialog", { name: "Edit Key date" });
       await d
@@ -499,7 +505,9 @@ export default async function matterWork(ctx) {
       await d.getByRole("button", { name: "Save" }).click();
       await d.waitFor({ state: "hidden" });
       const tomDate = (await dates()).find((x) => x.label === "DOC-029r2 work Tom only");
-      await datesRegion().getByRole("button", { name: "Actions for DOC-029r2 work filing" }).click();
+      await datesRegion()
+        .getByRole("button", { name: "Actions for DOC-029r2 work filing" })
+        .click();
       await page.getByRole("menuitem", { name: "Edit date" }).click();
       await d.getByRole("checkbox", { name: account.name }).uncheck();
       await d.getByRole("button", { name: "Save" }).click();
@@ -527,7 +535,9 @@ export default async function matterWork(ctx) {
     "Edit date saves with Save; Remove date asks for confirmation (Cancel keeps the date); a closed Matter keeps its dates, still edits them, and has no Next deadline until reopened.",
     async () => {
       await gotoTab("key-dates");
-      await datesRegion().getByRole("button", { name: "Actions for DOC-029r2 work overdue" }).click();
+      await datesRegion()
+        .getByRole("button", { name: "Actions for DOC-029r2 work overdue" })
+        .click();
       await page.getByRole("menuitem", { name: "Edit date" }).click();
       const d = page.getByRole("dialog", { name: "Edit Key date" });
       await d.getByLabel("Event").fill("DOC-029r2 work overdue edited");
@@ -560,7 +570,9 @@ export default async function matterWork(ctx) {
       });
       await gotoTab("key-dates");
       const listed = await datesRegion().getByText("DOC-029r2 work filing").isVisible();
-      await datesRegion().getByRole("button", { name: "Actions for DOC-029r2 work filing" }).click();
+      await datesRegion()
+        .getByRole("button", { name: "Actions for DOC-029r2 work filing" })
+        .click();
       await page.getByRole("menuitem", { name: "Edit date" }).click();
       await d.getByLabel("Note").fill("Edited while closed.");
       await d.getByRole("button", { name: "Save" }).click();

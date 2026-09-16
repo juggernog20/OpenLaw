@@ -147,9 +147,9 @@ async function mailLink(email) {
 async function magicLinkSignIn(page, email) {
   const newest = async () =>
     (
-      await fetch(`${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=1`).then(
-        (r) => r.json(),
-      )
+      await fetch(
+        `${MAIL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=1`,
+      ).then((r) => r.json())
     ).messages?.[0]?.ID ?? null;
   const before = await newest();
   await page.goto(`${BASE}/portal/login`);
@@ -312,7 +312,10 @@ async function walkthrough(role, page, displayName, options = {}) {
       const sideBySide =
         paneBox && fieldsBox && paneBox.x < fieldsBox.x && Math.abs(paneBox.y - fieldsBox.y) < 200;
       expectThat(sideBySide, `pane and form are not side by side: ${q(paneBox)} ${q(fieldsBox)}`);
-      expectThat(parts.Header && parts.Header.length === 2, "header Placeholder chips missing (counterparty_name and client_matter)");
+      expectThat(
+        parts.Header && parts.Header.length === 2,
+        "header Placeholder chips missing (counterparty_name and client_matter)",
+      );
       expectThat(parts.Footer && parts.Footer.length === 1, "footer Placeholder chip missing");
       expectThat(
         parts.Footnotes && parts.Footnotes.length === 1,
@@ -328,12 +331,18 @@ async function walkthrough(role, page, displayName, options = {}) {
         );
       const chipOrder = [];
       for (const c of chips) {
-        const slug = c.label.replace(/^Placeholder /, "").split("|")[0].trim();
+        const slug = c.label
+          .replace(/^Placeholder /, "")
+          .split("|")[0]
+          .trim();
         if (!chipOrder.includes(slug)) chipOrder.push(slug);
       }
       const bodySlugs = [];
       for (const l of parts.Body ?? []) {
-        const slug = l.replace(/^Placeholder /, "").split("|")[0].trim();
+        const slug = l
+          .replace(/^Placeholder /, "")
+          .split("|")[0]
+          .trim();
         if (!bodySlugs.includes(slug)) bodySlugs.push(slug);
       }
       const expectedLabels = chipOrder.map((slug) => {
@@ -550,7 +559,12 @@ async function walkthrough(role, page, displayName, options = {}) {
     "Negative: an upload with a name that is not a valid slug is refused and the refusal quotes the text",
     async () => {
       const text = await uploadExpectingRefusal(page, fixture("doc029-bad-slug.docx"));
-      const pill = (await page.getByText(/^File version \d+$/).first().textContent()).trim();
+      const pill = (
+        await page
+          .getByText(/^File version \d+$/)
+          .first()
+          .textContent()
+      ).trim();
       expectThat(/Counterparty-Name/.test(text), `unexpected refusal ${text}`);
       expectThat(pill === "File version 1", `a version was written: ${pill}`);
       return `Upload version refused doc029-bad-slug.docx with ${q(text)}; the pane still shows ${q(pill)}.`;

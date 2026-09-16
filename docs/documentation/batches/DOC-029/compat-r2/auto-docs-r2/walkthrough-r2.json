@@ -4,10 +4,7 @@
   "group": "auto-docs",
   "round": 2,
   "replayOf": "batches/DOC-029/auto-docs/walkthrough-r1.mjs",
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "walkthroughReviewer": "DOC-029r2 compatibility reviewer (auto-docs)",
   "reviewerKind": "agent",
   "articleId": "auto-doc-template",
@@ -457,13 +454,7 @@
     "fail": 0
   },
   "observedOrder": {
-    "partOrder": [
-      "Body",
-      "Endnotes",
-      "Footer",
-      "Footnotes",
-      "Header"
-    ],
+    "partOrder": ["Body", "Endnotes", "Footer", "Footnotes", "Header"],
     "chipOrder": [
       "counterparty_name",
       "signing_date",

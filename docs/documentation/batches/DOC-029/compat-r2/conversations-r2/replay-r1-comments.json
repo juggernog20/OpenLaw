@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "group": "conversations",
   "round": 1,
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "independentReview": true,
   "walkthroughReviewer": "DOC-029r2 compatibility reviewer (conversations)",
   "reviewerKind": "agent",

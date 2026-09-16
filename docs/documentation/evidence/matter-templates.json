@@ -83,17 +83,21 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
     "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed",
-    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
-    "reviewer": "DOC-029r2 compatibility reviewer (admin-config)",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T18:00:30Z",
-    "summary": "I inspected the 3fa407e3..57e77e38 app diff and found no change to the Matter template settings, the template editor, the Create matter and Convert dialogs, or the matter-templates, matters, requests and fields API modules; the shared list-editor and Settings changes do not alter any step in the article. I replayed the round 1 V-C39 walkthrough on the admin2 lab built from 57e77e38, and all eight Administrator steps and both negative role checks passed with the same outcomes.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (admin-config)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and found no change to the Matter template settings, the template editor, the Create matter and Convert dialogs, or the matter-templates, matters, requests and fields API modules; the shared list-editor and Settings changes do not alter any step in the article. I replayed the round 1 V-C39 walkthrough on the admin2 lab built from 57e77e38, and all eight Administrator steps and both negative role checks passed with the same outcomes. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/admin-config.json",
-        "sha256": "c898edb66cffd7d7c4fc604ee3daa7883f9b5a33f8d699bd1643c052e2f55c03"
+        "sha256": "3ec15a6a6c5f8872032b2f938ab2477c300cecb21d5ff9155b06b77e71a02f38"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
     ]
   }

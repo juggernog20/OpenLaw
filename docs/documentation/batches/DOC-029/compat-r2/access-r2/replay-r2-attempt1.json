@@ -29,11 +29,7 @@
     }
   },
   "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
-  "modules": [
-    "home",
-    "search",
-    "settings"
-  ],
+  "modules": ["home", "search", "settings"],
   "startedAt": "2026-09-16T17:51:48.715Z",
   "finishedAt": "2026-09-16T17:53:57.759Z",
   "fixtures": {

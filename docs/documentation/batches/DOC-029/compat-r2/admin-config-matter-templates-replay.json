@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "group": "admin-config",
   "round": 2,
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "walkthroughReviewer": "DOC-029r2 compatibility reviewer (admin-config)",
   "reviewerKind": "agent",
   "articles": [
@@ -45,11 +42,7 @@
     "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
   },
   "appUrl": "http://127.0.0.1:23300",
-  "sections": [
-    "forms",
-    "templates",
-    "access"
-  ],
+  "sections": ["forms", "templates", "access"],
   "startedAt": "2026-09-16T17:54:50.557Z",
   "stamp": "mu4eht6p",
   "steps": [
@@ -444,16 +437,12 @@
     {
       "kind": "contract type",
       "name": "DOC-029r2 admin-config compat Forms MSA mu4eht6p",
-      "attached": [
-        "Deal value (USD)"
-      ]
+      "attached": ["Deal value (USD)"]
     },
     {
       "kind": "matter type",
       "name": "DOC-029r2 admin-config compat Forms matter type mu4eht6p",
-      "attached": [
-        "DOC-029r2 admin-config compat Supplier entity mu4eht6p"
-      ]
+      "attached": ["DOC-029r2 admin-config compat Supplier entity mu4eht6p"]
     },
     {
       "kind": "contract type",

@@ -4,10 +4,7 @@
   "group": "admin-config",
   "round": 2,
   "walkthroughRound": 1,
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-config, round 1)",
   "reviewerKind": "agent",
   "articles": [
@@ -41,13 +38,7 @@
     "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
   },
   "appUrl": "http://127.0.0.1:23300",
-  "sections": [
-    "types",
-    "forms",
-    "reminders",
-    "audit",
-    "access"
-  ],
+  "sections": ["types", "forms", "reminders", "audit", "access"],
   "startedAt": "2026-09-16T18:07:01.543Z",
   "stamp": "mu4exh81",
   "steps": [
@@ -672,16 +663,12 @@
     {
       "kind": "contract type",
       "name": "DOC-029r2 admin-config walk Forms MSA mu4exh81",
-      "attached": [
-        "Deal value (USD)"
-      ]
+      "attached": ["Deal value (USD)"]
     },
     {
       "kind": "matter type",
       "name": "DOC-029r2 admin-config walk Forms matter type mu4exh81",
-      "attached": [
-        "DOC-029r2 admin-config walk Supplier entity mu4exh81"
-      ]
+      "attached": ["DOC-029r2 admin-config walk Supplier entity mu4exh81"]
     },
     {
       "kind": "contract type",

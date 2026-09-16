@@ -38,7 +38,9 @@ export async function passwordSignIn(browser, email) {
   const page = await context.newPage();
   page.setDefaultTimeout(60000);
   await page.goto(`${BASE}/auth/login`);
-  const withPassword = page.getByRole("button", { name: /Sign in with a password|Administrator sign-in/ });
+  const withPassword = page.getByRole("button", {
+    name: /Sign in with a password|Administrator sign-in/,
+  });
   if (await withPassword.isVisible().catch(() => false)) await withPassword.click();
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);
@@ -56,7 +58,10 @@ export async function magicSignIn(browser, email) {
     await page.goto(`${BASE}/auth/login`);
     await page.getByRole("button", { name: "Email me a sign-in link" }).click();
     await page.getByLabel("Email").fill(email);
-    await page.getByRole("button", { name: /Send|Email me/ }).last().click();
+    await page
+      .getByRole("button", { name: /Send|Email me/ })
+      .last()
+      .click();
     let href = null;
     for (let i = 0; i < 40 && !href; i++) {
       await sleep(750);
@@ -92,8 +97,18 @@ export async function magicSignIn(browser, email) {
 }
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 function ordinal(d) {
   const s = ["th", "st", "nd", "rd"];
@@ -120,10 +135,7 @@ export async function pickDate(page, triggerName, iso) {
 
 /** Run an action and wait for the matching API response; returns its status. */
 export async function withResponse(page, match, action, timeout = 15000) {
-  const wait = page.waitForResponse(
-    (r) => r.url().includes("/api/v1/") && match(r),
-    { timeout },
-  );
+  const wait = page.waitForResponse((r) => r.url().includes("/api/v1/") && match(r), { timeout });
   wait.catch(() => {});
   await action();
   const res = await wait;

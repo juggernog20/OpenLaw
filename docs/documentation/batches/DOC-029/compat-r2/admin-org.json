@@ -142,11 +142,11 @@
         "files": [
           {
             "path": "batches/DOC-029/compat-r2/admin-org-r2/walkthrough-r2.mjs",
-            "sha256": "f60e03eb3ef31744d58731401c2ab9b084edd2480cb33a70734e13ac0b823fda"
+            "sha256": "b3ecbb5ee30242590c60c1aa7b25daf2fc4be97aaa46a9b108b1e399d0a55355"
           },
           {
             "path": "batches/DOC-029/compat-r2/admin-org-r2/lib-r2.mjs",
-            "sha256": "9a54ded8d261ac3e760ec1a375894b1d99e1dff96312d20e23496534649e833a"
+            "sha256": "57088646cd9e45f39e045be27e2b1beed338f255f61aead5f91eb2867b5f1545"
           },
           {
             "path": "batches/DOC-029/compat-r2/admin-org-r2/runs/groups-2026-09-16T17-53-54-217Z.json",

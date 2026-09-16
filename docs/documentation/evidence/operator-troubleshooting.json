@@ -60,17 +60,21 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
     "contentSha256": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
-    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
-    "reviewer": "DOC-029r2 compatibility reviewer (operator-lifecycle)",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T18:19:21Z",
-    "summary": "Inspected the 3fa407e3..57e77e38 app diff (SMTP save body and failure texts, sign-in branding, AI analysis intro, BASE_URL wording) and confirmed compose.yml, packages/db, apps/worker and services did not change. Replayed the round 1 V-C48 script on 57e77e38 from a populated d1d098ba upgrade: startup, port, database, proxy origin, live updates, migration, email, storage, worker, engine and provider-control faults all reached the documented cause and recovery (39 of 39 steps).",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (operator-lifecycle)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff (SMTP save body and failure texts, sign-in branding, AI analysis intro, BASE_URL wording) and confirmed compose.yml, packages/db, apps/worker and services did not change. Replayed the round 1 V-C48 script on 57e77e38 from a populated d1d098ba upgrade: startup, port, database, proxy origin, live updates, migration, email, storage, worker, engine and provider-control faults all reached the documented cause and recovery (39 of 39 steps). From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article mentions the saved wizard relay only. The change does not touch the Outbound email step.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/operator-lifecycle.json",
-        "sha256": "274319adb0ca06fa6c3b1109b24f0b9526afe0bd0ec71fbbb5a6c8f4c6546847"
+        "sha256": "df6ecde75c37a04ffeb0856df7b56d0181c38de7f9e55fe056bbf194f94535d3"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
     ]
   }

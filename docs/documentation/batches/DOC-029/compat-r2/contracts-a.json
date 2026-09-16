@@ -97,7 +97,7 @@
   "replay": {
     "script": {
       "path": "batches/DOC-029/compat-r2/contracts-a-r2/replay-r2.mjs",
-      "sha256": "21b5858bf0855daa72711cbfd9ec62f9c0a5bd6c517e8cea40b26382e86a8f7d",
+      "sha256": "c8c41bcfd640357826fa25253e3a36a40d3c30a392808b3df4c8bf90ac68777b",
       "adaptedFrom": "batches/DOC-029/contracts-a/walkthrough-r1.mjs",
       "changes": [
         "Lab metadata path work to work2 (app 127.0.0.1:23301 and Mailpit 127.0.0.1:23401), and the repository root depth for the new folder.",
@@ -108,7 +108,7 @@
     "runs": [
       {
         "path": "batches/DOC-029/compat-r2/contracts-a-r2/replay-r2.json",
-        "sha256": "17bf68d61fc54536f04177f9a4258b75da547189fd3b577c3b1d87f432e619ee",
+        "sha256": "84689b35ae26fdfa2f0582dc3f7f6e95cbeeb2f76a43e4fa46adc9a7050cf3f7",
         "scope": "all four articles, legal_team_member and administrator",
         "startedAt": "2026-09-16T18:02:49.809Z",
         "finishedAt": "2026-09-16T18:06:25.457Z",
@@ -117,7 +117,7 @@
       },
       {
         "path": "batches/DOC-029/compat-r2/contracts-a-r2/replay-r2-create-contract-administrator.json",
-        "sha256": "0c5592018983e456eede2e3a1ef39a341c54ebf1691744fcb1a14dfbad635362",
+        "sha256": "d3bbd4018b07698e3721cffa4d74dd435d5a73aa970bc0a659616d29b3c022c2",
         "scope": "create-contract, administrator (ONLY=create-contract ROLES=administrator)",
         "startedAt": "2026-09-16T18:06:45.355Z",
         "finishedAt": "2026-09-16T18:07:13.947Z",

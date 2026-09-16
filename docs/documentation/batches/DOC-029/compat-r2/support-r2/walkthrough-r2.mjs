@@ -338,7 +338,9 @@ const FX = { stamp };
     "v1",
   );
   must(
-    await N.api("POST", `/contracts/${shared.number}/folders`, { name: "DOC-029r2 support folder" }),
+    await N.api("POST", `/contracts/${shared.number}/folders`, {
+      name: "DOC-029r2 support folder",
+    }),
     "folder",
   );
   const folderId = must(

@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "group": "contracts-b",
   "round": 2,
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "walkthroughReviewer": "DOC-029r2 compatibility reviewer (contracts-b)",
   "reviewerKind": "agent",
   "method": "browser-walkthrough",
@@ -43,15 +40,8 @@
     "fixtures/doc029-renewal-amendment.pdf": "8ab068abcb8f33bb423203c954c2304f055d69942cf77af3f867e5bd2a1c2dbe"
   },
   "selection": {
-    "articles": [
-      "C18",
-      "C19",
-      "C20"
-    ],
-    "roles": [
-      "legal_team_member",
-      "administrator"
-    ]
+    "articles": ["C18", "C19", "C20"],
+    "roles": ["legal_team_member", "administrator"]
   },
   "startedAt": "2026-09-16T17:51:56.733Z",
   "stamp": 1789581116732,

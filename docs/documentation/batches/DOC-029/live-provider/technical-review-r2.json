@@ -50,19 +50,28 @@
         },
         {
           "claim": "Settings -> Organization -> AI analysis page, card order, labels, switches and badges",
-          "sources": ["apps/web/src/routes/settings-ai-analysis.tsx", "apps/web/src/routes/settings.tsx"],
+          "sources": [
+            "apps/web/src/routes/settings-ai-analysis.tsx",
+            "apps/web/src/routes/settings.tsx"
+          ],
           "actual": "Only the Provider card intro text changed. It now reads 'Connect your AI provider for Contract analysis and AI-assisted Request conversion. Relevant document text, Request answers, and conversations are sent to the provider when an AI task runs.' The article does not quote the intro. Its Request conversion section already says that Fill Contract Fields after conversion uses Request answers, conversation and supporting sources. The labels Provider, Protocol, Deployment endpoint, Base URL, API key, Save connector, Test connection, Connection successful., Use AI analysis, Remove connector, Request conversion, the three switch labels, Connected and Turned off are unchanged. SettingsLayout now shows a 'Return to setup' link only for an Administrator who arrives from the welcome wizard's review step. The review step does not link to AI analysis, so the article's route is not affected.",
           "correction": null
         },
         {
           "claim": "Model selector controls: Load models, Refresh models, Search models, Enter model ID manually, Azure manual entry",
-          "sources": ["apps/web/src/components/ai-model-selector.tsx", "apps/web/src/routes/welcome.tsx"],
+          "sources": [
+            "apps/web/src/components/ai-model-selector.tsx",
+            "apps/web/src/routes/welcome.tsx"
+          ],
           "actual": "ai-model-selector.tsx did not change. Commit 2b6d167f also uses AiModelSelector in the welcome wizard's AI analysis step, with Azure OpenAI starting in manual entry. The article covers the Settings page only, so no change is needed.",
           "correction": null
         },
         {
           "claim": "Field prompts card: seven prompts, not collapsible, Enter saves, Shift+Enter, clear and leave restores, Reset to default, link to Contracts -> Fields",
-          "sources": ["apps/web/src/components/ai-field-prompts-card.tsx", "apps/web/src/lib/field-commit.ts"],
+          "sources": [
+            "apps/web/src/components/ai-field-prompts-card.tsx",
+            "apps/web/src/lib/field-commit.ts"
+          ],
           "actual": "Neither file changed. The link text 'Contracts → Fields' still goes to /settings/contracts/fields. The Escape handler still calls revertText() and then blur(), so defect #887 is still present. The article must continue to leave out the Escape sentence.",
           "correction": null
         },

@@ -80,17 +80,21 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
     "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
-    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
-    "reviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T18:09:19.625Z",
-    "summary": "Inspected the 3fa407e3..57e77e38 app diff; the Stage pipeline, Soft gate and History are unchanged, and only the Settings add row for a Status changed. Replayed the round 1 V-C15 walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 12 steps passed.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-a)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff; the Stage pipeline, Soft gate and History are unchanged, and only the Settings add row for a Status changed. Replayed the round 1 V-C15 walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 12 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/contracts-a.json",
-        "sha256": "7578086b8f9f87dd4dbb5388996768abcbc2fac33c3a1a087720d21d8ad596ae"
+        "sha256": "d3f55e90c80b20890b67d07c3d321fa5dc3376df94341715e4f76e570b9cc953"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
     ]
   }

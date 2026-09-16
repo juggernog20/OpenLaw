@@ -111,5 +111,32 @@
   ],
   "previousEvidence": "docs/documentation/batches/dev-integration/previous-configure-analysis.json",
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "Round 3 reviewed 3fa407e3 to 432dba3a. No file on the AI provider path changed from 3fa407e3 to 432dba3a. git diff --quiet reports no change for apps/api/src/modules/ai-connector, ai-field-prompts, contract-analysis, apps/api/src/lib, apps/api/src/pipeline, apps/worker, packages/shared/src/analysis.ts, packages/db, ai-model-selector.tsx and ai-field-prompts-card.tsx. The API changes are in email-settings and org only. In apps/web, settings-ai-analysis.tsx changed only the Provider card intro text, which the article does not quote, and moved the key reuse check into lib/ai-connector-config.ts as canReuseAiKey. I compared the old and new code. Both require hasApiKey, the same preset and protocol, a saved base URL, and equal normalized base URLs, so the rule in Disable, rotate, or remove is unchanged. Two status messages in en-US.json now say AI features instead of Contract analysis. The article does not quote them. The live provider check on 3fa407e3 (V-C43, walkthrough-c43.json) used a real OpenRouter connector with deepseek/deepseek-v4.1-flash. It covered Test connection success, Load models, search and refresh with 444 models, Field prompt save, line break, restore and reset, an automatic Analysis run and a deliberate rerun with Version, model, evidence and Unverified values, the evidence panel, the no-primary-Document refusal, turning the connector off and on, the Legal Team Member view, and a Load models refusal from a missing Custom endpoint path. On 57e77e38 round 2 (walkthrough-r2-1.json) re-ran 18 credential-free steps and all passed: page and card order, presets and forms, save refusals, API refusals, Load models against a closed endpoint, a fictional Custom connector with a failing test, the turned-off state, the changed-destination key rule, Field prompts, the Contracts to Fields link, Remove connector, the Legal Team Member refusal, the signed-out help link, and operator checks of the shared OPENLAW_SECRET_KEY and key-free logs. It could not re-run the live provider steps. Those steps run only code that did not change, so I judge the article compatible. The article contentSha256 a2e55ab5 still matches its evidence. Known issue #887 remains and the article still makes no Escape claim. From 57e77e38 to 432dba3a only welcome.tsx and its test changed, which the article does not describe.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
+        "sha256": "a12a6c69558c97bce7f5feb88b38c4e4ae237d7091b0780fa2116035bdcaffdb"
+      },
+      {
+        "path": "batches/DOC-029/live-provider/technical-review-r2.json",
+        "sha256": "1858967f9ef1e5da131e68ffb8863810c705d3e6be90173924035e9bc25667c0"
+      },
+      {
+        "path": "batches/DOC-029/live-provider/walkthrough-r2-1.json",
+        "sha256": "935e3d26434a3f57fad90b7e596d5682afe5e7753fddf1cf4d93cbe776383083"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
+  }
 }

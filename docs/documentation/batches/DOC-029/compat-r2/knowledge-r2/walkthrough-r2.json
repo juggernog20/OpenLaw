@@ -720,17 +720,12 @@
     {
       "role": "administrator",
       "kind": "archived Knowledge type fixture",
-      "names": [
-        "DOC-029r2 knowledge retired type D75897"
-      ]
+      "names": ["DOC-029r2 knowledge retired type D75897"]
     },
     {
       "role": "legal_team_member",
       "kind": "folders",
-      "names": [
-        "DOC-029r2 knowledge LTM D75897 parent",
-        "DOC-029r2 knowledge LTM D75897 child"
-      ]
+      "names": ["DOC-029r2 knowledge LTM D75897 parent", "DOC-029r2 knowledge LTM D75897 child"]
     },
     {
       "role": "legal_team_member",
@@ -743,24 +738,17 @@
     {
       "role": "legal_team_member",
       "kind": "knowledge item",
-      "names": [
-        "DOC-029r2 knowledge LTM D75897 guidance"
-      ]
+      "names": ["DOC-029r2 knowledge LTM D75897 guidance"]
     },
     {
       "role": "legal_team_member",
       "kind": "knowledge item",
-      "names": [
-        "DOC-029r2 knowledge LTM D75897 continue"
-      ]
+      "names": ["DOC-029r2 knowledge LTM D75897 continue"]
     },
     {
       "role": "administrator",
       "kind": "folders",
-      "names": [
-        "DOC-029r2 knowledge Admin D75897 parent",
-        "DOC-029r2 knowledge Admin D75897 child"
-      ]
+      "names": ["DOC-029r2 knowledge Admin D75897 parent", "DOC-029r2 knowledge Admin D75897 child"]
     },
     {
       "role": "administrator",
@@ -773,16 +761,12 @@
     {
       "role": "administrator",
       "kind": "knowledge item",
-      "names": [
-        "DOC-029r2 knowledge Admin D75897 guidance"
-      ]
+      "names": ["DOC-029r2 knowledge Admin D75897 guidance"]
     },
     {
       "role": "administrator",
       "kind": "knowledge item",
-      "names": [
-        "DOC-029r2 knowledge Admin D75897 continue"
-      ]
+      "names": ["DOC-029r2 knowledge Admin D75897 continue"]
     },
     {
       "role": "legal_team_member",

@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "round": 2,
   "group": "inbox",
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "reviewer": "DOC-029r2 compatibility reviewer (inbox)",
   "reviewerKind": "agent",
   "independence": "The reviewer did not write, correct, technically review or walk any article in this group in round 1, and did not edit article text.",
@@ -178,31 +175,31 @@
     "files": [
       {
         "path": "batches/DOC-029/compat-r2/inbox-r2/api.mjs",
-        "sha256": "4c1f789404091cdb69968e64d9540fdeb77c914a8b30273b81f7a2437b4d6239"
+        "sha256": "987f55dbb3c6a1cc5dd4da6234895475e272ef57aa27741edfae521e7c565002"
       },
       {
         "path": "batches/DOC-029/compat-r2/inbox-r2/setup-config-r2.mjs",
-        "sha256": "12eff80d67796789ee9ea02ef5fa0e0ac616bdd6005bd084ff73bf793b788ce2"
+        "sha256": "a6f55537718ef74355e355ca42a78147c74acf2693ed3560fe1bc3fd461a9005"
       },
       {
         "path": "batches/DOC-029/compat-r2/inbox-r2/setup-requests-r2.mjs",
-        "sha256": "d11119010bb19c971ea64d1297396b2828a68cd91893f00c03f61dca3cca4930"
+        "sha256": "944fbdeb73a25feb6b53f699f39d4231a5d7a9bd1f5be4999d4f2c37757b2b1a"
       },
       {
         "path": "batches/DOC-029/compat-r2/inbox-r2/walkthrough-r2.mjs",
-        "sha256": "fdc42e07b645e1626db0359b47926e0b14241bc8b934b1efcd2a871ffa960e2a"
+        "sha256": "0a2c8dc695eda74dbc0a2924f0b423387c05eabdc8e5b49bb516ea992e579aaf"
       },
       {
         "path": "batches/DOC-029/compat-r2/inbox-r2/walkthrough-r2.json",
-        "sha256": "384f675729ba18b6d9322116069fb90e5a239b327e283b1da65111adae9cb80a"
+        "sha256": "474af8ae43123c0905786aa4f1cf6c0646b12b94b5a0cba03e204850ef4d4fbd"
       },
       {
         "path": "batches/DOC-029/compat-r2/inbox-r2/fixtures-r2.json",
-        "sha256": "5f5463a96a4a8e95fc0f80dfae56197387c56e574dd12c105b6a3974024d9926"
+        "sha256": "a11c44f4ff72ef18f1487d9465a1618357c4149fb58960ac7ca1a7da52901aed"
       },
       {
         "path": "batches/DOC-029/compat-r2/inbox-r2/requests-r2.json",
-        "sha256": "04a6deee73e5feeccfeb4adad84d6d2be385fba4858c7a0ba715d0be34b3233d"
+        "sha256": "7df49f8d60e5d5f1a19a45512f6968dbce19a040db806d7479b9ca2c87807916"
       }
     ],
     "screenshots": "batches/DOC-029/compat-r2/inbox-r2/r2-*.png"

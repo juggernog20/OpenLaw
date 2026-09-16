@@ -3,10 +3,7 @@
   "task": "DOC-029",
   "round": 2,
   "group": "admin-config",
-  "issues": [
-    745,
-    747
-  ],
+  "issues": [745, 747],
   "reviewer": "DOC-029r2 compatibility reviewer (admin-config)",
   "reviewerKind": "agent",
   "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
@@ -89,13 +86,13 @@
       "replay": {
         "script": {
           "path": "batches/DOC-029/compat-r2/admin-config-matter-templates-replay.mjs",
-          "sha256": "07186e6fe788cd3c41d8e427b93407975d42397083e32f76e4df2469035115dd",
+          "sha256": "0faef115c92ccee0cbd3489ae81365a48301142d12292a6cadf2faef3b1fe996",
           "adaptedFrom": "batches/DOC-029/admin-config/walkthrough-r1.mjs",
           "changes": "Lab project openlaw-docs-41255c61-admin2, record prefix 'DOC-029r2 admin-config compat', output path, round and reviewer metadata, appCommit 57e77e38, and the leftover deflection-link filter scoped to this run's prefix so other agents' links on the shared lab are not removed. No step logic changed."
         },
         "log": {
           "path": "batches/DOC-029/compat-r2/admin-config-matter-templates-replay.json",
-          "sha256": "470f1cd2c695921a28871ce0e942aec3244a1920a98b6098b04dcd56f5353470"
+          "sha256": "79b29d1ed356f905a653092ec2a0b154c16f06fd50a68df898dda6c9d05b000e"
         },
         "sections": "forms,templates,access (forms creates the Matter request form, the Global Entity Field and the Request that the templates section converts)",
         "stamp": "mu4eht6p",

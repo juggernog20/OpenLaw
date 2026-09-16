@@ -78,17 +78,21 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
     "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
-    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
-    "reviewer": "DOC-029r2 compatibility reviewer (analysis-standin)",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T18:07:30.000Z",
-    "summary": "I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Comparison, Document reader, Document access or export file; the Documents list only restyles an archived uploader name. I replayed the round 1 V-C29 walkthrough and its archived-pair supplement on lab analysis-r2, and all 20 steps passed for the Administrator and the Legal Team Member.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (analysis-standin)) found the article compatible: I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Comparison, Document reader, Document access or export file; the Documents list only restyles an archived uploader name. I replayed the round 1 V-C29 walkthrough and its archived-pair supplement on lab analysis-r2, and all 20 steps passed for the Administrator and the Legal Team Member. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/analysis-standin.json",
         "sha256": "23c4b2773f1ea02986f233803e49f17bffa1e089e3e5fbe429a2c0f28c914d0e"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
     ]
   }

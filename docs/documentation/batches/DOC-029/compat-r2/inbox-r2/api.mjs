@@ -7,7 +7,8 @@ import { Session } from "../../../../../../scripts/seed/client.mjs";
 export const BASE = process.env.LAB_APP_URL ?? "http://127.0.0.1:23301";
 export const MAIL = process.env.LAB_MAIL_URL ?? "http://127.0.0.1:23401";
 export const PASSWORD = process.env.LAB_PASSWORD;
-if (!PASSWORD) throw new Error("Set LAB_PASSWORD to the seed demo password documented in VALIDATION.md.");
+if (!PASSWORD)
+  throw new Error("Set LAB_PASSWORD to the seed demo password documented in VALIDATION.md.");
 export const PW_PATH =
   "/home/blairwentworth/.cache/openlaw-docs-status/node_modules/.pnpm/playwright@1.63.0/node_modules/playwright/index.mjs";
 
@@ -50,7 +51,12 @@ export async function waitForMail(address, subjectRe, since, timeoutMs = 45000) 
     if (match) {
       const message = await mailpit(`/api/v1/message/${match.ID}`);
       if (message.Text)
-        return { id: match.ID, subject: message.Subject, text: message.Text, created: match.Created };
+        return {
+          id: match.ID,
+          subject: message.Subject,
+          text: message.Text,
+          created: match.Created,
+        };
     }
     await pause(700);
   }

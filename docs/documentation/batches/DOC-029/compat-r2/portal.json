@@ -36,18 +36,12 @@
     "method": "Replayed the round 1 fixture and walkthrough scripts (portal/fixtures-r1.mjs, portal/walkthrough-r1.mjs, phases submit, follow, knowledge, then supplement) against work2. Adaptations: record and fixture names DOC-029 portal became DOC-029r2 portal, the log header names this reviewer and commit, and file paths moved to compat-r2/portal-r2. No check, selector or expectation changed. The recheck phase was not needed because the first Your requests read passed.",
     "runs": [
       {
-        "phases": [
-          "submit",
-          "follow",
-          "knowledge"
-        ],
+        "phases": ["submit", "follow", "knowledge"],
         "startedAt": "2026-09-16T17:51:50.116Z",
         "finishedAt": "2026-09-16T17:52:37.398Z"
       },
       {
-        "phases": [
-          "supplement"
-        ],
+        "phases": ["supplement"],
         "startedAt": "2026-09-16T17:52:51.046Z",
         "finishedAt": "2026-09-16T17:52:54.124Z"
       }
@@ -57,23 +51,23 @@
     "files": [
       {
         "path": "batches/DOC-029/compat-r2/portal-r2/lib-r2.mjs",
-        "sha256": "a9acaeb14ebb99c2c41050c8ca62fdb928efde0d1f6ba306dfa7efbcdc2ce1c1"
+        "sha256": "d6e0e1aa49a73be8360e640011fd5fdb908dfed0017ea09aaa55b08181e71dd3"
       },
       {
         "path": "batches/DOC-029/compat-r2/portal-r2/fixtures-r2.mjs",
-        "sha256": "9a114015f22455dcc78b9fbea24101488c528d2885b9005a22d810834d6b1ce5"
+        "sha256": "a1b870d37e41cde763ae9ddbc1a5acfd5a847f4c916d2741e8f442ba8d7a2924"
       },
       {
         "path": "batches/DOC-029/compat-r2/portal-r2/pdf-r2.mjs",
-        "sha256": "34e59b84b678b53e593a86669624b107c41482d7be222a67d43be033199da413"
+        "sha256": "19e251139809626e4de0a3e62e5a93ef849d8917feeac504a59807d6e3b99ed9"
       },
       {
         "path": "batches/DOC-029/compat-r2/portal-r2/walkthrough-r2.mjs",
-        "sha256": "ed7fe7b235610e7c5339b084b2de43a7954bf39f5e129e715f45c9799ecb6a23"
+        "sha256": "efbeaf1dd3b95eb9144ef820a65c6f858b0ff4d00715932faafaea227e74bcb4"
       },
       {
         "path": "batches/DOC-029/compat-r2/portal-r2/walkthrough-r2.json",
-        "sha256": "d16145fc0f82fc9ebefe535c2be074be235a2f71da76c9501f69c25acb282e39"
+        "sha256": "bc30081fb300a6cd94f1d1260ae21b4c3bfeff2160938fcc81f8187acf271c00"
       }
     ]
   },

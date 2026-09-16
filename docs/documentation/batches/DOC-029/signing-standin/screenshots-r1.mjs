@@ -10,7 +10,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../../../../..");
 const require = createRequire(path.join(root, "e2e/package.json"));
 const { chromium } = require("@playwright/test");
-const lab = JSON.parse(readFileSync(path.join(root, ".documentation-labs/sign-r1/lab.json"), "utf8"));
+const lab = JSON.parse(
+  readFileSync(path.join(root, ".documentation-labs/sign-r1/lab.json"), "utf8"),
+);
 const BASE = lab.appUrl;
 const number = process.env.CONTRACT;
 

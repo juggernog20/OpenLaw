@@ -60,7 +60,7 @@
         "source": "batches/DOC-029/live-provider/credential-free-checks.mjs (round 1)",
         "script": {
           "path": "batches/DOC-029/compat-r2/live-provider-r2/credential-free-checks-r2.mjs",
-          "sha256": "da5d0cb19733de23b66f3a294d0767999f14d94d0a977e74b91af740f07994c5"
+          "sha256": "777f2d4b8150cfc6d86f53c29a1e3047348817eeb7061243e43ef759d891d648"
         },
         "observations": {
           "path": "batches/DOC-029/compat-r2/live-provider-r2/credential-free-observations-r2.json",

@@ -1,0 +1,625 @@
+{
+  "record": "walkthrough-r3-1",
+  "articleId": "first-run",
+  "scenario": "V-C35",
+  "reviewer": "DOC-029 independent walkthrough agent (first-run, round 3)",
+  "reviewerKind": "agent",
+  "appCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+  "labProject": "openlaw-docs-41255c61-firstrun-r3",
+  "buildId": "app sha256:4c23394e45421a1b74efb756e9db94b9b53eb94c5c3bf9de35ec55e77a87ff73; engine sha256:5af3a204e8764e6c85bf0bbe72e3571ece5218ca5d2bb424c8de15af2233c1b9",
+  "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+  "articleContentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
+  "buildSource": "The lab could not build from 432dba3a itself. Its own edition.json still pinned 3fa407e3, so the web build refused it with \"application compatibility review is missing or stale\". The committed branch head bf4ab492 also failed the web build, on the auto-doc-template compatibility review, because the matching evidence updates were still uncommitted in the worktree. The reviewer therefore built the lab from an unreferenced snapshot commit, 2491a1a804a9dd0027a861fa0372300d20f41ce7. It is bf4ab492 plus the worktree state of docs/documentation/evidence and docs/documentation/batches/DOC-029/compat-r3 at that moment. No branch points to it and it was not pushed. git diff 432dba3a..2491a1a8 changes only files under docs/. applicationDigest (scripts/documentation/build.mjs) gives 9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c for both 432dba3a and 2491a1a8, the same value the edition pins. The app code under test is therefore the code of 432dba3a.",
+  "summary": {
+    "result": "pass",
+    "steps": 52,
+    "finalRuns": [1, 2, 3, 4, 5],
+    "failedSteps": [],
+    "labLifecycles": "Three fresh unseeded lifecycles of openlaw-docs-41255c61-firstrun-r3, all with the same app and engine image IDs: one for phase A, one for phases B0 to B2, and one for phase C. Phase A used the local OpenID Connect stand-in (oidc-fixture.mjs, oauth2-mock-server 9.2.0) in a container on the lab backend network as http://oidc:8080. Email phases recreated only app and worker with email-from-missing.overlay.json or email-unset.overlay.json. Every phase ran inside a pasta network namespace with ports 23311 and 23411 forwarded. The lab and the stand-in were destroyed at the end.",
+    "scriptChange": "walkthrough-r3-1.mjs is walkthrough-r2-1.mjs with new names and one changed check. The two-factor step now requires /auth/two-factor/enroll right after Continue, the enrollment notice, and a return to enrollment from other app addresses. The next step now requires the link named Done, not Done or Continue.",
+    "notRecorded": "No password, cookie, magic link, TOTP secret, backup code, SMTP password, or mail body is stored. Mail checks record only recipient counts and subjects. Logo PNG files were generated in scratch outside the worktree."
+  },
+  "runs": [
+    {
+      "phase": "A",
+      "labProject": "openlaw-docs-41255c61-firstrun-r3",
+      "labCreatedAt": "2026-09-16T19:32:22.028Z",
+      "appImageId": "sha256:4c23394e45421a1b74efb756e9db94b9b53eb94c5c3bf9de35ec55e77a87ff73",
+      "engineImageId": "sha256:5af3a204e8764e6c85bf0bbe72e3571ece5218ca5d2bb424c8de15af2233c1b9",
+      "sourceCommit": "2491a1a804a9dd0027a861fa0372300d20f41ce7",
+      "emailEnvironment": "lab default overlay",
+      "browserNetwork": "pasta network namespace with ports 23311 and 23411 forwarded",
+      "articleContentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
+      "startedAt": "2026-09-16T19:32:58.312Z",
+      "finishedAt": "2026-09-16T19:33:22.136Z",
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Open the instance address on a fresh instance",
+          "expected": "Set up OpenLaw shows Name, Email, Password, Confirm password and Create Administrator.",
+          "actual": "needsSetup was true; / redirected to /auth/setup, which showed Set up OpenLaw with Name, Email, Password, Confirm password and Create Administrator.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:32:58.384Z",
+          "at": "2026-09-16T19:32:58.630Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Submit a seven-character password in both fields",
+          "expected": "The password is refused and setup does not continue.",
+          "actual": "The Password field reported a too-short value, the page stayed on /auth/setup, and needsSetup stayed true.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:32:58.630Z",
+          "at": "2026-09-16T19:32:59.548Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Submit different values in Password and Confirm password",
+          "expected": "A validation message shows and no account is created.",
+          "actual": "The page showed \"The passwords do not match.\", stayed on /auth/setup, and needsSetup stayed true.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:32:59.549Z",
+          "at": "2026-09-16T19:32:59.589Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Correct the validation message and submit again",
+          "expected": "Setup signs the Administrator in and opens Welcome to OpenLaw.",
+          "actual": "Signed in as an administrator at /welcome. Step 1 of 9: Welcome to OpenLaw. The step shows Get started and Skip optional steps, and no Set up later.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:32:59.589Z",
+          "at": "2026-09-16T19:32:59.828Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Try account setup again after a user exists",
+          "expected": "Account setup is not available; the visitor is sent to Sign in.",
+          "actual": "A separate signed-out context was redirected from /auth/setup to /auth/login. The setup API answered 409 \"Setup has already been completed.\". Before any organization save, Sign in showed brand {\"brand\":\"OpenLaw\",\"logoCount\":0,\"logoLoaded\":false,\"powered\":0}.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:32:59.828Z",
+          "at": "2026-09-16T19:33:00.885Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Before onboarding completes, open Home and a Settings page",
+          "expected": "Home opens the wizard at its Welcome step. With email configured by the environment, other pages open normally.",
+          "actual": "/ -> /welcome (Step 1 of 9: Welcome to OpenLaw). /settings/general stayed at /settings/general while email was configured.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:00.885Z",
+          "at": "2026-09-16T19:33:02.367Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "On Welcome to OpenLaw select Get started",
+          "expected": "Your organization opens as Step 2 of 9.",
+          "actual": "Step 2 of 9: Your organization at /welcome?step=organization.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:02.367Z",
+          "at": "2026-09-16T19:33:02.506Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In Your organization check the locale, the logo rules, and the Upload control",
+          "expected": "Default locale offers only English (United States); Upload accepts a PNG of 5 MB or smaller and refuses a GIF and a PNG over 5 MB.",
+          "actual": "Default locale had one option, \"English (United States)\". The file input accepted \"image/png,image/jpeg,image/webp,image/svg+xml\". A GIF and a 5402383-byte PNG (over 5 MB) were refused with \"That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\"; a 4682073-byte PNG (under 5 MB) showed the Organization logo preview.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:02.620Z",
+          "at": "2026-09-16T19:33:02.853Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Enter an organization name and timezone, then select Set up later",
+          "expected": "The wizard moves on without saving the unsaved organization entries.",
+          "actual": "Step 3 of 9: Authentication. The saved organization still had name \"\", no logo, timezone UTC.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:02.854Z",
+          "at": "2026-09-16T19:33:03.015Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Go Back to Your organization and select Continue",
+          "expected": "Continue saves Organization name, logo and Default timezone and opens Authentication.",
+          "actual": "Step 3 of 9: Authentication. The API read back name \"DOC-029r3 first-run Harbor Legal\", timezone Europe/Lisbon, locale en-US, and a PNG logo of 4682073 bytes.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:03.015Z",
+          "at": "2026-09-16T19:33:03.614Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Open the sign-in page in a signed-out browser after saving Your organization",
+          "expected": "The sign-in page shows the saved organization name and logo.",
+          "actual": "Before the save, Sign in showed {\"brand\":\"OpenLaw\",\"logoCount\":0,\"logoLoaded\":false,\"powered\":0}. After the save, it showed {\"brand\":\"DOC-029r3 first-run Harbor Legal\",\"logoCount\":1,\"logoLoaded\":true,\"powered\":1}.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:03.615Z",
+          "at": "2026-09-16T19:33:04.556Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "While steps are unfinished, open Settings -> Organization -> General",
+          "expected": "A Setup checklist card lists unfinished steps; each row links to its Settings page except Email; Review seeded types has Mark as reviewed.",
+          "actual": "Settings nav showed Organization with General and Users, and no Email page. No Return to setup on a direct visit. Setup checklist rows: [{\"label\":\"Business-user portal\",\"href\":\"/settings/authentication\",\"markAsReviewed\":false},{\"label\":\"Invite your team\",\"href\":\"/settings/users\",\"markAsReviewed\":false},{\"label\":\"E-signature\",\"href\":\"/settings/integrations/e-signature\",\"markAsReviewed\":false},{\"label\":\"AI analysis\",\"href\":\"/settings/ai-analysis\",\"markAsReviewed\":false},{\"label\":\"Review seeded types\",\"href\":null,\"markAsReviewed\":true}].",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:04.557Z",
+          "at": "2026-09-16T19:33:05.277Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "On Your organization type an unsaved name change, then reload the wizard page",
+          "expected": "The reload keeps the current step from the page address; the saved settings remain; the unsaved entry does not.",
+          "actual": "Address before reload /welcome?step=organization. After reload: Step 2 of 9: Your organization at /welcome?step=organization; the name field showed the saved \"DOC-029r3 first-run Harbor Legal\" and the saved logo, not the unsaved entry. Continue opened Authentication.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:05.277Z",
+          "at": "2026-09-16T19:33:06.509Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "From a later step, open Home before onboarding completes",
+          "expected": "Home opens the wizard again at its Welcome step; Get started continues.",
+          "actual": "From /welcome?step=authentication: / -> /welcome (Step 1 of 9: Welcome to OpenLaw). Get started opened Your organization; Continue returned to Authentication.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:06.509Z",
+          "at": "2026-09-16T19:33:07.651Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In Authentication, turn off every sign-in method and select Continue",
+          "expected": "OpenLaw refuses a policy with no sign-in method.",
+          "actual": "Initial switches {\"Email and password\":{\"checked\":true,\"disabled\":false},\"Email magic link\":{\"checked\":true,\"disabled\":false},\"Single sign-on (SSO)\":{\"checked\":false,\"disabled\":true},\"Require two-factor authentication\":{\"checked\":false,\"disabled\":false}}. With both email methods off, Continue showed \"Enable at least one sign-in method.\" and stayed at Step 3 of 9: Authentication; the saved legal policy was unchanged.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:07.696Z",
+          "at": "2026-09-16T19:33:07.869Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Check the Single sign-on (SSO) switch before a provider is registered",
+          "expected": "The SSO switch is unavailable and the Register your identity provider form shows.",
+          "actual": "Single sign-on (SSO) was disabled. Register your identity provider showed Provider ID, Issuer URL, Email domain, Client ID, Client secret and Register provider.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:07.869Z",
+          "at": "2026-09-16T19:33:07.886Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Complete Register your identity provider and select Register provider",
+          "expected": "OpenLaw shows a callback URL to copy, and the SSO switch becomes available.",
+          "actual": "The step showed \"Identity provider doc029r3-harbor is registered.\" and \"Paste this callback URL into your IdP console: http://127.0.0.1:23311/api/auth/sso/callback\". The Single sign-on (SSO) switch became enabled. The issuer was a local OpenID Connect stand-in.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:07.886Z",
+          "at": "2026-09-16T19:33:08.054Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Change an Authentication switch, then select Set up later",
+          "expected": "The wizard moves to Business-user portal without saving the change.",
+          "actual": "From Step 3 of 9: Authentication, Set up later opened Step 4 of 9: Business-user portal. Saved legal policy stayed {\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:08.055Z",
+          "at": "2026-09-16T19:33:08.203Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Turn on Email and password, Email magic link and Require two-factor authentication, then select Continue",
+          "expected": "OpenLaw makes the Administrator set up two-factor authentication before continuing.",
+          "actual": "Continue opened two-factor setup directly, with \"Your organization requires two-factor authentication.\" and Turn on two-factor. Observed: after Continue the page was /auth/two-factor/enroll; saved legal policy {\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":true}; /me twoFactorSetupRequired true; opening /welcome?step=portal went to /auth/two-factor/enroll; opening / went to /auth/two-factor/enroll.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:08.204Z",
+          "at": "2026-09-16T19:33:09.827Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Set up two-factor authentication with an authenticator code",
+          "expected": "After setup, the wizard opens again at its Welcome step and the saved choices remain.",
+          "actual": "The enrollment page accepted a generated TOTP code and showed the backup-code notice. \"Done\" led to /welcome at Step 1 of 9: Welcome to OpenLaw; /me reported no pending two-factor step. Get started showed the saved name, and Authentication showed {\"Email and password\":true,\"Email magic link\":true,\"Single sign-on (SSO)\":false,\"Require two-factor authentication\":true}.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:09.828Z",
+          "at": "2026-09-16T19:33:11.110Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Continue from Authentication without changes",
+          "expected": "Business-user portal opens.",
+          "actual": "Step 4 of 9: Business-user portal. The step showed the same four switches for Business Users, Allowed email domains, and \"No domains allowed yet. Magic-link sign-in is unavailable.\".",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:11.110Z",
+          "at": "2026-09-16T19:33:11.212Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Add a domain, then select Set up later",
+          "expected": "The wizard moves to Outbound email without saving the domain.",
+          "actual": "Step 5 of 9: Outbound email. The saved allowed-domain list stayed empty.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:11.213Z",
+          "at": "2026-09-16T19:33:11.449Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Add an entry with an email username",
+          "expected": "The guide asks for a domain without an email username; record what OpenLaw does with one.",
+          "actual": "An entry with an email username was added to the draft list; Continue stayed on Business-user portal with \"One or more request fields are invalid.\" and nothing was saved. The saved list did not contain it.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:11.450Z",
+          "at": "2026-09-16T19:33:13.395Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Turn on Email magic link for Business Users, add helix.example and harbor.example, then select Continue",
+          "expected": "Continue saves the switches and the list and opens Outbound email.",
+          "actual": "Step 5 of 9: Outbound email. Saved domains [\"helix.example\",\"harbor.example\"]; business policy {\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:13.396Z",
+          "at": "2026-09-16T19:33:13.634Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In Outbound email check the configuration source set by the deployment environment",
+          "expected": "The step is read-only, has no Set up later, and Continue is available because email is configured.",
+          "actual": "The step said \"Outbound email is set by the deployment environment. Mail is sent from OpenLaw <legal@helix.example>.\" It showed no SMTP server, Port, Connection security, Authentication or Sender email fields, and no Save relay, Send test email, Replace relay, Clear relay or Set up later. Continue was enabled.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:13.634Z",
+          "at": "2026-09-16T19:33:13.645Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Continue to Invite your team and invite a Legal team member",
+          "expected": "Name, Email, Legal team member, Administrator and Send invite are offered; the invitation is sent.",
+          "actual": "Step 6 of 9: Invite your team. Role choices [\"Legal team member\",\"Administrator\"]. Send invite showed \"1 invite sent:\" and Mailpit received 1 message(s) for rowan.lee@harbor.example, subject [\"Set your OpenLaw password\"].",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:13.645Z",
+          "at": "2026-09-16T19:33:13.990Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Invite an Administrator",
+          "expected": "The invitation is sent with the Administrator role.",
+          "actual": "Send invite showed \"2 invites sent:\" and Mailpit received 1 message(s) for sam.ortiz@harbor.example.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:13.990Z",
+          "at": "2026-09-16T19:33:14.193Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Type a third invitation without sending it, then select Set up later",
+          "expected": "The wizard moves to E-signature and the unsent invitation is not sent.",
+          "actual": "Step 7 of 9: E-signature. Mailpit had no message for unsent.person@harbor.example.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:14.193Z",
+          "at": "2026-09-16T19:33:16.281Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In E-signature select Set up later",
+          "expected": "The manual signing hand-off stays; AI analysis opens.",
+          "actual": "E-signature said \"Optional. Connect DocuSign and contracts are sent for signature from their own records. Skip it and nothing else is lost. The manual hand-off stays the path, so you send the paper yourself, then upload the executed PDF and pin it to the record.\". Set up later opened Step 8 of 9: AI analysis; the onboarding API reported the E-signature step not done.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:16.281Z",
+          "at": "2026-09-16T19:33:16.376Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In AI analysis select Set up later",
+          "expected": "The AI connector stays unconfigured; Review opens.",
+          "actual": "AI analysis said \"Optional. Connect an AI provider to analyze Contract documents and suggest Field values. You can also enable AI to prepare Matter and Contract conversions from Requests and fill Contract Fields using Request answers, conversations, and supporting documents. AI-generated Field values stay Unverified until reviewed. Enable conversion workflows in AI analysis Settings. Relevant content is sent to your provider when an AI task runs.\". Set up later opened Step 9 of 9: Review; the onboarding API reported the AI analysis step not done.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:16.376Z",
+          "at": "2026-09-16T19:33:16.477Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In Review check the row counts and reminder offsets",
+          "expected": "Review shows the seeded lists with row counts, separate Matter fields, Contract fields and Entity fields rows, the reminder offsets, and Finish.",
+          "actual": "Review rows [{\"list\":\"Matter types\",\"href\":\"/settings/matters/types\",\"rows\":\"9\"},{\"list\":\"Matter statuses\",\"href\":\"/settings/matters/statuses\",\"rows\":\"4\"},{\"list\":\"Matter fields\",\"href\":\"/settings/matters/fields\",\"rows\":\"0\"},{\"list\":\"Contract types\",\"href\":\"/settings/contracts/types\",\"rows\":\"8\"},{\"list\":\"Contract statuses\",\"href\":\"/settings/contracts/statuses\",\"rows\":\"8\"},{\"list\":\"Contract fields\",\"href\":\"/settings/contracts/fields\",\"rows\":\"3\"},{\"list\":\"Entity types\",\"href\":\"/settings/entities/types\",\"rows\":\"5\"},{\"list\":\"Officer roles\",\"href\":\"/settings/entities/officer-roles\",\"rows\":\"5\"},{\"list\":\"Entity fields\",\"href\":\"/settings/entities/fields\",\"rows\":\"0\"},{\"list\":\"Knowledge types\",\"href\":\"/settings/knowledge/types\",\"rows\":\"4\"},{\"list\":\"Request types\",\"href\":\"/settings/intake/request-types\",\"rows\":\"3\"},{\"list\":\"Reminder offsets\",\"href\":\"/settings/reminders\",\"rows\":\"3\"}]. Finish and Set up later were shown; onboarding was not yet complete or reviewed.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:16.477Z",
+          "at": "2026-09-16T19:33:16.548Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "In Review select a list name, then select Return to setup",
+          "expected": "Settings opens that list and shows Return to setup, which opens Review again.",
+          "actual": "Contract fields opened /settings/contracts/fields with a Return to setup link to /welcome?step=review. That link opened Step 9 of 9: Review at /welcome?step=review. Reminder offsets opened /settings/reminders with Return to setup, which also returned to Review.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:16.548Z",
+          "at": "2026-09-16T19:33:17.546Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Select Finish",
+          "expected": "Finish records the review, ends onboarding and enters the app.",
+          "actual": "Finish opened Home at /. The onboarding API reported completed true and review done true.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:17.546Z",
+          "at": "2026-09-16T19:33:17.824Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Try to reopen the welcome wizard after completion",
+          "expected": "The wizard cannot be reopened; Home opens instead.",
+          "actual": "/welcome -> /; /welcome?step=review -> / after completion.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:17.825Z",
+          "at": "2026-09-16T19:33:19.524Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "After completion open Settings -> Organization -> General and Users",
+          "expected": "Name, logo and timezone are shown; the checklist lists only unfinished steps; invited users appear in Users; the other settings pages open.",
+          "actual": "General showed the saved name, the saved PNG logo, and Default timezone \"Europe/Lisbon\". Setup checklist rows after Finish: [{\"label\":\"E-signature\",\"href\":\"/settings/integrations/e-signature\",\"markAsReviewed\":false},{\"label\":\"AI analysis\",\"href\":\"/settings/ai-analysis\",\"markAsReviewed\":false}]. Users listed Rowan Lee and Sam Ortiz and not the unsent entry. /settings/authentication, /settings/integrations/e-signature and /settings/ai-analysis opened.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:33:19.525Z",
+          "at": "2026-09-16T19:33:22.116Z"
+        }
+      ],
+      "notes": "The TOTP secret was read from the enrollment response in memory only (seen); it is not recorded. Logo PNG files were generated in scratch outside the worktree.",
+      "disposition": "Final phase A run. All 35 steps passed."
+    },
+    {
+      "phase": "B0",
+      "labProject": "openlaw-docs-41255c61-firstrun-r3",
+      "labCreatedAt": "2026-09-16T19:33:43.601Z",
+      "appImageId": "sha256:4c23394e45421a1b74efb756e9db94b9b53eb94c5c3bf9de35ec55e77a87ff73",
+      "engineImageId": "sha256:5af3a204e8764e6c85bf0bbe72e3571ece5218ca5d2bb424c8de15af2233c1b9",
+      "sourceCommit": "2491a1a804a9dd0027a861fa0372300d20f41ce7",
+      "emailEnvironment": "lab overlay plus email-from-missing.overlay.json (SMTP_URL set, SMTP_FROM empty), applied before the first account",
+      "browserNetwork": "pasta network namespace with ports 23311 and 23411 forwarded",
+      "articleContentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
+      "startedAt": "2026-09-16T19:34:10.588Z",
+      "finishedAt": "2026-09-16T19:34:16.144Z",
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Create the first Administrator on a fresh instance whose environment sets SMTP_URL but not SMTP_FROM",
+          "expected": "Setup signs the Administrator in and opens Welcome to OpenLaw.",
+          "actual": "Created the first Administrator through Set up OpenLaw. Step 1 of 9: Welcome to OpenLaw.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:10.669Z",
+          "at": "2026-09-16T19:34:11.157Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "While email is not configured, open Home and other app pages",
+          "expected": "Every app page opens the wizard at its Welcome step.",
+          "actual": "/ -> /welcome (Step 1 of 9: Welcome to OpenLaw); /settings/general -> /welcome (Step 1 of 9: Welcome to OpenLaw); /contracts -> /welcome (Step 1 of 9: Welcome to OpenLaw); /matters -> /welcome (Step 1 of 9: Welcome to OpenLaw)",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:11.158Z",
+          "at": "2026-09-16T19:34:13.636Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "On Welcome select Skip optional steps while email is not configured",
+          "expected": "Outbound email opens instead of ending onboarding; it says SMTP_FROM is not set; no Set up later; Continue unavailable.",
+          "actual": "Step 5 of 9: Outbound email at /welcome?step=email. It said \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\" No Set up later or Save relay; Continue disabled; onboarding not complete.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:13.637Z",
+          "at": "2026-09-16T19:34:13.777Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Open Review by its page address while email is not configured, then select Finish and Set up later",
+          "expected": "Setup cannot finish without working outbound email: each action opens Outbound email and onboarding stays open.",
+          "actual": "Finish on Review opened Step 5 of 9: Outbound email at /welcome?step=email; onboarding completed false, review done false. Set up later on Review opened Step 5 of 9: Outbound email at /welcome?step=email; onboarding completed false, review done false.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:13.778Z",
+          "at": "2026-09-16T19:34:16.123Z"
+        }
+      ],
+      "disposition": "Final phase B0 run. All 4 steps passed."
+    },
+    {
+      "phase": "B1",
+      "labProject": "openlaw-docs-41255c61-firstrun-r3",
+      "labCreatedAt": "2026-09-16T19:33:43.601Z",
+      "appImageId": "sha256:4c23394e45421a1b74efb756e9db94b9b53eb94c5c3bf9de35ec55e77a87ff73",
+      "engineImageId": "sha256:5af3a204e8764e6c85bf0bbe72e3571ece5218ca5d2bb424c8de15af2233c1b9",
+      "sourceCommit": "2491a1a804a9dd0027a861fa0372300d20f41ce7",
+      "emailEnvironment": "lab overlay plus email-unset.overlay.json (SMTP_URL and SMTP_FROM empty)",
+      "browserNetwork": "pasta network namespace with ports 23311 and 23411 forwarded",
+      "articleContentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
+      "startedAt": "2026-09-16T19:34:29.517Z",
+      "finishedAt": "2026-09-16T19:34:36.652Z",
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Sign in again after the operator removes email from the environment",
+          "expected": "The unfinished wizard opens.",
+          "actual": "/welcome: Step 1 of 9: Welcome to OpenLaw",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:29.589Z",
+          "at": "2026-09-16T19:34:30.502Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "While email is unset, open Home and other app pages",
+          "expected": "Every app page opens the wizard at its Welcome step.",
+          "actual": "/ -> /welcome (Step 1 of 9: Welcome to OpenLaw); /settings/users -> /welcome (Step 1 of 9: Welcome to OpenLaw); /requests -> /welcome (Step 1 of 9: Welcome to OpenLaw)",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:30.503Z",
+          "at": "2026-09-16T19:34:32.353Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Select Skip optional steps with email unset",
+          "expected": "Outbound email opens with SMTP server, Port, Connection security, Authentication, Sender email, Sender name (optional) and Save relay; no Set up later; Continue unavailable.",
+          "actual": "Step 5 of 9: Outbound email at /welcome?step=email. SMTP server, Port, Connection security ([\"STARTTLS\",\"TLS\",\"None\"]), Authentication ([\"Username and password\",\"None\"], selected \"Username and password\"), Sender name (optional), Sender email and Save relay shown; no Set up later or Send test email; Continue disabled.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:32.353Z",
+          "at": "2026-09-16T19:34:32.443Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Reload the wizard page on Outbound email",
+          "expected": "The reload keeps Outbound email because the step is part of the page address.",
+          "actual": "Reloaded /welcome?step=email; the wizard showed Step 5 of 9: Outbound email.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:32.443Z",
+          "at": "2026-09-16T19:34:32.559Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "With Authentication set to Username and password, leave SMTP username and SMTP password empty and select Save relay",
+          "expected": "SMTP username and SMTP password show and are required; nothing saves.",
+          "actual": "With Username and password selected, SMTP username and SMTP password showed and both reported a missing value; source stayed \"unset\". With None selected, the two fields were hidden.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:32.559Z",
+          "at": "2026-09-16T19:34:33.503Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Save a relay whose SMTP server is a URL",
+          "expected": "The relay is refused and email stays unset.",
+          "actual": "Save relay with SMTP server \"https://mail.harbor.example\" left source \"unset\" and Continue disabled. Messages: \"One or more request fields are invalid. | Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications.\".",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:33.503Z",
+          "at": "2026-09-16T19:34:35.066Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Enter SMTP server, Port, Connection security, Authentication, Sender name and Sender email, select Save relay, then Send test email",
+          "expected": "The relay saves, Continue becomes available, and a test email reaches the Administrator.",
+          "actual": "\"Relay saved. The next email this instance sends will use it.\" and \"Outbound email is set in the app. Mail is sent from \"DOC-029r3 first-run Harbor Legal\" <legal@harbor.example>.\" shown; source \"app\"; Continue enabled; still no Set up later. Send test email reported success and Mailpit held 1 message(s) for the Administrator, subjects [\"OpenLaw test email\"].",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:35.067Z",
+          "at": "2026-09-16T19:34:35.295Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Move through the remaining steps with Set up later, and select Set up later on Review",
+          "expected": "Set up later on Review ends onboarding without recording the review.",
+          "actual": "Set up later on Review opened Home at /. The onboarding API reported completed true and review done false.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:35.296Z",
+          "at": "2026-09-16T19:34:35.726Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Open Settings -> Organization -> General and select Mark as reviewed on Review seeded types",
+          "expected": "The checklist lists the unfinished steps with Settings links; Mark as reviewed removes the Review row.",
+          "actual": "Rows before: [{\"label\":\"Organization\",\"href\":\"/settings/general\",\"markAsReviewed\":false},{\"label\":\"Business-user portal\",\"href\":\"/settings/authentication\",\"markAsReviewed\":false},{\"label\":\"Invite your team\",\"href\":\"/settings/users\",\"markAsReviewed\":false},{\"label\":\"E-signature\",\"href\":\"/settings/integrations/e-signature\",\"markAsReviewed\":false},{\"label\":\"AI analysis\",\"href\":\"/settings/ai-analysis\",\"markAsReviewed\":false},{\"label\":\"Review seeded types\",\"href\":null,\"markAsReviewed\":true}]. Mark as reviewed removed Review seeded types and the API reported review done true. The Business-user portal row opened /settings/authentication.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:35.726Z",
+          "at": "2026-09-16T19:34:36.044Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Try to reopen the wizard after Set up later on Review",
+          "expected": "The wizard cannot be reopened.",
+          "actual": "/welcome redirected to /.",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:36.045Z",
+          "at": "2026-09-16T19:34:36.629Z"
+        }
+      ],
+      "disposition": "Final phase B1 run. All 10 steps passed."
+    },
+    {
+      "phase": "B2",
+      "labProject": "openlaw-docs-41255c61-firstrun-r3",
+      "labCreatedAt": "2026-09-16T19:33:43.601Z",
+      "appImageId": "sha256:4c23394e45421a1b74efb756e9db94b9b53eb94c5c3bf9de35ec55e77a87ff73",
+      "engineImageId": "sha256:5af3a204e8764e6c85bf0bbe72e3571ece5218ca5d2bb424c8de15af2233c1b9",
+      "sourceCommit": "2491a1a804a9dd0027a861fa0372300d20f41ce7",
+      "emailEnvironment": "lab overlay plus email-from-missing.overlay.json after completion",
+      "browserNetwork": "pasta network namespace with ports 23311 and 23411 forwarded",
+      "articleContentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
+      "startedAt": "2026-09-16T19:34:49.957Z",
+      "finishedAt": "2026-09-16T19:34:51.279Z",
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "After completion, with SMTP_URL set and SMTP_FROM unset in the environment, open Settings -> Organization -> General",
+          "expected": "The Setup checklist shows Email as a row without a Settings link.",
+          "actual": "Sign-in landed at /. Setup checklist rows: [{\"label\":\"Organization\",\"href\":\"/settings/general\",\"markAsReviewed\":false},{\"label\":\"Business-user portal\",\"href\":\"/settings/authentication\",\"markAsReviewed\":false},{\"label\":\"Email\",\"href\":null,\"markAsReviewed\":false},{\"label\":\"Invite your team\",\"href\":\"/settings/users\",\"markAsReviewed\":false},{\"label\":\"E-signature\",\"href\":\"/settings/integrations/e-signature\",\"markAsReviewed\":false},{\"label\":\"AI analysis\",\"href\":\"/settings/ai-analysis\",\"markAsReviewed\":false}].",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:34:50.040Z",
+          "at": "2026-09-16T19:34:51.261Z"
+        }
+      ],
+      "disposition": "Final phase B2 run. The step passed."
+    },
+    {
+      "phase": "C",
+      "labProject": "openlaw-docs-41255c61-firstrun-r3",
+      "labCreatedAt": "2026-09-16T19:35:34.127Z",
+      "appImageId": "sha256:4c23394e45421a1b74efb756e9db94b9b53eb94c5c3bf9de35ec55e77a87ff73",
+      "engineImageId": "sha256:5af3a204e8764e6c85bf0bbe72e3571ece5218ca5d2bb424c8de15af2233c1b9",
+      "sourceCommit": "2491a1a804a9dd0027a861fa0372300d20f41ce7",
+      "emailEnvironment": "lab default overlay",
+      "browserNetwork": "pasta network namespace with ports 23311 and 23411 forwarded",
+      "articleContentSha256": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5",
+      "startedAt": "2026-09-16T19:35:48.647Z",
+      "finishedAt": "2026-09-16T19:35:50.737Z",
+      "steps": [
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "Create the first Administrator on a fresh instance with email set by the environment",
+          "expected": "Setup opens Welcome to OpenLaw.",
+          "actual": "Step 1 of 9: Welcome to OpenLaw",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:35:48.721Z",
+          "at": "2026-09-16T19:35:49.194Z"
+        },
+        {
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "action": "On Welcome select Skip optional steps with email configured",
+          "expected": "Onboarding ends and the app opens without recording the review.",
+          "actual": "Skip optional steps opened Home at /. The onboarding API reported completed true and review done false. /welcome then redirected to /. Setup checklist rows: [{\"label\":\"Organization\",\"href\":\"/settings/general\",\"markAsReviewed\":false},{\"label\":\"Business-user portal\",\"href\":\"/settings/authentication\",\"markAsReviewed\":false},{\"label\":\"Invite your team\",\"href\":\"/settings/users\",\"markAsReviewed\":false},{\"label\":\"E-signature\",\"href\":\"/settings/integrations/e-signature\",\"markAsReviewed\":false},{\"label\":\"AI analysis\",\"href\":\"/settings/ai-analysis\",\"markAsReviewed\":false},{\"label\":\"Review seeded types\",\"href\":null,\"markAsReviewed\":true}].",
+          "result": "pass",
+          "startedAt": "2026-09-16T19:35:49.195Z",
+          "at": "2026-09-16T19:35:50.720Z"
+        }
+      ],
+      "disposition": "Final phase C run. Both steps passed."
+    }
+  ]
+}

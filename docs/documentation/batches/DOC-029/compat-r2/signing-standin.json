@@ -62,9 +62,7 @@
       "path": "docs/user-guides/electronic-signing.md",
       "contentSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
       "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-      "scenarios": [
-        "V-C17-electronic"
-      ],
+      "scenarios": ["V-C17-electronic"],
       "diffFilesInspected": [
         "apps/api/openapi.json",
         "apps/api/src/modules/email-settings/config.test.ts",
@@ -525,7 +523,7 @@
   "files": [
     {
       "path": "batches/DOC-029/compat-r2/signing-standin-r2/note-check-r2.mjs",
-      "sha256": "f86487879845d592dd43eb1d022cb73837d00902edc12a50f0c1254f1f3dac27"
+      "sha256": "7e959199bcf5c82ab5e9640f5e1bb180ac9af235805f30e4aa92a6f7eece7851"
     },
     {
       "path": "batches/DOC-029/compat-r2/signing-standin-r2/note-check-r2.raw.json",
@@ -561,7 +559,7 @@
     },
     {
       "path": "batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2.mjs",
-      "sha256": "861f73ff4853cfd18dc1c691539261809db57b290b12e8b717f9f9899fbb8c5c"
+      "sha256": "efb493b221569c9f37a5871217bd7fc16468a1a565eefb4e5da86e4b9c68bc14"
     }
   ],
   "reviewedAt": "2026-09-16T18:03:07.993Z"

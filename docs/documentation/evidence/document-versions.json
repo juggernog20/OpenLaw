@@ -82,17 +82,21 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
     "contentSha256": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14",
-    "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
-    "reviewer": "DOC-029r2 compatibility reviewer (documents)",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T17:56:57.125Z",
-    "summary": "I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (documents)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/documents.json",
-        "sha256": "7272db57b414d7ff067e8891c526335284edc6f2c3e5436415d024b996c0f4e2"
+        "sha256": "3129c2786313b928fdd642e565cda91ea74a4bd3467b1839b0dfcec7d3ee8b7a"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
     ]
   }

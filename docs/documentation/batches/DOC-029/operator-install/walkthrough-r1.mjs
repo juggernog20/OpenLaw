@@ -9,13 +9,7 @@
 // is appended, so a failed step stays in the log next to its retry.
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-  chmodSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, chmodSync } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -360,9 +354,14 @@ async function download(api, ref, timeout = 30_000) {
   const started = Date.now();
   let r;
   try {
-    r = await api.get(`/api/v1/documents/${ref.documentId}/versions/${ref.versionId}/download`, { timeout });
+    r = await api.get(`/api/v1/documents/${ref.documentId}/versions/${ref.versionId}/download`, {
+      timeout,
+    });
   } catch (e) {
-    return { status: `no answer within ${Math.round((Date.now() - started) / 1000)} s`, matches: false };
+    return {
+      status: `no answer within ${Math.round((Date.now() - started) / 1000)} s`,
+      matches: false,
+    };
   }
   if (r.status() !== 200) return { status: r.status(), matches: false, ms: Date.now() - started };
   const bytes = await r.body();
@@ -407,7 +406,10 @@ phases.install = async () => {
       const c = sh("docker compose version --short", { cwd: WORK });
       const ctx = sh("docker context show", { cwd: WORK });
       const g = sh("git --version && openssl version", { cwd: WORK });
-      expect(v.code === 0 && c.code === 0 && ctx.code === 0 && g.code === 0, "a prerequisite command failed");
+      expect(
+        v.code === 0 && c.code === 0 && ctx.code === 0 && g.code === 0,
+        "a prerequisite command failed",
+      );
       return `Docker Engine ${v.stdout.trim()}, Compose ${c.stdout.trim()}, context "${ctx.stdout.trim()}" (the local host), ${firstLines(g.stdout, 2)}. Disk had about 1.5 TB free.`;
     },
   );
@@ -449,7 +451,10 @@ phases.install = async () => {
       const a = envValue("AUTH_SECRET") ?? "";
       const k = envValue("OPENLAW_SECRET_KEY") ?? "";
       expect(mode === "600", `mode ${mode}`);
-      expect(a.length === 44 && k.length === 44 && a !== k, "keys were not generated as two different values");
+      expect(
+        a.length === 44 && k.length === 44 && a !== k,
+        "keys were not generated as two different values",
+      );
       state.authSecretSha = sha(a);
       state.secretKeySha = sha(k);
       saveState();
@@ -495,8 +500,18 @@ phases.install = async () => {
     image: openlaw-engine-local:\${OPENLAW_BUILD_COMMIT:?Set the source revision}
 `,
       );
-      const dupes = ["COMPOSE_PROJECT_NAME", "COMPOSE_FILE", "OPENLAW_BUILD_COMMIT", "OPENLAW_BUILD_DIRTY", "BASE_URL", "PORT"].filter(
-        (k) => readEnv().split("\n").filter((l) => l.startsWith(`${k}=`)).length !== 1,
+      const dupes = [
+        "COMPOSE_PROJECT_NAME",
+        "COMPOSE_FILE",
+        "OPENLAW_BUILD_COMMIT",
+        "OPENLAW_BUILD_DIRTY",
+        "BASE_URL",
+        "PORT",
+      ].filter(
+        (k) =>
+          readEnv()
+            .split("\n")
+            .filter((l) => l.startsWith(`${k}=`)).length !== 1,
       );
       expect(dupes.length === 0, `settings not present exactly once: ${dupes.join(", ")}`);
       return `Added COMPOSE_PROJECT_NAME=${PROJECT}, COMPOSE_FILE=compose.yml:compose.operator.yml, OPENLAW_BUILD_COMMIT=${COMMIT}, OPENLAW_BUILD_DIRTY=false, BASE_URL=${ORIGIN} (the local proxy origin chosen for this check) and PORT=${APP_PORT}, each once. Wrote compose.operator.yml exactly as the article shows. Saving the keys in a secret store was represented by the private walkthrough directory outside the repository.`;
@@ -512,7 +527,10 @@ phases.install = async () => {
       const s = compose("config --services");
       expect(q.code === 0 && q.stdout.trim() === "", `config --quiet exited ${q.code} with output`);
       const services = s.stdout.trim().split("\n").sort();
-      expect(JSON.stringify(services) === JSON.stringify(["app", "doc-engine", "postgres", "worker"]), `services ${services}`);
+      expect(
+        JSON.stringify(services) === JSON.stringify(["app", "doc-engine", "postgres", "worker"]),
+        `services ${services}`,
+      );
       return `docker compose config --quiet exited 0 with no output. config --services listed ${services.join(", ")}.`;
     },
   );
@@ -534,9 +552,16 @@ phases.install = async () => {
     "container-operation",
     () => {
       const r = compose("build app doc-engine", { timeout: 3_600_000 });
-      expect(r.code === 0, `build exited ${r.code}: ${firstLines(r.stderr.split("\n").slice(-8).join("\n"), 8)}`);
-      const app = sh(`docker image inspect --format '{{.Id}}' openlaw-local:${COMMIT}`).stdout.trim();
-      const eng = sh(`docker image inspect --format '{{.Id}}' openlaw-engine-local:${COMMIT}`).stdout.trim();
+      expect(
+        r.code === 0,
+        `build exited ${r.code}: ${firstLines(r.stderr.split("\n").slice(-8).join("\n"), 8)}`,
+      );
+      const app = sh(
+        `docker image inspect --format '{{.Id}}' openlaw-local:${COMMIT}`,
+      ).stdout.trim();
+      const eng = sh(
+        `docker image inspect --format '{{.Id}}' openlaw-engine-local:${COMMIT}`,
+      ).stdout.trim();
       expect(app.startsWith("sha256:") && eng.startsWith("sha256:"), "a tagged image is missing");
       state.buildMs = r.ms;
       saveState();
@@ -566,7 +591,9 @@ async function upAndReady() {
     "container-operation",
     async () => {
       const code = await waitReady(240_000);
-      const c = sh(`curl --fail -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:${APP_PORT}/readyz`);
+      const c = sh(
+        `curl --fail -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:${APP_PORT}/readyz`,
+      );
       expect(code === 200 && c.code === 0, `readyz ${code}, curl exit ${c.code}`);
       state.readyAt = new Date().toISOString();
       saveState();
@@ -579,9 +606,15 @@ async function upAndReady() {
       const worker = containerState("worker");
       expect(worker?.state === "running", `worker ${JSON.stringify(worker)}`);
       expect(eng?.health === "healthy", `doc-engine ${JSON.stringify(eng)}`);
-      const appImg = sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q app)`).stdout.trim();
-      const wImg = sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q worker)`).stdout.trim();
-      const eImg = sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q doc-engine)`).stdout.trim();
+      const appImg = sh(
+        `docker inspect --format '{{.Image}}' $(docker compose ps -q app)`,
+      ).stdout.trim();
+      const wImg = sh(
+        `docker inspect --format '{{.Image}}' $(docker compose ps -q worker)`,
+      ).stdout.trim();
+      const eImg = sh(
+        `docker inspect --format '{{.Image}}' $(docker compose ps -q doc-engine)`,
+      ).stdout.trim();
       log.images = { app: appImg, worker: wImg, "doc-engine": eImg, postgres: "postgres:16" };
       const elapsed = Math.round((Date.now() - new Date(state.installStartedAt).getTime()) / 1000);
       return `curl --fail /readyz exited 0 with HTTP 200. The worker is running and the doc-engine reports healthy. The running app and worker containers use ${appImg}; doc-engine uses ${eImg}. Elapsed from the first prerequisite command to readiness: ${elapsed} s on this host (build cache warm from earlier labs of the same revision).`;
@@ -596,7 +629,9 @@ phases["install-up"] = async () => {
     "The shared host's Docker address pools are exhausted by parallel labs; pre-created networks carrying the Compose project labels let the article's own up command proceed unchanged.",
     "container-operation",
     () => {
-      const r = sh(`docker network inspect ${PROJECT}_openlaw-backend ${PROJECT}_openlaw-doc-engine --format '{{.Name}} internal={{.Internal}} {{range .IPAM.Config}}{{.Subnet}}{{end}}'`);
+      const r = sh(
+        `docker network inspect ${PROJECT}_openlaw-backend ${PROJECT}_openlaw-doc-engine --format '{{.Name}} internal={{.Internal}} {{range .IPAM.Config}}{{.Subnet}}{{end}}'`,
+      );
       expect(r.code === 0, "networks missing");
       return `The first up failed with "all predefined address pools have been fully subnetted" because other parallel documentation labs hold every default pool. The reviewer created ${r.stdout.trim().split("\n").join("; ")} with the Compose project and network labels (docker network create --subnet ... --label com.docker.compose.project=${PROJECT} --label com.docker.compose.network=...). No installation file changed; this is a host workaround, not an article step.`;
     },
@@ -708,7 +743,8 @@ volumes:
 phases.firstrun = async () => {
   secret("adminPassword");
   const { page, context } = await newSession();
-  const shot = (n) => page.screenshot({ path: path.join(PRIVATE, `firstrun-${n}.png`) }).catch(() => {});
+  const shot = (n) =>
+    page.screenshot({ path: path.join(PRIVATE, `firstrun-${n}.png`) }).catch(() => {});
   try {
     await step(
       "V-C44",
@@ -723,7 +759,9 @@ phases.firstrun = async () => {
         await page.getByLabel("Password", { exact: true }).fill(state.adminPassword);
         await page.getByLabel("Confirm password", { exact: true }).fill(state.adminPassword);
         await page.getByRole("button", { name: "Create Administrator" }).click();
-        await page.getByRole("heading", { name: "Welcome to OpenLaw" }).waitFor({ timeout: 30_000 });
+        await page
+          .getByRole("heading", { name: "Welcome to OpenLaw" })
+          .waitFor({ timeout: 30_000 });
         return `Created the fictional Administrator ${ADMIN.name} at ${ORIGIN}. OpenLaw signed her in and showed "Welcome to OpenLaw".`;
       },
     );
@@ -826,7 +864,9 @@ phases["firstrun-finish"] = async () => {
       const { page } = s;
       try {
         await page.goto(ORIGIN);
-        await page.getByRole("heading", { name: "Welcome to OpenLaw" }).waitFor({ timeout: 30_000 });
+        await page
+          .getByRole("heading", { name: "Welcome to OpenLaw" })
+          .waitFor({ timeout: 30_000 });
         const reopenedAt = new URL(page.url()).pathname;
         await page.getByRole("button", { name: "Get started" }).click();
         const org = await page.getByLabel("Organization name").inputValue();
@@ -864,7 +904,10 @@ phases["firstrun-verify"] = async () => {
         await s.page.getByRole("heading", { name: "Home" }).waitFor({ timeout: 30_000 });
         const status = await json(await s.page.request.get(`${ORIGIN}/api/v1/onboarding`));
         const org = await json(await s.page.request.get(`${ORIGIN}/api/v1/org/general`));
-        expect(status.completed === true && status.steps.review.done && status.steps.email.done, JSON.stringify(status).slice(0, 160));
+        expect(
+          status.completed === true && status.steps.review.done && status.steps.email.done,
+          JSON.stringify(status).slice(0, 160),
+        );
         return `The onboarding state reads completed=true with review done, email done and invites done; e-signature and AI analysis are not done (set up later). The address opens Home at ${new URL(s.page.url()).pathname}. The organization name is "${org.general.name}". The first attempt's Finish click had completed; its status read ran before the write landed.`;
       } finally {
         await s.context.close();
@@ -900,13 +943,19 @@ phases.checks = async () => {
       state.contractNumber = contract.number;
       const pdf = pdfFile("doc029-install-check.pdf", "DOC-029 operator install check words");
       const ref = await upload(api, contract.number, pdf);
-      expect(ref.status === 201, `upload answered ${ref.status} ${String(JSON.stringify(ref.body)).slice(0, 200)}`);
+      expect(
+        ref.status === 201,
+        `upload answered ${ref.status} ${String(JSON.stringify(ref.body)).slice(0, 200)}`,
+      );
       state.docs = { installPdf: ref };
       saveState();
       const d = await download(api, ref);
       expect(d.matches, `download ${d.status}, bytes match ${d.matches}`);
       const t = await waitText(api, ref);
-      expect(t.state === "ready" && /operator install check/i.test(t.text ?? ""), `processing ${t.state}`);
+      expect(
+        t.state === "ready" && /operator install check/i.test(t.text ?? ""),
+        `processing ${t.state}`,
+      );
       return `Created Contract ${contract.number} "DOC-029 operator-install check contract". Uploaded a one-page PDF (201); its download matched the uploaded SHA-256. Text extraction reached "ready" with the uploaded words (source ${t.source ?? "n/a"}).`;
     },
   );
@@ -929,7 +978,10 @@ phases.checks = async () => {
       const c = await apiClient(ORIGIN, COLLEAGUE.email, state.colleaguePassword);
       const me = await json(await c.ctx.get("/api/v1/me"));
       await c.ctx.dispose();
-      expect(c.signInStatus === 200 && me.user?.email === COLLEAGUE.email, `sign-in ${c.signInStatus}`);
+      expect(
+        c.signInStatus === 200 && me.user?.email === COLLEAGUE.email,
+        `sign-in ${c.signInStatus}`,
+      );
       return `Opened the invitation link on ${ORIGIN}, set a password for ${COLLEAGUE.name}, and signed in with it (role ${me.user.role}).`;
     },
   );
@@ -941,7 +993,11 @@ phases.checks = async () => {
     async () => {
       const r = compose("restart worker");
       expect(r.code === 0, `restart exited ${r.code}`);
-      const ref = await upload(api, state.contractNumber, pdfFile("doc029-after-restart.pdf", "processed after worker restart"));
+      const ref = await upload(
+        api,
+        state.contractNumber,
+        pdfFile("doc029-after-restart.pdf", "processed after worker restart"),
+      );
       expect(ref.status === 201, `upload ${ref.status}`);
       const t = await waitText(api, ref);
       expect(t.state === "ready", `processing ${t.state}`);
@@ -956,7 +1012,9 @@ phases.checks = async () => {
     () => {
       const rev = sh("git rev-parse HEAD").stdout.trim();
       const imgs = compose("images --format json").stdout.trim();
-      const vol = sh(`docker volume inspect ${PROJECT}_openlaw-files --format '{{.Name}}'`).stdout.trim();
+      const vol = sh(
+        `docker volume inspect ${PROJECT}_openlaw-files --format '{{.Name}}'`,
+      ).stdout.trim();
       expect(rev === COMMIT && imgs.length > 0 && vol, "an identity could not be read");
       return `Source ${rev}; project ${PROJECT}; origin ${ORIGIN}; local files in volume ${vol}; images as recorded in the log's images field.`;
     },
@@ -981,13 +1039,19 @@ phases["checks-document"] = async () => {
       state.contractNumber = contract.number;
       const pdf = pdfFile("doc029-install-check.pdf", "DOC-029 operator install check words");
       const ref = await upload(api, contract.number, pdf);
-      expect(ref.status === 201, `upload answered ${ref.status} ${String(JSON.stringify(ref.body)).slice(0, 200)}`);
+      expect(
+        ref.status === 201,
+        `upload answered ${ref.status} ${String(JSON.stringify(ref.body)).slice(0, 200)}`,
+      );
       state.docs = { installPdf: ref };
       saveState();
       const d = await download(api, ref);
       expect(d.matches, `download ${d.status}, bytes match ${d.matches}`);
       const t = await waitText(api, ref);
-      expect(t.state === "ready" && /operator install check/i.test(t.text ?? ""), `processing ${t.state}`);
+      expect(
+        t.state === "ready" && /operator install check/i.test(t.text ?? ""),
+        `processing ${t.state}`,
+      );
       return `Created Contract ${contract.number} "DOC-029 operator-install check contract". Uploaded a one-page PDF (201); its download matched the uploaded SHA-256. Text extraction reached "ready" with the uploaded words (source ${t.source ?? "n/a"}).`;
     },
   );
@@ -1010,7 +1074,10 @@ phases["install-negatives"] = async () => {
       const q2 = compose("config --quiet");
       const ready = await readyz();
       expect(q.code !== 0 && u.code !== 0, "Compose accepted a blank AUTH_SECRET");
-      expect(ps.length === 4 && q2.code === 0 && ready === 200, `after restore: ps ${ps}, config ${q2.code}, readyz ${ready}`);
+      expect(
+        ps.length === 4 && q2.code === 0 && ready === 200,
+        `after restore: ps ${ps}, config ${q2.code}, readyz ${ready}`,
+      );
       return `With AUTH_SECRET blank, config --quiet exited ${q.code} and up exited ${u.code} with "${firstLines(u.stderr, 1)}". docker compose ps still listed ${ps.join(", ")}. Restoring the key made config --quiet exit 0; /readyz answered 200.`;
     },
   );
@@ -1020,21 +1087,38 @@ phases["install-negatives"] = async () => {
     "The start fails and names the port; the other listener is untouched; an unused port recovers.",
     "container-operation",
     async () => {
-      const holder = spawnSync("bash", ["-c", `nohup python3 -m http.server ${SPARE_PORT} --bind 0.0.0.0 >/dev/null 2>&1 & echo $!`], { encoding: "utf8" });
+      const holder = spawnSync(
+        "bash",
+        [
+          "-c",
+          `nohup python3 -m http.server ${SPARE_PORT} --bind 0.0.0.0 >/dev/null 2>&1 & echo $!`,
+        ],
+        { encoding: "utf8" },
+      );
       const pid = holder.stdout.trim();
       await sleep(1500);
       try {
         setEnv({ PORT: String(SPARE_PORT) });
         const u = up();
-        const ps = compose("ps --format '{{.Service}}'").stdout.trim().split("\n").filter(Boolean).sort();
-        const other = await fetch(`http://127.0.0.1:${SPARE_PORT}/`).then((r) => r.status).catch(() => "down");
+        const ps = compose("ps --format '{{.Service}}'")
+          .stdout.trim()
+          .split("\n")
+          .filter(Boolean)
+          .sort();
+        const other = await fetch(`http://127.0.0.1:${SPARE_PORT}/`)
+          .then((r) => r.status)
+          .catch(() => "down");
         setEnv({ PORT: String(APP_PORT) });
         const u2 = up();
         const ready = await waitReady(120_000);
-        expect(u.code !== 0 && /address already in use|port is already allocated/i.test(u.stderr), `up exited ${u.code}: ${firstLines(u.stderr)}`);
+        expect(
+          u.code !== 0 && /address already in use|port is already allocated/i.test(u.stderr),
+          `up exited ${u.code}: ${firstLines(u.stderr)}`,
+        );
         expect(other === 200, `the unrelated listener answered ${other}`);
         expect(u2.code === 0 && ready === 200, `recovery up ${u2.code}, readyz ${ready}`);
-        const line = u.stderr.split("\n").find((l) => /already in use|already allocated/i.test(l)) ?? "";
+        const line =
+          u.stderr.split("\n").find((l) => /already in use|already allocated/i.test(l)) ?? "";
         return `With PORT=${SPARE_PORT} held by an unrelated owned listener, up exited ${u.code} with "${(line.match(/(failed to bind|Bind for).*$/)?.[0] ?? line).trim().slice(0, 200)}". docker compose ps then listed ${ps.join(", ") || "nothing"}. The unrelated listener still answered 200. Restoring PORT=${APP_PORT} and running up -d --no-build --pull never brought the app back; /readyz 200.`;
       } finally {
         spawnSync("kill", [pid]);
@@ -1062,7 +1146,8 @@ phases["install-negatives"] = async () => {
     "Negative: the authoring lab is not used as installation evidence",
     "All V-C44 observations come from the owned project built by the article's commands.",
     "container-operation",
-    () => `Every V-C44 step ran against ${PROJECT}, built by the article's own clone, .env and Compose commands. No lab.mjs lab, seed data, or dev overlay was used.`,
+    () =>
+      `Every V-C44 step ran against ${PROJECT}, built by the article's own clone, .env and Compose commands. No lab.mjs lab, seed data, or dev overlay was used.`,
   );
 };
 
@@ -1073,21 +1158,38 @@ phases["port-negative"] = async () => {
     "The start fails and names the port; the other listener is untouched; an unused port recovers.",
     "container-operation",
     async () => {
-      const holder = spawnSync("bash", ["-c", `nohup python3 -m http.server ${SPARE_PORT} --bind 0.0.0.0 >/dev/null 2>&1 & echo $!`], { encoding: "utf8" });
+      const holder = spawnSync(
+        "bash",
+        [
+          "-c",
+          `nohup python3 -m http.server ${SPARE_PORT} --bind 0.0.0.0 >/dev/null 2>&1 & echo $!`,
+        ],
+        { encoding: "utf8" },
+      );
       const pid = holder.stdout.trim();
       await sleep(1500);
       try {
         setEnv({ PORT: String(SPARE_PORT) });
         const u = up();
-        const ps = compose("ps --format '{{.Service}}'").stdout.trim().split("\n").filter(Boolean).sort();
-        const other = await fetch(`http://127.0.0.1:${SPARE_PORT}/`).then((r) => r.status).catch(() => "down");
+        const ps = compose("ps --format '{{.Service}}'")
+          .stdout.trim()
+          .split("\n")
+          .filter(Boolean)
+          .sort();
+        const other = await fetch(`http://127.0.0.1:${SPARE_PORT}/`)
+          .then((r) => r.status)
+          .catch(() => "down");
         setEnv({ PORT: String(APP_PORT) });
         const u2 = up();
         const ready = await waitReady(120_000);
-        expect(u.code !== 0 && /address already in use|port is already allocated/i.test(u.stderr), `up exited ${u.code}: ${firstLines(u.stderr)}`);
+        expect(
+          u.code !== 0 && /address already in use|port is already allocated/i.test(u.stderr),
+          `up exited ${u.code}: ${firstLines(u.stderr)}`,
+        );
         expect(other === 200, `the unrelated listener answered ${other}`);
         expect(u2.code === 0 && ready === 200, `recovery up ${u2.code}, readyz ${ready}`);
-        const line = u.stderr.split("\n").find((l) => /already in use|already allocated/i.test(l)) ?? "";
+        const line =
+          u.stderr.split("\n").find((l) => /already in use|already allocated/i.test(l)) ?? "";
         return `With PORT=${SPARE_PORT} held by an unrelated owned listener, up exited ${u.code} with "${(line.match(/(failed to bind|Bind for).*$/)?.[0] ?? line).trim().slice(0, 200)}". docker compose ps then listed ${ps.join(", ") || "nothing"}. The unrelated listener still answered 200. Restoring PORT=${APP_PORT} and running up -d --no-build --pull never brought the app back; /readyz 200.`;
       } finally {
         spawnSync("kill", [pid]);
@@ -1112,7 +1214,10 @@ phases.apply = async () => {
       await waitReady();
       const env = inContainer("app", "MAX_UPLOAD_MB");
       const up1 = await upload(await adminApi(), state.contractNumber, big);
-      expect(r.code === 0 && env === "" && up1.status === 201, `env "${env}", upload ${up1.status}`);
+      expect(
+        r.code === 0 && env === "" && up1.status === 201,
+        `env "${env}", upload ${up1.status}`,
+      );
       return `After adding MAX_UPLOAD_MB=1 and docker compose restart app, the container's MAX_UPLOAD_MB was still empty and a 1,100,000-byte upload was accepted (201).`;
     },
   );
@@ -1128,7 +1233,10 @@ phases.apply = async () => {
       const a = await adminApi();
       const b = await upload(a, state.contractNumber, big);
       const s = await upload(a, state.contractNumber, small);
-      expect(r.code === 0 && env === "1" && b.status === 413 && s.status === 201, `env ${env}, big ${b.status}, small ${s.status}`);
+      expect(
+        r.code === 0 && env === "1" && b.status === 413 && s.status === 201,
+        `env ${env}, big ${b.status}, small ${s.status}`,
+      );
       return `up -d --no-build --pull never recreated the app; MAX_UPLOAD_MB is now 1 in the container. The 1,100,000-byte upload was refused with ${b.status} "${b.body?.detail ?? ""}"; a 200,000-byte upload was accepted (201). The Caddy proxy has no body limit configured, so the app's own refusal was seen.`;
     },
   );
@@ -1145,7 +1253,10 @@ phases.apply = async () => {
       setEnv({ MAX_UPLOAD_MB: null });
       up();
       await waitReady();
-      expect(r.code === 0 && ready === 200 && b.status === 201, `ready ${ready}, upload ${b.status}`);
+      expect(
+        r.code === 0 && ready === 200 && b.status === 201,
+        `ready ${ready}, upload ${b.status}`,
+      );
       return `With MAX_UPLOAD_MB=ten the app started (/readyz 200) and accepted the 1,100,000-byte upload (201), so the ceiling fell back to the 100 MB default. The setting was then removed and the containers recreated.`;
     },
   );
@@ -1177,7 +1288,10 @@ phases.apply = async () => {
           .split("\n")
           .map((l) => l.split("=")[0]);
       const engEnv = envNames("doc-engine");
-      const engNets = insp("doc-engine", "{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}");
+      const engNets = insp(
+        "doc-engine",
+        "{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}",
+      );
       const pgPorts = insp("postgres", "{{json .HostConfig.PortBindings}}");
       const engPorts = insp("doc-engine", "{{json .HostConfig.PortBindings}}");
       const appPorts = insp("app", "{{json .HostConfig.PortBindings}}");
@@ -1185,13 +1299,20 @@ phases.apply = async () => {
         (k) => inContainer("app", k) === inContainer("worker", k),
       );
       const keySame =
-        sha(inContainer("app", "OPENLAW_SECRET_KEY")) === sha(inContainer("worker", "OPENLAW_SECRET_KEY"));
+        sha(inContainer("app", "OPENLAW_SECRET_KEY")) ===
+        sha(inContainer("worker", "OPENLAW_SECRET_KEY"));
       expect(appImg === wImg && appCmd !== wCmd, "app/worker image or command");
       expect(same && keySame, "app and worker environment differ");
       expect(!engEnv.some((k) => /DATABASE_URL|SECRET|AUTH/.test(k)), `engine env ${engEnv}`);
       expect(!/backend/.test(engNets), `engine networks ${engNets}`);
-      expect(["{}", "null"].includes(pgPorts) && ["{}", "null"].includes(engPorts), "a private port is published");
-      expect(appPorts.includes('"3000/tcp"') && appPorts.includes(`"${APP_PORT}"`), `app ports ${appPorts}`);
+      expect(
+        ["{}", "null"].includes(pgPorts) && ["{}", "null"].includes(engPorts),
+        "a private port is published",
+      );
+      expect(
+        appPorts.includes('"3000/tcp"') && appPorts.includes(`"${APP_PORT}"`),
+        `app ports ${appPorts}`,
+      );
       return `App and worker run the same image ${appImg} with commands ${appCmd === "null" ? "(image default)" : appCmd} and ${wCmd}. DATABASE_URL, STORAGE_PATH, BASE_URL, DOC_ENGINE_URL and OPENLAW_SECRET_KEY are identical in both (compared, not recorded). The doc-engine container has no DATABASE_URL, AUTH_SECRET or OPENLAW_SECRET_KEY and joins only ${engNets.trim()}. Postgres and doc-engine publish no host ports; the app maps container port 3000 to host port ${APP_PORT}.`;
     },
   );
@@ -1202,9 +1323,16 @@ phases.apply = async () => {
     "container-operation",
     () => {
       const url = inContainer("app", "DOC_ENGINE_URL");
-      const tmpfs = sh(`docker inspect --format '{{json .HostConfig.Tmpfs}}' $(docker compose ps -q doc-engine)`).stdout.trim();
-      const ro = sh(`docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' $(docker compose ps -q doc-engine)`).stdout.trim();
-      expect(url === "http://doc-engine:8080" && tmpfs.includes("size=2g"), `url ${url}, tmpfs ${tmpfs}`);
+      const tmpfs = sh(
+        `docker inspect --format '{{json .HostConfig.Tmpfs}}' $(docker compose ps -q doc-engine)`,
+      ).stdout.trim();
+      const ro = sh(
+        `docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' $(docker compose ps -q doc-engine)`,
+      ).stdout.trim();
+      expect(
+        url === "http://doc-engine:8080" && tmpfs.includes("size=2g"),
+        `url ${url}, tmpfs ${tmpfs}`,
+      );
       return `The app's DOC_ENGINE_URL is ${url}. The doc-engine mounts /tmp as tmpfs ${tmpfs} with a read-only root filesystem (${ro}).`;
     },
   );
@@ -1231,8 +1359,18 @@ phases.proxy = async () => {
     "Sign-in posted with a foreign Origin is refused; the direct port with the configured Origin still works.",
     "container-operation",
     async () => {
-      const bad = await apiClient(ORIGIN, ADMIN.email, state.adminPassword, "https://not-the-configured-origin.example");
-      const direct = await apiClient(LOCAL, ADMIN.email, state.adminPassword, `http://127.0.0.1:${APP_PORT}`);
+      const bad = await apiClient(
+        ORIGIN,
+        ADMIN.email,
+        state.adminPassword,
+        "https://not-the-configured-origin.example",
+      );
+      const direct = await apiClient(
+        LOCAL,
+        ADMIN.email,
+        state.adminPassword,
+        `http://127.0.0.1:${APP_PORT}`,
+      );
       const directGood = await apiClient(LOCAL, ADMIN.email, state.adminPassword, ORIGIN);
       await bad.ctx.dispose();
       await direct.ctx.dispose();
@@ -1249,7 +1387,11 @@ phases.proxy = async () => {
     "container-operation",
     async () => {
       const api = await adminApi(ORIGIN);
-      const ref = await upload(api, state.contractNumber, textFile("doc029-proxy.txt", Buffer.from("DOC-029 through the proxy\n")));
+      const ref = await upload(
+        api,
+        state.contractNumber,
+        textFile("doc029-proxy.txt", Buffer.from("DOC-029 through the proxy\n")),
+      );
       const d = await download(api, ref);
       await api.dispose();
       expect(ref.status === 201 && d.matches, `upload ${ref.status}, download ${d.status}`);
@@ -1263,7 +1405,9 @@ phases.proxy = async () => {
     "browser-walkthrough",
     async () => {
       const a = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
-      const contract = await json(await a.page.request.get(`${ORIGIN}/api/v1/contracts/${state.contractNumber}`));
+      const contract = await json(
+        await a.page.request.get(`${ORIGIN}/api/v1/contracts/${state.contractNumber}`),
+      );
       const contractId = contract.contract.id;
       // Rowan must be able to reach the Contract: add her to its team.
       const users = await json(await a.page.request.get(`${ORIGIN}/api/v1/users`));
@@ -1276,16 +1420,21 @@ phases.proxy = async () => {
           window.__frames = [];
           const ctrl = new AbortController();
           window.__abort = ctrl;
-          fetch(`/api/events?entityType=contract&entityId=${id}`, { signal: ctrl.signal, credentials: "include" }).then(async (r) => {
-            window.__status = r.status;
-            const reader = r.body.getReader();
-            const dec = new TextDecoder();
-            for (;;) {
-              const { value, done } = await reader.read();
-              if (done) break;
-              window.__frames.push({ t: Date.now(), text: dec.decode(value) });
-            }
-          }).catch(() => {});
+          fetch(`/api/events?entityType=contract&entityId=${id}`, {
+            signal: ctrl.signal,
+            credentials: "include",
+          })
+            .then(async (r) => {
+              window.__status = r.status;
+              const reader = r.body.getReader();
+              const dec = new TextDecoder();
+              for (;;) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                window.__frames.push({ t: Date.now(), text: dec.decode(value) });
+              }
+            })
+            .catch(() => {});
         },
         { id: contractId },
       );
@@ -1312,9 +1461,13 @@ phases.proxy = async () => {
       } catch {}
       const origin1 = await a.page.evaluate(() => performance.timeOrigin);
       await a.context.close();
-      expect(postStatus === 201 || postStatus === 200, `comment post ${postStatus} (${rowan?.role})`);
+      expect(
+        postStatus === 201 || postStatus === 200,
+        `comment post ${postStatus} (${rowan?.role})`,
+      );
       expect(status === 200 && frame, `stream status ${status}, record frame ${Boolean(frame)}`);
-      const kind = frame.text.match(/"kind":"([^"]+)"/)?.[1] ?? frame.text.match(/"type":"([^"]+)"/)?.[1];
+      const kind =
+        frame.text.match(/"kind":"([^"]+)"/)?.[1] ?? frame.text.match(/"type":"([^"]+)"/)?.[1];
       return `The Administrator's browser held Contract ${state.contractNumber} open through ${ORIGIN} and read /api/events for that record (HTTP ${status}). ${COLLEAGUE.name} posted a comment through the proxy (${postStatus}). A named record frame${kind ? ` (${kind})` : ""} for that Contract arrived ${frame.t - sent} ms later. The comment text ${onScreen ? "appeared on the open page without a reload" : "did not appear in the visible page within 10 s"}; the page's timeOrigin ${origin0 === origin1 ? "was unchanged" : "changed"}.`;
     },
   );
@@ -1352,113 +1505,159 @@ phases.storage = async (only) => {
     }
     return out;
   };
-  if (!only) await step(
-    "V-C45",
-    "local driver: upload and download, file lands in the shared named volume at the default STORAGE_PATH",
-    "Bytes match; the file is under /var/lib/openlaw/files in both app and worker.",
-    "container-operation",
-    async () => {
-      const api = await adminApi();
-      const ref = await upload(api, state.contractNumber, textFile("doc029-local.txt", Buffer.from(`DOC-029 local ${Date.now()}\n`)));
-      docs.local = ref;
-      saveState();
-      const d = await download(api, ref);
-      const appCount = compose("exec -T app sh -c 'find /var/lib/openlaw/files -type f | wc -l'").stdout.trim();
-      const wCount = compose("exec -T worker sh -c 'find /var/lib/openlaw/files -type f | wc -l'").stdout.trim();
-      await api.dispose();
-      expect(ref.status === 201 && d.matches && Number(appCount) > 0 && appCount === wCount, `upload ${ref.status} match ${d.matches} files ${appCount}/${wCount}`);
-      return `With STORAGE_DRIVER unset (local), an upload returned 201 and its download matched. The app and worker both see ${appCount} files under /var/lib/openlaw/files in the shared volume.`;
-    },
-  );
-  if (!only) await step(
-    "V-C45",
-    "s3 driver: create the bucket first, set the S3 variables, recreate; upload/download new and older Documents; worker processing",
-    "New file is written to the bucket; older local file still downloads; processing reaches ready.",
-    "container-operation",
-    async () => {
-      await s3.send(new CreateBucketCommand({ Bucket: "doc029-openlaw-files" })).catch((e) => {
-        if (!/BucketAlreadyOwnedByYou/.test(e.name)) throw e;
-      });
-      setEnv({
-        STORAGE_DRIVER: "s3",
-        S3_BUCKET: "doc029-openlaw-files",
-        S3_ENDPOINT: "http://minio:9000",
-        S3_FORCE_PATH_STYLE: "true",
-        S3_ACCESS_KEY_ID: state.minioUser,
-        S3_SECRET_ACCESS_KEY: state.minioPassword,
-      });
-      const r = up();
-      const ready = await waitReady();
-      const api = await adminApi();
-      const ref = await upload(api, state.contractNumber, textFile("doc029-s3.txt", Buffer.from(`DOC-029 s3 ${Date.now()}\n`)));
-      docs.s3 = ref;
-      saveState();
-      const objs = await s3.send(new ListObjectsV2Command({ Bucket: "doc029-openlaw-files" }));
-      const pdf = await upload(api, state.contractNumber, pdfFile("doc029-s3.pdf", "stored on the s3 driver"));
-      const t = await waitText(api, pdf);
-      const all = await checkAll(api);
-      await api.dispose();
-      expect(r.code === 0 && ready === 200 && ref.status === 201, `up ${r.code} ready ${ready} upload ${ref.status}`);
-      expect((objs.KeyCount ?? 0) >= 1, "bucket is empty");
-      expect(all.every((x) => x.includes("200 match")), all.join(", "));
-      expect(t.state === "ready", `processing ${t.state}`);
-      return `Created bucket doc029-openlaw-files in MinIO, set STORAGE_DRIVER=s3 with S3_BUCKET, S3_ENDPOINT=http://minio:9000, S3_FORCE_PATH_STYLE=true and explicit keys, and recreated. /readyz 200. A new upload returned 201 and the bucket now holds ${objs.KeyCount} objects. Downloads: ${all.join(", ")}. A PDF written to s3 reached "ready" in the worker.`;
-    },
-  );
-  if (!only) await step(
-    "V-C45",
-    "azure-blob driver: create the container first, set the Azure variables, recreate; every earlier store still reads; worker processing",
-    "New file in the Azurite container; local and s3 files still download; processing reaches ready.",
-    "container-operation",
-    async () => {
-      await blob.getContainerClient("doc029-openlaw-files").createIfNotExists();
-      setEnv({
-        STORAGE_DRIVER: "azure-blob",
-        AZURE_BLOB_CONTAINER: "doc029-openlaw-files",
-        AZURE_BLOB_ACCOUNT: AZ_ACCOUNT,
-        AZURE_BLOB_ACCOUNT_KEY: AZ_KEY,
-        AZURE_BLOB_ENDPOINT: `http://azurite:10000/${AZ_ACCOUNT}`,
-      });
-      const r = up();
-      const ready = await waitReady();
-      const api = await adminApi();
-      const ref = await upload(api, state.contractNumber, textFile("doc029-azure.txt", Buffer.from(`DOC-029 azure ${Date.now()}\n`)));
-      docs.azure = ref;
-      saveState();
-      let n = 0;
-      for await (const _ of blob.getContainerClient("doc029-openlaw-files").listBlobsFlat()) n++;
-      const pdf = await upload(api, state.contractNumber, pdfFile("doc029-azure.pdf", "stored on the azure driver"));
-      const t = await waitText(api, pdf);
-      const all = await checkAll(api);
-      await api.dispose();
-      expect(r.code === 0 && ready === 200 && ref.status === 201 && n >= 1, `up ${r.code} ready ${ready} upload ${ref.status} blobs ${n}`);
-      expect(all.every((x) => x.includes("200 match")), all.join(", "));
-      expect(t.state === "ready", `processing ${t.state}`);
-      return `Created container doc029-openlaw-files in Azurite, set STORAGE_DRIVER=azure-blob with AZURE_BLOB_CONTAINER, AZURE_BLOB_ACCOUNT, AZURE_BLOB_ACCOUNT_KEY and AZURE_BLOB_ENDPOINT=http://azurite:10000/devstoreaccount1, and recreated. /readyz 200. A new upload returned 201; the container holds ${n} blobs. Downloads: ${all.join(", ")}. A PDF written to azure-blob reached "ready" in the worker.`;
-    },
-  );
-  if (!only) await step(
-    "V-C45",
-    "Startup validates storage configuration: STORAGE_DRIVER=s3 without S3_BUCKET",
-    "The app refuses to start with a storage configuration message; correcting it recovers.",
-    "container-operation",
-    async () => {
-      const bucket = envValue("S3_BUCKET");
-      setEnv({ STORAGE_DRIVER: "s3", S3_BUCKET: null });
-      const since = new Date().toISOString();
-      up();
-      await sleep(15_000);
-      const ready = await readyz();
-      const logs = appLogs("app", since);
-      const line = logs.split("\n").find((l) => /S3_BUCKET/.test(l)) ?? "";
-      setEnv({ STORAGE_DRIVER: "azure-blob", S3_BUCKET: bucket });
-      up();
-      const back = await waitReady();
-      expect(ready !== 200 && line, `readyz ${ready}; log line "${line}"`);
-      expect(back === 200, `recovery ${back}`);
-      return `With STORAGE_DRIVER=s3 and S3_BUCKET removed, the app did not become ready (/readyz ${ready}) and logged "${line.replace(/^.*?\|\s*/, "").trim().slice(0, 200)}". Restoring the settings and recreating returned /readyz 200.`;
-    },
-  );
+  if (!only)
+    await step(
+      "V-C45",
+      "local driver: upload and download, file lands in the shared named volume at the default STORAGE_PATH",
+      "Bytes match; the file is under /var/lib/openlaw/files in both app and worker.",
+      "container-operation",
+      async () => {
+        const api = await adminApi();
+        const ref = await upload(
+          api,
+          state.contractNumber,
+          textFile("doc029-local.txt", Buffer.from(`DOC-029 local ${Date.now()}\n`)),
+        );
+        docs.local = ref;
+        saveState();
+        const d = await download(api, ref);
+        const appCount = compose(
+          "exec -T app sh -c 'find /var/lib/openlaw/files -type f | wc -l'",
+        ).stdout.trim();
+        const wCount = compose(
+          "exec -T worker sh -c 'find /var/lib/openlaw/files -type f | wc -l'",
+        ).stdout.trim();
+        await api.dispose();
+        expect(
+          ref.status === 201 && d.matches && Number(appCount) > 0 && appCount === wCount,
+          `upload ${ref.status} match ${d.matches} files ${appCount}/${wCount}`,
+        );
+        return `With STORAGE_DRIVER unset (local), an upload returned 201 and its download matched. The app and worker both see ${appCount} files under /var/lib/openlaw/files in the shared volume.`;
+      },
+    );
+  if (!only)
+    await step(
+      "V-C45",
+      "s3 driver: create the bucket first, set the S3 variables, recreate; upload/download new and older Documents; worker processing",
+      "New file is written to the bucket; older local file still downloads; processing reaches ready.",
+      "container-operation",
+      async () => {
+        await s3.send(new CreateBucketCommand({ Bucket: "doc029-openlaw-files" })).catch((e) => {
+          if (!/BucketAlreadyOwnedByYou/.test(e.name)) throw e;
+        });
+        setEnv({
+          STORAGE_DRIVER: "s3",
+          S3_BUCKET: "doc029-openlaw-files",
+          S3_ENDPOINT: "http://minio:9000",
+          S3_FORCE_PATH_STYLE: "true",
+          S3_ACCESS_KEY_ID: state.minioUser,
+          S3_SECRET_ACCESS_KEY: state.minioPassword,
+        });
+        const r = up();
+        const ready = await waitReady();
+        const api = await adminApi();
+        const ref = await upload(
+          api,
+          state.contractNumber,
+          textFile("doc029-s3.txt", Buffer.from(`DOC-029 s3 ${Date.now()}\n`)),
+        );
+        docs.s3 = ref;
+        saveState();
+        const objs = await s3.send(new ListObjectsV2Command({ Bucket: "doc029-openlaw-files" }));
+        const pdf = await upload(
+          api,
+          state.contractNumber,
+          pdfFile("doc029-s3.pdf", "stored on the s3 driver"),
+        );
+        const t = await waitText(api, pdf);
+        const all = await checkAll(api);
+        await api.dispose();
+        expect(
+          r.code === 0 && ready === 200 && ref.status === 201,
+          `up ${r.code} ready ${ready} upload ${ref.status}`,
+        );
+        expect((objs.KeyCount ?? 0) >= 1, "bucket is empty");
+        expect(
+          all.every((x) => x.includes("200 match")),
+          all.join(", "),
+        );
+        expect(t.state === "ready", `processing ${t.state}`);
+        return `Created bucket doc029-openlaw-files in MinIO, set STORAGE_DRIVER=s3 with S3_BUCKET, S3_ENDPOINT=http://minio:9000, S3_FORCE_PATH_STYLE=true and explicit keys, and recreated. /readyz 200. A new upload returned 201 and the bucket now holds ${objs.KeyCount} objects. Downloads: ${all.join(", ")}. A PDF written to s3 reached "ready" in the worker.`;
+      },
+    );
+  if (!only)
+    await step(
+      "V-C45",
+      "azure-blob driver: create the container first, set the Azure variables, recreate; every earlier store still reads; worker processing",
+      "New file in the Azurite container; local and s3 files still download; processing reaches ready.",
+      "container-operation",
+      async () => {
+        await blob.getContainerClient("doc029-openlaw-files").createIfNotExists();
+        setEnv({
+          STORAGE_DRIVER: "azure-blob",
+          AZURE_BLOB_CONTAINER: "doc029-openlaw-files",
+          AZURE_BLOB_ACCOUNT: AZ_ACCOUNT,
+          AZURE_BLOB_ACCOUNT_KEY: AZ_KEY,
+          AZURE_BLOB_ENDPOINT: `http://azurite:10000/${AZ_ACCOUNT}`,
+        });
+        const r = up();
+        const ready = await waitReady();
+        const api = await adminApi();
+        const ref = await upload(
+          api,
+          state.contractNumber,
+          textFile("doc029-azure.txt", Buffer.from(`DOC-029 azure ${Date.now()}\n`)),
+        );
+        docs.azure = ref;
+        saveState();
+        let n = 0;
+        for await (const _ of blob.getContainerClient("doc029-openlaw-files").listBlobsFlat()) n++;
+        const pdf = await upload(
+          api,
+          state.contractNumber,
+          pdfFile("doc029-azure.pdf", "stored on the azure driver"),
+        );
+        const t = await waitText(api, pdf);
+        const all = await checkAll(api);
+        await api.dispose();
+        expect(
+          r.code === 0 && ready === 200 && ref.status === 201 && n >= 1,
+          `up ${r.code} ready ${ready} upload ${ref.status} blobs ${n}`,
+        );
+        expect(
+          all.every((x) => x.includes("200 match")),
+          all.join(", "),
+        );
+        expect(t.state === "ready", `processing ${t.state}`);
+        return `Created container doc029-openlaw-files in Azurite, set STORAGE_DRIVER=azure-blob with AZURE_BLOB_CONTAINER, AZURE_BLOB_ACCOUNT, AZURE_BLOB_ACCOUNT_KEY and AZURE_BLOB_ENDPOINT=http://azurite:10000/devstoreaccount1, and recreated. /readyz 200. A new upload returned 201; the container holds ${n} blobs. Downloads: ${all.join(", ")}. A PDF written to azure-blob reached "ready" in the worker.`;
+      },
+    );
+  if (!only)
+    await step(
+      "V-C45",
+      "Startup validates storage configuration: STORAGE_DRIVER=s3 without S3_BUCKET",
+      "The app refuses to start with a storage configuration message; correcting it recovers.",
+      "container-operation",
+      async () => {
+        const bucket = envValue("S3_BUCKET");
+        setEnv({ STORAGE_DRIVER: "s3", S3_BUCKET: null });
+        const since = new Date().toISOString();
+        up();
+        await sleep(15_000);
+        const ready = await readyz();
+        const logs = appLogs("app", since);
+        const line = logs.split("\n").find((l) => /S3_BUCKET/.test(l)) ?? "";
+        setEnv({ STORAGE_DRIVER: "azure-blob", S3_BUCKET: bucket });
+        up();
+        const back = await waitReady();
+        expect(ready !== 200 && line, `readyz ${ready}; log line "${line}"`);
+        expect(back === 200, `recovery ${back}`);
+        return `With STORAGE_DRIVER=s3 and S3_BUCKET removed, the app did not become ready (/readyz ${ready}) and logged "${line
+          .replace(/^.*?\|\s*/, "")
+          .trim()
+          .slice(0, 200)}". Restoring the settings and recreating returned /readyz 200.`;
+      },
+    );
   await step(
     "V-C45",
     "Unavailable storage: a wrong S3_ENDPOINT on the retained s3 reader",
@@ -1484,7 +1683,10 @@ phases.storage = async (only) => {
       const api2 = await adminApi();
       const all = await checkAll(api2);
       await api2.dispose();
-      expect(r.code === 0 && ready === 200 && other.matches && bad.status !== 200, `ready ${ready}, s3 ${bad.status}, local ${other.status}`);
+      expect(
+        r.code === 0 && ready === 200 && other.matches && bad.status !== 200,
+        `ready ${ready}, s3 ${bad.status}, local ${other.status}`,
+      );
       expect(back === 200 && all.every((x) => x.includes("200 match")), all.join(", "));
       return `With S3_ENDPOINT=http://minio-unreachable:9000 the app still became ready (/readyz ${ready}) and the local Document still downloaded. The s3 Document's download answered ${bad.status} after ${bad.seconds} s. Restoring S3_ENDPOINT=http://minio:9000 and recreating: ${all.join(", ")}.`;
     },
@@ -1499,12 +1701,19 @@ phases.storage = async (only) => {
       up();
       await waitReady();
       const api = await adminApi();
-      const ref = await upload(api, state.contractNumber, textFile("doc029-local-again.txt", Buffer.from(`DOC-029 local again ${Date.now()}\n`)));
+      const ref = await upload(
+        api,
+        state.contractNumber,
+        textFile("doc029-local-again.txt", Buffer.from(`DOC-029 local again ${Date.now()}\n`)),
+      );
       docs.localAgain = ref;
       saveState();
       const all = await checkAll(api);
       await api.dispose();
-      expect(all.every((x) => x.includes("200 match")), all.join(", "));
+      expect(
+        all.every((x) => x.includes("200 match")),
+        all.join(", "),
+      );
       return `Removed STORAGE_DRIVER (default local) and kept the S3 and Azure reader settings. A new local upload returned ${ref.status}. Downloads: ${all.join(", ")}.`;
     },
   );
@@ -1521,14 +1730,29 @@ phases.engine = async () => {
     up();
     await sleep(20_000);
     const ready = await readyz();
-    const appLine = appLogs("app", since).split("\n").find((l) => l.includes(key)) ?? "";
-    const wLine = appLogs("worker", since).split("\n").find((l) => l.includes(key)) ?? "";
+    const appLine =
+      appLogs("app", since)
+        .split("\n")
+        .find((l) => l.includes(key)) ?? "";
+    const wLine =
+      appLogs("worker", since)
+        .split("\n")
+        .find((l) => l.includes(key)) ?? "";
     const w = containerState("worker");
     restore();
     const back = await waitReady();
-    expect(ready !== 200 && appLine && wLine, `readyz ${ready}; app line "${appLine.slice(0, 80)}"; worker line "${wLine.slice(0, 80)}"`);
+    expect(
+      ready !== 200 && appLine && wLine,
+      `readyz ${ready}; app line "${appLine.slice(0, 80)}"; worker line "${wLine.slice(0, 80)}"`,
+    );
     expect(back === 200, `recovery ${back}`);
-    return `With ${key}=${value}, the app did not become ready (/readyz ${ready}) and logged "${appLine.replace(/^.*?\|\s*/, "").trim().slice(0, 160)}". The worker logged the same refusal (state ${w?.state}, ${w?.status}). Removing the setting and recreating returned /readyz 200.`;
+    return `With ${key}=${value}, the app did not become ready (/readyz ${ready}) and logged "${appLine
+      .replace(/^.*?\|\s*/, "")
+      .trim()
+      .slice(
+        0,
+        160,
+      )}". The worker logged the same refusal (state ${w?.state}, ${w?.status}). Removing the setting and recreating returned /readyz 200.`;
   };
   await step(
     "V-C45",
@@ -1553,12 +1777,21 @@ phases.engine = async () => {
       const api = await adminApi();
       compose("stop doc-engine");
       const ready = await readyz();
-      const ref = await upload(api, state.contractNumber, pdfFile("doc029-engine-down.pdf", "engine is down"));
+      const ref = await upload(
+        api,
+        state.contractNumber,
+        pdfFile("doc029-engine-down.pdf", "engine is down"),
+      );
       const t = await waitText(api, ref, 60_000, ["ready"]);
       const after60 = t.state;
       compose("start doc-engine");
-      for (let i = 0; i < 60 && containerState("doc-engine")?.health !== "healthy"; i++) await sleep(2000);
-      const ref2 = await upload(api, state.contractNumber, pdfFile("doc029-engine-back.pdf", "engine is back"));
+      for (let i = 0; i < 60 && containerState("doc-engine")?.health !== "healthy"; i++)
+        await sleep(2000);
+      const ref2 = await upload(
+        api,
+        state.contractNumber,
+        pdfFile("doc029-engine-back.pdf", "engine is back"),
+      );
       const t2 = await waitText(api, ref2, 180_000, ["ready", "failed"]);
       const t1later = await textState(api, ref);
       await api.dispose();
@@ -1584,19 +1817,39 @@ phases.database = async () => {
       const r = up();
       const ready = await waitReady();
       const setup = await fetch(`${LOCAL}/api/v1/auth/setup`).then((x) => x.json());
-      const ctx = await pwRequest.newContext({ baseURL: LOCAL, extraHTTPHeaders: { origin: ORIGIN } });
+      const ctx = await pwRequest.newContext({
+        baseURL: LOCAL,
+        extraHTTPHeaders: { origin: ORIGIN },
+      });
       secret("externalAdminPassword");
       const created = await ctx.post("/api/v1/auth/setup", {
-        data: { email: "sam.external@doc029-install.example", displayName: "DOC-029 Sam External", password: state.externalAdminPassword },
+        data: {
+          email: "sam.external@doc029-install.example",
+          displayName: "DOC-029 Sam External",
+          password: state.externalAdminPassword,
+        },
       });
       await ctx.dispose();
-      const fx = (sql) => sh(`docker compose exec -T extdb psql -U doc029ext -d doc029ext -Atc "${sql}"`, { cwd: FIX });
-      const extUsers = fx("select count(*) from users where email='sam.external@doc029-install.example'").stdout.trim();
+      const fx = (sql) =>
+        sh(`docker compose exec -T extdb psql -U doc029ext -d doc029ext -Atc "${sql}"`, {
+          cwd: FIX,
+        });
+      const extUsers = fx(
+        "select count(*) from users where email='sam.external@doc029-install.example'",
+      ).stdout.trim();
       const migrations = fx("select count(*) from drizzle.__drizzle_migrations").stdout.trim();
-      const bundled = compose(`exec -T postgres psql -U openlaw -d openlaw -Atc "select count(*) from users where email='sam.external@doc029-install.example'"`).stdout.trim();
+      const bundled = compose(
+        `exec -T postgres psql -U openlaw -d openlaw -Atc "select count(*) from users where email='sam.external@doc029-install.example'"`,
+      ).stdout.trim();
       const pg = containerState("postgres");
-      expect(r.code === 0 && ready === 200 && setup.needsSetup === true, `ready ${ready}, needsSetup ${setup.needsSetup}`);
-      expect([200, 201].includes(created.status()) && extUsers === "1" && bundled === "0", `setup ${created.status()}, ext ${extUsers}, bundled ${bundled}`);
+      expect(
+        r.code === 0 && ready === 200 && setup.needsSetup === true,
+        `ready ${ready}, needsSetup ${setup.needsSetup}`,
+      );
+      expect(
+        [200, 201].includes(created.status()) && extUsers === "1" && bundled === "0",
+        `setup ${created.status()}, ext ${extUsers}, bundled ${bundled}`,
+      );
       return `Set DATABASE_URL to the separate postgres:16 service and recreated. /readyz 200; the selected database reported needsSetup=true. It holds ${migrations || "the"} applied migration rows. Creating the fictional Administrator "DOC-029 Sam External" answered ${created.status()}; that user exists in the external database (count ${extUsers}) and not in the bundled one (count ${bundled}). The bundled postgres service stayed ${pg?.state}.`;
     },
   );
@@ -1606,17 +1859,25 @@ phases.database = async () => {
     "The app does not become ready; correcting the URL recovers.",
     "container-operation",
     async () => {
-      setEnv({ DATABASE_URL: `postgres://doc029ext:${state.extdbPassword}@extdb-missing:5432/doc029ext` });
+      setEnv({
+        DATABASE_URL: `postgres://doc029ext:${state.extdbPassword}@extdb-missing:5432/doc029ext`,
+      });
       const since = new Date().toISOString();
       up();
       await sleep(20_000);
       const ready = await readyz();
-      const line = appLogs("app", since).split("\n").find((l) => /ENOTFOUND|ECONNREFUSED|getaddrinfo|connect/i.test(l)) ?? "";
+      const line =
+        appLogs("app", since)
+          .split("\n")
+          .find((l) => /ENOTFOUND|ECONNREFUSED|getaddrinfo|connect/i.test(l)) ?? "";
       setEnv({ DATABASE_URL: extUrl() });
       up();
       const back = await waitReady();
       expect(ready !== 200 && back === 200, `ready ${ready}, back ${back}`);
-      return `With the host extdb-missing, /readyz answered ${ready} and the app logged "${line.replace(/^.*?\|\s*/, "").trim().slice(0, 160)}". Restoring the external URL returned /readyz 200.`;
+      return `With the host extdb-missing, /readyz answered ${ready} and the app logged "${line
+        .replace(/^.*?\|\s*/, "")
+        .trim()
+        .slice(0, 160)}". Restoring the external URL returned /readyz 200.`;
     },
   );
   await step(
@@ -1633,7 +1894,10 @@ phases.database = async () => {
       const users = await json(await api.get("/api/v1/users"));
       await api.dispose();
       const sam = users.users.some((u) => u.email.startsWith("sam.external"));
-      expect(ready === 200 && list.contracts?.length === state.bundledContractCount && !sam, `ready ${ready}, contracts ${list.contracts?.length}, sam ${sam}`);
+      expect(
+        ready === 200 && list.contracts?.length === state.bundledContractCount && !sam,
+        `ready ${ready}, contracts ${list.contracts?.length}, sam ${sam}`,
+      );
       return `Removed DATABASE_URL and recreated. /readyz 200; ${ADMIN.name} signed in; the Contract list has the same ${list.contracts.length} records as before; Sam External does not exist in the bundled database.`;
     },
   );
@@ -1646,14 +1910,30 @@ phases.mail = async () => {
     const since = new Date().toISOString();
     const r = await api.post("/api/v1/email-settings/test");
     const body = await json(r);
-    const arrived = r.status() === 200 ? await waitMail(ADMIN.email, "OpenLaw test email", since, 20_000) : null;
-    const put = await api.put("/api/v1/email-settings", { data: { smtpUrl: "smtp://relay:1025", smtpFrom: RELAY_FROM.replace(/"/g, "") } });
+    const arrived =
+      r.status() === 200 ? await waitMail(ADMIN.email, "OpenLaw test email", since, 20_000) : null;
+    const put = await api.put("/api/v1/email-settings", {
+      data: { smtpUrl: "smtp://relay:1025", smtpFrom: RELAY_FROM.replace(/"/g, "") },
+    });
     const invite = await api.post("/api/v1/auth/invites", {
-      data: { email: `doc029-probe-${Date.now()}@doc029-install.example`, displayName: "DOC-029 operator-install probe", role: "legal_team_member" },
+      data: {
+        email: `doc029-probe-${Date.now()}@doc029-install.example`,
+        displayName: "DOC-029 operator-install probe",
+        role: "legal_team_member",
+      },
     });
     const inviteBody = await json(invite);
     await api.dispose();
-    return { source: stateNow.source, from: stateNow.fromAddress, status: r.status(), detail: body.detail, arrived: Boolean(arrived), putStatus: put.status(), inviteStatus: invite.status(), inviteDetail: inviteBody.detail };
+    return {
+      source: stateNow.source,
+      from: stateNow.fromAddress,
+      status: r.status(),
+      detail: body.detail,
+      arrived: Boolean(arrived),
+      putStatus: put.status(),
+      inviteStatus: invite.status(),
+      inviteDetail: inviteBody.detail,
+    };
   };
   await step(
     "V-C45",
@@ -1678,7 +1958,10 @@ phases.mail = async () => {
       const before = await mailCount();
       const t = await testSend();
       const after = await mailCount();
-      expect(t.source === "env" && t.status === 502 && t.putStatus === 409 && before === after, JSON.stringify(t));
+      expect(
+        t.source === "env" && t.status === 502 && t.putStatus === 409 && before === after,
+        JSON.stringify(t),
+      );
       return `With both set to a relay host that does not exist, email-settings source is "${t.source}". Saving the app relay answered ${t.putStatus}. The test send answered ${t.status} "${t.detail}". The saved relay received nothing (${before} before, ${after} after).`;
     },
   );
@@ -1694,7 +1977,10 @@ phases.mail = async () => {
       const before = await mailCount();
       const t = await testSend();
       const after = await mailCount();
-      expect(t.source === "env" && t.from === null && t.status === 502 && before === after, JSON.stringify(t));
+      expect(
+        t.source === "env" && t.from === null && t.status === 502 && before === after,
+        JSON.stringify(t),
+      );
       expect(t.inviteStatus >= 400, `invite answered ${t.inviteStatus}`);
       return `With only SMTP_URL (pointing at the working relay), source is "${t.source}" with no From address. The test send answered ${t.status} "${t.detail}". Inviting a probe user answered ${t.inviteStatus} "${t.inviteDetail}". The relay received nothing.`;
     },
@@ -1723,7 +2009,9 @@ phases.mail = async () => {
       await s.page.goto(`${ORIGIN}/settings/general`);
       await s.page.waitForLoadState("networkidle").catch(() => {});
       await s.page.getByText("Users").first().waitFor({ timeout: 20_000 });
-      const nav = (await s.page.getByRole("link").allInnerTexts()).map((t) => t.trim()).filter(Boolean);
+      const nav = (await s.page.getByRole("link").allInnerTexts())
+        .map((t) => t.trim())
+        .filter(Boolean);
       const onboarding = await json(await s.page.request.get(`${ORIGIN}/api/v1/onboarding`));
       await s.context.close();
       const emailLinks = nav.filter((t) => /e-?mail|smtp/i.test(t));
@@ -1745,7 +2033,9 @@ phases["settings-email"] = async () => {
       await s.page.goto(`${ORIGIN}/settings/general`);
       await s.page.waitForLoadState("networkidle").catch(() => {});
       await s.page.getByText("Users").first().waitFor({ timeout: 20_000 });
-      const nav = (await s.page.getByRole("link").allInnerTexts()).map((t) => t.trim()).filter(Boolean);
+      const nav = (await s.page.getByRole("link").allInnerTexts())
+        .map((t) => t.trim())
+        .filter(Boolean);
       const onboarding = await json(await s.page.request.get(`${ORIGIN}/api/v1/onboarding`));
       await s.context.close();
       const emailLinks = nav.filter((t) => /e-?mail|smtp/i.test(t));
@@ -1768,10 +2058,18 @@ phases["mail-flows"] = async () => {
       await waitReady();
       const since = new Date().toISOString();
       const before = await mailCount();
-      const probe = await pwRequest.newContext({ baseURL: ORIGIN, ignoreHTTPSErrors: true, extraHTTPHeaders: { origin: ORIGIN } });
-      const magic = await probe.post("/api/v1/auth/magic-link", { data: { email: COLLEAGUE.email } });
+      const probe = await pwRequest.newContext({
+        baseURL: ORIGIN,
+        ignoreHTTPSErrors: true,
+        extraHTTPHeaders: { origin: ORIGIN },
+      });
+      const magic = await probe.post("/api/v1/auth/magic-link", {
+        data: { email: COLLEAGUE.email },
+      });
       const magicBody = await json(magic);
-      const setup = await probe.post("/api/v1/auth/password-setup", { data: { email: COLLEAGUE.email } });
+      const setup = await probe.post("/api/v1/auth/password-setup", {
+        data: { email: COLLEAGUE.email },
+      });
       const setupBody = await json(setup);
       await probe.dispose();
       const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
@@ -1786,7 +2084,11 @@ phases["mail-flows"] = async () => {
         await dialog.getByLabel("Email").fill(invitee);
         await dialog.getByRole("button", { name: "Send invite" }).click();
         await sleep(4000);
-        screen = (await s.page.locator('[role="alert"], [role="status"], [data-sonner-toast]').allInnerTexts()).join(" | ");
+        screen = (
+          await s.page
+            .locator('[role="alert"], [role="status"], [data-sonner-toast]')
+            .allInnerTexts()
+        ).join(" | ");
         const dialogOpen = await dialog.isVisible().catch(() => false);
         await s.page.screenshot({ path: path.join(here, "r1-invite-without-smtp-from.png") });
         const users = await json(await s.page.request.get(`${ORIGIN}/api/v1/users`));
@@ -1797,13 +2099,26 @@ phases["mail-flows"] = async () => {
       }
       await sleep(5000);
       const after = await mailCount();
-      const logLine = appLogs("app", since).split("\n").filter((l) => /SMTP|mail/i.test(l)).map((l) => l.replace(/^.*?\|\s*/, "").trim().slice(0, 160)).slice(0, 2).join(" / ");
+      const logLine = appLogs("app", since)
+        .split("\n")
+        .filter((l) => /SMTP|mail/i.test(l))
+        .map((l) =>
+          l
+            .replace(/^.*?\|\s*/, "")
+            .trim()
+            .slice(0, 160),
+        )
+        .slice(0, 2)
+        .join(" / ");
       setEnv({ SMTP_URL: null, SMTP_FROM: null });
       up();
       await waitReady();
       const summary = `Magic-link request answered ${magic.status()} "${magicBody.detail ?? ""}". Password-setup request answered ${setup.status()} "${setupBody.detail ?? ""}". Settings -> Users -> Invite user -> Send invite for a fictional invitee showed "${screen}"; the invitee ${listed ? "was added as a user" : "was not added"}. The relay received ${after - before} messages. App log lines mentioning mail: ${logLine || "none"}. The override was then removed and the containers recreated.`;
       expect(magic.status() >= 400 && setup.status() >= 400, summary);
-      expect(!(listed && after === before && !/email|mail|SMTP/i.test(screen)), `The invitation was accepted without a report that email is unavailable. ${summary}`);
+      expect(
+        !(listed && after === before && !/email|mail|SMTP/i.test(screen)),
+        `The invitation was accepted without a report that email is unavailable. ${summary}`,
+      );
       return summary;
     },
   );
@@ -1817,9 +2132,18 @@ phases.keys = async () => {
     const body = await json(r);
     const src = await json(await api.get("/api/v1/email-settings"));
     const contracts = await api.get("/api/v1/contracts");
-    const arrived = r.status() === 200 ? Boolean(await waitMail(ADMIN.email, "OpenLaw test email", since, 20_000)) : false;
+    const arrived =
+      r.status() === 200
+        ? Boolean(await waitMail(ADMIN.email, "OpenLaw test email", since, 20_000))
+        : false;
     await api.dispose();
-    return { status: r.status(), detail: body.detail, arrived, source: src.source, contracts: contracts.status() };
+    return {
+      status: r.status(),
+      detail: body.detail,
+      arrived,
+      source: src.source,
+      contracts: contracts.status(),
+    };
   };
   const bootLines = (since) =>
     appLogs("app", since)
@@ -1844,7 +2168,10 @@ phases.keys = async () => {
       await sleep(2000);
       const lines = bootLines(since);
       const d = await deliver();
-      expect(r.code === 0 && lines.some((l) => /resealed/.test(l)) && d.status === 200 && d.arrived, `${lines} ${JSON.stringify(d)}`);
+      expect(
+        r.code === 0 && lines.some((l) => /resealed/.test(l)) && d.status === 200 && d.arrived,
+        `${lines} ${JSON.stringify(d)}`,
+      );
       return `Recreated with the previous key and a newly generated key. The app logged "${lines.join(" / ")}". A test send through the stored relay answered 200 and arrived.`;
     },
   );
@@ -1885,7 +2212,10 @@ phases.keys = async () => {
       up();
       await waitReady();
       const good = await deliver();
-      expect(ready === 200 && bad.contracts === 200 && bad.status !== 200, `wrong key: ${JSON.stringify(bad)}`);
+      expect(
+        ready === 200 && bad.contracts === 200 && bad.status !== 200,
+        `wrong key: ${JSON.stringify(bad)}`,
+      );
       expect(good.status === 200 && good.arrived, `restored: ${JSON.stringify(good)}`);
       return `With a different valid key, /readyz answered ${ready} and the app logged "${lines.join(" / ") || "no key line"}". The Contract list answered ${bad.contracts}. Email source read "${bad.source}" and a test send answered ${bad.status} "${bad.detail}". Restoring the retained key and recreating (without re-saving the relay) made the test send answer 200 and arrive.`;
     },
@@ -1904,15 +2234,30 @@ phases.keys = async () => {
       up();
       await sleep(15_000);
       const ready = await readyz();
-      const appLine = appLogs("app", since).split("\n").find((l) => /OPENLAW_SECRET_KEY/.test(l)) ?? "";
-      const wLine = appLogs("worker", since).split("\n").find((l) => /OPENLAW_SECRET_KEY/.test(l)) ?? "";
+      const appLine =
+        appLogs("app", since)
+          .split("\n")
+          .find((l) => /OPENLAW_SECRET_KEY/.test(l)) ?? "";
+      const wLine =
+        appLogs("worker", since)
+          .split("\n")
+          .find((l) => /OPENLAW_SECRET_KEY/.test(l)) ?? "";
       setEnv({ OPENLAW_SECRET_KEY: good });
       up();
       const back = await waitReady();
       const d = await deliver();
-      expect(blank.code !== 0 && ready !== 200 && appLine && wLine, `blank ${blank.code}, ready ${ready}, app "${appLine.slice(0, 60)}", worker "${wLine.slice(0, 60)}"`);
+      expect(
+        blank.code !== 0 && ready !== 200 && appLine && wLine,
+        `blank ${blank.code}, ready ${ready}, app "${appLine.slice(0, 60)}", worker "${wLine.slice(0, 60)}"`,
+      );
       expect(back === 200 && d.arrived, `recovery ${back} ${JSON.stringify(d)}`);
-      return `A blank key made up exit ${blank.code} with "${firstLines(blank.stderr, 1)}". A 16-character key stopped startup: /readyz ${ready}; app logged "${appLine.replace(/^.*?\|\s*/, "").trim().slice(0, 140)}"; worker logged "${wLine.replace(/^.*?\|\s*/, "").trim().slice(0, 140)}". Restoring the key recovered readiness and delivery.`;
+      return `A blank key made up exit ${blank.code} with "${firstLines(blank.stderr, 1)}". A 16-character key stopped startup: /readyz ${ready}; app logged "${appLine
+        .replace(/^.*?\|\s*/, "")
+        .trim()
+        .slice(0, 140)}"; worker logged "${wLine
+        .replace(/^.*?\|\s*/, "")
+        .trim()
+        .slice(0, 140)}". Restoring the key recovered readiness and delivery.`;
     },
   );
   await step(
@@ -1935,15 +2280,26 @@ phases.keys = async () => {
       const again = await adminApi();
       const after = (await again.get("/api/v1/me")).status();
       await again.dispose();
-      expect(before === 200 && during === 401 && after === 200, `before ${before}, during ${during}, after ${after}`);
+      expect(
+        before === 200 && during === 401 && after === 200,
+        `before ${before}, during ${during}, after ${after}`,
+      );
       return `An existing session answered /api/v1/me ${before}. After replacing AUTH_SECRET and recreating, the same session answered ${during}. Restoring the original AUTH_SECRET and signing in again answered ${after}.`;
     },
   );
 };
 
 phases.images = async () => {
-  const insp = (svc) => sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q ${svc})`).stdout.trim();
-  log.images = { app: insp("app"), worker: insp("worker"), "doc-engine": insp("doc-engine"), postgres: sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q postgres)`).stdout.trim() + " (postgres:16)" };
+  const insp = (svc) =>
+    sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q ${svc})`).stdout.trim();
+  log.images = {
+    app: insp("app"),
+    worker: insp("worker"),
+    "doc-engine": insp("doc-engine"),
+    postgres:
+      sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q postgres)`).stdout.trim() +
+      " (postgres:16)",
+  };
   console.log(log.images);
 };
 
@@ -1956,8 +2312,13 @@ phases.teardown = async () => {
     () => {
       const fx = sh(`docker compose -p ${FX_PROJECT} down -v --remove-orphans`, { cwd: FIX });
       const ins = sh(`docker compose -p ${PROJECT} down -v --remove-orphans`);
-      const left = sh(`docker ps -a --filter label=com.docker.compose.project=${PROJECT} -q; docker ps -a --filter label=com.docker.compose.project=${FX_PROJECT} -q; docker volume ls -q --filter label=com.docker.compose.project=${PROJECT}; docker volume ls -q --filter label=com.docker.compose.project=${FX_PROJECT}`).stdout.trim();
-      expect(fx.code === 0 && ins.code === 0 && left === "", `fx ${fx.code}, install ${ins.code}, left "${left}"`);
+      const left = sh(
+        `docker ps -a --filter label=com.docker.compose.project=${PROJECT} -q; docker ps -a --filter label=com.docker.compose.project=${FX_PROJECT} -q; docker volume ls -q --filter label=com.docker.compose.project=${PROJECT}; docker volume ls -q --filter label=com.docker.compose.project=${FX_PROJECT}`,
+      ).stdout.trim();
+      expect(
+        fx.code === 0 && ins.code === 0 && left === "",
+        `fx ${fx.code}, install ${ins.code}, left "${left}"`,
+      );
       return `docker compose -p ${FX_PROJECT} down -v and docker compose -p ${PROJECT} down -v exited 0; no containers or volumes remain with either project label. The locally built image tags were left in the cache.`;
     },
   );
