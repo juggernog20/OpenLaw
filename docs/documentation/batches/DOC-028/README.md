@@ -49,3 +49,7 @@ While this PR was being reviewed, `dev` advanced to `7f7e917a` with dependency u
 The article verification record keeps the original walkthrough commit and adds a hashed compatibility reference for the updated application. The edition now identifies the updated tested build.
 
 The fresh implementation reviewer then reran all six builder journeys (49, 50, 51, 53, 54, and 57) and the 35-step walkthrough script against the same updated lab on 2026-09-16. Every journey and every scripted check passed with no axe violations, and the script's Help screenshot matched `compatibility-help.png` byte for byte.
+
+## Corrected script observations
+
+[The correction replay](observation-corrections.json) retains four updated Help/keyboard observations from a passing 35-step run on the compatibility build. The earlier script recorded the Form URL after leaving Help and searched for a field card by its old label. The corrected script records `/help/auto-doc-template` and confirms the renamed field card is visible for both roles. The original logs remain unchanged.

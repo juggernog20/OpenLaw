@@ -529,8 +529,9 @@ async function walkthrough(role, page, displayName, options = {}) {
     expectThat(h1 === "Write an Auto-Doc template", `heading is ${h1}`);
     if (role === "legal_team_member")
       await page.screenshot({ path: path.join(SHOTS, "member-help-article.png"), fullPage: false });
+    const opened = page.url().replace(BASE, "");
     await page.goto(`${base}/form`);
-    return `Link href ${q(href)} opened ${page.url().replace(BASE, "")} with h1 ${q(h1)} and sections ${q(h2s)}.`;
+    return `Link href ${q(href)} opened ${q(opened)} with h1 ${q(h1)} and sections ${q(h2s)}.`;
   });
 
   await step(
@@ -555,15 +556,13 @@ async function walkthrough(role, page, displayName, options = {}) {
       const pressed = await page.evaluate(() =>
         document.activeElement?.getAttribute("aria-pressed"),
       );
-      const cardVisible = await page
-        .getByRole("region", {
-          name: reached.label
-            .replace("Placeholder ", "")
-            .replace(/_/g, " ")
-            .replace(/^./, (c) => c.toUpperCase()),
-        })
-        .isVisible()
-        .catch(() => false);
+      expectThat(pressed === "true", "Enter did not select the Placeholder");
+      const selectedLabel = await page
+        .getByRole("textbox", { name: "Label", exact: true })
+        .inputValue();
+      const card = page.getByRole("region", { name: selectedLabel, exact: true });
+      await card.waitFor({ state: "visible" });
+      const cardVisible = await card.isVisible();
       await page.getByRole("button", { name: "Upload version" }).focus();
       await page.keyboard.press("Enter");
       const dialog = page.getByRole("dialog", { name: "Upload version" });

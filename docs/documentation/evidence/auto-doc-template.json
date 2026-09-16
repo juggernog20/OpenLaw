@@ -70,8 +70,8 @@
     "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
     "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T10:03:12.494489+00:00",
-    "summary": "Source review and 35 passing automated replay checks across both roles establish compatibility after dependency and message-type updates. The original independent walkthrough is retained at its original tested commit.",
+    "reviewedAt": "2026-09-16T10:24:31.190939+00:00",
+    "summary": "Source review and 35 passing automated replay checks across both roles establish compatibility after dependency and message-type updates. The original independent walkthrough is retained at its original tested commit. A later 35-step replay corrected the Help destination and renamed-card visibility diagnostics; the original logs are retained.",
     "evidence": [
       {
         "path": "batches/DOC-028/compatibility-review.json",
@@ -84,6 +84,10 @@
       {
         "path": "batches/DOC-028/compatibility-help.png",
         "sha256": "e6c8bc24b2e609581f5eefaf13f1774678269877a0c471c2b713cce1c772f71e"
+      },
+      {
+        "path": "batches/DOC-028/observation-corrections.json",
+        "sha256": "67854a208f2e8c10e0994c05e562fc59fee5fd3b362196955d8d01c53992122c"
       }
     ]
   }
