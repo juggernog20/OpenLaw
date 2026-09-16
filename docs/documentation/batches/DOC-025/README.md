@@ -1,6 +1,10 @@
 # Whole-suite acceptance
 
-Task [#745](https://github.com/juggernog20/OpenLaw/issues/745) remains open. This
+DOC-029 later completed both gates. See the passing [G3](G3.md) and [G4](G4.md)
+reports and the [DOC-029 record](../DOC-029/README.md). The text below describes
+the state at the end of DOC-025.
+
+Task [#745](https://github.com/juggernog20/OpenLaw/issues/745) remained open. This
 batch completes the available evidence reconciliation and records separate
 [G3](G3.md) and [G4](G4.md) reports. It cannot complete either gate while the real
 provider checks in #742 are blocked. There are no approved release exceptions.

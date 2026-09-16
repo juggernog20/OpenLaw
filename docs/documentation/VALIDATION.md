@@ -11,8 +11,9 @@ retains missing provider or complete-content publication requirements. The
 counts from release acceptance. Independent acceptance of the available 54-article
 scope is recorded separately again, in
 [independent-acceptance.json](batches/DOC-025/independent-acceptance.json) and the
-other `independent-*` records of that batch; V-HELP and V-OFFLINE stay `blocked`
-because they need the complete 56-article edition.
+other `independent-*` records of that batch. DOC-029 verified the complete
+57-article edition, and V-HELP and V-OFFLINE now pass; see
+[the DOC-029 record](batches/DOC-029/README.md).
 The [environment readiness record](environment-readiness.json) records the actual
 role sign-in and helper isolation checks for this preparation task.
 
