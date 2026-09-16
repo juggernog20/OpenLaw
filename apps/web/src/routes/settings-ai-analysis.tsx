@@ -494,7 +494,7 @@ export function SettingsAiAnalysisPage() {
         <SettingsCard
           title={<FormattedMessage id="conversion.settings" defaultMessage="Request conversion" />}
         >
-          <div className="flex items-center justify-between gap-4 p-4">
+          <div className="flex items-center justify-between gap-4">
             <Label htmlFor="matter-preparation">
               <FormattedMessage
                 id="conversion.settingsMatter"
@@ -508,7 +508,7 @@ export function SettingsAiAnalysisPage() {
               onCheckedChange={(matterPreparation) => void saveWorkflow({ matterPreparation })}
             />
           </div>
-          <div className="flex items-center justify-between gap-4 p-4">
+          <div className="flex items-center justify-between gap-4">
             <Label htmlFor="contract-preparation">
               <FormattedMessage
                 id="conversion.settingsContract"
@@ -522,7 +522,7 @@ export function SettingsAiAnalysisPage() {
               onCheckedChange={(contractPreparation) => void saveWorkflow({ contractPreparation })}
             />
           </div>
-          <div className="flex items-center justify-between gap-4 p-4">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <Label htmlFor="contract-conversion-analysis">
                 <FormattedMessage
