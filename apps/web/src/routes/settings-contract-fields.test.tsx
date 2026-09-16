@@ -135,7 +135,8 @@ function fieldsApi(calls: FieldCalls, rows = seededFields()) {
   };
 }
 
-const fieldList = () => screen.getByRole("list");
+const fieldList = () =>
+  within(screen.getByRole("region", { name: "Custom Fields" })).getByRole("list");
 
 /** Matches the innermost element whose full accessible text — sr-only
  * prefix plus visible label — is `text`; wrappers repeating the same

@@ -8102,9 +8102,6 @@
   "settings.contractFields.hasPrompt": {
     "defaultMessage": "{name} has an AI extraction prompt"
   },
-  "settings.contractFields.help": {
-    "defaultMessage": "Field type is immutable after creation. Archiving a field keeps stored values. Global fields are shared across modules — the sparkle marks fields with a contract AI extraction prompt."
-  },
   "settings.contractFields.invalidResponse": {
     "defaultMessage": "The server returned a field outside this catalog."
   },
@@ -8767,6 +8764,99 @@
   },
   "settings.field.saving": {
     "defaultMessage": "Saving…"
+  },
+  "settings.fields.custom": {
+    "defaultMessage": "Custom Fields"
+  },
+  "settings.fields.default.businessOwner": {
+    "defaultMessage": "Business Owner"
+  },
+  "settings.fields.default.closed": {
+    "defaultMessage": "Closed"
+  },
+  "settings.fields.default.confidentiality": {
+    "defaultMessage": "Confidentiality"
+  },
+  "settings.fields.default.contractType": {
+    "defaultMessage": "Contract type"
+  },
+  "settings.fields.default.counterparties": {
+    "defaultMessage": "Counterparties"
+  },
+  "settings.fields.default.department": {
+    "defaultMessage": "Department"
+  },
+  "settings.fields.default.description": {
+    "defaultMessage": "Description"
+  },
+  "settings.fields.default.effectiveDate": {
+    "defaultMessage": "Effective date"
+  },
+  "settings.fields.default.expiryDate": {
+    "defaultMessage": "Expiry date"
+  },
+  "settings.fields.default.legalOwner": {
+    "defaultMessage": "Legal Owner"
+  },
+  "settings.fields.default.linkedMatter": {
+    "defaultMessage": "Linked Matter"
+  },
+  "settings.fields.default.matterManager": {
+    "defaultMessage": "Matter Manager"
+  },
+  "settings.fields.default.matterType": {
+    "defaultMessage": "Matter type"
+  },
+  "settings.fields.default.noticePeriod": {
+    "defaultMessage": "Notice period (days)"
+  },
+  "settings.fields.default.opened": {
+    "defaultMessage": "Opened"
+  },
+  "settings.fields.default.ourEntity": {
+    "defaultMessage": "Our entity"
+  },
+  "settings.fields.default.parentContract": {
+    "defaultMessage": "Parent Contract"
+  },
+  "settings.fields.default.parentMatter": {
+    "defaultMessage": "Parent Matter"
+  },
+  "settings.fields.default.primaryDocument": {
+    "defaultMessage": "Primary Document"
+  },
+  "settings.fields.default.priority": {
+    "defaultMessage": "Priority"
+  },
+  "settings.fields.default.reference": {
+    "defaultMessage": "Reference"
+  },
+  "settings.fields.default.region": {
+    "defaultMessage": "Region"
+  },
+  "settings.fields.default.renewalPeriod": {
+    "defaultMessage": "Renewal period (months)"
+  },
+  "settings.fields.default.risk": {
+    "defaultMessage": "Risk"
+  },
+  "settings.fields.default.status": {
+    "defaultMessage": "Status"
+  },
+  "settings.fields.default.termType": {
+    "defaultMessage": "Term type"
+  },
+  "settings.fields.default.title": {
+    "defaultMessage": "Title"
+  },
+  "settings.fields.default.value": {
+    "defaultMessage": "Value"
+  },
+  "settings.fields.defaultLocked": {
+    "defaultMessage": "{name}: built-in field, read-only here"
+  },
+  "settings.fields.defaults": {
+    "defaultMessage": "Default fields"
   },
   "settings.general.locale": {
     "defaultMessage": "Default locale"

@@ -213,6 +213,34 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
           expect(Number(await row.getByRole("cell").innerText())).toBeGreaterThan(0);
         }
         await expect(review.getByText("7 days before, 1 day before, and On the day")).toBeVisible();
+        for (const [label, address] of [
+          ["Matter fields", "/settings/matters/fields"],
+          ["Contract fields", "/settings/contracts/fields"],
+        ] as const) {
+          await review.getByRole("link", { name: label, exact: true }).click();
+          await expect(page).toHaveURL(address);
+          const defaults = page.getByRole("region", { name: "Default fields", exact: true });
+          const custom = page.getByRole("region", { name: "Custom Fields", exact: true });
+          await expect(defaults.getByRole("button", { name: "Default fields" })).toHaveAttribute(
+            "aria-expanded",
+            "false",
+          );
+          await expect(custom.getByRole("button", { name: "Custom Fields" })).toHaveAttribute(
+            "aria-expanded",
+            "true",
+          );
+          await expect(custom.getByRole("button", { name: "Add field" })).toBeVisible();
+          await defaults.getByRole("button", { name: "Default fields" }).click();
+          await expect(
+            defaults.getByRole("img", { name: "Title: built-in field, read-only here" }),
+          ).toBeVisible();
+          await expect(defaults.getByRole("list").getByRole("button")).toHaveCount(0);
+          await page.getByRole("link", { name: "Return to setup" }).click();
+          await expect(page).toHaveURL("/welcome?step=review");
+          await step("Review", 9);
+          await page.reload();
+          await step("Review", 9);
+        }
         expect(
           await reportAxeViolations(page, testInfo, "m33-review", { include: "main" }),
         ).toEqual([]);
