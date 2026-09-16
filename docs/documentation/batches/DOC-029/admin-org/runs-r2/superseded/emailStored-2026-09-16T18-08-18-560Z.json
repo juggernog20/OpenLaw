@@ -1,0 +1,105 @@
+{
+  "section": "emailStored",
+  "reviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth2",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+    "authentication-and-email": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208"
+  },
+  "startedAt": "2026-09-16T18:08:18.560Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "First-run: create the first Administrator; the wizard needs email before it can finish",
+      "expected": "Welcome wizard opens; Skip optional steps on Welcome opens Outbound email while email is unset; no Set up later; Continue unavailable",
+      "startedAt": "2026-09-16T18:08:18.656Z",
+      "finishedAt": "2026-09-16T18:08:19.235Z",
+      "actual": "The first Administrator was created and landed on /welcome. Skip optional steps on the Welcome step opened Outbound email (/welcome?step=email) with \"Set up outbound email to finish instance setup...\". The step had no Set up later (buttons [\"Save relay\",\"Back\",\"Continue\"]) and Continue was disabled.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "With no saved Organization name, the sign-in pages show OpenLaw",
+      "expected": "Staff and Portal sign-in pages show OpenLaw and no logo",
+      "startedAt": "2026-09-16T18:08:19.235Z",
+      "finishedAt": "2026-09-16T18:08:21.891Z",
+      "actual": "On the unseeded lab the organization had no saved name (GET /api/v1/org/branding {\"name\":\"\",\"logo\":null}). In a browser with no session: {\"/auth/login\":{\"start\":\"OpenLaw Legal Portal Sign in Email Password Sign in Help wit\",\"logos\":0},\"/portal/login\":{\"start\":\"OpenLaw Legal Portal Business Portal sign-in Email Password \",\"logos\":0}}.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Outbound email form: Port starts at 587 and follows Connection security until changed; Authentication shows or hides SMTP username and SMTP password",
+      "expected": "587, 465 for TLS, 25 for None, back to 587; a changed port stays; credentials fields only with Username and password",
+      "startedAt": "2026-09-16T18:08:21.891Z",
+      "finishedAt": "2026-09-16T18:08:51.963Z",
+      "actual": "Check failed: locator.waitFor: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('heading', { name: 'Outbound email' }) to be visible\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "SMTP server with an smtp:// prefix or a port is refused",
+      "expected": "Not saved; source stays unset",
+      "startedAt": "2026-09-16T18:08:51.964Z",
+      "finishedAt": "2026-09-16T18:08:52.533Z",
+      "actual": "Save relay results: [{\"host\":\"smtp://mailpit\",\"notice\":null,\"alerts\":[\"Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications.\"],\"source\":\"unset\"},{\"host\":\"mailpit:1025\",\"notice\":null,\"alerts\":[\"Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications.\"],\"source\":\"unset\"}].",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Save relay with STARTTLS and Username and password; credentials are never returned; the test fails because the relay offers no TLS upgrade",
+      "expected": "Relay saved; the page and API show no credentials; stored value is not plain text; Send test email fails and nothing is delivered",
+      "startedAt": "2026-09-16T18:08:52.533Z",
+      "finishedAt": "2026-09-16T18:08:55.832Z",
+      "actual": "Check failed: {\"match\":null,\"alerts\":[\"Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications.\"]}",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Replace relay opens an empty form; Keep current relay closes it without a change; replace with None and None and send a test",
+      "expected": "Empty form; Keep current relay leaves the relay unchanged; Relay saved; test message arrives from the Sender email with the Sender name",
+      "startedAt": "2026-09-16T18:08:55.832Z",
+      "finishedAt": "2026-09-16T18:08:57.114Z",
+      "actual": "Replace relay opened {\"host\":\"\",\"port\":\"587\",\"security\":\"STARTTLS\",\"authentication\":\"Username and password\",\"username\":\"\",\"password\":\"\",\"senderName\":\"\",\"senderEmail\":\"\"}. Keep current relay closed the form and the settings stayed {\"source\":\"app\",\"fromAddress\":\"\\\"DOC-029r2 Stored\\\" <stored-relay@helix.example>\"}. Replace relay with SMTP server mailpit, Port 1025, Connection security None, Authentication None, Sender email stored-relay@helix.example and Sender name DOC-029r2 Stored showed \"Relay saved. The next email this instance sends will use it.\" and \"Outbound email is set in the app. Mail is sent from \"DOC-029r2 Stored\" <stored-relay@helix.example>.\". Send test email showed \"null\" and Mailpit received \"OpenLaw test email\" from DOC-029r2 Stored <stored-relay@helix.example>. Continue became available.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Replace relay with a server that cannot be reached; the saved relay fails its test; Replace relay again with all details and retest",
+      "expected": "Relay saved alone does not prove delivery; the corrected relay delivers",
+      "startedAt": "2026-09-16T18:08:57.115Z",
+      "finishedAt": "2026-09-16T18:09:18.108Z",
+      "actual": "An unreachable SMTP server saved with \"Relay saved. The next email this instance sends will use it.\", but Send test email showed \"The test email could not be sent. The relay host could not be found. Check the SMTP server name.\". Replace relay, all details entered again, Save relay, and a second test delivered \"OpenLaw test email\" from stored-relay@helix.example.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Clear relay stops email delivery when there is no environment override; save a valid replacement",
+      "expected": "Source unset, Continue unavailable, no mail; saved replacement restores delivery",
+      "startedAt": "2026-09-16T18:09:18.109Z",
+      "finishedAt": "2026-09-16T18:09:22.096Z",
+      "actual": "Clear relay showed \"Relay cleared. This instance can no longer send email.\" The source became unset and Continue was disabled again. A password setup request for the Administrator answered 503 and no message arrived. After a valid replacement was saved, a test message arrived again from stored-relay@helix.example.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T18:09:22.099Z",
+  "phase": "stored: SMTP_URL and SMTP_FROM empty for app and worker (overlay-phase-stored.json)"
+}

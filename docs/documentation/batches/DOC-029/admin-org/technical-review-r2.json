@@ -1,0 +1,117 @@
+{
+  "batch": "DOC-029",
+  "round": 2,
+  "group": "admin-org",
+  "author": "DOC-029r2 source-review author agent (admin-org)",
+  "reviewer": "DOC-029r2 source-review author agent (admin-org)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T17:52:41Z",
+  "method": "source-inspection",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "scopeNote": "Source reading only. This agent ran no walkthrough and no lab, and changed no catalog status or evidence file. The review read the app diff 3fa407e3..57e77e38 (commits 1ea249dd, 2b6d167f, 6d34ac59, e3800b43, d64309f5, 57e77e38). The files that matter for this group are apps/api/src/modules/email-settings/config.ts and routes.ts, apps/web/src/components/smtp-settings-fields.tsx, apps/web/src/routes/welcome.tsx, apps/api/src/modules/org/routes.ts, packages/shared/src/logo.ts, apps/web/src/routes/settings-general.tsx, apps/web/src/routes/auth-layout.tsx, apps/web/src/routes/settings.tsx and apps/web/src/components/user-identity.tsx. settings-users.tsx, settings-authentication.tsx, authentication-options.tsx, apps/api/src/auth, apps/api/src/modules/auth, apps/api/src/modules/users, apps/api/src/lib/mailer.ts and apps/api/src/modules/onboarding did not change in that range. The Save and Cancel change in list-editor.tsx and inline-add-form.tsx does not reach the Users or Authentication panes.",
+  "limitations": [
+    "Source inspection only. Both articles changed content, so neither can keep its round 1 evidence through a compatibility review. The independent walkthrough agent must replay V-C36 and V-C37 against the content hashes below.",
+    "The authentication-and-email text that dev commit 2b6d167f added (structured SMTP fields) was never walked. Round 1 evidence for V-C37 records the old SMTP relay URL and From address form, including the refusal \"The relay URL must start with smtp:// or smtps://.\", which the wizard can no longer produce.",
+    "Round 1 evidence for V-C36 records that a 300 KB PNG logo was refused. At 57e77e38 the limit is 5 MB, so that observation no longer holds and must be replaced.",
+    "The server message for an SMTP server value with a scheme or port (\"Enter an SMTP hostname or IP address without a URL scheme or port.\") comes from request schema validation. This review did not confirm how the wizard displays it, so the article gives the instruction without quoting the message."
+  ],
+  "articles": [
+    {
+      "articleId": "authentication-and-email",
+      "result": "corrected",
+      "evidenceContentSha256": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1",
+      "contentSha256Before": "02db24e43d61d599393f72c66ffb93adac41e83dabea402c90c585d170cdeba6",
+      "contentSha256": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208",
+      "classification": "Behavior change. Commit 2b6d167f replaced the SMTP relay URL and From address inputs with discrete fields, and the dev merge already changed this article (hash 72be10f3 to 02db24e4). This round corrects that merged text further. Actions and prerequisites changed, so the V-C37 walkthrough must run again for the Outbound email steps. The sign-in policy, single sign-on, allowed-domain and precedence sections did not change and their source did not change.",
+      "sources": [
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/lib/mailer.ts",
+        "packages/db/src/schema/org.ts (smtpUrl encryptedText)",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "location": "Set up email before finishing the wizard, step 1 (now steps 1 to 4)",
+          "before": "Enter the SMTP server and Port ... Enter the SMTP credentials if required, a Sender email accepted by your relay, and an optional Sender name.",
+          "after": "Separate steps for SMTP server (host name or IP address only, no smtp:// prefix and no port) and Port; Connection security, with Port starting at 587 and following the choice while unchanged; Authentication with SMTP username and SMTP password, or None; Sender email and Sender name (optional).",
+          "reason": "smtp-settings-fields.tsx labels the inputs 'SMTP username', 'SMTP password' and 'Sender name (optional)'. The port state starts at 587 and moves to 465 or 25 only when it still equals the default of the previous security choice. config.ts HostSchema refuses a scheme or port."
+        },
+        {
+          "location": "Set up email before finishing the wizard, step 2 (now step 5)",
+          "before": "Credentials are stored encrypted and are never returned to the browser. STARTTLS requires a successful TLS upgrade before authentication or delivery.",
+          "after": "OpenLaw stores the credentials encrypted and never returns them to the browser. With STARTTLS, the TLS upgrade must succeed before authentication or delivery.",
+          "reason": "Active voice only. The facts hold: org_settings.smtp_url is encryptedText, GET /email-settings returns only source and fromAddress, and smtpSettingsToStorage sets requireTLS=true for starttls."
+        },
+        {
+          "location": "Set up email before finishing the wizard, step 4 (now step 7)",
+          "before": "Use Replace relay, correct the connection or sender details, save, and send another test.",
+          "after": "Use Replace relay. The form opens empty, so enter all the connection, authentication, and sender details again. Save, and send another test. Keep current relay closes the form without a change.",
+          "reason": "Replace relay renders a new SmtpSettingsFields form with empty inputs. The stored relay is write-only, so nothing can be 'corrected' in place. Keep current relay sets replacingRelay to false."
+        },
+        {
+          "location": "Set up email before finishing the wizard, list numbering",
+          "before": "Steps 3 and 5",
+          "after": "Steps 6 and 8, text unchanged",
+          "reason": "Renumbered after the split. No article links to a step number."
+        }
+      ],
+      "confirmed": [
+        "Outbound email step labels at 57e77e38: SMTP server, Port, Connection security (STARTTLS, TLS, None), Authentication (Username and password, None), Save relay, Send test email, Replace relay, Keep current relay, Clear relay.",
+        "Save relay still shows 'Relay saved. The next email this instance sends will use it.' and Clear relay still shows 'Relay cleared. This instance can no longer send email.'",
+        "The Outbound email step still has no Set up later, Continue stays disabled until email is configured, and Skip optional steps calls finish(), which opens the email step while email is unconfigured.",
+        "The wizard now keeps its step in the query string (?step=). finish() still checks emailConfigured, so a direct link to a later step cannot bypass the email requirement.",
+        "The welcome loader still redirects to / once onboarding is complete, and there is still no email Settings page.",
+        "PUT /email-settings still refuses with 409 while the environment sets SMTP, and SMTP_URL without SMTP_FROM still shows the incomplete warning.",
+        "Test email failure texts changed to name the SMTP server, port, connection security and credentials. The article does not quote them.",
+        "No source change for the Authentication pane, group policies, single sign-on or allowed email domains."
+      ]
+    },
+    {
+      "articleId": "organisation-and-users",
+      "result": "corrected",
+      "evidenceContentSha256": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+      "contentSha256Before": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+      "contentSha256": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+      "classification": "Behavior change. Commit 1ea249dd raised the logo limit from about 256 KB to 5 MB, added a specific rejection message on General, and shows the saved name and logo on the sign-in pages through a public endpoint. The article result changed and a new result was added, so the V-C36 walkthrough must run again for Update organization details. The Users sections did not change; their source changed only in the archived-row color (opacity to text-muted), which the article does not describe.",
+      "sources": [
+        "apps/web/src/routes/settings-general.tsx",
+        "packages/shared/src/logo.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/org/general.test.ts",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "location": "Update organization details, step 3",
+          "before": "Select Upload beside Logo and choose a supported image. If the image is rejected, correct its format or size and retry.",
+          "after": "Select Upload beside Logo and choose a PNG, JPEG, WebP, or SVG image of 5 MB or smaller. Any other file shows \"That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\" Choose a supported file and retry.",
+          "reason": "LOGO_BYTE_LIMIT is 5 * 1024 * 1024 and LOGO_TYPES lists the four types. settings-general.tsx now sets detail.logo to welcome.org.logo.rejected, so StatusNote shows that text instead of the generic 'The change could not be saved. Try again.' The API refuses a larger decoded image with 'The logo must be 5 MB or smaller.'"
+        },
+        {
+          "location": "Update organization details, new paragraph after step 5",
+          "before": "(none)",
+          "after": "The saved Organization name and logo also appear on the sign-in pages for staff and for the Business Portal, above the sign-in form. Anyone who opens a sign-in page can see them without an account. With no saved name, the sign-in pages show OpenLaw.",
+          "reason": "AuthLayout wraps /auth/* and /portal/login and loads GET /org/branding, which has no role guard and returns name and logo with Cache-Control no-store. An empty name falls back to auth.brand 'OpenLaw'. An Administrator must know that these values are shown before sign-in."
+        }
+      ],
+      "confirmed": [
+        "General: Organization name, Default locale and Default timezone behavior did not change between 3fa407e3 and 57e77e38.",
+        "The General pane still has no logo removal control.",
+        "settings-users.tsx, apps/api/src/modules/users and apps/web/src/lib/roles.ts did not change. Invite, role change, Sign out user, archive, restore and last-Administrator guards stay as round 1 recorded.",
+        "Archived user identities now use the text-muted color instead of 50% opacity. The article does not describe the style, so no text change is needed.",
+        "The Return to setup banner in Settings appears only when a wizard Review link opens Settings; it does not change the Settings, General path."
+      ]
+    }
+  ],
+  "productBugObservations": [
+    "auth-layout.tsx always shows the label 'Legal Portal' under the organization name, including on /portal/login, the Business Portal sign-in page for Business Users. CONTEXT.md has no 'Legal Portal' term. The articles do not quote the label."
+  ]
+}

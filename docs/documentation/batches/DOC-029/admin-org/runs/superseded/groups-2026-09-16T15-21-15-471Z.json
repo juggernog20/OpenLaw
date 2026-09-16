@@ -1,0 +1,175 @@
+{
+  "section": "groups",
+  "reviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-admin",
+  "appUrl": "http://127.0.0.1:23300",
+  "mailUrl": "http://127.0.0.1:23400",
+  "articleHashes": {
+    "organisation-and-users": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "approver-groups": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "authentication-and-email": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1"
+  },
+  "startedAt": "2026-09-16T15:21:15.472Z",
+  "steps": [
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Prepare two active Legal Team Members through Invite user and set-password links",
+      "expected": "Both rows Active",
+      "startedAt": "2026-09-16T15:21:16.267Z",
+      "finishedAt": "2026-09-16T15:21:18.352Z",
+      "actual": "Invited and activated DOC-029 admin-org Approver One mu490atr and DOC-029 admin-org Approver Two mu490atr; both rows are active.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Unauthorized configuration: a Legal Team Member cannot open or change Approver groups",
+      "expected": "Redirected; API refuses",
+      "startedAt": "2026-09-16T15:21:18.352Z",
+      "finishedAt": "2026-09-16T15:21:19.744Z",
+      "actual": "Nadia was sent to /settings/profile. GET /api/v1/approver-groups answered 403; POST answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create a group: profile menu, Settings, Contracts, Approver groups, Add group",
+      "expected": "Picker lists only Administrators and Legal team members; saved members show on Edit",
+      "startedAt": "2026-09-16T15:21:19.745Z",
+      "finishedAt": "2026-09-16T15:21:21.011Z",
+      "actual": "The profile menu path reached /settings/contracts/approver-groups. The Members picker listed 15 people and none of the 16 Business Users. After Add group and reload, Edit showed both chosen members checked (memberCount 2).",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Non-Member+ selection is refused",
+      "expected": "A Business User cannot be saved as a member",
+      "startedAt": "2026-09-16T15:21:21.011Z",
+      "finishedAt": "2026-09-16T15:21:21.050Z",
+      "actual": "The picker offers no Business User, so the refusal was checked on the member-list write the editor uses: adding a Business User was refused with 422 (\"Ravi Menon is not an Administrator or a Legal Team Member, so they can't approve a contract.\") and the group still had 2 members.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Apply the group on a Contract and check the Pending rows",
+      "expected": "Dialog names the people and warns about the snapshot; one Pending request per member",
+      "startedAt": "2026-09-16T15:21:21.051Z",
+      "finishedAt": "2026-09-16T15:21:21.689Z",
+      "actual": "On Contract 40, Approvals then Approvals & signing offered Apply group. The dialog read: \"Apply approver group Approver group Pick a group DOC-029 admin-org Group mu490atr Executive committee Finance sign-off Privacy review Security review Asks DOC-029 admin-org Approver One mu490atr and DOC-029 admin-org Approver Two mu490atr. Applying a group asks the people it names now. A later edit to the group leaves these requests as they are. Cancel Apply group\". Applying created 2 pending requests, one per member (3 Pending labels in the card).",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Applying again when every member already has a pending request is refused",
+      "expected": "Refused; no new rows",
+      "startedAt": "2026-09-16T15:21:21.690Z",
+      "finishedAt": "2026-09-16T15:21:51.996Z",
+      "actual": "Check failed: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('region', { name: 'Approvals & signing' }).getByRole('button', { name: 'Apply group' })\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A member with a pending request on the Contract is skipped",
+      "expected": "Dialog says it skips one person; only the other member gets a request",
+      "startedAt": "2026-09-16T15:21:51.996Z",
+      "finishedAt": "2026-09-16T15:21:52.671Z",
+      "actual": "After one manual request for Approver One on Contract 41, the dialog said \"Skips 1 person who already has a request open.\" Applying left 2 requests: one each, no duplicate.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A member who is no longer a Legal Team Member refuses the whole action by name",
+      "expected": "Refused by name; no Approval Request created; editor marks the member Can no longer approve",
+      "startedAt": "2026-09-16T15:21:52.672Z",
+      "finishedAt": "2026-09-16T15:21:58.931Z",
+      "actual": "With Approver Two changed to Business user, applying on Contract 42 showed \"DOC-029 admin-org Approver Two mu490atr is not an Administrator or a Legal Team Member, so they can't approve a contract.\" and created 0 requests. The group editor marked Approver Two \"Can no longer approve\"; selecting Save with that member still ticked and nothing else changed showed no error, the dialog closed, and the group still listed 2 members. Contract 40's two earlier requests were unchanged.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restore the member's role and apply again",
+      "expected": "Both requests are created",
+      "startedAt": "2026-09-16T15:21:58.931Z",
+      "finishedAt": "2026-09-16T15:22:01.550Z",
+      "actual": "Approver Two's row went back to Legal team member (row Active). Applying on Contract 42 then created 2 pending requests.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Confidential Contract: a member outside the audience refuses the whole action by name",
+      "expected": "Refused by name; no requests",
+      "startedAt": "2026-09-16T15:22:01.551Z",
+      "finishedAt": "2026-09-16T15:22:02.051Z",
+      "actual": "On Confidential Contract 43, created by Daniel with neither approver in its audience, Apply group showed \"DOC-029 admin-org Approver One mu490atr can't see this contract, so they can't be asked to approve it.\" and created 0 requests.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Edit members, then archive and restore the group: earlier requests keep their named people",
+      "expected": "Requests unchanged; archive confirmation needs no replacement; Show archived then Restore",
+      "startedAt": "2026-09-16T15:22:02.052Z",
+      "finishedAt": "2026-09-16T15:22:03.113Z",
+      "actual": "Save replaced Approver Two with Nadia Haddad. The archive confirmation read \"Archive DOC-029 admin-org Group mu490atr DOC-029 admin-org Group mu490atr leaves the apply picker. Its 2 members are kept, and approvals already requested from the group are untouched. The change applies immediately and is recorded in the audit log. Cancel Archive group\" and asked for no replacement. While archived the group was not in Contract 41's picker ((no Apply group button)). Show archived then Restore returned it. Contract 40's two requests and their named people were identical before the edit, after it, after archive, and after restore.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A Legal Team Member applies the group on a Contract they can open",
+      "expected": "Requests created for the members who have none",
+      "startedAt": "2026-09-16T15:22:03.114Z",
+      "finishedAt": "2026-09-16T15:22:04.173Z",
+      "actual": "Nadia opened Contract 44, Approvals, Approvals & signing, Apply group. The dialog read \"Apply approver group Approver group Pick a group DOC-029 admin-org Group mu490atr Executive committee Finance sign-off Privacy review Security review Asks DOC-029 admin-org Approver One mu490atr and N\" and applying created 2 pending requests.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:22:04.243Z",
+  "identities": [
+    {
+      "role": "administrator",
+      "account": "Daniel Okafor (seeded)"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "Nadia Haddad (seeded)"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "DOC-029 admin-org Approver One mu490atr"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "DOC-029 admin-org Approver Two mu490atr"
+    }
+  ],
+  "records": [
+    "Approver group \"DOC-029 admin-org Group mu490atr\"",
+    "Contract 40 \"DOC-029 admin-org approvals contract one mu490atr\"",
+    "Contract 41 \"DOC-029 admin-org approvals contract two mu490atr\"",
+    "Contract 42 \"DOC-029 admin-org approvals contract three mu490atr\"",
+    "Contract 43 \"DOC-029 admin-org confidential approvals contract mu490atr\"",
+    "Contract 44 \"DOC-029 admin-org legal apply contract mu490atr\""
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "batch": "DOC-029",
+  "round": 2,
+  "group": "admin-config",
+  "author": "DOC-029r2 source-review author agent (admin-config)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (admin-config)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T18:30:00Z",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "previousEvidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousReview": "docs/documentation/batches/DOC-029/admin-config/technical-review.json",
+  "appDiff": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+  "relevantAppChanges": [
+    "6d34ac59: settings list add rows (types, Officer roles, request types, Contract and Matter Statuses, reminder lead times) now use InlineAddForm with Save (or Save status) and Cancel. Blur no longer creates a row. Enter submits the form, Escape cancels, and Save stays disabled while the name is blank.",
+    "e3800b43: Contract and Matter Fields settings show a collapsed, read-only Default fields card above an expanded Custom Fields card. Entities Fields keeps the single Fields card. The card help caption under Fields was removed.",
+    "Other commits in the range (sign-in branding and logo limit, SMTP fields and first-run, Return to setup link in Settings, archived-user text-muted styles) do not change any step in these three articles."
+  ],
+  "limitations": [
+    "Source inspection and existing unit tests only. This agent ran no browser walkthrough. An independent agent runs the walkthroughs.",
+    "The author and the technical reviewer are the same agent. The independent walkthrough and any compatibility review must come from a different agent.",
+    "Catalog status and evidence files were not changed. The evidence files still record app commit 3fa407e3 and the round 1 content hashes.",
+    "Commits 6d34ac59 and e3800b43 edited types-statuses-fields.md and reminders-and-audit.md on dev. Those edits change actions (select Save instead of press Enter, new Default fields paragraph), so they are not copy-only. The walkthroughs for these articles must run again."
+  ],
+  "articles": [
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256Round1": "9e991226a487902476ed1a37590c517e8c64e7253d54ed65a1ffd9d34f9acc9d",
+      "contentSha256Before": "6959a5dfd5960d5bf12d807ec1fadf7c8197ca91b1c7dcbb2f003026c3b4d604",
+      "contentSha256After": "6959a5dfd5960d5bf12d807ec1fadf7c8197ca91b1c7dcbb2f003026c3b4d604",
+      "changedByThisReview": false,
+      "changeClass": "behavior change (edits came from dev commits 6d34ac59 and e3800b43); walkthrough needed",
+      "sources": [
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-officer-roles.tsx",
+        "apps/web/src/routes/settings-contract-types.test.tsx",
+        "apps/web/src/routes/settings-matter-statuses.test.tsx",
+        "apps/web/src/routes/settings-default-fields.test.tsx",
+        "messages/en-US.json"
+      ],
+      "corrections": [],
+      "confirmed": [
+        "Add and maintain types, step 2: Add type opens a name box with Save and Cancel. Save creates the type. Leaving the box does not create it. Cancel or Escape discards the draft (taxonomy-types-pane.tsx InlineAddForm; settings-contract-types.test.tsx).",
+        "Add and maintain types, step 3: Rename still saves on blur or Enter (list-editor.tsx commitRename); this was not changed.",
+        "Configure Statuses: Contract and Matter Status add rows show Save status and Cancel. Save status stays disabled until the name has text. A missing Category shows 'Pick a category for the new status.' The group select still defaults to In progress (settings-matter-statuses.tsx; settings-matter-statuses.test.tsx).",
+        "Create a Field, first paragraph: Contracts and Matters Fields show a Default fields card, collapsed at first, with locked rows labeled '{name}: built-in field, read-only here' and no row controls. Selecting the Default fields heading expands it. Custom Fields is below it, starts expanded, and holds Add field (default-fields.tsx; settings-default-fields.test.tsx).",
+        "Entities Fields keeps one card named Fields and has no Default fields card, which matches 'Matter and Contract Fields settings'.",
+        "Field dialog labels, Type list, Scope, Tag, Options, and AI prompt did not change in this range.",
+        "Maintain Officer roles: Add role uses the same TaxonomyTypesPane add row. The article does not describe the key press, so no change is needed.",
+        "The Settings Return to setup link appears only when an Administrator arrives from the setup review; it does not change any step here."
+      ]
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256Round1": "d1430853a0de13ac67a359a7bc447d48a08bd5193bb494ddcb34d3cabe44dec8",
+      "contentSha256Before": "8ca186fcbb821a59d6b0591a467fac3674421df48337d519d3e7ff0d9593648d",
+      "contentSha256After": "8ca186fcbb821a59d6b0591a467fac3674421df48337d519d3e7ff0d9593648d",
+      "changedByThisReview": false,
+      "changeClass": "behavior change (edit came from dev commit 6d34ac59); walkthrough needed",
+      "sources": [
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings-reminders.test.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "messages/en-US.json"
+      ],
+      "corrections": [],
+      "confirmed": [
+        "Set reminder lead times, step 3: Add lead time opens a number box with Save and Cancel. Save stays disabled while the box is empty. Cancel or Escape closes the draft (settings-reminders.tsx InlineAddForm canSave draft.trim() !== '').",
+        "Lead time limits, Remove, reorder, and On the day did not change in this range.",
+        "The API diff touches only email settings and organization general settings. Reminder processing and the Audit log routes did not change, so the Check delivery and Audit log sections stay correct."
+      ]
+    },
+    {
+      "articleId": "request-forms",
+      "contentSha256Round1": "417d8285bde34a0849db9f57bd573957b12c00979ec343ae12ff608c3a97d82d",
+      "contentSha256Before": "417d8285bde34a0849db9f57bd573957b12c00979ec343ae12ff608c3a97d82d",
+      "contentSha256After": "b7be99eb4442a012c4e00fbe17cc964a74d347ac4195e5b28b3faafb11be64fd",
+      "changedByThisReview": true,
+      "changeClass": "behavior change in the add step; walkthrough needed",
+      "sources": [
+        "apps/web/src/routes/settings-request-types.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/routes/settings-request-type-editor.tsx",
+        "apps/web/src/routes/settings-intake-links.tsx",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "location": "Create the request type, step 2",
+          "before": "Select Add request type. Enter a display name and press Enter.",
+          "after": "Select Add request type. Enter a display name and select Save. Select Cancel to discard the draft.",
+          "source": "commit 6d34ac59; settings-request-types.tsx uses TaxonomyTypesPane, whose add row is now InlineAddForm with Save (action.save) and Cancel (action.cancel). The dev commit updated the same step in types-statuses-fields.md but not here."
+        }
+      ],
+      "confirmed": [
+        "Enter in the name box still submits the add form, so the old step did not fail. The visible Save and Cancel buttons are the new controls, and leaving the box no longer creates the type.",
+        "Request type editor (Description, Target turnaround, Form fields, Required rule), Deflection links, Portal form, and Convert dialog sources did not change in this range.",
+        "Title, anchors, and scope are unchanged."
+      ]
+    }
+  ]
+}

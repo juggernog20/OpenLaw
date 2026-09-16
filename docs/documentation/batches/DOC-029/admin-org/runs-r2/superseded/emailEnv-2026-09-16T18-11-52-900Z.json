@@ -1,0 +1,28 @@
+{
+  "section": "emailEnv",
+  "reviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth2",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+    "authentication-and-email": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208"
+  },
+  "startedAt": "2026-09-16T18:11:52.901Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Deployment sets SMTP_URL and SMTP_FROM: the wizard relay settings are read-only and the environment wins",
+      "expected": "No Save relay, Replace relay or Clear relay; mail is sent from the environment sender, not the stored one",
+      "startedAt": "2026-09-16T18:11:53.438Z",
+      "finishedAt": "2026-09-16T18:11:57.043Z",
+      "actual": "The Outbound email step read \"Outbound email is set by the deployment environment. Mail is sent from DOC-029 Environment <env-relay@helix.example>.\" with the hint that settings saved here never apply. Its buttons were [\"Back\",\"Continue\"]; there was no Save relay, Replace relay, Clear relay or Send test email. A direct save attempt answered 409. An invitation from the Invite your team step arrived from env-relay@helix.example, not from the stored stored-relay@helix.example.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T18:11:57.049Z",
+  "phase": "env: SMTP_URL smtp://mailpit:1025 and SMTP_FROM DOC-029 Environment <env-relay@helix.example> (overlay-phase-env.json), stored relay still saved"
+}

@@ -1,0 +1,262 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-029",
+  "group": "contracts-a",
+  "round": 2,
+  "walkthroughReviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+  "reviewerKind": "agent",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "environment": "openlaw-docs-41255c61-work2",
+  "appUrl": "http://127.0.0.1:23301",
+  "mailUrl": "http://127.0.0.1:23401",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+    }
+  ],
+  "browser": "Playwright Chromium from e2e/node_modules, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "create-contract": "9ddc15162c743f9502cd7bf98f7d3c1229895b9e275a730bc203e860d4f316d1",
+    "contract-stages": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+    "contract-approvals": "d33d268780abc6592242a140452187a3233bad9a1bb337a15dcd24e5ecf3b3d3",
+    "manual-signing": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0"
+  },
+  "stamp": 1789582005354,
+  "startedAt": "2026-09-16T18:06:45.355Z",
+  "finishedAt": "2026-09-16T18:07:13.947Z",
+  "fixtures": [
+    {
+      "kind": "Field",
+      "name": "DOC-029r2 contracts-a Required number 1789582005354",
+      "detail": "number, business, required on the fixture type"
+    },
+    {
+      "kind": "Field",
+      "name": "DOC-029r2 contracts-a Notes 1789582005354",
+      "detail": "long text, business, optional on the fixture type"
+    },
+    {
+      "kind": "Contract type",
+      "name": "DOC-029r2 contracts-a Required type 1789582005354",
+      "detail": "created for the required-Field and Change contract type checks"
+    },
+    {
+      "kind": "Contract Status",
+      "name": "DOC-029r2 contracts-a review 1789582005354",
+      "detail": "Review Stage; renamed during V-C15; archived at the end"
+    },
+    {
+      "kind": "Approver group",
+      "name": "DOC-029r2 contracts-a sign-off 1789582005354",
+      "detail": "Marcus Oyelaran and Priya Raman; archived at the end"
+    }
+  ],
+  "records": [
+    {
+      "title": "DOC-029r2 contracts-a administrator C14 1789582005354",
+      "reference": "C-121"
+    }
+  ],
+  "steps": [
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Negative: Create contract refuses a blank Title, a missing Contract type, a blank required Field and an invalid number; archived references are not offered; Cancel creates nothing",
+      "expected": "Each refusal shows an error in the dialog and no Contract is created; archived type, Entity and person are absent.",
+      "startedAt": "2026-09-16T18:06:48.358Z",
+      "finishedAt": "2026-09-16T18:06:49.888Z",
+      "actual": "Blank Create said \"Name the contract.\"; with a Title only it said \"Pick a contract type.\". The type list omitted archived \"Framework agreement\"; Owner omitted archived Gabriel Santos and Business Users and started on Daniel Okafor. The fixture type showed its required and optional Fields; blank required Field said \"Fill DOC-029r2 contracts-a Required number 1789582005354 — this contract type requires it.\"; a non-number said \"DOC-029r2 contracts-a Required number 1789582005354: enter this as a number.\". Cancel on a complete draft closed the dialog; the Contracts API lists no Contract with that title.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Create the record: Title, Contract type, Fields, Owner, Confidential, optional Matter search, Create",
+      "expected": "The app opens the new Contract with its title, type, Legal Owner and a new C- reference, in the Draft Status; the chosen Owner is Legal Owner and the creator is on the team as Creator.",
+      "startedAt": "2026-09-16T18:06:49.889Z",
+      "finishedAt": "2026-09-16T18:06:50.820Z",
+      "actual": "The dialog selected Matter \"M-16\" (help text in dialog: \"Link only when this Contract is part of broader Matter work. Nothing else flows across the link.\"). Create opened /contracts/121 directly. Header: \"Contracts C-121 DOC-029r2 contracts-a administrator C14 1789582005354 Draft Draft Review Approval Signature Active Ended\". Overview Contract type MSA, Legal Owner \"NH Nadia Haddad\"; Confidential true; the Governing law Field saved. Contract team: \"Contract team NH Legal Owner Nadia Haddad DO Creator Daniel Okafor\". MSA has 0 default people, so no one else joined.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor", "Marcus Oyelaran"],
+      "method": "browser-walkthrough",
+      "action": "A link does not copy access: a Legal Team Member outside the Confidential team reads the Matter but not the Contract",
+      "expected": "The Matter answers; the Confidential Contract is refused for the reader outside its team.",
+      "startedAt": "2026-09-16T18:06:50.820Z",
+      "finishedAt": "2026-09-16T18:06:52.885Z",
+      "actual": "Marcus Oyelaran: Matter M-16 answered 200; Contract C-121 answered 404; his page did not show the title (\"C-121 does not exist, or you cannot open it. Back to Contracts\").",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Rename keeps the C- reference",
+      "expected": "The reference stays the same after a rename.",
+      "startedAt": "2026-09-16T18:06:52.885Z",
+      "finishedAt": "2026-09-16T18:06:53.809Z",
+      "actual": "Contract actions > Rename contract focused the Overview Title (true); the new title saved on Enter; header now \"Contracts C-121 DOC-029r2 contracts-a administrator C14 1789582005354 renamed Draft Draft Review Approval Signature Active Ended\".",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Record the parties and ownership on Overview: Legal Owner, Business Owner, Our entity, Department, Region, Priority, Risk, Description, Value",
+      "expected": "Core fields appear in the stated order; choices save immediately; Unassigned, Not known yet, No Department and No Region clear; Description saves on leave; Value parts save together; Other needs Custom cadence; emptying Amount removes the value.",
+      "startedAt": "2026-09-16T18:06:53.810Z",
+      "finishedAt": "2026-09-16T18:07:01.054Z",
+      "actual": "Order on Overview: Title, Contract type, Legal Owner, Business Owner, Department, Priority, Risk. Legal Owner picker offered only staff [\"Unassigned\",\"BW Blair Wentworth\",\"DO Daniel Okafor\",\"D5 DOC-029r2 access Administrator 58686\",\"D7 DOC-029r2 access Administrator 72746\",\"D9 DOC-029r2 access Administrator 90765\",\"DOC-029r2 access Administrator 9183\",\"D5 DOC-029r2 access Legal Team Member 58686\",\"D7 DOC-029r2 access Legal Team Member 72746\",\"DOC-029r2 access Legal Team Member 9183\",\"D8 DOC-029r2 access No Password Member 88982\",\"D2 DOC-029r2 conversations Admin No Date Email 221497\",\"D2 DOC-029r2 conversations Member Before Eight 221497\",\"D2 DOC-029r2 conversations Member Dates 221497\",\"D2 DOC-029r2 conversations Member No Date Bell 221497\",\"ID Ines Duarte\",\"MO Marcus Oyelaran\",\"NH Nadia Haddad\",\"PR Priya Raman\",\"SL Sofia Lindqvist\",\"TI Tom Iwu\"]; Unassigned cleared it and Daniel Okafor was set. Business Owner Jonas Weber saved. Our entity omitted the archived Portugal Entity; Not known yet cleared it. No Department and No Region cleared those choices. Priority High and Risk Low saved. Description after Enter only: null; it saved when focus left. With Frequency Other and a blank Custom cadence, pressing Enter did not save (value API still null or earlier; page note present: true); with \"each milestone\" the group saved {\"amount\":1250000,\"currency\":\"EUR\",\"cadence\":\"other\",\"cadenceDescription\":\"each milestone\"}. After reload: {\"legal\":\"DO\\nDaniel Okafor\",\"business\":\"JW\\nJonas Weber\",\"entity\":\"Helix Software Ltd\",\"department\":\"Finance\",\"region\":\"EMEA\",\"amount\":\"12,500\",\"cadence\":\"each milestone\",\"description\":\"DOC-029 fictional services description.\"}. Emptying Amount removed the value; it was then re-entered as 12500 EUR Annually.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Counterparties: search, inspect the create action, link two, Make primary, remove one link",
+      "expected": "A new name offers a create action; the first linked party is primary; Make primary moves the designation; removing a link keeps the Counterparty record.",
+      "startedAt": "2026-09-16T18:07:01.055Z",
+      "finishedAt": "2026-09-16T18:07:02.028Z",
+      "actual": "Typing a new name offered \"Create \\\"DOC-029r2 contracts-a administrator Counterparty 1789582005354\\\"\"; selecting it linked the new Counterparty as primary. Litware Insurance Company was linked second. Make primary moved the Primary designation to Litware. \"Take DOC-029r2 contracts-a administrator Counterparty 1789582005354 off the contract\" left one linked party, and the Counterparty search still returns the record.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Contract team: Add team member > Person > Add; membership rows and separate statements; removing membership keeps the Business Owner statement",
+      "expected": "One row per person; Legal Owner, Business Owner and Creator show as statements; taking a person off the team leaves their Business Owner statement.",
+      "startedAt": "2026-09-16T18:07:02.028Z",
+      "finishedAt": "2026-09-16T18:07:03.195Z",
+      "actual": "Membership after Add: [\"Daniel Okafor\",\"Jonas Weber\"]; roster rows [\"DO Legal Owner Creator Daniel Okafor\",\"JW Business Owner Jonas Weber\"]. After \"Take Jonas Weber off the contract team\" membership is [\"Daniel Okafor\"], yet the roster still shows [\"DO Legal Owner Creator Daniel Okafor\",\"JW Business Owner Jonas Weber\"] and the record still names Jonas Weber as Business Owner. Re-added: [\"DO Legal Owner Creator Daniel Okafor\",\"JW Business Owner Jonas Weber\"].",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Maintain the values on Fields: text saves on leave or Enter; a choice saves when selected; Escape abandons an unsaved edit",
+      "expected": "Blur and Enter save; Escape restores the saved value without a save; choices save immediately.",
+      "startedAt": "2026-09-16T18:07:03.196Z",
+      "finishedAt": "2026-09-16T18:07:05.386Z",
+      "actual": "Jurisdiction saved on Tab; Liability cap saved on Enter; an Escape after typing \"Unsaved edit\" restored \"Fees paid in 12 months\" and the stored value stayed \"Fees paid in 12 months\"; Our position Customer saved on selection.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Change contract type on Overview asks for missing required Fields; Cancel keeps the type; Change type applies it; long text Enter makes a new line",
+      "expected": "Change contract type opens for the missing required Field; blank is refused; Cancel keeps MSA; filling it and Change type re-types the record; C- reference unchanged.",
+      "startedAt": "2026-09-16T18:07:05.386Z",
+      "finishedAt": "2026-09-16T18:07:08.112Z",
+      "actual": "Selecting \"DOC-029r2 contracts-a Required type 1789582005354\" opened Change contract type: \"Change contract type DOC-029r2 contracts-a Required type 1789582005354 requires these fields. Fill them to change the type. DOC-029r2 contracts-a Required numbe\". Change type with the Field blank kept the dialog open: \"Change contract type DOC-029r2 contracts-a Required type 1789582005354 requires these fields. Fill them to change the type. DOC-029r2 contracts-a Required number 1789582005354 Fill DOC-029r2 contracts\". Cancel kept MSA. Filling 42 and Change type re-typed the record; Fields shows \"42\" for the required number. In the long-text Field, Enter added a new line (no save before leaving: null), and leaving saved two lines. Header still \"Contracts C-121 DOC-029r2 contracts-a administrator C14 1789582005354 renamed Draft Draft Review Approval Signature Active Ended\".",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor", "Jonas Weber (Portal)"],
+      "method": "browser-walkthrough",
+      "action": "Negative: a Business User in the Portal cannot create a Contract directly or assign its Legal Owner",
+      "expected": "Jonas reaches the Contract he is on in the Portal read-only for legal details, sees no create control, and the API refuses direct creation and a Legal Owner change.",
+      "startedAt": "2026-09-16T18:07:08.113Z",
+      "finishedAt": "2026-09-16T18:07:13.255Z",
+      "actual": "Portal Contracts list showed no create control (list begins \"Your Contracts Contracts you are on the team for. 19 of 19 records Search Filter Reference Title Counterparty Stage Lega\"). C-121 in the Portal shows \"Your Contracts DOC-029r2 contracts-a administrator C14 1789582005354 renamed C-121 Overview Counterparty Litware Insurance Company Stage Draft Business Owner Jonas Weber Legal Owner Daniel Okafor Department Finance Regio\" with no Legal Owner control. Direct API create answered 403; a Legal Owner change answered 403; Legal Owner is still Daniel Okafor.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Negative: an archived Contract must be restored before editing",
+      "expected": "Archive shows the archived note and read-only controls; Restore makes the record editable again.",
+      "startedAt": "2026-09-16T18:07:13.255Z",
+      "finishedAt": "2026-09-16T18:07:13.797Z",
+      "actual": "Archive showed \"This contract is archived — it is out of the contract list. Restore it to edit.\"; Title and Contract type were disabled; 0 Stage move controls; a direct edit answered 409. Restore made Priority editable again.",
+      "result": "pass"
+    }
+  ],
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in",
+      "context": "daniel"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in",
+      "context": "nadia"
+    },
+    {
+      "role": "legal_team_member (comparison reader and approver)",
+      "person": "Priya Raman",
+      "entry": "password sign-in",
+      "context": "priya"
+    },
+    {
+      "role": "legal_team_member (reader outside the team)",
+      "person": "Marcus Oyelaran",
+      "entry": "password sign-in",
+      "context": "marcus"
+    },
+    {
+      "role": "business_user",
+      "person": "Jonas Weber",
+      "entry": "new magic link from this lab's Mailpit, Portal sign-in",
+      "context": "jonas"
+    }
+  ],
+  "cleanup": [
+    "status DOC-029r2 contracts-a review 1789582005354: 200",
+    "group DOC-029r2 contracts-a sign-off 1789582005354: 200",
+    "type DOC-029r2 contracts-a Required type 1789582005354: 200",
+    "field DOC-029r2 contracts-a Required number 1789582005354: 200",
+    "field DOC-029r2 contracts-a Notes 1789582005354: 200"
+  ]
+}

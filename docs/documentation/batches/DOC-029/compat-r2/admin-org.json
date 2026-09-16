@@ -1,0 +1,169 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "admin-org",
+  "reviewer": "DOC-029r2 compatibility reviewer (admin-org)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "lab": {
+    "name": "admin2",
+    "project": "openlaw-docs-41255c61-admin2",
+    "app": "http://127.0.0.1:23300",
+    "mail": "http://127.0.0.1:23400",
+    "source": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "seed": "Helix light, seed 7",
+    "images": {
+      "app": "openlaw-docs-41255c61-admin2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "engine": "openlaw-docs-41255c61-admin2-engine:57e77e386be3 sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    }
+  },
+  "diffInspection": {
+    "command": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles messages",
+    "commits": [
+      "1ea249dd Show organization branding on sign-in and raise the logo limit",
+      "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+      "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+      "e3800b43 Show locked default fields above each custom field catalog",
+      "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+      "57e77e38 Update user and comment display styles to use 'text-muted' for archived users"
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+      "scenario": "V-C55",
+      "diffFilesInspected": [
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/router.tsx",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "messages/en-US.json",
+        "full diff --stat for apps, packages, styles (43 files) checked for approver-groups, contract-approvals, approvers, contract-record and approvals-signing-card files"
+      ],
+      "diffFindings": "No file under apps/api/src/modules/approver-groups, apps/api/src/modules/contract-approvals, apps/api/src/lib/approvers.ts, settings-approver-groups.tsx, contracts-settings-tabs.tsx, contract-record.tsx, approvals-signing-card.tsx or the user menu changed. settings-approver-groups.tsx uses ListEditor with onAdd opening the Add approver group dialog and no inline addRow. The ListEditor change adds optional collapsible and defaultOpen props, makes help optional, disables the add button while an inline add row is open, and grows the inline add row; none of these changes the Approver groups pane, which still passes help and uses a dialog. InlineAddForm is used by taxonomy-types-pane.tsx, not by Approver groups. settings.tsx adds a Return to setup link only when the page is opened from first-run setup. user-identity.tsx shows archived users with text-muted instead of opacity-50, and the article does not describe that styling. The openapi and api-client changes cover org branding, org general logo and email settings only. No removed or changed message string is one the article names (Add group, Name, Description, Members, Edit, Save, Can no longer approve, Apply group, Approver group, Pending, Archive group, Show archived, Restore).",
+      "conclusion": "compatible",
+      "replay": {
+        "method": "Replayed the round 1 groups section of batches/DOC-029/admin-org/walkthrough-r1.mjs against admin2. Adaptations: lab project openlaw-docs-41255c61-admin2, reviewer name, record names DOC-029r2 admin-org * and doc029r2-grp-*, output folder compat-r2/admin-org-r2, lib root path one level higher, other sections removed, and one added cleanup step that archives the replay group. No check, selector or expectation changed.",
+        "runFile": "batches/DOC-029/compat-r2/admin-org-r2/runs/groups-2026-09-16T17-53-54-217Z.json",
+        "startedAt": "2026-09-16T17:53:54.218Z",
+        "finishedAt": "2026-09-16T17:54:19.478Z",
+        "stepsTotal": 14,
+        "stepsFailed": 0,
+        "steps": [
+          {
+            "role": "administrator",
+            "action": "Prepare two active Legal Team Members through Invite user and set-password links",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Unauthorized configuration: a Legal Team Member cannot open or change Approver groups",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Create a group: profile menu, Settings, Contracts, Approver groups, Add group",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Non-Member+ selection is refused",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Apply the group on a Contract and check the Pending rows",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Applying again when every member already has a pending request is refused",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "A member with a pending request on the Contract is skipped",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "A member who is no longer a Legal Team Member refuses the whole action by name",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Restore the member's role and apply again",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Confidential Contract: a member outside the audience refuses the whole action by name",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Edit members, then archive and restore the group: earlier requests keep their named people",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "A group with no members is refused when applied",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "A Legal Team Member applies the group on a Contract they can open",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Clean up: archive the replay group",
+            "result": "pass"
+          }
+        ],
+        "records": [
+          "Approver group \"DOC-029r2 admin-org Group mu4eglrc\"",
+          "Contract 35 \"DOC-029r2 admin-org approvals contract one mu4eglrc\"",
+          "Contract 36 \"DOC-029r2 admin-org approvals contract two mu4eglrc\"",
+          "Contract 37 \"DOC-029r2 admin-org approvals contract three mu4eglrc\"",
+          "Contract 38 \"DOC-029r2 admin-org confidential approvals contract mu4eglrc\"",
+          "Approver group \"DOC-029r2 admin-org Empty group mu4eglrc\" (archived at the end of this step)",
+          "Contract 39 \"DOC-029r2 admin-org empty group contract mu4eglrc\"",
+          "Contract 40 \"DOC-029r2 admin-org legal apply contract mu4eglrc\""
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-029/compat-r2/admin-org-r2/walkthrough-r2.mjs",
+            "sha256": "b3ecbb5ee30242590c60c1aa7b25daf2fc4be97aaa46a9b108b1e399d0a55355"
+          },
+          {
+            "path": "batches/DOC-029/compat-r2/admin-org-r2/lib-r2.mjs",
+            "sha256": "57088646cd9e45f39e045be27e2b1beed338f255f61aead5f91eb2867b5f1545"
+          },
+          {
+            "path": "batches/DOC-029/compat-r2/admin-org-r2/runs/groups-2026-09-16T17-53-54-217Z.json",
+            "sha256": "902c655b4073ba7e73ffd6fca17667ba8d15eb985b20f445796f751dab57f468"
+          },
+          {
+            "path": "batches/DOC-029/compat-r2/admin-org-r2/groups-list-r2.png",
+            "sha256": "fd6580c898bba051f42c74a006ab783fc0ec716272129015deb86a84491cbc76"
+          }
+        ]
+      },
+      "limitations": [
+        "Agent replay on a seeded lab, not a human user study.",
+        "As in round 1, the Business User refusal was checked on the member-list write, because the picker offers no Business User.",
+        "The replay changed no organisation settings. It created two Legal Team Members, six Contracts and two Approver groups named DOC-029r2 admin-org *, and archived both groups."
+      ]
+    }
+  ],
+  "notInScope": "authentication-and-email, configure-signing and configure-analysis were not assigned to this round 2 admin-org task, so no scenario-fixture lab on 23310/23410 was built."
+}

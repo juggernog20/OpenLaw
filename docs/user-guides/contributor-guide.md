@@ -18,9 +18,9 @@ Select a column heading to sort ascending, descending or return to the default o
 
 ## Read record information
 
-**Overview** and **Fields** show the current values from the full app record. On a Contract, this includes **Department**, **Region**, Value and dates. Business Fields, including Description, are read-only. Ask Legal to change a value; reload the record to see their update.
+The record details at the top and **Fields** show the current values from the full app record. Contracts and Matters both show **Department** and **Region**. A Contract shows its details under **Overview**, including Value and dates. Business Fields, including Description, are read-only. Ask Legal to change a value; reload the record to see their update.
 
-**Original request** contains the original description, submitted answers, Requester and submission date. It is read-only. A record may show more than one original submission, or none if it started without a Request. Legal’s changes to the live Description do not change the original ask.
+**Original request** contains the original description, submitted answers, Requester and submission date. It is read-only. A record may show more than one original submission, or none if it started without a Request. Legal's changes to the live Description do not change the original ask.
 
 ## Work with Documents
 
@@ -36,9 +36,9 @@ Use **Search Documents** to find a Document by its name or any Version's filenam
 
 ## Join the conversation
 
-Open **Comments** in the applet bar on the right, write your reply, attach files if needed, and select **Comment**. Your reply appears on the Contract or Matter at **Full thread**. Type **@** to mention someone who can hear the comment. Use **Comment actions** to edit or delete your own comment. The unread badge clears after the comments load. Closing or switching applets keeps your draft and attachments on this record. There is no audience picker in the Portal. Legal Only and Working Team messages stay outside this view.
+Open **Comments** in the applet bar on the right, write your reply, attach files if needed, and select **Comment**. Your reply shows **Contract Team** on a Contract or **Matter Team** on a Matter. This is the Full Thread audience. The text below the composer names it, for example "Visible to Legal and all Matter team members." Type **@** to mention someone who can hear the comment. Use **Comment actions** to edit or delete your own comment. The unread badge clears after the comments load. Closing or switching applets keeps your draft and attachments on this record. There is no audience picker in the Portal. Legal Only and older Internal team messages stay outside this view.
 
-A comment attachment belongs to the conversation. Upload under Documents when the file needs its own managed Document chain. See [Comments, attachments, and activity](comments-and-activity.md) for attachment limits and reply behavior.
+A comment attachment belongs to the conversation. Upload under Documents when the file needs its own managed Document chain. See [Choose who can read a comment](comments-and-activity.md) for attachment limits and reply behavior.
 
 ## Add team members
 

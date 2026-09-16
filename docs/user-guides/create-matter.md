@@ -14,7 +14,7 @@ Open **Matters** and select **New matter**. Enter **Title**, choose **Matter typ
 
 Choose **Department** from the shared list, or leave **No Department** selected. Review **Priority**, **Risk**, **Description**, and **Confidential**. Priority starts at **Medium** and Risk at **Not assessed** unless a template supplies defaults. Complete any Entity or person reference Fields your type offers by selecting the intended record, rather than entering an identifier.
 
-Select **Create**. The new Matter opens with its M- reference. Check the saved values and its initial open-category Status. The M- reference remains the same if you rename the Matter. **Cancel** leaves the dialog without creating it.
+Under **Documents**, you can attach files with **Attach documents**. Select **Create**. The new Matter opens with its M- reference. If a file upload fails after the Matter is created, the dialog stays open with **Retry failed uploads** and **Continue**. The Matter already exists. Check the saved values and its initial open-category Status. The M- reference remains the same if you rename the Matter. **Cancel** leaves the dialog without creating it.
 
 If creation is refused, read the message, fill the named missing or invalid values, and try again. An unavailable type, template, or reference may have changed since you opened the form; reopen it and choose a live option if necessary.
 
@@ -22,7 +22,7 @@ If creation is refused, read the message, fill the named missing or invalid valu
 
 After choosing the Matter type, check **Matter template**. Choose a template explicitly to apply its defaults, Tasks and Key dates, or leave **No template** selected to create without one.
 
-A template can prefill the title, Priority, Risk, and attached Fields, and the dialog tells you how many Tasks and Key dates it adds. Review those values before creating. Changing or removing the template resets its Priority, Risk, and Field defaults; a title you have typed is preserved unless it still matches the previous template's title prefix.
+A template can prefill the title, Priority, Risk, and attached Fields, and the dialog tells you how many Tasks and Key dates it adds. Review those values before creating. Changing or removing the template resets Priority, Risk, and every Field value to the new template's defaults, or to empty values with **No template**. Field values you typed are replaced. A title you have typed is preserved unless it still matches the previous template's title prefix.
 
 You can clear an optional Field that the selected template prefills. It stays empty on the saved Matter. Untouched defaults and replacement values are saved as shown. Required Fields must have a value before you can create the Matter.
 
@@ -32,7 +32,7 @@ Later template edits do not change this Matter. Manage the copied Tasks, dates, 
 
 ## Set responsibility and maintain the record
 
-On **Overview**, edit the normal controls for the title, type, **Matter Manager**, **Business Owner**, **Department**, Priority, Risk, Description, and **Custom fields**. These core fields use the same sequence as Contracts: title, type, legal responsibility, business responsibility, Department, Priority, then Risk. Both owner controls let you search for a person and show their avatar. Wait for each save result. Changing type can require a **Change matter type** dialog to fill the new type's required Fields; use **Change type** to confirm. A required value cannot be cleared. Values for Fields no longer attached to the type are retained but no longer shown there.
+On **Overview**, edit the normal controls for the title, type, **Matter Manager**, **Business Owner**, **Department**, **Region**, Priority, Risk, Description, and **Custom fields**. The core fields appear in this sequence: title, type, Matter Manager, Business Owner, Department, Region, Priority, then Risk. Choose **Region** from the shared list, or choose **No Region**. Both owner controls let you search for a person and show their avatar. Wait for each save result. Changing type can require a **Change matter type** dialog to fill the new type's required Fields; use **Change type** to confirm. A required value cannot be cleared. Values for Fields no longer attached to the type are retained but no longer shown there.
 
 Open **Matter team** in the activity bar. Select **Add team member**, choose **Person**, then **Add**. The roster has one membership row per person, with Matter Manager, Business Owner and Creator as separate statements. Change owners through their Overview controls. Owner assignments do not grant Portal access; membership does.
 

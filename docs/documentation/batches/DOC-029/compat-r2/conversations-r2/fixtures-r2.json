@@ -1,0 +1,34 @@
+{
+  "createdAt": "2026-09-16T17:53:43.799Z",
+  "stamp": "221497",
+  "contractRequest": 48,
+  "matterRequest": 49,
+  "openRequest": 50,
+  "archiveRequest": 51,
+  "contract": {
+    "module": "contract",
+    "number": 77
+  },
+  "matter": {
+    "module": "matter",
+    "number": 82
+  },
+  "archive": {
+    "module": "contract",
+    "number": 78
+  },
+  "contractTitle": "DOC-029r2 conversations Contract 221497",
+  "matterTitle": "DOC-029r2 conversations Matter 221497",
+  "openTitle": "DOC-029r2 conversations open Request 221497",
+  "archiveTitle": "DOC-029r2 conversations archive Contract 221497",
+  "contractId": "01a0ab5a-670a-7d8c-9305-c161573be22a",
+  "matterId": "01a0ab5a-6732-7838-96f9-0cc18139cd13",
+  "archiveId": "01a0ab5a-675a-7edd-a0d1-430fe1d9c880",
+  "openRequestId": "01a0ab5a-667c-7faf-ac7b-12ddb15eb1e1",
+  "ids": {
+    "daniel": "01a0ab53-0e0b-7225-9d4d-2a29904eac73",
+    "nadia": "01a0ab53-0e11-73b7-a3b0-4181047d1b6c",
+    "jonas": "01a0ab53-110b-73e3-bde4-4e0d0d097603",
+    "amara": "01a0ab53-110a-749f-b5ba-31f742272eee"
+  }
+}

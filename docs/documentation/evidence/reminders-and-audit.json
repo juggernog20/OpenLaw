@@ -1,28 +1,20 @@
 {
   "articleId": "reminders-and-audit",
-  "contentSha256": "91583fda511a5d75941af7d8b919de5db42298846ee2b9dad65fcd6f43a4565c",
-  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
-  "environment": "openlaw-docs-b8e31260-configuration",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Opus 5 independent review agent",
-  "walkthroughReviewer": "Opus 5 independent review agent",
+  "contentSha256": "8ca186fcbb821a59d6b0591a467fac3674421df48337d519d3e7ff0d9593648d",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "environment": "openlaw-docs-41255c61-admin2",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-config, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T06:33:00Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-config)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (admin-config)",
+  "verifiedAt": "2026-09-16T18:12:47Z",
   "status": "pass",
   "sources": [
-    "CONTEXT.md",
-    "docs/decision-records/DECISIONS-SETTINGS.md",
-    "apps/web/src/routes/settings-contract-fields.tsx",
-    "apps/web/src/routes/settings-matter-template-editor.tsx",
-    "apps/web/src/routes/settings-request-type-editor.tsx",
-    "apps/web/src/routes/settings-reminders.tsx",
-    "apps/web/src/routes/settings-audit-log.tsx",
-    "apps/web/src/routes/settings-approver-groups.tsx",
-    "apps/api/src/modules/fields/routes.ts",
-    "apps/api/src/modules/matters/create.ts",
-    "apps/api/src/modules/requests/convert.ts",
-    "apps/api/src/pipeline/morning-round.ts"
+    "docs/user-guides/reminders-and-audit.md",
+    "docs/documentation/batches/DOC-029/admin-config/technical-review.json",
+    "docs/documentation/batches/DOC-029/admin-config/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
@@ -30,52 +22,82 @@
       "coverage": ["C41"],
       "role": "administrator",
       "method": "browser-walkthrough",
-      "expected": "Lead-time changes and audit facts are observable at the documented scope. The audit log is unavailable to other roles; timezone/channel limits and missing events are investigated rather than assumed.",
-      "actual": "Both rail entries read \"Notifications\"; the Organization one at /settings/reminders is headed \"Reminder lead times\" and the Personal one holds only that person's switches. Added 0, 4 and 11 to the organization list; a duplicate was refused with \"4 days before is already on the list.\" and 731 with \"Enter a whole number of days between 0 and 730.\"; zero rendered as \"On the day\"; Remove and a keyboard reorder both saved and survived a reload; reduced to one entry the row lost its Remove control, showed the only-lead-time lock, and an empty list was refused by the API. Delivery used a brand-new fictional Legal Team Member with no earlier briefing history, a saved Asia/Dubai timezone and their own preferences. The real queued notification.morning-round completed in the owned worker on the real clock; Mailpit delivered an actual briefing naming the 4-day and On-the-day Key dates and omitting the 11-day one, and the bell linked to the record's Key dates page rather than naming the Key date. Audit log: reached under Security, the Person, Action and Record filters combined and narrowed in turn, the From and To bounds became the browser's local calendar day in Asia/Dubai, an out-of-range window reported \"No entry matches these filters.\", Clear filters recovered, Search matched recorded audit text but not a Request answer's prose, Export CSV downloaded every matching entry, and Show older paged back. Legal and Contributor were redirected from the pane and refused 403 on GET /audit-log. A later evidence review relabelled four audit steps: two negative row counts and two date-bound claims whose captured query did not match the inputs. repair-audit awaits the response whose query carries exactly the instants both controls were set to, in both directions, and re-counts the combined filters with the header row excluded; repair-reminders supplies a complete problem for the empty-list refusal without disturbing the reader's saved list.",
+      "prerequisites": [
+        "Seeded fictional Administrator signed in on the admin2 documentation lab built from 57e77e38; seeded Legal Team Member in a separate context.",
+        "Two reviewer-invited fictional Legal Team Members with saved timezones Asia/Dubai (past 08:00) and Asia/Tokyo (before 08:00), each managing a fictional Matter with Key dates; the real morning round queued in the lab worker; Mailpit."
+      ],
+      "expected": "Add lead time saves with Save and Cancel discards a draft. The list refuses duplicates, values over 730 and a 21st entry, reorders, persists, and keeps at least one entry. After the morning round an eligible colleague past 08:00 gets one reminder per listed Key date, including two Key dates on one date and a Key date's own lead time, and none for an unlisted distance or a Key date that selects only another recipient; a colleague before 08:00 gets nothing yet. The Audit log filters, dates, Search, Show older, Clear filters and Export CSV work, Confidential Matter entries appear only for its audience, and other roles cannot open the log or the reminder settings.",
+      "actual": "9 recorded steps passed on 57e77e38. Organization > Notifications opened /settings/reminders (Reminder lead times); Personal > Notifications opened Notification preferences. Add lead time with 33 and Cancel saved nothing. Add lead time 9 with Save saved; a second 9 was refused with \"9 days before is already on the list.\", 731 with \"Enter a whole number of days between 0 and 730.\", and a 21st entry with \"The list holds at most 20 lead times. Remove one first.\"; each refused draft stayed open beside Save and Cancel. ArrowUp reorder persisted after reload; with one entry left no Remove was available. After the real morning round, the Asia/Dubai colleague had key_date_approaching bell items and a \"Your daily briefing\" mail for the 9-day Key date, both 7-day Key dates on the same date, and the Key date with its own 12-day lead time, and none for the 11-day Key date or the 3-day Key date that selected only Daniel Okafor. The Asia/Tokyo colleague at local hour 3 had no reminder and no briefing. The list was restored afterwards. In Settings > Security > Audit log, Person + Action + Record showed Daniel Okafor's org_settings.updated entries with before and after lead times; a range ending yesterday showed \"No entry matches these filters.\"; Clear filters reset every filter; Show older grew the page from 50 to 100 rows; Search narrowed to the walkthrough's records; Export CSV downloaded only the 46 matching entries. A Confidential Matter created by Nadia Haddad had 0 entries in the page and the CSV for Daniel Okafor until she added him to the Matter team, then 4.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-021/independent-audit.json",
-        "docs/documentation/batches/DOC-021/independent-audit-retry.json",
-        "docs/documentation/batches/DOC-021/independent-audit-retry2.json",
-        "docs/documentation/batches/DOC-021/independent-audit-retry3.json",
-        "docs/documentation/batches/DOC-021/independent-discovery.json",
-        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
-        "docs/documentation/batches/DOC-021/independent-reminders-config.json",
-        "docs/documentation/batches/DOC-021/independent-reminders-config-retry.json",
-        "docs/documentation/batches/DOC-021/independent-reminders-delivery.json",
-        "docs/documentation/batches/DOC-021/independent-repair-audit.json",
-        "docs/documentation/batches/DOC-021/independent-repair-reminders.json",
-        "docs/documentation/batches/DOC-021/independent-roles.json",
-        "docs/documentation/batches/DOC-021/independent-roles-retry.json"
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
+      ]
+    },
+    {
+      "id": "V-C41",
+      "coverage": ["C41"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded fictional Legal Team Member signed in on the admin2 documentation lab in a separate browser context."
+      ],
+      "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
+      "actual": "Role confirmed as legal_team_member from /api/v1/me. /settings/reminders sent the browser to /settings/profile. PUT /api/v1/org/reminder-offsets answered 403 (\"You do not have permission to perform this action.\"). /settings/audit-log sent the browser to /settings/profile. GET /api/v1/audit-log answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
+      ]
+    },
+    {
+      "id": "V-C41",
+      "coverage": ["C41"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded fictional Business User signed in to the Portal with a fresh emailed sign-in link in a separate browser context."
+      ],
+      "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
+      "actual": "Role confirmed as business_user from /api/v1/me. /settings/reminders sent the browser to /portal. PUT /api/v1/org/reminder-offsets answered 403 (\"You do not have permission to perform this action.\"). /settings/audit-log sent the browser to /portal. GET /api/v1/audit-log answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
       ]
     }
   ],
-  "authorEvidence": [
-    "docs/documentation/batches/DOC-021/README.md",
-    "docs/documentation/batches/DOC-021/author-discovery.json",
-    "docs/documentation/batches/DOC-021/author-reminders-complete.json",
-    "docs/documentation/batches/DOC-021/author-reminders-complete2.json",
-    "docs/documentation/batches/DOC-021/author-reminders-complete3.json",
-    "docs/documentation/batches/DOC-021/author-reminders.json",
-    "docs/documentation/batches/DOC-021/author-reminders-retry.json"
-  ],
   "limitations": [
-    "Technical review and the walkthrough were both performed by the same independent agent; they are separate methods (source inspection and browser walkthrough), not two independent people.",
-    "Independent agent walkthrough, not a human user study; the author and the reviewer are different agents.",
-    "Verified on the owned lab at immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
-    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behaviour remain open and are described as limits, not fixed.",
-    "No human feature owner has signed off behaviour accuracy, and the user's final proofreading of the assembled suite has not happened."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not feature-owner approval.",
+    "The admin2 lab was shared with other DOC-029r2 agents. Records were named DOC-029r2 admin-config walk. Records named DOC-029r2 admin-config compat came from another agent and were not changed. Organisation reminder lead times were changed during the run and restored to 30, 14, 7, 1, and On the day; this was confirmed after reload.",
+    "Two development runs of single sections of the same script (logs not kept in the repository) left extra fictional records with the suffixes mu4erz3c and mu4ev57k. The one failure in those runs was a reviewer script error; walkthrough-r2-1.json reviewerNotes describes it.",
+    "Negative access checks used the seeded Legal Team Member (nadia.haddad) and Business User (jonas.weber), each in its own browser context; roles were confirmed from /api/v1/me.",
+    "Dev commit 6d34ac59 changed this article on dev (select Save and Cancel in step 3). The round 2 source-review author agent made no further change; technical-review-r2.json records the source check.",
+    "The morning round was queued as notification.morning-round in the lab worker through pg-boss on the real clock (container-operation support for the browser checks). Bell contents were read from GET /api/v1/notifications as the colleague; the browser checked the header bell count and Mailpit held the briefing.",
+    "Expiry, notice deadline and Entity Obligation reminders, email preference switches, and Search not covering record content were not checked.",
+    "The Reminder lead times page note still says 'One list covers every tracked date'; the article's per-Key-date lead times match the observed behaviour.",
+    "The 20-entry check added 14 temporary organisation entries for a few seconds in the shared lab before removing them."
   ],
-  "previousEvidence": null,
+  "previousEvidence": {
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "d1430853a0de13ac67a359a7bc447d48a08bd5193bb494ddcb34d3cabe44dec8",
+    "verifiedAt": "2026-09-16T16:26:15Z"
+  },
   "copyOnlyReview": null,
-  "verifiedAtBasis": "Actual completion of the last passing walkthrough covering this article: 2026-09-08T06:33:00.817Z, truncated to the second. Historical action times and article hashes inside the walkthrough records are unchanged, including records taken on earlier draft bytes of the same immutable app build.",
-  "technicalReview": {
-    "reviewer": "Opus 5 independent review agent",
+  "compatibilityReview": {
+    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "8ca186fcbb821a59d6b0591a467fac3674421df48337d519d3e7ff0d9593648d",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "method": "source-inspection",
-    "completedAt": "2026-09-08T06:12:26Z",
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "scope": "Read the organization lead-time pane with MAX_OFFSET_DAYS 730, MAX_OFFSETS 20 and the last-entry lock (apps/web/src/routes/settings-reminders.tsx), the personal preference switches Dates approaching / In-app and the Briefing Dates and Obligations sections (components/notification-preferences.tsx), the morning round's hourly tick, reached-08:00 local rule, once-per-local-day briefing and its three date sources plus Matter key dates and Entity obligations (apps/api/src/pipeline/morning-round.ts), the audit pane's filters, browser-local day bounds and export control (settings-audit-log.tsx), and the audit API where one predicate backs the page, the count and the export, so the CSV streams the whole filtered set (apps/api/src/modules/audit-log/routes.ts).",
-    "notHeld": "An agent source review of the release under test. It is not a human feature owner's sign-off on behaviour accuracy, and it is not the user's final proofreading of the assembled suite."
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
   }
 }

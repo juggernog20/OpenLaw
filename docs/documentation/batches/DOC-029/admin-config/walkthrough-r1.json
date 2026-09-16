@@ -1,0 +1,901 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-029",
+  "group": "admin-config",
+  "round": 1,
+  "issues": [745, 747],
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (admin-config, round 1)",
+  "reviewerKind": "agent",
+  "articles": [
+    {
+      "articleId": "types-statuses-fields",
+      "articlePath": "docs/user-guides/types-statuses-fields.md",
+      "contentSha256": "9e991226a487902476ed1a37590c517e8c64e7253d54ed65a1ffd9d34f9acc9d"
+    },
+    {
+      "articleId": "matter-templates",
+      "articlePath": "docs/user-guides/matter-templates.md",
+      "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed"
+    },
+    {
+      "articleId": "request-forms",
+      "articlePath": "docs/user-guides/request-forms.md",
+      "contentSha256": "417d8285bde34a0849db9f57bd573957b12c00979ec343ae12ff608c3a97d82d"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "articlePath": "docs/user-guides/reminders-and-audit.md",
+      "contentSha256": "d1430853a0de13ac67a359a7bc447d48a08bd5193bb494ddcb34d3cabe44dec8"
+    }
+  ],
+  "scenarios": {
+    "V-C38": "types-statuses-fields",
+    "V-C39": "matter-templates",
+    "V-C40": "request-forms",
+    "V-C41": "reminders-and-audit"
+  },
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "labProject": "openlaw-docs-41255c61-admin",
+  "images": {
+    "app": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0",
+    "engine": "sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+    "worker": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0"
+  },
+  "appUrl": "http://127.0.0.1:23300",
+  "sections": ["types", "templates", "forms", "reminders", "audit", "access"],
+  "startedAt": "2026-09-16T16:19:35.027Z",
+  "stamp": "mu4b3b28",
+  "steps": [
+    {
+      "scenario": "all",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Sign in as the seeded Administrator",
+      "expected": "The app opens with the Administrator's name in the header.",
+      "startedAt": "2026-09-16T16:19:35.101Z",
+      "at": "2026-09-16T16:19:35.534Z",
+      "actual": "Signed in through /auth/login; /api/v1/me reports role \"administrator\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Add and maintain types, step 1-2: open Settings > Organization > Matters > Types, select Add type, enter a name, press Enter",
+      "expected": "The new type row appears in the Matter types list.",
+      "startedAt": "2026-09-16T16:19:35.535Z",
+      "at": "2026-09-16T16:19:36.146Z",
+      "actual": "Profile menu > Settings opened /settings/matters/types. Add type with the name \"DOC-029 admin-config Supplier assessment mu4b3b28\" and Enter added the row \"DOC-029 admin-config Supplier assessment mu4b3b28 0 matters\". A second type \"DOC-029 admin-config Replacement type mu4b3b28\" was added the same way for the archive check.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Step 3: rename the row with Rename; open Edit, change the description, leave the field, check the saved result; the Slug stays fixed",
+      "expected": "Rename changes the display name. Edit shows a fixed Slug and saves the description on blur.",
+      "startedAt": "2026-09-16T16:19:36.146Z",
+      "at": "2026-09-16T16:19:37.992Z",
+      "actual": "Rename changed the row to \"DOC-029 admin-config Supplier assessment renamed mu4b3b28\". Edit opened /settings/matters/types/01a0ab04-39dc-70f4-b7e0-7d4e61bb0e6b with heading \"DOC-029 admin-config Supplier assessment renamed mu4b3b28\". Slug \"doc_029_admin_config_supplier_assessment_mu4b3b28\" is read-only (editable=false) with the note \"Slug is immutable — it keys templates, reporting, and the API.\"; it kept the original name after the rename. The description saved on Tab and read \"DOC-029 fictional supplier assessment type.\" after reload.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Step 4: focus a reorder handle and use the arrow keys to change the display order",
+      "expected": "The row moves one position and the order persists after reload.",
+      "startedAt": "2026-09-16T16:19:37.993Z",
+      "at": "2026-09-16T16:19:39.661Z",
+      "actual": "The handle for \"DOC-029 admin-config Supplier assessment renamed mu4b3b28\" was at position 26. ArrowUp moved it to position 25, and it stayed there after reload. Other shows the lock image \"Other is system-protected and can't be archived\" and has no Archive control.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Step 1-2 for the other modules: Contracts, Entities, and Knowledge Types each accept Add type; Edit exists only where the article says it may",
+      "expected": "Contracts and Entities rows have Edit; Knowledge rows have none.",
+      "startedAt": "2026-09-16T16:19:39.661Z",
+      "at": "2026-09-16T16:19:41.155Z",
+      "actual": "Contracts: added \"DOC-029 admin-config Contract type mu4b3b28\", Edit control present. Entities: added \"DOC-029 admin-config Entities type mu4b3b28\", Edit control present. archived the unused probe type; the dialog read \"Archive DOC-029 admin-config Entities type mu4b3b28 DOC-029 admin-config Entities type mu4b3b28 is not used by any entities — it can be archived without reassig\". Knowledge: added \"DOC-029 admin-config Knowledge type mu4b3b28\", Edit control absent. archived the unused probe type; the dialog read \"Archive DOC-029 admin-config Knowledge type mu4b3b28 DOC-029 admin-config Knowledge type mu4b3b28 is not used by any knowledge items — it can be archived withou\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create a Field, steps 1-5: Matters > Fields > Add field with Name, Description, Type, Scope, Tag, and Options",
+      "expected": "The Type list matches the article order; the new Field row shows its Type, Scope, and Tag.",
+      "startedAt": "2026-09-16T16:19:41.156Z",
+      "at": "2026-09-16T16:19:42.005Z",
+      "actual": "Type offered [\"Text\",\"Long text\",\"Number\",\"Currency\",\"Date\",\"Boolean\",\"Single select\",\"Multi select\",\"User\",\"Entity\"], Scope [\"Matter\",\"Global\"], Tag [\"Business\",\"Legal\"]. Add field created the row \"DOC-029 admin-config Assessment scope mu4b3b28 Type: Single select Scope: Matter Tag: Legal — No AI prompt\". A second Text Field \"DOC-029 admin-config Assessment note mu4b3b28\" was added. The Field catalog shows 0 reorder handles. Edit shows no Type control and reads \"The field type is immutable after creation.\"; Options read \"Security\\nPrivacy\\nFinance\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Attach Fields and set requiredness, steps 1-3: Types > Edit > Attach field, turn on Required, reorder the attached Fields",
+      "expected": "Both Fields attach; Required saves; keyboard reorder changes the attached order.",
+      "startedAt": "2026-09-16T16:19:42.005Z",
+      "at": "2026-09-16T16:19:45.023Z",
+      "actual": "Attach field listed both new Fields; both attached. Required was on for \"DOC-029 admin-config Assessment scope mu4b3b28\" after reload. Order before [\"Reorder DOC-029 admin-config Assessment scope mu4b3b28, position 1 of 2. Use the arrow keys to move it.\",\"Reorder DOC-029 admin-config Assessment note mu4b3b28, position 2 of 2. Use the arrow keys to move it.\"]; after ArrowUp and reload [\"Reorder DOC-029 admin-config Assessment note mu4b3b28, position 1 of 2. Use the arrow keys to move it.\",\"Reorder DOC-029 admin-config Assessment scope mu4b3b28, position 2 of 2. Use the arrow keys to move it.\"].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Step 4: create a fictional Matter of this type, first leaving the required Field empty, then with a valid value",
+      "expected": "Creation is refused without the required Field and accepted with it; the record holds the value.",
+      "startedAt": "2026-09-16T16:19:45.023Z",
+      "at": "2026-09-16T16:19:49.173Z",
+      "actual": "With \"DOC-029 admin-config Assessment scope mu4b3b28\" empty, Create left the dialog open; alerts [\"Fill DOC-029 admin-config Assessment scope mu4b3b28.\"]; invalid controls []. With Privacy chosen, Create opened M-42, whose Overview shows \"DOC-029 admin-config Assessment scope mu4b3b28\" with Privacy.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Global Fields: promote the Field to Global in Edit, attach it to a Contract type, then try to narrow it back to Matter",
+      "expected": "Promotion saves. Narrowing is refused while the Contract type attaches it and allowed after Detach.",
+      "startedAt": "2026-09-16T16:19:49.174Z",
+      "at": "2026-09-16T16:19:51.966Z",
+      "actual": "Edit > Scope Global saved; the row read \"DOC-029 admin-config Assessment scope mu4b3b28 Type: Single select Scope: Global Tag: Legal — No AI prompt\". The Field attached to Contract type \"DOC-029 admin-config Contract type mu4b3b28\". Narrowing to Matter was refused with \"DOC-029 admin-config Assessment scope mu4b3b28 is attached outside the matter module — detach it there first, then narrow the scope.\" and the row stayed Global. After Detach on the Contract type, narrowing saved and the row read \"DOC-029 admin-config Assessment scope mu4b3b28 Type: Single select Scope: Matter Tag: Legal — No AI prompt\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Detach and Archive keep stored values: detach the Field from the Matter type, archive it in the catalog, then Show archived and Restore",
+      "expected": "The definition stays in the catalog after Detach; the Matter keeps its stored value; Archive hides the Field; Restore brings it back.",
+      "startedAt": "2026-09-16T16:19:51.966Z",
+      "at": "2026-09-16T16:19:55.769Z",
+      "actual": "Detach removed \"DOC-029 admin-config Assessment note mu4b3b28\" from the type; it stayed in the Field catalog. The Archive dialog read \"Archive DOC-029 admin-config Assessment scope mu4b3b28 DOC-029 admin-config Assessment scope mu4b3b28 is attached to 2 types — the attachments are kept, hidden until the field is restored. The change \"; the Field left the live list. While archived, GET /api/v1/matters/42 answered 200 and still held the Privacy value, and the type editor's Attached fields read \"No fields are attached to this type.\". Show archived > Restore made the Field live again, and M-42 still shows Privacy.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive an in-use type: read the usage count, try without a replacement, then choose the live replacement; Restore does not move the Matter back",
+      "expected": "The dialog names the usage count; archive without a replacement is refused; with a replacement the Matter moves; Restore leaves it on the replacement.",
+      "startedAt": "2026-09-16T16:19:55.769Z",
+      "at": "2026-09-16T16:19:59.067Z",
+      "actual": "The dialog read \"Archive DOC-029 admin-config Supplier assessment renamed mu4b3b28 DOC-029 admin-config Supplier assessment renamed mu4b3b28 is used by 1 matter. Pick a replacement type — that matter moves to it when the type is archived\". Replacement choices: [\"No reassignment\",\"Employment\",\"Litigation\",\"Regulatory\",\"Commercial\",\"Corporate\",\"IP\",\"Privacy\",\"Advisory\",\"Other\",\"Product counsel\",\"M&A\",\"DOC-029 admin-config probe type\",\"DOC-029 admin-config Replacement type mu49dyo7\",\"DOC-029 admin-config Supplier assessment renamed mu49dyo7\",\"DOC-029 admin-config Replacement type mu49gs2n\",\"DOC-029 admin-config Supplier assessment renamed mu49gs2n\",\"DOC-029 admin-config Replacement type mu49ogjv\",\"DOC-029 admin-config Supplier assessment renamed mu49ogjv\",\"DOC-029 admin-config Forms matter type mu4ae1f0\",\"DOC-029 admin-config Forms matter type mu4ah3e4\",\"DOC-029 admin-config Forms matter type mu4ajt1o\",\"DOC-029 admin-config Forms matter type mu4anzu9\",\"DOC-029 admin-config Template type mu4atdhb\",\"DOC-029 admin-config Forms matter type mu4azgv6\",\"DOC-029 admin-config Template type mu4azgv6\",\"DOC-029 admin-config Replacement type mu4b3b28\"]. Without a replacement: Archive type with \"No reassignment\" left the dialog open=true, dialog text now \"Archive DOC-029 admin-config Supplier assessment renamed mu4b3b28 DOC-029 admin-config Supplier assessment renamed mu4b3b28 is used by 1 matter. Pick a replacement type — that matter moves to it when the type is archived. Reassign 1 matter to No reassignment Employment Litigation Regulatory Commerci\"; M-42 still has type \"DOC-029 admin-config Supplier assessment renamed mu4b3b28\". With \"DOC-029 admin-config Replacement type mu4b3b28\" chosen, Archive type closed the dialog and M-42 shows Matter type \"DOC-029 admin-config Replacement type mu4b3b28\". Show archived > Restore made \"DOC-029 admin-config Supplier assessment renamed mu4b3b28\" live again; M-42 still shows \"DOC-029 admin-config Replacement type mu4b3b28\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Configure Statuses: add a Contract Status with a Stage, rename it, and check the protected and in-use rows",
+      "expected": "The new row keeps its Stage after rename; no control changes the Stage; Draft, Active, and Expired are protected; an in-use Status cannot be archived from the dialog.",
+      "startedAt": "2026-09-16T16:19:59.067Z",
+      "at": "2026-09-16T16:20:00.040Z",
+      "actual": "Stage choices: [\"Stage…\",\"Draft\",\"Review\",\"Approval\",\"Signature\",\"Active\",\"Ended\"]. The new Status \"DOC-029 admin-config Legal check mu4b3b28\" was added with Review and Enter, renamed to \"DOC-029 admin-config Legal check renamed mu4b3b28\", and after reload the row reads \"DOC-029 admin-config Legal check renamed mu4b3b28 Stage: Review 0 contracts\" with no Stage control. Draft, Active, and Expired show the protected lock. Archive on the in-use Status \"Internal review\" read \"Archive Internal review Internal review is the status of 6 contracts. Move them to another status first. The change applies immediately and is recorded in the audit log. Cancel Archive status\" with Archive status disabled and no reassignment select. The unused new Status archived.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Configure Statuses: add Matter Statuses in the Open Category with and without a group, rename, change the group on the row, and archive an in-use Status with a same-Category replacement",
+      "expected": "A new Open Status uses In progress unless another group is chosen; rename keeps Category and group; the archive replacement lists only same-Category Statuses and the Matter moves.",
+      "startedAt": "2026-09-16T16:20:00.040Z",
+      "at": "2026-09-16T16:20:03.153Z",
+      "actual": "Category choices [\"Category…\",\"Open\",\"Closed\"]; with Open chosen the group select offered [\"Open\",\"In progress\",\"Waiting\"] and started at \"In progress\". \"DOC-029 admin-config Waiting on supplier mu4b3b28\" was added with Waiting; \"DOC-029 admin-config Default group mu4b3b28\" was added without choosing a group and reads \"In progress\". After rename and reload \"DOC-029 admin-config Waiting on supplier renamed mu4b3b28\" keeps group \"Waiting\". Changing \"DOC-029 admin-config Default group mu4b3b28\"'s row group to Open persisted after reload. Open and Closed show the protected lock. M-42 was moved to \"DOC-029 admin-config Waiting on supplier renamed mu4b3b28\" from the record's status control (the Waiting group menu, which listed [\"Awaiting the business\",\"With external counsel\",\"With counterparty\",\"DOC-029 admin-config Waiting on supplier renamed mu4b3b28\"]). Its Archive dialog read \"Archive DOC-029 admin-config Waiting on supplier renamed mu4b3b28 DOC-029 admin-config Waiting on supplier renamed mu4b3b28 is the status of 1 matter. Pick its \" with Archive status disabled until a replacement was chosen; replacements offered [\"Choose a status…\",\"Open\",\"In progress\",\"On hold\",\"Awaiting the business\",\"With external counsel\",\"With counterparty\",\"DOC-029 admin-config Default group mu49gs2n\",\"DOC-029 admin-config Default group mu49ogjv\",\"DOC-029 admin-config Default group mu4b3b28\"] (no Closed-Category Status). Choosing \"DOC-029 admin-config Default group mu4b3b28\" archived it and the Matter now carries \"DOC-029 admin-config Default group mu4b3b28\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Officer roles: Add role, Rename, reorder; archive an in-use role that has a current and a resigned Officer, choose the replacement and confirm Archive role; Restore does not reverse it",
+      "expected": "The usage count includes the resigned Officer; both entries move to the replacement; Other cannot be archived; Restore leaves them on the replacement.",
+      "startedAt": "2026-09-16T16:20:03.153Z",
+      "at": "2026-09-16T16:20:06.903Z",
+      "actual": "Add role created \"DOC-029 admin-config Board observer mu4b3b28\"; Rename changed it to \"DOC-029 admin-config Board observer renamed mu4b3b28\"; ArrowUp on its handle moved it from position 12 to 11. Other shows the protected lock. On the fictional Entity \"DOC-029 admin-config Officer Holdings mu4b3b28\" one current and one resigned Officer were added with this role; the role row then read \"DOC-029 admin-config Board observer renamed mu4b3b28 2 officers\". The Archive dialog read \"Archive DOC-029 admin-config Board observer renamed mu4b3b28 DOC-029 admin-config Board observer renamed mu4b3b28 is used by 2 officers. Pick a replacement role — those officers move to it when the ro\". With replacement \"Director\", Archive role closed the dialog. Show archived > Restore made the role live; its row reads \"DOC-029 admin-config Board observer renamed mu4b3b28 0 officers Saved\", so the reassignment was not reversed. Without Show former the Entity lists only [\"DOC-029 Fictional Current Observer Role\"]; with Show former on, the Directors & Officers roles read [\"DOC-029 Fictional Current Observer Role: Director\",\"DOC-029 Fictional Former Observer Role: Director\"].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set reminder lead times, steps 1-2: profile menu > Settings > Organization > Notifications opens Reminder lead times; Personal > Notifications is a different page",
+      "expected": "Organization > Notifications shows Reminder lead times; Personal > Notifications shows the person's own preferences.",
+      "startedAt": "2026-09-16T16:20:06.904Z",
+      "at": "2026-09-16T16:20:07.888Z",
+      "actual": "Organization > Notifications opened /settings/reminders with heading Reminder lead times and the list [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"]. Personal > Notifications opened /settings/notifications with heading Notification preferences.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Steps 3-5: Add lead time 9 with Enter, refuse a duplicate and 731, reorder with the arrow keys, reload and confirm; check the 20-entry limit and that the last entry cannot be removed",
+      "expected": "9 days before is added; a duplicate and 731 are refused; the reordered list persists; a 21st entry is refused; the last entry has no working Remove.",
+      "startedAt": "2026-09-16T16:20:07.888Z",
+      "at": "2026-09-16T16:20:43.433Z",
+      "actual": "Add lead time with 9 and Enter added \"9 days before\" (open add row after Enter: null). A second 9 was refused in the add row with \"days before the date 9 days before is already on the list.\"; the list still had one 9. 731 was refused with \"days before the date Enter a whole number of days between 0 and 730.\". ArrowUp moved 9 from position 6 to 5; after reload the list read [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"9 days before\",\"On the day\"]. 14 temporary entries (40 to 53) filled the list to 20; adding 90 was then refused with \"days before the date The list holds at most 20 lead times. Remove one first.\" (Add lead time disabled=false) and the list stayed at 20. The temporary entries were removed.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Check delivery, part 1: prepare two eligible fictional Legal Team Members in different saved timezones, a Matter for each, and Key dates at chosen distances",
+      "expected": "Invitations activate; timezones save; Key dates show the lead times each will use.",
+      "startedAt": "2026-09-16T16:20:43.433Z",
+      "at": "2026-09-16T16:20:51.788Z",
+      "actual": "Invited \"DOC-029 admin-config Reminder ready mu4b3b28\" and \"DOC-029 admin-config Reminder early mu4b3b28\" as Legal Team Members; each set a password from the invitation mail. \"DOC-029 admin-config Reminder ready mu4b3b28\" saved timezone Asia/Dubai (local hour 20, past 08:00); \"DOC-029 admin-config Reminder early mu4b3b28\" saved Asia/Tokyo (local hour 1, before 08:00). Default preferences were kept (Dates approaching In-app on, Dates briefing on). M-43 (manager \"DOC-029 admin-config Reminder ready mu4b3b28\") got Key dates: KD org nine on 2026-09-25: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD eleven unlisted on 2026-09-27: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD seven A on 2026-09-23: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD seven B on 2026-09-23: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD own twelve on 2026-09-28: This date will remind: 30 days before, 14 days before, 12 days before, 9 days before, 7 days before, 1 day before, On the day; KD own three to admin only on 2026-09-19: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 3 days before, 1 day before, On the day. M-44 (manager \"DOC-029 admin-config Reminder early mu4b3b28\") got \"DOC-029 admin-config KD early seven mu4b3b28\" on 2026-09-24. The organization list includes 9 and 7, not 11, 12, or 3.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Check delivery, part 2: run the morning round in the lab worker, then check each colleague's bell and briefing email",
+      "expected": "The past-08:00 colleague gets one reminder for each listed Key date, including both Key dates on the same date and the Key date's own lead time; nothing for 11 days or for the Key date that selects only another recipient. The before-08:00 colleague gets nothing yet.",
+      "startedAt": "2026-09-16T16:20:51.789Z",
+      "at": "2026-09-16T16:20:58.031Z",
+      "actual": "Queued notification.morning-round in openlaw-docs-41255c61-admin-worker-1 at 2026-09-16T16:20:51.910Z; job completed at 2026-09-16T16:20:53.999Z. \"DOC-029 admin-config Reminder ready mu4b3b28\": GET /api/v1/notifications answered 200 with 5 items; key_date_approaching items per Key date {\"DOC-029 admin-config KD org nine mu4b3b28\":[\"offset 9\"],\"DOC-029 admin-config KD eleven unlisted mu4b3b28\":[],\"DOC-029 admin-config KD seven A mu4b3b28\":[\"offset 7\"],\"DOC-029 admin-config KD seven B mu4b3b28\":[\"offset 7\"],\"DOC-029 admin-config KD own twelve mu4b3b28\":[\"offset 12\"],\"DOC-029 admin-config KD own three to admin only mu4b3b28\":[]}. Briefing mail subject \"Your daily briefing\"; Key date names in the mail {\"DOC-029 admin-config KD org nine mu4b3b28\":true,\"DOC-029 admin-config KD eleven unlisted mu4b3b28\":false,\"DOC-029 admin-config KD seven A mu4b3b28\":true,\"DOC-029 admin-config KD seven B mu4b3b28\":true,\"DOC-029 admin-config KD own twelve mu4b3b28\":true,\"DOC-029 admin-config KD own three to admin only mu4b3b28\":false}. The colleague's header bell reads \"Notifications, 5 unread\". \"DOC-029 admin-config Reminder early mu4b3b28\" (local hour 1): bell has the early Key date=false; briefing mails 0.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restore the organization lead time list and confirm it after reload",
+      "expected": "The list matches the list recorded before the walkthrough.",
+      "startedAt": "2026-09-16T16:20:58.032Z",
+      "at": "2026-09-16T16:21:07.551Z",
+      "actual": "Removed the walkthrough's entries. With one entry left (\"30 days before\"): Remove is not available. The page note reads \"Drag a row, or focus its handle and use the arrow keys, to reorder. One list covers every tracked date — key dates, notice deadlines, and expiries — and the reminders arrive in the daily digest. Keep at least one lead time.\". The original entries were added back and reordered; after reload the list reads [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"], the same as before the walkthrough.",
+      "result": "pass"
+    },
+    {
+      "scenario": "all",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Sign in as the seeded Legal Team Member in a separate browser context",
+      "expected": "The app opens with the Legal Team Member's name in the header.",
+      "startedAt": "2026-09-16T16:21:07.579Z",
+      "at": "2026-09-16T16:21:07.936Z",
+      "actual": "Signed in through /auth/login in its own browser context.",
+      "result": "pass"
+    },
+    {
+      "scenario": "all",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Sign in as the seeded Business User with a fresh emailed sign-in link in a separate browser context",
+      "expected": "The Portal opens.",
+      "startedAt": "2026-09-16T16:21:07.957Z",
+      "at": "2026-09-16T16:21:08.358Z",
+      "actual": "Requested a fresh link at /portal/login and followed it from Mailpit; the browser opened /portal.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: live destination types and Fields (fixtures created through Settings)",
+      "expected": "A Contract type with the Global Deal value (USD) Field, a Matter type with a Global Entity Field, and a Global User Field exist.",
+      "startedAt": "2026-09-16T16:21:08.359Z",
+      "at": "2026-09-16T16:21:11.942Z",
+      "actual": "Created Global Entity Field \"DOC-029 admin-config Supplier entity mu4b3b28\" and Global User Field \"DOC-029 admin-config Account manager mu4b3b28\" in Matters > Fields. Created Contract type \"DOC-029 admin-config Forms MSA mu4b3b28\" with Deal value (USD) attached, Matter type \"DOC-029 admin-config Forms matter type mu4b3b28\" with \"DOC-029 admin-config Supplier entity mu4b3b28\" attached, and Contract type \"DOC-029 admin-config Target to archive mu4b3b28\" with no Fields. Registered Entity \"DOC-029 admin-config Portal supplier mu4b3b28\" and turned on Portal-listed on its record; no seeded Entity in this lab is Portal-listed.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create the request type, steps 1-4: Settings > Intake > Request types > Add request type with Enter, Edit, Description saved on leaving the field; the list Target column and the editor have no Target control",
+      "expected": "The new row shows Target: No target; the editor has Display name, Description, and Target turnaround, and no Target or Slug control; the Description persists after reload.",
+      "startedAt": "2026-09-16T16:21:11.943Z",
+      "at": "2026-09-16T16:21:17.718Z",
+      "actual": "Add request type with Enter created \"DOC-029 admin-config Contract form mu4b3b28\", \"DOC-029 admin-config Matter form mu4b3b28\" and \"DOC-029 admin-config Archived target form mu4b3b28\". The list row reads \"DOC-029 admin-config Contract form mu4b3b28 Target: No target Form fields: 0 fields\". Edit opened each editor; the Description saved on Tab and read \"Use this DOC-029 form for a supplier contract review.\" after reload. Editor labels [\"Display name\",\"Description\",\"Target turnaround (business days)\"]; Target controls 0, Slug controls 0.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Publish an estimated turnaround: 36501 is refused, 5 saves on leaving the control",
+      "expected": "36501 shows an error and is not saved; 5 is saved and persists after reload.",
+      "startedAt": "2026-09-16T16:21:17.719Z",
+      "at": "2026-09-16T16:21:22.154Z",
+      "actual": "The control note reads \"Counts Monday–Friday from submission in the organization’s timezone, without excluding public holidays, for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged.\". 36501 with Tab showed \"Enter a whole number from 0 to 36,500 business days, or leave it blank.\". 5 with Enter saved; after reload the value is \"5\". The Matter form was set to 0.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Choose the form fields, steps 1-3: Attach field, Required, reorder with the arrow keys; No target offers only Global Fields; the fixed basics; a User Field cannot be required, an Entity Field can",
+      "expected": "The No target menu lists only Global Fields; Required persists; the order changes; Department is a required basic; the User Field's Required is refused; the Entity Field's Required saves.",
+      "startedAt": "2026-09-16T16:21:22.155Z",
+      "at": "2026-09-16T16:21:26.377Z",
+      "actual": "No target menu: 20 items, all \"· global\" ([\"Region Single select · global\",\"Counterparty name Text · global\",\"Needed by Date · global\",\"Deal value (USD) Number · global\"]...). Basics: [\"Title required: true\",\"Description required: true\",\"Attachments required: false\",\"Department required: true\",\"Urgency required: true\"]. Attached Deal value (USD), Country and Needed by; Required on Deal value (USD); ArrowUp on Needed by; after reload the order is [\"Deal value (USD)\",\"Needed by\",\"Country\"] and Deal value (USD) is still required. Seeded menus (read only, no change): {\"Vendor onboarding (Contract · Vendor)\":{\"global\":16,\"moduleScoped\":[\"Governing law Text\",\"Jurisdiction Text\",\"Our position Single select\",\"Security review Single select\",\"Processes personal data Boolean\",\"Liability cap Text\",\"Territories Multi select\",\"Deal desk reference Text\",\"Signed copy filed on Date\"]},\"Employment question (Matter · Employment)\":{\"global\":19,\"moduleScoped\":[\"External counsel Text\",\"Budget approved Number\",\"Budget currency Currency\",\"Regulator Single select\",\"DOC-029 admin-config Assessment scope mu49dyo7 Single select\",\"DOC-029 admin-config Assessment scope mu49ogjv Single select\",\"DOC-029 admin-config Assessment note mu49ogjv Text\",\"DOC-029 admin-config Template region mu4atdhb Text\",\"DOC-029 admin-config Template counsel mu4atdhb Text\",\"DOC-029 admin-config Template region mu4azgv6 Text\",\"DOC-029 admin-config Template counsel mu4azgv6 Text\",\"DOC-029 admin-config Assessment scope mu4b3b28 Single select\",\"DOC-029 admin-config Assessment note mu4b3b28 Text\"]}}. On \"DOC-029 admin-config Matter form mu4b3b28\" the Entity Field's Required saved and persisted; the User Field: Required checkbox disabled; its row reads \"DOC-029 admin-config Account manager mu4b3b28 User · global DOC-029 admin-config Account manager mu4b3b28 can be on the form, but it can't be required. A requester cannot pick a person in the Portal.\"; after reload it is not required.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Offer guidance before submission, steps 1-4: Deflection links > Add link with an External address (refuse an address without https://) and with a Knowledge item; Placement on each form; Edit; reorder",
+      "expected": "An address without http:// or https:// is refused; both links save with the chosen placement; Edit changes the label; a handle moves with the arrow keys.",
+      "startedAt": "2026-09-16T16:21:26.378Z",
+      "at": "2026-09-16T16:21:29.835Z",
+      "actual": "Address \"example.com/doc-029-supplier-checklist\" was refused with \"Enter a full web address that starts with http:// or https://.\"; with https:// the external link saved. Knowledge item offered 15 items; \"How to ask legal for help\" saved. Edit changed the Knowledge link label to \"DOC-029 admin-config Ask Legal guidance mu4b3b28\". Rows: \"DOC-029 admin-config Supplier checklist mu4b3b28 example.com/doc-029-supplier-checklist Placement: DOC-029 admin-config Contract form mu4b3b28\"; \"DOC-029 admin-config Ask Legal guidance mu4b3b28 How to ask legal for help Placement: DOC-029 admin-config Matter form mu4b3b28\". ArrowUp moved the Knowledge link from position 17 to 16, kept after reload.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Check the result on the Portal: request-type cards, Before you submit, Fields, order, and required markers; submit with a required answer missing, then with valid answers",
+      "expected": "Both cards show the description and estimated turnaround; each form shows its own guidance; Fields appear in the configured order with required markers; a missing required answer is refused; valid answers create a Request.",
+      "startedAt": "2026-09-16T16:21:29.836Z",
+      "at": "2026-09-16T16:21:31.985Z",
+      "actual": "Portal cards: \"DOC-029 admin-config Contract form mu4b3b28 Estimated turnaround: 5 business days Use this DOC-029 form for a supplier contract review.\"; \"DOC-029 admin-config Matter form mu4b3b28 Estimated turnaround: 0 business days Use this DOC-029 form for supplier advice that is not a contract.\". \"DOC-029 admin-config Contract form mu4b3b28\" opened /portal/new/doc_029_admin_config_contract_form_mu4b3b28; Before you submit links to https://example.com/doc-029-supplier-checklist (target \"_blank\"); detail Fields read [\"Deal value (USD) (required)\",\"Needed by\",\"Country\"]. Submit without Deal value stayed on the form and showed \"Deal value (USD) is required.\". With 125000 and Country \"United Kingdom\", Submit showed \"Request R-49 is with Legal\". \"DOC-029 admin-config Matter form mu4b3b28\" lists labels [\"Title (required)\",\"Description (required)\",\"Attachments\",\"Department (required)\",\"Urgency (required)\",\"DOC-029 admin-config Supplier entity mu4b3b28 (required)\",\"DOC-029 admin-config Account manager mu4b3b28\"]; Before you submit shows only \"DOC-029 admin-config Ask Legal guidance mu4b3b28\"; the User Field is present on the Portal form; the Entity choices are [\"Not set\",\"DOC-029 admin-config Portal supplier mu4b3b28\"]: only Entities this walkthrough made Portal-listed, out of 34 live Entities the Administrator can read. Following the Knowledge link opened /portal/knowledge/01a0aaad-b43b-75c9-b4fb-4ea4806e7e48 with heading \"How to ask legal for help\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Submit the Matter form with a valid Entity answer",
+      "expected": "A Request is created.",
+      "startedAt": "2026-09-16T16:21:31.986Z",
+      "at": "2026-09-16T16:21:32.248Z",
+      "actual": "Submitted \"DOC-029 admin-config Supplier advice request mu4b3b28\" with Urgency High and Entity \"DOC-029 admin-config Portal supplier mu4b3b28\"; the confirmation reads \"Request R-50 is with Legal\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Have Legal convert the Contract Request: a blank Type is refused; the attached Field carries; the answer the destination type does not attach is listed under Does not carry into the contract",
+      "expected": "Convert without a type shows Pick a contract type.; with the Contract type chosen, Deal value (USD) carries, Counterparty name is listed as not carrying, and the Contract is created with the value.",
+      "startedAt": "2026-09-16T16:21:32.249Z",
+      "at": "2026-09-16T16:21:57.055Z",
+      "actual": "The Convert dialog opened with Contract type \"Type…\". Convert without a type showed \"Pick a contract type.\" and stayed open. With \"DOC-029 admin-config Forms MSA mu4b3b28\" chosen the dialog read \"Does not carry into the contract Country Deal value (USD) Documents Attach documents or drag and drop files here Convert to matter instead Cancel Convert to contract\"; Country is not attached to that Contract type. Convert created C-142; GET /api/v1/contracts/142 shows type \"DOC-029 admin-config Forms MSA mu4b3b28\" and Deal value 125000.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "If a configured destination type is archived, select a live type during conversion (fixture: the Target set through the API, because the editor has no Target control)",
+      "expected": "The Target column names the configured Contract type; after that type is archived, conversion does not use it or switch module; a live type must be chosen and the Request becomes a Contract of that type.",
+      "startedAt": "2026-09-16T16:21:57.055Z",
+      "at": "2026-09-16T16:22:30.264Z",
+      "actual": "PATCH /api/v1/request-types/<id> set the Target (200); the list row then read \"DOC-029 admin-config Archived target form mu4b3b28 DOC-029 form bound to a Contract type that will be archived. Target: Contract · DOC-029 admin-config Target to archive mu4b3b28 Form fields: 0 fields\". Jonas Weber submitted R-51. The Target Contract type was archived. The Request Overview read \"Requester JW Jonas Weber Type DOC-029 admin-config Archived target form mu4b3b28 Converts to Contract Department Finance Urgency Medium Submitted this minute\". Convert to contract opened with Contract type \"Type…\"; the archived type was not offered. Convert without a type showed \"Pick a contract type.\". With \"DOC-029 admin-config Forms MSA mu4b3b28\" chosen, R-51 became C-143 of that type, not a Matter. The fixture type was restored afterwards.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive a request type: the dialog reports no usage and no replacement; the Portal drops the card and the form; the Request stays readable; Show archived > Restore offers it again",
+      "expected": "Archive removes the card and form from the Portal; the earlier Request still opens for the Requester; Restore brings the card back.",
+      "startedAt": "2026-09-16T16:22:30.264Z",
+      "at": "2026-09-16T16:22:40.755Z",
+      "actual": "Jonas Weber submitted R-52 on \"DOC-029 admin-config Archived target form mu4b3b28\" (/portal/new/doc_029_admin_config_archived_target_form_mu4b3b28). The Archive dialog read \"Archive DOC-029 admin-config Archived target form mu4b3b28 DOC-029 admin-config Archived target form mu4b3b28 is not used by any requests — it can be archived without reassignment. Reassign requests to No reassignment ND\" ; its 1 reassignment select(s) are disabled (0 enabled), although R-52 and an earlier converted Request name this type. After Archive the Portal home had no card for it (seen on load 1 of up to 10, 2 seconds apart), and /portal/new/doc_029_admin_config_archived_target_form_mu4b3b28 sent the browser to /portal. /portal/requests/52 still showed the Request title. Show archived > Restore brought the card back (1).",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Remove the walkthrough's deflection links and turn off Portal-listed on its Entities",
+      "expected": "Remove deletes each link at once with no archive; the Knowledge Item stays published; the Entities leave Portal pickers.",
+      "startedAt": "2026-09-16T16:22:40.756Z",
+      "at": "2026-09-16T16:22:42.866Z",
+      "actual": "Removed this run's links [\"DOC-029 admin-config Supplier checklist mu4b3b28\",\"DOC-029 admin-config Ask Legal guidance mu4b3b28\"] and 10 links left by earlier development runs of this script; after reload no DOC-029 admin-config link remains and the pane has no Show archived switch. The Knowledge Item still opens on the Portal with heading \"How to ask legal for help\". Portal-listed is now off for [\"DOC-029 admin-config Portal supplier mu4anzu9\",\"DOC-029 admin-config Portal supplier mu4azgv6\",\"DOC-029 admin-config Portal supplier mu4b3b28\"].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: a live Matter type with the Fields the template should fill",
+      "expected": "The type has an optional Text Field, a required Text Field, and the Entity Field the Matter form collects.",
+      "startedAt": "2026-09-16T16:22:42.867Z",
+      "at": "2026-09-16T16:22:45.265Z",
+      "actual": "Created Matter Fields \"DOC-029 admin-config Template region mu4b3b28\" and \"DOC-029 admin-config Template counsel mu4b3b28\", and Matter type \"DOC-029 admin-config Template type mu4b3b28\" with both and \"DOC-029 admin-config Supplier entity mu4b3b28\" attached; \"DOC-029 admin-config Template counsel mu4b3b28\" is Required.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create and edit a template, steps 1-7: Templates > Matter type > Add template (Name, Description); Edit; Matter defaults; Custom field defaults; Tasks with offsets, roles and reorder; Key dates; Save template; reopen and confirm",
+      "expected": "The template saves, and after reload all four areas hold the entered values in the chosen order.",
+      "startedAt": "2026-09-16T16:22:45.266Z",
+      "at": "2026-09-16T16:22:51.464Z",
+      "actual": "Add template created the row \"DOC-029 admin-config Supplier onboarding template mu4b3b28 DOC-029 fictional onboarding checklist for a supplier. 0 tasks 0 dates 0 fields\". Edit opened the editor (\"Matter type: DOC-029 admin-config Template type mu4b3b28\"). Save template reported saved=true. After reload: Priority \"Low\", Risk \"Medium\", Title prefix \"Supplier -\"; Field defaults [\"EMEA default\",\"DOC-029 Fictional Counsel LLP\"]; Tasks [[\"DOC-029 admin-config Confirm the supplier scope mu4b3b28\",\"2\",\"Matter Manager\"],[\"DOC-029 admin-config Check the sanctions list mu4b3b28\",\"5\",\"Matter Manager\"],[\"DOC-029 admin-config Open the evidence folder mu4b3b28\",\"\",\"Unassigned\"]] (the third Task moved up with ArrowUp); Key dates [[\"DOC-029 admin-config Supplier review mu4b3b28\",\"10\",\"Fictional review with the supplier.\"],[\"DOC-029 admin-config Kick-off mu4b3b28\",\"0\",\"\"]].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Offsets are whole numbers from 0 to 3650; a Key date needs an offset; the editor names the problem",
+      "expected": "3651 and a blank Key date offset are refused with an error, and the saved template stays unchanged.",
+      "startedAt": "2026-09-16T16:22:51.464Z",
+      "at": "2026-09-16T16:22:58.627Z",
+      "actual": "Priority Critical with Task 1 offset 3651: Save template showed \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload Priority is \"Low\" and Task 1 offset \"2\", so no section saved. A blank Key date 1 offset showed \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload it reads \"10\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Test both creation paths, direct creation: Create matter with the template; suggested title, Priority, Risk and Fields; Matter Manager starts as the person who opens it; clear the optional Field; check Overview, Tasks, assignments and Key dates",
+      "expected": "Dialog shows the template defaults; the Matter keeps the cleared optional Field empty; Tasks and Key dates use the Matter's UTC creation date; Matter Manager Tasks go to the manager; the Task with no offset has no due date.",
+      "startedAt": "2026-09-16T16:22:58.628Z",
+      "at": "2026-09-16T16:23:04.064Z",
+      "actual": "Template choices for the type: [\"No template\",\"DOC-029 admin-config Supplier onboarding template mu4b3b28\"]. Choosing the template filled {\"title\":\"Supplier -\",\"priority\":\"Low\",\"risk\":\"Medium\",\"manager\":\"Daniel Okafor\",\"region\":\"EMEA default\",\"counsel\":\"DOC-029 Fictional Counsel LLP\"}. With the optional region cleared, Create opened M-45, created 2026-09-16T16:23:00.711Z (UTC anchor 2026-09-16). API: priority \"low\", risk \"medium\", region null, counsel \"DOC-029 Fictional Counsel LLP\". Tasks page rows [\"DOC-029 admin-config Confirm the supplier scope mu4b3b28 Due Sep 18 DO Daniel Okafor\",\"DOC-029 admin-config Check the sanctions list mu4b3b28 Due Sep 21 DO Daniel Okafor\",\"DOC-029 admin-config Open the evidence folder mu4b3b28 Unassigned\"]. Key dates page rows [\"Sep 16 (today) DOC-029 admin-config Kick-off mu4b3b28\",\"Sep 26 (in 10 days) DOC-029 admin-config Supplier review mu4b3b28 Fictional review with the supplier.\"]. Task facts [[\"DOC-029 admin-config Confirm the supplier scope mu4b3b28\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029 admin-config Check the sanctions list mu4b3b28\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029 admin-config Open the evidence folder mu4b3b28\",null,null]]; Key date facts [[\"DOC-029 admin-config Kick-off mu4b3b28\",\"2026-09-16\"],[\"DOC-029 admin-config Supplier review mu4b3b28\",\"2026-09-26\"]].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Direct creation with Matter Manager set to Unassigned",
+      "expected": "Matter Manager Tasks stay unassigned.",
+      "startedAt": "2026-09-16T16:23:04.065Z",
+      "at": "2026-09-16T16:23:09.266Z",
+      "actual": "M-46 with Matter Manager Unassigned has Tasks [[\"DOC-029 admin-config Confirm the supplier scope mu4b3b28\",\"2026-09-18\",null],[\"DOC-029 admin-config Check the sanctions list mu4b3b28\",\"2026-09-21\",null],[\"DOC-029 admin-config Open the evidence folder mu4b3b28\",null,null]]; the Tasks page rows read [\"DOC-029 admin-config Confirm the supplier scope mu4b3b28 Due Sep 18 Unassigned\",\"DOC-029 admin-config Check the sanctions list mu4b3b28 Due Sep 21 Unassigned\",\"DOC-029 admin-config Open the evidence folder mu4b3b28 Unassigned\"].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39,V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Test both creation paths, Request conversion: convert the Matter form Request with the Matter type and template; check carried answers, defaults, Priority, Risk, title, Manager, Tasks and Key dates",
+      "expected": "The Entity answer carries; template Field defaults fill the rest; Priority stays the Request's Urgency, Risk stays unset, the title has no template prefix; the converting person is Matter Manager and gets the Manager Tasks; dates use the new Matter's UTC creation date.",
+      "startedAt": "2026-09-16T16:23:09.267Z",
+      "at": "2026-09-16T16:23:15.921Z",
+      "actual": "Convert R-50 to a matter opened with Priority \"High\" (the Request's Urgency). Template choices [\"No template\",\"DOC-029 admin-config Supplier onboarding template mu4b3b28\"]. After choosing type and template the dialog showed {\"title\":\"DOC-029 admin-config Supplier advice request mu4b3b28\",\"priority\":\"High\",\"region\":\"EMEA default\",\"counsel\":\"DOC-029 Fictional Counsel LLP\"} and no \"Does not carry into the matter\" list. Convert created M-47 (created 2026-09-16T16:23:12.543Z, UTC anchor 2026-09-16; the Request was submitted earlier). API: title \"DOC-029 admin-config Supplier advice request mu4b3b28\", priority \"high\" (template default was Low), risk null (template default was Medium), manager \"Daniel Okafor\", Entity value present, template Field defaults present. Task facts [[\"DOC-029 admin-config Confirm the supplier scope mu4b3b28\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029 admin-config Check the sanctions list mu4b3b28\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029 admin-config Open the evidence folder mu4b3b28\",null,null]]; Key date facts [[\"DOC-029 admin-config Kick-off mu4b3b28\",\"2026-09-16\"],[\"DOC-029 admin-config Supplier review mu4b3b28\",\"2026-09-26\"]].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Change or archive a template: edit and save; existing Matters keep their Tasks and dates; a new Matter uses the change; Archive template removes it from creation; Show archived > Restore brings it back",
+      "expected": "The earlier Matter is unchanged; a new Matter shows the edited Task; the archived template is not offered and cannot be used; Restore makes it available.",
+      "startedAt": "2026-09-16T16:23:15.922Z",
+      "at": "2026-09-16T16:23:25.640Z",
+      "actual": "Task 1 was renamed \"DOC-029 admin-config Confirm the supplier scope mu4b3b28 revised\" with offset 3 and saved. M-45 still has Tasks [[\"DOC-029 admin-config Confirm the supplier scope mu4b3b28\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029 admin-config Check the sanctions list mu4b3b28\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029 admin-config Open the evidence folder mu4b3b28\",null,null]]. New M-48 (created 2026-09-16T16:23:20.443Z) has [\"DOC-029 admin-config Confirm the supplier scope mu4b3b28 revised\",\"2026-09-19\",\"Daniel Okafor\"]. The Archive dialog read \"Archive DOC-029 admin-config Supplier onboarding template mu4b3b28? The template leaves new Matter creation. Existing Matters are unchanged, and restoring the template brings its full definition back.\"; after Archive template the Create matter dialog offered [\"No template\"]. POST /api/v1/matters with the archived template id (same body the dialog sent earlier) answered 400 \"The template must be live and belong to the selected matter type.\". Show archived > Restore made it available again: [\"No template\",\"DOC-029 admin-config Supplier onboarding template mu4b3b28\"].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A Field detached from the template's type: the editor names its retained saved value; reattach restores it",
+      "expected": "After Detach the editor says the Field is no longer attached and shows the retained value; after reattach the default is editable again.",
+      "startedAt": "2026-09-16T16:23:25.641Z",
+      "at": "2026-09-16T16:23:28.502Z",
+      "actual": "After Detach on the type, the template editor read \"DOC-029 admin-config Template region mu4b3b28 is no longer attached to this Matter type. Its saved value (EMEA default) is retained.\". After Attach field on the type again, the default control shows \"EMEA default\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Find a change in the Audit log, steps 1-2: Settings > Security > Audit log; combine Person, Action, and Record to find the walkthrough's lead time changes",
+      "expected": "Entries by Daniel Okafor for org_settings.updated on System show the before and after lead times, including 9 days.",
+      "startedAt": "2026-09-16T16:23:28.503Z",
+      "at": "2026-09-16T16:23:30.481Z",
+      "actual": "Settings > Security > Audit log opened /settings/audit-log. Columns [\"Event\",\"Record\",\"Audience\",\"When\"]. Person Daniel Okafor + Action org_settings.updated + Record System showed 50 rows, all by Daniel Okafor. 34 rows show a 9-day change, for example \"Daniel Okafor changed the organization settings Reminder lead times: 30 days, 14 days, 7 days, 1 day, 9 days, day of, 52 days, and 53 days → 30 days, 14 days, 7 days, 1 day, 9 days, day of, and 53 days System Administrat\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Steps 3-5: narrow with From and To in the browser's local days and with Search; read event, record, audience, and time; Show older; Clear filters",
+      "expected": "Today's bounds keep the entries; a range that ends yesterday removes them; Search narrows to the walkthrough's Matter type; Show older adds rows; Clear filters resets every filter.",
+      "startedAt": "2026-09-16T16:23:30.483Z",
+      "at": "2026-09-16T16:23:39.307Z",
+      "actual": "From and To set to 2026-09-16 (browser local day) kept 50 rows; 2026-09-15 to 2026-09-15 left 0 entry rows (\"No entry matches these filters.\"). Clear filters reset to {\"person\":\"Anyone\",\"action\":\"Any action\",\"record\":\"Any record\",\"from\":\"\",\"to\":\"\",\"search\":\"\"}. The unfiltered first page had 50 rows; Show older made it 100. Search \"DOC-029 admin-config Supplier assessment\" left 24 rows that all name the walkthrough's records, for example \"Daniel Okafor restored the matter type DOC-029 admin-config Supplier assessment renamed mu4b3b28 System Administrators 3 minutes ago\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Export CSV applies the current filters",
+      "expected": "The downloaded file has a header and only entries that match the filters.",
+      "startedAt": "2026-09-16T16:23:39.307Z",
+      "at": "2026-09-16T16:23:40.925Z",
+      "actual": "With Person Daniel Okafor and Action org_settings.updated, the page showed 50 rows. Export CSV (/api/v1/audit-log/export?actorId=01a0aaad-7613-77a7-9679-10ce8d79fee2&action=org_settings.updated) downloaded \"openlaw-audit-log-2026-09-16.csv\" with header \"\\\"id\\\",\\\"created_at\\\",\\\"action\\\",\\\"entity_type\\\",\\\"entity_id\\\",\\\"visibility\\\",\\\"actor_id\\\",\\\"actor_name\\\",\\\"actor_email\\\",\\\"payload\\\"\\r\" and 135 data lines, all org_settings.updated entries. The file was kept outside the repository and not retained.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "legal_team_member+administrator",
+      "method": "browser-walkthrough",
+      "action": "Entries about a Confidential Matter appear only when the Administrator is in its audience, in the page and in Export CSV",
+      "expected": "While Nadia Haddad's Confidential Matter excludes Daniel Okafor, Search finds none of its entries and the CSV has none; after Nadia adds Daniel to the Matter team, its entries appear.",
+      "startedAt": "2026-09-16T16:23:40.925Z",
+      "at": "2026-09-16T16:23:45.758Z",
+      "actual": "Nadia Haddad created Confidential M-49 \"DOC-029 admin-config Confidential audit mu4b3b28\" with Matter Manager \"Nadia Haddad\". Daniel Okafor's GET /api/v1/matters/49 answered 404. Search for the title in the Audit log showed 0 entries for it, and Export CSV held 0. After Nadia added Daniel Okafor from Matter team, the same Search showed 4 rows, for example \"Nadia Haddad added Daniel Okafor to the team Matter M-49 · DOC-029 admin-config Confidential audit mu4b3b28 01a0ab07-f98e-7878-b51f-fed9a13ac927 Working team this minute\", and the CSV held 4 matching lines.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/matters/types and calls POST /api/v1/matter-types",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:23:45.767Z",
+      "at": "2026-09-16T16:23:48.300Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/matters/types sent the browser to /settings/profile. POST /api/v1/matter-types answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/matters/fields and calls POST /api/v1/fields",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:23:48.301Z",
+      "at": "2026-09-16T16:23:50.837Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/matters/fields sent the browser to /settings/profile. POST /api/v1/fields answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/matters/templates and calls GET /api/v1/matter-templates",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:23:50.837Z",
+      "at": "2026-09-16T16:23:53.367Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/matters/templates sent the browser to /settings/profile. GET /api/v1/matter-templates answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/intake/request-types and calls POST /api/v1/request-types",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:23:53.368Z",
+      "at": "2026-09-16T16:23:55.896Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/intake/request-types sent the browser to /settings/profile. POST /api/v1/request-types answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/reminders and calls PUT /api/v1/org/reminder-offsets",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:23:55.897Z",
+      "at": "2026-09-16T16:23:58.427Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/reminders sent the browser to /settings/profile. PUT /api/v1/org/reminder-offsets answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/audit-log and calls GET /api/v1/audit-log",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:23:58.429Z",
+      "at": "2026-09-16T16:24:00.960Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/audit-log sent the browser to /settings/profile. GET /api/v1/audit-log answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/matters/types and calls POST /api/v1/matter-types",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:24:00.965Z",
+      "at": "2026-09-16T16:24:03.495Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/matters/types sent the browser to /portal. POST /api/v1/matter-types answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/matters/fields and calls POST /api/v1/fields",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:24:03.496Z",
+      "at": "2026-09-16T16:24:06.031Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/matters/fields sent the browser to /portal. POST /api/v1/fields answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/matters/templates and calls GET /api/v1/matter-templates",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:24:06.032Z",
+      "at": "2026-09-16T16:24:08.563Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/matters/templates sent the browser to /portal. GET /api/v1/matter-templates answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/intake/request-types and calls POST /api/v1/request-types",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:24:08.565Z",
+      "at": "2026-09-16T16:24:11.097Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/intake/request-types sent the browser to /portal. POST /api/v1/request-types answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/reminders and calls PUT /api/v1/org/reminder-offsets",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:24:11.098Z",
+      "at": "2026-09-16T16:24:13.626Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/reminders sent the browser to /portal. PUT /api/v1/org/reminder-offsets answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/audit-log and calls GET /api/v1/audit-log",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T16:24:13.627Z",
+      "at": "2026-09-16T16:24:16.159Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/audit-log sent the browser to /portal. GET /api/v1/audit-log answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    }
+  ],
+  "records": [
+    {
+      "kind": "matter type",
+      "name": "DOC-029 admin-config Supplier assessment mu4b3b28"
+    },
+    {
+      "kind": "matter type",
+      "name": "DOC-029 admin-config Replacement type mu4b3b28"
+    },
+    {
+      "kind": "Contracts type",
+      "name": "DOC-029 admin-config Contract type mu4b3b28"
+    },
+    {
+      "kind": "Entities type",
+      "name": "DOC-029 admin-config Entities type mu4b3b28"
+    },
+    {
+      "kind": "Knowledge type",
+      "name": "DOC-029 admin-config Knowledge type mu4b3b28"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029 admin-config Assessment scope mu4b3b28"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029 admin-config Assessment note mu4b3b28"
+    },
+    {
+      "kind": "matter",
+      "name": "DOC-029 admin-config Supplier matter mu4b3b28",
+      "number": "42"
+    },
+    {
+      "kind": "contract status (archived)",
+      "name": "DOC-029 admin-config Legal check renamed mu4b3b28"
+    },
+    {
+      "kind": "matter status (archived)",
+      "name": "DOC-029 admin-config Waiting on supplier renamed mu4b3b28"
+    },
+    {
+      "kind": "matter status",
+      "name": "DOC-029 admin-config Default group mu4b3b28"
+    },
+    {
+      "kind": "entity",
+      "name": "DOC-029 admin-config Officer Holdings mu4b3b28",
+      "id": "01a0ab04-a7ec-7556-871e-2891079d6b13"
+    },
+    {
+      "kind": "officer role",
+      "name": "DOC-029 admin-config Board observer renamed mu4b3b28"
+    },
+    {
+      "kind": "user",
+      "name": "DOC-029 admin-config Reminder ready mu4b3b28",
+      "role": "legal_team_member",
+      "timezone": "Asia/Dubai"
+    },
+    {
+      "kind": "user",
+      "name": "DOC-029 admin-config Reminder early mu4b3b28",
+      "role": "legal_team_member",
+      "timezone": "Asia/Tokyo"
+    },
+    {
+      "kind": "matter",
+      "name": "DOC-029 admin-config Reminder matter ready mu4b3b28",
+      "number": "43"
+    },
+    {
+      "kind": "matter",
+      "name": "DOC-029 admin-config Reminder matter early mu4b3b28",
+      "number": "44"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029 admin-config Supplier entity mu4b3b28",
+      "type": "Entity",
+      "scope": "Global"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029 admin-config Account manager mu4b3b28",
+      "type": "User",
+      "scope": "Global"
+    },
+    {
+      "kind": "contract type",
+      "name": "DOC-029 admin-config Forms MSA mu4b3b28",
+      "attached": ["Deal value (USD)"]
+    },
+    {
+      "kind": "matter type",
+      "name": "DOC-029 admin-config Forms matter type mu4b3b28",
+      "attached": ["DOC-029 admin-config Supplier entity mu4b3b28"]
+    },
+    {
+      "kind": "contract type",
+      "name": "DOC-029 admin-config Target to archive mu4b3b28"
+    },
+    {
+      "kind": "entity (Portal-listed)",
+      "name": "DOC-029 admin-config Portal supplier mu4b3b28",
+      "id": "01a0ab05-aeba-7fb0-8ab9-8eb17d9022b9"
+    },
+    {
+      "kind": "request type",
+      "name": "DOC-029 admin-config Contract form mu4b3b28"
+    },
+    {
+      "kind": "request type",
+      "name": "DOC-029 admin-config Matter form mu4b3b28"
+    },
+    {
+      "kind": "request type",
+      "name": "DOC-029 admin-config Archived target form mu4b3b28"
+    },
+    {
+      "kind": "deflection link",
+      "name": "DOC-029 admin-config Supplier checklist mu4b3b28"
+    },
+    {
+      "kind": "deflection link",
+      "name": "DOC-029 admin-config Ask Legal guidance mu4b3b28"
+    },
+    {
+      "kind": "request",
+      "name": "DOC-029 admin-config Supplier contract request mu4b3b28",
+      "number": "49"
+    },
+    {
+      "kind": "request",
+      "name": "DOC-029 admin-config Supplier advice request mu4b3b28",
+      "number": "50"
+    },
+    {
+      "kind": "contract",
+      "number": 142,
+      "from": "R-49"
+    },
+    {
+      "kind": "request",
+      "name": "DOC-029 admin-config Archived target request mu4b3b28",
+      "number": "51"
+    },
+    {
+      "kind": "contract",
+      "number": 143,
+      "from": "R-51"
+    },
+    {
+      "kind": "request (left open)",
+      "name": "DOC-029 admin-config Open request on archived form mu4b3b28",
+      "number": "52"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029 admin-config Template region mu4b3b28",
+      "type": "Text",
+      "scope": "Matter"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029 admin-config Template counsel mu4b3b28",
+      "type": "Text",
+      "scope": "Matter"
+    },
+    {
+      "kind": "matter type",
+      "name": "DOC-029 admin-config Template type mu4b3b28",
+      "attached": [
+        "DOC-029 admin-config Template region mu4b3b28",
+        "DOC-029 admin-config Template counsel mu4b3b28",
+        "DOC-029 admin-config Supplier entity mu4b3b28"
+      ]
+    },
+    {
+      "kind": "matter template",
+      "name": "DOC-029 admin-config Supplier onboarding template mu4b3b28"
+    },
+    {
+      "kind": "matter",
+      "name": "Supplier - DOC-029 admin-config Direct matter mu4b3b28",
+      "number": "45"
+    },
+    {
+      "kind": "matter",
+      "name": "Supplier - DOC-029 admin-config Unassigned matter mu4b3b28",
+      "number": "46"
+    },
+    {
+      "kind": "matter",
+      "from": "R-50",
+      "number": 47
+    },
+    {
+      "kind": "matter",
+      "name": "Supplier - DOC-029 admin-config After change matter mu4b3b28",
+      "number": "48"
+    },
+    {
+      "kind": "matter (confidential)",
+      "name": "DOC-029 admin-config Confidential audit mu4b3b28",
+      "number": "49",
+      "createdBy": "Nadia Haddad"
+    }
+  ],
+  "finishedAt": "2026-09-16T16:24:16.160Z",
+  "summary": {
+    "total": 56,
+    "pass": 56,
+    "fail": 0
+  },
+  "reviewerNotes": {
+    "addedAt": "2026-09-16T16:26:00Z",
+    "developmentRuns": "Before this recorded run, the reviewer ran single sections of the same script while it was written (logs not kept). Those runs failed only on reviewer script errors: locators that ran before a list loaded, a Tab key that stays inside a date input, a Portal link query that also matched the Your requests list, a counterparty answer that the Convert dialog carries by design, and an API response shape. They left extra records named DOC-029 admin-config with other suffixes (mu49dyo7, mu49gs2n, mu49ogjv, mu49zjk4, mu4a758i, mu4aajaz, mu4ae1f0, mu4ah3e4, mu4ajt1o, mu4anzu9, mu4atdhb, mu4azgv6) and one Entity named DOC-029 admin-config Officer Holdings probe. The recorded run (suffix mu4b3b28) removed the development runs' deflection links and turned off Portal-listed on their Entities. Organisation lead times were restored to the recorded list after each run.",
+    "observations": [
+      "The Reminder lead times page note still reads 'One list covers every tracked date'. The article says a Contract or Matter Key date can add its own lead times, and the walkthrough saw the own 12-day lead time fire. The article matches the behaviour; the page note is out of date.",
+      "Archive type with 'No reassignment' on an in-use Matter type leaves the dialog open with no message. Nothing changes, so the refusal is silent.",
+      "The Field archive dialog counted a Field attached to one type with one stored value as 'attached to 2 types'.",
+      "The request type archive dialog says the type 'is not used by any requests' while Requests still name it, and shows a disabled 'Reassign requests to' select. The article describes this.",
+      "With a long Field catalog the Attach field menu opened taller than the 900 px viewport and its top items were above the screen. The script chose menu items with the keyboard.",
+      "No seeded Entity in the admin lab is Portal-listed, so a required Entity Field on a Portal form offers only Not set until an Administrator turns on Portal-listed."
+    ],
+    "limitations": [
+      "Independent agent walkthrough, not a human user study.",
+      "The bell contents were read from GET /api/v1/notifications as the colleague; the browser checked only the header bell count.",
+      "The morning round was queued in the lab worker through pg-boss on the real clock; no clock change.",
+      "Not checked in the browser: requiredness at type change; every Stage or Category keeping a live Status; failed multi-part Field saves; the AI prompt and AI preparation; renaming and reordering request types; Department carry-through; a turnaround of 0 meaning the submission date; Key date reorder in a template; a template section failing after an earlier section saved (the editor refuses invalid rows before any section saves); expiry, notice deadline and Entity Obligation reminders; Search not covering record content.",
+      "The archived-target check set a request type Target through PATCH /api/v1/request-types/<id>, because the editor has no Target control."
+    ]
+  }
+}

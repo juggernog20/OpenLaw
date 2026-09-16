@@ -4,7 +4,7 @@ Check which version of OpenLaw the documentation supports and give the right per
 
 ## Find the applicable edition
 
-1. Select **Help** in the staff or Portal header. For the complete suite, select **All documentation**, or **Read this article in the full documentation** when reading a Help article. Formal documentation can also be read without signing in.
+1. Select **Help** in the staff or Portal header. For the complete suite, select **All documentation** below **Browse guides**. An article outside your Help selection offers **Read this article in the full documentation**. Formal documentation can also be read without signing in.
 2. Expand **Edition details** near the bottom of the reader.
 3. Record the edition identifier and channel, **Supported app**, **Distribution commit**, and **Content digest**. **Publication target** distinguishes where that edition is intended to be used.
 
@@ -32,7 +32,7 @@ Bundled reading and documentation search do not require an external documentatio
 
 Before reporting a missing capability, check the procedure's prerequisites and current constraints:
 
-- [Roles and access](roles-and-access.md): links, relationships, and mentions do not grant access; Administrators retain access to Confidential records.
+- [Roles and access](roles-and-access.md): links, relationships, and mentions do not grant access; Administrators also need named access to Confidential Contracts and Matters, and a Grant for a Confidential Entity.
 - [Portal record work](contributor-guide.md): legal actions and Task completion remain with Legal.
 - [Document reading](document-previews.md): storage support is wider than preview support; processing and original downloads can have different outcomes.
 - [Approval](contract-approvals.md): requests are parallel internal decisions; unresolved requests produce a warning when moving beyond Approval.
@@ -59,6 +59,6 @@ Include:
 - Short steps using fictional names and records, the expected outcome, and what actually happened.
 - The relevant error wording and time, with private data removed.
 
-For example: “As a Business User, I followed ‘Work on a shared Contract or Matter,’ ‘Supply a supporting Document.’ On fictional Contract C-123, adding a second Version returned [error]. The first Version still downloaded. App build: [build]; documentation edition and digest: [details].” Replace the bracketed report fields with facts from your incident.
+For example: “As a Business User, I followed ‘Work on a shared Contract or Matter,’ ‘Work with Documents.’ On fictional Contract C-123, adding a second Version returned [error]. The first Version still downloaded. App build: [build]; documentation edition and digest: [details].” Replace the bracketed report fields with facts from your incident.
 
 The tracker is public. Do not include private Documents, record titles, personal details, passwords, sign-in links, provider keys, or complete logs. Use a minimal fictional reproduction and sanitized excerpts. Following the support link does not submit a report or send your records automatically.

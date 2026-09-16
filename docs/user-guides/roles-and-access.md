@@ -18,11 +18,11 @@ On a Confidential Contract, an Administrator or Legal Team Member needs a team r
 
 Only an Administrator, Creator, Legal Owner or Matter Manager who is a Legal Team Member or Administrator and can already reach the record may change its Confidential audience. Being able to read the record does not give that right.
 
-Confidential Entities use a separate rule. An Administrator gives a named Legal Team Member a **Grant** through **Manage access**. A Grant applies to that Entity only. Administrators retain their Entity access. Business Users cannot open the Entities module.
+Confidential Entities use a separate rule. Every person needs a **Grant** for that Entity, and Administrators need one too. The person who creates an Entity gets a Grant. A Legal Team Member or Administrator who has a Grant uses **Manage access** to give or remove Grants. An Administrator can also manage access on an Entity that is not Confidential. A Grant applies to that Entity only. A Confidential Entity must keep at least one active person with a Grant. Business Users cannot open the Entities module.
 
 ## Manage Portal Contract access
 
-Open **Contract team** or **Matter team** in the record's activity bar. Select **Add team member**, choose **Person**, and select **Add**. Each person appears once, with their responsibilities together and no role picker. Adding a Business User gives them access to the record in the Portal. Business Users may add existing people from the Portal on non-Confidential records. Confidential team changes remain Legal actions under the rules above.
+Open **Contract team** or **Matter team** in the record's activity bar. Select **Add team member**, choose a person in **Person**, and select **Add**. Each person appears once, with their responsibilities together and no role picker. Adding a Business User gives them access to the record in the Portal. Business Users may add existing people from the Portal on non-Confidential records. Confidential team changes remain Legal actions under the rules above.
 
 In the full app, use the person's remove control to remove membership. That ends a Business User's record access on the next read, including old links, replies, Documents and notifications. Removing a Legal Team Member from an open record does not end their ordinary account access.
 
@@ -36,9 +36,9 @@ The former Stakeholder list is removed. Existing eligible affiliations become te
 
 Every related record has its own audience. A link, mention or owner statement does not grant a Business User record access. Documents also require access to their owning record. A Document's Confidential flag can further narrow its audience.
 
-Business Users read and post **Full thread** comments on their records. They do not see **Legal only** or **Working team**. A later-added team member can read the Full Thread history. Removing membership ends that access. Legal must choose Full Thread for a message intended for the business.
+Business Users read and post Full Thread comments on their records. In the Comments applet, a Full Thread comment shows **Contract Team** on a Contract and **Matter Team** on a Matter. Business Users do not see **Legal Only** comments or older **Internal team** comments. A later-added team member can read the earlier Contract Team or Matter Team comments. Removing membership ends that access. For a message to the business, Legal chooses **Contract Team** or **Matter Team** above **New comment**, not **Legal Only**.
 
-The History applet shows shared comments and business record changes. It excludes Legal Only and Working Team activity. The Portal excludes legal Fields, Tasks, Key dates, Approvals and signing controls. Legal retains responsibility for those actions.
+The Portal History applet shows Contract Team and Matter Team comment activity. It excludes Legal Only and Internal team activity. Record changes do not appear in Portal History. The record details and **Fields** show the current values. The Portal excludes legal Fields, Tasks, Key dates, Approvals and signing controls. Legal retains responsibility for those actions.
 
 ## When a record is unavailable
 

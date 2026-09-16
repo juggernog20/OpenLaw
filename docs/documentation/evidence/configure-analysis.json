@@ -1,30 +1,23 @@
 {
   "articleId": "configure-analysis",
-  "contentSha256": "28bf804aa38a3559571e3251eddbfb1b52d5ca03897f372fac920c478ba01740",
-  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
-  "environment": "dev integration source review",
-  "author": "Codex integration author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "contentSha256": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-live",
+  "walkthroughReviewer": "DOC-029 independent live-provider walkthrough agent",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "blocked",
+  "author": "DOC-022 author; corrections by DOC-029 live-provider author agent",
+  "technicalReviewer": "DOC-029 live-provider author agent",
+  "verifiedAt": "2026-09-16T17:30:00Z",
+  "status": "pass",
   "sources": [
-    "CONTEXT.md",
-    "docs/decision-records/DECISIONS-SETTINGS.md",
-    "apps/web/src/routes/settings-ai-analysis.tsx",
-    "apps/web/src/components/ai-field-prompts-card.tsx",
-    "apps/web/src/routes/settings-contract-fields.tsx",
-    "apps/api/src/modules/ai-connector/routes.ts",
-    "apps/api/src/lib/ai/presets.ts",
-    "apps/api/src/lib/ai/openai-compatible.ts",
-    "apps/api/src/lib/ai/anthropic.ts",
-    "apps/api/src/lib/ai/gemini.ts",
-    "apps/api/src/lib/analysis-targets.ts",
-    "apps/api/src/pipeline/automatic-contract-analysis.ts",
-    "apps/api/src/pipeline/contract-analysis.ts",
-    "docs/documentation/batches/DOC-022/primary-sources.json"
+    "docs/user-guides/configure-analysis.md",
+    "docs/documentation/batches/DOC-029/live-provider/technical-review.json",
+    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
+    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43-attempt1.json",
+    "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-observations.json",
+    "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.json",
+    "docs/user-guides/contract-analysis.md"
   ],
   "scenarios": [
     {
@@ -33,12 +26,17 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with an OpenRouter AI connector and model deepseek/deepseek-v4.1-flash. The user entered the API key; the agent never read, entered or saved it.",
+        "Fictional Contract C-36 \"DOC-029 live analysis\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-analysis.docx (sha256 30093f0a5f9a551010892c918ff0c5902049120089262c2d3f332e6337f7385c), and C-37 \"DOC-029 live analysis no paper\" with no Document. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures."
       ],
-      "expected": "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence. Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "expected": "Test connection succeeds; Load models, search and refresh list the provider's models without saving; Field prompts save on Enter, keep line breaks with Shift+Enter, restore the saved text when cleared, and reset to default; an Analysis run sends the target text to the provider and records Version, model, evidence and Unverified values; refusals and the disabled connector behave as documented; the connector ends enabled. Model accuracy is not claimed.",
+      "actual": "A01 to A16 passed on 3fa407e3 (walkthrough-c43.json round 2). AI analysis is its own Organization link; cards were Provider > Request conversion > Field prompts, Field prompts last with no collapse control, the three switches off. Provider showed OpenRouter and deepseek/deepseek-v4.1-flash with a blank key input and the keep/rotate hint. Test connection showed \"Connection successful.\" in 1.8 s. Load models with the stored key returned 444 models in 229 ms and the button became Refresh models; Search models \"deepseek-v4.1\" left the one matching model; the selection and updatedAt did not change and no save was sent. Enter saved an edited notice-period prompt (asking for the days stated in the paper, without inference) and showed Reset to default; Shift+Enter inserted a line break; clearing the prompt and leaving restored the saved text; maxlength is 2000. Uploading the fictional paper to C-36 started an automatic run without anyone selecting Run analysis; it finished ready on Version 1 with deepseek/deepseek-v4.1-flash in 24 s (21.6 s at the provider; walkthrough-c43-attempt1.json A07). The card read \"Completed Sep 16, 2026, 7:30 PM on Version 1 with deepseek/deepseek-v4.1-flash.\" with Term type, Effective date, Expiry date, Notice period (days) and Value Written and Unverified, Renewal period Invalid, Counterparty Unmatched, and a Price review Key date. A deliberate rerun after the prompt edit showed Running… and finished in 8 to 14 s. The Notice period evidence sparkle opened the doc panel on doc029-live-analysis.docx v1 with \"by giving 45 days' written notice\" highlighted and made no AI call. On C-37, Run analysis was refused: \"This Contract has no primary Document to analyze.\" (409). Turning Use AI analysis off showed Turned off, disabled Test connection and the three switches, hid Run analysis, kept the Unverified values, and a run request answered 409 \"No enabled AI connector is configured.\"; the stored preset, model and key stayed. A Legal Team Member saw no Run analysis while off, was sent to /settings/profile, and got 403 for the connector and prompt APIs. Turning it on passed Test connection again, and the member saw Run analysis again. Load models against a Custom endpoint with a fictional key and a missing path showed \"The provider refused model discovery with HTTP 404.\" and nothing was saved. Reset to default restored the notice-period prompt; the connector ended enabled with no overridden prompt.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43-attempt1.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-live.mjs"
+      ]
     },
     {
       "id": "V-C43",
@@ -46,12 +44,17 @@
       "role": "administrator",
       "method": "live-provider-check",
       "prerequisites": [
-        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with an OpenRouter AI connector and model deepseek/deepseek-v4.1-flash. The user entered the API key; the agent never read, entered or saved it.",
+        "Fictional Contract C-36 \"DOC-029 live analysis\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-analysis.docx (sha256 30093f0a5f9a551010892c918ff0c5902049120089262c2d3f332e6337f7385c), and C-37 \"DOC-029 live analysis no paper\" with no Document. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures."
       ],
-      "expected": "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence. Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "expected": "Test connection succeeds; Load models, search and refresh list the provider's models without saving; Field prompts save on Enter, keep line breaks with Shift+Enter, restore the saved text when cleared, and reset to default; an Analysis run sends the target text to the provider and records Version, model, evidence and Unverified values; refusals and the disabled connector behave as documented; the connector ends enabled. Model accuracy is not claimed.",
+      "actual": "Live OpenRouter calls: Test connection passed three times (1.3 to 1.8 s). Load models returned 444 models. Analysis runs on C-36 finished ready with openrouter deepseek/deepseek-v4.1-flash: automatic run 21.6 s at the provider, manual runs 12.6 s and 8.1 s. The saved values read back from the Contract were effective 2026-03-01, expiry 2027-02-28, notice 45 days, fixed term and USD 12,000 annually, with a derived notice deadline and a Price review Key date. The input was only the fictional paper (583 extracted characters) and the core prompts. Accuracy is not claimed. The refusal, disable and re-enable results are the same as in the browser-walkthrough record.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43-attempt1.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-live.mjs"
+      ]
     },
     {
       "id": "V-C43",
@@ -59,12 +62,17 @@
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with an OpenRouter AI connector and model deepseek/deepseek-v4.1-flash. The user entered the API key; the agent never read, entered or saved it.",
+        "Fictional Contract C-36 \"DOC-029 live analysis\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-analysis.docx (sha256 30093f0a5f9a551010892c918ff0c5902049120089262c2d3f332e6337f7385c), and C-37 \"DOC-029 live analysis no paper\" with no Document. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures.",
+        "Operator responsibility was performed with deployment tools on the owned lab and the signed-out formal documentation reader, not through an app role."
       ],
-      "expected": "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence. Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "expected": "The operator can follow the article to the deployment guidance for outbound provider access and credential-key retention.",
+      "actual": "OB02 passed. Signed out, the operator opened /documentation/configure-analysis in the formal reader and followed its deployment configuration link to /documentation/deployment-configuration. That page says to allow outbound provider traffic from both the app and worker, and its \"Preserve and rotate encryption keys\" section says OPENLAW_SECRET_KEY encrypts the AI-provider key. The reader serves the committed article bytes of 3fa407e3, so this proves the operator link and its target, not the reviewed wording. Operator container actions are in operator-observations.json.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.mjs"
+      ]
     },
     {
       "id": "V-C43",
@@ -72,20 +80,63 @@
       "role": "operator",
       "method": "live-provider-check",
       "prerequisites": [
-        "A real disposable supported AI-provider account and a small fictional document with a bounded test input."
+        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with an OpenRouter AI connector and model deepseek/deepseek-v4.1-flash. The user entered the API key; the agent never read, entered or saved it.",
+        "Fictional Contract C-36 \"DOC-029 live analysis\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-analysis.docx (sha256 30093f0a5f9a551010892c918ff0c5902049120089262c2d3f332e6337f7385c), and C-37 \"DOC-029 live analysis no paper\" with no Document. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures.",
+        "Operator responsibility was performed with container tools on the owned lab, not through an app role."
       ],
-      "expected": "The actual configured provider receives the intended input and OpenLaw records its supported output/evidence. Invalid key/model/endpoint, provider refusal, and disabling produce the documented behavior without claiming model accuracy.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "expected": "Both the app and worker reach the AI provider, share the credential encryption key, and do not log the API key.",
+      "actual": "O01, O02, O04 and O05 passed. The app and worker set the same non-empty OPENLAW_SECRET_KEY (compared by hash equality; no value or hash printed) and no AI credential is an environment variable. The app reached OpenRouter for Test connection and Load models. The worker reached OpenRouter: its log has \"contract analysis finished\" for each run (15:30:01Z, 15:30:18Z, 15:32:39Z, and later runs on C-38), and each run finished ready with the configured model. No proxy variable is set. The logs contain no 'sk-or-' or bearer text. Source inspection confirms that Load models and the probe run in the app, extraction runs in the worker, and the switch changes only disabledAt.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-observations.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json"
+      ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/dev-integration/author-model-selector.json"],
+  "notes": [
+    {
+      "kind": "product-bug",
+      "issue": "#887",
+      "text": "Escape in a Field prompt saved the discarded text (A06, both rounds). The handler reverts the draft and then blurs the input, and the blur handler saves the stale draft (apps/web/src/components/ai-field-prompts-card.tsx). The agent restored the prompt with Reset to default. The author removed the Escape sentence from the article, so this is not a scenario failure."
+    }
+  ],
   "limitations": [
-    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
-    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate.",
-    "No real AI inference or DocuSign Envelope lifecycle was completed. DOC-022 remains open. Model-list fixture and real signing authentication checks are author observations only."
+    "Independent agent walkthrough by a different agent from the author; not a human user study. Model accuracy is not claimed.",
+    "The walkthrough ran against article bytes that still had the sentence \"Escape restores the saved text.\" The author then removed only that sentence (issue #887), which gives the recorded hash a2e55ab5.... The removal takes a claim away and adds no step, so the walkthrough still covers every step in these bytes.",
+    "Invalid key, invalid model and provider refusal were not tested live, because the user's key cannot be re-entered without the user. The live failure cases were a Load models refusal (HTTP 404) against a missing endpoint path with a fictional key (not saved), the no-primary-Document refusal, and the disabled connector.",
+    "Catalog Fields with AI prompts, Request conversion switches and the other presets were not exercised live. The switches were only seen off and disabled while the connector was off.",
+    "Side effects on the lab: a re-run of the reviewer script uploaded a second, non-primary copy of doc029-live-analysis.docx to C-36. The signing paper on C-38 and its executed copy were also sent to OpenRouter by automatic runs, because the connector was enabled.",
+    "Reviewer script errors are kept in walkthrough-c43-attempt1.json: A08 read no result rows and A10 found no evidence button because of wrong locators. Round 2 corrected both. The automatic-run observation comes from round 1 A07, because round 2 reused C-36.",
+    "The connector ended enabled with OpenRouter and deepseek/deepseek-v4.1-flash, the key stored, and no prompt overridden."
   ],
   "previousEvidence": "docs/documentation/batches/dev-integration/previous-configure-analysis.json",
-  "copyOnlyReview": null
+  "copyOnlyReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "Round 3 reviewed 3fa407e3 to 432dba3a. No file on the AI provider path changed from 3fa407e3 to 432dba3a. git diff --quiet reports no change for apps/api/src/modules/ai-connector, ai-field-prompts, contract-analysis, apps/api/src/lib, apps/api/src/pipeline, apps/worker, packages/shared/src/analysis.ts, packages/db, ai-model-selector.tsx and ai-field-prompts-card.tsx. The API changes are in email-settings and org only. In apps/web, settings-ai-analysis.tsx changed only the Provider card intro text, which the article does not quote, and moved the key reuse check into lib/ai-connector-config.ts as canReuseAiKey. I compared the old and new code. Both require hasApiKey, the same preset and protocol, a saved base URL, and equal normalized base URLs, so the rule in Disable, rotate, or remove is unchanged. Two status messages in en-US.json now say AI features instead of Contract analysis. The article does not quote them. The live provider check on 3fa407e3 (V-C43, walkthrough-c43.json) used a real OpenRouter connector with deepseek/deepseek-v4.1-flash. It covered Test connection success, Load models, search and refresh with 444 models, Field prompt save, line break, restore and reset, an automatic Analysis run and a deliberate rerun with Version, model, evidence and Unverified values, the evidence panel, the no-primary-Document refusal, turning the connector off and on, the Legal Team Member view, and a Load models refusal from a missing Custom endpoint path. On 57e77e38 round 2 (walkthrough-r2-1.json) re-ran 18 credential-free steps and all passed: page and card order, presets and forms, save refusals, API refusals, Load models against a closed endpoint, a fictional Custom connector with a failing test, the turned-off state, the changed-destination key rule, Field prompts, the Contracts to Fields link, Remove connector, the Legal Team Member refusal, the signed-out help link, and operator checks of the shared OPENLAW_SECRET_KEY and key-free logs. It could not re-run the live provider steps. Those steps run only code that did not change, so I judge the article compatible. The article contentSha256 a2e55ab5 still matches its evidence. Known issue #887 remains and the article still makes no Escape claim. From 57e77e38 to 432dba3a only welcome.tsx and its test changed, which the article does not describe.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
+        "sha256": "a12a6c69558c97bce7f5feb88b38c4e4ae237d7091b0780fa2116035bdcaffdb"
+      },
+      {
+        "path": "batches/DOC-029/live-provider/technical-review-r2.json",
+        "sha256": "1858967f9ef1e5da131e68ffb8863810c705d3e6be90173924035e9bc25667c0"
+      },
+      {
+        "path": "batches/DOC-029/live-provider/walkthrough-r2-1.json",
+        "sha256": "935e3d26434a3f57fad90b7e596d5682afe5e7753fddf1cf4d93cbe776383083"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
+  }
 }

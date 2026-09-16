@@ -1,0 +1,1086 @@
+{
+  "kind": "compatibility-review",
+  "batch": "DOC-029",
+  "group": "entities",
+  "issues": [745, 747],
+  "round": 2,
+  "reviewer": "DOC-029r2 compatibility reviewer (entities)",
+  "reviewerKind": "agent",
+  "independence": "This reviewer wrote none of the four articles and edited no article text.",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "diffCommand": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+  "commits": [
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "1ea249dd Show organization branding on sign-in and raise the logo limit"
+  ],
+  "lab": {
+    "name": "entities2",
+    "project": "openlaw-docs-41255c61-entities2",
+    "appUrl": "http://127.0.0.1:23302",
+    "mailUrl": "http://127.0.0.1:23402",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "containerImages": [
+      {
+        "service": "app",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      },
+      {
+        "service": "doc-engine",
+        "imageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+      },
+      {
+        "service": "mailpit",
+        "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+      },
+      {
+        "service": "postgres",
+        "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+      },
+      {
+        "service": "worker",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      }
+    ],
+    "runningImageCheck": {
+      "app": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "doc-engine": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+      "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+    },
+    "seed": {
+      "scale": "light",
+      "randomSeed": 7,
+      "completedAt": "2026-09-16T17:46:04.212Z",
+      "ai": "disabled",
+      "signing": "unconfigured"
+    }
+  },
+  "replay": {
+    "script": "batches/DOC-029/compat-r2/entities-r2/replay-r2.mjs",
+    "scriptSha256": "6bb3d74ad236f781297249de200364ce5483beff78a26d21ae5ecf49b6b357a8",
+    "log": "batches/DOC-029/compat-r2/entities-r2/replay-r2.json",
+    "logSha256": "f6d5de2b1f4ab8bf3eef080961f1266d5e1544062232de6dfb4d47261459c077",
+    "adaptedFrom": "batches/DOC-029/entities/walkthrough-r1.mjs",
+    "adaptations": "Lab manifest entities2, output path, screenshot folder moved to scratch (not kept in the worktree), reviewer label, round number, fixture file path, and record names 'DOC-029r2 entities ...'. No check, locator, or expectation changed.",
+    "browser": "Playwright 1.63.0 Chromium, headless, 1440x1000, one browser context per identity",
+    "tag": "EGH2I",
+    "startedAt": "2026-09-16T17:53:48.217Z",
+    "finishedAt": "2026-09-16T18:00:01.039Z",
+    "steps": 135,
+    "passed": 135,
+    "failed": 0,
+    "errorScreens": 0
+  },
+  "articles": [
+    {
+      "articleId": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "contentSha256": "ddbbf1cfcd46f72fc735c67dcd9162a47480641221e06d2fcd2362d660607c35",
+      "diffFilesInspected": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json (entity, obligation, officer, holding, grant, confidential, counterparty, share, registration, and chart keys)"
+      ],
+      "roundOneSourcesChangedInDiff": [],
+      "conclusion": "compatible",
+      "reasoning": "The diff 3fa407e3..57e77e38 changes no file that round 1 cited for this article. No entity, counterparty, obligation, holding, grant, chart, or share-capital route, component, migration, or message key changed. The changes are SMTP first-run fields, sign-in branding and logo limit, settings list Save/Cancel creation, locked default fields on the Contract and Matter Field catalogs, AI settings copy, and 'text-muted' for archived users in lists and comments. The article defers type and Field maintenance to types-statuses-fields and makes no claim about how a type is added; the Save/Cancel change in taxonomy-types-pane.tsx does not touch the Entity type in-use count or its availability rule. The new locked 'Our entity' and 'Counterparties' default rows appear only in the Contract Field catalog in Settings, which this article does not describe.",
+      "replay": {
+        "steps": 26,
+        "passed": 26,
+        "failed": 0,
+        "results": [
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Register step 1: open Entities; first view is Calendar; select List",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Register step 2: Search entities by name, then Type/Status/Jurisdiction/Majority owner filters and Clear all",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Register steps 3-5: Add entity with identity details, Status default Active, Register, open the new Entity; creator Grant",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Register step 5: change one field and move focus away; a selection saves when chosen; both survive reload; Status Dormant does not archive",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Names are not unique: registering the same legal name again creates another Entity",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Negative: blank Legal name has a clear outcome",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Parties step 1: choose Our entity on a Contract; it survives reload",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Parties steps 2-3: type a new name and Create; the first Counterparty is Primary",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Parties step 4: add another Counterparty and Make primary",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Picker negatives: an exact existing name in another case offers no Create; a Counterparty on the Contract is not offered again",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Parties step 5: Take name off the contract; next remaining takes Primary; shared record remains; final removal leaves none",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Recovery: an archived Entity is not offered for a new selection; the existing Contract keeps its reference",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Register step 1: open Entities; first view is Calendar; select List",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Register step 2: Search entities by name, then Type/Status/Jurisdiction/Majority owner filters and Clear all",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Register steps 3-5: Add entity with identity details, Status default Active, Register, open the new Entity; creator Grant",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Register step 5: change one field and move focus away; a selection saves when chosen; both survive reload; Status Dormant does not archive",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Names are not unique: registering the same legal name again creates another Entity",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: blank Legal name has a clear outcome",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Parties step 1: choose Our entity on a Contract; it survives reload",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Parties steps 2-3: type a new name and Create; the first Counterparty is Primary",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Parties step 4: add another Counterparty and Make primary",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Picker negatives: an exact existing name in another case offers no Create; a Counterparty on the Contract is not offered again",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Parties step 5: Take name off the contract; next remaining takes Primary; shared record remains; final removal leaves none",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Recovery: an archived Entity is not offered for a new selection; the existing Contract keeps its reference",
+            "result": "pass"
+          },
+          {
+            "role": "business_user (Ravi Menon, magic link)",
+            "method": "browser-walkthrough",
+            "action": "Negative: a Business User cannot use the Member+ Entities destination",
+            "result": "pass"
+          },
+          {
+            "role": "business_user (Jonas Weber, magic link)",
+            "method": "browser-walkthrough",
+            "action": "Negative: a Business User cannot use the Member+ Entities destination",
+            "result": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "articleId": "entity-records",
+      "scenario": "V-C32",
+      "contentSha256": "e8bd443312eb75490ecd396313913b1a050ea9751aa63e03ca55d43e22c7e56d",
+      "diffFilesInspected": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json (entity, obligation, officer, holding, grant, confidential, counterparty, share, registration, and chart keys)"
+      ],
+      "roundOneSourcesChangedInDiff": [],
+      "conclusion": "compatible",
+      "reasoning": "The diff 3fa407e3..57e77e38 changes no file that round 1 cited for this article. No entity, counterparty, obligation, holding, grant, chart, or share-capital route, component, migration, or message key changed. The changes are SMTP first-run fields, sign-in branding and logo limit, settings list Save/Cancel creation, locked default fields on the Contract and Matter Field catalogs, AI settings copy, and 'text-muted' for archived users in lists and comments. The article says only an Administrator adds an Officer role and links to types-statuses-fields; the settings list Save/Cancel change does not change that claim. The archived-user style change (opacity to text-muted) does not change any label or behavior that the article names.",
+      "replay": {
+        "steps": 36,
+        "passed": 36,
+        "failed": 0,
+        "results": [
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Officers steps 1-3: Directors & Officers, Add director or officer, name, Role, Appointed on, Linked user, Add",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Officers step 4: correct text and move focus away; choose another role saves",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Negative: a resignation date before the appointment date is refused",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Officers step 5: Resigned on retains a resignation; Show former reads former Officers; clearing the date returns the Officer",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Officer note: Linking a user does not grant that person Entity access",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Officer note: Remove name deletes the Officer entry",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Registrations steps 1-3: Add registration with Jurisdiction, Registration number, Registered agent, Status Lapsed; Formation jurisdiction unchanged",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Registrations step 3: edit text and move focus away; a Status selection saves immediately",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Registrations step 4 and note: Remove jurisdiction registration detaches linked Obligations and keeps them",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Holdings steps 1-4: Ownership tab, Add Holding, This Entity owns, Entity, Ownership percent, Add; Owners and Owned Entities on both records",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Holdings: Owns this Entity direction; over-100 total warns but saves; correcting the row on blur clears it",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Negative: an out-of-range row percentage is refused without changing the saved value",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Holdings note: the Entity cannot own itself, duplicate a directional Holding, or create a loop",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Holdings step 5: Remove name removes the Holding; neither Entity is deleted",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Documents: a new Entity has no pre-created folders; Upload, Choose files, Kind Executed, Upload gives a v1 row",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Archive step 1: Archive saves immediately; Archived mark; editable controls unavailable",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Archive: the archived Entity leaves ordinary registry and Holding picker results",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Archive steps 2-3: List, Show archived, open the Entity, Restore; facts, relationships, Documents and Obligation remain; editing returns",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Officers steps 1-3: Directors & Officers, Add director or officer, name, Role, Appointed on, Linked user, Add",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Officers step 4: correct text and move focus away; choose another role saves",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: a resignation date before the appointment date is refused",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Officers step 5: Resigned on retains a resignation; Show former reads former Officers; clearing the date returns the Officer",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Officer note: Linking a user does not grant that person Entity access",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Officer note: Remove name deletes the Officer entry",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Registrations steps 1-3: Add registration with Jurisdiction, Registration number, Registered agent, Status Lapsed; Formation jurisdiction unchanged",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Registrations step 3: edit text and move focus away; a Status selection saves immediately",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Registrations step 4 and note: Remove jurisdiction registration detaches linked Obligations and keeps them",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Holdings steps 1-4: Ownership tab, Add Holding, This Entity owns, Entity, Ownership percent, Add; Owners and Owned Entities on both records",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Holdings: Owns this Entity direction; over-100 total warns but saves; correcting the row on blur clears it",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: an out-of-range row percentage is refused without changing the saved value",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Holdings note: the Entity cannot own itself, duplicate a directional Holding, or create a loop",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Holdings step 5: Remove name removes the Holding; neither Entity is deleted",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Documents: a new Entity has no pre-created folders; Upload, Choose files, Kind Executed, Upload gives a v1 row",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Archive step 1: Archive saves immediately; Archived mark; editable controls unavailable",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Archive: the archived Entity leaves ordinary registry and Holding picker results",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Archive steps 2-3: List, Show archived, open the Entity, Restore; facts, relationships, Documents and Obligation remain; editing returns",
+            "result": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "articleId": "entity-obligations",
+      "scenario": "V-C52",
+      "contentSha256": "9e66336f58ac640455e2953d4231f4cb5e05c30dc9eee207e33908f372206b66",
+      "diffFilesInspected": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json (entity, obligation, officer, holding, grant, confidential, counterparty, share, registration, and chart keys)"
+      ],
+      "roundOneSourcesChangedInDiff": [],
+      "conclusion": "compatible",
+      "reasoning": "The diff 3fa407e3..57e77e38 changes no file that round 1 cited for this article. No entity, counterparty, obligation, holding, grant, chart, or share-capital route, component, migration, or message key changed. The changes are SMTP first-run fields, sign-in branding and logo limit, settings list Save/Cancel creation, locked default fields on the Contract and Matter Field catalogs, AI settings copy, and 'text-muted' for archived users in lists and comments. obligation-routes.ts, the Home obligations section, the morning round, and the notification audience are unchanged. The settings-reminders.tsx change adds Save/Cancel to reminder offset creation; the article only links to notification preferences.",
+      "replay": {
+        "steps": 33,
+        "passed": 33,
+        "failed": 0,
+        "results": [
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Add steps 1-4: recurring Obligation with Registration, Assignee, Matter and Note",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Add step 2: a blank recurrence makes a one-off",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Negative: recurrence outside 1 to 1,200 months and a blank Label are refused",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Add step 5: edit an open row; text saves on focus change; a selection saves immediately",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Calendar steps 1-2: Calendar, Due-date list puts overdue open Obligations first; Entity and Assignee filters with Apply",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Calendar step 3: Month, Previous month, Next month, Today, and Due-date list keep the filters",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Calendar step 2: From/To narrow by date; Include completed exists",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Calendar step 4: no results shows Clear all; opening an Obligation goes to its Entity",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Home: open Obligations assigned to you, subject to access; reading does not file or advance",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Home: Administrators also see unassigned Obligations on Entities they can reach; others do not",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Mark filed steps 1-3: Mark filed dialog explanation and Filed on default; filing 2026-10-05 advances the annual to 2027-09-30; History records it",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "One-off filing: keeps its due date, shows Filed, leaves open Obligations, cannot be filed again, row read-only; Include completed finds it",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Recovery: correct an open recurring row's date; Delete removes the Obligation without filing",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Negative: an invalid due date correction is not saved",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Archiving the Entity removes its Obligations from the calendar and Home until restored",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Negative: a change on an archived Entity is refused (unauthorized/archived outcome)",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Add steps 1-4: recurring Obligation with Registration, Assignee, Matter and Note",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Add step 2: a blank recurrence makes a one-off",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: recurrence outside 1 to 1,200 months and a blank Label are refused",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Add step 5: edit an open row; text saves on focus change; a selection saves immediately",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Calendar steps 1-2: Calendar, Due-date list puts overdue open Obligations first; Entity and Assignee filters with Apply",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Calendar step 3: Month, Previous month, Next month, Today, and Due-date list keep the filters",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Calendar step 2: From/To narrow by date; Include completed exists",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Calendar step 4: no results shows Clear all; opening an Obligation goes to its Entity",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Home: open Obligations assigned to you, subject to access; reading does not file or advance",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Home: Administrators also see unassigned Obligations on Entities they can reach; others do not",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Mark filed steps 1-3: Mark filed dialog explanation and Filed on default; filing 2026-10-05 advances the annual to 2027-09-30; History records it",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "One-off filing: keeps its due date, shows Filed, leaves open Obligations, cannot be filed again, row read-only; Include completed finds it",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Recovery: correct an open recurring row's date; Delete removes the Obligation without filing",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: an invalid due date correction is not saved",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Archiving the Entity removes its Obligations from the calendar and Home until restored",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: a change on an archived Entity is refused (unauthorized/archived outcome)",
+            "result": "pass"
+          },
+          {
+            "role": "business_user (Jonas Weber, magic link)",
+            "method": "browser-walkthrough",
+            "action": "Negative: an unauthorized change has a clear outcome",
+            "result": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "scenario": "V-C53",
+      "contentSha256": "f6d077cc3b817a0c097844fb00d800525777503bab0ba0bff52b222f14b1ea2f",
+      "diffFilesInspected": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json (entity, obligation, officer, holding, grant, confidential, counterparty, share, registration, and chart keys)"
+      ],
+      "roundOneSourcesChangedInDiff": [],
+      "conclusion": "compatible",
+      "reasoning": "The diff 3fa407e3..57e77e38 changes no file that round 1 cited for this article. No entity, counterparty, obligation, holding, grant, chart, or share-capital route, component, migration, or message key changed. The changes are SMTP first-run fields, sign-in branding and logo limit, settings list Save/Cancel creation, locked default fields on the Contract and Matter Field catalogs, AI settings copy, and 'text-muted' for archived users in lists and comments. Grant routes, entity-access.ts, the chart, share-capital card, and confidential toggle are unchanged. The Matter Field catalog change adds a read-only Default fields list; the Entity Field catalog keeps its 'Fields' title and no default list, so the Entity-valued Field statement is unaffected.",
+      "replay": {
+        "steps": 40,
+        "passed": 40,
+        "failed": 0,
+        "results": [
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Share capital steps 1-2, 4: Authorized shares saves on focus change, Issued shares on Enter; both survive reload",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Share capital step 4: Escape abandons an unsaved edit",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Negative: negative and fractional share counts are refused without replacing the saved value",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Share capital step 2: leave a value blank when unknown",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Share capital step 3 and note: Par value unavailable until Currency; amount with the currency's decimals; too many decimals refused; changing Currency keeps the amount",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Chart steps 1-2: Chart draws the Holdings; primary owner solid, others dashed; highest percentage is primary even below 50%; an Entity with no Holdings in a separate row",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Chart step 3: drag pans, wheel zooms; with the chart focused arrows pan, plus zooms, zero fits; Fit to window resets",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Chart step 4: single click or Space highlights the ownership chain; Clear highlight or Escape removes it; double-click or Enter opens",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Linked Contracts: the Contracts tab lists Contracts through Our entity; rows and counts reflect the reader's reach",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Linked Matters tab: shows relationships only through saved Entity-valued Fields",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Before Grants: an Administrator can manage access while the Entity is not Confidential",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Grant steps 1-3: Manage access, Confidential access, Person, Grant access; the list includes the person and you; only live Legal Team Members and Administrators are offered",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Grant step 4: turn on Confidential — restrict to the access list; check the saved result",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member (Priya Raman, comparison reader with a Grant)",
+            "method": "browser-walkthrough",
+            "action": "V-C53 L: a Grant gives the named person access",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "V-C53 L: without a Grant, an Administrator cannot reach the Confidential Entity; Holding shows Restricted Entity; chart shows Confidential Entity; no self-grant",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "V-C53 L: an Officer user link and a linked Contract do not grant access",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Grant step 5: Remove name withdraws access; the relationship is preserved",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Negative: removing the last live person from a Confidential Entity is refused",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Turning the Confidential switch off makes the Entity available to all Legal Team Members and Administrators without Grants",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Grant note: Grants let their holder change the flag and Grants; a Legal Team Member who removes their own Grant on an open Entity loses that control",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Share capital steps 1-2, 4: Authorized shares saves on focus change, Issued shares on Enter; both survive reload",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Share capital step 4: Escape abandons an unsaved edit",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: negative and fractional share counts are refused without replacing the saved value",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Share capital step 2: leave a value blank when unknown",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Share capital step 3 and note: Par value unavailable until Currency; amount with the currency's decimals; too many decimals refused; changing Currency keeps the amount",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Chart steps 1-2: Chart draws the Holdings; primary owner solid, others dashed; highest percentage is primary even below 50%; an Entity with no Holdings in a separate row",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Chart step 3: drag pans, wheel zooms; with the chart focused arrows pan, plus zooms, zero fits; Fit to window resets",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Chart step 4: single click or Space highlights the ownership chain; Clear highlight or Escape removes it; double-click or Enter opens",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Linked Contracts: the Contracts tab lists Contracts through Our entity; rows and counts reflect the reader's reach",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Linked Matters tab: shows relationships only through saved Entity-valued Fields",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "Before Grants: a Legal Team Member without a Grant sees the switch unavailable and no Manage access",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Grant steps 1-3: Manage access, Confidential access, Person, Grant access; the list includes the person and you; only live Legal Team Members and Administrators are offered",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Grant step 4: turn on Confidential — restrict to the access list; check the saved result",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member (Priya Raman, comparison reader with a Grant)",
+            "method": "browser-walkthrough",
+            "action": "V-C53 A: a Grant gives the named person access",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "V-C53 A: without a Grant, a Legal Team Member cannot reach the Confidential Entity; Holding shows Restricted Entity; chart shows Confidential Entity; no self-grant",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "V-C53 A: an Officer user link and a linked Contract do not grant access",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Grant step 5: Remove name withdraws access; the relationship is preserved",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: removing the last live person from a Confidential Entity is refused",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Turning the Confidential switch off makes the Entity available to all Legal Team Members and Administrators without Grants",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Negative: turning on Confidential with no live person in the list is refused",
+            "result": "pass"
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Agent replay in headless Chromium of the round 1 walkthrough script; not a human user study.",
+    "The replay repeats the round 1 checks. It does not add checks for statements round 1 left unexercised; those limitations in each evidence file still apply.",
+    "No live provider credentials are involved in this group."
+  ],
+  "reviewedAt": "2026-09-16T18:00:47.076Z"
+}

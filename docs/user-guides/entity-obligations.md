@@ -25,7 +25,7 @@ Recurrence accepts 1 to 1,200 months. A blank recurrence makes the item one-off.
 3. Select **Month** for a month grid. Use **Previous month**, **Next month**, or **Today**. Switching between the list and month keeps your filters.
 4. Open an Obligation from the results to work on its Entity. If no results match, use **Clear all** and check whether the Entity is archived or outside your access.
 
-Home shows open Obligations assigned to you, subject to Entity access. Administrators also see unassigned Obligations and those whose named assignee cannot reach the Entity. The section shows a limited set of rows; use the Entity calendar for the wider list. Past-due items remain open until someone files them.
+Home shows open Obligations assigned to you, subject to Entity access. On the Entities they can reach, Administrators also see unassigned Obligations and those whose named assignee cannot reach the Entity. The section shows a limited set of rows; use the Entity calendar for the wider list. Past-due items remain open until someone files them.
 
 Approaching-date reminders and the daily briefing also depend on organization scheduling and your [notification preferences](notifications.md). A reminder reports a due date; it is not evidence that a filing happened. Archiving the Entity removes its Obligations from the calendar, Home, and reminder selection until it is restored.
 
@@ -41,6 +41,6 @@ A one-off keeps its due date and shows **Filed**. It no longer appears among ope
 
 ## Recover from a mistake or refusal
 
-Read the message and correct invalid dates or recurrence values before retrying. If the Entity was archived or your Grant was removed, restore the Entity or ask an Administrator to review access. Another person's filing can make a one-off unavailable for filing; reload to see the saved result.
+Read the message and correct invalid dates or recurrence values before retrying. If the Entity was archived or your Grant was removed, restore the Entity or ask a person with a Grant on that Entity to review access. Another person's filing can make a one-off unavailable for filing; reload to see the saved result.
 
 **Delete \<Obligation label\>** removes the Obligation and its future schedule. It does not file the Obligation or undo a recorded filing. Do not delete an item merely to clear an overdue result. For an incorrect recurring next date, correct the open row and retain the History of what was recorded.

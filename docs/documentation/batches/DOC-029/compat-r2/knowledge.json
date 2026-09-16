@@ -1,0 +1,499 @@
+{
+  "batch": "DOC-029",
+  "round": 2,
+  "group": "knowledge",
+  "kind": "compatibility-review",
+  "reviewer": "DOC-029r2 compatibility reviewer (knowledge)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "reviewedAt": "2026-09-16T17:55:54.577Z",
+  "method": "Read both articles and the V-C33 and V-C34 evidence, inspected the full app diff 3fa407e3..57e77e38 (apps, packages, styles, messages), then replayed the round 1 walkthrough script unchanged in its steps against the entities2 lab.",
+  "diffSummary": "43 app files changed across 6 commits: sign-in branding (org name, logo, Legal Portal label, public GET /org/branding, 5 MB logo limit), SMTP settings fields and first-run welcome steps, locked default fields above custom field catalogs, explicit Save and Cancel for new settings list rows (types, statuses, reminders), a Return to setup link in Settings, and text-muted instead of opacity for archived users. No file under the knowledge, portal knowledge, intake links, deflection panel, knowledge documents or markdown modules changed. No message key used by either article changed.",
+  "lab": {
+    "lab": "entities2",
+    "project": "openlaw-docs-41255c61-entities2",
+    "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appImage": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImage": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "appUrl": "http://127.0.0.1:23302",
+    "mailUrl": "http://127.0.0.1:23402",
+    "seed": "Helix light seed 7"
+  },
+  "replay": {
+    "script": {
+      "path": "batches/DOC-029/compat-r2/knowledge-r2/walkthrough-r2.mjs",
+      "sha256": "7fe50fd3600d06a4c723a0d9cf730a1107934efc7b5cf01746526abf6b69a2c7",
+      "basedOn": "batches/DOC-029/knowledge/walkthrough-r1.mjs",
+      "changes": "Import and fixture paths for the new folder, record names DOC-029r2 knowledge, reviewer name, round 2 and output file name. No step, selector or assertion changed."
+    },
+    "results": {
+      "path": "batches/DOC-029/compat-r2/knowledge-r2/walkthrough-r2.json",
+      "sha256": "1fe86b8493e1bb90e0e3c1422e92d5e4c052eb3fc70338f615876386da0c6bd5"
+    },
+    "log": {
+      "path": "batches/DOC-029/compat-r2/knowledge-r2/walkthrough-r2.log",
+      "sha256": "f0fc5b01571f796d89473d5b2daebcaefafbe58c431a617cbbc629560b1312d1"
+    },
+    "stamp": "D75897",
+    "startedAt": "2026-09-16T17:53:25.550Z",
+    "completedAt": "2026-09-16T17:55:11.356Z",
+    "roles": [
+      "legal_team_member",
+      "administrator",
+      "business_user (ravi.menon, staff refusal)",
+      "portal reader (jonas.weber, magic link)"
+    ],
+    "cleanup": [
+      "Removed deflection link DOC-029r2 knowledge LTM D75897 supplier pack.",
+      "Removed deflection link DOC-029r2 knowledge Admin D75897 supplier pack.",
+      "Archived published fixture DOC-029r2 knowledge Admin D75897 pack (200).",
+      "Archived published fixture DOC-029r2 knowledge LTM D75897 pack (200).",
+      "Deleted the archived Knowledge type fixture (204)."
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "5e0e6144f49cefdeae01ca7744488350531630d3a2f230e9695e75edb8f85a4c",
+      "scenario": "V-C33",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts"
+      ],
+      "notes": [
+        "The Knowledge types settings page now adds a type with explicit Save and Cancel (taxonomy-types-pane.tsx). The article only links to types and Fields for that task and names Manage types… beside Type, which the replay confirmed.",
+        "The archived-user style change touches the Documents repository uploader column, not the Knowledge Item Documents section wording."
+      ],
+      "replaySteps": [
+        {
+          "role": "legal_team_member",
+          "action": "Before you start: open Knowledge from the navigation",
+          "result": "pass",
+          "actual": "The navigation link Knowledge opened /knowledge with the New button, the All Knowledge folder entry and the Knowledge items region as Nadia Haddad."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Organize the library step 2: Add folder at top level, then a child under the selected folder",
+          "result": "pass",
+          "actual": "Add folder with All Knowledge selected saved \"DOC-029r2 knowledge LTM D75897 parent\" with no parent. With that folder selected, Add folder saved \"DOC-029r2 knowledge LTM D75897 child\" with the parent folder as its parent."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Start with files step 2: Folder starts at the selected folder, or at Library",
+          "result": "pass",
+          "actual": "With All Knowledge selected the Folder control read Library. With \"DOC-029r2 knowledge LTM D75897 parent\" selected it started at that folder."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Start with files steps 2-3: choose two files, a Type, and Create drafts",
+          "result": "pass",
+          "actual": "Create drafts opened \"DOC-029r2 knowledge LTM D75897 policy A.pdf\" with the Draft marker, Legal Only, Type Precedent, the parent folder and its file under Primary document. The Knowledge breadcrumb returned to the list, and the parent folder listed both \"DOC-029r2 knowledge LTM D75897 policy A.pdf\" and \"DOC-029r2 knowledge LTM D75897 policy B.pdf\". Each was a draft with one Document of its own as primary."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Start with files step 4: Title saves on Enter and on leaving the field; Type and Folder save on change",
+          "result": "pass",
+          "actual": "Enter saved \"DOC-029r2 knowledge LTM D75897 policy A renamed\". Moving focus to Type saved \"DOC-029r2 knowledge LTM D75897 policy A reviewed\". Type Playbook and Folder \"DOC-029r2 knowledge LTM D75897 child\" saved on change. After a reload the title, heading, Type and Folder showed the saved values."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Start with guidance steps 1-2: New Knowledge Item with Attach documents; a failed upload offers Retry failed uploads",
+          "result": "pass",
+          "actual": "New Knowledge Item took Title, Type Article, Folder and one attached DOCX with Document kind \"Draft · theirs\". The reviewer's browser dropped the first upload request. The dialog then read \"Record created. Some documents could not be uploaded.\" and offered Retry failed uploads and Continue, and the item already existed with no Document. Retry failed uploads uploaded the file and opened the item: Draft marker, Audience Legal Only, and \"DOC-029r2 knowledge LTM D75897 playbook.docx\" under Primary document (kind draft_theirs)."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Start with guidance step 2: Continue after a failed upload keeps the item",
+          "result": "pass",
+          "actual": "With the upload request dropped, Continue closed the dialog and opened \"DOC-029r2 knowledge LTM D75897 continue\": a Draft item with no Document and Primary document None."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Start with guidance steps 3-4: Add guidance, Preview renders Markdown and saves on blur, Edit returns to the source",
+          "result": "pass",
+          "actual": "Add guidance opened the editor. Its only help text was \"Use Preview to see how your guidance will appear to readers.\" and it named no Markdown rules. Preview saved the source on blur and rendered the heading, bold and italic text, a two-item list, inline code and the link. The raw <b> tag did not become a bold element (visible text: \"tag text shown as text\"). Edit showed the source again, and the source was still there after a reload."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Add Documents step 1: upload a new Document in the Documents section",
+          "result": "pass",
+          "actual": "Upload, Choose files and Upload added \"DOC-029r2 knowledge LTM D75897 supporting checklist.pdf\" as a second Document with v1. \"DOC-029r2 knowledge LTM D75897 playbook.docx\", the first Document, kept the primary designation. The Documents section offered no New folder button (count 0). The upload dialog offered Choose folder 1 time(s)."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Add Documents step 2: Set as primary moves the Primary mark and the Primary document control",
+          "result": "pass",
+          "actual": "The primary row's Actions menu offered no Set as primary. On \"DOC-029r2 knowledge LTM D75897 supporting checklist.pdf\" Actions, Set as primary put the Primary mark on that row, and the Primary document control above the Documents section changed to that title."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Add Documents step 3: Open preview reads the primary Document's current Version; the other Document keeps its own Version history",
+          "result": "pass",
+          "actual": "Open preview opened the document reader for \"DOC-029r2 knowledge LTM D75897 supporting checklist.pdf\" labelled \"DOC-029r2 knowledge LTM D75897 supporting checklist.pdf, version 1\", the current Version, and Close the document shut it. Add version on the supporting DOCX made Version 2 on that Document only. The primary PDF kept one Version and its designation."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Add Documents closing text: archiving the primary Document preserves Versions and designation and picks no replacement; restore returns it",
+          "result": "pass",
+          "actual": "Archive took \"DOC-029r2 knowledge LTM D75897 supporting checklist.pdf\" out of the ordinary Documents list. The supporting DOCX did not get the Primary mark. With archived rows included, the PDF still had its one Version and its primary designation. Show archived and Restore returned it to the ordinary list with the Primary mark, and the Primary document control named it after a reload."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Add Documents closing text: an item's Documents use a flat list, even when files come from Choose folder",
+          "result": "pass",
+          "actual": "The Documents section had no New folder button. Upload, Choose folder on a folder holding one file in a subfolder offered Import 1 file, and the import placed \"DOC-029r2 knowledge LTM D75897 folder pick.pdf\" at the item root with no Document folder, beside the other Documents (3 in the flat list)."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Organize the library step 1: All Knowledge, a folder with its descendants, and separate filters",
+          "result": "pass",
+          "actual": "Type, State, Audience, Author and Format were each offered. The parent folder listed the item in its child folder as well as its own items; the child folder listed only its item. Type Precedent dropped the Playbook item. State Published hid the drafts (empty-state text shown: true). Author Nadia Haddad kept the PDF item; adding Format Word dropped it (guidance item listed under Word: false), and Format PDF brought it back. Audience Everyone then hid that Legal Only item. Clear filters and reselecting the folder brought all items back."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Organize the library step 3: Rename or move selected folder excludes the folder and its descendants and saves the change",
+          "result": "pass",
+          "actual": "In Rename or move folder for the parent folder, Parent folder offered Library, other folders and \"DOC-029r2 knowledge LTM D75897 target\", but not the folder itself or its child. Save folder renamed it to \"DOC-029r2 knowledge LTM D75897 parent renamed\". Moving the child folder under \"DOC-029r2 knowledge LTM D75897 target\" with Parent folder and Save folder kept its item in it, and the target folder listed that item."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Organize the library step 4: up/down controls change sibling order",
+          "result": "pass",
+          "actual": "The target folder was at sibling position 8. Move up saved position 7, and Move down saved position 8 again (2 click(s) in total)."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Organize the library step 5: Delete selected folder moves its items and child folders to its parent",
+          "result": "pass",
+          "actual": "The dialog \"Delete the DOC-029r2 knowledge LTM D75897 target folder?\" read \"Its folders and items move to the parent folder. Nothing is deleted.\" Delete folder removed the folder. Its child folder became top-level, and \"DOC-029r2 knowledge LTM D75897 policy A reviewed\" stayed in that child folder with its one Document."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Recover from an unavailable choice: Manage types… beside Type is for Administrators; archived types are not offered",
+          "result": "pass",
+          "actual": "No Manage types… link was beside Type for the Legal Team Member. The archived Knowledge type \"DOC-029r2 knowledge retired type D75897\" was absent from the record Type control, the New Knowledge Item dialog and the New from files dialog, while Playbook was offered in all three."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Recover from an unavailable choice: an archived item cannot be edited or receive uploads; Restore makes it editable",
+          "result": "pass",
+          "actual": "Archive marked the item Archived and disabled Title, Type, Folder, Audience and the guidance editor. Upload disappeared, and a direct upload to the item answered 409 (\"Restore this Knowledge Item before adding Documents.\"). After a reload the saved address still opened the archived item. Knowledge Item actions, Restore cleared Archived and made the fields and Upload available again."
+        },
+        {
+          "role": "administrator",
+          "action": "Before you start: open Knowledge from the navigation",
+          "result": "pass",
+          "actual": "The navigation link Knowledge opened /knowledge with the New button, the All Knowledge folder entry and the Knowledge items region as Daniel Okafor."
+        },
+        {
+          "role": "administrator",
+          "action": "Organize the library step 2: Add folder at top level, then a child under the selected folder",
+          "result": "pass",
+          "actual": "Add folder with All Knowledge selected saved \"DOC-029r2 knowledge Admin D75897 parent\" with no parent. With that folder selected, Add folder saved \"DOC-029r2 knowledge Admin D75897 child\" with the parent folder as its parent."
+        },
+        {
+          "role": "administrator",
+          "action": "Start with files step 2: Folder starts at the selected folder, or at Library",
+          "result": "pass",
+          "actual": "With All Knowledge selected the Folder control read Library. With \"DOC-029r2 knowledge Admin D75897 parent\" selected it started at that folder."
+        },
+        {
+          "role": "administrator",
+          "action": "Start with files steps 2-3: choose two files, a Type, and Create drafts",
+          "result": "pass",
+          "actual": "Create drafts opened \"DOC-029r2 knowledge Admin D75897 policy A.pdf\" with the Draft marker, Legal Only, Type Precedent, the parent folder and its file under Primary document. The Knowledge breadcrumb returned to the list, and the parent folder listed both \"DOC-029r2 knowledge Admin D75897 policy A.pdf\" and \"DOC-029r2 knowledge Admin D75897 policy B.pdf\". Each was a draft with one Document of its own as primary."
+        },
+        {
+          "role": "administrator",
+          "action": "Start with files step 4: Title saves on Enter and on leaving the field; Type and Folder save on change",
+          "result": "pass",
+          "actual": "Enter saved \"DOC-029r2 knowledge Admin D75897 policy A renamed\". Moving focus to Type saved \"DOC-029r2 knowledge Admin D75897 policy A reviewed\". Type Playbook and Folder \"DOC-029r2 knowledge Admin D75897 child\" saved on change. After a reload the title, heading, Type and Folder showed the saved values."
+        },
+        {
+          "role": "administrator",
+          "action": "Start with guidance steps 1-2: New Knowledge Item with Attach documents; a failed upload offers Retry failed uploads",
+          "result": "pass",
+          "actual": "New Knowledge Item took Title, Type Article, Folder and one attached DOCX with Document kind \"Draft · theirs\". The reviewer's browser dropped the first upload request. The dialog then read \"Record created. Some documents could not be uploaded.\" and offered Retry failed uploads and Continue, and the item already existed with no Document. Retry failed uploads uploaded the file and opened the item: Draft marker, Audience Legal Only, and \"DOC-029r2 knowledge Admin D75897 playbook.docx\" under Primary document (kind draft_theirs)."
+        },
+        {
+          "role": "administrator",
+          "action": "Start with guidance step 2: Continue after a failed upload keeps the item",
+          "result": "pass",
+          "actual": "With the upload request dropped, Continue closed the dialog and opened \"DOC-029r2 knowledge Admin D75897 continue\": a Draft item with no Document and Primary document None."
+        },
+        {
+          "role": "administrator",
+          "action": "Start with guidance steps 3-4: Add guidance, Preview renders Markdown and saves on blur, Edit returns to the source",
+          "result": "pass",
+          "actual": "Add guidance opened the editor. Its only help text was \"Use Preview to see how your guidance will appear to readers.\" and it named no Markdown rules. Preview saved the source on blur and rendered the heading, bold and italic text, a two-item list, inline code and the link. The raw <b> tag did not become a bold element (visible text: \"tag text shown as text\"). Edit showed the source again, and the source was still there after a reload."
+        },
+        {
+          "role": "administrator",
+          "action": "Add Documents step 1: upload a new Document in the Documents section",
+          "result": "pass",
+          "actual": "Upload, Choose files and Upload added \"DOC-029r2 knowledge Admin D75897 supporting checklist.pdf\" as a second Document with v1. \"DOC-029r2 knowledge Admin D75897 playbook.docx\", the first Document, kept the primary designation. The Documents section offered no New folder button (count 0). The upload dialog offered Choose folder 1 time(s)."
+        },
+        {
+          "role": "administrator",
+          "action": "Add Documents step 2: Set as primary moves the Primary mark and the Primary document control",
+          "result": "pass",
+          "actual": "The primary row's Actions menu offered no Set as primary. On \"DOC-029r2 knowledge Admin D75897 supporting checklist.pdf\" Actions, Set as primary put the Primary mark on that row, and the Primary document control above the Documents section changed to that title."
+        },
+        {
+          "role": "administrator",
+          "action": "Add Documents step 3: Open preview reads the primary Document's current Version; the other Document keeps its own Version history",
+          "result": "pass",
+          "actual": "Open preview opened the document reader for \"DOC-029r2 knowledge Admin D75897 supporting checklist.pdf\" labelled \"DOC-029r2 knowledge Admin D75897 supporting checklist.pdf, version 1\", the current Version, and Close the document shut it. Add version on the supporting DOCX made Version 2 on that Document only. The primary PDF kept one Version and its designation."
+        },
+        {
+          "role": "administrator",
+          "action": "Add Documents closing text: archiving the primary Document preserves Versions and designation and picks no replacement; restore returns it",
+          "result": "pass",
+          "actual": "Archive took \"DOC-029r2 knowledge Admin D75897 supporting checklist.pdf\" out of the ordinary Documents list. The supporting DOCX did not get the Primary mark. With archived rows included, the PDF still had its one Version and its primary designation. Show archived and Restore returned it to the ordinary list with the Primary mark, and the Primary document control named it after a reload."
+        },
+        {
+          "role": "administrator",
+          "action": "Add Documents closing text: an item's Documents use a flat list, even when files come from Choose folder",
+          "result": "pass",
+          "actual": "The Documents section had no New folder button. Upload, Choose folder on a folder holding one file in a subfolder offered Import 1 file, and the import placed \"DOC-029r2 knowledge Admin D75897 folder pick.pdf\" at the item root with no Document folder, beside the other Documents (3 in the flat list)."
+        },
+        {
+          "role": "administrator",
+          "action": "Organize the library step 1: All Knowledge, a folder with its descendants, and separate filters",
+          "result": "pass",
+          "actual": "Type, State, Audience, Author and Format were each offered. The parent folder listed the item in its child folder as well as its own items; the child folder listed only its item. Type Precedent dropped the Playbook item. State Published hid the drafts (empty-state text shown: true). Author Daniel Okafor kept the PDF item; adding Format Word dropped it (guidance item listed under Word: false), and Format PDF brought it back. Audience Everyone then hid that Legal Only item. Clear filters and reselecting the folder brought all items back."
+        },
+        {
+          "role": "administrator",
+          "action": "Organize the library step 3: Rename or move selected folder excludes the folder and its descendants and saves the change",
+          "result": "pass",
+          "actual": "In Rename or move folder for the parent folder, Parent folder offered Library, other folders and \"DOC-029r2 knowledge Admin D75897 target\", but not the folder itself or its child. Save folder renamed it to \"DOC-029r2 knowledge Admin D75897 parent renamed\". Moving the child folder under \"DOC-029r2 knowledge Admin D75897 target\" with Parent folder and Save folder kept its item in it, and the target folder listed that item."
+        },
+        {
+          "role": "administrator",
+          "action": "Organize the library step 4: up/down controls change sibling order",
+          "result": "pass",
+          "actual": "The target folder was at sibling position 10. Move up saved position 9, and Move down saved position 10 again (2 click(s) in total)."
+        },
+        {
+          "role": "administrator",
+          "action": "Organize the library step 5: Delete selected folder moves its items and child folders to its parent",
+          "result": "pass",
+          "actual": "The dialog \"Delete the DOC-029r2 knowledge Admin D75897 target folder?\" read \"Its folders and items move to the parent folder. Nothing is deleted.\" Delete folder removed the folder. Its child folder became top-level, and \"DOC-029r2 knowledge Admin D75897 policy A reviewed\" stayed in that child folder with its one Document."
+        },
+        {
+          "role": "administrator",
+          "action": "Recover from an unavailable choice: Manage types… beside Type is for Administrators; archived types are not offered",
+          "result": "pass",
+          "actual": "Manage types… was beside Type and opened /settings/knowledge/types. The archived Knowledge type \"DOC-029r2 knowledge retired type D75897\" was absent from the record Type control, the New Knowledge Item dialog and the New from files dialog, while Playbook was offered in all three."
+        },
+        {
+          "role": "administrator",
+          "action": "Recover from an unavailable choice: an archived item cannot be edited or receive uploads; Restore makes it editable",
+          "result": "pass",
+          "actual": "Archive marked the item Archived and disabled Title, Type, Folder, Audience and the guidance editor. Upload disappeared, and a direct upload to the item answered 409 (\"Restore this Knowledge Item before adding Documents.\"). After a reload the saved address still opened the archived item. Knowledge Item actions, Restore cleared Archived and made the fields and Upload available again."
+        },
+        {
+          "role": "business_user",
+          "action": "Before you start: Business Users cannot author or browse the staff Knowledge library",
+          "result": "pass",
+          "actual": "Ravi Menon (Business User) signed in to the Business Portal with a fresh magic link; the app root sent him to /portal. /knowledge sent him to /portal, and a Knowledge record address sent him to /portal, with no Knowledge navigation link. The staff Knowledge list, record, Documents and create requests answered [403,403,403,403]. Jonas Weber's Portal session asking for /knowledge ended on /portal."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Before you start: Help search does not search Knowledge Items",
+          "result": "pass",
+          "actual": "Help search found the guide \"Create and organize Knowledge Items\" by its title. A search for the Knowledge Item title \"DOC-029r2 knowledge LTM D75897 guidance\" answered \"No matching articles\"."
+        }
+      ],
+      "passed": true,
+      "conclusion": "compatible"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "18918ce410b68ee48ca7bfc2217bc187ef24da783f5817298c0cf1188336e7bd",
+      "scenario": "V-C34",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "apps/web/src/routes/settings-general.tsx"
+      ],
+      "notes": [
+        "The Portal sign-in page now shows organization branding and a Legal Portal label. The article does not describe the sign-in page; the magic-link Portal session in the replay still worked.",
+        "Settings, Intake, Deflection links is unchanged; the Return to setup link shows only after navigation from first run."
+      ],
+      "replaySteps": [
+        {
+          "role": "legal_team_member",
+          "action": "Fixture: a draft item with guidance, a primary PDF and a supporting DOCX, plus a live draft replacement",
+          "result": "pass",
+          "actual": "The publisher's session created \"DOC-029r2 knowledge LTM D75897 pack\" (Draft, Legal Only, primary \"DOC-029r2 knowledge LTM D75897 pack primary.pdf\", supporting \"DOC-029r2 knowledge LTM D75897 pack supporting.docx\", guidance) and \"DOC-029r2 knowledge LTM D75897 replacement pack\" in folder \"DOC-029r2 knowledge LTM D75897 publish\". These are fixtures made through the API, not guide steps."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Before you start table rows 1-2: Draft and published Legal Only are unavailable in the Portal",
+          "result": "pass",
+          "actual": "Nadia Haddad opened the Draft record (Draft marker, no On the portal). Jonas Weber and Ravi Menon in their Portal sessions got 404 from the article read, and the Portal page returned Jonas to /portal. Publish while Legal Only removed the Draft marker without On the portal, and both readers still got 404 and the Portal home. Unpublish, with no deflection link, returned the item to Draft without a dialog."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Publish and check the Portal steps 1-2: Audience Everyone, then Publish from Knowledge Item actions",
+          "result": "pass",
+          "actual": "Audience Everyone saved on the draft; the item still showed Draft, no On the portal, and the Portal read answered 404. Knowledge Item actions, Publish removed Draft and showed On the portal. Before any deflection link existed, the Portal home had no link to the item."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Publish and check the Portal step 3: an Administrator adds a deflection link in Settings, Intake, Deflection links",
+          "result": "pass",
+          "actual": "As Daniel Okafor: user menu, Settings, Intake, Deflection links, Add link. Target Knowledge item offered \"DOC-029r2 knowledge LTM D75897 pack\" and did not offer the draft \"DOC-029r2 knowledge LTM D75897 replacement pack\". With the Label \"DOC-029r2 knowledge LTM D75897 supplier pack\" and Placement Portal home, Add link added the row. The item then counted 1 deflection link."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Publish and check the Portal step 4: a signed-in Portal reader opens the link under Before you submit and downloads both Documents",
+          "result": "pass",
+          "actual": "Jonas Weber opened \"DOC-029r2 knowledge LTM D75897 supplier pack\" under Before you submit and reached \"DOC-029r2 knowledge LTM D75897 pack\" with its guidance heading. The Documents section came before Guidance, and \"DOC-029r2 knowledge LTM D75897 pack primary.pdf\" was listed first. Both downloads matched the uploaded PDF and DOCX byte for byte. The page offered no staff actions, no text field and no Version choice. Ravi Menon's Portal session could also read the article (200)."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Publish and check the Portal closing text: a guidance edit and a new Version reach the Portal without another Publish",
+          "result": "pass",
+          "actual": "A guidance edit (saved on Preview) and Add version on the primary PDF made Version 2 with no second Publish. After a reload Jonas Weber saw the new guidance heading, and his download matched the Version 2 bytes. The staff chain still had both Versions (2). State, audience and the first publication time did not change."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Withdraw or restrict steps 1-3: change Audience to Legal Only; the dialog names the link; Cancel keeps it, Continue restricts it",
+          "result": "pass",
+          "actual": "Audience Legal Only opened \"Remove this from the portal?\" with the text \"Remove this from the portal? 1 deflection link points at this item. The link will stay in Settings but disappear from the portal. Cancel Continue\". Cancel left Everyone saved and shown. Continue saved Legal Only and removed On the portal. The Portal home no longer showed the link. The saved article address returned Jonas to /portal, and the article and both saved download addresses answered 404 for both Portal sessions (6 denied reads). The link row stayed in Settings, Deflection links."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Withdraw or restrict: Unpublish returns the item to Draft; Everyone and Publish make it available again with the existing link",
+          "result": "pass",
+          "actual": "Audience Everyone on the published item brought back the link, the article and both downloads. Unpublish asked \"Remove this from the portal?\"; Continue showed the Draft marker and kept Audience Everyone. The link went, and the article and file addresses answered 404 (6 denied reads). Publish on the draft brought back On the portal, the existing deflection link, the article and both downloads."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Archive and restore steps 1-4 with Replaced by",
+          "result": "pass",
+          "actual": "The Knowledge list had no Show archived toggle. Archive Knowledge Item started at No replacement; with Replaced by \"DOC-029r2 knowledge LTM D75897 replacement pack\", Archive marked the item Archived and disabled Title and Audience. Guidance, both Documents and the replacement stayed on the item. The link, the article and both file addresses stopped working (6 denied reads). The old Portal address returned the reader to /portal, not to the replacement. The folder list left the item out. The saved staff address still opened it, and Restore brought back Published, Everyone and On the portal with editable fields. The item was in the library again, and the existing link, the article and both downloads worked."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Check a missing item: archived replacements are not offered, and the Replaced by list refreshes only after a reload",
+          "result": "pass",
+          "actual": "The archived fixture \"DOC-029r2 knowledge LTM D75897 retired pack\" was not in Replaced by, and a direct archive naming it as a replacement answered 400. An item created while the record stayed open was missing when the dialog opened again (true), and it was offered after a reload."
+        },
+        {
+          "role": "legal_team_member",
+          "action": "Check a missing item: a browser with no Portal session cannot read a published Everyone item",
+          "result": "pass",
+          "actual": "With no session, the Portal article page went to /portal/login. The article read answered 401, and a saved download address answered 401."
+        },
+        {
+          "role": "administrator",
+          "action": "Fixture: a draft item with guidance, a primary PDF and a supporting DOCX, plus a live draft replacement",
+          "result": "pass",
+          "actual": "The publisher's session created \"DOC-029r2 knowledge Admin D75897 pack\" (Draft, Legal Only, primary \"DOC-029r2 knowledge Admin D75897 pack primary.pdf\", supporting \"DOC-029r2 knowledge Admin D75897 pack supporting.docx\", guidance) and \"DOC-029r2 knowledge Admin D75897 replacement pack\" in folder \"DOC-029r2 knowledge Admin D75897 publish\". These are fixtures made through the API, not guide steps."
+        },
+        {
+          "role": "administrator",
+          "action": "Before you start table rows 1-2: Draft and published Legal Only are unavailable in the Portal",
+          "result": "pass",
+          "actual": "Daniel Okafor opened the Draft record (Draft marker, no On the portal). Jonas Weber and Ravi Menon in their Portal sessions got 404 from the article read, and the Portal page returned Jonas to /portal. Publish while Legal Only removed the Draft marker without On the portal, and both readers still got 404 and the Portal home. Unpublish, with no deflection link, returned the item to Draft without a dialog."
+        },
+        {
+          "role": "administrator",
+          "action": "Publish and check the Portal steps 1-2: Audience Everyone, then Publish from Knowledge Item actions",
+          "result": "pass",
+          "actual": "Audience Everyone saved on the draft; the item still showed Draft, no On the portal, and the Portal read answered 404. Knowledge Item actions, Publish removed Draft and showed On the portal. Before any deflection link existed, the Portal home had no link to the item."
+        },
+        {
+          "role": "administrator",
+          "action": "Publish and check the Portal step 3: an Administrator adds a deflection link in Settings, Intake, Deflection links",
+          "result": "pass",
+          "actual": "As Daniel Okafor: user menu, Settings, Intake, Deflection links, Add link. Target Knowledge item offered \"DOC-029r2 knowledge Admin D75897 pack\" and did not offer the draft \"DOC-029r2 knowledge Admin D75897 replacement pack\". With the Label \"DOC-029r2 knowledge Admin D75897 supplier pack\" and Placement Portal home, Add link added the row. The item then counted 1 deflection link."
+        },
+        {
+          "role": "administrator",
+          "action": "Publish and check the Portal step 4: a signed-in Portal reader opens the link under Before you submit and downloads both Documents",
+          "result": "pass",
+          "actual": "Jonas Weber opened \"DOC-029r2 knowledge Admin D75897 supplier pack\" under Before you submit and reached \"DOC-029r2 knowledge Admin D75897 pack\" with its guidance heading. The Documents section came before Guidance, and \"DOC-029r2 knowledge Admin D75897 pack primary.pdf\" was listed first. Both downloads matched the uploaded PDF and DOCX byte for byte. The page offered no staff actions, no text field and no Version choice. Ravi Menon's Portal session could also read the article (200)."
+        },
+        {
+          "role": "administrator",
+          "action": "Publish and check the Portal closing text: a guidance edit and a new Version reach the Portal without another Publish",
+          "result": "pass",
+          "actual": "A guidance edit (saved on Preview) and Add version on the primary PDF made Version 2 with no second Publish. After a reload Jonas Weber saw the new guidance heading, and his download matched the Version 2 bytes. The staff chain still had both Versions (2). State, audience and the first publication time did not change."
+        },
+        {
+          "role": "administrator",
+          "action": "Withdraw or restrict steps 1-3: change Audience to Legal Only; the dialog names the link; Cancel keeps it, Continue restricts it",
+          "result": "pass",
+          "actual": "Audience Legal Only opened \"Remove this from the portal?\" with the text \"Remove this from the portal? 1 deflection link points at this item. The link will stay in Settings but disappear from the portal. Cancel Continue\". Cancel left Everyone saved and shown. Continue saved Legal Only and removed On the portal. The Portal home no longer showed the link. The saved article address returned Jonas to /portal, and the article and both saved download addresses answered 404 for both Portal sessions (6 denied reads). The link row stayed in Settings, Deflection links."
+        },
+        {
+          "role": "administrator",
+          "action": "Withdraw or restrict: Unpublish returns the item to Draft; Everyone and Publish make it available again with the existing link",
+          "result": "pass",
+          "actual": "Audience Everyone on the published item brought back the link, the article and both downloads. Unpublish asked \"Remove this from the portal?\"; Continue showed the Draft marker and kept Audience Everyone. The link went, and the article and file addresses answered 404 (6 denied reads). Publish on the draft brought back On the portal, the existing deflection link, the article and both downloads."
+        },
+        {
+          "role": "administrator",
+          "action": "Archive and restore steps 1-4 with Replaced by",
+          "result": "pass",
+          "actual": "The Knowledge list had no Show archived toggle. Archive Knowledge Item started at No replacement; with Replaced by \"DOC-029r2 knowledge Admin D75897 replacement pack\", Archive marked the item Archived and disabled Title and Audience. Guidance, both Documents and the replacement stayed on the item. The link, the article and both file addresses stopped working (6 denied reads). The old Portal address returned the reader to /portal, not to the replacement. The folder list left the item out. The saved staff address still opened it, and Restore brought back Published, Everyone and On the portal with editable fields. The item was in the library again, and the existing link, the article and both downloads worked."
+        },
+        {
+          "role": "administrator",
+          "action": "Check a missing item: archived replacements are not offered, and the Replaced by list refreshes only after a reload",
+          "result": "pass",
+          "actual": "The archived fixture \"DOC-029r2 knowledge Admin D75897 retired pack\" was not in Replaced by, and a direct archive naming it as a replacement answered 400. An item created while the record stayed open was missing when the dialog opened again (true), and it was offered after a reload."
+        },
+        {
+          "role": "administrator",
+          "action": "Check a missing item: a browser with no Portal session cannot read a published Everyone item",
+          "result": "pass",
+          "actual": "With no session, the Portal article page went to /portal/login. The article read answered 401, and a saved download address answered 401."
+        }
+      ],
+      "passed": true,
+      "conclusion": "compatible"
+    }
+  ],
+  "limitations": [
+    "The replay repeats the round 1 steps. It adds no new checks beyond the diff inspection.",
+    "The lab is shared with other DOC-029r2 reviewers; records use the DOC-029r2 knowledge prefix and stamp D75897."
+  ]
+}

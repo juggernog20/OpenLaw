@@ -1,22 +1,29 @@
 {
   "articleId": "contract-stages",
-  "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b",
-  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
-  "environment": "openlaw-docs-b8e31260-conversations",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-work",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (contracts-a)",
+  "technicalReviewer": "DOC-029 source-review author agent (contracts-a)",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (contracts-a, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-07T13:32:50.763Z",
+  "verifiedAt": "2026-09-16T15:40:06.333Z",
   "status": "pass",
   "sources": [
+    "docs/user-guides/contract-stages.md",
     "CONTEXT.md",
-    "apps/web/src/components/stage-pipeline.tsx",
+    "messages/en-US.json",
     "apps/web/src/routes/contract-record.tsx",
-    "apps/web/src/lib/activity.ts",
+    "apps/web/src/components/stage-pipeline.tsx",
+    "apps/web/src/components/activity/activity-applet.tsx",
     "apps/api/src/modules/contracts/routes.ts",
-    "apps/api/src/lib/soft-gate.ts"
+    "apps/api/src/lib/soft-gate.ts",
+    "apps/api/src/modules/contract-statuses/routes.ts",
+    "packages/db/migrations/0009_contract_statuses.sql",
+    "docs/documentation/batches/DOC-029/contracts-a/technical-review.json",
+    "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
+    "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs"
   ],
   "scenarios": [
     {
@@ -24,12 +31,17 @@
       "coverage": ["C15"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Contract Statuses covering the fixed Stages and an editable Contract.",
+        "Seeded Contract Statuses for all six Stages plus one fixture Review-Stage Status.",
+        "Contract created through the acting role's API session with Jonas Weber on its team."
+      ],
       "expected": "Status labels use their configured Stage mapping and each successful move is visible. An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage.",
-      "actual": "Menu label \"Move to\" listed each Status with its Stage (e.g. Out for signature · Signature); moves recorded Internal review→review, Awaiting approval→approval, Out for signature→signature, Active→active; the header Stage button read \"<Stage> — move contract\" and the Status name showed beside the reference after each; Out for signature created no Envelope and Active filed no Document; History showed 4 status changes. Active → Internal review accepted (Stage review); the Administrator's new Status renamed to \"Rev renamed review legal_team_member 20260907133231\" still listed and mapped as Review; Review → Active skipped Approval and Signature. Move past approval listed Priya Raman Pending; Cancel kept Awaiting approval; Move anyway saved Out for signature; History reads \"moved this contract past approval, overriding Priya Raman\"; the approval is still pending. Expired mapped to Ended and the Description still saved; archived record showed no Stage control and a direct status write answered 409; Restore left it Expired; the control then reopened it as Active. Ravi Menon (Contributor on the team) saw no Stage control and got 403; Priya Raman outside the Confidential team got 404; the Status stayed Active.",
+      "actual": "6 recorded steps passed for this role in the final run (2026-09-16T15:36:02.839Z to 2026-09-16T15:36:10.863Z). Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History: Menu items: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-029 contracts-a review 1789572933571 Review\"]. Moves: Internal review -> Review; Awaiting approval -> Approval; Out for signature -> Signature; Active -> Active; each time the header showed the Status beside C-188 and \"<Stage> — move contract\". Moving to Signature created 0 Envelopes and Active added 0 Documents. History: \"Nadia Haddad changed the status Out for signature → Active this minute Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad changed the status Internal review → Awaiting approval this minute Nadia Haddad changed the status Draft → Internal review this minute Nadia Haddad added Jonas Weber to the team this minute Nadia Haddad created this contract this minu\". Move backwards and skip Stages: Active -> Internal review accepted, then Internal review -> Active (skipping Approval and Signature) accepted; now Active (active). Negative: renaming a Status does not change its Stage: Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-029 contracts-a renamed by legal_team_member 1789572933571\" (a rename carrying a Stage answered 400). The Contract reads DOC-029 contracts-a renamed by legal_team_member 1789572933571 / review; the menu item reads \"DOC-029 contracts-a renamed by legal_team_member 1789572933571 Review\". Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override: Dialog: \"Move past approval 1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off. DO Daniel Okafor Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\". Cancel kept Awaiting approval. Move anyway saved Out for signature. History: \"Nadia Haddad moved this contract past approval, overriding Daniel Okafor this minute Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad asked Daniel Okafor\". The approval for Daniel Okafor is still pending. Ended Contracts stay editable: Moved to Expired (Ended); Priority Critical saved on the Ended Contract. Negative: archived records and Business Users get no Status control; Restore brings it back: Jonas Weber (team member, Portal) saw 0 Status controls and a direct Status write answered 403. Archived C-188 showed 0 Stage move controls and a direct write answered 409. After Restore (200) the Stage control moved it to Active.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-014/independent-discovery.json"
+        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs"
       ]
     },
     {
@@ -37,117 +49,53 @@
       "coverage": ["C15"],
       "role": "administrator",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Contract Statuses covering the fixed Stages and an editable Contract.",
+        "Seeded Contract Statuses for all six Stages plus one fixture Review-Stage Status.",
+        "Contract created through the acting role's API session with Jonas Weber on its team."
+      ],
       "expected": "Status labels use their configured Stage mapping and each successful move is visible. An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage.",
-      "actual": "Menu label \"Move to\" listed each Status with its Stage (e.g. Out for signature · Signature); moves recorded Internal review→review, Awaiting approval→approval, Out for signature→signature, Active→active; the header Stage button read \"<Stage> — move contract\" and the Status name showed beside the reference after each; Out for signature created no Envelope and Active filed no Document; History showed 4 status changes. Active → Internal review accepted (Stage review); the Administrator's new Status renamed to \"Rev renamed review administrator 20260907133231\" still listed and mapped as Review; Review → Active skipped Approval and Signature. Move past approval listed Priya Raman Pending; Cancel kept Awaiting approval; Move anyway saved Out for signature; History reads \"moved this contract past approval, overriding Priya Raman\"; the approval is still pending. Expired mapped to Ended and the Description still saved; archived record showed no Stage control and a direct status write answered 409; Restore left it Expired; the control then reopened it as Active. Ravi Menon (Contributor on the team) saw no Stage control and got 403; Priya Raman outside the Confidential team got 404; the Status stayed Active.",
+      "actual": "6 recorded steps passed for this role in the final run (2026-09-16T15:37:50.973Z to 2026-09-16T15:37:59.495Z). Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History: Menu items: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-029 contracts-a renamed by legal_team_member 1789572933571 Review\"]. Moves: Internal review -> Review; Awaiting approval -> Approval; Out for signature -> Signature; Active -> Active; each time the header showed the Status beside C-204 and \"<Stage> — move contract\". Moving to Signature created 0 Envelopes and Active added 0 Documents. History: \"Daniel Okafor changed the status Out for signature → Active this minute Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor changed the status Internal review → Awaiting approval this minute Daniel Okafor changed the status Draft → Internal review this minute Daniel Okafor added Jonas Weber to the team this minute Daniel Okafor created this contract thi\". Move backwards and skip Stages: Active -> Internal review accepted, then Internal review -> Active (skipping Approval and Signature) accepted; now Active (active). Negative: renaming a Status does not change its Stage: Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-029 contracts-a renamed by administrator 1789572933571\" (a rename carrying a Stage answered 400). The Contract reads DOC-029 contracts-a renamed by administrator 1789572933571 / review; the menu item reads \"DOC-029 contracts-a renamed by administrator 1789572933571 Review\". Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override: Dialog: \"Move past approval 1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off. NH Nadia Haddad Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\". Cancel kept Awaiting approval. Move anyway saved Out for signature. History: \"Daniel Okafor moved this contract past approval, overriding Nadia Haddad this minute Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor asked Nadia Haddad\". The approval for Nadia Haddad is still pending. Ended Contracts stay editable: Moved to Expired (Ended); Priority Critical saved on the Ended Contract. Negative: archived records and Business Users get no Status control; Restore brings it back: Jonas Weber (team member, Portal) saw 0 Status controls and a direct Status write answered 403. Archived C-204 showed 0 Stage move controls and a direct write answered 409. After Restore (200) the Stage control moved it to Active.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-014/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-014/independent-discovery.json"
+        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs"
       ]
     }
   ],
-  "authorEvidence": [
-    "docs/documentation/batches/DOC-014/README.md",
-    "docs/documentation/batches/DOC-014/author-stages.json"
-  ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
-    "Browser contexts were 1280×1800 CSS px so the crowded Stage menu of the disposable labs stayed reachable (issue #768); the ordinary-height crowded menu is not claimed to pass."
+    "Independent agent walkthrough by an agent that did not write the guide; not a human user study and not the feature owner's approval.",
+    "Run on the shared work lab (openlaw-docs-41255c61-work), which other DOC-029 groups used at the same time. Only records named DOC-029 contracts-a were created; the fixture Contract type, Fields, Contract Status and Approver group were archived after the run.",
+    "Setup API calls created some prerequisites and API readbacks confirmed saved values and refusals; the article steps themselves were performed in the browser. See the observations in walkthrough-r1.json.",
+    "Contributor is a former account type (DD-023). Business User refusals used Jonas Weber through a new Portal magic link.",
+    "Browser contexts were 1280x900 CSS px; the Status menu had 11 options and all were reachable. Issue #768 (crowded menu) is not claimed fixed.",
+    "A competing change that requires a fresh review was not exercised.",
+    "The Status rename was made by Daniel Okafor through the Contract Status API as fixture setup, not through the Settings screen."
   ],
-  "previousEvidence": null,
-  "copyOnlyReview": {
-    "reviewer": "Codex DOC-025 editorial audit (agent)",
-    "reviewedAt": "2026-09-08T12:54:41.384422Z",
-    "kind": "en-US spelling only",
-    "priorContentSha256": "8fec18cd5b3f50c0baadebd2b8fd68772cc118da4341915dec4674774a1a0553",
+  "previousEvidence": {
+    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
     "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b",
-    "priorEvidenceCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
-    "summary": "Only organization spelling changed. Actions, labels, prerequisites and results are unchanged; prior walkthrough timestamps/builds remain historical, no new walkthrough claimed."
+    "verifiedAt": "2026-09-07T13:32:50.763Z"
   },
-  "publicationBlockers": [
-    "DOC-025 complete-suite acceptance and DOC-027 publication remain pending; live-provider C42/C43 are blocked under #742. Linked non-provider guides now exist with passing article evidence and remain in catalog review."
-  ],
+  "copyOnlyReview": null,
   "compatibilityReview": {
-    "fromAppCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b",
-    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
-    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-08T13:42:44.735Z",
-    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-a)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff; the Stage pipeline, Soft gate and History are unchanged, and only the Settings add row for a Status changed. Replayed the round 1 V-C15 walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 12 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
-        "path": "batches/DOC-025/compatibility.json",
-        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
+        "path": "batches/DOC-029/compat-r2/contracts-a.json",
+        "sha256": "d3f55e90c80b20890b67d07c3d321fa5dc3376df94341715e4f76e570b9cc953"
       },
       {
-        "path": "batches/DOC-025/independent-compatibility.json",
-        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
-      },
-      {
-        "path": "batches/DOC-011/independent-walkthrough.json",
-        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
-      },
-      {
-        "path": "batches/DOC-012/independent-walkthrough.json",
-        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
-      },
-      {
-        "path": "batches/DOC-025/source-6a8873db.diff",
-        "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a"
-      },
-      {
-        "path": "batches/DOC-025/source-8539f4cc.diff",
-        "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161"
-      },
-      {
-        "path": "batches/DOC-025/source-a28331f7.diff",
-        "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63"
-      },
-      {
-        "path": "batches/DOC-025/source-d1d098ba.diff",
-        "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840"
-      },
-      {
-        "path": "batches/DOC-010/independent-walkthrough.json",
-        "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
-      },
-      {
-        "path": "batches/DOC-018/independent-c31.json",
-        "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
-      },
-      {
-        "path": "batches/DOC-018/independent-c52.json",
-        "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
-      },
-      {
-        "path": "batches/DOC-019/independent-c33.json",
-        "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
-      },
-      {
-        "path": "batches/DOC-019/independent-c34.json",
-        "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
-      },
-      {
-        "path": "batches/DOC-019/independent-supplement.json",
-        "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
-    ],
-    "authoredSourceAudit": {
-      "path": "batches/DOC-025/compatibility.json",
-      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
-      "reviewedAt": "2026-09-08T12:56:21.570227Z",
-      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
-    }
-  },
-  "publicationBlockersBeforeDOC025": [
-    "The linked approval, signing and relations guides are in review."
-  ],
-  "publicationBlockerReconciliation": {
-    "reviewer": "Codex DOC-025 evidence audit (agent)",
-    "reviewedAt": "2026-09-08T13:10:20.947051Z",
-    "priorEvidenceCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
-    "summary": "Preserves earlier blocker notes separately and identifies current suite gates. No walkthrough date, build, result or catalog status changed."
+    ]
   }
 }

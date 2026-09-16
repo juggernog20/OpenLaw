@@ -1,0 +1,213 @@
+{
+  "batch": "DOC-029",
+  "group": "access",
+  "round": 2,
+  "reviewer": "DOC-029r2 compatibility reviewer (access)",
+  "reviewerKind": "agent",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "environment": "openlaw-docs-41255c61-work2",
+  "appUrl": "http://127.0.0.1:23301",
+  "mailUrl": "http://127.0.0.1:23401",
+  "runningImages": {
+    "app": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "doc-engine": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+  },
+  "labStatusImages": {
+    "project": "openlaw-docs-41255c61-work2",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-16T17:45:41.767Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-16T17:46:02.188Z"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  "modules": ["search"],
+  "startedAt": "2026-09-16T17:54:17.733Z",
+  "finishedAt": "2026-09-16T17:57:00.335Z",
+  "fixtures": {
+    "accounts": {
+      "administrator": {
+        "email": "doc029r2.access.admin.1789581258686@helix.example",
+        "displayName": "DOC-029r2 access Administrator 58686"
+      },
+      "legal_team_member": {
+        "email": "doc029r2.access.member.1789581258686@helix.example",
+        "displayName": "DOC-029r2 access Legal Team Member 58686"
+      }
+    },
+    "created": [
+      "administrator account doc029r2.access.admin.1789581258686@helix.example (DOC-029r2 access Administrator 58686)",
+      "legal_team_member account doc029r2.access.member.1789581258686@helix.example (DOC-029r2 access Legal Team Member 58686)",
+      "Contracts C-84 (PDF with the unique word), C-85, Confidential C-86 for search"
+    ]
+  },
+  "sanitization": "No passwords, cookies, sign-in links, set-password tokens or mail bodies are stored. Fixture account passwords exist only in memory for the run.",
+  "summary": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0
+  },
+  "steps": [
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "fixture: Document text processed and searchable",
+      "expected": "The PDF's word becomes searchable",
+      "actual": "Indexed true for a unique word in the PDF on C-84",
+      "result": "pass",
+      "at": "2026-09-16T17:54:22.352Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Search across your work, steps 1-4, and the Document result",
+      "expected": "/ focuses Search; results include the reachable records and the Document whose words match; the Document result names its owning record and Version; the kind filter narrows; opening the result shows the matching Version with find filled; the Confidential record outside reach never appears",
+      "actual": "Header results listed; See all results opened the results page; title match C-85 true; Document result \"v1 doc029r2-access-search-1789581260121.pdf Owned by C-84 fictional clause mentions quilli\" names owner and version true; Document filter left only Document rows true (1); opened /contracts/84/documents with find text filled true and reader showing the file true; Confidential C-86 in header false, on page false",
+      "result": "pass",
+      "at": "2026-09-16T17:54:33.921Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "the Confidential record outside reach stays hidden",
+      "expected": "Direct link and search do not reveal it",
+      "actual": "Direct link shows Contract not found true; API contract results include it false",
+      "result": "pass",
+      "at": "2026-09-16T17:54:34.075Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Show more, failed reads and No matches",
+      "expected": "Show more adds a page; a failed next page keeps the rows and Show more retries; a failed search says Search could not load and a retry after recovery works; an unmatched query says No matches",
+      "actual": "First page 25 rows; blocked next page message true with 25 rows kept; retry grew to 27; header dropdown Search could not load true; results page Search could not load. Try again. true; retry after recovery true; No matches true",
+      "result": "pass",
+      "at": "2026-09-16T17:54:37.957Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Filter and sort a list, steps 1-6, with Back and Forward",
+      "expected": "Owner filter with Apply shows a chip and matching rows; another filter narrows; the Title heading cycles sort states; Back and Forward restore chips and sort; remove control and Clear all clear filters",
+      "actual": "Count 50 of 62 contracts -> Owner 13 contracts -> Owner+Status 11 contracts; chip true; hint Matches any selected value true; first-page rows all owned by Daniel true (13); URL carries owner true; two chips true; Title sort ascending -> descending; Back -> ascending, Back -> null with 2 chips, Back -> 1 chips; Forward -> 2 chips, Forward -> ascending; remove Status leaves 1; Clear all leaves 0",
+      "result": "pass",
+      "at": "2026-09-16T17:54:58.648Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "No contracts match these filters",
+      "expected": "An empty filter answer shows the empty message; removing filters restores rows",
+      "actual": "Owner Me shows the empty message true; rows after Clear all 50",
+      "result": "pass",
+      "at": "2026-09-16T17:55:03.450Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Save a view, steps 1-6, Modified, Save, Discard unsaved changes, Default view",
+      "expected": "Save as… with a Name stores filters, sort and column order; a change marks Modified; Discard unsaved changes restores; Save replaces; Default view shows the built-in layout; selecting the view restores it",
+      "actual": "Columns after Move Counterparty later: Reference|Title|Type|Counterparty|Status|Value|Owner|Next deadline; saved label \"DOC-029r2 access Administrator portfolio 60121\" true; change marked Modified true; Discard restored true; second change Modified true, Save cleared it true; Default view built-in true (Reference|Title|Counterparty|Type|Status|Value|Owner|Next deadline); reselected view: Owner chip true, Title sort descending, columns Reference|Title|Type|Counterparty|Status|Value|Owner|Next deadline",
+      "result": "pass",
+      "at": "2026-09-16T17:55:26.322Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Set as default, Rename…, duplicate name, another device",
+      "expected": "Set as default opens the list with the view; Rename… changes the name; a duplicate name is refused; the view follows the account to another browser",
+      "actual": "Opens with view after leaving and returning true; renamed true; duplicate Save as… kept the dialog open true (\"Save this view Name You already have a view with that name on this list. Cancel Save\"), stored views with that name 1; second browser opened the view with its chip true",
+      "result": "pass",
+      "at": "2026-09-16T17:55:38.789Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Delete… removes the saved view after confirmation and does not delete records",
+      "expected": "Confirmation says the records are not touched; the view is gone; records remain",
+      "actual": "Dialog: \"Delete this view? DOC-029r2 access Administrator portfolio 60121 renamed is removed. The records in it are not touched. Cancel Delete\"; view still listed false; contract rows in database 98 -> 98",
+      "result": "pass",
+      "at": "2026-09-16T17:55:41.790Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "Search across your work, steps 1-4, and the Document result",
+      "expected": "/ focuses Search; results include the reachable records and the Document whose words match; the Document result names its owning record and Version; the kind filter narrows; opening the result shows the matching Version with find filled; the Confidential record outside reach never appears",
+      "actual": "Header results listed; See all results opened the results page; title match C-85 true; Document result \"v1 doc029r2-access-search-1789581260121.pdf Owned by C-84 fictional clause mentions quilli\" names owner and version true; Document filter left only Document rows true (1); opened /contracts/84/documents with find text filled true and reader showing the file true; Confidential C-86 in header false, on page false",
+      "result": "pass",
+      "at": "2026-09-16T17:55:53.381Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "the Confidential record outside reach stays hidden",
+      "expected": "Direct link and search do not reveal it",
+      "actual": "Direct link shows Contract not found true; API contract results include it false",
+      "result": "pass",
+      "at": "2026-09-16T17:55:53.618Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "Show more, failed reads and No matches",
+      "expected": "Show more adds a page; a failed next page keeps the rows and Show more retries; a failed search says Search could not load and a retry after recovery works; an unmatched query says No matches",
+      "actual": "First page 25 rows; blocked next page message true with 25 rows kept; retry grew to 45; header dropdown Search could not load true; results page Search could not load. Try again. true; retry after recovery true; No matches true",
+      "result": "pass",
+      "at": "2026-09-16T17:55:57.556Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "Filter and sort a list, steps 1-6, with Back and Forward",
+      "expected": "Owner filter with Apply shows a chip and matching rows; another filter narrows; the Title heading cycles sort states; Back and Forward restore chips and sort; remove control and Clear all clear filters",
+      "actual": "Count 50 of 72 contracts -> Owner 16 contracts -> Owner+Status 13 contracts; chip true; hint Matches any selected value true; first-page rows all owned by Daniel true (16); URL carries owner true; two chips true; Title sort ascending -> descending; Back -> ascending, Back -> null with 2 chips, Back -> 1 chips; Forward -> 2 chips, Forward -> ascending; remove Status leaves 1; Clear all leaves 0",
+      "result": "pass",
+      "at": "2026-09-16T17:56:18.352Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "No contracts match these filters",
+      "expected": "An empty filter answer shows the empty message; removing filters restores rows",
+      "actual": "Owner Me shows the empty message true; rows after Clear all 50",
+      "result": "pass",
+      "at": "2026-09-16T17:56:23.107Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "Save a view, steps 1-6, Modified, Save, Discard unsaved changes, Default view",
+      "expected": "Save as… with a Name stores filters, sort and column order; a change marks Modified; Discard unsaved changes restores; Save replaces; Default view shows the built-in layout; selecting the view restores it",
+      "actual": "Columns after Move Counterparty later: Reference|Title|Type|Counterparty|Status|Value|Owner|Next deadline; saved label \"DOC-029r2 access Member portfolio 60121\" true; change marked Modified true; Discard restored true; second change Modified true, Save cleared it true; Default view built-in true (Reference|Title|Counterparty|Type|Status|Value|Owner|Next deadline); reselected view: Owner chip true, Title sort descending, columns Reference|Title|Type|Counterparty|Status|Value|Owner|Next deadline",
+      "result": "pass",
+      "at": "2026-09-16T17:56:45.589Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "Set as default, Rename…, duplicate name, another device",
+      "expected": "Set as default opens the list with the view; Rename… changes the name; a duplicate name is refused; the view follows the account to another browser",
+      "actual": "Opens with view after leaving and returning true; renamed true; duplicate Save as… kept the dialog open true (\"Save this view Name You already have a view with that name on this list. Cancel Save\"), stored views with that name 1; second browser opened the view with its chip true",
+      "result": "pass",
+      "at": "2026-09-16T17:56:57.495Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "legal_team_member",
+      "step": "Delete… removes the saved view after confirmation and does not delete records",
+      "expected": "Confirmation says the records are not touched; the view is gone; records remain",
+      "actual": "Dialog: \"Delete this view? DOC-029r2 access Member portfolio 60121 renamed is removed. The records in it are not touched. Cancel Delete\"; view still listed false; contract rows in database 110 -> 110",
+      "result": "pass",
+      "at": "2026-09-16T17:57:00.311Z"
+    }
+  ]
+}

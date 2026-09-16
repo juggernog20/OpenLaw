@@ -1,23 +1,31 @@
 {
   "articleId": "entity-records",
-  "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
-  "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
-  "buildId": "app sha256:800689bba1e0bd183d33760b14e4775a593d23d1cf9ded4ad752e788e60bd818; engine sha256:b69fd318f42ddbb78e8531a4b7151bcd58d9788b367a26d528d41c5bebfa792f",
-  "environment": "openlaw-docs-b8e31260-entities",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Independent review seat (agent)",
-  "walkthroughReviewer": "Independent review seat (agent)",
+  "contentSha256": "e8bd443312eb75490ecd396313913b1a050ea9751aa63e03ca55d43e22c7e56d",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-entities",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (entities)",
+  "technicalReviewer": "DOC-029 source-review author agent (entities)",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (entities, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T01:14:28.623Z",
+  "verifiedAt": "2026-09-16T15:53:13.127Z",
   "status": "pass",
   "sources": [
+    "docs/user-guides/entity-records.md",
     "CONTEXT.md",
-    "docs/decision-records/DECISIONS-ENTITIES.md",
     "apps/web/src/components/entities/officers-card.tsx",
     "apps/web/src/components/entities/registrations-card.tsx",
     "apps/web/src/components/entities/ownership-card.tsx",
+    "apps/web/src/routes/entity-record.tsx",
+    "apps/web/src/routes/entities.tsx",
+    "apps/web/src/components/entities/entity-list-filter-bar.tsx",
     "apps/api/src/modules/entities/record-routes.ts",
-    "apps/api/src/modules/entities/holding-routes.ts"
+    "apps/api/src/modules/entities/holding-routes.ts",
+    "messages/en-US.json",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "docs/documentation/batches/DOC-029/entities/technical-review.json",
+    "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
+    "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
   ],
   "scenarios": [
     {
@@ -25,159 +33,73 @@
       "coverage": ["C32"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Four fictional Entities per role created as fixtures; a small fictional text certificate at docs/documentation/batches/DOC-029/entities/fixtures/doc029-entities-certificate.txt."
+      ],
       "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
-      "actual": "Add officer saved \"Rev Ines Duarte LRXRCLO\" as Director appointed 2022-05-09 with Ravi Menon as the linked user; all four survived a reload. Typing \"Rev Ines Duarte LRXRCLO Jr\" into the Officer name and clicking the Officers heading to move focus away saved it with no further confirmation; the same transition restored \"Rev Ines Duarte LRXRCLO\". Resigned on 2021-01-01 against an appointment of 2022-05-09 was refused with \"The resignation date cannot be before the appointment date.\" shown beside the card; after a reload the appointment was still 2022-05-09 and no resignation was stored. Resigned on 2024-08-31 saved when focus left the field and took the Officer out of the current list; Show former brought the row back carrying that resignation date. \"Remove Rev Ines Duarte LRXRCLO\" deleted the Officer entry; it was absent even with Show former turned on. Add registration saved Nordvik LRXRCLO / NV-LRXRCLO / Nordvik Agents AS with Status Lapsed, and the Entity's own Formation jurisdiction stayed \"Rev C32 LRXRCLO\". Choosing Withdrawn saved without any further confirmation and survived a reload. Removing Nordvik LRXRCLO left the Obligation \"Rev C32 licence renewal LRXRCLO\" on the Entity with its Registration cleared to \"None\", so the link was detached rather than the Obligation deleted. \"This Entity owns Rev C32 owned LRXRCLO\" at 60% listed Rev C32 owned LRXRCLO under Rev C32 main LRXRCLO's Owned Entities and listed Rev C32 main LRXRCLO at 60% under Rev C32 owned LRXRCLO's Owners. the Entity is not offered in its own Holding picker (the list answered []), so it cannot be chosen as its own owner; an Entity already in a Holding with this one is left out of the picker (the list answered []), so the same directional Holding cannot be repeated; closing the loop through Rev C32 owned LRXRCLO refused with \"This holding would create a loop: Rev C32 cycle tail LRXRCLO → Rev C32 main LRXRCLO → Rev C32 owned LRXRCLO → Rev C32 cycle tail LRXRCLO.\"; afterwards the one recorded Holding was still the only one. Two owners at 60% each both saved and produced the \"Ownership totals 120%\" warning; correcting one row to 30% and moving focus away persisted and cleared the warning. \"Remove Rev C32 owned LRXRCLO\" deleted only the Holding; both \"Rev C32 main LRXRCLO\" and \"Rev C32 owned LRXRCLO\" still opened as their own records. Upload filed the fictional \"rev-c32-certificate.txt\" as Executed on Rev C32 main LRXRCLO at Version v1; it did not appear on Rev C32 other owner LRXRCLO, so the Document stayed owned by the Entity it was filed against. Archive saved at once, put an Archived mark on the record with \"This entity is archived. Restore it to edit.\", disabled its Legal name and withdrew Add officer, and took the Entity out of the ordinary registry results. Show archived brought \"Rev C32 main LRXRCLO\" back into the registry; Restore returned its editing controls, its Obligation \"Rev C32 licence renewal LRXRCLO\" was still recorded, and its Document \"rev-c32-certificate.txt\" was still filed at v1.",
+      "actual": "Nadia Haddad used Directors & Officers: Add director or officer saved name, Role Director, Appointed on 2022-05-09 and Linked user Daniel Okafor, all present after a reload; a name edit saved on focus change and Role Secretary on selection. Resigned on 2021-01-01 showed \"The resignation date cannot be before the appointment date.\" and stored nothing. Resigned on 2024-08-31 removed the Officer from the current list, Show former showed it, and clearing the date returned it. The linked user held no Grant. \"Remove <name>\" deleted the Officer (absent with Show former). Add registration saved Jurisdiction, Registration number, Registered agent and Status Lapsed, and Formation jurisdiction stayed \"Republic of Aldoria\"; an agent edit saved on blur and Withdrawn on selection. \"Remove <jurisdiction> registration\" deleted the row and left its linked Obligation on the Entity with Registration \"None\". On Ownership, Add Holding with This Entity owns at 60% listed the Holding under Owned Entities and under Owners on the other record. A second owner through Owns this Entity at 60% showed \"Ownership totals 120% for <name>.\" and saved; correcting it to 40 on blur cleared the warning. 150 in a row was refused with \"One or more request fields are invalid.\" and both saved percentages stayed. The Holding picker did not offer the Entity itself or an Entity already in a Holding with it; a Holding that would close a loop was refused with a message naming the loop path. \"Remove <name>\" removed a Holding and both Entities still opened. The Documents tab showed \"No documents on this Entity yet.\" with no folders; Upload, Choose files, Kind Executed and Upload gave a v1 row that a sibling Entity did not list. Archive showed the Archived mark and \"This entity is archived. Restore it to edit.\", disabled Legal name and removed the add controls; the Entity left List search and the Add Holding picker. List with Show archived found it, Restore returned editing, and its formation jurisdiction, Holding, Document and Obligation remained.",
       "result": "pass",
-      "startedAt": "2026-09-08T00:33:08.318Z",
-      "completedAt": "2026-09-08T00:34:16.251Z",
-      "stepsSummarized": "15 of this role's 17 recorded steps; the linked records hold every step",
-      "evidence": ["docs/documentation/batches/DOC-018/independent-c32.json"]
+      "startedAt": "2026-09-16T15:45:34.148Z",
+      "completedAt": "2026-09-16T15:46:31.605Z",
+      "stepsSummarized": "18 recorded steps for this role, all pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
+      ]
     },
     {
       "id": "V-C32",
       "coverage": ["C32"],
       "role": "administrator",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Four fictional Entities per role created as fixtures; a small fictional text certificate at docs/documentation/batches/DOC-029/entities/fixtures/doc029-entities-certificate.txt."
+      ],
       "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
-      "actual": "Add officer saved \"Rev Ines Duarte ARXRCLO\" as Director appointed 2022-05-09 with Ravi Menon as the linked user; all four survived a reload. Typing \"Rev Ines Duarte ARXRCLO Jr\" into the Officer name and clicking the Officers heading to move focus away saved it with no further confirmation; the same transition restored \"Rev Ines Duarte ARXRCLO\". Resigned on 2021-01-01 against an appointment of 2022-05-09 was refused with \"The resignation date cannot be before the appointment date.\" shown beside the card; after a reload the appointment was still 2022-05-09 and no resignation was stored. Resigned on 2024-08-31 saved when focus left the field and took the Officer out of the current list; Show former brought the row back carrying that resignation date. \"Remove Rev Ines Duarte ARXRCLO\" deleted the Officer entry; it was absent even with Show former turned on. Add registration saved Nordvik ARXRCLO / NV-ARXRCLO / Nordvik Agents AS with Status Lapsed, and the Entity's own Formation jurisdiction stayed \"Rev C32 ARXRCLO\". Choosing Withdrawn saved without any further confirmation and survived a reload. Removing Nordvik ARXRCLO left the Obligation \"Rev C32 licence renewal ARXRCLO\" on the Entity with its Registration cleared to \"None\", so the link was detached rather than the Obligation deleted. \"This Entity owns Rev C32 owned ARXRCLO\" at 60% listed Rev C32 owned ARXRCLO under Rev C32 main ARXRCLO's Owned Entities and listed Rev C32 main ARXRCLO at 60% under Rev C32 owned ARXRCLO's Owners. the Entity is not offered in its own Holding picker (the list answered []), so it cannot be chosen as its own owner; an Entity already in a Holding with this one is left out of the picker (the list answered []), so the same directional Holding cannot be repeated; closing the loop through Rev C32 owned ARXRCLO refused with \"This holding would create a loop: Rev C32 cycle tail ARXRCLO → Rev C32 main ARXRCLO → Rev C32 owned ARXRCLO → Rev C32 cycle tail ARXRCLO.\"; afterwards the one recorded Holding was still the only one. Two owners at 60% each both saved and produced the \"Ownership totals 120%\" warning; correcting one row to 30% and moving focus away persisted and cleared the warning. \"Remove Rev C32 owned ARXRCLO\" deleted only the Holding; both \"Rev C32 main ARXRCLO\" and \"Rev C32 owned ARXRCLO\" still opened as their own records. Upload filed the fictional \"rev-c32-certificate.txt\" as Executed on Rev C32 main ARXRCLO at Version v1; it did not appear on Rev C32 other owner ARXRCLO, so the Document stayed owned by the Entity it was filed against. Archive saved at once, put an Archived mark on the record with \"This entity is archived. Restore it to edit.\", disabled its Legal name and withdrew Add officer, and took the Entity out of the ordinary registry results. Show archived brought \"Rev C32 main ARXRCLO\" back into the registry; Restore returned its editing controls, its Obligation \"Rev C32 licence renewal ARXRCLO\" was still recorded, and its Document \"rev-c32-certificate.txt\" was still filed at v1.",
+      "actual": "Daniel Okafor used Directors & Officers: Add director or officer saved name, Role Director, Appointed on 2022-05-09 and Linked user Nadia Haddad, all present after a reload; a name edit saved on focus change and Role Secretary on selection. Resigned on 2021-01-01 showed \"The resignation date cannot be before the appointment date.\" and stored nothing. Resigned on 2024-08-31 removed the Officer from the current list, Show former showed it, and clearing the date returned it. The linked user held no Grant. \"Remove <name>\" deleted the Officer (absent with Show former). Add registration saved Jurisdiction, Registration number, Registered agent and Status Lapsed, and Formation jurisdiction stayed \"Republic of Aldoria\"; an agent edit saved on blur and Withdrawn on selection. \"Remove <jurisdiction> registration\" deleted the row and left its linked Obligation on the Entity with Registration \"None\". On Ownership, Add Holding with This Entity owns at 60% listed the Holding under Owned Entities and under Owners on the other record. A second owner through Owns this Entity at 60% showed \"Ownership totals 120% for <name>.\" and saved; correcting it to 40 on blur cleared the warning. 150 in a row was refused with \"One or more request fields are invalid.\" and both saved percentages stayed. The Holding picker did not offer the Entity itself or an Entity already in a Holding with it; a Holding that would close a loop was refused with a message naming the loop path. \"Remove <name>\" removed a Holding and both Entities still opened. The Documents tab showed \"No documents on this Entity yet.\" with no folders; Upload, Choose files, Kind Executed and Upload gave a v1 row that a sibling Entity did not list. Archive showed the Archived mark and \"This entity is archived. Restore it to edit.\", disabled Legal name and removed the add controls; the Entity left List search and the Add Holding picker. List with Show archived found it, Restore returned editing, and its formation jurisdiction, Holding, Document and Obligation remained.",
       "result": "pass",
-      "startedAt": "2026-09-08T00:34:16.516Z",
-      "completedAt": "2026-09-08T00:35:24.244Z",
-      "stepsSummarized": "15 of this role's 17 recorded steps; the linked records hold every step",
-      "evidence": ["docs/documentation/batches/DOC-018/independent-c32.json"]
-    },
-    {
-      "id": "DOC-018-discovery",
-      "coverage": ["C32"],
-      "role": "legal_team_member",
-      "method": "browser-walkthrough",
-      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
-      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Legal Team Member\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
-      "result": "pass",
-      "startedAt": "2026-09-08T00:55:05.569Z",
-      "completedAt": "2026-09-08T01:13:09.750Z",
+      "startedAt": "2026-09-16T15:46:31.641Z",
+      "completedAt": "2026-09-16T15:47:28.297Z",
+      "stepsSummarized": "18 recorded steps for this role, all pass",
       "evidence": [
-        "docs/documentation/batches/DOC-018/independent-discovery.json",
-        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
-      ]
-    },
-    {
-      "id": "DOC-018-discovery",
-      "coverage": ["C32"],
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "expected": "This guide is listed in Help for this reader's audience and found by its exact title; its outline and the shell's skip link work by keyboard; it links out to itself in the formal reader; and it holds in Light, Dark and Warm at 320, 720 and 1440 CSS pixels and at an emulated 200 percent zoom.",
-      "actual": "The Entities destination offered a Help link, and the Help index headed \"Guides for Administrator\" listed all four Entity guides by their exact titles. Each exact title was found by the Help search and resolved to its own article (Maintain Entities and Counterparties -> /help/entities-and-counterparties; Manage Holdings, Officers, and Registrations -> /help/entity-records; Track and file Entity obligations -> /help/entity-obligations; Manage Entity structure and access -> /help/entity-structure-and-access). Selecting \"Read the calendar and Home\" moved to #read-the-calendar-and-home; the focused element was H2#read-the-calendar-and-home and the section heading was in view. \"Read this article in the full documentation\" opened /documentation/entity-structure-and-access and showed the same guide, \"Manage Entity structure and access\", in the formal reader. The Help article kept its title and produced no horizontal overflow in every theme and width combination (light@320px:0px, light@720px:0px, light@1440px:0px, dark@320px:0px, dark@720px:0px, dark@1440px:0px, warm@320px:0px, warm@720px:0px, warm@1440px:0px). At an emulated 200 percent zoom (a 1440px layout halved to a 720x450 CSS viewport) the article kept its title with no horizontal overflow. Arriving at the article put focus on its H1 \"track-and-file-entity-obligations\"; Shift+Tab reached the outline link for the filing section with a visible focus indicator (outline: solid) and Enter followed it to #mark-a-filing-and-check-the-next-cycle; the shell's \"Skip to content\" link was present and targets #main. All four guides kept their titles with no horizontal overflow across every theme and width combination (36 checks: 4 guides x light/dark/warm x 320/720/1440 CSS pixels). All four guides kept their titles with no horizontal overflow at an emulated 200 percent zoom, a 1440px layout halved to a 720x450 CSS viewport (entities-and-counterparties, entity-records, entity-obligations, entity-structure-and-access). On every guide, arrival focus landed on the article H1, Shift+Tab reached its outline link with a visible focus indicator, and Enter followed it to the section (entities-and-counterparties#recover-from-an-unavailable-choice-or-refused-change; entity-records#archive-and-restore-an-entity; entity-obligations#mark-a-filing-and-check-the-next-cycle; entity-structure-and-access#grant-access-to-a-confidential-entity). Tabbing reached the \"Skip to content\" link and pressing Enter moved focus to MAIN#main with the address at \"#main\", so the skip link activates rather than merely being present. Each guide's \"Read this article in the full documentation\" opened its own formal page showing the same title (entities-and-counterparties -> /documentation/entities-and-counterparties; entity-records -> /documentation/entity-records; entity-obligations -> /documentation/entity-obligations; entity-structure-and-access -> /documentation/entity-structure-and-access).",
-      "result": "pass",
-      "startedAt": "2026-09-08T00:55:40.813Z",
-      "completedAt": "2026-09-08T01:14:14.640Z",
-      "evidence": [
-        "docs/documentation/batches/DOC-018/independent-discovery.json",
-        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
-      ]
-    },
-    {
-      "id": "DOC-018-discovery",
-      "coverage": ["C32"],
-      "role": "anonymous",
-      "method": "browser-walkthrough",
-      "expected": "The formal reader lists and serves this guide without a sign-in and asks the application for nothing.",
-      "actual": "Without any sign-in the formal index listed all four Entity guides behind a \"Skip to content\" link, offered no sign-in form or password field, and issued no /api/v1 request (0 application calls observed). A fresh anonymous context visited the formal index and all four guide pages (/documentation/, /documentation/entities-and-counterparties, /documentation/entity-records, /documentation/entity-obligations, /documentation/entity-structure-and-access) and issued no request under /api/ at all — none to /api/v1/ and none to /api/auth/ — with no password field anywhere.",
-      "result": "pass",
-      "startedAt": "2026-09-08T00:56:15.724Z",
-      "completedAt": "2026-09-08T01:14:28.623Z",
-      "evidence": [
-        "docs/documentation/batches/DOC-018/independent-discovery.json",
-        "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
+        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
       ]
     }
-  ],
-  "authorEvidence": [
-    "docs/documentation/batches/DOC-018/README.md",
-    "docs/documentation/batches/DOC-018/independent-c32.json",
-    "docs/documentation/batches/DOC-018/independent-discovery.json",
-    "docs/documentation/batches/DOC-018/independent-discovery-coverage.json"
   ],
   "limitations": [
-    "Agent walkthroughs by an independent review seat, not human user studies or feature-owner approval.",
-    "The types and Fields guide remains a publication dependency for the guides that link it.",
-    "Recorded against lab app source 8539f4cc, which is ahead of edition.json's supportedAppCommit; the whole suite is re-pinned to one build at DOC-025 acceptance.",
-    "The catalog stays in feature review: DOC-025 whole-suite acceptance and DOC-027 publication are still ahead."
+    "Independent agent walkthrough in headless Chromium by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
+    "The lab openlaw-docs-41255c61-entities is shared with other DOC-029 walkthrough agents. This run created only records named \"DOC-029 entities ...\" (run tag 9U3SZ) plus records from earlier development runs of the same script with other tags. It changed no organization settings.",
+    "Recorded against app source 3fa407e3a846559914aa1a63249741f30cfb4f69, which differs from edition.json's supportedAppCommit; the edition pin or a compatibility review is outside this walkthrough's file ownership.",
+    "API calls prepared fixtures (Entities, Holdings, Contracts, a Registration) or read back results the browser had already shown; every documented action was performed through the browser controls.",
+    "1 page load(s) showed the app's \"Something went wrong.\" screen because Chromium reported net::ERR_NETWORK_CHANGED while other labs changed the host's Docker networks. The script recorded each case in the log's errorScreens and reloaded once; the step then passed. This is an environment effect, not an app finding.",
+    "The out-of-range Holding percentage refusal shows the generic \"One or more request fields are invalid.\" message; the article does not quote a message.",
+    "Not exercised: adding an Officer role (Administrator settings), a concurrent archive/restore by another person, and Document Versions beyond v1, which the article delegates to the shared Document guides."
   ],
-  "previousEvidence": null,
+  "previousEvidence": {
+    "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+    "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
+    "verifiedAt": "2026-09-08T01:14:28.623Z"
+  },
   "copyOnlyReview": null,
   "compatibilityReview": {
-    "fromAppCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
-    "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
-    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
-    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "e8bd443312eb75490ecd396313913b1a050ea9751aa63e03ca55d43e22c7e56d",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-08T13:42:44.735Z",
-    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (entities)) found the article compatible: Inspected git diff 3fa407e3..57e77e38 (apps, packages, messages); it changes no Officer, Registration, Holding, Entity Document, or archive code or label. Replayed the round 1 V-C32 walkthrough on lab entities2 as Legal Team Member and Administrator: 36 of 36 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
-        "path": "batches/DOC-025/compatibility.json",
-        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
+        "path": "batches/DOC-029/compat-r2/entities.json",
+        "sha256": "82ac9e118330c7ab4b627e90dc772cd4a020d75a596f0ac9831876cb47c9d2ad"
       },
       {
-        "path": "batches/DOC-025/independent-compatibility.json",
-        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
-      },
-      {
-        "path": "batches/DOC-011/independent-walkthrough.json",
-        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
-      },
-      {
-        "path": "batches/DOC-012/independent-walkthrough.json",
-        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
-      },
-      {
-        "path": "batches/DOC-025/source-6a8873db.diff",
-        "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a"
-      },
-      {
-        "path": "batches/DOC-025/source-8539f4cc.diff",
-        "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161"
-      },
-      {
-        "path": "batches/DOC-025/source-a28331f7.diff",
-        "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63"
-      },
-      {
-        "path": "batches/DOC-025/source-d1d098ba.diff",
-        "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840"
-      },
-      {
-        "path": "batches/DOC-010/independent-walkthrough.json",
-        "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
-      },
-      {
-        "path": "batches/DOC-018/independent-c31.json",
-        "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
-      },
-      {
-        "path": "batches/DOC-018/independent-c52.json",
-        "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
-      },
-      {
-        "path": "batches/DOC-019/independent-c33.json",
-        "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
-      },
-      {
-        "path": "batches/DOC-019/independent-c34.json",
-        "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
-      },
-      {
-        "path": "batches/DOC-019/independent-supplement.json",
-        "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
-    ],
-    "authoredSourceAudit": {
-      "path": "batches/DOC-025/compatibility.json",
-      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
-      "reviewedAt": "2026-09-08T12:56:21.570227Z",
-      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
-    }
+    ]
   }
 }

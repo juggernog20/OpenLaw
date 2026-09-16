@@ -62,7 +62,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["auth"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "portal-sign-in",
@@ -75,7 +75,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.entry"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "find-your-work",
@@ -88,7 +88,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["home"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "search-and-views",
@@ -101,7 +101,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["search", "lists"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "personal-settings",
@@ -114,7 +114,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.personal"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "roles-and-access",
@@ -127,7 +127,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["access"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "comments-and-activity",
@@ -140,7 +140,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["comments", "activity"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "notifications",
@@ -153,7 +153,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["notifications"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "submit-request",
@@ -166,7 +166,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.home", "portal.form"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "follow-request",
@@ -179,7 +179,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.request"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "portal-knowledge",
@@ -192,7 +192,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P1",
       "contexts": ["portal.knowledge"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "triage-requests",
@@ -205,7 +205,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["inbox"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "convert-request",
@@ -218,7 +218,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["inbox.convert"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "create-contract",
@@ -231,7 +231,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.list", "contracts.overview"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contract-stages",
@@ -244,7 +244,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.progression"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contract-approvals",
@@ -257,7 +257,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.approvals"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "manual-signing",
@@ -270,7 +270,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.signing"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "electronic-signing",
@@ -283,7 +283,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.signing"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "terms-and-renewals",
@@ -296,7 +296,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.term", "contracts.renewal"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contract-tasks-and-dates",
@@ -309,7 +309,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.tasks", "contracts.dates"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contract-relations-and-ending",
@@ -322,7 +322,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["contracts.relations", "contracts.actions"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contract-analysis",
@@ -335,7 +335,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.analysis"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "create-matter",
@@ -348,7 +348,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["matters.list", "matters.overview"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "matter-status-and-archive",
@@ -361,7 +361,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["matters.progression", "matters.actions"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "matter-work",
@@ -374,7 +374,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["matters.tasks", "matters.dates", "matters.relations"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contributor-guide",
@@ -387,7 +387,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.records"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "document-versions",
@@ -400,7 +400,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["documents.versions", "comments.files"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "document-folders",
@@ -413,7 +413,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["documents.folders", "documents.upload"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "document-previews",
@@ -426,7 +426,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["documents.preview", "portal.files"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "compare-versions",
@@ -439,7 +439,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["documents.compare"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "document-repository",
@@ -452,7 +452,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["documents.repository"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "entities-and-counterparties",
@@ -465,7 +465,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["entities.list", "entities.overview", "counterparties"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "entity-records",
@@ -478,7 +478,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["entities.holdings", "entities.officers", "entities.registrations"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "create-knowledge",
@@ -491,7 +491,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["knowledge.list", "knowledge.overview"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "publish-knowledge",
@@ -504,7 +504,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["knowledge.publishing"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "first-run",
@@ -517,7 +517,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["setup", "welcome"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "organisation-and-users",
@@ -530,7 +530,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.general", "settings.users"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "authentication-and-email",
@@ -543,7 +543,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.authentication", "settings.email"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "types-statuses-fields",
@@ -556,7 +556,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.taxonomies"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "matter-templates",
@@ -569,7 +569,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.matter-templates"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "request-forms",
@@ -582,7 +582,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.intake"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "reminders-and-audit",
@@ -595,7 +595,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.reminders", "settings.audit"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "configure-signing",
@@ -608,7 +608,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.signing"],
-      "status": "draft"
+      "status": "verified"
     },
     {
       "id": "configure-analysis",
@@ -621,7 +621,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.analysis"],
-      "status": "draft"
+      "status": "verified"
     },
     {
       "id": "install",
@@ -634,7 +634,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "deployment-configuration",
@@ -647,7 +647,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "upgrade",
@@ -660,7 +660,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "backup-and-restore",
@@ -673,7 +673,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "operator-troubleshooting",
@@ -686,7 +686,7 @@
       "destinations": ["formal"],
       "priority": "P0",
       "contexts": [],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "troubleshooting",
@@ -699,7 +699,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["errors"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "reference",
@@ -712,7 +712,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P1",
       "contexts": ["reference"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "versions-and-support",
@@ -725,7 +725,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["support"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "entity-obligations",
@@ -738,7 +738,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["entities.obligations", "home.obligations"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "entity-structure-and-access",
@@ -751,7 +751,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["entities.capital", "entities.chart", "entities.links", "entities.access"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "archive-and-delete-documents",
@@ -764,7 +764,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["documents.actions"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "approver-groups",
@@ -777,7 +777,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.approver-groups"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "auto-doc-template",

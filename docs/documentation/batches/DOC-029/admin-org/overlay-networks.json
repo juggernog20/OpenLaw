@@ -1,0 +1,15 @@
+{
+  "networks": {
+    "openlaw-backend": { "ipam": { "config": [{ "subnet": "10.233.10.0/24" }] } },
+    "openlaw-doc-engine": { "ipam": { "config": [{ "subnet": "10.233.11.0/24" }] } }
+  },
+  "services": {
+    "oidc": {
+      "image": "node:24-slim",
+      "working_dir": "/fixture",
+      "command": ["node", "oidc-fixture.mjs"],
+      "volumes": ["__OIDC_DIR__:/fixture:ro"],
+      "networks": { "openlaw-backend": { "aliases": ["oidc"] } }
+    }
+  }
+}

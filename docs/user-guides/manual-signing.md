@@ -11,7 +11,7 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 1. Use the Stage control to choose your organization's Signature Status, such as **Out for signature**. Arrange signature through your team's external process.
 2. Once signed, open **Documents**. On the intended Document, use **Add version** to upload the executed file. If there is no Document yet, upload it as a new Document first.
 3. Read or download the uploaded Document Version and check that it is the intended executed copy.
-4. Open that Document Version's actions and select **Mark as executed copy**. Check its executed designation. On a Contract with several Documents, also check that the intended contract paper is the primary Document.
+4. Open the Document's actions and select **Mark as executed copy**. For an earlier Document Version, use that Version's own actions. Check its executed designation. On a Contract with several Documents, also check that the intended contract paper is the primary Document.
 5. Use the Stage control to choose the intended Active Status. Confirm a Soft gate override only if appropriate, then check the Status and Activity.
 
 A Document Version's kind and its executed designation are separate. Choosing an Executed kind during upload does not set the executed designation automatically. Marking a Document Version as executed does not itself change the Contract's Status. A later upload can become current while the executed designation still identifies the earlier signed Document Version.

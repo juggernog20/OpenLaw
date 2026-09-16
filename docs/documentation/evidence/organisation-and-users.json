@@ -1,23 +1,19 @@
 {
   "articleId": "organisation-and-users",
-  "contentSha256": "2d28269f8c2f22700cab66cdba067f377fbc5477e6a6f4365650241e3a0adc5a",
-  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
-  "environment": "openlaw-docs-b8e31260-admin-review",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "contentSha256": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T04:13:42Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (admin-org)",
+  "verifiedAt": "2026-09-16T18:24:39Z",
   "status": "pass",
+  "environment": "openlaw-docs-41255c61-admin2",
   "sources": [
-    "CONTEXT.md",
-    "docs/decision-records/DECISIONS-SETTINGS.md",
-    "apps/web/src/routes/settings-general.tsx",
-    "apps/web/src/routes/settings-users.tsx",
-    "apps/api/src/modules/auth/routes.ts",
-    "apps/api/src/modules/users/routes.ts",
-    "docs/DEPLOYMENT.md"
+    "docs/user-guides/organisation-and-users.md",
+    "docs/documentation/batches/DOC-029/admin-org/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
@@ -25,38 +21,57 @@
       "coverage": ["C36"],
       "role": "administrator",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded Administrator Daniel Okafor and Legal Team Member Nadia Haddad on the shared admin2 documentation lab built from 57e77e38, with Mailpit.",
+        "Disposable invited users, a Portal-created Business User and one Contract, all named DOC-029r2 admin-org * or doc029r2-org-*.",
+        "The last-Administrator and no-saved-name checks ran on the owned unseeded lab openlaw-docs-41255c61-adminorg-auth2, which has one Administrator and no organization name."
+      ],
       "expected": "Changes apply to the intended account and revoked sessions cease granting access. Unauthorized administration, invalid invites, and self/last-Administrator safeguards behave as implemented.",
-      "actual": "Organization name saved on Enter, restored on Escape and survived reloads; Default locale offered only English (United States); Default timezone is a searchable combobox that saved Europe/London; Logo accepted a PNG and refused a text file. Invite user offers exactly Legal team member, Contributor and Administrator as radio choices, so the guide now quotes the sentence-case visible label. An invitation reached Mailpit, activation through Set your password turned the row Active, and the activated Legal team member was offered no Invite user control. Re-inviting a pending address with the same role resent and left one row; with a different role it was refused with \"This user already exists with a different role.\" and sent no mail; an activated account was refused with \"This user has already activated their account.\"; a Portal-created Business User address was refused the same way. The Users table Role control offers four choices including Business user, appears on Active rows only, and a promoted Portal account becomes a pending Invited row that loses its role control until the resent link sets a password. Revoke all sessions ended a live session on its next request while the row stayed Active and the password still worked. Archiving blocked sign-in, Show archived plus Restore returned the account, and previously revoked sessions stayed revoked. The signed-in Administrator row offered no Archive or Revoke all sessions control, and demoting the only Administrator was refused with \"You cannot demote the last Administrator.\" until a second Administrator was invited and activated; the demotion then applied immediately, costing the demoted session its Invite user control and returning 403 on its next request. A Contract kept its archived Owner, and only an explicit Owner reassignment through the record control moved the work before access was withdrawn. Supplemental scope check: a Business User that already has an account stays Active when promoted and keeps its role control. The promotion instruction is now conditional on the observed row state instead of assuming no account exists.",
+      "actual": "27 recorded steps passed on 57e77e38. Nadia Haddad was redirected from Settings General and Users to /settings/profile, and the users and invite APIs answered 403. Organization name saved on Enter, Escape put the saved name back, and reload kept the saved value. A .txt file and a PNG just over 5 MB each showed \"That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\" and changed nothing; a 300 KB PNG and then an SVG saved. In a browser with no session, /auth/login and /portal/login showed the saved name above the sign-in form with one image named Organization logo. On the unseeded lab with no saved name both pages showed OpenLaw and no logo. Name and logo were restored and the sign-in page followed. Default timezone saved America/Toronto; Default locale offered only English (United States); the timezone was restored. Invite user offered Legal team member and Administrator; Send invite added an Invited row with Resend invite and Revoke invite and sent a set-password email. An address without @ kept the dialog open. Re-inviting the pending address with the same role resent with one row; a different role showed \"This user already exists with a different role.\" with no email; an active account showed \"This user has already activated their account.\"; a Business User's address was refused. After a magic-link sign-in the colleague's row stayed Invited with both invite actions. Setting a password from the latest link made it Active, and that Legal team member had no administration. Revoke invite removed a pending row. The role menu offered Administrator, Legal team member and Business user; promotion gave the colleague's live session Settings Users on its next navigation, and demotion made the next request 403. A Portal-created Business User promoted to Legal team member became Invited with no role control; Resend invite and a set password made it Active again; an activated account stayed Active when demoted and promoted again. Daniel's own row had no Sign out user or Archive, and self-archive was refused (409). Sign out user ended the colleague's session (401) while the row stayed Active and a password sign-in worked. Archive removed the row from the list, ended the session, and sign-in showed \"This account has been archived.\"; a Contract kept the archived person as Legal Owner. Show archived then Restore returned the row to Active; the old session stayed revoked and a new sign-in worked. On the owned auth lab, demoting the only Administrator showed \"You cannot demote the last Administrator.\" and archiving it was refused with \"You cannot archive the last Administrator.\" In the same lab, an invited staff account became Active by signing in through single sign-on while Legal User Authentication had it on.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-020/README.md",
-        "docs/documentation/batches/DOC-020/review-users.json",
-        "docs/documentation/batches/DOC-020/review-portal.json",
-        "docs/documentation/batches/DOC-020/review-offboarding.json",
-        "docs/documentation/batches/DOC-020/review-final-bytes.json",
-        "docs/documentation/batches/DOC-020/review-discovery.json",
-        "docs/documentation/batches/DOC-020/review-scope.json"
-      ],
-      "verifiedAt": "2026-09-08T04:13:42Z"
+        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.mjs",
+        "docs/documentation/batches/DOC-029/admin-org/lib.mjs",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/org-2026-09-16T18-06-08-941Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailStored-2026-09-16T18-18-29-961Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/sso-2026-09-16T18-20-42-380Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/runs-r2/twoFactor-2026-09-16T18-21-22-503Z.json",
+        "docs/documentation/batches/DOC-029/admin-org/org-users-restored-r2.png",
+        "docs/documentation/batches/DOC-029/admin-org/fixtures-r2/doc029r2-logo.svg",
+        "docs/documentation/batches/DOC-029/admin-org/fixtures-r2/doc029r2-not-an-image.txt"
+      ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-020/README.md"],
   "limitations": [
-    "Independent walkthroughs are agent walkthroughs, not human user studies or feature-owner approval.",
-    "Single sign-on was verified against a dedicated local OpenID Connect fixture. It is not certification of a real provider's client-secret handling or account policy, and it does not satisfy the real DocuSign and AI-provider verification required by DOC-022.",
-    "Onboarding completion is instance-wide and irreversible, so one instance permits one finishing action. Set up later on the final invitation step was exercised; Finish and the Welcome-step Set up later were not independently exercised here.",
-    "Evidence was taken on fixture app commit 6a8873dbda333fd9992eb77525d4bfa3f47af20d, not the final app candidate. DOC-025 reconciles the catalog against that candidate.",
-    "Operator and module configuration guides remain forward publication dependencies."
+    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
+    "The last-Administrator safeguard and the no-saved-name sign-in branding were checked on the owned auth lab (one Administrator, no organization name) because the shared admin2 lab has several Administrators and a saved name that were not changed for that purpose.",
+    "The pane has no logo removal control. The original empty logo was restored through PATCH /api/v1/org/general after the check.",
+    "Logo checks used a PNG, an SVG, a text file and an oversize PNG. JPEG and WebP uploads were not tried. The two PNG fixtures were a 1x1 PNG padded with zero bytes, generated at run time in a scratch directory and not retained.",
+    "Offboarding reassignment was checked as the negative claim only: a Contract kept its archived Legal Owner. Reassigning Owners, Matter roles, Tasks, Obligations and Approvals belongs to the linked guides and was not replayed here.",
+    "The admin2 lab is shared with other DOC-029r2 agents. This walkthrough created only records named DOC-029r2 admin-org * or doc029r2-org-* and restored every organization setting it changed.",
+    "Help discovery for settings.general and settings.users was not part of V-C36 and was not checked."
   ],
-  "previousEvidence": null,
+  "previousEvidence": {
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "verifiedAt": "2026-09-16T15:49:45Z"
+  },
   "copyOnlyReview": null,
-  "independentEvidence": [
-    "docs/documentation/batches/DOC-020/README.md",
-    "docs/documentation/batches/DOC-020/review-users.json",
-    "docs/documentation/batches/DOC-020/review-portal.json",
-    "docs/documentation/batches/DOC-020/review-offboarding.json",
-    "docs/documentation/batches/DOC-020/review-final-bytes.json",
-    "docs/documentation/batches/DOC-020/review-discovery.json",
-    "docs/documentation/batches/DOC-020/review-scope.json"
-  ]
+  "compatibilityReview": {
+    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. Invitations, roles, sessions and archive do not involve the wizard Authentication step. Organization branding on sign-in pages is unchanged by this commit.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
+  }
 }

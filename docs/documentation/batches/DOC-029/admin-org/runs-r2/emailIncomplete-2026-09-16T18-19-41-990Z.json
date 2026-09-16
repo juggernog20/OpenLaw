@@ -1,0 +1,28 @@
+{
+  "section": "emailIncomplete",
+  "reviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth2",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+    "authentication-and-email": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208"
+  },
+  "startedAt": "2026-09-16T18:19:41.990Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "SMTP_URL without SMTP_FROM prevents delivery even though a complete relay is stored in the app",
+      "expected": "Warning shown; no message is sent",
+      "startedAt": "2026-09-16T18:19:42.550Z",
+      "finishedAt": "2026-09-16T18:19:49.309Z",
+      "actual": "The step warned \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\" The source was env with from null. Continue was disabled, so the invite step could not be reached. A direct invitation through the Users invite route answered 201, and Mailpit received 0 messages for that address.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T18:19:49.313Z",
+  "phase": "incomplete: SMTP_URL set, SMTP_FROM empty (overlay-phase-incomplete.json), complete stored relay still saved"
+}

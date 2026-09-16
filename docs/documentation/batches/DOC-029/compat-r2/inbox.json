@@ -1,0 +1,619 @@
+{
+  "kind": "compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "inbox",
+  "issues": [745, 747],
+  "reviewer": "DOC-029r2 compatibility reviewer (inbox)",
+  "reviewerKind": "agent",
+  "independence": "The reviewer did not write, correct, technically review or walk any article in this group in round 1, and did not edit article text.",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "commitsReviewed": [
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "1ea249dd Show organization branding on sign-in and raise the logo limit"
+  ],
+  "diffCommand": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+  "diffFilesAll": [
+    "apps/api/openapi.json",
+    "apps/api/src/modules/email-settings/config.test.ts",
+    "apps/api/src/modules/email-settings/config.ts",
+    "apps/api/src/modules/email-settings/email-settings.test.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/org/general.test.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/web/src/components/comments/comment-applet.tsx",
+    "apps/web/src/components/contracts/contracts-columns.tsx",
+    "apps/web/src/components/default-fields.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/components/inline-add-form.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/matters/matters-columns.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/components/taxonomy-types-pane.tsx",
+    "apps/web/src/components/user-identity.tsx",
+    "apps/web/src/lib/ai-connector-config.ts",
+    "apps/web/src/lib/field-catalog.ts",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/auth-layout.test.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/routes/set-password.test.tsx",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/web/src/routes/settings-contract-fields.test.tsx",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/web/src/routes/settings-contract-statuses.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "apps/web/src/routes/settings-contract-types.test.tsx",
+    "apps/web/src/routes/settings-default-fields.test.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-matter-statuses.test.tsx",
+    "apps/web/src/routes/settings-matter-statuses.tsx",
+    "apps/web/src/routes/settings-matter-types.test.tsx",
+    "apps/web/src/routes/settings-reminders.test.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/welcome.test.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/testing/helpers.tsx",
+    "packages/api-client/src/schema.ts",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/logo.ts"
+  ],
+  "otherChangedFiles": [
+    ".env.example",
+    "README.md",
+    "e2e/tests/00-m33-demo.spec.ts",
+    "e2e/tests/08-accessibility.spec.ts",
+    "e2e/tests/12-m6-demo.spec.ts",
+    "messages/en-US.json",
+    "scripts/dev-hot.sh"
+  ],
+  "changedMessageKeys": [
+    "settings.aiAnalysis.intro",
+    "settings.contractFields.help",
+    "welcome.aiAnalysis.configured",
+    "welcome.aiAnalysis.configured.disabled",
+    "welcome.aiAnalysis.hint",
+    "welcome.email.field.from",
+    "welcome.email.field.fromPlaceholder",
+    "welcome.email.field.url",
+    "welcome.email.field.url.hint",
+    "welcome.email.field.urlPlaceholder",
+    "welcome.org.logo.rejected",
+    "welcome.review.fields",
+    "welcome.review.reminders.address",
+    "auth.logo",
+    "auth.portalLabel",
+    "auth.poweredBy",
+    "settings.fields.custom",
+    "settings.fields.default.businessOwner",
+    "settings.fields.default.closed",
+    "settings.fields.default.confidentiality",
+    "settings.fields.default.contractType",
+    "settings.fields.default.counterparties",
+    "settings.fields.default.department",
+    "settings.fields.default.description",
+    "settings.fields.default.effectiveDate",
+    "settings.fields.default.expiryDate",
+    "settings.fields.default.legalOwner",
+    "settings.fields.default.linkedMatter",
+    "settings.fields.default.matterManager",
+    "settings.fields.default.matterType",
+    "settings.fields.default.noticePeriod",
+    "settings.fields.default.opened",
+    "settings.fields.default.ourEntity",
+    "settings.fields.default.parentContract",
+    "settings.fields.default.parentMatter",
+    "settings.fields.default.primaryDocument",
+    "settings.fields.default.priority",
+    "settings.fields.default.reference",
+    "settings.fields.default.region",
+    "settings.fields.default.renewalPeriod",
+    "settings.fields.default.risk",
+    "settings.fields.default.status",
+    "settings.fields.default.termType",
+    "settings.fields.default.title",
+    "settings.fields.default.value",
+    "settings.fields.defaultLocked",
+    "settings.fields.defaults",
+    "settings.matterStatuses.saveNew",
+    "settings.returnToSetup",
+    "welcome.email.authentication.none",
+    "welcome.email.authentication.password",
+    "welcome.email.field.authentication",
+    "welcome.email.field.host",
+    "welcome.email.field.password",
+    "welcome.email.field.port",
+    "welcome.email.field.security",
+    "welcome.email.field.senderEmail",
+    "welcome.email.field.senderName",
+    "welcome.email.field.username",
+    "welcome.email.security.none",
+    "welcome.review.contractFields",
+    "welcome.review.entityFields",
+    "welcome.review.matterFields"
+  ],
+  "lab": {
+    "project": "openlaw-docs-41255c61-work2",
+    "appUrl": "http://127.0.0.1:23301",
+    "mailUrl": "http://127.0.0.1:23401",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "seed": "Helix light, seed 7, built by scripts/documentation/lab.mjs",
+    "images": {
+      "app": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "doc-engine": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+      "postgres": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2",
+      "mailpit": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    "appImageRevisionLabel": "57e77e386be31b2a319f7143dd54d00123e65efe"
+  },
+  "replay": {
+    "of": [
+      "batches/DOC-029/inbox/setup-config-r1.mjs",
+      "batches/DOC-029/inbox/setup-requests-r1.mjs",
+      "batches/DOC-029/inbox/walkthrough-r1.mjs"
+    ],
+    "adaptations": "Relative import depth, lab project name work2, record prefix DOC-029r2 inbox, output file names r2, and log metadata. No step, selector, expectation or assertion changed. The lab URLs were already 23301 and 23401.",
+    "browser": "Playwright 1.63.0 Chromium from node_modules, headless, 1440x1000; one isolated browser context per identity",
+    "startedAt": "2026-09-16T17:51:36.164Z",
+    "finishedAt": "2026-09-16T17:55:04.393Z",
+    "articleHashesAtStart": {
+      "triage-requests": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d",
+      "convert-request": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee"
+    },
+    "totals": {
+      "steps": 59,
+      "pass": 59,
+      "fail": 0
+    },
+    "files": [
+      {
+        "path": "batches/DOC-029/compat-r2/inbox-r2/api.mjs",
+        "sha256": "987f55dbb3c6a1cc5dd4da6234895475e272ef57aa27741edfae521e7c565002"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/inbox-r2/setup-config-r2.mjs",
+        "sha256": "a6f55537718ef74355e355ca42a78147c74acf2693ed3560fe1bc3fd461a9005"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/inbox-r2/setup-requests-r2.mjs",
+        "sha256": "944fbdeb73a25feb6b53f699f39d4231a5d7a9bd1f5be4999d4f2c37757b2b1a"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/inbox-r2/walkthrough-r2.mjs",
+        "sha256": "0a2c8dc695eda74dbc0a2924f0b423387c05eabdc8e5b49bb516ea992e579aaf"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/inbox-r2/walkthrough-r2.json",
+        "sha256": "474af8ae43123c0905786aa4f1cf6c0646b12b94b5a0cba03e204850ef4d4fbd"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/inbox-r2/fixtures-r2.json",
+        "sha256": "a11c44f4ff72ef18f1487d9465a1618357c4149fb58960ac7ca1a7da52901aed"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/inbox-r2/requests-r2.json",
+        "sha256": "7df49f8d60e5d5f1a19a45512f6968dbce19a040db806d7479b9ca2c87807916"
+      }
+    ],
+    "screenshots": "batches/DOC-029/compat-r2/inbox-r2/r2-*.png"
+  },
+  "articles": {
+    "triage-requests": {
+      "article": "docs/user-guides/triage-requests.md",
+      "contentSha256": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "scenario": "V-C12",
+      "diffFilesInspected": [
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts"
+      ],
+      "evidenceSourcesUnchanged": "Two evidence sources changed. In comment-applet.tsx the author name of an archived person now uses text-muted instead of opacity-50. In messages/en-US.json only the keys in changedMessageKeys changed, and none is an Inbox, Request, Triage, assignment, resolution or comment label. inbox.tsx, inbox-request.tsx, inbox-columns.tsx, inbox-filter-definitions.ts, request-assignment.tsx, resolve-dialog.tsx, comments.ts, roles.ts, request-owner.tsx, portal-request.tsx and every apps/api/src/modules/requests file are unchanged.",
+      "diffFinding": "No change touches Requests, the Inbox, assignment, Triage, resolution, conversion, Matter templates, comments tiers or the Portal Request pages. The changed files cover SMTP settings fields, sign-in branding and logo limits, the first-run welcome flow, settings list Save and Cancel rows, locked default fields in Settings catalogs, and a text-muted colour for archived people in place of 50% opacity. The article states no colour or opacity for archived people, and the sign-in page branding does not change the Business User magic-link path the article relies on.",
+      "replaySteps": [
+        {
+          "role": "administrator",
+          "step": "Open Inbox: Requests tab first, built-in view Status: New, ordered by urgency then age",
+          "result": "pass",
+          "at": "2026-09-16T17:51:38.368Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Open R-16 and read Description, Form responses, Attachments, Converts to, Requester, Department, Urgency",
+          "result": "pass",
+          "at": "2026-09-16T17:51:38.480Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Select attachment filenames: PDF displays, Word file is prepared for reading, Download saves the original bytes",
+          "result": "pass",
+          "at": "2026-09-16T17:51:40.287Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Assign R-16 from the list row: Search people, choose Nadia Haddad, Save assignment; status stays New; the other legal session still has Triage",
+          "result": "pass",
+          "at": "2026-09-16T17:51:42.567Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Portal shows the saved triage assignee as Owner",
+          "result": "pass",
+          "at": "2026-09-16T17:51:45.609Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Reassign from the avatar control; Cancel leaves the saved assignment; Unassigned clears it and the Portal shows Not assigned yet",
+          "result": "pass",
+          "at": "2026-09-16T17:51:49.728Z"
+        },
+        {
+          "role": "administrator",
+          "step": "If it does not work: people list failure offers Retry; a failed save shows the error and keeps the saved assignee",
+          "result": "pass",
+          "at": "2026-09-16T17:51:51.275Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Clarify through Comments: audience starts on Legal only; Shared with requester reaches Jonas; Legal only does not; Request stays New",
+          "result": "pass",
+          "at": "2026-09-16T17:51:55.348Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Triage menu offers Convert to contract, Convert to matter, Resolve request without converting, and no Decline",
+          "result": "pass",
+          "at": "2026-09-16T17:51:56.020Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Resolve R-17: blank note refused; Cancel leaves it undecided with nothing posted",
+          "result": "pass",
+          "at": "2026-09-16T17:51:57.651Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Assign R-17 to Nadia Haddad, then resolve it as Daniel Okafor with a note: Status card Resolved, note in Comments, assignee kept read-only, controls gone",
+          "result": "pass",
+          "at": "2026-09-16T17:51:58.882Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Requester reads the resolution note on the Portal, receives the email, and a later reply does not reopen R-17",
+          "result": "pass",
+          "at": "2026-09-16T17:52:02.702Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Lost race on R-18: Nadia Haddad resolves while the dialog is open; dialog states their outcome with Close; the losing note is not posted",
+          "result": "pass",
+          "at": "2026-09-16T17:52:03.833Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Find decided Requests: Status filter Resolved lists them; removing the Status filter lists all outcomes",
+          "result": "pass",
+          "at": "2026-09-16T17:52:05.749Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Historical Declined Request shows its reason and no Assign or Triage controls",
+          "result": "pass",
+          "at": "2026-09-16T17:52:06.710Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Converted R-19 in the Inbox keeps assignee, Description and Form responses, shows no Attachments card or Comments, and has no Assign or Triage",
+          "result": "pass",
+          "at": "2026-09-16T17:52:21.940Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Open Inbox: Requests tab first, built-in view Status: New, ordered by urgency then age",
+          "result": "pass",
+          "at": "2026-09-16T17:53:16.393Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Open R-24 and read Description, Form responses, Attachments, Converts to, Requester, Department, Urgency",
+          "result": "pass",
+          "at": "2026-09-16T17:53:16.501Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Select attachment filenames: PDF displays, Word file is prepared for reading, Download saves the original bytes",
+          "result": "pass",
+          "at": "2026-09-16T17:53:18.344Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Assign R-24 from the list row: Search people, choose Daniel Okafor, Save assignment; status stays New; the other legal session still has Triage",
+          "result": "pass",
+          "at": "2026-09-16T17:53:20.859Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Portal shows the saved triage assignee as Owner",
+          "result": "pass",
+          "at": "2026-09-16T17:53:23.885Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Reassign from the avatar control; Cancel leaves the saved assignment; Unassigned clears it and the Portal shows Not assigned yet",
+          "result": "pass",
+          "at": "2026-09-16T17:53:28.081Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "If it does not work: people list failure offers Retry; a failed save shows the error and keeps the saved assignee",
+          "result": "pass",
+          "at": "2026-09-16T17:53:29.556Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Clarify through Comments: audience starts on Legal only; Shared with requester reaches Jonas; Legal only does not; Request stays New",
+          "result": "pass",
+          "at": "2026-09-16T17:53:33.529Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Triage menu offers Convert to contract, Convert to matter, Resolve request without converting, and no Decline",
+          "result": "pass",
+          "at": "2026-09-16T17:53:34.216Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Resolve R-25: blank note refused; Cancel leaves it undecided with nothing posted",
+          "result": "pass",
+          "at": "2026-09-16T17:53:35.073Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Assign R-25 to Daniel Okafor, then resolve it as Nadia Haddad with a note: Status card Resolved, note in Comments, assignee kept read-only, controls gone",
+          "result": "pass",
+          "at": "2026-09-16T17:53:36.397Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Requester reads the resolution note on the Portal, receives the email, and a later reply does not reopen R-25",
+          "result": "pass",
+          "at": "2026-09-16T17:53:45.233Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Lost race on R-26: Daniel Okafor resolves while the dialog is open; dialog states their outcome with Close; the losing note is not posted",
+          "result": "pass",
+          "at": "2026-09-16T17:53:46.107Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Find decided Requests: Status filter Resolved lists them; removing the Status filter lists all outcomes",
+          "result": "pass",
+          "at": "2026-09-16T17:53:48.113Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Historical Declined Request shows its reason and no Assign or Triage controls",
+          "result": "pass",
+          "at": "2026-09-16T17:53:49.254Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Converted R-27 in the Inbox keeps assignee, Description and Form responses, shows no Attachments card or Comments, and has no Assign or Triage",
+          "result": "pass",
+          "at": "2026-09-16T17:54:04.073Z"
+        },
+        {
+          "role": "business_user",
+          "step": "Business Users cannot open or triage the Inbox",
+          "result": "pass",
+          "at": "2026-09-16T17:55:04.392Z"
+        }
+      ],
+      "conclusion": "compatible",
+      "limitationsCarried": "The round 1 limitations still apply. The Contributor refusal was again not run because the seed ravi.menon account is a business_user; the Business User refusal passed."
+    },
+    "convert-request": {
+      "article": "docs/user-guides/convert-request.md",
+      "contentSha256": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "scenario": "V-C13",
+      "diffFilesInspected": [
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts"
+      ],
+      "evidenceSourcesUnchanged": "Two evidence sources changed. In settings-ai-analysis.tsx the key-reuse check moved to lib/ai-connector-config.ts with the same logic, and the intro text (settings.aiAnalysis.intro) now names AI-assisted Request conversion. The article does not quote that intro. In messages/en-US.json only the keys in changedMessageKeys changed, and none is a Convert dialog, conversion switch, record or Portal label. prepared-convert-dialog.tsx, convert-dialog.tsx, description-source-toggle.tsx, conversion-evidence.tsx, contract-record.tsx, matter-record.tsx, ai-analysis-card.tsx, portal-request.tsx, the requests convert, promote-paper, move-thread and original-intake modules, contracts and matters create, portal-record-access and both pipeline files are unchanged.",
+      "diffFinding": "No change touches Requests, the Inbox, assignment, Triage, resolution, conversion, Matter templates, comments tiers or the Portal Request pages. The changed files cover SMTP settings fields, sign-in branding and logo limits, the first-run welcome flow, settings list Save and Cancel rows, locked default fields in Settings catalogs, and a text-muted colour for archived people in place of 50% opacity. The welcome flow and settings catalog changes alter how an Administrator adds Types and Fields in Settings, not the destination Types, Fields or templates the Convert dialog reads. The three AI conversion switches and their labels are unchanged.",
+      "replaySteps": [
+        {
+          "role": "administrator",
+          "step": "Before converting R-19 and R-20: assign Nadia Haddad for triage and post a Legal only note and a Shared with requester message with paper",
+          "result": "pass",
+          "at": "2026-09-16T17:52:15.849Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Open R-19 Triage > Convert to contract with preparation off: manual Convert dialog opens directly",
+          "result": "pass",
+          "at": "2026-09-16T17:52:16.688Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Refusals: empty Title, empty required Field, and the archived reference are refused by name; Cancel leaves the Request undecided",
+          "result": "pass",
+          "at": "2026-09-16T17:52:18.473Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Convert R-19: replace the archived Entity with a live one, answer the required Field, set Needed by, and convert once",
+          "result": "pass",
+          "at": "2026-09-16T17:52:21.136Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Open C-47 from the Status card and check Title, Type, Priority, Description, Department, Needed by Key date, Fields, owners, team, Risk",
+          "result": "pass",
+          "at": "2026-09-16T17:52:24.681Z"
+        },
+        {
+          "role": "administrator",
+          "step": "C-47 Documents: each Request attachment is a root Document at Version 1 with its bytes; the first is primary; comment paper is not filed; comments keep tiers and authors",
+          "result": "pass",
+          "at": "2026-09-16T17:52:26.815Z"
+        },
+        {
+          "role": "administrator",
+          "step": "After conversion the original R-19 attachment links stop working (staff and Portal)",
+          "result": "pass",
+          "at": "2026-09-16T17:52:26.856Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Portal: Jonas's R- address redirects to C-47, the Request leaves Your requests, Original request is shown; Amara is refused",
+          "result": "pass",
+          "at": "2026-09-16T17:52:33.271Z"
+        },
+        {
+          "role": "administrator",
+          "step": "R-20 Convert to matter: choose the Matter template, review defaults (carried answer wins, template default fills), explicitly clear the archived Entity, answer required Field",
+          "result": "pass",
+          "at": "2026-09-16T17:52:36.510Z"
+        },
+        {
+          "role": "administrator",
+          "step": "M-64: Title and Priority kept, Risk unset, Matter Manager and Business Owner, Custom fields, template Tasks and Key dates from the creation date in UTC, Documents without primary",
+          "result": "pass",
+          "at": "2026-09-16T17:52:40.751Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Re-target R-21 (configured for Contract): Convert to matter, check the destination, switch with Convert to contract instead and back, then convert once",
+          "result": "pass",
+          "at": "2026-09-16T17:53:12.342Z"
+        },
+        {
+          "role": "administrator",
+          "step": "Lost race on R-22: Nadia Haddad converts first; the dialog states the outcome and record with Close; no second Contract",
+          "result": "pass",
+          "at": "2026-09-16T17:53:13.558Z"
+        },
+        {
+          "role": "administrator",
+          "step": "R-23: a refused template default is recovered by choosing No template and answering the required Field",
+          "result": "pass",
+          "at": "2026-09-16T17:53:16.069Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Before converting R-27 and R-28: assign Daniel Okafor for triage and post a Legal only note and a Shared with requester message with paper",
+          "result": "pass",
+          "at": "2026-09-16T17:53:57.604Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Open R-27 Triage > Convert to contract with preparation off: manual Convert dialog opens directly",
+          "result": "pass",
+          "at": "2026-09-16T17:53:58.734Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Refusals: empty Title, empty required Field, and the archived reference are refused by name; Cancel leaves the Request undecided",
+          "result": "pass",
+          "at": "2026-09-16T17:54:00.543Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Convert R-27: replace the archived Entity with a live one, answer the required Field, set Needed by, and convert once",
+          "result": "pass",
+          "at": "2026-09-16T17:54:03.385Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Open C-80 from the Status card and check Title, Type, Priority, Description, Department, Needed by Key date, Fields, owners, team, Risk",
+          "result": "pass",
+          "at": "2026-09-16T17:54:06.894Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "C-80 Documents: each Request attachment is a root Document at Version 1 with its bytes; the first is primary; comment paper is not filed; comments keep tiers and authors",
+          "result": "pass",
+          "at": "2026-09-16T17:54:08.998Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "After conversion the original R-27 attachment links stop working (staff and Portal)",
+          "result": "pass",
+          "at": "2026-09-16T17:54:09.036Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Portal: Jonas's R- address redirects to C-80, the Request leaves Your requests, Original request is shown; Amara is refused",
+          "result": "pass",
+          "at": "2026-09-16T17:54:15.464Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "R-28 Convert to matter: choose the Matter template, review defaults (carried answer wins, template default fills), explicitly clear the archived Entity, answer required Field",
+          "result": "pass",
+          "at": "2026-09-16T17:54:19.032Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "M-85: Title and Priority kept, Risk unset, Matter Manager and Business Owner, Custom fields, template Tasks and Key dates from the creation date in UTC, Documents without primary",
+          "result": "pass",
+          "at": "2026-09-16T17:54:23.045Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Re-target R-29 (configured for Contract): Convert to matter, check the destination, switch with Convert to contract instead and back, then convert once",
+          "result": "pass",
+          "at": "2026-09-16T17:54:54.944Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Lost race on R-30: Daniel Okafor converts first; the dialog states the outcome and record with Close; no second Contract",
+          "result": "pass",
+          "at": "2026-09-16T17:54:56.334Z"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "R-31: a refused template default is recovered by choosing No template and answering the required Field",
+          "result": "pass",
+          "at": "2026-09-16T17:54:59.204Z"
+        }
+      ],
+      "conclusion": "compatible",
+      "limitationsCarried": "The round 1 limitations still apply. The AI connector is unconfigured on work2, so only the manual conversion path was replayed; the AI preparation and Fill Contract Fields steps rest on source inspection, and their source files are unchanged in this diff."
+    }
+  },
+  "needsRewalk": [],
+  "writtenAt": "2026-09-16T17:56:26.898Z"
+}

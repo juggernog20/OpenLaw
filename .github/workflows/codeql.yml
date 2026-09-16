@@ -35,6 +35,12 @@ jobs:
           # No compilation needed for JS/TS extraction.
           build-mode: none
           queries: security-and-quality
+          # Documentation batches retain the verification scripts that
+          # walked each guide against a disposable loopback lab. They are
+          # evidence, cited by hash, and never ship or run in the app.
+          config: |
+            paths-ignore:
+              - docs/documentation/batches
 
       - uses: github/codeql-action/analyze@v3
         with:

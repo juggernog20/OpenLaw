@@ -1,0 +1,28 @@
+{
+  "phase": "operator-browser",
+  "reviewer": "DOC-029 independent live-provider walkthrough agent",
+  "reviewerKind": "agent",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "startedAt": "2026-09-16T17:27:58.422Z",
+  "steps": [
+    {
+      "id": "OB01",
+      "article": "configure-signing",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Signed out, open /documentation/configure-signing, follow the deployment configuration link, find the provider and key sections",
+      "actual": "The formal reader opened /documentation/configure-signing. Its deployment configuration link opened /documentation/deployment-configuration. The page says to allow outbound provider traffic from both the app and worker, and has \"Preserve and rotate encryption keys\", which says OPENLAW_SECRET_KEY encrypts the Signing RSA key and HMAC secret and the AI-provider key. The reader serves the committed configure-signing bytes of 3fa407e3; this check proves the operator link and target, not the reviewed wording.",
+      "result": "pass"
+    },
+    {
+      "id": "OB02",
+      "article": "configure-analysis",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Signed out, open /documentation/configure-analysis, follow the deployment configuration link, find the provider and key sections",
+      "actual": "The formal reader opened /documentation/configure-analysis. Its deployment configuration link opened /documentation/deployment-configuration. The page says to allow outbound provider traffic from both the app and worker, and has \"Preserve and rotate encryption keys\", which says OPENLAW_SECRET_KEY encrypts the Signing RSA key and HMAC secret and the AI-provider key. The reader serves the committed configure-analysis bytes of 3fa407e3; this check proves the operator link and target, not the reviewed wording.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T17:27:59.046Z"
+}

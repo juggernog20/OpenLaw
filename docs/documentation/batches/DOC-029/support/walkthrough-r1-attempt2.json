@@ -1,0 +1,779 @@
+{
+  "disposition": "Superseded recorded attempt. One reviewer harness fault: a page main landmark did not appear within 30 seconds on the shared lab. See walkthrough-r1.json notes.",
+  "batch": "DOC-029",
+  "group": "support",
+  "round": 1,
+  "kind": "independent-article-walkthrough",
+  "reviewer": "DOC-029 independent walkthrough agent (support, round 1)",
+  "reviewerKind": "agent",
+  "appUrl": "http://127.0.0.1:23300",
+  "mailUrl": "http://127.0.0.1:23400",
+  "lab": {
+    "project": "openlaw-docs-41255c61-admin",
+    "source": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "appImage": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0",
+    "workerImage": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0",
+    "engineImage": "sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837"
+  },
+  "articles": {
+    "troubleshooting": {
+      "path": "docs/user-guides/troubleshooting.md",
+      "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa"
+    },
+    "reference": {
+      "path": "docs/user-guides/reference.md",
+      "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd"
+    },
+    "versions-and-support": {
+      "path": "docs/user-guides/versions-and-support.md",
+      "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, one browser context per identity",
+  "fixtures": {
+    "stamp": "mu4as0lt",
+    "confidential": {
+      "number": 121,
+      "title": "DOC-029 support confidential contract mu4as0lt"
+    },
+    "adminConfidential": {
+      "number": 122,
+      "title": "DOC-029 support administrator confidential contract mu4as0lt"
+    },
+    "shared": {
+      "number": 123,
+      "title": "DOC-029 support shared contract mu4as0lt",
+      "documentId": "01a0aafc-2c73-7593-8926-306eb2f5b56e",
+      "folderId": "01a0aafc-2c8e-7500-ba67-ec3e14bfb47c"
+    },
+    "knowledge": {
+      "id": "01a0aafc-2cc1-76e3-bd3a-c9e94839f582",
+      "title": "DOC-029 support Portal Knowledge mu4as0lt"
+    },
+    "confidentialPortal": {
+      "number": 124,
+      "title": "DOC-029 support confidential portal contract mu4as0lt"
+    },
+    "archived": {
+      "number": 125,
+      "title": "DOC-029 support archived contract mu4as0lt"
+    },
+    "approval": {
+      "number": 126,
+      "title": "DOC-029 support approval contract mu4as0lt"
+    },
+    "uploads": {
+      "number": 127,
+      "title": "DOC-029 support upload contract mu4as0lt"
+    },
+    "files": {
+      "number": 128,
+      "title": "DOC-029 support file behavior contract mu4as0lt"
+    },
+    "relatedMatter": {
+      "number": 35,
+      "title": "DOC-029 support related matter mu4as0lt"
+    },
+    "entity": {
+      "id": "01a0aafc-2d83-7bcb-b2ff-2a92035388c4",
+      "name": "DOC-029 support confidential entity Ltd mu4as0lt"
+    },
+    "request": {
+      "number": 39,
+      "contract": 129
+    },
+    "openRequest": {
+      "number": 40
+    },
+    "createdAt": "2026-09-16T16:10:48.652Z",
+    "createdBy": "Nadia Haddad and Daniel Okafor API sessions, Jonas Weber Portal session"
+  },
+  "startedAt": "2026-09-16T16:10:46.227Z",
+  "steps": [
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Help from the header and reach Resolve common problems",
+      "expected": "Header Help opens the role's Help; Reference and troubleshooting lists Resolve common problems and it opens with its sections.",
+      "startedAt": "2026-09-16T16:10:48.653Z",
+      "at": "2026-09-16T16:10:54.179Z",
+      "actual": "Header Help went to /help; Reference and troubleshooting > Resolve common problems opened /help/troubleshooting with 11 sections (I cannot sign in; A record or search result is missing; An edit or action is unavailable; An upload is refused or appears twice; A preview stays pending or fails; A notification or email is missing; I cannot approve, or an Approval warning appears; Electronic signing is unavailable or the executed copy is missing; Analysis is missing, fails, or keeps an earlier value; AI conversion or source evidence is unavailable; If the problem continues). Meta line: \"For Legal Team Member \u00b7 Administrator \u00b7 Business User\".",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Open Help from the header and reach Resolve common problems",
+      "expected": "Header Help opens the role's Help; Reference and troubleshooting lists Resolve common problems and it opens with its sections.",
+      "startedAt": "2026-09-16T16:10:54.179Z",
+      "at": "2026-09-16T16:10:59.728Z",
+      "actual": "Header Help went to /help; Reference and troubleshooting > Resolve common problems opened /help/troubleshooting with 11 sections (I cannot sign in; A record or search result is missing; An edit or action is unavailable; An upload is refused or appears twice; A preview stays pending or fails; A notification or email is missing; I cannot approve, or an Approval warning appears; Electronic signing is unavailable or the executed copy is missing; Analysis is missing, fails, or keeps an earlier value; AI conversion or source evidence is unavailable; If the problem continues). Meta line: \"For Legal Team Member \u00b7 Administrator \u00b7 Business User\".",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Open Help from the header and reach Resolve common problems",
+      "expected": "Header Help opens the role's Help; Reference and troubleshooting lists Resolve common problems and it opens with its sections.",
+      "startedAt": "2026-09-16T16:10:59.728Z",
+      "at": "2026-09-16T16:11:05.208Z",
+      "actual": "Header Help went to /portal/help; Reference and troubleshooting > Resolve common problems opened /portal/help/troubleshooting with 11 sections (I cannot sign in; A record or search result is missing; An edit or action is unavailable; An upload is refused or appears twice; A preview stays pending or fails; A notification or email is missing; I cannot approve, or an Approval warning appears; Electronic signing is unavailable or the executed copy is missing; Analysis is missing, fails, or keeps an earlier value; AI conversion or source evidence is unavailable; If the problem continues). Meta line: \"For Legal Team Member \u00b7 Administrator \u00b7 Business User\".",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: staff sign-in with a wrong password, then the correct one",
+      "expected": "A wrong password shows a visible error and the account still signs in with the right password.",
+      "startedAt": "2026-09-16T16:11:05.209Z",
+      "at": "2026-09-16T16:11:07.406Z",
+      "actual": "The staff sign-in page offered [\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"]. A wrong password showed \"Check your email and password.\" and stayed on the page. The correct password then signed in to /.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: Administrator staff sign-in with a wrong password, then the correct one",
+      "expected": "A wrong password shows a visible error and the account still signs in.",
+      "startedAt": "2026-09-16T16:11:07.407Z",
+      "at": "2026-09-16T16:11:09.528Z",
+      "actual": "Wrong password showed \"Check your email and password.\"; the correct password signed in to /.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: a Portal link already used; request a new link and open the newest message",
+      "expected": "Reusing a spent link shows the expired or already-used copy; a new link signs in; the Portal session does not open staff pages.",
+      "startedAt": "2026-09-16T16:11:09.528Z",
+      "at": "2026-09-16T16:11:16.164Z",
+      "actual": "The first link (subject \"Sign in to OpenLaw\") signed in once. Opening the same link in a new context landed on /auth/link-expired with heading \"Sign-in link expired\" and the text \"The link has expired or was already used. Enter your email to get a fresh one.\". A new link from the newest message signed in to the Portal. Going to /contracts in that session landed on /portal. Screenshot docs/documentation/batches/DOC-029/support/r1-portal-link-expired.png.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A record is missing: a direct link to a missing Contract and to an unreachable Confidential Contract",
+      "expected": "Both answer Contract not found with Back to Contracts; reloads do not change access; no title leaks; after the Legal Owner adds a team entry the link opens.",
+      "startedAt": "2026-09-16T16:11:16.165Z",
+      "at": "2026-09-16T16:11:28.009Z",
+      "actual": "C-999999 showed \"Contract not found\" and \"C-999999 does not exist, or you cannot open it. Back to Contracts\". Confidential C-121 (Nadia Haddad Legal Owner, Daniel not on the team) showed \"Contract not found\" and \"C-121 does not exist, or you cannot open it. Back to Contracts\", the same answer; two reloads still showed \"Contract not found\" and the title did not appear. Nadia added Daniel with Contract team > Add team member; Daniel's reload then opened \"DOC-029 support confidential contract mu4as0lt\". Nadia then removed the entry again. Screenshot docs/documentation/batches/DOC-029/support/r1-admin-contract-not-found.png.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A page could not load: Something went wrong. with Reload after a temporary connection failure",
+      "expected": "With the record read failing, the page shows Something went wrong. and Reload; after the connection returns, Reload opens the record.",
+      "startedAt": "2026-09-16T16:11:28.010Z",
+      "at": "2026-09-16T16:11:30.133Z",
+      "actual": "With the browser's request for C-123 failing, the page showed \"Something went wrong.\" and a Reload button. After the request was allowed again, Reload opened \"DOC-029 support shared contract mu4as0lt\". Screenshot docs/documentation/batches/DOC-029/support/r1-member-page-could-not-load.png.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A record is missing: missing Contract and Matter links, and a Confidential Contract without access",
+      "expected": "Missing and unreachable work give the same not-found answer; the Administrator can recover access by adding a team entry.",
+      "startedAt": "2026-09-16T16:11:30.133Z",
+      "at": "2026-09-16T16:12:01.915Z",
+      "actual": "Check did not complete: locator.innerText: Timeout 30000ms exceeded. Call log: \u001b[2m - waiting for getByRole('main')\u001b[22m",
+      "result": "fail"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A record is missing (Portal): missing, Confidential without team entry, shared, archived, related Matter, and missing Knowledge",
+      "expected": "Missing and unreachable Contracts show the Portal not-found copy; a team entry opens the record; archiving closes it; a linked Matter stays closed.",
+      "startedAt": "2026-09-16T16:12:01.916Z",
+      "at": "2026-09-16T16:12:16.239Z",
+      "actual": "C-999999: \"Contract not found\" / \"Your Contracts Contract not found This Contract does not exist, or you cannot open it.\". Confidential C-121 without a team entry gave the same copy and no title. Shared C-123 (team entry) opened \"DOC-029 support shared contract mu4as0lt\". C-125 opened before Nadia archived it and afterwards showed \"Your Contracts Contract not found This Contract does not exist, or you cannot open it.\", unchanged after reload. M-35, linked to C-123, showed \"Your Matters Matter not found This Matter does not exist, or you cannot open it.\". An unknown Portal Knowledge address showed \"What do you need from Legal?\" / \"What do you need from Legal? Help with this page NDA request Estimated turnaround: 3 business days Mutual or one-way NDA with a counterparty. Contract review Es\".",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Converted Request: reopen it in the Portal; team entry removed; Legal restores it; staff page stays closed",
+      "expected": "The converted Request opens its Contract in the Portal while Jonas is on the team; without the team entry it no longer opens; the staff Contract page is not available.",
+      "startedAt": "2026-09-16T16:12:16.239Z",
+      "at": "2026-09-16T16:12:24.265Z",
+      "actual": "R-39 opened /portal/contracts/129 (\"DOC-029 support converted contract mu4as0lt\"); the converted Contract's team held Jonas: true. After Nadia removed Jonas's team entry, R-39 showed path /portal, heading \"What do you need from Legal?\", text \"What do you need from Legal? Help with this page NDA request Estimated turnaround: 3 business days Mutual or one-way NDA with a counterparty. Contract review Estimated turnaround: 7 business days Revi\". After Nadia added the entry back it opened /portal/contracts/129 again. /contracts/129 in the Portal session landed on /portal.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An edit or action is unavailable: Business User controls on a shared Contract",
+      "expected": "Fields are read-only; Add version, reply and Add team member are offered; no Task completion, Approval, signing or Stage control; a direct Field write is refused.",
+      "startedAt": "2026-09-16T16:12:24.265Z",
+      "at": "2026-09-16T16:12:27.781Z",
+      "actual": "Portal C-123: Overview and Fields had 0 and 0 editable controls. Buttons: [\"Upload documents\",\"Drop files here or click to upload\",\"Search\",\"doc029-support-v1.txt\",\"Add version\",\"doc029-support-image.png\",\"Add version\",\"Contract team\",\"Comments\",\"History\"]; none for Approval, Tasks, signing, Stage or archive. A direct description write answered 403. Jonas posted a reply in Comments and it appeared. Add team member (\"Add team member Person Choose a person Ade Balogun Amara Nwosu Blair Wentworth Clara Fontaine Daniel Okafor Diego Salas DOC-029 admin-config Reminder early mu49\") added \"Amara Nwosu\" to the team.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An edit or action is unavailable: Add team member on a Confidential team",
+      "expected": "A Business User on a Confidential Contract cannot add people to its team.",
+      "startedAt": "2026-09-16T16:12:27.781Z",
+      "at": "2026-09-16T16:12:30.358Z",
+      "actual": "Jonas opened Confidential C-124 (\"DOC-029 support confidential portal contract mu4as0lt\"). Add team member: present but disabled. A direct team add answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An edit or action is unavailable: archived Contract, and a save that reports an error",
+      "expected": "The archived Contract offers no Upload; a refused value shows a correction and a reload shows what actually saved.",
+      "startedAt": "2026-09-16T16:12:30.359Z",
+      "at": "2026-09-16T16:12:38.440Z",
+      "actual": "Archived C-125 Documents showed 0 Upload buttons (\"archived contract mu4as0lt Draft Archived Draft Review Approval Signature Active Ended Overview Fields Documents Approvals Key dates Tasks This contract is archived \u2014 it is out of the contract list.\"). On C-127, entering 99999 in Notice period (days) showed \"One or more request fields are invalid.\" beside the field and kept the entered value \"99999\" (aria-invalid null); after reload the saved value was \"\", so the refused value had not saved.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An edit or action is unavailable: Administrator reaches configured Fields; Legal Team Member does not",
+      "expected": "Settings > Contracts > Fields opens for the Administrator; the Legal Team Member cannot open organization settings.",
+      "startedAt": "2026-09-16T16:12:38.441Z",
+      "at": "2026-09-16T16:12:42.110Z",
+      "actual": "Daniel saw [\"Fields\"] at /settings/contracts/fields. Nadia's visit ended at /settings/profile with headings [\"Settings\",\"Personal\",\"Profile\",\"Password & two-factor\",\"Sessions\"].",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An upload is refused: oversized file, over-long filename, corrected name, and a repeat upload",
+      "expected": "The oversized file names the MB limit; the long filename is refused; nothing is stored; the corrected name uploads once; sending the same file again as a new Document makes a second row.",
+      "startedAt": "2026-09-16T16:12:42.161Z",
+      "at": "2026-09-16T16:12:52.801Z",
+      "actual": "A 105 MiB file was refused with \"That file is over the 100 MB upload limit.\". A 305-character filename was refused with \"Rename the file to 255 characters or fewer before uploading it.\". Documents stayed at 0. The short name uploaded once (count 1). Uploading the same file again as a new Document made 2 separate Documents, with 2 rows named doc029-support-note.txt in the list.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An upload is refused: over-long filename as Administrator",
+      "expected": "The filename refusal is visible and nothing is stored.",
+      "startedAt": "2026-09-16T16:12:52.802Z",
+      "at": "2026-09-16T16:12:54.829Z",
+      "actual": "A 315-character filename was refused with \"Rename the file to 255 characters or fewer before uploading it.\"; the Document count stayed 2.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An upload in the Portal: Add version on the primary Document; no folder destination",
+      "expected": "Add version adds Version 2 to the primary Document; the Portal upload dialog has no folder choice and a folder destination is refused.",
+      "startedAt": "2026-09-16T16:12:54.829Z",
+      "at": "2026-09-16T16:12:57.969Z",
+      "actual": "On the Primary Document row, Add version opened Upload documents with Add as \"New version of doc029-support-v1.txt\" and controls [\"Add as\",\"New documents New version of doc029-support-v1.txt New version of doc029-support-image.png\",\"Kind\",\"General Draft \u00b7 ours Draft \u00b7 theirs Redline \u00b7 theirs Redline \u00b7 ours Amendment Executed\",\"Note (optional)\"] (no folder choice). After Upload the row read \"Primary Document doc029-support-v1.txt Version 2 General Current 78 byte JW Jonas Weber \u00b7 Sep 16 Add version 1 earlier v\". An upload naming a folder answered 403 \"Business Users may upload supporting Documents at the record root only.\".",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A preview stays pending or fails: damaged Word file; Download reads the original",
+      "expected": "The reader shows the pending message, then the failure message; Download returns the original bytes; reopening adds no Version.",
+      "startedAt": "2026-09-16T16:12:57.970Z",
+      "at": "2026-09-16T16:13:02.270Z",
+      "actual": "The reader first showed \"Preparing this document for reading\u2026\" and then showed \"This file could not be prepared for reading here. Download it to read it.\". Download returned doc029-support-damaged.docx, 2046 bytes, SHA-256 equal to the fixture. Reopening showed the same failure and the chain still had 1 Version. Screenshot docs/documentation/batches/DOC-029/support/r1-member-preview-failed.png.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A preview fails: the Administrator reads the failed Version and downloads the original",
+      "expected": "The failure message and Download are shown; the original downloads.",
+      "startedAt": "2026-09-16T16:13:02.271Z",
+      "at": "2026-09-16T16:13:04.252Z",
+      "actual": "Daniel saw the failure message on the same Version; Download returned 2046 bytes matching the uploaded original.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: staff Notification preferences and profile timezone",
+      "expected": "Groups show In-app and Email switches, a Briefing section and the In-app/Email rule; Profile has a Timezone control.",
+      "startedAt": "2026-09-16T16:13:04.253Z",
+      "at": "2026-09-16T16:13:07.888Z",
+      "actual": "Switches: [\"Assigned to you In-app\",\"Assigned to you Email\",\"Activity on your records In-app\",\"Activity on your records Email\",\"Dates approaching In-app\",\"New requests In-app\",\"New requests Email\",\"Knowledge items Email\",\"Approvals Email\",\"Tasks Email\",\"Dates Email\",\"Obligations Email\",\"Intake Email\"]. Briefing heading present. Caption: \"Email off keeps the bell items coming. In-app off turns the group off entirely, email included. A group with no in-app switch reaches you by email only; its one switch is the whole choice. Approaching-date emails are set in the Briefing group below.\". Profile showed a Timezone control.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: staff Notification preferences and profile timezone",
+      "expected": "Groups show In-app and Email switches, a Briefing section and the In-app/Email rule; Profile has a Timezone control.",
+      "startedAt": "2026-09-16T16:13:07.889Z",
+      "at": "2026-09-16T16:13:11.506Z",
+      "actual": "Switches: [\"Assigned to you In-app\",\"Assigned to you Email\",\"Activity on your records In-app\",\"Activity on your records Email\",\"Dates approaching In-app\",\"New requests In-app\",\"New requests Email\",\"Knowledge items Email\",\"Approvals Email\",\"Tasks Email\",\"Dates Email\",\"Obligations Email\",\"Intake Email\"]. Briefing heading present. Caption: \"Email off keeps the bell items coming. In-app off turns the group off entirely, email included. A group with no in-app switch reaches you by email only; its one switch is the whole choice. Approaching-date emails are set in the Briefing group below.\". Profile showed a Timezone control.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: Portal Notification settings",
+      "expected": "Notification settings lists Request updates, Assigned to you and Activity on your records with In-app and Email.",
+      "startedAt": "2026-09-16T16:13:11.506Z",
+      "at": "2026-09-16T16:13:14.527Z",
+      "actual": "The header link Notification settings opened /portal/settings with switches [\"Request updates In-app\",\"Request updates Email\",\"Assigned to you In-app\",\"Assigned to you Email\",\"Activity on your records In-app\",\"Activity on your records Email\"] and caption \"Email off keeps the bell items coming. In-app off turns the group off entirely, email included.\".",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "I cannot approve: only the named person can answer",
+      "expected": "On a request naming another person the requester sees only Cancel request; on the request naming himself he sees Approve and Reject.",
+      "startedAt": "2026-09-16T16:13:14.527Z",
+      "at": "2026-09-16T16:13:16.500Z",
+      "actual": "On C-126, Actions for Nadia Haddad offered [\"Cancel request\"]; Actions for Daniel Okafor offered [\"Approve\",\"Reject\",\"Cancel request\"]. A direct decision on Nadia's request answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "I cannot approve: the named approver decides once; the decision is final",
+      "expected": "The dialog says a decision is final; afterwards no decision control remains and a second decision is refused.",
+      "startedAt": "2026-09-16T16:13:16.500Z",
+      "at": "2026-09-16T16:13:19.713Z",
+      "actual": "The Approve dialog read \"Approve this contract A decision is final. To change it, ask for a new approval. Note Cancel Approve\". After Approve the row read \"NH Nadia Haddad Requested by Daniel Okafor Added manually Approved \u2014 Sep 16\"; its actions offered []. A second decision answered 409.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An Approval warning appears: Move past approval with a Pending request; Cancel",
+      "expected": "Moving to an Active Status opens Move past approval listing the Pending request; Cancel keeps the Status.",
+      "startedAt": "2026-09-16T16:13:19.713Z",
+      "at": "2026-09-16T16:13:22.993Z",
+      "actual": "The dialog read \"Move past approval 1 approval on this contract is unresolved. Moving to Active goes past sign-off. DO Daniel Okafor Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\". Cancel closed it and the Status stayed Draft. Screenshot docs/documentation/batches/DOC-029/support/r1-admin-move-past-approval.png.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Electronic signing is unavailable: connector state and manual hand-off",
+      "expected": "Integrations > E-signature shows the connector state; with no connector there is no Send for signature, and Mark as executed copy stays available.",
+      "startedAt": "2026-09-16T16:13:22.993Z",
+      "at": "2026-09-16T16:13:28.607Z",
+      "actual": "Integrations > E-signature read \"DocuSign Not connected\". C-123 Approvals had 0 Send for signature controls. The primary Document's actions offered [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\",\"Delete\"], including Mark as executed copy for manual hand-off.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Electronic signing is unavailable: no send control for the Legal Team Member",
+      "expected": "No Send for signature appears while the connector is not connected; manual hand-off remains available.",
+      "startedAt": "2026-09-16T16:13:28.608Z",
+      "at": "2026-09-16T16:13:32.377Z",
+      "actual": "Approvals & signing (\"Approvals & signing 0 Apply group Add approver No approvals requested on this contract yet.\") had no Send for signature. The primary Document offered [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\"].",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Analysis is missing: AI analysis settings show the provider state",
+      "expected": "The AI analysis settings page shows whether the provider is connected; Field prompts are visible for the Administrator.",
+      "startedAt": "2026-09-16T16:13:32.378Z",
+      "at": "2026-09-16T16:13:34.180Z",
+      "actual": "AI analysis read \"Provider Not connected\" with a Field prompts section. The article's step to ask the Administrator about connector or Field-prompt configuration matches this page.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Analysis and AI conversion are unavailable: Contract and Convert dialog without a provider",
+      "expected": "No Analysis run control appears on the Contract; the Convert dialog allows manual conversion without a Conversion draft.",
+      "startedAt": "2026-09-16T16:13:34.181Z",
+      "at": "2026-09-16T16:13:40.540Z",
+      "actual": "C-123 showed no Analysis buttons ([]) and 0 AI analysis cards. Triage > Convert to contract on R-40 opened a dialog reading \"Convert R-40 to a contract Contract review \u00b7 submitted by Jonas Weber Title* Contract type* Type\u2026 NDA MSA SOW Sales Vendor Employment License Other DPA Reseller Lease DOC-029 admin-config Contract type mu49dyo7 DOC-029 admin-config Contract type mu49gs2n DOC-029 admin-config Contract type mu49ogjv D\" with no Conversion draft preparation; Cancel left the Request new.",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Roles: the role control offers the fixed account roles",
+      "expected": "The role control offers Administrator, Legal team member and Business user, with no Contributor or operator role.",
+      "startedAt": "2026-09-16T16:13:40.540Z",
+      "at": "2026-09-16T16:13:42.436Z",
+      "actual": "The role control for Priya Raman offered \"Administrator Legal team member Business user\". Escape closed it with no change.",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Stage, Status and Category: fixed backbones behind configurable labels",
+      "expected": "Contract statuses each show one Stage from Draft, Review, Approval, Signature, Active, Ended; a new Matter status asks for Open or Closed.",
+      "startedAt": "2026-09-16T16:13:42.437Z",
+      "at": "2026-09-16T16:13:46.892Z",
+      "actual": "Contract statuses showed Stages [\"Draft\",\"Review\",\"Approval\",\"Signature\",\"Active\",\"Ended\"]. Matter statuses > Add status offered Category choices [\"Category\u2026\",\"Open\",\"Closed\"]; Cancel left the list unchanged.",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Task and Key date, Entity and Counterparty: compare the terms with the Contract dialogs",
+      "expected": "Add a key date has no assignee but has reminder lead times and team recipients; Add task has an assignee and due date; the Contract shows Our entity separately from Counterparties.",
+      "startedAt": "2026-09-16T16:13:46.892Z",
+      "at": "2026-09-16T16:13:53.470Z",
+      "actual": "Add a key date read \"Add a key date Date* Event* Note Reminders Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day This date will remind: 30 days before, 14 days before, 7 days before, 1 day before, On the day Additional lead time (days before) Add lead time With no selection, reminders go to the Legal Owner or Matter Manager and record team. Select people to send this Key date's reminders only to t\": no assignee, an Additional lead time and team recipients. Add task showed \"Add a task Title* Description Assignee Unassigned Due date Comments & attachments Add a note Attach files Up to 5 files. Cancel Add task\". The Contract Overview has separate Our entity and Counterparties controls.",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Document terms: Version kinds, Executed pin, primary Document, no Version delete; permanent delete is Administrator-only",
+      "expected": "Kind offers Draft \u00b7 ours and Executed; actions offer Mark as executed copy; no Version delete action; only the Administrator sees permanent deletion.",
+      "startedAt": "2026-09-16T16:13:53.470Z",
+      "at": "2026-09-16T16:13:57.264Z",
+      "actual": "Kind options: [\"Draft \u00b7 ours\",\"Draft \u00b7 theirs\",\"Redline \u00b7 theirs\",\"Redline \u00b7 ours\",\"Amendment\",\"Executed\"]. Row: \"doc029-support-v1.txt Primary Draft \u00b7 ours Draft \u00b7 theirs Redline \u00b7 theirs Redline \u00b7 ours Amendment Executed v2 Sep 16 U\". Nadia's actions: [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\"]. Daniel's actions: [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\",\"Delete\"]. No action deletes a single Version; only the Administrator's menu has [\"Delete\"].",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "File behavior: PNG reads inline, SVG is download-only, EML opens the email reader",
+      "expected": "The PNG opens in the reader, the SVG shows the download-only card, and the EML shows its subject and body.",
+      "startedAt": "2026-09-16T16:13:57.265Z",
+      "at": "2026-09-16T16:14:14.894Z",
+      "actual": "PNG reader: 1 image(s), \"doc029-support-image.png v1 doc029-support-image.png Download\". SVG: \"doc029-support-diagram.svg v1 doc029-support-diagram.svg Download doc029-support-diagram.svg This file type does not open here. Download it to read it. 115 byte Download\". EML reader: \"doc029-support-message.eml v1 doc029-support-message.eml Download Subject DOC-029 support fictional message From Fictional Sender <sender@fictional.example> To Legal <legal@helix.example> Date Sep 16, 2026, 2:00 PM GMT+4\".",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Permissions: the Administrator needs a Grant for a Confidential Entity and named access for a Confidential Contract",
+      "expected": "Without a Grant the Entity answers Entity not found; with a Grant it opens; the Confidential Contract without team entry answers Contract not found.",
+      "startedAt": "2026-09-16T16:14:14.894Z",
+      "at": "2026-09-16T16:14:22.093Z",
+      "actual": "Confidential Entity: \"Entity not found\" before the Grant, \"DOC-029 support confidential entity Ltd mu4as0lt\" after Nadia granted Daniel, \"Entity not found\" after removal. Confidential C-121: \"Contract not found\".",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Permissions: organization settings remain Administrator-only",
+      "expected": "The Legal Team Member cannot open Settings > Users.",
+      "startedAt": "2026-09-16T16:14:22.094Z",
+      "at": "2026-09-16T16:14:23.927Z",
+      "actual": "Nadia's visit to /settings/users ended at /settings/profile with headings [\"Settings\",\"Personal\",\"Profile\",\"Password & two-factor\",\"Sessions\"] and no Invite user control.",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Permissions and Portal files: staff workspace closed; shared Documents read and download with earlier Versions; related Matter closed",
+      "expected": "Staff addresses land in the Portal; the shared Contract's primary Document shows Version 2 with Version 1 available to read and download; the linked Matter is not reachable.",
+      "startedAt": "2026-09-16T16:14:23.927Z",
+      "at": "2026-09-16T16:14:30.422Z",
+      "actual": "/documents in the Portal session landed on /portal. Primary Document row: \"Primary Document doc029-support-v1.txt Version 2 General Current 78 byte JW Jonas Weber \u00b7 Sep 16 Add version 1 earlier version\". Earlier Versions: \"Documents Upload documents Drop files here or click to upload Search Primary Document doc029-support-v1.txt Version 2 General Current 78 byte JW Jonas Weber \u00b7 Sep 16 Add version 1 earlier version doc029-support-v1.txt Version 1 Draft \u00b7 ours 57 byte NH Nadia Haddad \u00b7 Sep 16 doc029-support-image.png V\". Download links: [\"Download doc029-support-v1.txt, version 2\",\"Download doc029-support-v1.txt, version 1\"]; Version 1 downloaded 57 bytes (matches the uploaded v1). Selecting doc029-support-image.png opened the Portal reader with 1 image(s). The related Matter refusal is recorded in the Portal missing-record step.",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Portal files: published Knowledge offers current-file downloads without a Version picker",
+      "expected": "A published Knowledge Item with a two-Version file shows a Download for the current file only.",
+      "startedAt": "2026-09-16T16:14:30.423Z",
+      "at": "2026-09-16T16:14:32.250Z",
+      "actual": "Portal Knowledge \"DOC-029 support Portal Knowledge mu4as0lt\" (published, audience everyone, primary file with Versions 1 and 2) showed 1 Download link ([\"Download\"]) and 0 Version controls. The download returned 78 bytes equal to Version 2, the current file.",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Deployment operator: read the reference signed out in the formal documentation",
+      "expected": "The formal reader opens without an app session and shows the Deployment operator row and MAX_UPLOAD_MB.",
+      "startedAt": "2026-09-16T16:14:32.251Z",
+      "at": "2026-09-16T16:14:36.002Z",
+      "actual": "Signed out, /documentation/reference showed \"Look up terms, permissions, and file behavior\", the Deployment operator row and MAX_UPLOAD_MB. App API requests seen while reading signed out: [\"/api/v1/me\"] (a session check, not organisation data). Signed-out /help landed on /documentation. The reviewed bytes carry the same row and variable.",
+      "result": "pass"
+    },
+    {
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Links in the reviewed reference resolve in the formal documentation",
+      "expected": "Every internal link and anchor in the reviewed bytes opens an article and heading in the bundled edition.",
+      "startedAt": "2026-09-16T16:14:36.003Z",
+      "at": "2026-09-16T16:15:12.787Z",
+      "actual": "21 internal targets from the reviewed bytes all opened in /documentation: [\"versions-and-support\",\"entities-and-counterparties\",\"entity-records\",\"create-knowledge\",\"contract-stages\",\"matter-status-and-archive\",\"contract-tasks-and-dates\",\"entity-obligations\",\"roles-and-access\",\"contributor-guide\",\"follow-request\",\"document-versions\",\"compare-versions\",\"archive-and-delete-documents\",\"document-previews\",\"types-statuses-fields\",\"matter-templates\",\"request-forms\",\"personal-settings\",\"organisation-and-users\",\"deployment-configuration\"].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-16T16:15:12.788Z",
+      "at": "2026-09-16T16:15:18.993Z",
+      "actual": "Header Help worked; /help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.0.1 / 7f7e917aa1db4baee34fd6613466c6458a1f4b8e\"],[\"Distribution commit\",\"3fa407e3a846559914aa1a63249741f30cfb4f69\"],[\"Content digest\",\"9209d16fb31c193a307c60b9912239c85e09b068f5f0e8142343a5ffcc92fd4a\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation. Screenshot docs/documentation/batches/DOC-029/support/r1-admin-edition-details.png.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-16T16:15:18.994Z",
+      "at": "2026-09-16T16:15:24.344Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-16T16:15:24.345Z",
+      "at": "2026-09-16T16:15:30.385Z",
+      "actual": "/help/upgrade showed \"Upgrade a populated instance\" with Read this article in the full documentation, which opened /documentation/upgrade (\"Upgrade a populated instance\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-16T16:15:30.386Z",
+      "at": "2026-09-16T16:15:35.549Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-16T16:15:35.550Z",
+      "at": "2026-09-16T16:15:41.675Z",
+      "actual": "Header Help worked; /help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.0.1 / 7f7e917aa1db4baee34fd6613466c6458a1f4b8e\"],[\"Distribution commit\",\"3fa407e3a846559914aa1a63249741f30cfb4f69\"],[\"Content digest\",\"9209d16fb31c193a307c60b9912239c85e09b068f5f0e8142343a5ffcc92fd4a\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-16T16:15:41.676Z",
+      "at": "2026-09-16T16:15:47.059Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-16T16:15:47.060Z",
+      "at": "2026-09-16T16:15:53.098Z",
+      "actual": "/help/upgrade showed \"Upgrade a populated instance\" with Read this article in the full documentation, which opened /documentation/upgrade (\"Upgrade a populated instance\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-16T16:15:53.098Z",
+      "at": "2026-09-16T16:15:58.266Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-16T16:15:58.267Z",
+      "at": "2026-09-16T16:16:04.410Z",
+      "actual": "Header Help worked; /portal/help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.0.1 / 7f7e917aa1db4baee34fd6613466c6458a1f4b8e\"],[\"Distribution commit\",\"3fa407e3a846559914aa1a63249741f30cfb4f69\"],[\"Content digest\",\"9209d16fb31c193a307c60b9912239c85e09b068f5f0e8142343a5ffcc92fd4a\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-16T16:16:04.411Z",
+      "at": "2026-09-16T16:16:09.741Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-16T16:16:09.742Z",
+      "at": "2026-09-16T16:16:15.780Z",
+      "actual": "/portal/help/configure-analysis showed \"Configure the AI connector and Field prompts\" with Read this article in the full documentation, which opened /documentation/configure-analysis (\"Configure the AI connector and Field prompts\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-16T16:16:15.781Z",
+      "at": "2026-09-16T16:16:20.934Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Signed-out reading, standalone edition, and an offline copy with and without JavaScript",
+      "expected": "Formal documentation reads signed out; Open standalone edition loads; the downloaded edition extracts and its index and prose open from disk offline, with and without JavaScript.",
+      "startedAt": "2026-09-16T16:16:20.934Z",
+      "at": "2026-09-16T16:16:25.305Z",
+      "actual": "Signed out, /documentation/versions-and-support showed \"Find version information and get help\" (app API calls []). Download standalone edition gave openlaw-documentation.tar.gz (296838 bytes). Open standalone edition (/documentation-export/index.html) served \"Documentation \u00b7 OpenLaw\". The archive extracted to an index at index.html. In an offline context from file://, with JavaScript the index and the support article read; without JavaScript the index read (search notice shown: true) and the article prose included \"Report a product defect or documentation correction\".",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Links in the reviewed versions-and-support and troubleshooting bytes resolve",
+      "expected": "Every internal link and anchor opens in the bundled edition.",
+      "startedAt": "2026-09-16T16:16:25.306Z",
+      "at": "2026-09-16T16:17:19.752Z",
+      "actual": "versions-and-support: 10 internal targets from the reviewed bytes all opened in /documentation: [\"upgrade\",\"roles-and-access\",\"contributor-guide\",\"document-previews\",\"contract-approvals\",\"electronic-signing\",\"contract-analysis\",\"notifications\",\"troubleshooting\",\"operator-troubleshooting\"]. troubleshooting: 21 internal targets from the reviewed bytes all opened in /documentation: [\"operator-troubleshooting\",\"staff-sign-in\",\"portal-sign-in\",\"authentication-and-email\",\"search-and-views\",\"roles-and-access\",\"follow-request\",\"portal-knowledge\",\"contributor-guide\",\"types-statuses-fields\",\"document-versions\",\"contributor-guide#work-with-documents\",\"reference#file-behavior-and-limits\",\"document-previews\",\"notifications\",\"contract-approvals\",\"electronic-signing\",\"manual-signing\",\"contract-analysis\",\"configure-analysis\",\"versions-and-support\"].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Check the relevant limitation: Administrators need named access to Confidential Contracts",
+      "expected": "The Administrator without a team entry or Legal Owner role gets Contract not found for a Confidential Contract.",
+      "startedAt": "2026-09-16T16:17:19.753Z",
+      "at": "2026-09-16T16:17:21.574Z",
+      "actual": "Daniel opened Confidential C-121 and saw \"Contract not found\".",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T16:17:21.597Z",
+  "edition": {
+    "Edition details": "documentation-development (Development)",
+    "Supported app": "0.0.1 / 7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+    "Distribution commit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "Content digest": "9209d16fb31c193a307c60b9912239c85e09b068f5f0e8142343a5ffcc92fd4a",
+    "Publication target": "development-app"
+  },
+  "summary": {
+    "total": 56,
+    "pass": 55,
+    "fail": 1
+  }
+}

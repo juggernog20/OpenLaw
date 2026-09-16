@@ -1,0 +1,626 @@
+{
+  "batch": "DOC-029",
+  "group": "access",
+  "round": 2,
+  "walkthroughRound": 1,
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (access, round 1)",
+  "reviewerKind": "agent",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "environment": "openlaw-docs-41255c61-work2",
+  "appUrl": "http://127.0.0.1:23301",
+  "mailUrl": "http://127.0.0.1:23401",
+  "articleContentSha256": {
+    "staff-sign-in": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
+    "portal-sign-in": "a4658df9a8f1da02cfef7751c256b9b520a9b7065739c9987d8be154adacebcf"
+  },
+  "runningImages": {
+    "app": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "doc-engine": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+  },
+  "labStatusImages": {
+    "project": "openlaw-docs-41255c61-work2",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-16T17:45:41.767Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-16T17:46:02.188Z"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  "modules": ["staff", "portal"],
+  "startedAt": "2026-09-16T18:09:57.726Z",
+  "finishedAt": "2026-09-16T18:12:43.827Z",
+  "fixtures": {
+    "accounts": {
+      "administrator": {
+        "email": "doc029r2.access.wt.admin.1789582198220@helix.example",
+        "displayName": "DOC-029r2 access Administrator 98220"
+      },
+      "legal_team_member": {
+        "email": "doc029r2.access.wt.member.1789582198220@helix.example",
+        "displayName": "DOC-029r2 access Legal Team Member 98220"
+      },
+      "business_user": {
+        "email": "doc029r2.access.wt.business.1789582305608@helix.example",
+        "displayName": "DOC-029r2 access Business User 5608"
+      }
+    },
+    "created": [
+      "Business User doc029r2.access.wt.business.1789582305608@helix.example (DOC-029r2 access Business User 5608), created by first Portal sign-in",
+      "Business User doc029r2.access.wt.business-pw.1789582305608@helix.example, created by Portal password setup (left at onboarding)",
+      "8 Contracts named DOC-029r2 access Show more fixture, with Jonas Weber on the team (C-122:201/201, C-123:201/201, C-124:201/201, C-125:201/201, C-126:201/201, C-127:201/201, C-128:201/201, C-129:201/201)"
+    ]
+  },
+  "summary": {
+    "total": 60,
+    "passed": 59,
+    "failed": 0,
+    "notRun": 1
+  },
+  "steps": [
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "fixture: invitation email arrives",
+      "expected": "An invitation email with a set-password link",
+      "actual": "API 201; subject \"Set your OpenLaw password\"; link present true",
+      "result": "pass",
+      "at": "2026-09-16T18:09:58.312Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "expired invitation link refused",
+      "expected": "Expired link is refused; ask the Administrator for a fresh invitation",
+      "actual": "Shown: This link has expired or was already used. Ask for a new one.",
+      "result": "pass",
+      "at": "2026-09-16T18:09:58.701Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "invitation link without its token refused",
+      "expected": "A link missing part of its address is refused",
+      "actual": "Shown: This link is not valid. Ask for a new invitation or password reset.",
+      "result": "pass",
+      "at": "2026-09-16T18:09:58.754Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "fixture: Administrator sends a fresh invitation",
+      "expected": "A new set-password email",
+      "actual": "API 200; subject \"Set your OpenLaw password\"",
+      "result": "pass",
+      "at": "2026-09-16T18:09:58.829Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "passwords that do not match are refused",
+      "expected": "Mismatch is refused; correct and retry",
+      "actual": "Shown: The passwords do not match.",
+      "result": "pass",
+      "at": "2026-09-16T18:09:58.938Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "steps 1-5: set password, Password set, Sign in",
+      "expected": "Password set appears with Sign in",
+      "actual": "Password set true; Sign in control true",
+      "result": "pass",
+      "at": "2026-09-16T18:09:59.063Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "introduction: the sign-in page shows your organization's name above the form, and its logo if saved",
+      "expected": "Organization name above the Sign in form; a logo only when the Administrator saved one",
+      "actual": "Public branding answer name \"Helix Software Group\", logo none; name shown true; name above the Sign in heading and form true; Organization logo images 0",
+      "result": "pass",
+      "at": "2026-09-16T18:09:59.144Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "incorrect password refused",
+      "expected": "Wrong password is refused",
+      "actual": "Shown: Check your email and password.",
+      "result": "pass",
+      "at": "2026-09-16T18:09:59.212Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "step 6: sign in reaches the app with your name in the header",
+      "expected": "Home opens; name menu shows the account name",
+      "actual": "URL /; header name menu \"DOC-029r2 access Administrator 98220\" true",
+      "result": "pass",
+      "at": "2026-09-16T18:09:59.404Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "activation consumed the invitation link",
+      "expected": "The used link is refused",
+      "actual": "Reopened link refused with the expired-or-used message",
+      "result": "pass",
+      "at": "2026-09-16T18:09:59.732Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Turn on two-factor steps 1-8 from Settings > Profile",
+      "expected": "Password, QR code with manual secret, Code and Confirm, backup codes shown once, Done; Profile says two-factor is on",
+      "actual": "Profile said off before: true; QR svg true; manual secret shown true; wrong enrollment code refused true; backup codes shown 10; Profile after Done: on true, Re-enroll and Turn off two-factor true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:00.231Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "second factor: wrong code refused, current code accepted",
+      "expected": "Challenge after password; wrong code refused; current code with Verify signs in",
+      "actual": "Challenge page true; wrong code message true; after current code URL /",
+      "result": "pass",
+      "at": "2026-09-16T18:10:00.557Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "backup code works once; reuse refused",
+      "expected": "Unused backup code signs in; the same code cannot be reused",
+      "actual": "First use reached app true; replay stayed on challenge true (Skip to content Helix Software Group Legal Portal Powered by OpenLaw Two-factor authentication Enter one of your backup )",
+      "result": "pass",
+      "at": "2026-09-16T18:10:03.606Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Sign out on the challenge page restarts sign-in",
+      "expected": "Sign out on Two-factor authentication returns to sign-in",
+      "actual": "Returned to /auth/login; opening / stays signed out true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:05.160Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Sign out other devices; revoked session returns to sign-in",
+      "expected": "Other device goes to sign-in; this session stays",
+      "actual": "Other device reload -> /auth/login; this device -> /settings/profile",
+      "result": "pass",
+      "at": "2026-09-16T18:10:41.118Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Re-enroll turns off the old authenticator; closing before confirming leaves two-factor off",
+      "expected": "New secret issued; abandoned re-enrollment leaves two-factor off",
+      "actual": "New secret differs true; Profile off after closing true; password-only sign-in reached app true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:41.775Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Turn off two-factor requires the password and removes the challenge; Sign out ends the session",
+      "expected": "Wrong password refused; off after password; password-only sign-in; Sign out returns to sign-in",
+      "actual": "Wrong password message true; Profile off true; Sign out landed on sign-in true; password-only sign-in reached app true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:42.714Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Email me a sign-in link: newest email signs in once",
+      "expected": "Link signs in; the same link cannot be used again",
+      "actual": "Check your email true; subject \"Sign in to OpenLaw\"; link signed in true; reuse -> /auth/link-expired (Sign-in link expired true)",
+      "result": "pass",
+      "at": "2026-09-16T18:10:43.200Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Set up or reset your password",
+      "expected": "Neutral Check your email; one-hour link sets a new password; sign-in works with it",
+      "actual": "Neutral message true; email \"Set your OpenLaw password\"; token lifetime 60 min; Password set true; old password refused true; new password reached app true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:43.808Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "fixture: invitation email arrives",
+      "expected": "An invitation email with a set-password link",
+      "actual": "API 201; subject \"Set your OpenLaw password\"; link present true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:43.883Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "expired invitation link refused",
+      "expected": "Expired link is refused; ask the Administrator for a fresh invitation",
+      "actual": "Shown: This link has expired or was already used. Ask for a new one.",
+      "result": "pass",
+      "at": "2026-09-16T18:10:44.257Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "invitation link without its token refused",
+      "expected": "A link missing part of its address is refused",
+      "actual": "Shown: This link is not valid. Ask for a new invitation or password reset.",
+      "result": "pass",
+      "at": "2026-09-16T18:10:44.297Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "fixture: Administrator sends a fresh invitation",
+      "expected": "A new set-password email",
+      "actual": "API 200; subject \"Set your OpenLaw password\"",
+      "result": "pass",
+      "at": "2026-09-16T18:10:44.362Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "passwords that do not match are refused",
+      "expected": "Mismatch is refused; correct and retry",
+      "actual": "Shown: The passwords do not match.",
+      "result": "pass",
+      "at": "2026-09-16T18:10:44.434Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "steps 1-5: set password, Password set, Sign in",
+      "expected": "Password set appears with Sign in",
+      "actual": "Password set true; Sign in control true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:44.542Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "introduction: the sign-in page shows your organization's name above the form, and its logo if saved",
+      "expected": "Organization name above the Sign in form; a logo only when the Administrator saved one",
+      "actual": "Public branding answer name \"Helix Software Group\", logo none; name shown true; name above the Sign in heading and form true; Organization logo images 0",
+      "result": "pass",
+      "at": "2026-09-16T18:10:44.627Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "incorrect password refused",
+      "expected": "Wrong password is refused",
+      "actual": "Shown: Check your email and password.",
+      "result": "pass",
+      "at": "2026-09-16T18:10:44.688Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "step 6: sign in reaches the app with your name in the header",
+      "expected": "Home opens; name menu shows the account name",
+      "actual": "URL /; header name menu \"DOC-029r2 access Legal Team Member 98220\" true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:44.832Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "activation consumed the invitation link",
+      "expected": "The used link is refused",
+      "actual": "Reopened link refused with the expired-or-used message",
+      "result": "pass",
+      "at": "2026-09-16T18:10:45.092Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Turn on two-factor steps 1-8 from Settings > Profile",
+      "expected": "Password, QR code with manual secret, Code and Confirm, backup codes shown once, Done; Profile says two-factor is on",
+      "actual": "Profile said off before: true; QR svg true; manual secret shown true; wrong enrollment code refused true; backup codes shown 10; Profile after Done: on true, Re-enroll and Turn off two-factor true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:45.640Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "second factor: wrong code refused, current code accepted",
+      "expected": "Challenge after password; wrong code refused; current code with Verify signs in",
+      "actual": "Challenge page true; wrong code message true; after current code URL /",
+      "result": "pass",
+      "at": "2026-09-16T18:10:45.931Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "backup code works once; reuse refused",
+      "expected": "Unused backup code signs in; the same code cannot be reused",
+      "actual": "First use reached app true; replay stayed on challenge true (Skip to content Helix Software Group Legal Portal Powered by OpenLaw Two-factor authentication Enter one of your backup )",
+      "result": "pass",
+      "at": "2026-09-16T18:10:48.950Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Sign out on the challenge page restarts sign-in",
+      "expected": "Sign out on Two-factor authentication returns to sign-in",
+      "actual": "Returned to /auth/login; opening / stays signed out true",
+      "result": "pass",
+      "at": "2026-09-16T18:10:50.510Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Sign out other devices; revoked session returns to sign-in",
+      "expected": "Other device goes to sign-in; this session stays",
+      "actual": "Other device reload -> /auth/login; this device -> /settings/profile",
+      "result": "pass",
+      "at": "2026-09-16T18:11:26.356Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Re-enroll turns off the old authenticator; closing before confirming leaves two-factor off",
+      "expected": "New secret issued; abandoned re-enrollment leaves two-factor off",
+      "actual": "New secret differs true; Profile off after closing true; password-only sign-in reached app true",
+      "result": "pass",
+      "at": "2026-09-16T18:11:26.837Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Turn off two-factor requires the password and removes the challenge; Sign out ends the session",
+      "expected": "Wrong password refused; off after password; password-only sign-in; Sign out returns to sign-in",
+      "actual": "Wrong password message true; Profile off true; Sign out landed on sign-in true; password-only sign-in reached app true",
+      "result": "pass",
+      "at": "2026-09-16T18:11:31.153Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Email me a sign-in link: newest email signs in once",
+      "expected": "Link signs in; the same link cannot be used again",
+      "actual": "Check your email true; subject \"Sign in to OpenLaw\"; link signed in true; reuse -> /auth/link-expired (Sign-in link expired true)",
+      "result": "pass",
+      "at": "2026-09-16T18:11:31.617Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Set up or reset your password",
+      "expected": "Neutral Check your email; one-hour link sets a new password; sign-in works with it",
+      "actual": "Neutral message true; email \"Set your OpenLaw password\"; token lifetime 60 min; Password set true; old password refused true; new password reached app true",
+      "result": "pass",
+      "at": "2026-09-16T18:11:32.144Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Check your email does not confirm eligibility",
+      "expected": "An address outside the allowed domains, with no account, gets the same neutral page and no email",
+      "actual": "Neutral page true; messages to the unknown address 0",
+      "result": "pass",
+      "at": "2026-09-16T18:11:37.477Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "repeated wrong codes show a wait time",
+      "expected": "Follow any wait time shown after repeated failures",
+      "actual": "Not observable: the lab app container sets AUTH_RATE_LIMIT=off, which disables the sign-in rate limiter that produces the 15-minute message. No repeated-failure run was made in round 2 (the earlier eight-code observation is from round 1).",
+      "result": "not-run",
+      "at": "2026-09-16T18:11:37.480Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "supplementary (mocked methods answer): single sign-on and Administrator sign-in controls render",
+      "expected": "Continue with single sign-on and Administrator sign-in appear when staff password sign-in is off; Administrator sign-in opens the password form",
+      "actual": "SSO primary: Continue with single sign-on true, Administrator sign-in true, opens password form true; magic-link primary: Administrator sign-in true; unconfigured text present true. Browser-side rendering only; the server policy was not changed.",
+      "result": "pass",
+      "at": "2026-09-16T18:11:41.242Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "supplementary (mocked branding answer): logo above the form, failed logo hidden, no saved name",
+      "expected": "A saved logo shows above the Sign in form with the name; a logo that fails to load is hidden; with no saved name the page shows OpenLaw instead of an organization name",
+      "actual": "{\"savedLogoShownAbove\":true,\"brokenLogoHidden\":true,\"noNameShowsOpenLaw\":true}. Browser-side rendering only; the organization settings were not changed.",
+      "result": "pass",
+      "at": "2026-09-16T18:11:45.602Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "step 1: organization name, and logo if saved, above Business Portal sign-in",
+      "expected": "The Portal sign-in page shows the organization's name above Business Portal sign-in; a logo only when one is saved",
+      "actual": "Public branding answer name \"Helix Software Group\", logo none; name shown true; above Business Portal sign-in true; Organization logo images 0",
+      "result": "pass",
+      "at": "2026-09-16T18:11:45.903Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "steps 1-5: Business Portal sign-in, Email me a sign-in link, Get a sign-in link, Send link, Check your email",
+      "expected": "Sign-in page titled Business Portal sign-in shows the password form; Email me a sign-in link opens Get a sign-in link; Send link shows the neutral Check your email",
+      "actual": "/portal while signed out -> /portal/login; /portal/enter -> /portal/login; title true; password form first true; Get a sign-in link true; neutral Check your email with 5-minute text true",
+      "result": "pass",
+      "at": "2026-09-16T18:11:46.077Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "step 6 and first visit: link opens the Portal after We need to learn a little about you",
+      "expected": "Link works within five minutes; first visit shows onboarding; Department required; later steps offer Skip; Finish opens the Portal under that email identity",
+      "actual": "Link lifetime 5 min; onboarding at /portal/onboarding true; Continue disabled until Department chosen true (6 Departments), no Skip on Department true; name step then Skip on: Name and photo, Theme, Notifications; Finish shown true; landed /portal; header shows the new name and email true",
+      "result": "pass",
+      "at": "2026-09-16T18:11:51.882Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "Sign out in the Portal header",
+      "expected": "Sign out returns to the Portal sign-in page",
+      "actual": "Returned to /portal/login true; opening /portal afterwards -> /portal/login",
+      "result": "pass",
+      "at": "2026-09-16T18:11:53.452Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "Replace an expired or used link: old email after sign-out, Sign-in link expired, Email, Send link, new link once",
+      "expected": "A used link opens Sign-in link expired with Email and Send link; the new email link opens the Portal",
+      "actual": "Reused link -> /auth/link-expired?portal=1 (Sign-in link expired true); new email subject \"Sign in to OpenLaw\"; new link opened the Portal true; onboarding not repeated true",
+      "result": "pass",
+      "at": "2026-09-16T18:11:53.651Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "address outside the allowed domains",
+      "expected": "Neutral Check your email; no link arrives",
+      "actual": "Check your email shown; messages to doc029r2.access.wt.<stamp>@outside-domain.example: 0",
+      "result": "pass",
+      "at": "2026-09-16T18:11:59.957Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "Set up or reset your password, then Email and Password with Sign in",
+      "expected": "Send password setup link; the one-hour email link sets a password; Email and Password with Sign in open the Portal",
+      "actual": "Neutral one-hour message true; subject \"Set your OpenLaw password\"; Password set true; password sign-in reached /portal/onboarding",
+      "result": "pass",
+      "at": "2026-09-16T18:12:00.633Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "fixture: more than 25 current-team Contracts for Jonas",
+      "expected": "Enough Contracts exist for Show more to appear",
+      "actual": "Current-team Contracts before 19; created 8 (C-122:201/201, C-123:201/201, C-124:201/201, C-125:201/201, C-126:201/201, C-127:201/201, C-128:201/201, C-129:201/201)",
+      "result": "pass",
+      "at": "2026-09-16T18:12:02.022Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "Portal lists that person's Requests (Jonas)",
+      "expected": "The Portal opens under Jonas's identity and lists his Requests",
+      "actual": "Header shows jonas.weber@helix.example true; own Request R-16 listed true",
+      "result": "pass",
+      "at": "2026-09-16T18:12:04.492Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "another Business User's Request link does not grant access",
+      "expected": "Amara's Request number returns Jonas to the Portal without showing it",
+      "actual": "/portal/requests/6 -> /portal; Amara's Request title shown false",
+      "result": "pass",
+      "at": "2026-09-16T18:12:06.531Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "Business Users cannot enter the staff Inbox, Contracts, or Matters pages",
+      "expected": "Staff pages send the Business User to the Portal",
+      "actual": "{\"/inbox\":\"/portal\",\"/contracts\":\"/portal\",\"/matters\":\"/portal\"}",
+      "result": "pass",
+      "at": "2026-09-16T18:12:11.099Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "Contracts in the navigation bar: Your Contracts, current-team rows, Show more",
+      "expected": "List titled Your Contracts holds non-archived Contracts whose teams include you; Show more loads more",
+      "actual": "Heading Your Contracts; archived team Contract C-36 listed false; Show more shown true; row links 25 -> 27",
+      "result": "pass",
+      "at": "2026-09-16T18:12:14.802Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "open a Contract: reference, fields, Documents with Primary Document, read and download, applets, Your Contracts",
+      "expected": "Contract page shows its C- reference, Counterparty, Stage, owners, terms, dates and Value; Documents marks the Primary Document; the name opens the reader; the download control downloads; Comments, History and Contract team applets; Your Contracts returns",
+      "actual": "C-45 reference true; missing labels []; Primary Document label true; reader opened for \"DOC-029r2 conversations 135085 filed notice letter\" true (DOC-029r2 conversations 135085 filed notice letter v1 doc029-conv-notice.pdf Dow); download control \"Download DOC-029r2 conversations 135085 filed notice letter, version 1\" downloaded true; applets {\"Comments\":true,\"History\":true,\"Contract team\":true}; Your Contracts returned to list true",
+      "result": "pass",
+      "at": "2026-09-16T18:12:21.633Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "open a Matter: reference, Matter Type, Status, Matter Manager, Business Owner, applets",
+      "expected": "Matter page shows M- reference, Matter Type, Status, Matter Manager and Business Owner, with Fields, Documents and the Comments, History and Matter team applets",
+      "actual": "M-18 reference true; missing labels []; applets {\"Comments\":true,\"History\":true,\"Matter team\":true}",
+      "result": "pass",
+      "at": "2026-09-16T18:12:25.816Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "a converted Request address redirects to its record",
+      "expected": "R- address opens the new Contract, which shows Original request",
+      "actual": "/portal/requests/5 -> /portal/contracts/33; Original request section true",
+      "result": "pass",
+      "at": "2026-09-16T18:12:28.388Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "second Business User context (Amara) sees only her own work",
+      "expected": "Amara's session opens as Amara; her Request is listed; Jonas's Request link does not open",
+      "actual": "Header shows amara.nwosu@helix.example true; own R-6 listed true; Jonas's title on home false; /portal/requests/16 -> /portal, title shown false",
+      "result": "pass",
+      "at": "2026-09-16T18:12:32.865Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "supplementary (mocked methods answer): email links switched off",
+      "expected": "No Email me a sign-in link; Email, Password and Set up or reset your password; no method shows Sign-in is unavailable. Contact your administrator.; the expired-link page offers only Back to sign-in",
+      "actual": "Links off: no Email me a sign-in link and password setup shown true; no method message true; expired-link page Back to sign-in only true. Browser-side rendering only; the server policy was not changed.",
+      "result": "pass",
+      "at": "2026-09-16T18:12:39.458Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "role": "business_user",
+      "step": "supplementary (mocked branding answer): Portal logo above Business Portal sign-in, failed logo hidden, no saved name",
+      "expected": "A saved logo shows above Business Portal sign-in with the name; a logo that fails to load is hidden; with no saved name the page shows OpenLaw",
+      "actual": "{\"savedLogoShownAbove\":true,\"brokenLogoHidden\":true,\"noNameShowsOpenLaw\":true}. Browser-side rendering only; the organization settings were not changed.",
+      "result": "pass",
+      "at": "2026-09-16T18:12:43.804Z"
+    }
+  ],
+  "attempts": [
+    {
+      "log": "walkthrough-r2-1-attempt1.json",
+      "summary": "59 steps: 57 pass, 1 fail, 1 not-run",
+      "disposition": "Reviewer script error. The script picked Amara's first Request R-2, which is converted in this seed, so it was not in her Requests list. The script now picks an unconverted Request. Show more did not appear because Jonas had fewer than 26 current-team Contracts; round 1 logic accepted that, round 2 now requires Show more."
+    },
+    {
+      "log": "walkthrough-r2-1-attempt2.portal.json",
+      "summary": "portal module only, 17 steps pass",
+      "disposition": "Partial rerun after the Amara fix. Show more was still not observed (16 rows, page size 25), so the Show more fixture was added and the full run was repeated."
+    },
+    {
+      "log": "walkthrough-r2-1-attempt3.json",
+      "summary": "60 steps: 57 pass, 2 fail, 1 not-run",
+      "disposition": "Reviewer script error. The Show more fixture chose an archived Contract Type, the API answered 400 The contract type must be a live contract type., and no Contract was created. The fixture now uses the live NDA type."
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "batch": "DOC-029",
+  "group": "documents",
+  "reviewer": "DOC-029 source-review author agent (documents)",
+  "author": "DOC-029 source-review author agent (documents)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T15:00:08Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "comparedFromAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "scope": "Source review only. No walkthrough was run. Catalog status was not changed. An independent agent must walk the corrected bytes.",
+  "commonSources": [
+    "CONTEXT.md (Document, Document Version, Executed pin, Business User, Member+, Portal)",
+    "docs/decision-records/DECISIONS.md (DD-023, DD-024, DD-026)",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-001 Matter Kind addendum, DOC-006 drag and folder disclosure addenda, DOC-010/DOC-011 upload results and bulk actions addendum, repository filter paragraph)",
+    "messages/en-US.json",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/lib/roles.ts",
+    "apps/api/src/modules/documents/routes.ts"
+  ],
+  "articles": [
+    {
+      "articleId": "document-versions",
+      "previousContentSha256": "ff9491d656f4914deba6ea4c0199f781589bd881b3a63dc37288676dbf010896",
+      "contentSha256": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14",
+      "result": "corrected",
+      "sources": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/components/comments/attachment-preview.tsx",
+        "apps/web/src/components/confidential-toggle.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/modules/comments/routes.ts",
+        "docs/decision-records/DECISIONS.md",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md"
+      ],
+      "corrections": [
+        {
+          "before": "Business Users can supply supporting Documents but cannot append to a Contract's primary Document.",
+          "after": "Business Users on a Contract or Matter team upload Documents and add Versions in the Portal, including a new Version of the primary Contract Document. They cannot change designations, kinds, or folders, or archive or delete paper.",
+          "evidence": "routes.ts removed the Contributor primary-chain 403 and documents Business User appends to any accessible Document; documents-section.tsx offers Add version on every row; DD-024."
+        },
+        {
+          "before": "Upload and Add version always ask for Kind; a Legal user can correct Kind on any hand-set Version.",
+          "after": "A Matter upload has no Kind control, Add version asks for Kind only where the record shows it, and Matter Documents have no Kind correction control.",
+          "evidence": "documents-card.tsx hides the Kind column and composer Kind for entityType matter; routes.ts forces general for Matter uploads; DOC-001 Matter Kind addendum."
+        },
+        {
+          "before": "Heading 'File a Contract conversation attachment'; the action is File; Matter comments do not offer filing.",
+          "after": "Heading 'File a Contract or Matter conversation attachment'; the action is File to Contract or File to Matter, also offered from the attachment preview; Kind is a Contract-only field; the Confidential switch label is the same on a Matter and restricts to the Matter team.",
+          "evidence": "comment-attachments.tsx labels comments.attachments.fileContract / fileMatter and hides Kind on Matter; matter-record.tsx sets canFile for Member+ on an unfrozen Matter; comments/routes.ts files to Matter with a Matter team check. No other guide or help context links the old heading anchor."
+        },
+        {
+          "before": "Business Users should ask Legal to update a primary Document.",
+          "after": "Business Users should ask Legal to change a designation.",
+          "evidence": "DD-024 lets Business Users append primary Versions; designations stay Legal."
+        }
+      ],
+      "confirmed": [
+        "Upload, Choose files, Choose file, Note, Upload, Add version, Edit details, Save labels.",
+        "Several chosen files open the batch import dialog.",
+        "Kind options Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Amendment, Executed; Generated redline is not hand-settable and cannot be corrected.",
+        "Primary, Make primary, Mark as executed copy, Unmark as executed copy on Contracts only; Set as primary on Knowledge.",
+        "An archived owning record refuses new paper.",
+        "File attachment dialog: Destination, New Document, New Version on an existing Document, Document name, Document, Note, File; Legal Only attachment preselects Confidential.",
+        "Business Users get no filing action (canFile is Member+)."
+      ]
+    },
+    {
+      "articleId": "document-folders",
+      "previousContentSha256": "81be2aedf4c123245e8a4c01b21b70d99ca5da67b169ed159cbd4a7dcfb08d02",
+      "contentSha256": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
+      "result": "corrected",
+      "sources": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/batch-dialog.tsx",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/web/src/components/documents/use-document-drag.ts",
+        "apps/api/src/modules/documents/folders.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md"
+      ],
+      "corrections": [
+        {
+          "before": "After Save, expand the folder to read its Documents.",
+          "after": "Only a folder with Documents or subfolders shows an expand control; an empty folder has none.",
+          "evidence": "FolderRows draws the chevron only when documentCount > 0 or child folders exist; DOC-006/DES-033 folder disclosure addendum."
+        },
+        {
+          "before": "Folder action New folder inside; the owning record itself is the move-out destination.",
+          "after": "Folder action New subfolder; None is the top-level choice in Move into and File in; Documents can also be dragged onto a folder row or onto Drop here to move out of folders, or moved in bulk with checkboxes and Move.",
+          "evidence": "en-US documents.folder.action.newInside = New subfolder, documents.folder.recordRoot = None, documents.drag.root, documents.bulk.move; DOC-006 drag addendum."
+        },
+        {
+          "before": "Select Version kind for every import.",
+          "after": "A Matter import has no Version kind control.",
+          "evidence": "batch-dialog.tsx hides batch-kind when entityType is matter."
+        },
+        {
+          "before": "Read the final counts, then select Done.",
+          "after": "A fully successful import closes after the list refreshes; a failure keeps the dialog open with counts and Done.",
+          "evidence": "batch-dialog.tsx calls onClose when every row succeeded, folders succeeded and nothing was unreadable; DOC-010/DOC-011 addendum."
+        },
+        {
+          "before": "Business Users upload supporting paper at the record root.",
+          "after": "Business Users upload several files at the record root in the Portal.",
+          "evidence": "Staff record routes are Member+ (canReadContracts); portal documents-section.tsx uploads with no folder; routes.ts refuses a Business User destination."
+        }
+      ],
+      "confirmed": [
+        "New folder, Name, Save, Actions for the … folder, Rename, Move, Move into, Move to folder, File in, Delete labels.",
+        "Folder name and cycle refusals are unchanged in folders.ts.",
+        "Folder Delete dissolves into the parent or the record: 'Anything in it moves into … Nothing is deleted.'",
+        "Import dialog: Destination, Record root, Version kind, 'Applied to every file in this import. Notes are not collected in bulk.', Import # files, Cancel remaining, Retry, Retry # files, Done.",
+        "Choose folder in the Upload dialog; retry is offered only where a retry could succeed.",
+        "Knowledge Items have no Document folders."
+      ]
+    },
+    {
+      "articleId": "document-previews",
+      "previousContentSha256": "ac427a494698a887a7686ea94878d3d6be626310fda1b2576a2f8e8b59d72484",
+      "contentSha256": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b",
+      "result": "corrected",
+      "sources": [
+        "apps/web/src/components/documents/doc-panel.tsx",
+        "apps/web/src/components/documents/pdf-preview.tsx",
+        "apps/web/src/components/documents/email-preview.tsx",
+        "apps/web/src/components/documents/reader-context.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/components/comments/attachment-preview.tsx",
+        "apps/api/src/modules/comments/routes.ts",
+        "apps/web/src/routes/portal-knowledge.tsx"
+      ],
+      "corrections": [
+        {
+          "before": "The Portal does not grant a Contract's full Version history.",
+          "after": "Business Users read earlier Versions of permitted Contract and Matter paper in the Portal.",
+          "evidence": "portal/documents.ts returns every Version; documents-section.tsx lists earlier versions with read and download; DD-024."
+        },
+        {
+          "before": "In the Portal, select a Request or comment attachment to download it.",
+          "after": "Contract and Matter Documents open in the Portal reader from the Documents section, with earlier Versions and download buttons; Request Attachments download; comment attachment names open a preview with Download, or 'Preview unavailable. You can download the original file.'",
+          "evidence": "record-shell.tsx mounts DocPanel for Portal records; portal-request.tsx AttachmentList uses download links; attachment-preview.tsx fetches preview=true and shows PDF or image, else the unavailable message."
+        }
+      ],
+      "confirmed": [
+        "Reader labels: Previous page, Next page, Zoom out, Zoom in, Find in document, Download, Close the document, v{number}.",
+        "Preparing this document for reading… and This file could not be prepared for reading here. Download it to read it.",
+        "Download-only staff rows use a download link; the reader shows 'This file type does not open here. Download it to read it.'",
+        "Email reader headers and attachment list are unchanged apart from the reader source context.",
+        "Portal Knowledge still lists Download buttons with the primary Document first and no in-app preview.",
+        "Staff Document routes stay Member+ for the repository; Business User version reads are limited to live Contract and Matter Documents."
+      ]
+    },
+    {
+      "articleId": "document-repository",
+      "previousContentSha256": "c6fafe2c6ea61e0af66726e4ea1c46c71fdee1731064bea0ceb3f5b8c8b050cc",
+      "contentSha256": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3",
+      "result": "corrected",
+      "sources": [
+        "apps/web/src/routes/documents.tsx",
+        "apps/web/src/components/documents/document-filter-bar.tsx",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/documents/document-drop-folders.tsx",
+        "apps/api/src/modules/documents/repository.ts",
+        "apps/api/src/lib/document-access.ts",
+        "apps/web/src/lib/documents.ts",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md"
+      ],
+      "corrections": [
+        {
+          "before": "Visible filters above the list; Owner choices Contracts, Matters, Entities, Knowledge; Record typed and matched.",
+          "after": "Filters open from the Filter button; Owner adds Auto-Docs; choices use Search choices and Apply.",
+          "evidence": "document-filter-bar.tsx builds RecordFilterBar definitions including auto_doc; record-filter-bar.tsx labels Filter, Search choices, Apply."
+        },
+        {
+          "before": "Uploaded from and Uploaded to filters; one value per filter.",
+          "after": "One Uploaded filter with From and To, inclusive; Format, Kind, Counterparty and Uploader accept several values that match any selected value, and different filters must all match.",
+          "evidence": "en-US removed documents.filter.uploadedFrom/uploadedTo and added documents.filter.uploaded; recordFilters.matchAny and recordFilters.inclusive; repository.ts uses inArray and an exclusive next-day upper bound."
+        },
+        {
+          "before": "Turn on Show archived.",
+          "after": "Select Filter, then Show archived.",
+          "evidence": "Show archived is a flag filter in DocumentFilterBar for Member+."
+        },
+        {
+          "before": "Member+ find Contract, Matter, Entity, and Knowledge Documents; folder management is only on the record.",
+          "after": "Auto-Doc Documents are included; a live Contract, Matter, or Entity row can be dragged onto a Move to folder target inside its owning record; Auto-Doc Documents have no folders.",
+          "evidence": "repository.ts and document-access.ts add the auto_doc owner; documents.tsx rowDrag and DocumentDropFolders; DOC-006 drag addendum."
+        }
+      ],
+      "confirmed": [
+        "Recent shows five Documents ordered by current Version upload time and hides while any filter is active.",
+        "Record, Folder, Record root, Counterparty, Uploader labels; Clear all and Remove … filter.",
+        "Row activation opens the owning record with the current Version selected (documentLandingPath).",
+        "Restore action column for archived rows; the repository is Member+ only."
+      ]
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "previousContentSha256": "92eb2c110a4a53c470defc675e1289244c6a9813af5bb3862abc84ca1541ac36",
+      "contentSha256": "9b7236766f07ea15cba334194bf2b4d638e65663627ea6c004b417ecd318f01e",
+      "result": "corrected",
+      "sources": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/web/src/components/documents/document-filter-bar.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/lib/document-erasure.ts",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md"
+      ],
+      "corrections": [
+        {
+          "before": "Type the Document's displayed name in 'Type … to confirm'.",
+          "after": "Type delete in 'Type \"delete\" to confirm'; the dialog names the Document and its Version count; a rename during the dialog makes the API refuse.",
+          "evidence": "DeleteDialog matches typed text to 'delete' and sends document.title; routes.ts still compares confirmTitle to the title; DOC-010/DOC-011 addendum."
+        },
+        {
+          "before": "Archive, restore, and delete act on one Document at a time.",
+          "after": "The selection bar offers Archive for live selections, Restore for archived selections, and Administrator Delete with the same typed word.",
+          "evidence": "bulk-document-actions.tsx; en-US documents.bulk.*."
+        },
+        {
+          "before": "Turn on Show archived in the Documents repository.",
+          "after": "In the repository, select Filter, then Show archived.",
+          "evidence": "document-filter-bar.tsx includeArchived flag."
+        },
+        {
+          "before": "Business Users supply supporting uploads.",
+          "after": "Business Users add Documents and Versions in the Portal.",
+          "evidence": "DD-024."
+        }
+      ],
+      "confirmed": [
+        "Archive and Restore are row Actions items for Member+; Delete is Administrator only (canErase).",
+        "Show archived switch on the owning record is hidden on an archived record.",
+        "Erasure removes Versions, renditions, comparison files and extracted text and logs document.hard_deleted.",
+        "An Auto-Doc template Document is refused with 409; this is outside the article's owning-record scope.",
+        "Individual Versions cannot be deleted."
+      ]
+    }
+  ],
+  "limitations": [
+    "Source inspection only; no browser walkthrough, screenshot or API call was made.",
+    "The evidence records under docs/documentation/evidence/ still name the previous content hashes and app build; they were not restamped."
+  ]
+}

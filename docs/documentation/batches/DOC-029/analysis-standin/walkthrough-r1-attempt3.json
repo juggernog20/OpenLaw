@@ -1,0 +1,644 @@
+{
+  "kind": "independent-article-walkthrough",
+  "batch": "DOC-029",
+  "group": "analysis-standin",
+  "round": 1,
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (analysis-standin, round 1)",
+  "reviewerKind": "agent",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "environment": "openlaw-docs-41255c61-analysis-r1",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0"
+    }
+  ],
+  "providerMode": "Local OpenAI-compatible stand-in (provider-standin.mjs) in its own container on this lab's backend network only; fictional paper and known answers; no real provider account or traffic.",
+  "browser": "Playwright 1.63.0 Chromium, headless, one context per identity at 1440x1000 CSS px",
+  "articleHashesTested": {
+    "contract-analysis": "ce182804fbd35ffb2e8ba24cff6bc848963a56f1b04a10222dea23aedebbee39",
+    "compare-versions": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63"
+  },
+  "stamp": 1789572830220,
+  "roles": ["administrator", "legal_team_member"],
+  "parts": ["analysis", "conversion", "compare"],
+  "setup": [
+    {
+      "at": "2026-09-16T15:33:52.704Z",
+      "text": "Administrator API: AI connector saved as Custom, OpenAI chat completions, base URL http://analysis-provider:8080/v1 (the stand-in), model doc029-standin-model, and enabled. This is prerequisite preparation (configure-analysis), not a C21 step."
+    },
+    {
+      "at": "2026-09-16T15:33:52.848Z",
+      "text": "Administrator API: Contract type \"DOC-029 analysis-standin Analysis type 1789572830220\" with three prompted Fields (text location, number tier, text audit clause), and one live Counterparty \"DOC-029 Analysis Supplier 1789572830220 Ltd\" created on holder Contract C-72."
+    },
+    {
+      "at": "2026-09-16T15:33:52.894Z",
+      "text": "administrator API: created C-73 (no paper), C-74 (malformed primary PDF) and C-75 (main walk) of the analysis type; stand-in markers DOC029ASADMIN1789572830220 and DOC029ASADMIN1789572830220V2."
+    },
+    {
+      "at": "2026-09-16T15:35:02.870Z",
+      "text": "legal_team_member API: created C-77 (no paper), C-78 (malformed primary PDF) and C-79 (main walk) of the analysis type; stand-in markers DOC029ASLEGAL1789572830220 and DOC029ASLEGAL1789572830220V2."
+    },
+    {
+      "at": "2026-09-16T15:36:24.531Z",
+      "text": "administrator API: Contract C-83 with a download-only primary placeholder and four supporting Documents: Word v1 thirty/monthly, v2 sixty/quarterly, v3 ninety/annually; PDF v1 / Word v2; TXT v1 / PDF v2; malformed PDF v1 / PDF v2."
+    },
+    {
+      "at": "2026-09-16T15:36:55.138Z",
+      "text": "legal_team_member API: Contract C-84 with a download-only primary placeholder and four supporting Documents: Word v1 thirty/monthly, v2 sixty/quarterly, v3 ninety/annually; PDF v1 / Word v2; TXT v1 / PDF v2; malformed PDF v1 / PDF v2."
+    }
+  ],
+  "startedAt": "2026-09-16T15:33:50.221Z",
+  "steps": [
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Before you start: a Contract without a primary Document",
+      "expected": "The AI analysis card says no run has happened and Run analysis is refused with the no-primary-Document reason; no run is created.",
+      "actual": "C-73 Fields: AI analysis card below the Fields card read \"No analysis has run yet.\". Run analysis showed \"This Contract has no primary Document to analyze.\"; the Contract still has no Analysis run.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:33:52.895Z",
+      "at": "2026-09-16T15:33:53.643Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Before you start: the primary Document text failed to extract",
+      "expected": "No automatic run starts and Run analysis is refused because the target text is not ready or empty.",
+      "actual": "Uploaded a malformed PDF as C-74's primary Document (setup); its text state became \"failed\". Fields still read \"No analysis has run yet.\" (no automatic run). Run analysis showed \"The analysis target has no ready, non-empty text.\" and created no run.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:33:53.643Z",
+      "at": "2026-09-16T15:33:55.395Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "If the card is absent: disabled connector, no marked values and no run",
+      "expected": "With the connector disabled, the AI analysis card is absent on a Contract with no run and no markers, the Contract actions menu has no Run analysis, and a direct run is refused. Enabling brings the card back.",
+      "actual": "Administrator disabled the connector (setup API). C-73 Fields showed the Fields card and no AI analysis card; Contract actions offered [\"Copy link\",\"Rename contract\",\"Archive\"]; POST analysis answered 409 \"No enabled AI connector is configured.\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:33:55.395Z",
+      "at": "2026-09-16T15:33:56.714Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Run Analysis: an automatic run starts when the primary Document text becomes ready",
+      "expected": "The card says Running… with no Run analysis control, then updates in place to Completed … on Version 1 with the model; each result row shows the returned value, evidence and the documented outcome.",
+      "actual": "Uploaded the first PDF as C-75's primary Document (setup, stand-in paused). Fields showed \"Running…\" and no Run analysis control. After the stand-in answered, without a page load the card read \"Completed Sep 16, 2026, 7:33 PM on Version 1 with doc029-standin-model.\". Rows: \"Expiry date Unverified Mar 31, 2027 This Agreement expires on March 31, 2027. Written Confirm\"; \"Notice period (days) Unverified 60 at least 60 days before expiry Written Confirm\"; \"Value Unverified $2,500.00 /month The fees are USD 2,500 per month. Written Confirm\"; \"DOC-029 Service location 1789572830220 Unverified Muscat The services are performed in Muscat. Written Confirm\"; \"DOC-029 Service tier 1789572830220 Unverified 1 The service tier is 1. Written Confirm\"; \"Counterparty Doc029 Unknown Supplier LLC Doc029 Unknown Supplier LLC Unmatched\"; \"Effective date Mar 2, 2027 The Agreement takes effect on the thirtieth day of February 2027. Invalid\"; \"Term type — No evidence returned. Unsupported\"; \"DOC-029 Audit clause 1789572830220 Annual audit The customer may audit the supplier once a year. Unsupported\"; \"Key date Unverified Price review — Jan 15, 2027 The price review takes place on January 15, 2027. Written Confirm\"; \"Key date Contract expiry — Mar 31, 2027 This Agreement expires on March 31, 2027. Kept\". No Counterparty was linked for the unknown name. Six values carry Unverified: [\"value\",\"expiry_date\",\"notice_period_days\",\"doc_029_service_tier_1789572830220\",\"doc_029_service_location_1789572830220\",\"key_date:4d96f3488f4c1c887c88657b35f298d50c7e86f0de7eecc6d2bde5c0b15c673e\"].",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:33:56.714Z",
+      "at": "2026-09-16T15:33:58.902Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "The card updates when a run finishes while preserving typed drafts",
+      "expected": "A value typed but not yet saved on the Fields section stays in its control when the pending run completes and the card updates.",
+      "actual": "C-76 (separate Contract): typed \"DOC-029 unsaved draft text\" into DOC-029 Audit clause 1789572830220 without leaving the control while the card read Running…. When the card updated to \"Completed Sep 16, 2026, 7:34 PM on Version 1 with doc029-standin-model.\", the typed draft was still in the control and the written DOC-029 Service location 1789572830220 showed \"Muscat\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:33:58.902Z",
+      "at": "2026-09-16T15:34:02.438Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Run Analysis from the Contract actions menu and Unverified markers on Overview",
+      "expected": "Contract actions offers Run analysis from another section. Newly written values show the Unverified indicator and an evidence sparkle.",
+      "actual": "Overview Contract actions menu: [\"Copy link\",\"Rename contract\",\"Run analysis\",\"Archive\"]. Overview shows 3 Unverified indicators and sparkles [\"View AI evidence for Value\",\"View AI evidence for Expiry date\",\"View AI evidence for Notice period (days)\"]; the Notice period control sits in an AI border wrapper {\"generated\":\"true\",\"start\":\"#a78bfa\",\"end\":\"#c084fc\",\"pseudo\":\"linear-gradient(115deg, rgb(167, 139, 250), rgb(139, 92, 246) 45%, rgb(192, 132, 252) 75%,\"} (screenshot r1-administrator-unverified-notice.png).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:02.438Z",
+      "at": "2026-09-16T15:34:03.342Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Evidence sparkle opens the cited Document Version in the same-page doc panel",
+      "expected": "Selecting the sparkle opens the original Document Version 1 in the doc panel and marks the quoted passage.",
+      "actual": "Overview sparkle opened \"doc029-services-admin.pdf, version 1\" on the same page (/contracts/75) with the marked passage \"at least 60 days before expiry\". On Key dates the Price review sparkle opened the same Version with \"The price review takes place on January 15, 2027.\" marked.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:03.342Z",
+      "at": "2026-09-16T15:34:05.514Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Unverified values are already usable",
+      "expected": "Before confirmation the extracted Key date is in the Key dates list, the notice period drives the derived deadline, and the Value is saved.",
+      "actual": "Key dates rows before any confirmation: [\"Jan 15, 2027 Price review Key date Unverified Confirm\",\"Jan 30, 2027 Renewal notice deadline — 60 days before expiry Derived Unverified\",\"Mar 31, 2027 Current term expires Derived Unverified\"]. The Kept \"Contract expiry\" milestone added no row. Saved Value {\"amount\":250000,\"currency\":\"USD\",\"cadence\":\"monthly\"}; noticeDeadline 2027-01-30.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:05.514Z",
+      "at": "2026-09-16T15:34:06.226Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Confirm or correct one value",
+      "expected": "Confirm clears only that value's marker; editing a Field clears its marker; a Key date note-only edit keeps the marker, an event change clears it; Confirm all shows while more than one value is marked; History records the confirmation.",
+      "actual": "Confirm beside Notice period (days) kept 60 and cleared only its marker (6 -> 5). Editing DOC-029 Service location 1789572830220 to Salalah on Fields cleared its marker (4 left). Key dates: Edit date with a note-only change kept the Price review marker (4); changing its event to \"Annual price review\" cleared it (3 left: [\"value\",\"expiry_date\",\"doc_029_service_tier_1789572830220\"]). Confirm all was shown with 3 marked values. History: \"Daniel Okafor confirmed the AI-written value for Notice period (days)\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:06.226Z",
+      "at": "2026-09-16T15:34:11.099Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Rerun after a change: the executed pin is the target and a newer upload does not displace it",
+      "expected": "Marking Version 1 as the executed copy starts a run on Version 1. A newer Version starts no run, Run analysis still reads Version 1, and the earlier evidence still opens Version 1. Confirmed and edited values are Kept; a reviewed Key date is not added again.",
+      "actual": "Documents: Actions for doc029-services-admin.pdf -> Mark as executed copy started automatic run on Version 1; notice (confirmed) and location (edited) were Kept and the renamed Price review was not added again. Version 2 uploaded (setup) and its text became ready: no new run and no provider request (45 -> 45). Overview Expiry date sparkle still opened \"doc029-services-admin.pdf, version 1\". Run analysis then read \"Completed Sep 16, 2026, 7:34 PM on Version 1 with doc029-standin-model.\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:11.099Z",
+      "at": "2026-09-16T15:34:20.898Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Rerun on changed input while another legal person edits a value",
+      "expected": "Marking Version 2 executed runs on Version 2. An unverified value is replaced by the new answer; confirmed, edited and concurrently edited values are Kept although the returned answer differs; the matching live Counterparty is linked; a new milestone is written.",
+      "actual": "Documents -> Mark as executed copy on the Document pinned Version 2 and queued a run; Nadia Haddad saved DOC-029 Service tier 1789572830220 1 -> 5 on Fields while the run waited at the stand-in. Card: \"Completed Sep 16, 2026, 7:34 PM on Version 2 with doc029-standin-model.\". Rows: \"Expiry date Unverified Jun 30, 2027 This Agreement expires on June 30, 2027. Written Confirm\"; \"Notice period (days) 90 at least 90 days before expiry Kept\"; \"DOC-029 Service location 1789572830220 Doha The services are performed in Doha. Kept\"; \"DOC-029 Service tier 1789572830220 2 The service tier is 2. Kept\"; \"Counterparty Unverified DOC-029 Analysis Supplier 1789572830220 Ltd DOC-029 Analysis Supplier 1789572830220 Ltd Written Confirm\"; \"Value Unverified $3,000.00 /month The fees are USD 3,000 per month. Written Confirm\"; \"DOC-029 Audit clause 1789572830220 Unverified Annual audit The customer may audit the supplier once a year. Written Confirm\"; Key date Kept rows [\"Key date Price review — Jan 15, 2027 The price review takes place on January 15, 2027. Kept\",\"Key date Contract expiry — Jun 30, 2027 This Agreement expires on June 30, 2027. Kept\"]. Saved: expiry 2027-06-30 (Unverified again), notice 60, location Salalah, tier 5 with no marker, Counterparty \"DOC-029 Analysis Supplier 1789572830220 Ltd\" linked. Key dates: Option exercise deadline added Unverified; Annual price review unchanged.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:20.898Z",
+      "at": "2026-09-16T15:34:24.434Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Key date removal is not undone by a later run, and an explicit clear is preserved",
+      "expected": "Edit date with a note-only change keeps the marker; Remove date clears it; a later run does not add the milestone again. A cleared Field stays empty after a rerun.",
+      "actual": "Edit date with a note-only change left Option exercise deadline Unverified. Remove date removed the row and its marker (5 -> 4). Cleared DOC-029 Audit clause 1789572830220 on Fields. Run analysis: \"Completed Sep 16, 2026, 7:34 PM on Version 2 with doc029-standin-model.\"; \"DOC-029 Audit clause 1789572830220 Annual audit The customer may audit the supplier once a year. Kept\"; \"Key date Option exercise deadline — May 1, 2027 The option exercise deadline is May 1, 2027. Kept\"; no Option exercise deadline row returned; Annual price review still listed; the audit Field stayed empty.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:24.434Z",
+      "at": "2026-09-16T15:34:48.443Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "If Analysis cannot finish: a failed run reports its reason, Version and model and changes nothing",
+      "expected": "A malformed provider reply ends in Failed … on Version 2 with the model and reason; saved values and markers are unchanged; another run succeeds.",
+      "actual": "With the stand-in returning non-JSON, Run analysis ended as \"Failed Sep 16, 2026, 7:34 PM on Version 2 with doc029-standin-model: The provider reply did not contain one JSON object.\". Saved values and markers were identical before and after. With valid replies restored, Run analysis read \"Completed Sep 16, 2026, 7:34 PM on Version 2 with doc029-standin-model.\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:48.443Z",
+      "at": "2026-09-16T15:34:50.494Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Supporting Documents are not the target",
+      "expected": "A second Document with ready text does not start a run and sends nothing to the provider.",
+      "actual": "A supporting PDF (not primary) reached ready text; the latest run stayed 9960b9 and the stand-in received no request for it.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:50.494Z",
+      "at": "2026-09-16T15:34:57.603Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Roles and states: Ended, archived, disabled connector and Confirm all",
+      "expected": "Ended removes Run analysis and refuses a run but allows Confirm. Archived removes Confirm and refuses it until restored. A disabled connector keeps markers and the card; Confirm all clears the remaining markers without changing values.",
+      "actual": "Moved C-75 to \"Expired\" (Ended; setup API). Fields had no Run analysis control, Contract actions offered [\"Copy link\",\"Rename contract\",\"Archive\"], and POST analysis answered 409. Confirm on Expiry date still cleared its marker (3 -> 2). Contract actions -> Archive: no Confirm or Confirm all control; POST confirm answered 409. Restore kept the Ended stage. Connector disabled: the card stayed with 2 Unverified values ([\"value\",\"counterparty\"]); Confirm all cleared them and no saved value changed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:34:57.603Z",
+      "at": "2026-09-16T15:35:02.095Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Business Users cannot run Analysis or confirm its values",
+      "expected": "A Business User on the Contract team cannot open the Contract record in the app, and the run and confirm requests are refused.",
+      "actual": "Jonas Weber (Business User; team add answered 201) opening /contracts/75/fields landed on \"/portal\" with no AI analysis card; POST analysis answered 403 and POST confirm-all answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:02.095Z",
+      "at": "2026-09-16T15:35:02.833Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Before you start: a Contract without a primary Document",
+      "expected": "The AI analysis card says no run has happened and Run analysis is refused with the no-primary-Document reason; no run is created.",
+      "actual": "C-77 Fields: AI analysis card below the Fields card read \"No analysis has run yet.\". Run analysis showed \"This Contract has no primary Document to analyze.\"; the Contract still has no Analysis run.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:02.870Z",
+      "at": "2026-09-16T15:35:03.575Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Before you start: the primary Document text failed to extract",
+      "expected": "No automatic run starts and Run analysis is refused because the target text is not ready or empty.",
+      "actual": "Uploaded a malformed PDF as C-78's primary Document (setup); its text state became \"failed\". Fields still read \"No analysis has run yet.\" (no automatic run). Run analysis showed \"The analysis target has no ready, non-empty text.\" and created no run.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:03.575Z",
+      "at": "2026-09-16T15:35:05.363Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "If the card is absent: disabled connector, no marked values and no run",
+      "expected": "With the connector disabled, the AI analysis card is absent on a Contract with no run and no markers, the Contract actions menu has no Run analysis, and a direct run is refused. Enabling brings the card back.",
+      "actual": "Administrator disabled the connector (setup API). C-77 Fields showed the Fields card and no AI analysis card; Contract actions offered [\"Copy link\",\"Rename contract\",\"Archive\"]; POST analysis answered 409 \"No enabled AI connector is configured.\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:05.363Z",
+      "at": "2026-09-16T15:35:06.932Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Run Analysis: an automatic run starts when the primary Document text becomes ready",
+      "expected": "The card says Running… with no Run analysis control, then updates in place to Completed … on Version 1 with the model; each result row shows the returned value, evidence and the documented outcome.",
+      "actual": "Uploaded the first PDF as C-79's primary Document (setup, stand-in paused). Fields showed \"Running…\" and no Run analysis control. After the stand-in answered, without a page load the card read \"Completed Sep 16, 2026, 7:35 PM on Version 1 with doc029-standin-model.\". Rows: \"Expiry date Unverified Mar 31, 2027 This Agreement expires on March 31, 2027. Written Confirm\"; \"Notice period (days) Unverified 60 at least 60 days before expiry Written Confirm\"; \"Value Unverified $2,500.00 /month The fees are USD 2,500 per month. Written Confirm\"; \"DOC-029 Service location 1789572830220 Unverified Muscat The services are performed in Muscat. Written Confirm\"; \"DOC-029 Service tier 1789572830220 Unverified 1 The service tier is 1. Written Confirm\"; \"Counterparty Doc029 Unknown Supplier LLC Doc029 Unknown Supplier LLC Unmatched\"; \"Effective date Mar 2, 2027 The Agreement takes effect on the thirtieth day of February 2027. Invalid\"; \"Term type — No evidence returned. Unsupported\"; \"DOC-029 Audit clause 1789572830220 Annual audit The customer may audit the supplier once a year. Unsupported\"; \"Key date Unverified Price review — Jan 15, 2027 The price review takes place on January 15, 2027. Written Confirm\"; \"Key date Contract expiry — Mar 31, 2027 This Agreement expires on March 31, 2027. Kept\". No Counterparty was linked for the unknown name. Six values carry Unverified: [\"value\",\"expiry_date\",\"notice_period_days\",\"doc_029_service_tier_1789572830220\",\"doc_029_service_location_1789572830220\",\"key_date:4d96f3488f4c1c887c88657b35f298d50c7e86f0de7eecc6d2bde5c0b15c673e\"].",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:06.932Z",
+      "at": "2026-09-16T15:35:09.104Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "The card updates when a run finishes while preserving typed drafts",
+      "expected": "A value typed but not yet saved on the Fields section stays in its control when the pending run completes and the card updates.",
+      "actual": "C-80 (separate Contract): typed \"DOC-029 unsaved draft text\" into DOC-029 Audit clause 1789572830220 without leaving the control while the card read Running…. When the card updated to \"Completed Sep 16, 2026, 7:35 PM on Version 1 with doc029-standin-model.\", the typed draft was still in the control and the written DOC-029 Service location 1789572830220 showed \"Muscat\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:09.104Z",
+      "at": "2026-09-16T15:35:12.620Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Run Analysis from the Contract actions menu and Unverified markers on Overview",
+      "expected": "Contract actions offers Run analysis from another section. Newly written values show the Unverified indicator and an evidence sparkle.",
+      "actual": "Overview Contract actions menu: [\"Copy link\",\"Rename contract\",\"Run analysis\",\"Archive\"]. Overview shows 3 Unverified indicators and sparkles [\"View AI evidence for Value\",\"View AI evidence for Expiry date\",\"View AI evidence for Notice period (days)\"]; the Notice period control sits in an AI border wrapper {\"generated\":\"true\",\"start\":\"#a78bfa\",\"end\":\"#c084fc\",\"pseudo\":\"linear-gradient(115deg, rgb(167, 139, 250), rgb(139, 92, 246) 45%, rgb(192, 132, 252) 75%,\"} (screenshot r1-legal_team_member-unverified-notice.png).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:12.620Z",
+      "at": "2026-09-16T15:35:13.487Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Evidence sparkle opens the cited Document Version in the same-page doc panel",
+      "expected": "Selecting the sparkle opens the original Document Version 1 in the doc panel and marks the quoted passage.",
+      "actual": "Overview sparkle opened \"doc029-services-legal.pdf, version 1\" on the same page (/contracts/79) with the marked passage \"at least 60 days before expiry\". On Key dates the Price review sparkle opened the same Version with \"The price review takes place on January 15, 2027.\" marked.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:13.487Z",
+      "at": "2026-09-16T15:35:15.463Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Unverified values are already usable",
+      "expected": "Before confirmation the extracted Key date is in the Key dates list, the notice period drives the derived deadline, and the Value is saved.",
+      "actual": "Key dates rows before any confirmation: [\"Jan 15, 2027 Price review Key date Unverified Confirm\",\"Jan 30, 2027 Renewal notice deadline — 60 days before expiry Derived Unverified\",\"Mar 31, 2027 Current term expires Derived Unverified\"]. The Kept \"Contract expiry\" milestone added no row. Saved Value {\"amount\":250000,\"currency\":\"USD\",\"cadence\":\"monthly\"}; noticeDeadline 2027-01-30.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:15.463Z",
+      "at": "2026-09-16T15:35:16.137Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Confirm or correct one value",
+      "expected": "Confirm clears only that value's marker; editing a Field clears its marker; a Key date note-only edit keeps the marker, an event change clears it; Confirm all shows while more than one value is marked; History records the confirmation.",
+      "actual": "Confirm beside Notice period (days) kept 60 and cleared only its marker (6 -> 5). Editing DOC-029 Service location 1789572830220 to Salalah on Fields cleared its marker (4 left). Key dates: Edit date with a note-only change kept the Price review marker (4); changing its event to \"Annual price review\" cleared it (3 left: [\"value\",\"expiry_date\",\"doc_029_service_tier_1789572830220\"]). Confirm all was shown with 3 marked values. History: \"Nadia Haddad confirmed the AI-written value for Notice period (days)\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:16.137Z",
+      "at": "2026-09-16T15:35:20.692Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Rerun after a change: the executed pin is the target and a newer upload does not displace it",
+      "expected": "Marking Version 1 as the executed copy starts a run on Version 1. A newer Version starts no run, Run analysis still reads Version 1, and the earlier evidence still opens Version 1. Confirmed and edited values are Kept; a reviewed Key date is not added again.",
+      "actual": "Documents: Actions for doc029-services-legal.pdf -> Mark as executed copy started automatic run on Version 1; notice (confirmed) and location (edited) were Kept and the renamed Price review was not added again. Version 2 uploaded (setup) and its text became ready: no new run and no provider request (53 -> 53). Overview Expiry date sparkle still opened \"doc029-services-legal.pdf, version 1\". Run analysis then read \"Completed Sep 16, 2026, 7:35 PM on Version 1 with doc029-standin-model.\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:20.692Z",
+      "at": "2026-09-16T15:35:50.586Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Rerun on changed input while another legal person edits a value",
+      "expected": "Marking Version 2 executed runs on Version 2. An unverified value is replaced by the new answer; confirmed, edited and concurrently edited values are Kept although the returned answer differs; the matching live Counterparty is linked; a new milestone is written.",
+      "actual": "Documents -> Mark as executed copy on the Document pinned Version 2 and queued a run; Daniel Okafor saved DOC-029 Service tier 1789572830220 1 -> 5 on Fields while the run waited at the stand-in. Card: \"Completed Sep 16, 2026, 7:35 PM on Version 2 with doc029-standin-model.\". Rows: \"Expiry date Unverified Jun 30, 2027 This Agreement expires on June 30, 2027. Written Confirm\"; \"Notice period (days) 90 at least 90 days before expiry Kept\"; \"DOC-029 Service location 1789572830220 Doha The services are performed in Doha. Kept\"; \"DOC-029 Service tier 1789572830220 2 The service tier is 2. Kept\"; \"Counterparty Unverified DOC-029 Analysis Supplier 1789572830220 Ltd DOC-029 Analysis Supplier 1789572830220 Ltd Written Confirm\"; \"Value Unverified $3,000.00 /month The fees are USD 3,000 per month. Written Confirm\"; \"DOC-029 Audit clause 1789572830220 Unverified Annual audit The customer may audit the supplier once a year. Written Confirm\"; Key date Kept rows [\"Key date Price review — Jan 15, 2027 The price review takes place on January 15, 2027. Kept\",\"Key date Contract expiry — Jun 30, 2027 This Agreement expires on June 30, 2027. Kept\"]. Saved: expiry 2027-06-30 (Unverified again), notice 60, location Salalah, tier 5 with no marker, Counterparty \"DOC-029 Analysis Supplier 1789572830220 Ltd\" linked. Key dates: Option exercise deadline added Unverified; Annual price review unchanged.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:50.587Z",
+      "at": "2026-09-16T15:35:54.170Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Key date removal is not undone by a later run, and an explicit clear is preserved",
+      "expected": "Edit date with a note-only change keeps the marker; Remove date clears it; a later run does not add the milestone again. A cleared Field stays empty after a rerun.",
+      "actual": "Edit date with a note-only change left Option exercise deadline Unverified. Remove date removed the row and its marker (5 -> 4). Cleared DOC-029 Audit clause 1789572830220 on Fields. Run analysis: \"Completed Sep 16, 2026, 7:35 PM on Version 2 with doc029-standin-model.\"; \"DOC-029 Audit clause 1789572830220 Annual audit The customer may audit the supplier once a year. Kept\"; \"Key date Option exercise deadline — May 1, 2027 The option exercise deadline is May 1, 2027. Kept\"; no Option exercise deadline row returned; Annual price review still listed; the audit Field stayed empty.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:54.170Z",
+      "at": "2026-09-16T15:35:57.943Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "If Analysis cannot finish: a failed run reports its reason, Version and model and changes nothing",
+      "expected": "A malformed provider reply ends in Failed … on Version 2 with the model and reason; saved values and markers are unchanged; another run succeeds.",
+      "actual": "With the stand-in returning non-JSON, Run analysis ended as \"Failed Sep 16, 2026, 7:35 PM on Version 2 with doc029-standin-model: The provider reply did not contain one JSON object.\". Saved values and markers were identical before and after. With valid replies restored, Run analysis read \"Completed Sep 16, 2026, 7:35 PM on Version 2 with doc029-standin-model.\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:35:57.943Z",
+      "at": "2026-09-16T15:36:00.225Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Supporting Documents are not the target",
+      "expected": "A second Document with ready text does not start a run and sends nothing to the provider.",
+      "actual": "A supporting PDF (not primary) reached ready text; the latest run stayed 346aaf and the stand-in received no request for it.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:00.225Z",
+      "at": "2026-09-16T15:36:07.333Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Roles and states: Ended, archived, disabled connector and Confirm all",
+      "expected": "Ended removes Run analysis and refuses a run but allows Confirm. Archived removes Confirm and refuses it until restored. A disabled connector keeps markers and the card; Confirm all clears the remaining markers without changing values.",
+      "actual": "Moved C-79 to \"Expired\" (Ended; setup API). Fields had no Run analysis control, Contract actions offered [\"Copy link\",\"Rename contract\",\"Archive\"], and POST analysis answered 409. Confirm on Expiry date still cleared its marker (3 -> 2). Contract actions -> Archive: no Confirm or Confirm all control; POST confirm answered 409. Restore kept the Ended stage. Connector disabled: the card stayed with 2 Unverified values ([\"value\",\"counterparty\"]); Confirm all cleared them and no saved value changed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:07.333Z",
+      "at": "2026-09-16T15:36:11.350Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Business Users cannot run Analysis or confirm its values",
+      "expected": "A Business User on the Contract team cannot open the Contract record in the app, and the run and confirm requests are refused.",
+      "actual": "Jonas Weber (Business User; team add answered 201) opening /contracts/79/fields landed on \"/portal\" with no AI analysis card; POST analysis answered 403 and POST confirm-all answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:11.350Z",
+      "at": "2026-09-16T15:36:11.991Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "step": "Analysis after Request conversion: filling, failure, Retry Request-context Analysis and completion",
+      "expected": "With Fill Contract Fields after conversion on, the converted Contract's card reports filling; a failed run leaves the Contract created and offers Retry Request-context Analysis; retry completes; no separate automatic primary-Document run is queued.",
+      "actual": "Fill Contract Fields after conversion: already on. Jonas Weber submitted Request 21 (\"Legal question\") naming \"DOC-029 Portal Supplier Admin 1789572830220 GmbH\", and administrator converted it to C-81 (both setup API). With the stand-in held, Fields read \"Filling Contract Fields from the Request and supporting sources…\". With non-JSON replies the card read \"Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.\"; the Contract remained (\"DOC-029 analysis-standin Converted Admin 1789572830220\"). Retry Request-context Analysis then read \"Request-context Analysis completed. Review the Unverified values and their source evidence.\" and the retry control was gone. The latest run is trigger \"conversion\"; the stand-in's last call carried source kinds [\"request\",\"request\",\"request\"] (2 extraction calls). Result rows on the card: [\"Term type — No evidence returned. Unsupported\",\"Effective date — No evidence returned. Unsupported\",\"Expiry date — No evidence returned. Unsupported\",\"Renewal period (months) — No evidence returned. Unsupported\",\"Notice period (days) — No evidence returned. Unsupported\",\"Value — No evidence returned. Unsupported\",\"Counterparty DOC-029 Portal Supplier Admin 1789572830220 GmbH DOC-029 Portal Supplier Admin 1789572830220 GmbH Unmatched\",\"DOC-029 Service location 1789572830220 — No evidence returned. Unsupported\",\"DOC-029 Service tier 1789572830220 — No evidence returned. Unsupported\",\"DOC-029 Audit clause 1789572830220 — No evidence returned. Unsupported\"]. Documents on the Contract: 0 (the Request had no attachment, so promoted paper was not exercised). Counterparties: [].",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:11.992Z",
+      "at": "2026-09-16T15:36:14.069Z"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "step": "Analysis after Request conversion: filling, failure, Retry Request-context Analysis and completion",
+      "expected": "With Fill Contract Fields after conversion on, the converted Contract's card reports filling; a failed run leaves the Contract created and offers Retry Request-context Analysis; retry completes; no separate automatic primary-Document run is queued.",
+      "actual": "Fill Contract Fields after conversion: already on. Jonas Weber submitted Request 22 (\"Legal question\") naming \"DOC-029 Portal Supplier Legal 1789572830220 GmbH\", and legal_team_member converted it to C-82 (both setup API). With the stand-in held, Fields read \"Filling Contract Fields from the Request and supporting sources…\". With non-JSON replies the card read \"Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.\"; the Contract remained (\"DOC-029 analysis-standin Converted Legal 1789572830220\"). Retry Request-context Analysis then read \"Request-context Analysis completed. Review the Unverified values and their source evidence.\" and the retry control was gone. The latest run is trigger \"conversion\"; the stand-in's last call carried source kinds [\"request\",\"request\",\"request\"] (2 extraction calls). Result rows on the card: [\"Term type — No evidence returned. Unsupported\",\"Effective date — No evidence returned. Unsupported\",\"Expiry date — No evidence returned. Unsupported\",\"Renewal period (months) — No evidence returned. Unsupported\",\"Notice period (days) — No evidence returned. Unsupported\",\"Value — No evidence returned. Unsupported\",\"Counterparty DOC-029 Portal Supplier Legal 1789572830220 GmbH DOC-029 Portal Supplier Legal 1789572830220 GmbH Unmatched\",\"DOC-029 Service location 1789572830220 — No evidence returned. Unsupported\",\"DOC-029 Service tier 1789572830220 — No evidence returned. Unsupported\",\"DOC-029 Audit clause 1789572830220 — No evidence returned. Unsupported\"]. Documents on the Contract: 0 (the Request had no attachment, so promoted paper was not exercised). Counterparties: [].",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:14.070Z",
+      "at": "2026-09-16T15:36:16.047Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Choose the Versions: Compare with previous, Preparing comparison, then Changes",
+      "expected": "Compare with previous opens the pair v2 → v3; while processing is held the page says Preparing comparison and updates to Changes when ready; no Document Version is added.",
+      "actual": "Version actions for version 2 also offered Compare with previous and opened \"v1 → v2\". Documents -> Actions for doc029-terms-admin.docx -> Compare with previous opened \"v2 → v3\". With this lab's worker paused the page read \"Preparing comparison Comparing both versions. This page will update when it is ready.\"; after resuming it changed to the Changes view without a reload. The chain still has 3 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:24.531Z",
+      "at": "2026-09-16T15:36:28.191Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Pair control, change list, Previous change and Next change",
+      "expected": "Choosing Older and Newer opens each pair at once; the choices keep the older before the newer; insertions and deletions describe the newer Version; Previous/Next move through changes.",
+      "actual": "Older v1 opened v1 → v3 at once; Newer offered [\"v2\",\"v3\"] and v2 opened v1 → v2. With v1 → v2, Older offered [\"v1\"]. Changes: [\"¶2, Replaced = ¶2thirty → sixty\",\"¶3, Replaced = ¶3monthly → quarterly\"]. Compared text: \"doc029-terms-admin.docx → doc029-terms-admin.docx DOC-029 fictional payment terms. Payment is due within Inserted: sixty Deleted: thirty days. Invoices are issued Inserted: quarterly Deleted: monthly.\". Next change moved the current change 0 -> 1; Previous change moved it back to 0.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:28.191Z",
+      "at": "2026-09-16T15:36:30.837Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "The Document reader offers Compare with the change count",
+      "expected": "When a ready Comparison exists for the previous pair, the reader link shows its change count and opens that Comparison.",
+      "actual": "Reader panel \"doc029-terms-admin.docx, version 3\" showed the link \"Compare with the previous version, 2 changes\"; it opened \"v2 → v3\" in the Changes view.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:30.837Z",
+      "at": "2026-09-16T15:36:31.604Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Export a Word Comparison as a Generated redline",
+      "expected": "Export track changes appends a Generated redline Version that records both operands; Open redline opens it; the file carries tracked changes; exporting again reuses it; reopening adds nothing; Generated redlines are not operands.",
+      "actual": "On v1 → v2, Export track changes became Open redline. Version 4 is \"generated_redline\" compared from v1 to v2; its download (sha256 34db6c726b36…) has w:ins [\"sixty\",\"quarterly\"] and w:del [\"thirty\",\"monthly\"]. Open redline opened \"doc029-terms-admin.docx, version 4\". Exporting the same pair again answered 200 with Version 4; reopening v1 → v2 showed Open redline; Newer offered [\"v2\",\"v3\"]; a request naming Version 4 as an operand answered 400. The chain has 4 Versions and v1-v3 remain.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:31.604Z",
+      "at": "2026-09-16T15:36:32.211Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "A text Comparison (PDF against Word)",
+      "expected": "The page says it was built from extracted text, shows the wording change, shows Export needs two Word files. and cannot be exported.",
+      "actual": "PDF v1 → Word v2 showed the extracted-text notice and \"Export needs two Word files.\" with no export control. Compared text: \"doc029-mixed-admin.pdf → doc029-mixed-admin.docx This comparison was built from extracted text, so formatting is not shown. DOC-029 fictional payment terms. Payment is due within Deleted: thirty Inser\". A direct export answered 409; the chain still has 2 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:32.211Z",
+      "at": "2026-09-16T15:36:34.811Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "If the Comparison fails: reason, Download links, no retry, corrected new Version",
+      "expected": "A TXT operand and a failed PDF extraction each fail with a reason and Download links; reopening returns the same failure with no retry; a corrected new Version compares as No changes although its bytes differ.",
+      "actual": "TXT v1 → PDF v2 read \"Comparison failed\" with \"Version 1 does not support extracted text.\" and [\"Download doc029-plain-admin.txt\",\"Download doc029-plain-admin.pdf\"]; both downloads matched the uploaded bytes. Reloading /documents/01a0aadc-8e98-7799-a35c-6eb8bec01bcc/compare?from=01a0aadc-8e98-7799-a35c-6eb9f5d58a1a&to=01a0aadc-8eaa-7d9a-be6f-c68a4ee9c1d6 returned the same failed Comparison (id unchanged) with no retry control. After adding a corrected PDF as Version 3 (setup, different sha256), Compare with previous opened \"v2 → v3\" and read \"No changes\". Malformed PDF v1 → PDF v2 read \"Version 1 text extraction failed.\" with 2 Download links.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:34.811Z",
+      "at": "2026-09-16T15:36:43.816Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Archiving keeps Comparisons readable and blocks new Generated redlines until restored",
+      "expected": "With the Document archived, Changes stay readable and no export is offered or accepted. With the owning Contract archived, the export is refused. After both are restored, the v2 → v3 export appends a Generated redline.",
+      "actual": "Documents -> Actions -> Archive on doc029-terms-admin.docx: v2 → v3 still showed Changes with no export control, and a direct export answered 409. Document restored (API). Contract actions -> Archive on C-83: Changes stayed readable; the control showed \"This contract is archived. Restore it before changing its paper.\"; a direct export answered 409; still 4 Versions. After Restore, Export track changes on v2 → v3 appended Version 5 (generated_redline, v2 -> v3; w:ins [\"ninety\",\"annually\"], w:del [\"sixty\",\"quarterly\"]).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:43.816Z",
+      "at": "2026-09-16T15:36:45.692Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Close comparison returns to the owning record",
+      "expected": "Close comparison opens the owning Contract's Documents section.",
+      "actual": "Close comparison opened /contracts/83/documents, where doc029-terms-admin.docx and its Actions menu are listed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:45.692Z",
+      "at": "2026-09-16T15:36:45.863Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Only Administrators and Legal Team Members open Comparisons",
+      "expected": "A Business User on the Contract team cannot open the Comparison page or request, read or export a Comparison.",
+      "actual": "Jonas Weber (Business User; team add answered 201) opening the v1 → v2 Comparison URL landed on \"/portal\" with no Changes view; requesting the pair answered 403; exporting answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:45.863Z",
+      "at": "2026-09-16T15:36:46.549Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Choose the Versions: Compare with previous, Preparing comparison, then Changes",
+      "expected": "Compare with previous opens the pair v2 → v3; while processing is held the page says Preparing comparison and updates to Changes when ready; no Document Version is added.",
+      "actual": "Version actions for version 2 also offered Compare with previous and opened \"v1 → v2\". Documents -> Actions for doc029-terms-legal.docx -> Compare with previous opened \"v2 → v3\". With this lab's worker paused the page read \"Preparing comparison Comparing both versions. This page will update when it is ready.\"; after resuming it changed to the Changes view without a reload. The chain still has 3 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:55.138Z",
+      "at": "2026-09-16T15:36:58.853Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Pair control, change list, Previous change and Next change",
+      "expected": "Choosing Older and Newer opens each pair at once; the choices keep the older before the newer; insertions and deletions describe the newer Version; Previous/Next move through changes.",
+      "actual": "Older v1 opened v1 → v3 at once; Newer offered [\"v2\",\"v3\"] and v2 opened v1 → v2. With v1 → v2, Older offered [\"v1\"]. Changes: [\"¶2, Replaced = ¶2thirty → sixty\",\"¶3, Replaced = ¶3monthly → quarterly\"]. Compared text: \"doc029-terms-legal.docx → doc029-terms-legal.docx DOC-029 fictional payment terms. Payment is due within Inserted: sixty Deleted: thirty days. Invoices are issued Inserted: quarterly Deleted: monthly.\". Next change moved the current change 0 -> 1; Previous change moved it back to 0.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:36:58.853Z",
+      "at": "2026-09-16T15:37:01.419Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "The Document reader offers Compare with the change count",
+      "expected": "When a ready Comparison exists for the previous pair, the reader link shows its change count and opens that Comparison.",
+      "actual": "Reader panel \"doc029-terms-legal.docx, version 3\" showed the link \"Compare with the previous version, 2 changes\"; it opened \"v2 → v3\" in the Changes view.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:37:01.419Z",
+      "at": "2026-09-16T15:37:02.210Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Export a Word Comparison as a Generated redline",
+      "expected": "Export track changes appends a Generated redline Version that records both operands; Open redline opens it; the file carries tracked changes; exporting again reuses it; reopening adds nothing; Generated redlines are not operands.",
+      "actual": "Check did not complete: locator.waitFor: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('complementary', { name: /version 4$/ }) to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-16T15:37:02.210Z",
+      "at": "2026-09-16T15:37:32.434Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "A text Comparison (PDF against Word)",
+      "expected": "The page says it was built from extracted text, shows the wording change, shows Export needs two Word files. and cannot be exported.",
+      "actual": "PDF v1 → Word v2 showed the extracted-text notice and \"Export needs two Word files.\" with no export control. Compared text: \"doc029-mixed-legal.pdf → doc029-mixed-legal.docx This comparison was built from extracted text, so formatting is not shown. DOC-029 fictional payment terms. Payment is due within Deleted: thirty Inser\". A direct export answered 409; the chain still has 2 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:37:32.435Z",
+      "at": "2026-09-16T15:37:35.116Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "If the Comparison fails: reason, Download links, no retry, corrected new Version",
+      "expected": "A TXT operand and a failed PDF extraction each fail with a reason and Download links; reopening returns the same failure with no retry; a corrected new Version compares as No changes although its bytes differ.",
+      "actual": "TXT v1 → PDF v2 read \"Comparison failed\" with \"Version 1 does not support extracted text.\" and [\"Download doc029-plain-legal.txt\",\"Download doc029-plain-legal.pdf\"]; both downloads matched the uploaded bytes. Reloading /documents/01a0aadd-05f6-7faf-8f15-8f01bfb73ff0/compare?from=01a0aadd-05f6-7faf-8f15-8f028dc308f8&to=01a0aadd-060b-7aee-8383-0dc450b227d7 returned the same failed Comparison (id unchanged) with no retry control. After adding a corrected PDF as Version 3 (setup, different sha256), Compare with previous opened \"v2 → v3\" and read \"No changes\". Malformed PDF v1 → PDF v2 read \"Version 1 text extraction failed.\" with 2 Download links.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:37:35.117Z",
+      "at": "2026-09-16T15:37:44.056Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Archiving keeps Comparisons readable and blocks new Generated redlines until restored",
+      "expected": "With the Document archived, Changes stay readable and no export is offered or accepted. With the owning Contract archived, the export is refused. After both are restored, the v2 → v3 export appends a Generated redline.",
+      "actual": "Documents -> Actions -> Archive on doc029-terms-legal.docx: v2 → v3 still showed Changes with no export control, and a direct export answered 409. Document restored (API). Contract actions -> Archive on C-84: Changes stayed readable; the control showed \"This contract is archived. Restore it before changing its paper.\"; a direct export answered 409; still 4 Versions. After Restore, Export track changes on v2 → v3 appended Version 5 (generated_redline, v2 -> v3; w:ins [\"ninety\",\"annually\"], w:del [\"sixty\",\"quarterly\"]).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:37:44.056Z",
+      "at": "2026-09-16T15:37:45.948Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Close comparison returns to the owning record",
+      "expected": "Close comparison opens the owning Contract's Documents section.",
+      "actual": "Close comparison opened /contracts/84/documents, where doc029-terms-legal.docx and its Actions menu are listed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:37:45.948Z",
+      "at": "2026-09-16T15:37:46.122Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Only Administrators and Legal Team Members open Comparisons",
+      "expected": "A Business User on the Contract team cannot open the Comparison page or request, read or export a Comparison.",
+      "actual": "Jonas Weber (Business User; team add answered 201) opening the v1 → v2 Comparison URL landed on \"/portal\" with no Changes view; requesting the pair answered 403; exporting answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:37:46.122Z",
+      "at": "2026-09-16T15:37:46.833Z"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:37:46.853Z",
+  "records": [
+    {
+      "role": "administrator",
+      "article": "contract-analysis",
+      "contracts": {
+        "noPaper": 73,
+        "failedPaper": 74,
+        "main": 75
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "article": "contract-analysis",
+      "contracts": {
+        "noPaper": 77,
+        "failedPaper": 78,
+        "main": 79
+      }
+    },
+    {
+      "role": "administrator",
+      "article": "compare-versions",
+      "contract": 83,
+      "documents": {
+        "word": "01a0aadc-8ddc-7049-b67b-d8eac5d399af",
+        "mixed": "01a0aadc-8e42-7332-9745-55de2c899ebc",
+        "plain": "01a0aadc-8e98-7799-a35c-6eb8bec01bcc",
+        "malformed": "01a0aadc-8eee-72dd-b562-b93eaaeef68a"
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "article": "compare-versions",
+      "contract": 84,
+      "documents": {
+        "word": "01a0aadd-0525-77c1-8320-5b487950167a",
+        "mixed": "01a0aadd-05a9-7103-8603-3834f6d00000",
+        "plain": "01a0aadd-05f6-7faf-8f15-8f01bfb73ff0",
+        "malformed": "01a0aadd-064f-7638-a7e6-ba1bfeb956fc"
+      }
+    }
+  ],
+  "navigationRetries": [
+    {
+      "at": "2026-09-16T15:34:46.329Z",
+      "url": "/contracts/75/fields"
+    },
+    {
+      "at": "2026-09-16T15:35:49.116Z",
+      "url": "/contracts/79/fields"
+    }
+  ]
+}

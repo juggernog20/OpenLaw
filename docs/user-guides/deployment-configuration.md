@@ -160,17 +160,17 @@ An unavailable engine can leave the app ready while processing fails or retries.
 
 ## Configure outbound email and providers
 
-Set both `SMTP_URL` and `SMTP_FROM` to pin email to the deployment environment. A set `SMTP_URL` takes precedence over the saved wizard relay, even if the environment configuration is incomplete. Remove the override and recreate the containers if the saved relay should be used again. When neither source is configured, email-dependent flows report that email is unavailable.
+Set both `SMTP_URL` and `SMTP_FROM` to pin email to the deployment environment. A set `SMTP_URL` takes precedence over the saved wizard relay, even if the environment configuration is incomplete. Remove the override and recreate the containers if the saved relay should be used again. If `SMTP_URL` is set and `SMTP_FROM` is not, OpenLaw cannot send email. The email step of the welcome wizard shows a warning that the environment sets `SMTP_URL` but not `SMTP_FROM`, and it has no **Send test email** button. An Administrator cannot finish the welcome wizard in that state. The sign-in page does not show **Set up or reset your password** or **Email me a sign-in link**. The API also refuses test email, sign-in link, and password-setup requests, and no email reaches the relay. An invitation does not report the problem in this build. **Settings → Users → Invite user** lists the person as **Invited**, but OpenLaw sends no email. Set both values, then invite a test address and check that the invitation reaches the relay.
 
 An Administrator can initially save and test the relay in the welcome wizard. This build has no separate email Settings page after that wizard is finished. Use [authentication and email](authentication-and-email.md) for the Administrator steps. Verify real delivery to an intended test recipient, including the link's origin; a successful SMTP connection alone is insufficient.
 
-Configure [Signing](configure-signing.md) and [AI analysis](configure-analysis.md) in their Administrator Settings pages. Allow the required outbound provider traffic from both the app and worker. AI model discovery and connection probes run in the app; Contract extraction runs in the worker. Signing in Polling mode uses outbound calls. Webhook mode also needs a publicly reachable HTTPS callback, which can use a separate gateway. Provider credentials and models are runtime Settings, not substitute environment variables.
+Configure [Signing](configure-signing.md) and [AI analysis](configure-analysis.md) in their Administrator Settings pages. Allow the required outbound provider traffic from both the app and worker. AI model discovery and connection probes run in the app; Contract extraction and Conversion drafts run in the worker. Signing in Polling mode uses outbound calls. Webhook mode also needs a publicly reachable HTTPS callback, which can use a separate gateway. Provider credentials and models are runtime Settings, not substitute environment variables.
 
 ## Preserve and rotate encryption keys
 
 `AUTH_SECRET` protects session signing and authentication material, including enrolled two-factor authentication. Changing it can invalidate sessions and make that material unreadable. Preserve it for a restore; do not use an ad hoc change as an account-recovery procedure.
 
-`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP URL, the SSO client secret, and the AI-provider key. It does not encrypt the database's Contract text or ordinary records. Store its recovery copy separately from database archives. Both processes require it at startup.
+`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP server address and credentials, the SSO client secret, and the AI-provider key. It does not encrypt the database's Contract text or ordinary records. Store its recovery copy separately from database archives. Both processes require it at startup.
 
 To rotate this credential key:
 

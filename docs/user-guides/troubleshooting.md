@@ -12,13 +12,13 @@ If a link is expired or already used, request a new link and open the newest mes
 
 Check the signed-in account, the module, your search words, and active filters or saved view. Return to the module's ordinary list and follow [search and views](search-and-views.md). An absent result does not prove deletion.
 
-A direct link may show **Something went wrong.** and **Reload** for either missing work or work you cannot reach. Reopen after a temporary connection failure; repeated reloads do not change access. Ask the Contract Owner, Matter Manager, or Administrator to check [your role and record access](roles-and-access.md). Business Users need a team entry on that particular Contract or Matter. Confidential Entities need their own access arrangement; a linked record does not grant access.
+A direct link gives the same answer for missing work and for work you cannot reach. In the app, the page says, for example, **Contract not found** and offers **Back to Contracts**. In the Portal, it says, for example, **This Contract does not exist, or you cannot open it.** **Something went wrong.** with **Reload** means the page could not load. Reload after a temporary connection failure; repeated reloads do not change access. Ask the Legal Owner, Matter Manager, or Administrator to check [your role and record access](roles-and-access.md). Business Users need a team entry on that particular Contract or Matter, and the record must not be archived. Confidential Entities need their own access arrangement; a linked record does not grant access.
 
-Business Users should reopen their own Request in the Portal. Conversion does not grant access to the resulting staff Contract or Matter page. For missing published Knowledge, ask Legal whether the item is still published, live, and shared with your audience. See [follow a Request](follow-request.md) and [Portal Knowledge](portal-knowledge.md).
+Business Users should reopen their own Request in the Portal. After conversion, the Request opens its Contract or Matter in the Portal while you are on that team. If the converted Request no longer opens, ask Legal to check your team entry. Conversion does not open the staff Contract or Matter page. For missing published Knowledge, ask Legal whether the item is still published, live, and shared with your audience. See [follow a Request](follow-request.md) and [Portal Knowledge](portal-knowledge.md).
 
 ## An edit or action is unavailable
 
-Check whether the owning record is archived and whether your role permits the action. A Business User can supply business information and supporting Documents on shared work, but cannot change its legal-managed details, complete Tasks, give Approval, or send for signature. Follow [Portal record work](contributor-guide.md) and ask Legal to perform the required legal action.
+Check whether the owning record is archived and whether your role permits the action. On shared work, a Business User can read business Fields, add Documents and Versions, reply in the conversation, and add existing people to a non-Confidential team. A Business User cannot change record Fields or other legal-managed details, complete Tasks, give Approval, or send for signature. Follow [Portal record work](contributor-guide.md) and ask Legal to perform the required legal action.
 
 If a save reports an error, keep your intended value, follow the displayed correction, and reload to confirm what actually saved. Do not assume an unchanged page means the save succeeded. Administrators can investigate configured Fields and required answers through [types, Statuses, and Fields](types-statuses-fields.md).
 
@@ -26,7 +26,7 @@ If a save reports an error, keep your intended value, follow the displayed corre
 
 Read the refusal: an oversized file needs a smaller copy or an operator-approved limit change; a filename problem needs a corrected name. Check the destination list before retrying an uncertain upload. If the first upload succeeded, sending it again as a new Document creates a separate chain.
 
-For another round of the same managed paper, use [Add version](document-versions.md). Business Users cannot append to a Contract's primary Document. Portal record pages offer supporting Document uploads and Add version. Reply attachments stay with the conversation. See [file limits](reference.md#file-behavior-and-limits) and [Request updates](follow-request.md).
+For another round of the same managed paper, use [Add version](document-versions.md). In the Portal, Business Users can use **Add version** on any Document of a shared record, including a Contract's primary Document. Portal uploads cannot go into folders. Reply attachments stay with the conversation. See [Portal Documents](contributor-guide.md#work-with-documents), [file limits](reference.md#file-behavior-and-limits) and [Request updates](follow-request.md).
 
 If valid uploads repeatedly fail, give your Administrator the visible message, time, file type and size, and the intended action. Share record details only through your organization's approved channel.
 
@@ -40,7 +40,7 @@ An original download failure needs a separate check of current access, archive/d
 
 ## A notification or email is missing
 
-Check that the event addressed you, that you still have access, and that the relevant notification group is enabled. Your own edit normally does not notify you. For staff, check the group's **In-app** and **Email** choices and any **Briefing** section. Business Users check **Request updates** in **Notification settings**. Turning In-app off also stops that group's new email.
+Check that the event addressed you, that you still have access, and that the relevant notification group is enabled. Your own edit normally does not notify you. For staff, check the group's **In-app** and **Email** choices and any **Briefing** section. Business Users check **Request updates**, **Assigned to you**, and **Activity on your records** in **Notification settings**. Turning In-app off also stops that group's new email.
 
 For morning updates, check the saved profile timezone and relevant tracked date. Delivery is not promised at exactly 8:00 a.m. Follow [notifications and reminders](notifications.md). If a bell item exists but mail does not arrive, check spam and filters, then ask your Administrator to check delivery. A bell item does not prove email receipt. For an urgent reply, open the record or Portal Request directly.
 
@@ -60,7 +60,7 @@ A **Signed** Envelope can still be waiting for the executed file to be stored. C
 
 Check your role, whether the Contract is Ended or archived, whether a run is already pending, and whether Analysis is enabled. The target is the primary Document's executed pin, or its current Version when there is no pin. Its extracted text must be ready and non-empty.
 
-Follow [Contract analysis](contract-analysis.md) to compare the run's Version and evidence with the actual saved Fields. **Kept** means the existing value was preserved. **Unverified** values are already saved and usable; do not confirm them merely to clear a warning. Review the source Document Version and correct or confirm each value you have checked.
+Follow [Contract analysis](contract-analysis.md) to compare the run's Version and evidence with the actual saved Fields and Key dates. **Kept** means the existing value was preserved. **Unverified** values are already saved and usable; do not confirm them merely to clear a warning. Review the source Document Version and correct or confirm each value you have checked.
 
 If a run failed, resolve the reported processing or provider problem before running again. Ask your Administrator about connector or Field-prompt configuration. Never put provider keys or private extracted text in a public report.
 

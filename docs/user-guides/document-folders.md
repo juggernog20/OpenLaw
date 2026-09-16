@@ -4,14 +4,14 @@ Use folders inside one Contract, Matter, or Entity to organize its Documents. Im
 
 ## Before you start
 
-Use a Legal Team Member or Administrator account with access to an unarchived owning record. Business Users can upload supporting paper at the record root, including multiple files, but cannot create folders, move Documents, or import a folder structure. Knowledge Folders organize Knowledge Items; they do not create Document folders inside an item.
+Use a Legal Team Member or Administrator account with access to an unarchived owning record. Business Users can upload several files at the record root in the Portal, but cannot create folders, move Documents, or import a folder structure. Knowledge Folders organize Knowledge Items; they do not create Document folders inside an item.
 
 ## Create and maintain folders
 
 1. Open the owning record's **Documents** tab and select **New folder**.
-2. Enter **Name**, then **Save**. Expand the folder to read its Documents.
-3. Use **Actions for the … folder** to **Rename**, **Move**, or create a **New folder inside**. Choose the destination in **Move into** and select **Move**.
-4. To file an existing Document, use its **Actions** menu and **Move to folder**. Choose **File in** and select **Move**. The owning record itself is the destination for moving it out of folders.
+2. Enter **Name**, then **Save**. A folder that holds Documents or subfolders shows an expand control; select it to read the contents. An empty folder has no expand control.
+3. Use **Actions for the … folder** to **Rename**, **Move**, or create a **New subfolder**. Choose the destination in **Move into** and select **Move**. **None** moves the folder to the top level.
+4. To file an existing Document, use its **Actions** menu and **Move to folder**. Choose **File in** and select **Move**. Choose **None** to move it out of folders. You can also drag a Document row onto a folder row, or onto **Drop here to move out of folders**. To move several Documents, select their checkboxes and select **Move** in the selection bar.
 
 A folder stays inside its owning record. Sibling names must be distinct without regard to case; blank names, slashes, and the exact names `.` and `..` are refused. A folder cannot move into itself or one of its descendants. Read the refusal and choose another name or destination.
 
@@ -21,9 +21,9 @@ A folder stays inside its owning record. Sibling names must be distinct without 
 
 1. Select **Upload**, then **Choose files** and choose several files. You can also drop files on the Documents section or a folder.
 2. Review the **Import … files** dialog. Check the displayed **Destination**: a picker imports at **Record root**; a drop uses the place where you dropped the files. The destination cannot be changed inside this dialog.
-3. Select **Version kind**. It applies to every file in this import; bulk import does not collect individual Notes.
+3. Select **Version kind**. It applies to every file in this import; bulk import does not collect individual Notes. A Matter import has no **Version kind** control.
 4. Select **Import … files**. Keep the dialog open while the import runs.
-5. Read the final uploaded and failed counts, then select **Done**. Each successful file is a new Document at Version 1, not another round on an existing Document.
+5. If every file uploads, the dialog closes after the Documents list refreshes. If a file fails, the dialog stays open; read the final uploaded and failed counts, then select **Done**. Each successful file is a new Document at Version 1, not another round on an existing Document.
 
 For another round of one Document, use [Add version](document-versions.md) instead.
 

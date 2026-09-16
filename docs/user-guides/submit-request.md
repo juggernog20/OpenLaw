@@ -12,12 +12,12 @@ Send Legal a Request with the details and attachments they need to review it.
 1. On the Portal home, read any [**Before you submit** guidance](portal-knowledge.md) and select the request type that matches your work.
 2. Enter a **Title** that names what you need. In **Description**, explain the background, the Counterparty if relevant, and the help you want from Legal.
 3. Under **Attachments**, select **Choose files** or drop the files onto the form. You can select up to 20 files. Check the selected filenames and remove any you did not intend to send. If you exceed the limit, the form keeps only the files that fit; check the list before submitting.
-4. Choose **Urgency** and complete the additional questions. Required questions are marked with an asterisk. Urgency starts at **Medium**; choose **Low**, **Medium**, **High**, or **Critical** to describe your need. This choice does not promise a response time.
+4. Check **Department**, choose **Urgency**, and complete the additional questions. Required questions are marked with an asterisk. **Department** is required. It starts with your own Department when that Department is in the list; otherwise choose one. Urgency starts at **Medium**; choose **Low**, **Medium**, **High**, or **Critical** to describe your need. This choice does not promise a response time.
 5. Select **Submit request** once. If a required answer is missing, fill in the marked question and submit again.
 6. Keep the confirmation open until the attachments finish uploading. Note the Request's **R-** reference and check whether any file failed.
 7. Select **Open request** to check the saved answers and attachments.
 
-For example, a fictional **Docs Contract review** Request could use the title **Review the Northstar evaluation terms**, an explanation of the proposed evaluation, **High** urgency, and **Procurement** as the Department. Department identifies the business team responsible for this work. Choose it from the shared list, or leave **No Department** selected. Legal can correct it while the Request is open; conversion carries it to the new record. These are example values, not required choices.
+For example, a fictional **Docs Contract review** Request could use the title **Review the Northstar evaluation terms**, an explanation of the proposed evaluation, **High** urgency, and **Procurement** as the Department. Department identifies the business team responsible for this work. Choose it from the shared list. Legal cannot change it on the Request; conversion carries it to the new record, where it can be changed. These are example values, not required choices.
 
 ## Check the result
 
@@ -27,7 +27,7 @@ Use [Follow a Request and reply to Legal](follow-request.md) to read progress, a
 
 ## If it does not work
 
-If required answers are missing, complete the marked questions. A question marked optional can stay blank; Legal completes any value its own record needs later. Ask Legal if you cannot answer a required question. You cannot change submitted answers in the Portal; send a correction in the existing Request's conversation.
+If required answers are missing, complete the marked questions. A question without an asterisk can stay blank; Legal completes any value its own record needs later. Ask Legal if you cannot answer a required question, or if **Department** offers no Department to choose. You cannot change submitted answers in the Portal; send a correction in the existing Request's conversation.
 
 The confirmation appears as soon as the Request exists, before every attachment has finished. An attachment failure does not undo the Request. Check the named failure and quote the existing R- reference when contacting Legal; submitting the whole form again would create another Request. Open that Request and attach the missing file to a reply. Check any file-size error against the limit shown by your instance.
 

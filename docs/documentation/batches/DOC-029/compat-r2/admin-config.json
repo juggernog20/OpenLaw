@@ -1,0 +1,298 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "admin-config",
+  "issues": [745, 747],
+  "reviewer": "DOC-029r2 compatibility reviewer (admin-config)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "reviewedAt": "2026-09-16T18:00:30Z",
+  "lab": {
+    "name": "admin2",
+    "project": "openlaw-docs-41255c61-admin2",
+    "app": "http://127.0.0.1:23300",
+    "mail": "http://127.0.0.1:23400",
+    "source": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "seed": "Helix light, seed 7",
+    "images": {
+      "app": "openlaw-docs-41255c61-admin2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "engine": "openlaw-docs-41255c61-admin2-engine:57e77e386be3 sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+      "worker": "openlaw-docs-41255c61-admin2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+    }
+  },
+  "diffInspection": {
+    "command": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles messages",
+    "commits": [
+      "1ea249dd Show organization branding on sign-in and raise the logo limit",
+      "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+      "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+      "e3800b43 Show locked default fields above each custom field catalog",
+      "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+      "57e77e38 Update user and comment display styles to use 'text-muted' for archived users"
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "matter-templates",
+      "articlePath": "docs/user-guides/matter-templates.md",
+      "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed",
+      "articleChangedInRange": false,
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/routes/settings-matter-types.test.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "packages/shared/src/index.ts",
+        "packages/api-client/src/schema.ts",
+        "apps/api/openapi.json",
+        "messages/en-US.json (removed and changed strings)"
+      ],
+      "unchangedPathsConfirmed": [
+        "apps/web/src/routes/settings-matter-templates.tsx",
+        "apps/web/src/routes/settings-matter-template-editor.tsx",
+        "apps/web/src/components/matter-template-content-editor.tsx",
+        "apps/web/src/components/matters-settings-tabs.tsx",
+        "apps/web/src/components/matters/create-matter-dialog.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/web/src/components/intake/prepared-convert-dialog.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/modules/matter-templates/",
+        "apps/api/src/modules/matters/",
+        "apps/api/src/modules/requests/",
+        "apps/api/src/modules/fields/",
+        "packages/db/src/schema/matter-templates.ts"
+      ],
+      "diffFindings": [
+        "No file on the template path changed: the Templates list, the template editor, its Tasks and Key dates editor, the Create matter dialog, the Convert dialogs, and the matter-templates, matters, requests and fields API modules are the same at both commits.",
+        "list-editor.tsx is shared with the Templates list. The help caption became optional and Add is disabled while an inline add row is open. The Templates list passes help and opens a dialog for Add template with no inline add row, so Add template, Edit, Archive, Show archived and Restore behave as before.",
+        "taxonomy-types-pane.tsx (6d34ac59) makes Add type use Save and Cancel with no create on blur. The article does not describe how to add a Matter type or attach Fields; it only asks for a live Matter type with the Fields. Enter still submits, so the replay fixture that adds a type with Enter still worked.",
+        "settings.tsx adds a Return to setup link only when an Administrator comes from the setup review. The profile menu > Settings > Matters > Templates path is the same.",
+        "matters-columns.tsx and user-identity.tsx change archived-user styling from opacity-50 to text-muted. The article does not describe it.",
+        "messages/en-US.json removes AI analysis, contract field help, welcome email, logo, and welcome review strings. No label the article names (Settings, Matters, Templates, Matter type, Add template, Name, Description, Edit, Matter defaults, Priority, Risk, Title prefix, Custom field defaults, Tasks, Add task, Matter Manager, Unassigned, Key dates, Add key date, Save template, Archive, Archive template, Show archived, Restore) was removed or changed.",
+        "The other commits (sign-in branding and logo limit, SMTP discrete fields and first-run, default fields card on Contract and Matter Fields, private-VM install docs) touch no step in this article."
+      ],
+      "conclusion": "compatible",
+      "replay": {
+        "script": {
+          "path": "batches/DOC-029/compat-r2/admin-config-matter-templates-replay.mjs",
+          "sha256": "0faef115c92ccee0cbd3489ae81365a48301142d12292a6cadf2faef3b1fe996",
+          "adaptedFrom": "batches/DOC-029/admin-config/walkthrough-r1.mjs",
+          "changes": "Lab project openlaw-docs-41255c61-admin2, record prefix 'DOC-029r2 admin-config compat', output path, round and reviewer metadata, appCommit 57e77e38, and the leftover deflection-link filter scoped to this run's prefix so other agents' links on the shared lab are not removed. No step logic changed."
+        },
+        "log": {
+          "path": "batches/DOC-029/compat-r2/admin-config-matter-templates-replay.json",
+          "sha256": "79b29d1ed356f905a653092ec2a0b154c16f06fd50a68df898dda6c9d05b000e"
+        },
+        "sections": "forms,templates,access (forms creates the Matter request form, the Global Entity Field and the Request that the templates section converts)",
+        "stamp": "mu4eht6p",
+        "startedAt": "2026-09-16T17:54:50.557Z",
+        "finishedAt": "2026-09-16T17:58:03.656Z",
+        "summary": {
+          "allSteps": {
+            "total": 34,
+            "pass": 33,
+            "fail": 1
+          },
+          "matterTemplatesSteps": {
+            "total": 13,
+            "pass": 13,
+            "fail": 0
+          }
+        },
+        "steps": [
+          {
+            "scenario": "all",
+            "role": "administrator",
+            "action": "Sign in as the seeded Administrator",
+            "result": "pass",
+            "actual": "Signed in through /auth/login; /api/v1/me reports role \"administrator\"."
+          },
+          {
+            "scenario": "all",
+            "role": "legal_team_member",
+            "action": "Sign in as the seeded Legal Team Member in a separate browser context",
+            "result": "pass",
+            "actual": "Signed in through /auth/login in its own browser context."
+          },
+          {
+            "scenario": "all",
+            "role": "business_user",
+            "action": "Sign in as the seeded Business User with a fresh emailed sign-in link in a separate browser context",
+            "result": "pass",
+            "actual": "Requested a fresh link at /portal/login and followed it from Mailpit; the browser opened /portal."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "administrator",
+            "action": "Before you start: a live Matter type with the Fields the template should fill",
+            "result": "pass",
+            "actual": "Created Matter Fields \"DOC-029r2 admin-config compat Template region mu4eht6p\" and \"DOC-029r2 admin-config compat Template counsel mu4eht6p\", and Matter type \"DOC-029r2 admin-config compat Template type mu4eht6p\" with both and \"DOC-029r2 admin-config compat Supplier entity mu4eht6p\" attached; \"DOC-029r2 admin-config compat Template counsel mu4eht6p\" is Required."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "administrator",
+            "action": "Create and edit a template, steps 1-7: Templates > Matter type > Add template (Name, Description); Edit; Matter defaults; Custom field defaults; Tasks with offsets, roles and reorder; Key dates; Save template; reopen and confirm",
+            "result": "pass",
+            "actual": "Add template created the row \"DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p DOC-029 fictional onboarding checklist for a supplier. 0 tasks 0 dates 0 fields\". Edit opened the editor (\"Matter type: DOC-029r2 admin-config compat Template type mu4eht6p\"). Save template reported saved=true. After reload: Priority \"Low\", Risk \"Medium\", Title prefix \"Supplier -\"; Field defaults [\"EMEA default\",\"DOC-029 Fictional Counsel LLP\"]; Tasks [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2\",\"Matter Manager\"],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"5\",\"Matter Manager\"],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",\"\",\"Unassigned\"]] (the third Task moved up with ArrowUp); Key dates [[\"DOC-029r2 admin-config compat Supplier review mu4eht6p\",\"10\",\"Fictional review with the supplier.\"],[\"DOC-029r2 admin-config compat Kick-off mu4eht6p\",\"0\",\"\"]]."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "administrator",
+            "action": "Offsets are whole numbers from 0 to 3650; a Key date needs an offset; the editor names the problem",
+            "result": "pass",
+            "actual": "Priority Critical with Task 1 offset 3651: Save template showed \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload Priority is \"Low\" and Task 1 offset \"2\", so no section saved. A blank Key date 1 offset showed \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload it reads \"10\"."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "administrator",
+            "action": "Test both creation paths, direct creation: Create matter with the template; suggested title, Priority, Risk and Fields; Matter Manager starts as the person who opens it; clear the optional Field; check Overview, Tasks, assignments and Key dates",
+            "result": "pass",
+            "actual": "Template choices for the type: [\"No template\",\"DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p\"]. Choosing the template filled {\"title\":\"Supplier -\",\"priority\":\"Low\",\"risk\":\"Medium\",\"manager\":\"Daniel Okafor\",\"region\":\"EMEA default\",\"counsel\":\"DOC-029 Fictional Counsel LLP\"}. With the optional region cleared, Create opened M-23, created 2026-09-16T17:57:05.421Z (UTC anchor 2026-09-16). API: priority \"low\", risk \"medium\", region null, counsel \"DOC-029 Fictional Counsel LLP\". Tasks page rows [\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p Due Sep 18 DO Daniel Okafor\",\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p Due Sep 21 DO Daniel Okafor\",\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p Unassigned\"]. Key dates page rows [\"Sep 16 (today) DOC-029r2 admin-config compat Kick-off mu4eht6p\",\"Sep 26 (in 10 days) DOC-029r2 admin-config compat Supplier review mu4eht6p Fictional review with the supplier.\"]. Task facts [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",null,null]]; Key date facts [[\"DOC-029r2 admin-config compat Kick-off mu4eht6p\",\"2026-09-16\"],[\"DOC-029r2 admin-config compat Supplier review mu4eht6p\",\"2026-09-26\"]]."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "administrator",
+            "action": "Direct creation with Matter Manager set to Unassigned",
+            "result": "pass",
+            "actual": "M-24 with Matter Manager Unassigned has Tasks [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2026-09-18\",null],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"2026-09-21\",null],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",null,null]]; the Tasks page rows read [\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p Due Sep 18 Unassigned\",\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p Due Sep 21 Unassigned\",\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p Unassigned\"]."
+          },
+          {
+            "scenario": "V-C39,V-C40",
+            "role": "administrator",
+            "action": "Test both creation paths, Request conversion: convert the Matter form Request with the Matter type and template; check carried answers, defaults, Priority, Risk, title, Manager, Tasks and Key dates",
+            "result": "pass",
+            "actual": "Convert R-17 to a matter opened with Priority \"High\" (the Request's Urgency). Template choices [\"No template\",\"DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p\"]. After choosing type and template the dialog showed {\"title\":\"DOC-029r2 admin-config compat Supplier advice request mu4eht6p\",\"priority\":\"High\",\"region\":\"EMEA default\",\"counsel\":\"DOC-029 Fictional Counsel LLP\"} and no \"Does not carry into the matter\" list. Convert created M-25 (created 2026-09-16T17:57:17.185Z, UTC anchor 2026-09-16; the Request was submitted earlier). API: title \"DOC-029r2 admin-config compat Supplier advice request mu4eht6p\", priority \"high\" (template default was Low), risk null (template default was Medium), manager \"Daniel Okafor\", Entity value present, template Field defaults present. Task facts [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",null,null]]; Key date facts [[\"DOC-029r2 admin-config compat Kick-off mu4eht6p\",\"2026-09-16\"],[\"DOC-029r2 admin-config compat Supplier review mu4eht6p\",\"2026-09-26\"]]."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "administrator",
+            "action": "Change or archive a template: edit and save; existing Matters keep their Tasks and dates; a new Matter uses the change; Archive template removes it from creation; Show archived > Restore brings it back",
+            "result": "pass",
+            "actual": "Task 1 was renamed \"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p revised\" with offset 3 and saved. M-23 still has Tasks [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",null,null]]. New M-26 (created 2026-09-16T17:57:25.100Z) has [\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p revised\",\"2026-09-19\",\"Daniel Okafor\"]. The Archive dialog read \"Archive DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p? The template leaves new Matter creation. Existing Matters are unchanged, and restoring the template brings its full definit\"; after Archive template the Create matter dialog offered [\"No template\"]. POST /api/v1/matters with the archived template id (same body the dialog sent earlier) answered 400 \"The template must be live and belong to the selected matter type.\". Show archived > Restore made it available again: [\"No template\",\"DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p\"]."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "administrator",
+            "action": "A Field detached from the template's type: the editor names its retained saved value; reattach restores it",
+            "result": "pass",
+            "actual": "After Detach on the type, the template editor read \"DOC-029r2 admin-config compat Template region mu4eht6p is no longer attached to this Matter type. Its saved value (EMEA default) is retained.\". After Attach field on the type again, the default control shows \"EMEA default\"."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "legal_team_member",
+            "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/matters/templates and calls GET /api/v1/matter-templates",
+            "result": "pass",
+            "actual": "/api/v1/me reports \"legal_team_member\". /settings/matters/templates sent the browser to /settings/profile. GET /api/v1/matter-templates answered 403 (\"You do not have permission to perform this action.\")."
+          },
+          {
+            "scenario": "V-C39",
+            "role": "business_user",
+            "action": "Negative: Jonas Weber (business_user) opens /settings/matters/templates and calls GET /api/v1/matter-templates",
+            "result": "pass",
+            "actual": "/api/v1/me reports \"business_user\". /settings/matters/templates sent the browser to /portal. GET /api/v1/matter-templates answered 403 (\"You do not have permission to perform this action.\")."
+          }
+        ],
+        "prerequisiteSteps": [
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "Before you start: live destination types and Fields (fixtures created through Settings)",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "Create the request type, steps 1-4: Settings > Intake > Request types > Add request type with Enter, Edit, Description saved on leaving the field; the list Target column and the editor have no Target control",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "Publish an estimated turnaround: 36501 is refused, 5 saves on leaving the control",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "Choose the form fields, steps 1-3: Attach field, Required, reorder with the arrow keys; No target offers only Global Fields; the fixed basics; a User Field cannot be required, an Entity Field can",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "Offer guidance before submission, steps 1-4: Deflection links > Add link with an External address (refuse an address without https://) and with a Knowledge item; Placement on each form; Edit; reorder",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "business_user",
+            "action": "Check the result on the Portal: request-type cards, Before you submit, Fields, order, and required markers; submit with a required answer missing, then with valid answers",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "business_user",
+            "action": "Submit the Matter form with a valid Entity answer",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "Have Legal convert the Contract Request: a blank Type is refused; the attached Field carries; the answer the destination type does not attach is listed under Does not carry into the contract",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "If a configured destination type is archived, select a live type during conversion (fixture: the Target set through the API, because the editor has no Target control)",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "Archive a request type: the dialog reports no usage and no replacement; the Portal drops the card and the form; the Request stays readable; Show archived > Restore offers it again",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "administrator",
+            "action": "Remove the walkthrough's deflection links and turn off Portal-listed on its Entities",
+            "result": "fail"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "legal_team_member",
+            "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/intake/request-types and calls POST /api/v1/request-types",
+            "result": "pass"
+          },
+          {
+            "scenario": "V-C40",
+            "role": "business_user",
+            "action": "Negative: Jonas Weber (business_user) opens /settings/intake/request-types and calls POST /api/v1/request-types",
+            "result": "pass"
+          }
+        ],
+        "notes": [
+          "Every V-C39 step passed on 57e77e38 with the same outcomes as round 1: saved defaults, Tasks order and Key dates after reload; the 0 to 3650 refusal message; direct creation (M-23) and Unassigned creation (M-24) with dates from the 2026-09-16 UTC creation date; conversion of R-17 to M-25 keeping Urgency High, Risk unset, the Request title and Daniel Okafor as Matter Manager; M-23 unchanged after the template edit and M-26 using it; archived template not offered and refused with 400; Restore; the detached Field's retained value named and restored after reattach.",
+          "One prerequisite cleanup step for V-C40 (request-forms) failed: 'Remove the walkthrough's deflection links and turn off Portal-listed on its Entities'. The script checks a Knowledge Item by the round 1 lab's seeded id 01a0aaad-b43b-75c9-b4fb-4ea4806e7e48. The seed generates ids at seed time, and on admin2 'How to ask legal for help' has id 01a0ab53-2a5c-75bb-92fc-82f6cea83646. The failure is a lab-specific id in the script, not an app change, and it does not touch any matter-templates step. This review makes no finding for request-forms.",
+          "Because that step stopped early, the reviewer finished its cleanup after the run: the Deflection links pane shows no 'DOC-029r2 admin-config compat' link, and Portal-listed on 'DOC-029r2 admin-config compat Portal supplier mu4eht6p' was turned off and read false after reload.",
+          "Negative checks: Nadia Haddad (legal_team_member) was sent from /settings/matters/templates to /settings/profile and Jonas Weber (business_user, fresh emailed sign-in link) to /portal; GET /api/v1/matter-templates answered 403 for both. Each role used its own browser context.",
+          "The admin2 lab is shared with other DOC-029r2 agents. Records created by this run carry the prefix 'DOC-029r2 admin-config compat' and stamp mu4eht6p and were left in the lab, as in round 1. The fixture Contract type that the forms section archives was restored by the script.",
+          "Screenshots went to temporary scratch space outside the worktree and are not evidence. No password, cookie, storage state or sign-in link was written to the worktree."
+        ]
+      }
+    }
+  ],
+  "needsRewalk": []
+}

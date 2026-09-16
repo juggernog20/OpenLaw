@@ -1,0 +1,137 @@
+{
+  "batch": "DOC-029",
+  "group": "portal",
+  "author": "DOC-029 source-review author agent (portal)",
+  "technicalReviewer": "DOC-029 source-review author agent (portal)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T14:56:30.705860+00:00",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "comparedFrom": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "method": "source-inspection",
+  "note": "Source review only. No walkthrough was run; an independent agent performs the browser walkthrough. Catalog status is unchanged.",
+  "articles": [
+    {
+      "articleId": "submit-request",
+      "contentSha256Before": "2cc92e608c6096e0413c41d0ff4f01e01561fa63472c70a85601b8f11660cc64",
+      "contentSha256After": "5f564beb8c997e68464baff73fc3a6c094c100307b346e0e929d453c9969b22b",
+      "sources": [
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/components/portal/my-requests.tsx",
+        "apps/web/src/components/department-picker.tsx",
+        "apps/web/src/components/custom-field-control.tsx",
+        "apps/web/src/lib/requests.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/requests/request-detail.ts",
+        "apps/api/src/modules/departments/references.ts",
+        "messages/en-US.json",
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-009, INT-010)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-010 amendment, required intake Department, 2026-09-15)"
+      ],
+      "corrections": [
+        {
+          "where": "Submit the form, step 4",
+          "before": "Choose Urgency and complete the additional questions; Department was not mentioned as a step.",
+          "after": "Check Department, choose Urgency, and complete the additional questions. Department is required and starts with the user's own Department when that Department is live; otherwise the user chooses one.",
+          "source": "portal-request-form.tsx submit() adds Department to missing fields; DepartmentPicker required shows disabled 'Choose a Department'; POST /requests body departmentId z.string().min(1); commit 9287c0b1."
+        },
+        {
+          "where": "Example paragraph",
+          "before": "Choose Department from the shared list, or leave No Department selected. Legal can correct it while the Request is open.",
+          "after": "Choose it from the shared list. Legal cannot change it on the Request; conversion carries it to the new record, where it can be changed.",
+          "source": "INT-010; commit 9287c0b1 removed PATCH /requests/:number/department and the Inbox RequestDepartment control."
+        },
+        {
+          "where": "If it does not work, paragraph 1",
+          "before": "A question marked optional can stay blank.",
+          "after": "A question without an asterisk can stay blank. Ask Legal if Department offers no Department to choose.",
+          "source": "Field in portal-request-form.tsx marks only required rows with '*' and '(required)'; no 'optional' marker exists. departmentOptions returns only live Departments, and the required picker has no other valid choice when the list is empty."
+        }
+      ],
+      "confirmed": [
+        "Portal home heading 'What do you need from Legal?', request type cards link to /portal/new/<slug>, 'Before you submit' panel, and 'Your requests' list.",
+        "Fixed basics in order Title, Description, Attachments, Department, Urgency under 'About your request'; type Fields under 'Details for <request type>'.",
+        "Attachments: 'Choose files', drop zone, up to 20 files (MAX_REQUEST_ATTACHMENTS), overflow keeps the files that fit with 'A request carries at most 20 files.', per-file Remove.",
+        "Urgency defaults to Medium; options Low, Medium, High, Critical; no response-time promise in the form.",
+        "'Submit request' button; missing required values show 'Fill ... first' and '<field> is required.' and send nothing.",
+        "Confirmation appears once the Request exists, before uploads finish: 'Request R-<n> is with Legal', 'Attaching your files\u2026', named failures, 'Open request'.",
+        "Attachment race with a disposition links to /portal/requests/<n>#portal-request-composer on the same Request.",
+        "Unknown or archived form slug redirects to /portal; a submission error shows 'The request could not be submitted.' without confirmation.",
+        "Submitted answers have no Portal edit control; Legal creates a Contract or Matter only by conversion.",
+        "Title label and prompt per INT-009."
+      ]
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256Before": "1db0631e8dde4911fa0c122d09b42771e88937d37c1a85d445fafac0f60a1880",
+      "contentSha256After": "5cea0964158582671d5f4b3dbdb9726d214f83dcaf08ed8ddedbc1603923b9a7",
+      "sources": [
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/components/portal/request-owner.tsx",
+        "apps/web/src/components/portal/my-requests.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/components/portal/record-work.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/lib/requests.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/comments/audience.ts",
+        "apps/api/src/lib/portal-record-access.ts",
+        "apps/api/src/lib/portal-contract-access.ts",
+        "messages/en-US.json",
+        "CONTEXT.md"
+      ],
+      "corrections": [
+        {
+          "where": "Open your Request, step 5",
+          "before": "What you submitted lists description, original attachments, urgency, and additional answers.",
+          "after": "What you submitted also lists Department.",
+          "source": "portal-request.tsx renders a Department ValueRow (Department or 'No Department') between Attachments and Urgency."
+        }
+      ],
+      "confirmed": [
+        "GET /portal/requests excludes converted Requests and scopes to the requester; detail and downloads answer 404 to other users, and the page redirects to /portal.",
+        "Status labels Open, Resolved, Declined; declined reason printed in the status banner; 'Owner: <name>' or 'Not assigned yet'.",
+        "Converted Request redirects to /portal/contracts/<n> or /portal/matters/<n> only while the record is not archived and the user is on its team; otherwise 404 to the Portal home. Archived destination shows 'The record created from this Request was archived. Your original request is shown below.' with no applets and no attachments.",
+        "Record page shows an 'Original request' card.",
+        "Comments applet labels: 'Comments', 'Show older', 'New comment', 'Attach files', 'Comment' (disabled until text is entered); error 'The conversation could not be read. Reopen the panel to try again.'",
+        "'Attach new files to a reply' appears for non-new statuses and targets #portal-request-composer, the Comments applet hash on the Portal.",
+        "Requester sees only the full-thread tier on a Request; Legal Only and Working Team tiers stay hidden (CONTEXT.md DD-016 vocabulary).",
+        "Conversion records the Requester as Business Owner and adds a team row (CONTEXT.md, DD-023). The sentence that Legal may add other Business Users stays true; CONTEXT.md also lets Business Users add existing people to non-Confidential record teams, which this article does not cover."
+      ]
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256Before": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+      "contentSha256After": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+      "sources": [
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/documentation/documentation-reader.tsx",
+        "apps/api/src/modules/portal/routes.ts",
+        "messages/en-US.json"
+      ],
+      "corrections": [],
+      "confirmed": [
+        "Only published, Everyone, non-archived Knowledge Items open; draft, Legal Only, archived and unknown ids answer one 404 and redirect to /portal. The download route uses the same gate.",
+        "Deflection panel hides Knowledge links that fail the gate; Knowledge links open in the same tab, external links open in a new tab with the domain beneath the label.",
+        "Page shows 'From Legal' above the title, a 'Documents' card with 'Download' per file (primary Document sorted first, current Version only, no reader or version picker), then 'Guidance', and a 'Your requests' back link.",
+        "Portal navigation has Requests, Contracts, Matters, Auto-Docs and no Knowledge library.",
+        "Help search reads the documentation bundle only.",
+        "Portal Knowledge source changed only in its sign-in redirect (/portal/enter to /portal/login) in this range; no article change needed."
+      ]
+    }
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/request-forms.md line 34 says Department is optional on the form. INT-010 and commit 9287c0b1 make Department required on every new Request. The owner of request-forms should correct it."
+  ],
+  "productBugs": [
+    "The Portal form requires a live Department, but a fresh instance creates no Departments (migrations 0116 and 0131 only migrate existing values). With no live Department, the required picker offers only the disabled 'Choose a Department' option, and no Business User can submit any Request. The form gives no hint that an Administrator must add a Department."
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "phase": "c42",
+  "reviewer": "DOC-029 independent live-provider walkthrough agent",
+  "reviewerKind": "agent",
+  "app": "http://127.0.0.1:23314",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "note": "Sanitized. No API key, RSA key, HMAC secret, integration key or User ID is recorded.",
+  "startedAt": "2026-09-16T15:35:24.742Z",
+  "guard": [
+    {
+      "at": "2026-09-16T15:35:26.975Z",
+      "passed": "PUT signing connector in Webhook mode with secrets removed",
+      "removedFields": ["webhookSecret"],
+      "webhookUrl": "http://gateway.doc029.example/api/v1/signing/docusign/webhook"
+    },
+    {
+      "at": "2026-09-16T15:35:27.841Z",
+      "passed": "PUT signing connector in Webhook mode with secrets removed",
+      "removedFields": ["webhookSecret"],
+      "webhookUrl": "https://gateway.doc029.example/api/v1/signing/docusign/webhook?token=x"
+    },
+    {
+      "at": "2026-09-16T15:35:28.710Z",
+      "passed": "PUT signing connector in Webhook mode with secrets removed",
+      "removedFields": ["webhookSecret"],
+      "webhookUrl": "https://***@gateway.doc029.example/hook"
+    }
+  ],
+  "steps": [
+    {
+      "id": "S01",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Settings > Organization > Integrations > E-signature; expand DocuSign; check the saved Polling connector",
+      "at": "2026-09-16T15:35:25.308Z",
+      "actual": "Integrations opens /settings/integrations/e-signature. DocuSign card started collapsed=true. Environment Demo; Signing updates Polling with the \"Keeps OpenLaw private...\" hint (true). Integration key and User ID are filled (values not recorded). RSA private key input is blank. Public callback URL, Connect HMAC secret and Webhook URL are absent (0/0/0). Chip reads Connected; Send for signature from records is on. Remove connector is present (1) and was not selected.",
+      "result": "pass",
+      "durationMs": 477
+    },
+    {
+      "id": "S02",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "action": "Test connection against DocuSign Demo",
+      "at": "2026-09-16T15:35:25.785Z",
+      "actual": "Test connection showed \"Connected to OpenLaw.\" after 52 ms (DocuSign Demo).",
+      "result": "pass",
+      "testMs": 52,
+      "account": "Connected to OpenLaw.",
+      "durationMs": 56
+    },
+    {
+      "id": "S03",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Choose Webhook without saving; check the extra fields; Save with the HMAC secret blank",
+      "at": "2026-09-16T15:35:25.841Z",
+      "actual": "Webhook shows Public callback URL (hint \"Enter the gateway's HTTPS address if it differs from OpenLaw's address. Forward POST requests to /api/v1/signing/docusig...\") and Connect HMAC secret (required, \"Required. OpenLaw checks it on every delivery...\" true). Webhook hint shown=true. Save with the HMAC secret blank: the browser refused the submit and sent no request. The stored mode is still Polling.",
+      "result": "pass",
+      "durationMs": 1085
+    },
+    {
+      "id": "S04",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Webhook refusals: http:// callback URL, and an HTTPS URL with a query (secret removed from each request by the guard)",
+      "at": "2026-09-16T15:35:26.926Z",
+      "actual": "http://gateway.doc029.example/api/v1/signing/docusign/webhook: API 400 \"One or more request fields are invalid.\"; pane shows [\"Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates.\",\"One or more request fields are invalid.\"]. https://gateway.doc029.example/api/v1/signing/docusign/webhook?token=x: API 400 \"One or more request fields are invalid.\"; pane shows [\"Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates.\",\"One or more request fields are invalid.\"]. https://***@gateway.doc029.example/hook: API 400 \"One or more request fields are invalid.\"; pane shows [\"Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates.\",\"One or more request fields are invalid.\"]. The stored connector did not change (Polling, no HMAC secret, updatedAt unchanged). After reload the form shows polling and a blank RSA key input=true.",
+      "result": "pass",
+      "durationMs": 2838
+    },
+    {
+      "id": "S05",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Prepare the fictional Contract DOC-029 live signing with a primary Document containing /sig/; move it to Out for signature",
+      "at": "2026-09-16T15:35:29.764Z",
+      "actual": "C-38 reused (NDA). Kept doc029-live-signing.docx (sha256 d3d85da2...) as the primary Document; documents: doc029-live-signing.docx. Status move: already there; status now Out for signature (stage signature). Note: the AI connector was on, so the upload also queued an automatic Analysis run of this fictional paper (automatic ready).",
+      "result": "pass",
+      "contract": "C-38",
+      "autoAnalysisOnSigningPaper": {
+        "trigger": "automatic",
+        "state": "ready",
+        "model": "deepseek/deepseek-v4.1-flash"
+      },
+      "durationMs": 406
+    },
+    {
+      "id": "S06",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Turn off Send for signature from records; check Test connection and the Contract; turn it back on and retest",
+      "at": "2026-09-16T15:35:30.170Z",
+      "actual": "Switch off answered 200; chip Turned off. Test connection stayed enabled=true; selecting it showed \"No e-signature connector is configured. Save the credentials first.\". C-38 Approvals & signing had Send for signature buttons=0 while off. Switch on answered 200; retest showed \"Connected to OpenLaw.\" after 2323 ms. Send for signature buttons now=1. Stored connector: enabled, Demo, Polling, RSA key kept.",
+      "result": "pass",
+      "retestMs": 2323,
+      "durationMs": 4662
+    },
+    {
+      "id": "S07",
+      "article": "configure-signing",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Send for signature on C-signing; fill Version, Signer name and Subject; Cancel (nothing is sent)",
+      "at": "2026-09-16T15:35:34.832Z",
+      "actual": "The dialog offered Version: Version 1 — doc029-live-signing.docx (current). Labels: Version, Subject. After filling the Signer name and Subject \"DOC-029 live signing round trip C-38\", Cancel closed the dialog. No envelope request was sent and C-38 has 0 Envelopes. Stopped before Send envelope.",
+      "result": "pass",
+      "subject": "DOC-029 live signing round trip C-38",
+      "durationMs": 880
+    },
+    {
+      "id": "S08",
+      "article": "configure-signing",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Legal Team Member cannot open or change the Signing connector but sees Send for signature on the reached Contract",
+      "at": "2026-09-16T15:35:35.713Z",
+      "actual": "Nadia Haddad: /settings/integrations/e-signature forwards to /settings/profile; GET connector 403; POST test 403. On C-38 (her Contract) Send for signature is shown (1).",
+      "result": "pass",
+      "durationMs": 1411
+    }
+  ],
+  "finishedAt": "2026-09-16T15:35:37.149Z",
+  "initialSigningConnector": {
+    "configured": true,
+    "enabled": true,
+    "environment": "demo",
+    "updateMode": "polling",
+    "webhookUrlOverride": null,
+    "hasPrivateKey": true,
+    "hasWebhookSecret": false,
+    "webhookUrl": "http://127.0.0.1:23314/api/v1/signing/docusign/webhook",
+    "updatedAt": "2026-09-16T15:34:35.445Z"
+  },
+  "finalSigningConnector": {
+    "configured": true,
+    "enabled": true,
+    "environment": "demo",
+    "updateMode": "polling",
+    "webhookUrlOverride": null,
+    "hasPrivateKey": true,
+    "hasWebhookSecret": false,
+    "webhookUrl": "http://127.0.0.1:23314/api/v1/signing/docusign/webhook",
+    "updatedAt": "2026-09-16T15:35:31.582Z"
+  },
+  "guardBlockedCount": 0
+}

@@ -1,28 +1,20 @@
 {
   "articleId": "types-statuses-fields",
-  "contentSha256": "6e3fa892dc9b2bb23d05bd7b3125a187cdd1cbafb384cdf2d248064a1bcd1abe",
-  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
-  "environment": "openlaw-docs-b8e31260-configuration",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Opus 5 independent review agent",
-  "walkthroughReviewer": "Opus 5 independent review agent",
+  "contentSha256": "6959a5dfd5960d5bf12d807ec1fadf7c8197ca91b1c7dcbb2f003026c3b4d604",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+  "environment": "openlaw-docs-41255c61-admin2",
+  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-config, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T06:33:02Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-config)",
+  "technicalReviewer": "DOC-029r2 source-review author agent (admin-config)",
+  "verifiedAt": "2026-09-16T18:12:47Z",
   "status": "pass",
   "sources": [
-    "CONTEXT.md",
-    "docs/decision-records/DECISIONS-SETTINGS.md",
-    "apps/web/src/routes/settings-contract-fields.tsx",
-    "apps/web/src/routes/settings-matter-template-editor.tsx",
-    "apps/web/src/routes/settings-request-type-editor.tsx",
-    "apps/web/src/routes/settings-reminders.tsx",
-    "apps/web/src/routes/settings-audit-log.tsx",
-    "apps/web/src/routes/settings-approver-groups.tsx",
-    "apps/api/src/modules/fields/routes.ts",
-    "apps/api/src/modules/matters/create.ts",
-    "apps/api/src/modules/requests/convert.ts",
-    "apps/api/src/pipeline/morning-round.ts"
+    "docs/user-guides/types-statuses-fields.md",
+    "docs/documentation/batches/DOC-029/admin-config/technical-review.json",
+    "docs/documentation/batches/DOC-029/admin-config/technical-review-r2.json",
+    "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json"
   ],
   "scenarios": [
     {
@@ -30,56 +22,82 @@
       "coverage": ["C38"],
       "role": "administrator",
       "method": "browser-walkthrough",
-      "expected": "New and existing records reflect the documented configuration and retained-value behavior. Immutable Stage/Category mappings and invalid reassignment are refused; non-Administrators cannot edit configuration.",
-      "actual": "Followed the guide as Daniel Okafor on the owned configuration lab. Created and renamed a Matter type, keyboard-reordered it, and confirmed the immutable Slug in Edit. Created a Global single-select Field, confirmed its immutable type, attached it to a Matter type and set Required; creation with the answer empty was refused by name (\"Fill Ind coverage region IND81T2F.\") and succeeded once supplied. Detach kept the catalog definition and the stored value; catalog Archive hid the row while keeping attachments and the stored answer, and Show archived plus Restore recovered it. In Edit, narrowing the Global Field to a module was refused while a Contract type still attached it (\"...is attached outside the matter module \u2014 detach it there first...\") and succeeded after detaching, with stored values retained. Contract Statuses: created on a chosen Stage, renaming kept the Stage, the Draft/Active/Expired seeds show a protected lock instead of an archive control, and an in-use Status was blocked (409) with no reassignment control until the Contract was moved by hand. Matter Statuses: an in-use custom Status offered only same-Category replacements and moved the Matter on confirmation. Archiving an in-use Matter type moved its records to the chosen replacement and Restore did not move them back; Other is protected. Archiving an in-use Officer role moved both a current and a resigned appointment to the replacement, and Restore did not reverse it. Nadia Haddad (Legal) and Ravi Menon (Contributor) saw no Organization rail entries, were redirected to /settings/profile from every configuration pane, and were refused 403 on a direct write. A later evidence review relabelled the field-type observation, which had read a non-control as a disabled select; repair-field-type re-establishes it, showing the type as static text with no control and a well-formed change refused 400 with the stored type unmoved.",
+      "prerequisites": [
+        "Seeded fictional Administrator signed in on the admin2 documentation lab built from 57e77e38.",
+        "Reviewer-created Matter, Contract, Entity and Knowledge types, Fields, Statuses, an Officer role, a fictional Entity with a current and a resigned Officer, and a fictional Matter."
+      ],
+      "expected": "Types, Statuses and Officer roles are added with Save (Save status for Statuses), and Cancel discards a draft. Rows can be renamed, reordered, edited and archived as the article says. Contracts and Matters Fields show a collapsed Default fields card of locked, read-only rows above an expanded Custom Fields card that holds Add field. The Slug and a Status's Stage or Category stay fixed. Requiredness blocks creation until the value is supplied. Detach and Archive keep stored values. Archiving an in-use type, Matter Status or Officer role needs a live replacement and moves the records; Restore does not move them back. Protected entries cannot be archived, an in-use Contract Status cannot be archived from the dialog, and narrowing a Global Field attached elsewhere is refused. Non-Administrators cannot open or change the configuration.",
+      "actual": "15 recorded steps passed on 57e77e38. Add type showed a name box with Save and Cancel; Save was disabled while the box was blank. Cancel on a named draft created no row (checked after reload). Add type with Save added Matter, Contract, Entity and Knowledge types; Contracts and Entities rows have Edit and Knowledge rows do not. Rename, Edit (description saved on Tab, read-only Slug that kept the original name) and ArrowUp reorder worked on Matter types; Other shows the protected lock. On Matters and Contracts Fields, Default fields sits above Custom Fields with aria-expanded=false and no rows shown; selecting its heading showed 15 (Matters) and 23 (Contracts) rows, each with a \"<name>: built-in field, read-only here\" lock and no row buttons or text boxes. Custom Fields started expanded with Add field. Entities Fields has one Fields card and no Default fields card. Add field offered Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, Entity; Edit shows no Type control; the Field catalog has no reorder handles. A required attached Field refused Create matter with \"Fill <Field>.\" until Privacy was chosen. Promote to Global saved; narrowing back was refused with \"... is attached outside the matter module \u2014 detach it there first, then narrow the scope.\" until the Contract type attachment was detached. Detach kept the catalog Field; Archive hid the Field while the Matter kept its value; Show archived > Restore brought it back. Archiving the in-use Matter type with \"No reassignment\" changed nothing; with a replacement the Matter moved, and Restore left it there. A new Contract Status added with Stage Review and Save status kept Stage Review after rename; Draft, Active and Expired are locked; the in-use Internal review dialog said \"Move them to another status first.\" with Archive status disabled. A new Open Matter Status added with Save status and no group choice used group In progress, a Waiting Status kept Waiting after rename, and a row group change persisted; archiving an in-use Status offered only Open-Category replacements and moved the Matter. Add role with Save created an Officer role; with one current and one resigned Officer it counted 2 officers, Archive role moved both to Director, and Restore left 0 officers on it.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-021/independent-discovery.json",
-        "docs/documentation/batches/DOC-021/independent-discovery-final.json",
-        "docs/documentation/batches/DOC-021/independent-repair-field-type.json",
-        "docs/documentation/batches/DOC-021/independent-requiredness.json",
-        "docs/documentation/batches/DOC-021/independent-requiredness-retry.json",
-        "docs/documentation/batches/DOC-021/independent-requiredness-retry2.json",
-        "docs/documentation/batches/DOC-021/independent-requiredness-retry3.json",
-        "docs/documentation/batches/DOC-021/independent-requiredness-retry4.json",
-        "docs/documentation/batches/DOC-021/independent-requiredness-retry5.json",
-        "docs/documentation/batches/DOC-021/independent-roles.json",
-        "docs/documentation/batches/DOC-021/independent-roles-retry.json",
-        "docs/documentation/batches/DOC-021/independent-statuses.json",
-        "docs/documentation/batches/DOC-021/independent-statuses-retry.json",
-        "docs/documentation/batches/DOC-021/independent-taxonomies.json"
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
+      ]
+    },
+    {
+      "id": "V-C38",
+      "coverage": ["C38"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded fictional Legal Team Member signed in on the admin2 documentation lab in a separate browser context."
+      ],
+      "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
+      "actual": "Role confirmed as legal_team_member from /api/v1/me. /settings/matters/types sent the browser to /settings/profile. POST /api/v1/matter-types answered 403 (\"You do not have permission to perform this action.\"). /settings/matters/fields sent the browser to /settings/profile. POST /api/v1/fields answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
+      ]
+    },
+    {
+      "id": "V-C38",
+      "coverage": ["C38"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded fictional Business User signed in to the Portal with a fresh emailed sign-in link in a separate browser context."
+      ],
+      "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
+      "actual": "Role confirmed as business_user from /api/v1/me. /settings/matters/types sent the browser to /portal. POST /api/v1/matter-types answered 403 (\"You do not have permission to perform this action.\"). /settings/matters/fields sent the browser to /portal. POST /api/v1/fields answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
+        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
       ]
     }
   ],
-  "authorEvidence": [
-    "docs/documentation/batches/DOC-021/README.md",
-    "docs/documentation/batches/DOC-021/author-discovery.json",
-    "docs/documentation/batches/DOC-021/author-statuses.json",
-    "docs/documentation/batches/DOC-021/author-statuses-retry.json",
-    "docs/documentation/batches/DOC-021/author-statuses-retry2.json",
-    "docs/documentation/batches/DOC-021/author-taxonomies.json",
-    "docs/documentation/batches/DOC-021/author-taxonomies-retry.json",
-    "docs/documentation/batches/DOC-021/author-taxonomies-retry2.json",
-    "docs/documentation/batches/DOC-021/author-taxonomies-retry3.json",
-    "docs/documentation/batches/DOC-021/author-taxonomies-retry4.json"
-  ],
   "limitations": [
-    "Technical review and the walkthrough were both performed by the same independent agent; they are separate methods (source inspection and browser walkthrough), not two independent people.",
-    "Independent agent walkthrough, not a human user study; the author and the reviewer are different agents.",
-    "Verified on the owned lab at immutable source 6a8873db; final candidate compatibility belongs to DOC-025.",
-    "Known #774 blank Matter Entity-valued Field picker and #770 template-default clear behaviour remain open and are described as limits, not fixed.",
-    "No human feature owner has signed off behaviour accuracy, and the user's final proofreading of the assembled suite has not happened."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not feature-owner approval.",
+    "The admin2 lab was shared with other DOC-029r2 agents. Records were named DOC-029r2 admin-config walk. Records named DOC-029r2 admin-config compat came from another agent and were not changed. Organisation reminder lead times were changed during the run and restored to 30, 14, 7, 1, and On the day; this was confirmed after reload.",
+    "Two development runs of single sections of the same script (logs not kept in the repository) left extra fictional records with the suffixes mu4erz3c and mu4ev57k. The one failure in those runs was a reviewer script error; walkthrough-r2-1.json reviewerNotes describes it.",
+    "Negative access checks used the seeded Legal Team Member (nadia.haddad) and Business User (jonas.weber), each in its own browser context; roles were confirmed from /api/v1/me.",
+    "Dev commits 6d34ac59 and e3800b43 changed this article on dev (select Save instead of press Enter, and the Default fields paragraph). The round 2 source-review author agent made no further change; technical-review-r2.json records the source check.",
+    "Not checked in the browser: requiredness when a record changes type, the rule that every Stage or Category keeps a live Status, reopening after a failed multi-part Field save, and the Contract Field AI prompt (covered by configure-analysis).",
+    "Archive type with No reassignment on an in-use type left the dialog open with no message; the refusal is silent but nothing changed.",
+    "The Field archive dialog counted a Field attached to one type as 'attached to 2 types'.",
+    "The Officer role check used the Director role as the replacement on a reviewer-created Entity; no seeded Officer was changed."
   ],
-  "previousEvidence": null,
+  "previousEvidence": {
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "9e991226a487902476ed1a37590c517e8c64e7253d54ed65a1ffd9d34f9acc9d",
+    "verifiedAt": "2026-09-16T16:26:15Z"
+  },
   "copyOnlyReview": null,
-  "verifiedAtBasis": "Actual completion of the last passing walkthrough covering this article: 2026-09-08T06:33:02.377Z, truncated to the second. Historical action times and article hashes inside the walkthrough records are unchanged, including records taken on earlier draft bytes of the same immutable app build.",
-  "technicalReview": {
-    "reviewer": "Opus 5 independent review agent",
+  "compatibilityReview": {
+    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "6959a5dfd5960d5bf12d807ec1fadf7c8197ca91b1c7dcbb2f003026c3b4d604",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "method": "source-inspection",
-    "completedAt": "2026-09-08T06:12:26Z",
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "scope": "Read the settings rail and its Organization-only guard (apps/web/src/routes/settings.tsx), the four Types panes and the shared archive/reassignment guard (settings-contract-types.tsx, settings-matter-types.tsx, settings-entity-types.tsx, settings-knowledge-types.tsx, components/taxonomy-types-pane.tsx), the Status panes and their fixed backbones (settings-contract-statuses.tsx STAGES and PROTECTED_SLUGS, settings-matter-statuses.tsx categories and same-category reassignment), the Field catalog and its nine types, scope moves and AI-prompt rule (settings-contract-fields.tsx, apps/api/src/modules/fields/routes.ts), the type editors' attachment surface and immutable Slug (settings-contract-type-editor.tsx, settings-matter-type-editor.tsx, components/type-editor-screen.tsx), the hard-required rule and its two deliberate skips (apps/api/src/lib/custom-fields.ts), and Officer-role usage counting resigned appointments (apps/api/src/modules/officer-roles/usage.ts).",
-    "notHeld": "An agent source review of the release under test. It is not a human feature owner's sign-off on behaviour accuracy, and it is not the user's final proofreading of the assembled suite."
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
   }
 }

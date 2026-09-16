@@ -1,0 +1,189 @@
+{
+  "batch": "DOC-029",
+  "group": "roles",
+  "reviewer": "DOC-029 source-review author agent (roles)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T14:59:24Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "method": "Source inspection only. The worktree's apps, packages, messages, CONTEXT.md and decision records match the app commit (git diff 3fa407e3 HEAD is empty for those paths). No browser walkthrough was run; an independent agent records V-C06 and V-C25.",
+  "articles": [
+    {
+      "articleId": "roles-and-access",
+      "author": "DOC-029 source-review author agent (roles)",
+      "technicalReviewer": "DOC-029 source-review author agent (roles)",
+      "contentSha256": "4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8",
+      "result": "pass-with-corrections",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS.md (DD-014 amendment of 10 September 2026)",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-004 amendment)",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/matter-access.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/lib/portal-contract-access.ts",
+        "apps/api/src/lib/portal-record-access.ts",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/modules/entities/routes.ts",
+        "apps/api/src/modules/entities/grant-routes.ts",
+        "apps/api/src/modules/portal/applets.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/users/routes.ts",
+        "packages/db/src/schema/auth.ts",
+        "apps/web/src/components/record-team-applet.tsx",
+        "apps/web/src/components/team-roster.tsx",
+        "apps/web/src/components/contracts/team-applet.tsx",
+        "apps/web/src/components/matters/team-applet.tsx",
+        "apps/web/src/components/entities/entity-grants-dialog.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/api/src/lib/activity.ts",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-079 Server permissions)"
+      ],
+      "corrections": [
+        {
+          "section": "How Confidential access works",
+          "before": "An Administrator gives a named Legal Team Member a Grant through Manage access. Administrators retain their Entity access.",
+          "after": "Every person needs a Grant for a Confidential Entity, including Administrators. The Entity creator gets a Grant. A Legal Team Member or Administrator with a Grant uses Manage access to give or remove Grants. An Administrator can also manage access on an Entity that is not Confidential. A Confidential Entity must keep at least one active person with a Grant.",
+          "evidence": "cb453470 removed the Administrator case from entityReachScope; canManageEntityAccess allows an Administrator on an open Entity or any Administrator or Legal Team Member holding a grant row; POST /entities inserts a grant for the creator; grant-routes accept Administrators and Legal Team Members as grantees and refuse removal of the last live grant with 409; the Confidential access dialog says 'Administrators also need a grant.'; DD-014 amendment dated 10 September 2026."
+        },
+        {
+          "section": "Manage Portal Contract access",
+          "before": "choose **Person**",
+          "after": "choose a person in **Person**",
+          "evidence": "AddTeamDialog: Person is the label of a select whose options are people; the empty option reads 'Choose a person'."
+        },
+        {
+          "round": "r1-correction",
+          "section": "A shared record does not share everything",
+          "before": "Business Users read and post **Full thread** comments on their records. They do not see **Legal only** or **Working team**. A later-added team member can read the Full Thread history. Removing membership ends that access. Legal must choose Full Thread for a message intended for the business.",
+          "after": "Business Users read and post Full Thread comments on their records. In the Comments applet, a Full Thread comment shows **Contract Team** on a Contract and **Matter Team** on a Matter. Business Users do not see **Legal Only** comments or older **Internal team** comments. A later-added team member can read the earlier Contract Team or Matter Team comments. Removing membership ends that access. For a message to the business, Legal chooses **Contract Team** or **Matter Team** above **New comment**, not **Legal Only**.",
+          "evidence": "Walkthrough r1 failure D5b.tier-labels (doc-error). apps/web/src/lib/comments.ts tierLabel(): on contract and matter records full_thread renders 'Contract Team' / 'Matter Team', legal_only renders 'Legal Only', working_team renders 'Internal team'. TIER_COPY labels 'Full thread', 'Legal only', 'Working team' are not used on Contracts or Matters. Matches comments-and-activity.md. Screenshot r1-legal-audience-labels.png."
+        },
+        {
+          "round": "r1-correction",
+          "section": "A shared record does not share everything",
+          "before": "The History applet shows shared comments and business record changes. It excludes Legal Only and Working Team activity.",
+          "after": "The Portal History applet shows Contract Team and Matter Team comment activity. It excludes Legal Only and Internal team activity. Record changes do not appear in Portal History. The record details and **Fields** show the current values.",
+          "evidence": "Walkthrough r1 failure D6b.history-business-change (classified product-bug). Confirmed in source: apps/api/src/modules/portal/applets.ts /portal/activity scopes to activity_log.visibility = 'full_thread' and would accept <type>.updated rows, but every Contract and Matter record edit is written at RECORD_ACTIVITY_TIER = 'working_team' (apps/api/src/lib/activity.ts; contracts/routes.ts, contracts/create.ts, matters). No code path writes a record edit at full_thread, so Portal History never lists one. DES-079 'Server permissions' says business record edits are supported in Portal History, so the app disagrees with the decision record. The article now describes actual behaviour because no procedure depends on it; the reader still finds current values in Overview and Fields. Product bug reported. If the bug is fixed, restore the business record changes sentence."
+        }
+      ],
+      "confirmedClaims": [
+        "The three account types are Administrator, Legal Team Member and Business User; Contributor is not in USER_ROLES. Only an Administrator changes a role (PATCH /users/:userId/role).",
+        "A Confidential Contract admits an Administrator or Legal Team Member with a team row or as Legal Owner (manager_id); a Confidential Matter admits a team row or the Matter Manager. There is no Administrator bypass. A Business User needs a team row, and Portal scopes also exclude archived records.",
+        "Confidential audience changes (flag and team changes on a Confidential record) need an Administrator, the Creator, or the Legal Owner or Matter Manager, and the actor must already reach the record and be Member+. The full app disables Add team member and the remove control for others (audienceLocked).",
+        "Team applet: Add team member icon control, Person select, Add. TeamRoster shows one row per person with Legal Owner or Matter Manager, Business Owner and Creator statements. Since 6f8ae150 the remove control appears on every team member row, including people with statements, and removal keeps the statements.",
+        "Portal team add is allowed on non-Confidential records only (403 'Ask Legal to add members to a Confidential record.'). Portal has no remove control.",
+        "DELETE team row ends Business User access on the next read: every Portal read, the Request redirect and documents use the current team scope.",
+        "Business Owner changes on Overview do not insert or delete team rows. Record creation and conversion add the creator and the Business Owner (the Requester at conversion) as team rows.",
+        "A converted Request redirects to the record while the Requester can reach it; if the record is archived, the Request page shows the archived notice and the original request without a thread or attachments.",
+        "Business Users hear only Full Thread (readableTiers / PORTAL_TIERS). Portal History shows Full Thread comments and business-value changes (description, value, effective date, Department, Region, business Fields).",
+        "Confidential Documents narrow to the record's named audience (documentAudienceScope). Business Users reach no Entities (entityReachScope returns false)."
+      ],
+      "limitations": [
+        "Source inspection supports technical accuracy only; the independent V-C06 browser walkthrough is still required.",
+        "The migration statements about the former Contributor type and Stakeholder list were not re-traced through migrations; the article keeps them as CONTEXT.md states them."
+      ],
+      "previousContentSha256": "e6b84c136d32049a04b1827512c6afcea0c1771d79d23a4829517bdec8de8042"
+    },
+    {
+      "articleId": "contributor-guide",
+      "author": "DOC-029 source-review author agent (roles)",
+      "technicalReviewer": "DOC-029 source-review author agent (roles)",
+      "contentSha256": "0062352d67a7c20bc2a0500f59ac4fcbfc8d663004bdb5f391b6f2069392cc0b",
+      "result": "pass-with-corrections",
+      "sources": [
+        "CONTEXT.md",
+        "apps/web/src/routes/portal-contracts.tsx",
+        "apps/web/src/routes/portal-matters.tsx",
+        "apps/web/src/routes/portal-contract.tsx",
+        "apps/web/src/routes/portal-matter.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/components/portal/record-list.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/components/portal/record-work.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/table/column-menu.tsx",
+        "apps/web/src/components/table/managed-table.tsx",
+        "apps/web/src/lib/portal-lists.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/record-team-applet.tsx",
+        "apps/api/src/modules/portal/contracts.ts",
+        "apps/api/src/modules/portal/matters.ts",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/api/src/modules/portal/record-work.ts",
+        "apps/api/src/modules/portal/applets.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/users/routes.ts",
+        "apps/web/src/lib/comments.ts"
+      ],
+      "corrections": [
+        {
+          "section": "Read record information",
+          "before": "Overview and Fields show the current values. On a Contract, this includes Department, Region, Value and dates.",
+          "after": "The record details at the top and Fields show the current values. Contracts and Matters both show Department and Region. A Contract shows its details under Overview, including Value and dates.",
+          "evidence": "portal-matter.tsx draws Matter Type, Status, Matter Manager, Business Owner, Region and Department in a card with no Overview heading; portal-contract.tsx draws an Overview section with Department, Region, Value and dates."
+        },
+        {
+          "section": "Read record information",
+          "before": "Legal’s (curly apostrophe)",
+          "after": "Legal's (straight apostrophe)",
+          "evidence": "Editorial straight-quote rule; no meaning change."
+        },
+        {
+          "round": "r1-correction",
+          "section": "Join the conversation",
+          "before": "Your reply appears on the Contract or Matter at **Full thread**.",
+          "after": "Your reply shows **Contract Team** on a Contract or **Matter Team** on a Matter. This is the Full Thread audience. The text below the composer names it, for example \"Visible to Legal and all Matter team members.\"",
+          "evidence": "Walkthrough r1 failure G11b.reply-tier-label (doc-error). apps/web/src/lib/comments.ts tierLabel() and tierAudience(): Portal replies are full_thread; the chip reads Contract Team or Matter Team and the audience line reads 'Visible to Legal and all Contract team members.' / 'Visible to Legal and all Matter team members.' Screenshot r1-portal-reply-tier-label.png."
+        },
+        {
+          "round": "r1-correction",
+          "section": "Join the conversation",
+          "before": "Legal Only and Working Team messages stay outside this view.",
+          "after": "Legal Only and older Internal team messages stay outside this view.",
+          "evidence": "Same source: working_team comments render as 'Internal team' on Contracts and Matters; the label 'Working Team' is not visible in the app."
+        }
+      ],
+      "confirmedClaims": [
+        "Portal navigation has Requests, Contracts, Matters and Auto-Docs; lists are titled Your Contracts and Your Matters and hold only non-archived records with the viewer's team row.",
+        "List search matches title or a C-/M- reference number; Contract search also matches the primary Counterparty name. The Search button submits.",
+        "Filter, Apply, Clear all and filter chips come from RecordFilterBar. Contract filters: Type, Legal Owner, Stage, Expiry date. Matter filters: Type, Matter Manager, Status, Lifecycle (Open or Closed).",
+        "Column sort cycles ascending, descending, off; Columns chooses and reorders; heading edges resize; Show more pages. Filters, search and sort are written to the page address; column choices are not.",
+        "Fields shows Description and business Fields read-only; there is no Portal write route for record values.",
+        "Original request cards show title, R- number, Requester, submission date, urgency, attachments, description and submitted Fields, one card per converted Request.",
+        "Documents: Primary Document ranks first; rows show Version number, kind, Current, Signed copy, size, uploader and date; preview opens from the name; download control per Version; earlier versions expand only when a Document has more than one Version.",
+        "Upload documents dialog: Add as (New documents or New version of a Document), one file for a new Version, Kind, Note (optional), Upload, Retry failed uploads for failures only. Add version preselects the Document. Business User uploads never take the primary designation and refuse folder destinations.",
+        "Search Documents matches Document title or any Version filename; Show more pages.",
+        "Comments applet: Portal surface has only Full Thread, no Audience picker; Comment posts; Comment actions offers edit and delete of own comments.",
+        "Portal team applet: Add team member, Person select, Add; existing members are excluded; Confidential records show 'Ask Legal to add members to a Confidential record.' and disable the control. No Portal remove control. Only an Administrator creates accounts.",
+        "Archiving removes the record from all Portal scopes; closing a Matter or ending a Contract does not change Portal scope."
+      ],
+      "limitations": [
+        "Source inspection supports technical accuracy only; the independent V-C25 browser walkthrough is still required.",
+        "The Portal first run and the Portal Auto-Docs area (including Filing a Generation to a shared record) are outside this article's current scope and were not added.",
+        "Unread badge clearing and draft retention across applets were read from comment-applet.tsx comments and state handling, not exercised."
+      ],
+      "previousContentSha256": "d4d83253caed19f0ef7b177004f7d905449aeb6c4fecea4b77d1db99c10c2131"
+    }
+  ],
+  "correctionRounds": [
+    {
+      "round": "r1-correction",
+      "reviewedAt": "2026-09-16T16:10:18Z",
+      "method": "Source inspection at 3fa407e3 against the independent walkthrough r1 failures. No walkthrough run.",
+      "productBugs": [
+        "Portal History never lists Contract or Matter record edits: record edits are written at working_team (RECORD_ACTIVITY_TIER) while /portal/activity reads only full_thread rows, contrary to DES-079 'Server permissions'."
+      ]
+    }
+  ]
+}

@@ -1,27 +1,31 @@
 {
   "articleId": "comments-and-activity",
-  "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f",
-  "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-  "buildId": "app sha256:7434e1b1802330e3f3499a0fba3dfcc0b8a04fc875561071e17f4ad5a1c29c0d; engine sha256:16ab8ea3bcaf1d43619d6e3cff879d2f313c5e366a36a7ae285a5baa7ae15ed0",
-  "environment": "openlaw-docs-b8e31260-conversations",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Fable review seat (agent source check against a28331f7); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-work",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (conversations, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-07T08:53:41.841Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (conversations)",
+  "technicalReviewer": "DOC-029 source-review author agent (conversations)",
+  "verifiedAt": "2026-09-16T15:50:11.279Z",
   "status": "pass",
   "sources": [
+    "docs/user-guides/comments-and-activity.md",
+    "docs/documentation/batches/DOC-029/conversations/technical-review.json",
+    "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.json",
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-COMMENTS.md",
     "apps/web/src/components/comments/comment-applet.tsx",
     "apps/web/src/components/comments/comment-attachments.tsx",
-    "apps/web/src/components/portal/request-thread.tsx",
+    "apps/web/src/components/comments/attachment-preview.tsx",
     "apps/web/src/components/activity/activity-applet.tsx",
-    "apps/web/src/lib/comments.ts",
-    "apps/web/src/lib/activity.ts",
+    "apps/web/src/components/portal/record-shell.tsx",
+    "apps/web/src/routes/portal-request.tsx",
     "apps/web/src/routes/inbox-request.tsx",
     "apps/api/src/modules/comments/routes.ts",
-    "apps/api/src/lib/notifications/notifier.ts"
+    "apps/api/src/modules/comments/audience.ts",
+    "apps/api/src/modules/activity/routes.ts"
   ],
   "scenarios": [
     {
@@ -29,12 +33,18 @@
       "coverage": ["C07"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded work lab openlaw-docs-41255c61-work built from 3fa407e3. Daniel Okafor and Nadia Haddad sign in with passwords; Jonas Weber and Amara Nwosu sign in to the Portal with fresh magic links; each identity has its own browser context.",
+        "Jonas submitted DOC-029 conversations Requests R-123 to R-126 through the API. Daniel converted R-123 to Contract C-147, R-124 to Matter M-132 and R-126 to Contract C-148, and added Nadia to the C-147 and M-132 teams. R-125 stays unconverted. Small fictional PDF and text fixtures are in batches/DOC-029/conversations/fixtures."
+      ],
       "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
-      "actual": "Nadia opened C-33 Comments on the newest page, used Show older, and read the audience descriptions for Legal only, Working team, and Full thread; she posted one comment per tier under her name with its tier label. @Dan listed Daniel Okafor under People you can mention, the Mentioned list offered Remove, and a Full thread mention posted without a widen prompt. Attach files listed two PDFs, Remove dropped one, the post carried the other and it downloaded with a Content-Disposition attachment; File was offered on the Contract attachment. Edit then Cancel left the text, Save showed edited, Delete asked Delete this comment? and left Comment deleted by its author.; her own menu had no Redact, another author's comment had no actions, and the edit form had no audience control. History listed 25 entries newest first and Show older brought 50. She saw Jonas Weber's Portal replies at Full thread on C-33 and in the R-16 Comments panel on the Inbox page, which has no History control.",
+      "actual": "On C-147 Comments offered Legal Only and Contract Team with Contract Team checked; the description below the composer read \"Visible to Legal and all Contract team members.\" and, for Legal Only, \"Visible to Administrators and Legal Team Members.\" No Internal team option was offered. Posts showed under Nadia Haddad with Legal Only or Contract Team badges; M-132 offered Legal Only and Matter Team, Matter Team first. Typing @Dan opened People and Files tabs; choosing Daniel Okafor filled Mentioned, Remove Daniel Okafor emptied it, and the re-picked mention posted without a prompt. A plain typed name gave no Mentioned list. A Legal Only mention of Jonas Weber raised Widen the audience?; Cancel kept the draft and posted nothing; Widen and post posted at Contract Team. Attach files (Up to 5 files.) listed two PDFs, Remove dropped one, six chosen files listed five; the post carried the notice PDF, its filename opened a preview with Download and File to Contract, and Download returned fixture-identical bytes. With the post request aborted the composer showed \"The comment could not be posted. Try again.\", kept text and paper, showed no Filed to marker, a reload found no post, and the retry posted once. File to Contract (also in the preview) opened File attachment with New Document and New Version on an existing Document; filing as a New Document left the attachment on the thread with \"Filed to ..., version 1\" and the Document on the record. Her own menu offered Edit and Delete only; Cancel kept the text, Save showed edited with no audience control, Delete asked Delete this comment? and left Comment deleted by its author. On M-132 the Comments button read 56 unread (her own two posts excluded), the first load held 50 rows, Show older loaded the rest, and reading set unread to 0. History listed 25 entries and Show older 50. Blocked reads showed \"The conversation could not be read. Reopen the panel to try again.\", \"The earlier comments could not be read. Try again.\" (loaded rows kept, retry loaded more) and \"The history could not be read. Reopen the panel to try again.\"; reopening recovered. R-125 in the Inbox offered Legal only (checked) and Shared with requester with a Comments applet only; converted R-123 showed no applets and a Status link that opened C-147. A stand-in older working_team comment showed Internal team on C-147 and Working team on R-125.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-011/independent-discovery.json"
+        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs",
+        "docs/documentation/batches/DOC-029/conversations/r1-member-contract-comments.png"
       ]
     },
     {
@@ -42,25 +52,17 @@
       "coverage": ["C07"],
       "role": "administrator",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded work lab openlaw-docs-41255c61-work built from 3fa407e3. Daniel Okafor and Nadia Haddad sign in with passwords; Jonas Weber and Amara Nwosu sign in to the Portal with fresh magic links; each identity has its own browser context.",
+        "Jonas submitted DOC-029 conversations Requests R-123 to R-126 through the API. Daniel converted R-123 to Contract C-147, R-124 to Matter M-132 and R-126 to Contract C-148, and added Nadia to the C-147 and M-132 teams. R-125 stays unconverted. Small fictional PDF and text fixtures are in batches/DOC-029/conversations/fixtures."
+      ],
       "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
-      "actual": "Daniel's Legal only mention of Ravi Menon raised Widen the audience? naming the proposed Working team tier; Cancel kept the draft and a thread read confirmed nothing was posted; Widen and post published it at Working team. A Full thread post with paper on M-22 offered no File control, while a Working team post with paper on C-33 offered File, whose File attachment dialog listed New Document and New Version and closed on Cancel without a Filed to marker. On another author's comment his menu offered Redact alone; redacting Nadia's author-deleted comment and her comment with paper each asked Redact this comment? and left Comment removed by an Administrator., after which her attachment URL answered 404. His own Legal only post edited then deleted after the confirmation, and History listed deleted, changed, commented, and removed-from-the-record entries.",
+      "actual": "Daniel Okafor posted on C-147 at Contract Team and at Legal Only with doc029-conv-legal-memo.pdf; the rows showed his name, the badges and the attachment. On Nadia's live Contract Team comment Comment actions offered Redact only. On M-132 a Matter Team post with paper offered File to Matter, whose File attachment dialog closed on Cancel with no Filed to marker. On the Inbox R-125 conversation his Shared with requester post with paper showed no File to control; his menu offered Edit, Delete and Redact; Save showed edited; deleting a Legal only note after the confirmation left Comment deleted by its author. Redact on Nadia's comment with paper asked \"Redact this comment? The text and every earlier version of it are removed for good. ...\"; confirming left Comment removed by an Administrator. and the attachment URL changed from 200 to 404. Redact was offered on her author-deleted comment and replaced that tombstone. Redacting the comment whose attachment had been filed left the filed Document on the record. On C-148 a Contract Team attachment offered File to Contract before archiving and no File to control after the archive.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-011/independent-discovery.json"
-      ]
-    },
-    {
-      "id": "V-C07",
-      "coverage": ["C07"],
-      "role": "contributor",
-      "method": "browser-walkthrough",
-      "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
-      "actual": "Ravi's Audience offered working_team and full_thread only; Nadia's Legal only text was absent while her Working team comment, Daniel's widened comment, and the Comment removed by an Administrator. marker were present. His Working team post carried its PDF with no File control; @Nad listed Nadia Haddad and posted at Working team without a widen prompt; his own edit showed edited and his own delete was confirmed. History named actions without comment text, and his full activity read carried working_team/full_thread tiers while Nadia's also carried legal_only. Six selected files listed five, Remove then one more selection stayed at five; an aborted post showed The comment could not be posted. Try again. with text and paper retained, and the retry posted exactly once. A blocked read showed The conversation could not be read. Reopen the panel to try again. and reopening recovered; a blocked earlier page showed The earlier comments could not be read. Try again. with loaded rows kept and the retry loaded more.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-011/independent-discovery.json"
+        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs"
       ]
     },
     {
@@ -68,107 +70,52 @@
       "coverage": ["C07"],
       "role": "business_user",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded work lab openlaw-docs-41255c61-work built from 3fa407e3. Daniel Okafor and Nadia Haddad sign in with passwords; Jonas Weber and Amara Nwosu sign in to the Portal with fresh magic links; each identity has its own browser context.",
+        "Jonas submitted DOC-029 conversations Requests R-123 to R-126 through the API. Daniel converted R-123 to Contract C-147, R-124 to Matter M-132 and R-126 to Contract C-148, and added Nadia to the C-147 and M-132 teams. R-125 stays unconverted. Small fictional PDF and text fixtures are in batches/DOC-029/conversations/fixtures."
+      ],
       "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
-      "actual": "Jonas opened R-17 from Your requests; its Conversation held Nadia's Full thread comments and omitted the Legal only, Working team, and widened comments and the Contributor's paper. Reply to Legal with Attach files and Send showed the reply and its PDF under You; the page had no audience radios, Comment actions menus, or mention listbox on @. His reply on the unconverted R-16 showed under You and reached Legal on the Inbox page. An aborted send showed The reply could not be sent. Try again. with text and paper kept and the retry sent once; a blocked read showed the reload message and reload recovered; a blocked earlier page showed The earlier replies could not be read. Try again. and the retry loaded more. R-18 showed Daniel's Full thread Matter comment with its paper under Legal, with the Request status and no History control.",
+      "actual": "Jonas Weber opened R-125 in the Portal and selected Comments in the Applets bar: no audience radios, Nadia's Shared with requester reply present, her Legal only note and the working_team note absent. @Nad showed a People tab only and listed Nadia Haddad; with doc029-conv-portal-note.pdf attached, Comment posted his reply under Jonas Weber. On his own comment Comment actions offered Edit and Delete; Save showed edited; Delete left Comment deleted by its author.; Nadia's reply had no actions. /portal/requests/123 redirected to /portal/contracts/147, whose Comments held the Contract Team notes, the widened mention and the notice PDF with its Filed to line, and omitted every Legal Only comment and the Legal Only memo; there were no audience radios or File to controls, and the notice PDF downloaded with fixture-identical bytes. On M-132 the Comments button read 57 and Show older loaded the earliest bulk comment while both Legal Only notes stayed absent. Portal History on C-147 listed 9 entries, all shared comment actions, and no Legal Only activity. /portal/requests/126 for archived C-148 showed \"The record created from this Request was archived. Your original request is shown below.\" with no Comments, and the C-148 record read answered 404. Amara Nwosu, added to the C-147 team later, read Nadia's earlier Contract Team note and not her Legal Only note; after removal her Portal page read Contract not found (404). After Jonas's own removal /portal/requests/123 showed no conversation and his record read answered 404; he was then restored.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-011/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-011/independent-discovery.json"
+        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs"
       ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-011/README.md"],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
-    "Mail absence was observed for 3 seconds after each controlled event once the Mailpit queue had settled, paired with positive deliveries through the same worker; this bounds the lab, not an arbitrary relay.",
-    "Filing an attachment, the Administrator lead-time procedure, and Document Versions were not performed; their guides (DOC-017, DOC-021) are unpublished and both articles stay in review until they pass.",
-    "The morning rounds were queued by the reviewer rather than waiting for the hourly cron; the worker served them with its real clock and rules.",
-    "Filing an attachment links to the unpublished Document guide (DOC-017); the article stays in review until that target passes."
+    "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner's approval.",
+    "The work lab is shared with other DOC-029 agents. Only records and accounts named DOC-029 conversations were created; no organisation settings changed. Debug runs before the recorded run left further DOC-029 conversations records; they are not credited.",
+    "Fixture Requests, conversions, team changes, the C-148 archive, 56 bulk Matter comments, and one stand-in working_team comment per thread were made through the API as the acting role; the article steps under test were followed in the browser.",
+    "Recovery checks used browser route interception to fail a comment post, a thread read, an earlier page, and a History read.",
+    "Not exercised: filing an attachment as a New Version, Portal History entries for business Field edits and for Fields that are now legal-only, and the unread badge's exclusion of removed comments in isolation.",
+    "The first attempts of two supplementary checks failed on reviewer-script errors and passed after correction; both attempts are kept in the walkthrough log with their dispositions."
   ],
-  "publicationBlockers": [
-    "DOC-025 complete-suite acceptance and DOC-027 publication remain pending; live-provider C42/C43 are blocked under #742. Linked non-provider guides now exist with passing article evidence and remain in catalog review."
-  ],
-  "previousEvidence": null,
+  "previousEvidence": {
+    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
+    "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f",
+    "verifiedAt": "2026-09-07T08:53:41.841Z"
+  },
   "copyOnlyReview": null,
   "compatibilityReview": {
-    "fromAppCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f",
-    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
-    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-08T13:42:44.735Z",
-    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (conversations)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38, and its only comments change is the colour of an archived author's name, which the article does not describe. I replayed the round 1 V-C07 comment checks for all three roles on the work2 lab, and all 30 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
-        "path": "batches/DOC-025/compatibility.json",
-        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
+        "path": "batches/DOC-029/compat-r2/conversations.json",
+        "sha256": "58d5e06a8606776ccfff26c3ff93a53767a63f764127de4cf688fe84b265824d"
       },
       {
-        "path": "batches/DOC-025/independent-compatibility.json",
-        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
-      },
-      {
-        "path": "batches/DOC-011/independent-walkthrough.json",
-        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
-      },
-      {
-        "path": "batches/DOC-012/independent-walkthrough.json",
-        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
-      },
-      {
-        "path": "batches/DOC-025/source-6a8873db.diff",
-        "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a"
-      },
-      {
-        "path": "batches/DOC-025/source-8539f4cc.diff",
-        "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161"
-      },
-      {
-        "path": "batches/DOC-025/source-a28331f7.diff",
-        "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63"
-      },
-      {
-        "path": "batches/DOC-025/source-d1d098ba.diff",
-        "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840"
-      },
-      {
-        "path": "batches/DOC-010/independent-walkthrough.json",
-        "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
-      },
-      {
-        "path": "batches/DOC-018/independent-c31.json",
-        "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
-      },
-      {
-        "path": "batches/DOC-018/independent-c52.json",
-        "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
-      },
-      {
-        "path": "batches/DOC-019/independent-c33.json",
-        "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
-      },
-      {
-        "path": "batches/DOC-019/independent-c34.json",
-        "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
-      },
-      {
-        "path": "batches/DOC-019/independent-supplement.json",
-        "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
-    ],
-    "authoredSourceAudit": {
-      "path": "batches/DOC-025/compatibility.json",
-      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
-      "reviewedAt": "2026-09-08T12:56:21.570227Z",
-      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
-    }
-  },
-  "publicationBlockersBeforeDOC025": ["document-versions (DOC-017) is unpublished."],
-  "publicationBlockerReconciliation": {
-    "reviewer": "Codex DOC-025 evidence audit (agent)",
-    "reviewedAt": "2026-09-08T13:10:20.947051Z",
-    "priorEvidenceCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
-    "summary": "Preserves earlier blocker notes separately and identifies current suite gates. No walkthrough date, build, result or catalog status changed."
+    ]
   }
 }

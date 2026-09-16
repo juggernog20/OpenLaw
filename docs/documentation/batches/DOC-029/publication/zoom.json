@@ -1,0 +1,202 @@
+{
+  "kind": "publication-browser-zoom",
+  "scenario": "V-HELP",
+  "task": "DOC-029",
+  "independentReview": true,
+  "method": "browser-walkthrough",
+  "appUrl": "http://127.0.0.1:23340",
+  "edition": {
+    "id": "documentation-development",
+    "channel": "development",
+    "supportedAppVersion": "0.0.1",
+    "supportedAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "distributionCommit": "366a78a83a4f7ece2e5d63a739b6cd6d2ebc0f57",
+    "workingChanges": true,
+    "publicationTarget": "development-app",
+    "contentDigest": "09293453cbde7ba5da56f0e9e2fce299d5770bb1985e1535b81923c27a0c5277"
+  },
+  "mechanism": "Disposable Chromium profile with a tabs-permission extension calling chrome.tabs.setZoom/getZoom.",
+  "reviewer": "DOC-029 independent publication reviewer agent",
+  "reviewerKind": "agent",
+  "steps": [
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "200% browser zoom on /documentation/backup-and-restore: reflow, three themes, search",
+      "startedAt": "2026-09-16T19:55:16.992Z",
+      "at": "2026-09-16T19:55:18.040Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          }
+        ],
+        "query": "which version",
+        "firstResult": "Find version information and get help",
+        "blockedExternal": []
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "200% browser zoom on /help/request-forms: reflow, three themes, search",
+      "startedAt": "2026-09-16T19:55:18.815Z",
+      "at": "2026-09-16T19:55:19.633Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          }
+        ],
+        "query": "form target",
+        "firstResult": "Configure request types and forms",
+        "blockedExternal": []
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "200% browser zoom on /help/triage-requests: reflow, three themes, search",
+      "startedAt": "2026-09-16T19:55:20.379Z",
+      "at": "2026-09-16T19:55:21.231Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          }
+        ],
+        "query": "assign request",
+        "firstResult": "Assign and triage Requests",
+        "blockedExternal": []
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "200% browser zoom on /portal/help/submit-request: reflow, three themes, search",
+      "startedAt": "2026-09-16T19:55:22.115Z",
+      "at": "2026-09-16T19:55:22.871Z",
+      "result": "pass",
+      "actual": {
+        "before": {
+          "width": 1280,
+          "dpr": 1
+        },
+        "chromeTabsGetZoom": 2,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          },
+          {
+            "theme": "warm",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          },
+          {
+            "theme": "dark",
+            "width": 640,
+            "dpr": 2,
+            "cssZoom": "1",
+            "overflow": false,
+            "titleInView": true
+          }
+        ],
+        "query": "submit request",
+        "firstResult": "Submit a Request to Legal",
+        "blockedExternal": []
+      }
+    }
+  ],
+  "startedAt": "2026-09-16T19:55:16.545Z",
+  "completedAt": "2026-09-16T19:55:22.918Z",
+  "passed": true
+}

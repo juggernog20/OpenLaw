@@ -1,0 +1,573 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "support",
+  "reviewer": "DOC-029r2 compatibility reviewer (support)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "lab": {
+    "name": "admin2",
+    "project": "openlaw-docs-41255c61-admin2",
+    "app": "http://127.0.0.1:23300",
+    "mail": "http://127.0.0.1:23400",
+    "source": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "seed": "Helix light, seed 7",
+    "images": {
+      "app": "openlaw-docs-41255c61-admin2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "worker": "openlaw-docs-41255c61-admin2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "engine": "openlaw-docs-41255c61-admin2-engine:57e77e386be3 sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    }
+  },
+  "diffInspection": {
+    "command": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles messages",
+    "commits": [
+      "57e77e38 Update user and comment display styles to use 'text-muted' for archived users",
+      "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+      "e3800b43 Show locked default fields above each custom field catalog",
+      "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+      "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+      "1ea249dd Show organization branding on sign-in and raise the logo limit"
+    ],
+    "changedFiles": [
+      "apps/api/openapi.json",
+      "apps/api/src/modules/email-settings/config.test.ts",
+      "apps/api/src/modules/email-settings/config.ts",
+      "apps/api/src/modules/email-settings/email-settings.test.ts",
+      "apps/api/src/modules/email-settings/routes.ts",
+      "apps/api/src/modules/org/general.test.ts",
+      "apps/api/src/modules/org/routes.ts",
+      "apps/web/src/components/comments/comment-applet.tsx",
+      "apps/web/src/components/contracts/contracts-columns.tsx",
+      "apps/web/src/components/default-fields.tsx",
+      "apps/web/src/components/documents/documents-columns.tsx",
+      "apps/web/src/components/inline-add-form.tsx",
+      "apps/web/src/components/list-editor.tsx",
+      "apps/web/src/components/matters/matters-columns.tsx",
+      "apps/web/src/components/smtp-settings-fields.tsx",
+      "apps/web/src/components/taxonomy-types-pane.tsx",
+      "apps/web/src/components/user-identity.tsx",
+      "apps/web/src/lib/ai-connector-config.ts",
+      "apps/web/src/lib/field-catalog.ts",
+      "apps/web/src/router.tsx",
+      "apps/web/src/routes/auth-layout.test.tsx",
+      "apps/web/src/routes/auth-layout.tsx",
+      "apps/web/src/routes/set-password.test.tsx",
+      "apps/web/src/routes/settings-ai-analysis.tsx",
+      "apps/web/src/routes/settings-contract-fields.test.tsx",
+      "apps/web/src/routes/settings-contract-fields.tsx",
+      "apps/web/src/routes/settings-contract-statuses.test.tsx",
+      "apps/web/src/routes/settings-contract-statuses.tsx",
+      "apps/web/src/routes/settings-contract-types.test.tsx",
+      "apps/web/src/routes/settings-default-fields.test.tsx",
+      "apps/web/src/routes/settings-general.tsx",
+      "apps/web/src/routes/settings-matter-statuses.test.tsx",
+      "apps/web/src/routes/settings-matter-statuses.tsx",
+      "apps/web/src/routes/settings-matter-types.test.tsx",
+      "apps/web/src/routes/settings-reminders.test.tsx",
+      "apps/web/src/routes/settings-reminders.tsx",
+      "apps/web/src/routes/settings.tsx",
+      "apps/web/src/routes/welcome.test.tsx",
+      "apps/web/src/routes/welcome.tsx",
+      "apps/web/src/testing/helpers.tsx",
+      "messages/en-US.json",
+      "packages/api-client/src/schema.ts",
+      "packages/shared/src/index.ts",
+      "packages/shared/src/logo.ts"
+    ],
+    "finding": "The range has six commits: sign-in branding and a larger logo limit, SMTP as discrete fields in first-run and settings, explicit Save and Cancel for new settings list rows, locked Default fields above custom Field catalogs, private-VM install docs, and text-muted instead of opacity for archived users. No styles/ file changed. No changed file is a record route, access scope, Document, upload, preview, notification, Approval, signing, Analysis run, Portal, Help or documentation reader module. The removed message strings (settings.contractFields.help, welcome.email URL fields, welcome.review.fields, welcome.review.reminders.address) do not appear in the three articles."
+  },
+  "replay": {
+    "source": "batches/DOC-029/support/walkthrough-r1.mjs and lib-r1.mjs",
+    "script": "batches/DOC-029/compat-r2/support-r2/walkthrough-r2.mjs",
+    "adaptations": "Lab name admin2 in the lab status call and project pattern; fixtures read from batches/DOC-029/support/fixtures; record names DOC-029r2 support ...; output walkthrough-r2.json and r2 screenshot names; reviewer name. No check, expected value or step changed.",
+    "startedAt": "2026-09-16T17:55:34.582Z",
+    "finishedAt": "2026-09-16T18:01:50.716Z",
+    "total": 56,
+    "pass": 56,
+    "fail": 0,
+    "artifacts": [
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/lib-r2.mjs",
+        "sha256": "30c19f136a3550600b690a5177b77e1b4039077bb8924c22bbb9668aff1e361c"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/r2-admin-contract-not-found.png",
+        "sha256": "efe97b7037972e18d1e12fce7c7cba1d5ac0fec9844a8a464b0679a196ecb8ac"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/r2-admin-edition-details.png",
+        "sha256": "d3bc9c4b42d1ed4990ad0f42cd12cb4c03ce604411921c253490a1d21ac441d3"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/r2-admin-move-past-approval.png",
+        "sha256": "38cdc3947f0aeb2810ec314980ba549ca8b2dd6b4ce9be18997e32183d5ec94f"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/r2-member-page-could-not-load.png",
+        "sha256": "63d03e9e1188803328052d20a9ee63ca219df627d935182f84c81f8d0d5b353b"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/r2-member-preview-failed.png",
+        "sha256": "5561ea507c60eeb471bd283e28d6e381f15859f6d6a95a74fb73fcdfc2abfa73"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/r2-portal-link-expired.png",
+        "sha256": "690324c6c81ba12f8a9ed8a4454803efcc545121514f3c4e2fb10eb7a46672ce"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/walkthrough-r2.json",
+        "sha256": "fdbfa37ad6dfacc6d80672b8a0a22cba21f70281b2bec6ff5db354d025d07efb"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/walkthrough-r2.log",
+        "sha256": "ef4cebf5744ef93019ab9de276f7bd11f51d6e14ab86f53efe3af480abf93597"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/support-r2/walkthrough-r2.mjs",
+        "sha256": "53384494cf84481ac41f3f051274da0ed95c16bcf49b8b5042a721b587c51de6"
+      }
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "troubleshooting",
+      "scenario": "V-C49",
+      "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa",
+      "diffFilesInspected": [
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "packages/shared/src/logo.ts",
+        "packages/shared/src/index.ts",
+        "messages/en-US.json",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/list-editor.tsx"
+      ],
+      "conclusion": "compatible",
+      "detail": "Compatible. The diff changes no record loader, not-found or error page, Portal page, Document upload or preview route, notification preference, Approval, signing or Analysis run code. The sign-in page now shows the organization name, logo, Legal Portal and Powered by OpenLaw above the form, but the sign-in controls and the expired-link text are unchanged, and the article names none of the new labels. The AI analysis settings intro text changed, but the article cites only the page name AI analysis settings, which is unchanged. The settings pane changes (Default fields, Custom Fields, Save and Cancel on new rows) do not change what the article says about configured Fields.",
+      "replaySteps": [
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "Open Help from the header and reach Resolve common problems",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "Open Help from the header and reach Resolve common problems",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "business_user",
+          "action": "Open Help from the header and reach Resolve common problems",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "I cannot sign in: staff sign-in with a wrong password, then the correct one",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "I cannot sign in: Administrator staff sign-in with a wrong password, then the correct one",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "business_user",
+          "action": "I cannot sign in: a Portal link already used; request a new link and open the newest message",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "A record is missing: a direct link to a missing Contract and to an unreachable Confidential Contract",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "A page could not load: Something went wrong. with Reload after a temporary connection failure",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "A record is missing: missing Contract and Matter links, and a Confidential Contract without access",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "business_user",
+          "action": "A record is missing (Portal): missing, Confidential without team entry, shared, archived, related Matter, and missing Knowledge",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "business_user",
+          "action": "Converted Request: reopen it in the Portal; team entry removed; Legal restores it; staff page stays closed",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "business_user",
+          "action": "An edit or action is unavailable: Business User controls on a shared Contract",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "business_user",
+          "action": "An edit or action is unavailable: Add team member on a Confidential team",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "An edit or action is unavailable: archived Contract, and a save that reports an error",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "An edit or action is unavailable: Administrator reaches configured Fields; Legal Team Member does not",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "An upload is refused: oversized file, over-long filename, corrected name, and a repeat upload",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "An upload is refused: over-long filename as Administrator",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "business_user",
+          "action": "An upload in the Portal: Add version on the primary Document; no folder destination",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "A preview stays pending or fails: damaged Word file; Download reads the original",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "A preview fails: the Administrator reads the failed Version and downloads the original",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "A notification is missing: staff Notification preferences and profile timezone",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "A notification is missing: staff Notification preferences and profile timezone",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "business_user",
+          "action": "A notification is missing: Portal Notification settings",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "I cannot approve: only the named person can answer",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "I cannot approve: the named approver decides once; the decision is final",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "An Approval warning appears: Move past approval with a Pending request; Cancel",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "Electronic signing is unavailable: connector state and manual hand-off",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "Electronic signing is unavailable: no send control for the Legal Team Member",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "administrator",
+          "action": "Analysis is missing: AI analysis settings show the provider state",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C49",
+          "role": "legal_team_member",
+          "action": "Analysis and AI conversion are unavailable: Contract and Convert dialog without a provider",
+          "result": "pass"
+        }
+      ]
+    },
+    {
+      "articleId": "reference",
+      "scenario": "V-C50",
+      "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd",
+      "diffFilesInspected": [
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "packages/shared/src/logo.ts",
+        "packages/shared/src/index.ts",
+        "messages/en-US.json",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "packages/api-client/src/schema.ts",
+        "apps/api/openapi.json"
+      ],
+      "conclusion": "compatible",
+      "detail": "Compatible. The diff changes no role list, access scope, Stage, Status or Category mapping, Key date, Document, Version, upload limit, filename check or file-reading code. The new 5 MB limit applies to the organization logo only, not to the Document upload limit of 100 MiB that the article states. Settings now show built-in Default fields as read-only above Custom Fields; the article's statement that Administrators configure Fields and that a Field label can change while its identifier stays is still true.",
+      "replaySteps": [
+        {
+          "scenario": "V-C50",
+          "role": "administrator",
+          "action": "Roles: the role control offers the fixed account roles",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "administrator",
+          "action": "Stage, Status and Category: fixed backbones behind configurable labels",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "legal_team_member",
+          "action": "Task and Key date, Entity and Counterparty: compare the terms with the Contract dialogs",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "legal_team_member",
+          "action": "Document terms: Version kinds, Executed pin, primary Document, no Version delete; permanent delete is Administrator-only",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "legal_team_member",
+          "action": "File behavior: PNG reads inline, SVG is download-only, EML opens the email reader",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "administrator",
+          "action": "Permissions: the Administrator needs a Grant for a Confidential Entity and named access for a Confidential Contract",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "legal_team_member",
+          "action": "Permissions: organization settings remain Administrator-only",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "business_user",
+          "action": "Permissions and Portal files: staff workspace closed; shared Documents read and download with earlier Versions; related Matter closed",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "business_user",
+          "action": "Portal files: published Knowledge offers current-file downloads without a Version picker",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "operator",
+          "action": "Deployment operator: read the reference signed out in the formal documentation",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C50",
+          "role": "operator",
+          "action": "Links in the reviewed reference resolve in the formal documentation",
+          "result": "pass"
+        }
+      ]
+    },
+    {
+      "articleId": "versions-and-support",
+      "scenario": "V-C51",
+      "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
+      "diffFilesInspected": [
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "packages/shared/src/logo.ts",
+        "packages/shared/src/index.ts",
+        "messages/en-US.json",
+        "scripts/documentation (no change in range)"
+      ],
+      "conclusion": "compatible",
+      "detail": "Compatible. The diff changes no documentation reader, Help link, app header, Portal shell, help route, standalone export or scripts/documentation file. The sign-in page keeps its Help link. Round 2 Edition details showed Supported app 0.0.1 / d64309f5 and Distribution commit 57e77e38, which is the recorded edition state before the orchestrator re-pins it; the article describes these labels and does not state a value.",
+      "replaySteps": [
+        {
+          "scenario": "V-C51",
+          "role": "administrator",
+          "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "administrator",
+          "action": "If a link names another edition, a missing article or a missing section",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "administrator",
+          "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "administrator",
+          "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "legal_team_member",
+          "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "legal_team_member",
+          "action": "If a link names another edition, a missing article or a missing section",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "legal_team_member",
+          "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "legal_team_member",
+          "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "business_user",
+          "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "business_user",
+          "action": "If a link names another edition, a missing article or a missing section",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "business_user",
+          "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "business_user",
+          "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "operator",
+          "action": "Signed-out reading, standalone edition, and an offline copy with and without JavaScript",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "operator",
+          "action": "Links in the reviewed versions-and-support and troubleshooting bytes resolve",
+          "result": "pass"
+        },
+        {
+          "scenario": "V-C51",
+          "role": "administrator",
+          "action": "Check the relevant limitation: Administrators need named access to Confidential Contracts",
+          "result": "pass"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Agent review, not a human user study.",
+    "The lab Help and formal readers serve the article bytes at 57e77e38, which are the round 1 bytes before the DOC-029 corrections. As in round 1, steps followed the reviewed bytes against the app, and link checks used the reviewed bytes.",
+    "Signing and Analysis stayed unconfigured on admin2; the replay checked only the connector-state, disabled and manual paths, as in round 1. No credential was read or copied.",
+    "Email delivery timing, the Not yet verified value and the Working changes marker were not observed.",
+    "The replay created records named DOC-029r2 support ... on admin2 and changed no organization settings."
+  ]
+}

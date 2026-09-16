@@ -1,0 +1,1336 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-029",
+  "group": "conversations",
+  "round": 1,
+  "issues": [745, 747],
+  "independentReview": true,
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (conversations, round 1)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "articles": [
+    {
+      "articleId": "comments-and-activity",
+      "articlePath": "docs/user-guides/comments-and-activity.md",
+      "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f"
+    },
+    {
+      "articleId": "notifications",
+      "articlePath": "docs/user-guides/notifications.md",
+      "contentSha256": "edd7436b8baac1519ed7b4b4b2a984746939ac7bfd90c1455f6137570aa6dbb2"
+    }
+  ],
+  "scenarios": {
+    "comments-and-activity": "V-C07",
+    "notifications": "V-C08"
+  },
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-work",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0"
+    }
+  ],
+  "appUrl": "http://127.0.0.1:23301",
+  "mailUrl": "http://127.0.0.1:23401",
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, 1440x900, one isolated browser context per identity",
+  "fixtures": {
+    "doc029-conv-notice.pdf": "7b574a6691ddc7b5388b305c1bce733777ad48cd61aa769a8ad05458459fb173",
+    "doc029-conv-schedule.pdf": "ff42a9deb8835b41d31c49140ec5d9c6a2ecfb0eca19b6a78f8a082c8c501bf6",
+    "doc029-conv-portal-note.pdf": "3fc501e60b48f758f7bf6ba46d100e8a5bd9f1caba793b205b2339bdeaee9ffc",
+    "doc029-conv-legal-memo.pdf": "9676bac39a6f02d0056c6b85aec6d8845bcd1081c6ce1991fe1cdbae67ba9535",
+    "doc029-conv-extra-1.txt": "9f29589a72d7ff0f211331344d160bca2240d0bab49e11ace60ca18fbc617c4c",
+    "doc029-conv-extra-2.txt": "320075fe4049a777ce9284010d1e537225402e4bcc1b7dc98ff8b7d71a961b55",
+    "doc029-conv-extra-3.txt": "05db08c00ea562fdfb84d8353c7f9526057ecbb1d17ef7d2d98f9e5ceb3304de",
+    "doc029-conv-extra-4.txt": "29ff59506f60e168a3ea770275c68d997df8caf6a64ebffceacad9d4adb7d0ea",
+    "doc029-conv-extra-5.txt": "fcd3935b728f1c11feee0f53b4c61493c8aee3275b006a58157ef8886400abd0",
+    "doc029-conv-extra-6.txt": "c6241f5f7926357a01e41c39de0e4f966d790610016471cf8a48092d43d9074a"
+  },
+  "identities": [
+    {
+      "role": "administrator",
+      "account": "Daniel Okafor (seed)",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "Nadia Haddad (seed)",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "business_user",
+      "account": "Jonas Weber (seed)",
+      "entry": "fresh magic link read from the work lab Mailpit, never stored"
+    }
+  ],
+  "script": "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.mjs",
+  "helper": "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs",
+  "fixtureRecords": "docs/documentation/batches/DOC-029/conversations/fixtures-r1.json",
+  "articleHashNote": "Both article files were unchanged during every run; contentSha256 above is the hash of the bytes each run read.",
+  "runs": [
+    {
+      "run": "main",
+      "startedAt": "2026-09-16T15:31:38.654Z",
+      "finishedAt": "2026-09-16T15:34:24.181Z",
+      "stamp": "698655",
+      "sections": ["all"],
+      "note": "all sections, fresh fixtures",
+      "summary": {
+        "total": 48,
+        "pass": 46,
+        "fail": 2
+      }
+    },
+    {
+      "run": "morning-rerun",
+      "startedAt": "2026-09-16T15:44:23.795Z",
+      "finishedAt": "2026-09-16T15:44:46.958Z",
+      "stamp": "m73463",
+      "sections": ["morning"],
+      "note": "SECTIONS=morning after the reviewer-script mail filter correction; new fresh accounts, same Contract",
+      "summary": {
+        "total": 5,
+        "pass": 5,
+        "fail": 0
+      }
+    },
+    {
+      "run": "supplement-1",
+      "startedAt": "2026-09-16T15:46:14.638Z",
+      "finishedAt": "2026-09-16T15:46:53.886Z",
+      "stamp": "574638",
+      "sections": ["supplement"],
+      "note": "SECTIONS=supplement MORNING_STAMP=m73463; checks added after reviewing the main run",
+      "summary": {
+        "total": 6,
+        "pass": 4,
+        "fail": 2
+      }
+    },
+    {
+      "run": "supplement-2",
+      "startedAt": "2026-09-16T15:47:41.430Z",
+      "finishedAt": "2026-09-16T15:47:46.467Z",
+      "stamp": "661430",
+      "sections": ["supplement"],
+      "note": "SECTIONS=supplement SUPP=errors,usual MORNING_STAMP=m73463; corrected reviewer script for two supplement checks",
+      "summary": {
+        "total": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    {
+      "run": "shots",
+      "startedAt": "2026-09-16T15:48:10.476Z",
+      "finishedAt": "2026-09-16T15:48:13.431Z",
+      "stamp": "690476",
+      "sections": ["shots"],
+      "note": "SECTIONS=shots; focused screenshots",
+      "summary": {
+        "total": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    }
+  ],
+  "startedAt": "2026-09-16T15:31:38.654Z",
+  "finishedAt": "2026-09-16T15:48:13.431Z",
+  "records": {
+    "createdAt": "2026-09-16T15:31:40.578Z",
+    "stamp": "698655",
+    "contractRequest": 123,
+    "matterRequest": 124,
+    "openRequest": 125,
+    "archiveRequest": 126,
+    "contract": {
+      "module": "contract",
+      "number": 147
+    },
+    "matter": {
+      "module": "matter",
+      "number": 132
+    },
+    "archive": {
+      "module": "contract",
+      "number": 148
+    },
+    "contractTitle": "DOC-029 conversations Contract 698655",
+    "matterTitle": "DOC-029 conversations Matter 698655",
+    "openTitle": "DOC-029 conversations open Request 698655",
+    "archiveTitle": "DOC-029 conversations archive Contract 698655",
+    "contractId": "01a0aad8-5941-7f92-8760-cea72ef6bcf8",
+    "matterId": "01a0aad8-5963-74cc-920f-8f23718bb872",
+    "archiveId": "01a0aad8-597f-7330-8337-fa589a44b216",
+    "openRequestId": "01a0aad8-58c7-7c11-9b89-e716dbc2108d",
+    "ids": {
+      "daniel": "01a0aaad-746c-7e44-a84c-5947852cfcf4",
+      "nadia": "01a0aaad-7476-705f-9805-48c41b149062",
+      "jonas": "01a0aaad-7a18-7c07-89a3-544afeeaecf6",
+      "amara": "01a0aaad-7a2b-7855-b3dc-8757cd82606f"
+    },
+    "bulkPosted": true,
+    "bellRequest": 127,
+    "freshAccounts": [
+      {
+        "role": "legal_team_member",
+        "displayName": "DOC-029 conversations Member Dates 698655",
+        "email": "doc029-conv-698655-a@helix.example",
+        "userId": "01a0aada-706c-7fe5-b633-ffe4cb685ba7"
+      },
+      {
+        "role": "legal_team_member",
+        "displayName": "DOC-029 conversations Member No Date Bell 698655",
+        "email": "doc029-conv-698655-b@helix.example",
+        "userId": "01a0aada-75a5-74e8-81c6-8318a0c82e52"
+      },
+      {
+        "role": "administrator",
+        "displayName": "DOC-029 conversations Admin No Date Email 698655",
+        "email": "doc029-conv-698655-c@helix.example",
+        "userId": "01a0aada-7a90-7a86-9bc3-1b459585815d"
+      },
+      {
+        "role": "legal_team_member",
+        "displayName": "DOC-029 conversations Member Honolulu 698655",
+        "email": "doc029-conv-698655-e@helix.example",
+        "userId": "01a0aada-803e-716e-b4f4-c821b4c7fdde"
+      }
+    ],
+    "morningRound1": {
+      "a": {
+        "mails": [
+          {
+            "subject": "Your daily briefing",
+            "sections": ["Dates", "Knowledge"]
+          }
+        ],
+        "bell": [
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 board pack",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 filing window",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 narrowed review",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "briefing.ready",
+            "label": null,
+            "reminderOffsetDays": null
+          }
+        ]
+      },
+      "b": {
+        "mails": [
+          {
+            "subject": "Your daily briefing",
+            "sections": ["Tasks", "Knowledge"]
+          },
+          {
+            "subject": "Task assigned: DOC-029 conversations 698655 due today for Member No Date Bell (DOC-029 conversations Contract 698655)",
+            "sections": []
+          }
+        ],
+        "bell": [
+          {
+            "type": "briefing.ready",
+            "label": null,
+            "reminderOffsetDays": null
+          }
+        ]
+      },
+      "c": {
+        "mails": [
+          {
+            "subject": "Your daily briefing",
+            "sections": ["Tasks", "Knowledge"]
+          },
+          {
+            "subject": "Task assigned: DOC-029 conversations 698655 due today for Admin No Date Email (DOC-029 conversations Contract 698655)",
+            "sections": []
+          }
+        ],
+        "bell": [
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 board pack",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 filing window",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "briefing.ready",
+            "label": null,
+            "reminderOffsetDays": null
+          }
+        ]
+      },
+      "e": {
+        "mails": [
+          {
+            "subject": "You were added to DOC-029 conversations Contract 698655",
+            "sections": []
+          }
+        ],
+        "bell": []
+      }
+    },
+    "freshAccountsMorningRerun": [
+      {
+        "role": "legal_team_member",
+        "displayName": "DOC-029 conversations Member Dates m73463",
+        "email": "doc029-conv-m73463-a@helix.example",
+        "userId": "01a0aae4-0448-7831-ab07-a1d368210a7e"
+      },
+      {
+        "role": "legal_team_member",
+        "displayName": "DOC-029 conversations Member No Date Bell m73463",
+        "email": "doc029-conv-m73463-b@helix.example",
+        "userId": "01a0aae4-095f-7e2e-bdf6-ee4c3ae36142"
+      },
+      {
+        "role": "administrator",
+        "displayName": "DOC-029 conversations Admin No Date Email m73463",
+        "email": "doc029-conv-m73463-c@helix.example",
+        "userId": "01a0aae4-0dbc-7f67-b340-cfef5e4bde7d"
+      },
+      {
+        "role": "legal_team_member",
+        "displayName": "DOC-029 conversations Member Honolulu m73463",
+        "email": "doc029-conv-m73463-e@helix.example",
+        "userId": "01a0aae4-118e-7fb5-a44e-7661bbcda93b"
+      }
+    ],
+    "morningRound1Rerun": {
+      "a": {
+        "mails": [
+          {
+            "subject": "Your daily briefing",
+            "sections": ["Dates", "Knowledge"]
+          }
+        ],
+        "otherMail": [],
+        "bell": [
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 board pack",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 filing window",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations m73463 board pack",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations m73463 filing window",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations m73463 narrowed review",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "briefing.ready",
+            "label": null,
+            "reminderOffsetDays": null
+          }
+        ]
+      },
+      "b": {
+        "mails": [
+          {
+            "subject": "Your daily briefing",
+            "sections": ["Tasks", "Knowledge"]
+          }
+        ],
+        "otherMail": [],
+        "bell": [
+          {
+            "type": "briefing.ready",
+            "label": null,
+            "reminderOffsetDays": null
+          }
+        ]
+      },
+      "c": {
+        "mails": [
+          {
+            "subject": "Your daily briefing",
+            "sections": ["Tasks", "Knowledge"]
+          }
+        ],
+        "otherMail": [],
+        "bell": [
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 board pack",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations 698655 filing window",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations m73463 board pack",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "date.key_date_approaching",
+            "label": "DOC-029 conversations m73463 filing window",
+            "reminderOffsetDays": null
+          },
+          {
+            "type": "briefing.ready",
+            "label": null,
+            "reminderOffsetDays": null
+          }
+        ]
+      },
+      "e": {
+        "mails": [],
+        "otherMail": [],
+        "bell": []
+      }
+    }
+  },
+  "steps": [
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Choose an audience on a record: open the Contract, select Comments, read the audience options and descriptions",
+      "expected": "Legal Only and Contract Team offered, Contract Team selected first, description below the composer changes with the choice",
+      "startedAt": "2026-09-16T15:31:40.645Z",
+      "at": "2026-09-16T15:31:41.772Z",
+      "actual": "C-147 Comments applet opened from the Applets toolbar. Audience offered \"Audience Legal Only Contract Team\" with Contract Team checked first. Description read \"Visible to Legal and all Contract team members.\" for Contract Team and \"Visible to Administrators and Legal Team Members.\" for Legal Only. No Internal team option was offered.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Post one Legal Only and one Contract Team comment on the Contract and check name and audience badge",
+      "expected": "Each post appears under Nadia Haddad with its audience badge",
+      "startedAt": "2026-09-16T15:31:41.772Z",
+      "at": "2026-09-16T15:31:42.045Z",
+      "actual": "Rows read \"NH Nadia Haddad Legal Only this minute DOC-029 conversations 698655 Nadia legal only note\" and \"NH Nadia Haddad Contract Team this minute DOC-029 conversations 698655 Nadia contract team note\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Choose an audience on a Matter: Matter Team first, Legal Only available, post both",
+      "expected": "Matter Team is the starting audience and posts carry Matter Team or Legal Only badges",
+      "startedAt": "2026-09-16T15:31:42.045Z",
+      "at": "2026-09-16T15:31:43.285Z",
+      "actual": "M-132 Audience offered \"Audience Legal Only Matter Team\", Matter Team checked first, description \"Visible to Legal and all Matter team members.\". Rows read \"NH Nadia Haddad Matter Team this minute DOC-029 conversations 698655 Nadia matter team note\" and \"NH Nadia Haddad Legal Only this minute DOC-029 conversations 698655 Nadia matter legal only note\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Mention a person: type @ and part of a name, pick on the People tab, check Mentioned, Remove, pick again, Comment",
+      "expected": "People tab lists reachable people, Files tab present for Legal, Mentioned list with Remove, post succeeds",
+      "startedAt": "2026-09-16T15:31:43.285Z",
+      "at": "2026-09-16T15:31:46.621Z",
+      "actual": "Typing @Dan opened the tabs [\"People\",\"Files\"] with People selected, listing [\"DO\\nDaniel Okafor\"]. Choosing Daniel Okafor added \"Daniel Okafor\" to the Mentioned list; Remove Daniel Okafor emptied it (0 lists left). After re-picking, Comment posted \"NH Nadia Haddad Contract Team this minute DOC-029 conversations 698655 Nadia asks @Daniel Okafor to check the notice letter.\" at Contract Team without a widen prompt.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Typing a name as ordinary text alone does not select a recipient",
+      "expected": "No Mentioned list when the name is typed without choosing from the list",
+      "startedAt": "2026-09-16T15:31:46.622Z",
+      "at": "2026-09-16T15:31:47.149Z",
+      "actual": "Typing \"Daniel Okafor\" without @ and without choosing showed no Mentioned list; the draft was cleared unposted.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Widen the audience? on a Legal Only mention of a Business User: Cancel keeps editing without posting, Widen and post posts at the proposed audience",
+      "expected": "Dialog names the proposed audience; Cancel posts nothing; Widen and post posts at Contract Team",
+      "startedAt": "2026-09-16T15:31:47.150Z",
+      "at": "2026-09-16T15:31:51.310Z",
+      "actual": "Dialog read \"Widen the audience? Jonas Weber cannot see a legal only comment. Post it at contract team instead to reach them. Visible to Legal and all Contract team members. Cancel Widen and post\". Cancel closed it, kept the draft \"DOC-029 conversations 698655 Nadia legal only mention for @Jonas Weber \", and no row was posted. Widen and post published \"NH Nadia Haddad Contract Team this minute DOC-029 conversations 698655 Nadia legal only mention for @Jonas Weber\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Attach paper: Attach files, choose files, check filenames, Remove one, post, open the preview and use Download",
+      "expected": "Selected filenames listed with Remove; post carries the remaining attachment; preview opens; Download retrieves the file",
+      "startedAt": "2026-09-16T15:31:51.310Z",
+      "at": "2026-09-16T15:31:53.193Z",
+      "actual": "Composer read \"Up to 5 files.\". Choosing two PDFs listed \"doc029-conv-notice.pdf doc029-conv-schedule.pdf\"; Remove doc029-conv-schedule.pdf left \"doc029-conv-notice.pdf\". Audience line before posting: \"Visible to Legal and all Contract team members.\". Posted row \"NH Nadia Haddad Contract Team this minute DOC-029 conversations 698655 Nadia shares the notice letter doc029-conv-notice.pdf File to Contract\". Selecting the filename opened a preview dialog (\"doc029-conv-notice.pdf Page 1 of 1 100% DOC-029 conversations fictional notice letter Download File to Contract\", buttons [\"\",\"\",\"\",\"\",\"\",\"\",\"File to Contract\"], links [\"Download\"]). Download doc029-conv-notice.pdf saved doc029-conv-notice.pdf with bytes identical to the fixture.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A failed post: keep the draft, check the error, check for an existing post, retry once",
+      "expected": "Error shown; text and paper stay in the composer; no row posted and no filed marker; retry posts exactly once",
+      "startedAt": "2026-09-16T15:31:53.194Z",
+      "at": "2026-09-16T15:31:56.949Z",
+      "actual": "With the comment POST aborted once, the composer showed \"The comment could not be posted. Try again.\", kept the text \"DOC-029 conversations 698655 Nadia retry after a failed post\" and the paper \"doc029-conv-schedule.pdf\"; no row was posted and 0 Filed to markers were shown. A reload to check for an existing post found 0 rows. Re-entering the draft and retrying posted exactly 1 row with the attachment.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "File to Contract on an unfiled attachment: the preview also offers it; file as a new Document; the attachment stays and shows Filed to",
+      "expected": "File to Contract offered on the attachment and in the preview; after filing the thread row shows Filed to with Document and version; the Document is on the record",
+      "startedAt": "2026-09-16T15:31:56.949Z",
+      "at": "2026-09-16T15:31:57.178Z",
+      "actual": "The preview offered File to Contract (1). The row's File to Contract opened File attachment with Destination options [\"New Document\",\"New Version on an existing Document\"]. Filing as a New Document named \"DOC-029 conversations 698655 filed notice letter\" closed the dialog; the thread row still lists doc029-conv-notice.pdf and shows \"Filed to DOC-029 conversations 698655 filed notice letter, version 1\", with 0 File to Contract controls left on it. The record's Documents read includes the new Document (HTTP 200).",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Edit or remove a post: Edit then Cancel, Edit then Save shows edited, Delete asks for confirmation and leaves the author tombstone; no Redact for a Legal Team Member",
+      "expected": "Cancel leaves text; Save marks edited; edit box has no audience control; Delete confirmation then Comment deleted by its author.; menu has Edit and Delete only",
+      "startedAt": "2026-09-16T15:31:57.179Z",
+      "at": "2026-09-16T15:31:57.757Z",
+      "actual": "Comment actions on her own comment offered [\"Edit\",\"Delete\"]. Edit opened Edit comment with 0 audience radios; Cancel left \"NH Nadia Haddad Contract Team this minute DOC-029 conversations 698655 Nadia wording to correct\". Save left \"NH Nadia Haddad Contract Team edited this minute DOC-029 conversations 698655 Nadia wording to correct corrected\". Delete asked \"Delete this comment? A tombstone keeps its place in the thread, and nobody can read what it said. You cannot undo this. Cancel Delete\"; confirming left Comment deleted by its author. and 0 rows with the text.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Show older and the unread Comments badge on a Matter with more comments than one page",
+      "expected": "Badge counts unread comments she can see; Show older loads earlier comments; reading the loaded conversation updates the count",
+      "startedAt": "2026-09-16T15:31:57.757Z",
+      "at": "2026-09-16T15:32:05.669Z",
+      "actual": "Before opening, the Comments applet button read \"56\" (unread read {\"unread\":56}). The first load listed 50 rows with Show older at the head; Show older brought the list to 58 rows including bulk update 01. After reading, the button read \"\" (unread read {\"unread\":0}).",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Read the Activity feed: History on the Matter, entries in order, Show older",
+      "expected": "History lists actions on the record, including comment actions, with Show older for earlier changes",
+      "startedAt": "2026-09-16T15:32:05.669Z",
+      "at": "2026-09-16T15:32:09.392Z",
+      "actual": "History listed 25 entries, first \"Daniel Okafor commented this minute\". Show older brought 50 entries; the last reads \"Daniel Okafor commented this minute\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Choose an audience in the Inbox: a Request offers Legal only and Shared with requester, starting on Legal only; the Inbox Request has no History",
+      "expected": "Two audiences, Legal only first, descriptions shown; posts carry their audience; no History applet",
+      "startedAt": "2026-09-16T15:32:09.393Z",
+      "at": "2026-09-16T15:32:10.598Z",
+      "actual": "R-125 Applets toolbar offered [\"Comments\"]. Audience offered \"Audience Legal only Shared with requester\" with Legal only checked; descriptions \"Visible to Administrators and Legal Team Members.\" and \"Visible to Legal and the requester.\". Posted rows \"NH Nadia Haddad Shared with requester this minute DOC-029 conversations 698655 Nadia shared reply on the open Request\" and \"NH Nadia Haddad Legal only this minute DOC-029 conversations 698655 Nadia legal only Request note\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A converted Request in the Inbox has no conversation; open its linked record instead",
+      "expected": "No Comments applet on the converted Request; Status links the Contract",
+      "startedAt": "2026-09-16T15:32:10.599Z",
+      "at": "2026-09-16T15:32:12.813Z",
+      "actual": "R-123 in the Inbox showed 0 applet buttons and a Status link C-147 (/contracts/147); selecting it opened the Contract.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Choose an audience on a record and post at both audiences, one with Legal Only paper",
+      "expected": "Legal Only and Contract Team offered; posts show under Daniel Okafor with their badges and attachment",
+      "startedAt": "2026-09-16T15:32:12.814Z",
+      "at": "2026-09-16T15:32:14.216Z",
+      "actual": "Audience offered \"Audience Legal Only Contract Team\", Contract Team first (true). Rows \"DO Daniel Okafor Contract Team this minute DOC-029 conversations 698655 Daniel owner note\" and \"DO Daniel Okafor Legal Only this minute DOC-029 conversations 698655 Daniel legal only memo doc029-conv-legal-memo.pdf File to Contract\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Another author's comment: Comment actions offers Redact and no Edit",
+      "expected": "Menu on Nadia's live comment offers Redact only",
+      "startedAt": "2026-09-16T15:32:14.217Z",
+      "at": "2026-09-16T15:32:14.341Z",
+      "actual": "Comment actions on Nadia Haddad's Contract Team comment offered [\"Redact\"].",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "File to Matter on a Matter conversation attachment",
+      "expected": "A Matter Team post with paper offers File to Matter",
+      "startedAt": "2026-09-16T15:32:14.342Z",
+      "at": "2026-09-16T15:32:15.821Z",
+      "actual": "The Matter Team row \"DO Daniel Okafor Matter Team this minute DOC-029 conversations 698655 Daniel matter paper doc029-conv-schedule.pdf File to Matter\" offered File to Matter; it opened File attachment with [\"New Document\",\"New Version on an existing Document\"]; Cancel closed it with 0 Filed to markers.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Legal Request conversation: Comment actions on his own live comment edits and deletes; no File control on Request paper",
+      "expected": "Edit then Save shows edited; Delete confirmation leaves the author tombstone; Request attachment has no File to control",
+      "startedAt": "2026-09-16T15:32:15.822Z",
+      "at": "2026-09-16T15:32:18.557Z",
+      "actual": "On R-125 his Shared with requester post with paper showed 0 File controls. His menu offered [\"Edit\",\"Delete\",\"Redact\"]; Save left \"DO Daniel Okafor Shared with requester edited this minute DOC-029 conversations 698655 Daniel request paper revised doc029-conv-schedule.pdf\". Deleting a Legal only note after the confirmation left 1 Comment deleted by its author. tombstones and no row with its text.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Reply from the Portal on a never-converted Request: Comments applet, no audience picker, Legal only comments absent, mention and attach, Comment",
+      "expected": "Shared with requester reply visible, Legal only note absent, reply posts under Jonas Weber with paper",
+      "startedAt": "2026-09-16T15:32:18.558Z",
+      "at": "2026-09-16T15:32:22.354Z",
+      "actual": "R-125 Portal Comments showed 0 audience radios, 1 Shared with requester reply from Nadia, and 0 rows of her Legal only note. @Nad showed tabs [\"People\"] listing [\"NH\\nNadia Haddad\"]; after picking Nadia Haddad and attaching doc029-conv-portal-note.pdf, Comment posted \"JW Jonas Weber Shared with requester this minute DOC-029 conversations 698655 Jonas replies on the open Request for @Nadia Haddad doc029-conv-portal-note.pdf\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal: Comment actions edits and deletes his own words",
+      "expected": "Edit and Delete offered on his own comment, no Redact; edited marker; author tombstone",
+      "startedAt": "2026-09-16T15:32:22.354Z",
+      "at": "2026-09-16T15:32:22.770Z",
+      "actual": "His menu offered [\"Edit\",\"Delete\"]; Save left \"JW Jonas Weber Shared with requester edited this minute DOC-029 conversations 698655 Jonas second thought revised\"; Delete after confirmation left Comment deleted by its author.; Nadia's reply had 0 Comment actions buttons.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "After conversion the Request address opens the Contract; its Comments hold team comments and their paper but no Legal Only content, no filing, no audience picker",
+      "expected": "Redirect to the Portal Contract; Contract Team rows and widened mention visible; Legal Only rows and memo absent; attachment preview and Download work; no File to Contract",
+      "startedAt": "2026-09-16T15:32:22.771Z",
+      "at": "2026-09-16T15:32:23.833Z",
+      "actual": "/portal/requests/123 redirected to /portal/contracts/147. Comments counts {\"team\":1,\"widened\":1,\"notice\":1,\"danielTeam\":1,\"legalOnly\":0,\"danielMemo\":0,\"memoFile\":0}; 0 audience radios; 0 File to controls; the notice letter downloaded with fixture-identical bytes. Its row read \"NH Nadia Haddad Contract Team this minute DOC-029 conversations 698655 Nadia shares the notice letter doc029-conv-notice.pdf Filed to DOC-029 conversations 698655 filed notice letter, version 1\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal Matter: Show older and the unread badge; Legal Only bulk note absent",
+      "expected": "Show older loads the earlier Matter Team comments; the Legal Only note is not in the view",
+      "startedAt": "2026-09-16T15:32:23.834Z",
+      "at": "2026-09-16T15:32:26.872Z",
+      "actual": "Before opening, the Portal Comments button read \"57\". Show older loaded bulk update 01; Nadia's Matter Team note was present; Legal Only notes from Daniel and Nadia were absent (0, 0).",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal History on the Contract: shared comment activity only",
+      "expected": "History shows comment entries for team comments only; no Legal Only activity",
+      "startedAt": "2026-09-16T15:32:26.873Z",
+      "at": "2026-09-16T15:32:29.060Z",
+      "actual": "Portal History listed 9 entries: [\"Daniel Okafor commented this minute\",\"Nadia Haddad deleted a comment this minute\",\"Nadia Haddad changed a comment this minute\",\"Nadia Haddad commented this minute\",\"Nadia Haddad commented this minute\",\"Nadia Haddad commented this minute\",\"Nadia Haddad commented this minute\",\"Nadia Haddad commented this minute\",\"Nadia Haddad commented this minute\"]. Staff activity read for comparison: \"{\\\"entries\\\":[{\\\"id\\\":\\\"01a0aad8-dcce-70d1-9ba1-7c8cbd865fde\\\",\\\"action\\\":\\\"comment.posted\\\",\\\"visibility\\\":\\\"legal_only\\\",\\\"actor\\\":{\\\"id\\\":\\\"01a0aaad-746c-7e44-a84c-5947852cfcf4\\\",\\\"displayName\\\":\\\"Daniel Okafor\\\",\\\"image\\\":\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Redact a reached comment with paper, an author-deleted comment, and the comment whose attachment was filed",
+      "expected": "Confirmation read first; thread says Comment removed by an Administrator.; attachment URL no longer serves; the filed Document stays on the record",
+      "startedAt": "2026-09-16T15:32:29.061Z",
+      "at": "2026-09-16T15:32:34.582Z",
+      "actual": "Redact on Nadia's comment with paper asked \"Redact this comment? The text and every earlier version of it are removed for good. Use this for text posted into the wrong record. You cannot undo this. Cancel Redact\". After confirming, the row became Comment removed by an Administrator. and its attachment URL answered 404 (it answered 200 before). On her author-deleted comment the menu offered [\"Redact\"] and the redaction replaced that tombstone. Redacting the notice-letter comment left the filed Document on the record (true). The thread now shows 3 administrator tombstones and 0 author tombstones.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Archived record: the attachment offers no File to Contract",
+      "expected": "No File to Contract on an archived Contract",
+      "startedAt": "2026-09-16T15:32:34.583Z",
+      "at": "2026-09-16T15:32:36.731Z",
+      "actual": "Before archiving, the row offered File to Contract (1). After archiving C-148, the same row showed 0 File to controls: \"DO Daniel Okafor Contract Team this minute DOC-029 conversations 698655 Daniel archive paper doc029-conv-schedule.pdf\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Archived destination: the Request address shows the original request with no conversation",
+      "expected": "Portal Request page shows the archived message and no Comments",
+      "startedAt": "2026-09-16T15:32:36.732Z",
+      "at": "2026-09-16T15:32:38.811Z",
+      "actual": "The archived Contract C-148 record read answered HTTP 404 for Jonas. /portal/requests/126 stayed at /portal/requests/126, showed \"The record created from this Request was archived. Your original request is shown below.\", and had 0 applet toolbars and 0 Comments buttons.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "A later-added Business User reads earlier team comments; a removed person loses them, including through the old Request link",
+      "expected": "Amara sees earlier Contract Team comments after being added; after removal Jonas cannot open the Contract or its conversation through /portal/requests",
+      "startedAt": "2026-09-16T15:32:38.812Z",
+      "at": "2026-09-16T15:32:46.475Z",
+      "actual": "After being added, Amara Nwosu saw Nadia's earlier Contract Team note (1) and not her Legal Only note (0). After removal Amara's Portal Contract page read \"Your Contracts Contract not found This Contract does not exist, or you cannot open it.\" (record read HTTP 404). After Jonas's removal, /portal/requests/123 showed \"What do you need from Legal? Help with this page NDA request Estimated turnaround: 3 business days Mutual or one-way NDA with a counterparty. Contract review Estimated turnaround: 7 business days Revi\" with 0 Comments buttons (record read HTTP 404). Jonas was restored to the team (HTTP 201).",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open a notification: badge with 9+, unread dots, opening the panel marks nothing read, selecting an item opens its record and marks it read",
+      "expected": "Badge shows 9+ over nine; items marked Unread; count unchanged by opening; the selected item opens the Contract and becomes read",
+      "startedAt": "2026-09-16T15:32:46.477Z",
+      "at": "2026-09-16T15:32:52.519Z",
+      "actual": "Header button read \"Notifications, 105 unread\" with badge \"9+\". The panel showed 25 Unread markers; the newest mention item read \"Unread Daniel Okafor mentioned you on DOC-029 conversations Contract 698655 this minute\" linking /contracts/147. Closing left unread at 105 (was 105; other lab activity can only raise it). Selecting the item opened /contracts/147, and on reopening the item read \"Daniel Okafor mentioned you on DOC-029 conversations Contract 698655 this minute\" without the Unread marker (API readAt set).",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Show older loads earlier items; Mark all read clears unread and then disappears",
+      "expected": "More than 25 items after Show older; unread 0 after Mark all read; the control is absent with nothing unread",
+      "startedAt": "2026-09-16T15:32:52.520Z",
+      "at": "2026-09-16T15:32:56.695Z",
+      "actual": "The panel listed 25 items; Show older brought 50. Mark all read was present (1); after selecting it unread read 0, 0 Unread markers remained, and Mark all read was gone. The header then read \"Notifications, none unread\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Change preferences: profile menu, Settings, Personal, Notifications; groups and initial choices match the table; Briefing switches",
+      "expected": "Five groups with the documented switches and initial choices; Briefing Approvals, Tasks, Dates, Obligations on and Intake off",
+      "startedAt": "2026-09-16T15:32:56.695Z",
+      "at": "2026-09-16T15:32:57.236Z",
+      "actual": "Profile menu > Settings > Personal > Notifications reached /settings/notifications. Switch states {\"Assigned to you In-app\":true,\"Assigned to you Email\":true,\"Activity on your records In-app\":true,\"Activity on your records Email\":false,\"Dates approaching In-app\":true,\"New requests In-app\":true,\"New requests Email\":false,\"Knowledge items Email\":true,\"Approvals Email\":true,\"Tasks Email\":true,\"Dates Email\":true,\"Obligations Email\":true,\"Intake Email\":false} match the guide's initial choices; Dates approaching has no Email switch and Knowledge items has no In-app switch.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Assigned to you: Email off keeps the bell item and sends no mail; Email on sends mail; In-app off stops both; each choice survives a reload; a mention gives one item, not a second comment item",
+      "expected": "Mention item with no mail; then mail; then neither; reload keeps each choice; no separate commented-on item for the mention",
+      "startedAt": "2026-09-16T15:32:57.237Z",
+      "at": "2026-09-16T15:33:12.058Z",
+      "actual": "Email off (still off after reload): a mention gave 1 bell item, 0 extra comment items, and 0 \"You were mentioned on DOC-029 conversations Contract 698655\" mail after the queue settled. Email on: 1 item and 1 mail. In-app off (still off after reload): 0 items and 0 mail. Choices restored to In-app on and Email on.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A failed preference save shows the error and the switch returns to its earlier value",
+      "expected": "The change could not be saved. Try again.; switch back to its earlier value, also after reload",
+      "startedAt": "2026-09-16T15:33:12.059Z",
+      "at": "2026-09-16T15:33:12.498Z",
+      "actual": "With the PATCH aborted, selecting New requests Email showed \"The change could not be saved. Try again.\" and the switch returned to aria-checked=false (was false); after reload it read false.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "New requests: a new Request reaches the Legal user's bell and opens the Inbox Request",
+      "expected": "New request item links /inbox/N and opens it",
+      "startedAt": "2026-09-16T15:33:12.499Z",
+      "at": "2026-09-16T15:33:13.271Z",
+      "actual": "The bell item \"Unread Jonas Weber submitted a new request: DOC-029 conversations new request bell 698655 this minute\" opened /inbox/127.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Activity on your records as the Owner: Email off gives a bell item and no mail; Email on sends New comment mail; own comment gives no item; the item opens the Contract",
+      "expected": "commented on item without mail; with Email on the mail arrives; his own comment produces no item",
+      "startedAt": "2026-09-16T15:33:13.272Z",
+      "at": "2026-09-16T15:33:29.233Z",
+      "actual": "Initial Activity on your records {\"Activity on your records In-app\":true,\"Activity on your records Email\":false}. Email off: Nadia's comment gave 1 bell item and 0 \"New comment on DOC-029 conversations Contract 698655\" mail. Email on: 1 item and 1 mail. Restored. His own comment gave 0 items and 0 mail. The item \"Unread Nadia Haddad commented on DOC-029 conversations Contract 698655 this minute\" opened /contracts/147.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If an update is missing: a failed bell read and a failed older page show their messages and recover",
+      "expected": "Notifications could not be read. Close this and open it again.; reopening lists items; The older notifications could not be read. Try again.; retry loads more",
+      "startedAt": "2026-09-16T15:33:29.234Z",
+      "at": "2026-09-16T15:33:32.171Z",
+      "actual": "A blocked read showed \"Notifications could not be read. Close this and open it again.\"; reopening listed 25 items. A blocked older page showed \"The older notifications could not be read. Try again.\" with 25 rows kept; the retry brought 50.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Settings page for an Administrator matches the guide's groups and Briefing sections",
+      "expected": "Same five groups and five Briefing switches",
+      "startedAt": "2026-09-16T15:33:32.172Z",
+      "at": "2026-09-16T15:33:32.751Z",
+      "actual": "Daniel's pane showed Notification preferences and 1 Briefing heading with switches {\"Assigned to you In-app\":true,\"Assigned to you Email\":true,\"Activity on your records In-app\":true,\"Activity on your records Email\":false,\"Dates approaching In-app\":true,\"New requests In-app\":true,\"New requests Email\":false,\"Knowledge items Email\":true,\"Approvals Email\":true,\"Tasks Email\":true,\"Dates Email\":true,\"Obligations Email\":true,\"Intake Email\":false}; caption \"These switches change the email only. Your Home sections and daily bell summary stay on.\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal bell: a Request receipt opens the Request; a converted Request's record item opens the Contract",
+      "expected": "Receipt item links /portal/requests/N; a C-N comment item opens /portal/contracts/N",
+      "startedAt": "2026-09-16T15:33:32.752Z",
+      "at": "2026-09-16T15:33:34.843Z",
+      "actual": "Portal header read \"Notifications, 549 unread\". Receipt item \"Unread Legal has received your request DOC-029 conversations new request bell 698655 this minute\" links /portal/requests/127. The item for Nadia's comment on the converted Contract read \"Unread Nadia Haddad replied on your request DOC-029 conversations Contract 698655 this minute\", linked /portal/requests/123, and opened /portal/contracts/147. Team addition item: \"Unread Daniel Okafor added you to the Contract team for DOC-029 conversations Contract 698655 this minute -> /portal/contracts/147\".",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Change Portal preferences: Notification settings offers Request updates, Assigned to you, Activity on your records with the documented initial choices and no Briefing",
+      "expected": "Three groups, In-app and Email each, Activity email off initially, no Briefing",
+      "startedAt": "2026-09-16T15:33:34.843Z",
+      "at": "2026-09-16T15:33:34.996Z",
+      "actual": "/portal/settings showed 6 switches with states {\"Request updates In-app\":true,\"Request updates Email\":true,\"Assigned to you In-app\":true,\"Assigned to you Email\":true,\"Activity on your records In-app\":true,\"Activity on your records Email\":false} and 0 Briefing text.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal Request updates: Email off keeps the bell item with no mail; Email on sends mail; In-app off stops both; choices survive reload",
+      "expected": "Legal replied item without mail; with mail; neither",
+      "startedAt": "2026-09-16T15:33:34.997Z",
+      "at": "2026-09-16T15:33:47.740Z",
+      "actual": "Email off (kept after reload): Nadia's Shared with requester reply on R-125 gave 1 bell item and 0 \"Legal replied on\" mail. Email on: 1 item and 1 mail. In-app off (kept after reload): 0 items and 0 mail. Restored to both on.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal Assigned to you: a team mention on his converted Contract gives one mention item and You were mentioned mail; a Legal Only comment gives nothing",
+      "expected": "mentioned you item with mail; nothing for Legal Only",
+      "startedAt": "2026-09-16T15:33:47.740Z",
+      "at": "2026-09-16T15:33:51.883Z",
+      "actual": "A Contract Team mention of Jonas on C-147 gave exactly one Portal item (comment.mentioned) and 1 \"You were mentioned on\" mail. A Legal Only comment on the same Contract gave 0 Portal items.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal Activity on your records: shared comments on his Contracts give a bell item and, with Email initially off, no mail",
+      "expected": "A shared team comment on C-N gives an Activity on your records bell item and no email while that group's Email is off",
+      "startedAt": "2026-09-16T15:33:51.883Z",
+      "at": "2026-09-16T15:33:56.301Z",
+      "actual": "Check did not complete: The guide says shared comments on his Contracts belong to Activity on your records (Email initially off). Jonas (the Requester of R-123, with {\"Activity on your records In-app\":true,\"Activity on your records Email\":false,\"Request updates Email\":true}) received [\"request.replied -> request\"] and mail [\"Legal replied on R-123 \u00b7 DOC-029 conversations Contract 698655\"]. Amara (on the team, not the Requester) received [\"comment.posted -> contract\"] and mail [\"You were added to DOC-029 conversations Contract 698655\"].",
+      "result": "fail",
+      "run": "main",
+      "disposition": "Article failure (doc-error). For the Requester of a converted Request, a shared comment on the resulting Contract arrives as request.replied in Request updates (bell item 'replied on your request', email 'Legal replied on R-N', Email on by default), not as Activity on your records. DECISIONS-NOTIFICATIONS.md addendum 2026-08-22 (M21/11) records this routing. A team member who is not the Requester (Amara Nwosu) received comment.posted with no email, as the article says.",
+      "kind": "doc-error"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "A failed Portal preference save shows the error and keeps the earlier value",
+      "expected": "The change could not be saved. Try again.; switch reverts",
+      "startedAt": "2026-09-16T15:33:56.301Z",
+      "at": "2026-09-16T15:33:56.572Z",
+      "actual": "With the save aborted the page showed \"The change could not be saved. Try again.\"; the switch stayed aria-checked=false and read false after reload.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Removing team membership removes record notifications from the Portal bell; restoring brings them back",
+      "expected": "No C-N items while off the team; items return after restore",
+      "startedAt": "2026-09-16T15:33:56.573Z",
+      "at": "2026-09-16T15:33:57.463Z",
+      "actual": "Jonas had 4 C-147 notifications; while off the team the Portal bell read returned 0 and the panel showed 0 links for the Contract; after restore it returned 5.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Fixture: invite fresh fictional accounts and check the initial Notification preferences on each",
+      "expected": "Each fresh account shows the guide's initial choices",
+      "startedAt": "2026-09-16T15:33:57.477Z",
+      "at": "2026-09-16T15:34:02.707Z",
+      "actual": "legal_team_member DOC-029 conversations Member Dates 698655: initial choices match; legal_team_member DOC-029 conversations Member No Date Bell 698655: initial choices match; administrator DOC-029 conversations Admin No Date Email 698655: initial choices match; legal_team_member DOC-029 conversations Member Honolulu 698655: initial choices match",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Key date reminders: the Add a key date dialog shows global reminders and the combined schedule, bounds additional lead times, offers team members but not Business Users, and narrows recipients",
+      "expected": "Global reminders and This date will remind lines; 731 not addable; Business User on the team not offered; the saved Key date keeps its lead time and one recipient",
+      "startedAt": "2026-09-16T15:34:02.716Z",
+      "at": "2026-09-16T15:34:03.488Z",
+      "actual": "Nadia's Add a key date dialog read \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". Additional lead time 731 left Add lead time disabled (true); 3 was added and the dialog read \"This date will remind: 30 days before, 14 days before, 7 days before, 3 days before, 1 day before, On the day\". Recipient checkboxes offered [\"Daniel Okafor\",\"DOC-029 conversations Admin No Date Email 698655\",\"DOC-029 conversations Member Dates 698655\",\"DOC-029 conversations Member Honolulu 698655\",\"DOC-029 conversations Member No Date Bell 698655\",\"Nadia Haddad\"] (Jonas Weber, a Business User on the team, was not offered); Use the usual audience controls shown after a pick: 0. Saved 2026-09-19 with lead times [3] and one recipient (the \"Member Dates\" account).",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Set the daily briefing and group switches on the fresh accounts before the morning",
+      "expected": "Saved indications for Dates approaching In-app off (Member No Date Bell) and Briefing Dates Email off (Admin No Date Email)",
+      "startedAt": "2026-09-16T15:34:03.489Z",
+      "at": "2026-09-16T15:34:04.947Z",
+      "actual": "After reload, Member No Date Bell read {\"Dates approaching In-app\":false,\"Dates Email\":true} and Admin No Date Email read {\"Dates approaching In-app\":true,\"Dates Email\":false}.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Understand reminder timing: a morning round after 8:00 in the saved timezone serves the briefing and date reminders; before 8:00 it defers",
+      "expected": "Accounts in Los Angeles receive what their switches allow; the Honolulu account receives nothing; Business User receives no briefing",
+      "startedAt": "2026-09-16T15:34:04.949Z",
+      "at": "2026-09-16T15:34:17.022Z",
+      "actual": "Check did not complete: {\"report\":{\"a\":{\"mails\":[{\"subject\":\"Your daily briefing\",\"sections\":[\"Dates\",\"Knowledge\"]}],\"bell\":[{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 board pack\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 filing window\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 narrowed review\",\"reminderOffsetDays\":null},{\"type\":\"briefing.ready\",\"label\":null,\"reminderOffsetDays\":null}]},\"b\":{\"mails\":[{\"subject\":\"Your daily briefing\",\"sections\":[\"Tasks\",\"Knowledge\"]},{\"subject\":\"Task assigned: DOC-029 conversations 698655 due today for Member No Date Bell (DOC-029 conversations Contract 698655)\",\"sections\":[]}],\"bell\":[{\"type\":\"briefing.ready\",\"label\":null,\"reminderOffsetDays\":null}]},\"c\":{\"mails\":[{\"subject\":\"Your daily briefing\",\"sections\":[\"Tasks\",\"Knowledge\"]},{\"subject\":\"Task assigned: DOC-029 conversations 698655 due today for Admin No Date Email (DOC-029 conversations Contract 698655)\",\"sections\":[]}],\"bell\":[{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 board pack\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 filing window\",\"reminderOffsetDays\":null},{\"type\":\"briefing.ready\",\"label\":null,\"reminderOffsetDays\":null}]},\"e\":{\"mails\":[{\"subject\":\"You were added to DOC-029 conversations Contract 698655\",\"sections\":[]}],\"bell\":[]}},\"jonasBriefing\":0}",
+      "result": "fail",
+      "run": "main",
+      "disposition": "Reviewer-script error, not an app or article failure. The check counted every mail to the fresh accounts, so a Task assigned mail and a You were added mail were read as briefings, and it expected date-only subjects although the lab has Knowledge items. The recorded report shows the article's behavior. The corrected check passed in run morning-rerun with new accounts.",
+      "kind": "reviewer-script"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "The daily bell summary opens Home; a second round the same local day sends no second briefing or reminder",
+      "expected": "Your daily briefing is ready opens /; second round adds no mail or date items",
+      "startedAt": "2026-09-16T15:34:17.023Z",
+      "at": "2026-09-16T15:34:24.164Z",
+      "actual": "Admin No Date Email's bell listed the Key date items [\"Unread DOC-029 conversations 698655 board pack on DOC-029 conversations Contract 698655 is coming up this minute\",\"Unread DOC-029 conversations 698655 filing window on DOC-029 conversations Contract 698655 is coming up this minute\"] and Your daily briefing is ready linking /; selecting it opened Home. A second queued round (completed) gave {\"a\":{\"mails\":[],\"bell\":0},\"b\":{\"mails\":[],\"bell\":0},\"c\":{\"mails\":[],\"bell\":0},\"e\":{\"mails\":[],\"bell\":0}}.",
+      "result": "pass",
+      "run": "main"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Fixture: invite fresh fictional accounts and check the initial Notification preferences on each",
+      "expected": "Each fresh account shows the guide's initial choices",
+      "startedAt": "2026-09-16T15:44:25.151Z",
+      "at": "2026-09-16T15:44:29.618Z",
+      "actual": "legal_team_member DOC-029 conversations Member Dates m73463: initial choices match; legal_team_member DOC-029 conversations Member No Date Bell m73463: initial choices match; administrator DOC-029 conversations Admin No Date Email m73463: initial choices match; legal_team_member DOC-029 conversations Member Honolulu m73463: initial choices match",
+      "result": "pass",
+      "run": "morning-rerun"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Key date reminders: the Add a key date dialog shows global reminders and the combined schedule, bounds additional lead times, offers team members but not Business Users, and narrows recipients",
+      "expected": "Global reminders and This date will remind lines; 731 not addable; Business User on the team not offered; the saved Key date keeps its lead time and one recipient",
+      "startedAt": "2026-09-16T15:44:29.628Z",
+      "at": "2026-09-16T15:44:30.371Z",
+      "actual": "Nadia's Add a key date dialog read \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". Additional lead time 731 left Add lead time disabled (true); 3 was added and the dialog read \"This date will remind: 30 days before, 14 days before, 7 days before, 3 days before, 1 day before, On the day\". Recipient checkboxes offered [\"Daniel Okafor\",\"DOC-029 conversations Admin No Date Email 698655\",\"DOC-029 conversations Admin No Date Email m73463\",\"DOC-029 conversations Member Dates 698655\",\"DOC-029 conversations Member Dates m73463\",\"DOC-029 conversations Member Honolulu 698655\",\"DOC-029 conversations Member Honolulu m73463\",\"DOC-029 conversations Member No Date Bell 698655\",\"DOC-029 conversations Member No Date Bell m73463\",\"Nadia Haddad\"] (Jonas Weber, a Business User on the team, was not offered); Use the usual audience controls shown after a pick: 0. Saved 2026-09-19 with lead times [3] and one recipient (the \"Member Dates\" account).",
+      "result": "pass",
+      "run": "morning-rerun"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Set the daily briefing and group switches on the fresh accounts before the morning",
+      "expected": "Saved indications for Dates approaching In-app off (Member No Date Bell) and Briefing Dates Email off (Admin No Date Email)",
+      "startedAt": "2026-09-16T15:44:30.371Z",
+      "at": "2026-09-16T15:44:31.365Z",
+      "actual": "After reload, Member No Date Bell read {\"Dates approaching In-app\":false,\"Dates Email\":true} and Admin No Date Email read {\"Dates approaching In-app\":true,\"Dates Email\":false}.",
+      "result": "pass",
+      "run": "morning-rerun"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Understand reminder timing: a morning round after 8:00 in the saved timezone serves the briefing and date reminders; before 8:00 it defers",
+      "expected": "Accounts in Los Angeles receive what their switches allow; the Honolulu account receives nothing; Business User receives no briefing",
+      "startedAt": "2026-09-16T15:44:31.365Z",
+      "at": "2026-09-16T15:44:38.771Z",
+      "actual": "Round completed. Member Dates (LA): bell [{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 board pack\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 filing window\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations m73463 board pack\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations m73463 filing window\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations m73463 narrowed review\",\"reminderOffsetDays\":null},{\"type\":\"briefing.ready\",\"label\":null,\"reminderOffsetDays\":null}], mail [{\"subject\":\"Your daily briefing\",\"sections\":[\"Dates\",\"Knowledge\"]}]. Member No Date Bell (LA, Dates approaching In-app off): bell [{\"type\":\"briefing.ready\",\"label\":null,\"reminderOffsetDays\":null}], mail [{\"subject\":\"Your daily briefing\",\"sections\":[\"Tasks\",\"Knowledge\"]}]. Admin No Date Email (LA, Briefing Dates Email off): bell [{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 board pack\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations 698655 filing window\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations m73463 board pack\",\"reminderOffsetDays\":null},{\"type\":\"date.key_date_approaching\",\"label\":\"DOC-029 conversations m73463 filing window\",\"reminderOffsetDays\":null},{\"type\":\"briefing.ready\",\"label\":null,\"reminderOffsetDays\":null}], mail [{\"subject\":\"Your daily briefing\",\"sections\":[\"Tasks\",\"Knowledge\"]}]. Member Honolulu (before 08:00): bell [], mail []. Jonas Weber received 0 briefing mails.",
+      "result": "pass",
+      "run": "morning-rerun"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "The daily bell summary opens Home; a second round the same local day sends no second briefing or reminder",
+      "expected": "Your daily briefing is ready opens /; second round adds no mail or date items",
+      "startedAt": "2026-09-16T15:44:38.771Z",
+      "at": "2026-09-16T15:44:46.946Z",
+      "actual": "Admin No Date Email's bell listed the Key date items [\"Unread DOC-029 conversations m73463 board pack on DOC-029 conversations Contract 698655 is coming up this minute\",\"Unread DOC-029 conversations m73463 filing window on DOC-029 conversations Contract 698655 is coming up this minute\"] and Your daily briefing is ready linking /; selecting it opened Home. A second queued round (completed) gave {\"a\":{\"mails\":[],\"bell\":0},\"b\":{\"mails\":[],\"bell\":0},\"c\":{\"mails\":[],\"bell\":0},\"e\":{\"mails\":[],\"bell\":0}}.",
+      "result": "pass",
+      "run": "morning-rerun"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Internal team: an older Working Team comment stays readable to Legal with its label, cannot be chosen, and stays out of the Business User view",
+      "expected": "Contract shows Internal team badge; Inbox Request shows Working team badge; no such composer option; Jonas sees neither",
+      "startedAt": "2026-09-16T15:46:15.870Z",
+      "at": "2026-09-16T15:46:19.829Z",
+      "actual": "Nadia's Contract row read \"NH Nadia Haddad Internal team this minute DOC-029 conversations 698655 older working team note\" with composer options \"Audience Legal Only Contract Team\". Her Inbox Request row read \"NH Nadia Haddad Working team this minute DOC-029 conversations 698655 older working team request note\" with options \"Audience Legal only Shared with requester\". Jonas's Portal Contract showed 0 and Portal Request 0 of these comments.",
+      "result": "pass",
+      "run": "supplement-1"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If the conversation or History cannot load: follow the message to reopen; retry Show older when only the earlier page failed",
+      "expected": "The conversation could not be read. Reopen the panel to try again.; reopening recovers; The earlier comments could not be read. Try again. keeps loaded rows and the retry loads more; The history could not be read. Reopen the panel to try again.",
+      "startedAt": "2026-09-16T15:46:19.829Z",
+      "at": "2026-09-16T15:46:35.523Z",
+      "actual": "Check did not complete: locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('complementary', { name: 'Comments' }).getByRole('button', { name: 'Show older' }) to be visible\u001b[22m ",
+      "result": "fail",
+      "run": "supplement-1",
+      "disposition": "Reviewer-script error: the script's close call left the panel open, so the panel never reopened. Corrected to use the panel's Close button; passed in run supplement-2.",
+      "kind": "reviewer-script"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Attach files accepts up to five files",
+      "expected": "Choosing six files keeps at most five in the list",
+      "startedAt": "2026-09-16T15:46:35.523Z",
+      "at": "2026-09-16T15:46:37.454Z",
+      "actual": "Choosing six text files listed 5 files (alerts []; Attach files disabled: true). The draft was discarded unposted.",
+      "result": "pass",
+      "run": "supplement-1"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Editing a narrowed Key date offers Use the usual audience",
+      "expected": "Edit Key date dialog shows the selected recipient and Use the usual audience; choosing it clears the selection",
+      "startedAt": "2026-09-16T15:46:37.455Z",
+      "at": "2026-09-16T15:46:53.794Z",
+      "actual": "Check did not complete: locator.click: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('dialog', { name: 'Edit key date' }).getByRole('button', { name: 'Use the usual audience' })\u001b[22m ",
+      "result": "fail",
+      "run": "supplement-1",
+      "disposition": "Reviewer-script error: the script expected Use the usual audience while the selected person was still on the team. The article ties that control to the case where selected people have left. Rewritten to that case; passed in run supplement-2.",
+      "kind": "reviewer-script"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "A Business User on the team receives no date reminders or briefing from the morning rounds",
+      "expected": "No date.* or briefing items in the Portal bell for the Contract after the rounds",
+      "startedAt": "2026-09-16T15:46:53.794Z",
+      "at": "2026-09-16T15:46:53.875Z",
+      "actual": "Jonas's Portal notifications since the fixtures were created include 0 date reminder or briefing items, although he is on the C-147 team whose Key dates reminded the Legal accounts.",
+      "result": "pass",
+      "run": "supplement-1"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The briefing lines name each Key date",
+      "expected": "The Member Dates briefing email names both same-date Key dates and the narrowed one",
+      "startedAt": "2026-09-16T15:46:53.875Z",
+      "at": "2026-09-16T15:46:53.886Z",
+      "actual": "The Member Dates m73463 briefing email's Dates section names [\"m73463 board pack\",\"m73463 filing window\",\"m73463 narrowed review\"].",
+      "result": "pass",
+      "run": "supplement-1"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If the conversation or History cannot load: follow the message to reopen; retry Show older when only the earlier page failed",
+      "expected": "The conversation could not be read. Reopen the panel to try again.; reopening recovers; The earlier comments could not be read. Try again. keeps loaded rows and the retry loads more; The history could not be read. Reopen the panel to try again.",
+      "startedAt": "2026-09-16T15:47:42.703Z",
+      "at": "2026-09-16T15:47:43.953Z",
+      "actual": "A blocked thread read showed \"The conversation could not be read. Reopen the panel to try again.\"; closing and reopening Comments loaded 51 rows. A blocked earlier page showed \"The earlier comments could not be read. Try again.\" with 51 rows kept; the retry brought 60. A blocked History read showed \"The history could not be read. Reopen the panel to try again.\"; reopening listed 25 entries.",
+      "result": "pass",
+      "run": "supplement-2"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "When the selected recipient has left the team, editing the Key date offers Use the usual audience",
+      "expected": "Edit key date explains the departed recipient and offers Use the usual audience; choosing it clears the selection",
+      "startedAt": "2026-09-16T15:47:43.954Z",
+      "at": "2026-09-16T15:47:46.467Z",
+      "actual": "With the selected recipient still on the team, Edit key date showed 0 Use the usual audience controls. After that person left the team, the dialog read \"Some selected recipients have left the team and will not be reminded.Use the usual audience\" and offered Use the usual audience (1); choosing it left 0 recipients selected. Cancel closed it without saving.",
+      "result": "pass",
+      "run": "supplement-2"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Screenshot: Portal bell item for a team comment on the Contract converted from his Request",
+      "expected": "Item reads replied on your request",
+      "startedAt": "2026-09-16T15:48:11.660Z",
+      "at": "2026-09-16T15:48:12.416Z",
+      "actual": "Saved r1-portal-notification-settings.png and r1-portal-bell-converted-contract-comment.png; the newest item for the Contract comment read \"Unread Nadia Haddad replied on your request DOC-029 conversations Contract 698655 this minute\".",
+      "result": "pass",
+      "run": "shots"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Screenshot: Contract conversation with audience badges, Filed to, and administrator tombstones",
+      "expected": "Screenshot saved",
+      "startedAt": "2026-09-16T15:48:12.417Z",
+      "at": "2026-09-16T15:48:13.431Z",
+      "actual": "Saved r1-member-contract-comments.png.",
+      "result": "pass",
+      "run": "shots"
+    }
+  ],
+  "fixturePreparation": [
+    {
+      "at": "2026-09-16T15:31:40.644Z",
+      "text": "Jonas Weber submitted four Legal question Requests through the Portal API (R-123, R-124, R-125, R-126). Daniel Okafor converted R-123 to Contract C-147, R-124 to Matter M-132, and R-126 to Contract C-148 through the convert API; R-125 stays unconverted. Daniel added Nadia Haddad to the C-147 and M-132 teams through the team API. The Request submission and conversion procedures belong to other guides.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:31:59.613Z",
+      "text": "Daniel Okafor posted 55 Matter Team comments and one Legal Only comment on M-132 through the comments API, to give the Matter more than one page of comments, History entries, and notifications.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:32:35.701Z",
+      "text": "Daniel Okafor archived C-148 through the archive API after posting a Contract Team comment with paper in the browser.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:32:38.827Z",
+      "text": "Daniel Okafor added Amara Nwosu (Business User) to the C-147 team through the team API, then removed her again; later removed and restored Jonas Weber the same way.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:32:46.503Z",
+      "text": "Notification events were arranged by posting comments through the comments API as the acting role (Daniel Okafor, Nadia Haddad) on C-147, M-132, and R-125; the notification steps under test were then followed in the browser.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:33:12.535Z",
+      "text": "Jonas Weber submitted R-127 through the Requests API from his Portal session for the New requests and Request receipt checks.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:33:56.300Z",
+      "text": "Daniel Okafor added Amara Nwosu to the C-147 team for the Portal Activity on your records comparison and removed her afterwards (HTTP 200).",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:33:57.463Z",
+      "text": "Daniel Okafor removed and restored Jonas Weber on the C-147 team through the team API for the Portal bell access check.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:34:02.706Z",
+      "text": "Daniel Okafor invited four fresh fictional accounts through the invites API (three Legal Team Members and one Administrator, all named \"DOC-029 conversations ... 698655\"). Each set a random in-memory password from its activation mail, signed in, and had its timezone set to Pacific/Honolulu through the preferences API so no morning round could serve it before its fixtures were ready.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:34:02.830Z",
+      "text": "Daniel Okafor added the four fresh accounts to the C-147 team, created one Task due 2026-09-16 for \"Member No Date Bell\" and for \"Admin No Date Email\", and added two Key dates on 2026-09-23 (DOC-029 conversations 698655 board pack, DOC-029 conversations 698655 filing window) through the API. Global reminder lead times in this lab: {\"offsets\":[30,14,7,1,0]}.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:34:04.946Z",
+      "text": "The Member Dates, Member No Date Bell, and Admin No Date Email accounts had their timezone set to America/Los_Angeles (local hour 8) through the preferences API; Member Honolulu stayed on Pacific/Honolulu (local hour 5).",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:34:08.481Z",
+      "text": "A morning round was queued as notification.morning-round in the lab's own pg-boss queue (job 7fb14bbb-7b7d-4947-bd53-2fec0f55c6c2) instead of waiting for the hourly cron; the worker ran it with its real clock, rules, notifier, and mailer.",
+      "run": "main"
+    },
+    {
+      "at": "2026-09-16T15:44:29.618Z",
+      "text": "Daniel Okafor invited four fresh fictional accounts through the invites API (three Legal Team Members and one Administrator, all named \"DOC-029 conversations ... m73463\"). Each set a random in-memory password from its activation mail, signed in, and had its timezone set to Pacific/Honolulu through the preferences API so no morning round could serve it before its fixtures were ready.",
+      "run": "morning-rerun"
+    },
+    {
+      "at": "2026-09-16T15:44:29.782Z",
+      "text": "Daniel Okafor added the four fresh accounts to the C-147 team, created one Task due 2026-09-16 for \"Member No Date Bell\" and for \"Admin No Date Email\", and added two Key dates on 2026-09-23 (DOC-029 conversations m73463 board pack, DOC-029 conversations m73463 filing window) through the API. Global reminder lead times in this lab: {\"offsets\":[30,14,7,1,0]}.",
+      "run": "morning-rerun"
+    },
+    {
+      "at": "2026-09-16T15:44:31.365Z",
+      "text": "The Member Dates, Member No Date Bell, and Admin No Date Email accounts had their timezone set to America/Los_Angeles (local hour 8) through the preferences API; Member Honolulu stayed on Pacific/Honolulu (local hour 5).",
+      "run": "morning-rerun"
+    },
+    {
+      "at": "2026-09-16T15:44:33.648Z",
+      "text": "A morning round was queued as notification.morning-round in the lab's own pg-boss queue (job 0c708bee-3a08-4583-b30d-c75f1e92f4bb) instead of waiting for the hourly cron; the worker ran it with its real clock, rules, notifier, and mailer.",
+      "run": "morning-rerun"
+    },
+    {
+      "at": "2026-09-16T15:46:15.918Z",
+      "text": "Nadia Haddad posted one working_team comment on C-147 and one on R-125 through the comments API to stand in for older Working Team comments; the composer does not offer that tier.",
+      "run": "supplement-1"
+    },
+    {
+      "at": "2026-09-16T15:47:46.467Z",
+      "text": "Daniel Okafor removed the selected recipient of DOC-029 conversations m73463 narrowed review from the C-147 team through the team API and restored it after the check.",
+      "run": "supplement-2"
+    }
+  ],
+  "summary": {
+    "total": 63,
+    "pass": 59,
+    "fail": 4,
+    "failByKind": {
+      "doc-error": 1,
+      "reviewer-script": 3
+    }
+  },
+  "outcome": {
+    "comments-and-activity": {
+      "scenario": "V-C07",
+      "result": "pass",
+      "roles": {
+        "legal_team_member": "pass",
+        "administrator": "pass",
+        "business_user": "pass"
+      }
+    },
+    "notifications": {
+      "scenario": "V-C08",
+      "result": "fail",
+      "roles": {
+        "legal_team_member": "pass",
+        "administrator": "pass",
+        "business_user": "fail"
+      },
+      "failure": "Change Portal preferences: the article says shared comments on your Contracts and Matters belong to Activity on your records (Email initially off). For the Requester of the converted Request they arrive as Request updates replies with email."
+    }
+  },
+  "observations": [
+    "The comments API accepted visibility working_team from a Legal Team Member, although the composer offers only Legal Only and the team audience. The walkthrough used this only to stand in for older Working Team comments.",
+    "Global reminder lead times in this lab are 30, 14, 7, 1, and 0 days, not the initial 7, 1, and 0. The article allows for an organization change.",
+    "After Jonas Weber left the C-147 team, his old /portal/requests/123 link showed the Portal request home page (What do you need from Legal?) with no conversation, rather than a not-found message.",
+    "In the Portal bell, items for a team comment on the Contract converted from the viewer's own Request link to /portal/requests/N, which redirects to /portal/contracts/N."
+  ],
+  "limitations": [
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "The work lab is shared with other DOC-029 agents; their records and notifications appear in the bells and lists. Assertions used DOC-029 conversations records, comment ids, and mail subjects to separate this walkthrough's events.",
+    "Events that trigger notifications, fixture Requests, conversions, team changes, Tasks, two Key dates, invitations, timezones, and one stand-in working_team comment were arranged through the API as the acting role; the article steps under test were followed in the browser.",
+    "Mail absence was observed after the pg-boss queue had no pending jobs plus a 4 to 5 second quiet window, paired with positive deliveries through the same worker; this bounds the lab, not an arbitrary relay.",
+    "Morning rounds were queued as notification.morning-round jobs in the lab's pg-boss queue rather than waiting for the hourly cron; the worker ran them with its real clock and rules. The UTC fallback for an unsaved timezone was not isolated.",
+    "Not exercised: filing as a New Version, Portal History for business Field edits and legal-only Fields, the unread badge's exclusion of removed comments in isolation, a lead time present in both lists, a Key date whose every selected person has left at round time, Knowledge-only briefings, Entity Obligation reminders, and spam or relay faults."
+  ]
+}

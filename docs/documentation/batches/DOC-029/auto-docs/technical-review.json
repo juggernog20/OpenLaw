@@ -1,0 +1,64 @@
+{
+  "articleId": "auto-doc-template",
+  "author": "DOC-029 source-review author agent (auto-docs)",
+  "reviewer": "DOC-029 source-review author agent (auto-docs)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T14:59:28Z",
+  "method": "source-inspection",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousAppCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+  "previousContentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
+  "contentSha256": "8b4d7dd36dcacac05d9d375655cb6455d3abf0c5663d95edcbe285d3c726e191",
+  "result": "corrected",
+  "classification": "precision correction, no behaviour change. No Auto-Doc source file changed between f8d7312c and 3fa407e3 (git diff f8d7312c 3fa407e3 touches only type annotations and unrelated modules). One sentence named the scanned Word parts and the new-field order loosely. The V-C56 browser walkthrough must still run at 3fa407e3 so the new record has no compatibility review.",
+  "sources": [
+    "apps/api/src/lib/auto-doc-template.ts",
+    "apps/api/src/lib/auto-doc-reading.ts",
+    "apps/api/src/lib/auto-doc-fill/values.ts",
+    "apps/api/src/lib/auto-doc-fill/render.ts",
+    "apps/api/src/modules/auto-docs/forms.ts",
+    "apps/api/src/modules/auto-docs/form-diff.ts",
+    "apps/api/src/modules/auto-docs/routes.ts",
+    "apps/web/src/routes/auto-docs.tsx",
+    "apps/web/src/routes/auto-doc-record.tsx",
+    "apps/web/src/components/auto-docs/template-pane.tsx",
+    "apps/web/src/components/auto-docs/upload-dialog.tsx",
+    "apps/web/src/components/auto-docs/publish-dialog.tsx",
+    "apps/web/src/components/auto-docs/form-builder.tsx",
+    "apps/web/src/components/shell/destinations.ts",
+    "apps/web/src/lib/roles.ts",
+    "messages/en-US.json",
+    "CONTEXT.md"
+  ],
+  "appChangesReviewed": "git diff --stat f8d7312c 3fa407e3 -- apps packages messages lists 22 files. None is under auto-docs or auto-doc-*. roles.ts and documentation-messages.ts gained type annotations only; activity-bar.tsx does not gate Auto-Docs.",
+  "corrections": [
+    {
+      "where": "Mark a Placeholder, sentences 4 and 5",
+      "before": "Type a Placeholder anywhere in the document, including headers, footers, and footnotes. Each new Placeholder gets its own form field on upload, in document order.",
+      "after": "Type a Placeholder in the body, a header, a footer, a footnote, or an endnote. Each new Placeholder gets its own form field on upload, in the order the file on the left shows them. The body comes first, then the other parts.",
+      "reason": "templateTextParts scans only word/document.xml, then word/header*.xml, footer*.xml, footnotes.xml and endnotes.xml sorted by part name. Other parts, for example comments, are not scanned, so 'anywhere' overstated it, and endnotes were missing. detectedFields appends new fields in that scan order, so a header Placeholder gets its field after the body fields, not in visual page order. readTemplate draws the pane in the same order, so the pane order is the exact reference."
+    }
+  ],
+  "confirmed": [
+    "Access: destinations.ts shows Auto-Docs to MEMBER_PLUS_ROLES; auto-docs.tsx and auto-doc-record.tsx redirect other roles to /portal; every Auto-Doc API route uses requireRole(administrator, legal_team_member).",
+    "Labels exist in messages/en-US.json: Auto-Docs, Create Auto-Doc, Form (record section), Upload version, Clauses, Include, When a rule matches, Form field, Operator, Label, Type, Help text, No Placeholder in file version {number}, Publish, File version, Form version, How to write an Auto-Doc template.",
+    "The Form section renders TemplatePane then FormBuilder in a wrapping row, so the file is on the left and the form on the right on a wide screen.",
+    "AUTO_DOC_SLUG is /^[a-z][a-z0-9_]{0,119}$/: lowercase first letter, then lowercase letters, digits, underscores, 120 characters in total.",
+    "parseAutoDocPlaceholder accepts at most one directive (extra bar parts are refused) and only upper, date:YYYY-MM-DD, date:DD/MM/YYYY, date:MMMM D, YYYY, or currency with a three-letter code in Intl.supportedValuesOf('currency').",
+    "values.ts: upper uppercases any answer; currency formats a number or currency answer with Intl.NumberFormat currency style; each date pattern prints as named.",
+    "detectedFields mints date for a date directive, currency for a currency directive, text otherwise; two type-requiring directives that disagree mint text. upper has no type requirement.",
+    "publicationGaps refuses a date directive on a non-date field and a currency directive on a field that is not currency or number, naming the field label and the Placeholder text; the publish route returns 409 with the gaps.",
+    "Upload refusals: invalid slug, invalid directive, unknown currency, unclosed brace, stray closing brace, Block close without open, and unclosed Block each throw TemplateDetectionError with the offending text quoted; detectTemplateUpload returns it as the 400 detail and UploadDialog shows that detail.",
+    "Blocks: RuleCard Include select offers Always and When a rule matches, then Form field, Operator and value; the Clauses caption says A Block with no rule is always included. CONTEXT.md says a Block keeps its own formatting.",
+    "Re-upload appends a file version and a form version; earlier fields stay; routes.ts orphanedFields lists fields once matched whose slug the newest scan lacks, and the form row shows No Placeholder in file version N.",
+    "PublishDialog picks one file version and one form version; the caption says Later edits leave this pair unchanged until you publish again; CONTEXT.md Live pair matches.",
+    "The template pane Help link targets /help/auto-doc-template, so the article id and title must stay."
+  ],
+  "walkthroughNotes": [
+    "The DOC-028 fixtures hold body, header, footer and footnote Placeholders but no endnote. An independent walkthrough that wants browser proof of the endnote claim needs a fixture with one, or it records the endnote claim as source-only.",
+    "The corrected field-order claim can be checked with doc028-services-v1.docx: reference_code appears only in the footer, so its Reference code field should come after every body field."
+  ],
+  "limitations": [
+    "Source inspection only. The V-C56 browser walkthrough is required before verification."
+  ]
+}

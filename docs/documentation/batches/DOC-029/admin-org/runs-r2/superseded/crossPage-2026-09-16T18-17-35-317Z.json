@@ -1,0 +1,38 @@
+{
+  "section": "crossPage",
+  "reviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth2",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
+    "authentication-and-email": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208"
+  },
+  "startedAt": "2026-09-16T18:17:35.317Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "OpenLaw checks the account's actual role, whichever sign-in page the person opened",
+      "expected": "With Legal password sign-in off, a Legal Team Member is refused on the Portal page too; a Business User with a password can use the staff page",
+      "startedAt": "2026-09-16T18:17:36.419Z",
+      "finishedAt": "2026-09-16T18:17:39.164Z",
+      "actual": "With Email and password off under Legal User Authentication, the Legal Team Member's password sign-in on the Business Portal page was refused (Password sign-in is disabled for this account.; me 401). With Business Portal password sign-in on, the Business User's password sign-in on the staff page succeeded (me 200, business_user, landed /portal/onboarding). Legal password sign-in was turned back on.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An identity with no account is refused when it first redeems a link issued before its domain was removed",
+      "expected": "No session and no account",
+      "startedAt": "2026-09-16T18:17:39.164Z",
+      "finishedAt": "2026-09-16T18:17:40.574Z",
+      "actual": "A never-seen address on northwind.example got \"Sign in to OpenLaw\" while the domain was allowed. After Remove northwind.example, opening that link ended on /api/auth/magic-link/verify (\"{\"message\":\"This email address is not eligible for portal access.\"}\") with no session (me 401) and no account. The domain was added back.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T18:17:40.577Z"
+}

@@ -1,0 +1,1177 @@
+{
+  "batch": "DOC-029",
+  "group": "operator-install",
+  "round": "2-2",
+  "basedOn": "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-1.mjs",
+  "reviewer": "DOC-029r2 independent walkthrough agent (operator-install, round 2)",
+  "reviewerKind": "agent",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "projects": ["doc029r2-opinst2", "doc029r2-opinst2-fx"],
+  "origin": "https://openlaw-r2.localhost:23321",
+  "localAddress": "http://127.0.0.1:23320",
+  "note": "Container-operation walkthrough by an agent, not a human operator study. Commands ran against disposable Compose projects owned by this walkthrough. Secrets, cookies, mail bodies and links are not recorded; command output is reduced to exit codes and selected sanitized lines.",
+  "images": {
+    "atInstall": {
+      "app": "sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455",
+      "worker": "sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455",
+      "doc-engine": "sha256:20442984d67650d438966b9f82d267ea9c0297c3368dd782f061e959323a3a9f"
+    },
+    "atEnd": {
+      "app": "sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455",
+      "worker": "sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455",
+      "doc-engine": "sha256:20442984d67650d438966b9f82d267ea9c0297c3368dd782f061e959323a3a9f",
+      "postgres": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2 (postgres:16)"
+    },
+    "note": "The images phase read the running containers before teardown. The revision tags pointed to the same IDs at install and at the end of the run."
+  },
+  "articleHashes": {
+    "install": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc",
+    "deployment-configuration": "e50a783f16931ee6132b052fd520ee348b6dd73952cdf687e3cdce31366cd622",
+    "first-run": "7a2b1b450917b8c0d25db4e344dc3778d406c57edfe33625b40a9acb3c7580b5"
+  },
+  "runs": [
+    {
+      "phase": "install",
+      "startedAt": "2026-09-16T18:43:51.015Z",
+      "completedAt": "2026-09-16T18:44:07.851Z"
+    },
+    {
+      "phase": "fixtures",
+      "startedAt": "2026-09-16T18:44:14.515Z",
+      "completedAt": "2026-09-16T18:44:18.770Z"
+    },
+    {
+      "phase": "firstrun",
+      "startedAt": "2026-09-16T18:44:19.040Z",
+      "completedAt": "2026-09-16T18:44:23.138Z"
+    },
+    {
+      "phase": "checks",
+      "startedAt": "2026-09-16T18:44:30.952Z",
+      "completedAt": "2026-09-16T18:44:35.565Z"
+    },
+    {
+      "phase": "install-negatives",
+      "startedAt": "2026-09-16T18:44:35.844Z",
+      "completedAt": "2026-09-16T18:44:56.134Z"
+    },
+    {
+      "phase": "apply",
+      "startedAt": "2026-09-16T18:44:56.387Z",
+      "completedAt": "2026-09-16T18:45:50.079Z"
+    },
+    {
+      "phase": "proxy",
+      "startedAt": "2026-09-16T18:45:50.339Z",
+      "completedAt": "2026-09-16T18:46:04.258Z"
+    },
+    {
+      "phase": "storage",
+      "startedAt": "2026-09-16T18:46:13.694Z",
+      "completedAt": "2026-09-16T18:47:54.191Z"
+    },
+    {
+      "phase": "engine",
+      "startedAt": "2026-09-16T18:47:54.435Z",
+      "completedAt": "2026-09-16T18:50:14.478Z"
+    },
+    {
+      "phase": "database",
+      "startedAt": "2026-09-16T18:50:14.715Z",
+      "completedAt": "2026-09-16T18:51:19.224Z"
+    },
+    {
+      "phase": "mail",
+      "startedAt": "2026-09-16T18:51:25.030Z",
+      "completedAt": "2026-09-16T18:51:38.301Z"
+    },
+    {
+      "phase": "mail-no-from",
+      "startedAt": "2026-09-16T18:51:38.525Z",
+      "completedAt": "2026-09-16T18:52:58.393Z"
+    },
+    {
+      "phase": "mail-both",
+      "startedAt": "2026-09-16T18:52:58.629Z",
+      "completedAt": "2026-09-16T18:53:55.583Z"
+    },
+    {
+      "phase": "settings-email",
+      "startedAt": "2026-09-16T18:53:55.859Z",
+      "completedAt": "2026-09-16T18:53:57.120Z"
+    },
+    {
+      "phase": "mail-both",
+      "startedAt": "2026-09-16T18:54:14.192Z",
+      "completedAt": "2026-09-16T18:54:44.786Z"
+    },
+    {
+      "phase": "keys",
+      "startedAt": "2026-09-16T18:54:50.372Z",
+      "completedAt": "2026-09-16T18:56:46.372Z"
+    },
+    {
+      "phase": "private-overlay",
+      "startedAt": "2026-09-16T18:56:46.585Z",
+      "completedAt": "2026-09-16T18:56:59.473Z"
+    },
+    {
+      "phase": "private-apply",
+      "startedAt": "2026-09-16T18:56:59.701Z",
+      "completedAt": "2026-09-16T18:57:13.120Z"
+    },
+    {
+      "phase": "private-proxy",
+      "startedAt": "2026-09-16T18:57:13.375Z",
+      "completedAt": "2026-09-16T18:57:13.743Z"
+    },
+    {
+      "phase": "private-serve",
+      "startedAt": "2026-09-16T18:57:13.977Z",
+      "completedAt": "2026-09-16T18:57:17.223Z"
+    },
+    {
+      "phase": "private-origin",
+      "startedAt": "2026-09-16T18:57:17.460Z",
+      "completedAt": "2026-09-16T18:57:52.294Z"
+    },
+    {
+      "phase": "private-emails",
+      "startedAt": "2026-09-16T18:57:52.846Z",
+      "completedAt": "2026-09-16T18:57:58.380Z"
+    },
+    {
+      "phase": "private-live",
+      "startedAt": "2026-09-16T18:58:29.046Z",
+      "completedAt": "2026-09-16T18:58:43.962Z"
+    },
+    {
+      "phase": "images",
+      "startedAt": "2026-09-16T18:59:13.647Z",
+      "completedAt": "2026-09-16T18:59:13.923Z"
+    },
+    {
+      "phase": "teardown",
+      "startedAt": "2026-09-16T19:00:02.291Z",
+      "completedAt": "2026-09-16T19:00:14.675Z"
+    }
+  ],
+  "steps": [
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check prerequisites: docker version, docker compose version, docker context show, Git and OpenSSL",
+      "expected": "Docker Engine and the Compose plugin answer, the context is the intended host, Git and OpenSSL are present.",
+      "actual": "Docker Engine 29.8.0, Compose 5.5.1, context \"default\" (the local host), git version 2.55.0 | OpenSSL 3.6.4 25 Aug 2026 (Library: OpenSSL 3.6.4 25 Aug 2026). Free disk: 1.5T.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:51.016Z",
+      "at": "2026-09-16T18:43:51.108Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Clone into a new directory, enter it, and select the documented revision",
+      "expected": "A detached checkout at 57e77e386be31b2a319f7143dd54d00123e65efe.",
+      "actual": "git clone and git checkout --detach exited 0 in 3 s. HEAD is 57e77e386be31b2a319f7143dd54d00123e65efe; 0 uncommitted paths.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:51.109Z",
+      "at": "2026-09-16T18:43:54.659Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Run the grouped .env commands",
+      "expected": ".env exists with mode 600 and both keys generated.",
+      "actual": "The block exited 0. .env has mode 600. AUTH_SECRET and OPENLAW_SECRET_KEY each hold a different 44-character generated value (values not recorded).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:54.660Z",
+      "at": "2026-09-16T18:43:54.678Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Run the grouped .env commands again over the existing .env",
+      "expected": "The commands refuse to overwrite the existing .env and stop before changing its keys.",
+      "actual": "The second run exited 1 with \"bash: line 4: .env: cannot overwrite existing file\". The .env bytes were unchanged (same SHA-256 before and after).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:54.678Z",
+      "at": "2026-09-16T18:43:54.681Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Edit .env with the origin, port and project name, and create compose.operator.yml",
+      "expected": "Each setting appears once; compose.operator.yml names the two revision-tagged images.",
+      "actual": "Added COMPOSE_PROJECT_NAME=doc029r2-opinst2, COMPOSE_FILE=compose.yml:compose.operator.yml, OPENLAW_BUILD_COMMIT=57e77e386be31b2a319f7143dd54d00123e65efe, OPENLAW_BUILD_DIRTY=false, BASE_URL=https://openlaw-r2.localhost:23321 (the local proxy origin chosen for this check) and PORT=23320, each once. Wrote compose.operator.yml exactly as the article shows. Saving the keys in a secret store was represented by the private walkthrough directory outside the repository.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:54.682Z",
+      "at": "2026-09-16T18:43:54.683Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the configuration: docker compose config --quiet and --services",
+      "expected": "config --quiet prints nothing and exits 0; the services are app, worker, postgres and doc-engine.",
+      "actual": "docker compose config --quiet exited 0 with no output. config --services listed app, doc-engine, postgres, worker.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:54.683Z",
+      "at": "2026-09-16T18:43:54.789Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "docker compose pull postgres",
+      "expected": "Postgres 16 is available.",
+      "actual": "docker compose pull postgres exited 0 in 1 s.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:54.789Z",
+      "at": "2026-09-16T18:43:55.969Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "docker compose build app doc-engine",
+      "expected": "Both images build and carry the revision tags; the worker needs no separate build.",
+      "actual": "docker compose build app doc-engine exited 0 in 2 s. openlaw-local:57e77e386be31b2a319f7143dd54d00123e65efe is sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455; openlaw-engine-local:57e77e386be31b2a319f7143dd54d00123e65efe is sha256:20442984d67650d438966b9f82d267ea9c0297c3368dd782f061e959323a3a9f.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:55.970Z",
+      "at": "2026-09-16T18:43:57.922Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "docker compose up -d --no-build --pull never, then docker compose ps",
+      "expected": "The four services start from the built images.",
+      "actual": "up exited 0. docker compose ps: app running; doc-engine running; postgres running; worker running.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:43:57.923Z",
+      "at": "2026-09-16T18:44:04.483Z"
+    },
+    {
+      "phase": "install",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "curl --fail http://127.0.0.1:<PORT>/readyz; check the worker is running and the document engine becomes healthy",
+      "expected": "readyz succeeds; worker running; doc-engine healthy.",
+      "actual": "curl --fail /readyz exited 0 with HTTP 200. The worker is running and the doc-engine reports healthy. The running app and worker containers use sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455; doc-engine uses sha256:20442984d67650d438966b9f82d267ea9c0297c3368dd782f061e959323a3a9f. Elapsed from the first prerequisite command to readiness: 17 s on this host (build cache warm from earlier labs of the same revision).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:04.484Z",
+      "at": "2026-09-16T18:44:07.850Z"
+    },
+    {
+      "phase": "fixtures",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start owned test dependencies: SMTP relay stand-in, MinIO, Azurite, a separate Postgres 16, and a Caddy reverse proxy on the app host",
+      "expected": "The fixture project starts beside the installation without changing its services.",
+      "actual": "Fixture project doc029r2-opinst2-fx started: Mailpit as the SMTP relay stand-in (relay:1025 on the installation's backend network, UI on 127.0.0.1:23322), MinIO (127.0.0.1:23323), Azurite (127.0.0.1:23324), a separate postgres:16 service reachable only on the backend network as extdb, and caddy:2-alpine on the host network serving https://openlaw-r2.localhost:23321 with \"reverse_proxy 127.0.0.1:23320\". Caddy issues the localhost certificate from its internal CA; the browser context accepts that CA, which does not test public certificate issuance.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:14.516Z",
+      "at": "2026-09-16T18:44:18.389Z"
+    },
+    {
+      "phase": "fixtures",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Open the HTTPS origin and check that it reaches Set up OpenLaw",
+      "expected": "The proxy origin serves the Set up OpenLaw page on an empty instance.",
+      "actual": "GET https://openlaw-r2.localhost:23321 answered 200 through Caddy, and the page shows the \"Set up OpenLaw\" heading. Screenshot r2-2-setup-through-proxy.png.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:18.390Z",
+      "at": "2026-09-16T18:44:18.769Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Create the initial Administrator through the HTTPS origin (first-run.md: Set up OpenLaw)",
+      "expected": "Create Administrator signs the fictional Administrator in and opens Welcome to OpenLaw.",
+      "actual": "Created the fictional Administrator Avery Morgan at https://openlaw-r2.localhost:23321. OpenLaw signed her in and showed \"Welcome to OpenLaw\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:19.122Z",
+      "at": "2026-09-16T18:44:19.667Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Welcome wizard up to Outbound email, then check that the wizard cannot finish without email",
+      "expected": "Continue on Outbound email is unavailable and completing onboarding is refused while email is not configured.",
+      "actual": "Your organization saved \"DOC-029 operator-install Organization\"; Authentication and Business-user portal continued with defaults. On Outbound email (Step 5 of 9) Continue was disabled and no Set up later was offered. A direct completion request answered HTTP 409 \"Configure outbound email before finishing instance setup.\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:19.691Z",
+      "at": "2026-09-16T18:44:20.042Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Save and test the SMTP relay in Outbound email",
+      "expected": "Save relay stores the relay, Send test email delivers to the Administrator, and Continue becomes available.",
+      "actual": "Filled SMTP server relay, Connection security None, Port 1025, Authentication None, Sender name \"DOC-029r2 operator-install\" and Sender email openlaw@doc029-install.example. Save relay stored it; Send test email delivered \"OpenLaw test email\" to avery.morgan@doc029-install.example at the owned relay; Continue became available.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:20.043Z",
+      "at": "2026-09-16T18:44:21.205Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Invite a colleague, skip E-signature and AI analysis, and Finish on Review",
+      "expected": "The invitation arrives with a link on the configured origin; Finish enters the app.",
+      "actual": "Send invite delivered an invitation \"Set your OpenLaw password\" to the fictional Rowan Operator; its link uses origin https://openlaw-r2.localhost:23321 (token not recorded). E-signature and AI analysis were set up later; Finish on Review entered the app at /. Onboarding completed: true.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:21.205Z",
+      "at": "2026-09-16T18:44:23.096Z"
+    },
+    {
+      "phase": "checks",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Sign in through the intended origin",
+      "expected": "Password sign-in through the proxy origin reaches the app.",
+      "actual": "Signed in as Avery Morgan at https://openlaw-r2.localhost:23321/auth/login; the browser left the sign-in page for /.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:30.953Z",
+      "at": "2026-09-16T18:44:31.438Z"
+    },
+    {
+      "phase": "checks",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Create a fictional Contract, upload a small supported Document, download it again and check its processing result",
+      "expected": "The Contract exists; the downloaded bytes match; processing reaches ready.",
+      "actual": "Created Contract 1 \"DOC-029 operator-install check contract\". Uploaded a one-page PDF (201); its download matched the uploaded SHA-256. Text extraction reached \"ready\" with the uploaded words (source native_layer).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:31.477Z",
+      "at": "2026-09-16T18:44:33.071Z"
+    },
+    {
+      "phase": "checks",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Confirm the test invitation's link is usable",
+      "expected": "The recipient can open the link on the configured origin and set a password, then sign in.",
+      "actual": "Opened the invitation link on https://openlaw-r2.localhost:23321, set a password for Rowan Operator, and signed in with it (role legal_team_member).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:33.071Z",
+      "at": "2026-09-16T18:44:33.539Z"
+    },
+    {
+      "phase": "checks",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Confirm that the worker processes new work after a restart",
+      "expected": "After docker compose restart worker, a new upload is processed.",
+      "actual": "docker compose restart worker exited 0. A PDF uploaded afterwards reached \"ready\" with its words.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:33.539Z",
+      "at": "2026-09-16T18:44:35.495Z"
+    },
+    {
+      "phase": "checks",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Record the source revision, resolved images, project name, origin and storage location",
+      "expected": "The identities can be read back from the running installation.",
+      "actual": "Source 57e77e386be31b2a319f7143dd54d00123e65efe; project doc029r2-opinst2; origin https://openlaw-r2.localhost:23321; local files in volume doc029r2-opinst2_openlaw-files; images as recorded in the log's images field.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:35.495Z",
+      "at": "2026-09-16T18:44:35.563Z"
+    },
+    {
+      "phase": "install-negatives",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Missing secret: blank AUTH_SECRET",
+      "expected": "Compose refuses before any container changes; restoring the key recovers.",
+      "actual": "With AUTH_SECRET blank, config --quiet exited 1 and up exited 1 with \"error while interpolating services.app.environment.AUTH_SECRET: required variable AUTH_SECRET is missing a value: AUTH_SECRET is required \u2014 generate one with `openssl rand -base64 32` and set it in .env\". docker compose ps still listed app, doc-engine, postgres, worker. Restoring the key made config --quiet exit 0; /readyz answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:35.846Z",
+      "at": "2026-09-16T18:44:36.050Z"
+    },
+    {
+      "phase": "install-negatives",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Occupied port: set PORT to a port an unrelated listener already holds",
+      "expected": "The start fails and names the port; the other listener is untouched; an unused port recovers.",
+      "actual": "With PORT=23326 held by an unrelated owned listener, up exited 1 with \"failed to bind host port 0.0.0.0:23326/tcp: address already in use\". docker compose ps then listed doc-engine, postgres. The unrelated listener still answered 200. Restoring PORT=23320 and running up -d --no-build --pull never brought the app back; /readyz 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:36.050Z",
+      "at": "2026-09-16T18:44:51.439Z"
+    },
+    {
+      "phase": "install-negatives",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Unavailable dependency: stop the bundled database",
+      "expected": "Readiness fails while the database is unavailable and recovers when it returns.",
+      "actual": "docker compose stop postgres; /readyz then answered 503. docker compose start postgres; /readyz answered 200 again.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:51.440Z",
+      "at": "2026-09-16T18:44:56.125Z"
+    },
+    {
+      "phase": "install-negatives",
+      "scenario": "V-C44",
+      "articles": ["install"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: the authoring lab is not used as installation evidence",
+      "expected": "All V-C44 observations come from the owned project built by the article's commands.",
+      "actual": "Every V-C44 step ran against doc029r2-opinst2, built by the article's own clone, .env and Compose commands. No lab.mjs lab, seed data, or dev overlay was used.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:56.126Z",
+      "at": "2026-09-16T18:44:56.126Z"
+    },
+    {
+      "phase": "apply",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "docker compose restart does not apply a changed .env",
+      "expected": "After setting MAX_UPLOAD_MB=1 and restarting, the app still has the old environment.",
+      "actual": "After adding MAX_UPLOAD_MB=1 and docker compose restart app, the container's MAX_UPLOAD_MB was still empty and a 1,100,000-byte upload was accepted (201).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:44:56.460Z",
+      "at": "2026-09-16T18:45:09.107Z"
+    },
+    {
+      "phase": "apply",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "up -d --no-build --pull never applies it; MAX_UPLOAD_MB=1 refuses a larger upload and accepts a smaller one",
+      "expected": "The recreated app enforces the 1 MB ceiling.",
+      "actual": "up -d --no-build --pull never recreated the app; MAX_UPLOAD_MB is now 1 in the container. The 1,100,000-byte upload was refused with 413 \"That file is over the 1 MB upload limit.\"; a 200,000-byte upload was accepted (201). The Caddy proxy has no body limit configured, so the app's own refusal was seen.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:09.108Z",
+      "at": "2026-09-16T18:45:22.290Z"
+    },
+    {
+      "phase": "apply",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "An unreadable MAX_UPLOAD_MB falls back to the default instead of stopping startup",
+      "expected": "MAX_UPLOAD_MB=ten starts normally and accepts a 1.1 MB upload.",
+      "actual": "With MAX_UPLOAD_MB=ten the app started (/readyz 200) and accepted the 1,100,000-byte upload (201), so the ceiling fell back to the 100 MB default. The setting was then removed and the containers recreated.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:22.291Z",
+      "at": "2026-09-16T18:45:48.353Z"
+    },
+    {
+      "phase": "apply",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "config --quiet validates without printing the expanded configuration",
+      "expected": "Exit 0 and no output.",
+      "actual": "docker compose config --quiet exited 0 and printed nothing on stdout or stderr.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:48.353Z",
+      "at": "2026-09-16T18:45:48.413Z"
+    },
+    {
+      "phase": "apply",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "App and worker share image and configuration with different commands; the engine has no database or credential access; database and engine ports are unpublished; PORT moves only the host port",
+      "expected": "Inspection matches the article's topology statements.",
+      "actual": "App and worker run the same image sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455 with commands [\"node\",\"apps/api/dist/index.js\"] and [\"node\",\"apps/worker/dist/index.js\"]. DATABASE_URL, STORAGE_PATH, BASE_URL, DOC_ENGINE_URL and OPENLAW_SECRET_KEY are identical in both (compared, not recorded). The doc-engine container has no DATABASE_URL, AUTH_SECRET or OPENLAW_SECRET_KEY and joins only doc029r2-opinst2_openlaw-doc-engine. Postgres and doc-engine publish no host ports; the app maps container port 3000 to host port 23320.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:48.413Z",
+      "at": "2026-09-16T18:45:49.858Z"
+    },
+    {
+      "phase": "apply",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Document-engine defaults: DOC_ENGINE_URL and DOC_ENGINE_TMPFS_SIZE",
+      "expected": "The bundled engine URL is http://doc-engine:8080 and scratch space is a 2g tmpfs.",
+      "actual": "The app's DOC_ENGINE_URL is http://doc-engine:8080. The doc-engine mounts /tmp as tmpfs {\"/tmp\":\"mode=1777,size=2g\"} with a read-only root filesystem (true).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:49.859Z",
+      "at": "2026-09-16T18:45:50.077Z"
+    },
+    {
+      "phase": "proxy",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Sign in through the proxy origin",
+      "expected": "Password sign-in through Caddy succeeds.",
+      "actual": "Signed in at https://openlaw-r2.localhost:23321 in the browser; /api/v1/me through the proxy returned the Administrator.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:50.339Z",
+      "at": "2026-09-16T18:45:50.953Z"
+    },
+    {
+      "phase": "proxy",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Wrong origin: a request whose Origin is not BASE_URL is refused",
+      "expected": "Sign-in posted with a foreign Origin is refused; the direct port with the configured Origin still works.",
+      "actual": "Sign-in through the proxy with Origin https://not-the-configured-origin.example answered 403. Sign-in on the direct app port with Origin http://127.0.0.1:23320 (not BASE_URL) answered 403; with Origin set to BASE_URL it answered 200. The app accepts only the configured origin.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:50.954Z",
+      "at": "2026-09-16T18:45:51.006Z"
+    },
+    {
+      "phase": "proxy",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Upload and download a Document through the proxy origin",
+      "expected": "Bytes match after a round trip through the proxy.",
+      "actual": "Uploaded a Document through https://openlaw-r2.localhost:23321 (201) and downloaded it through the same origin; the SHA-256 matched.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:51.007Z",
+      "at": "2026-09-16T18:45:51.081Z"
+    },
+    {
+      "phase": "proxy",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "A live update arrives through the proxy",
+      "expected": "With the Contract page open in one browser, a comment by a second person appears as a record frame on /api/events and on screen without a reload.",
+      "actual": "The Administrator's browser held Contract 1 open through https://openlaw-r2.localhost:23321 and read /api/events for that record (HTTP 200). Rowan Operator posted a comment through the proxy (201). A named record frame (record) for that Contract arrived 21 ms later. The comment text did not appear in the visible page within 10 s; the page's timeOrigin was unchanged.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:45:51.081Z",
+      "at": "2026-09-16T18:46:04.257Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "local driver: upload and download, file lands in the shared named volume at the default STORAGE_PATH",
+      "expected": "Bytes match; the file is under /var/lib/openlaw/files in both app and worker.",
+      "actual": "With STORAGE_DRIVER unset (local), an upload returned 201 and its download matched. The app and worker both see 7 files under /var/lib/openlaw/files in the shared volume.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:46:13.808Z",
+      "at": "2026-09-16T18:46:14.051Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "s3 driver: create the bucket first, set the S3 variables, recreate; upload/download new and older Documents; worker processing",
+      "expected": "New file is written to the bucket; older local file still downloads; processing reaches ready.",
+      "actual": "Created bucket doc029-openlaw-files in MinIO, set STORAGE_DRIVER=s3 with S3_BUCKET, S3_ENDPOINT=http://minio:9000, S3_FORCE_PATH_STYLE=true and explicit keys, and recreated. /readyz 200. A new upload returned 201 and the bucket now holds 1 objects. Downloads: local 200 match, s3 200 match. A PDF written to s3 reached \"ready\" in the worker.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:46:14.052Z",
+      "at": "2026-09-16T18:46:28.773Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "azure-blob driver: create the container first, set the Azure variables, recreate; every earlier store still reads; worker processing",
+      "expected": "New file in the Azurite container; local and s3 files still download; processing reaches ready.",
+      "actual": "Created container doc029-openlaw-files in Azurite, set STORAGE_DRIVER=azure-blob with AZURE_BLOB_CONTAINER, AZURE_BLOB_ACCOUNT, AZURE_BLOB_ACCOUNT_KEY and AZURE_BLOB_ENDPOINT=http://azurite:10000/devstoreaccount1, and recreated. /readyz 200. A new upload returned 201; the container holds 1 blobs. Downloads: local 200 match, s3 200 match, azure 200 match. A PDF written to azure-blob reached \"ready\" in the worker.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:46:28.773Z",
+      "at": "2026-09-16T18:46:43.525Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Startup validates storage configuration: STORAGE_DRIVER=s3 without S3_BUCKET",
+      "expected": "The app refuses to start with a storage configuration message; correcting it recovers.",
+      "actual": "With STORAGE_DRIVER=s3 and S3_BUCKET removed, the app did not become ready (/readyz unreachable (ECONNREFUSED)) and logged \"Set S3_BUCKET when STORAGE_DRIVER is s3.\". Restoring the settings and recreating returned /readyz 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:46:43.526Z",
+      "at": "2026-09-16T18:47:14.564Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Unavailable storage: a wrong S3_ENDPOINT on the retained s3 reader",
+      "expected": "The app stays ready but the older s3 Document's download fails; correcting the endpoint recovers.",
+      "actual": "With S3_ENDPOINT=http://minio-unreachable:9000 the app still became ready (/readyz 200) and the local Document still downloaded. The s3 Document's download answered 500 after 0 s. Restoring S3_ENDPOINT=http://minio:9000 and recreating: local 200 match, s3 200 match, azure 200 match.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:47:14.564Z",
+      "at": "2026-09-16T18:47:40.990Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Return new writes to local while keeping s3 and azure-blob readers configured",
+      "expected": "All three stores stay readable.",
+      "actual": "Removed STORAGE_DRIVER (default local) and kept the S3 and Azure reader settings. A new local upload returned 201. Downloads: local 200 match, s3 200 match, azure 200 match, localAgain 200 match.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:47:40.991Z",
+      "at": "2026-09-16T18:47:54.190Z"
+    },
+    {
+      "phase": "engine",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "DOC_ENGINE_TIMEOUT_MS above 420000 stops app and worker startup",
+      "expected": "Both processes refuse to start; removing the value recovers.",
+      "actual": "With DOC_ENGINE_TIMEOUT_MS=420001, the app did not become ready (/readyz unreachable (ECONNREFUSED)) and logged \"DOC_ENGINE_TIMEOUT_MS must be at most 420000 milliseconds, so two engine calls still fit inside a derivation job's queue budget.\". The worker logged the same refusal (state restarting, Restarting (1) 6 seconds ago). Removing the setting and recreating returned /readyz 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:47:54.436Z",
+      "at": "2026-09-16T18:48:30.366Z"
+    },
+    {
+      "phase": "engine",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "DOC_ENGINE_COMPARE_TIMEOUT_MS above 840000 stops startup",
+      "expected": "Startup refuses; removing the value recovers.",
+      "actual": "With DOC_ENGINE_COMPARE_TIMEOUT_MS=840001, the app did not become ready (/readyz unreachable (ECONNREFUSED)) and logged \"DOC_ENGINE_COMPARE_TIMEOUT_MS must be at most 840000 milliseconds, so one engine call still fits inside a comparison job's queue budget.\". The worker logged the same refusal (state restarting, Restarting (1) 6 seconds ago). Removing the setting and recreating returned /readyz 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:48:30.367Z",
+      "at": "2026-09-16T18:49:05.758Z"
+    },
+    {
+      "phase": "engine",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "An unavailable engine leaves the app ready while processing does not complete; restoring it recovers",
+      "expected": "With doc-engine stopped, /readyz stays 200 and a new PDF does not reach ready; after start, a new PDF reaches ready.",
+      "actual": "With docker compose stop doc-engine, /readyz answered 200. A PDF uploaded then was still \"pending\" after 60 s. After docker compose start doc-engine, a new PDF reached \"ready\"; the earlier one was then \"pending\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:49:05.758Z",
+      "at": "2026-09-16T18:50:14.477Z"
+    },
+    {
+      "phase": "database",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "External database: set DATABASE_URL to a separate PostgreSQL 16 and recreate",
+      "expected": "The app migrates the selected database, becomes ready, and writes records there; the bundled service stays in the topology.",
+      "actual": "Set DATABASE_URL to the separate postgres:16 service and recreated. /readyz 200; the selected database reported needsSetup=true. It holds 138 applied migration rows. Creating the fictional Administrator \"DOC-029 Sam External\" answered 201; that user exists in the external database (count 1) and not in the bundled one (count 0). The bundled postgres service stayed running.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:50:14.716Z",
+      "at": "2026-09-16T18:50:30.347Z"
+    },
+    {
+      "phase": "database",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Unreachable external database: DATABASE_URL names a host that does not answer",
+      "expected": "The app does not become ready; correcting the URL recovers.",
+      "actual": "With the host extdb-missing, /readyz answered unreachable (ECONNREFUSED) and the app logged \"Error: getaddrinfo ENOTFOUND extdb-missing\". Restoring the external URL returned /readyz 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:50:30.348Z",
+      "at": "2026-09-16T18:51:06.155Z"
+    },
+    {
+      "phase": "database",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove DATABASE_URL: the bundled database and its earlier records return; nothing was transferred",
+      "expected": "The original Administrator and Contracts are present; Sam External is not.",
+      "actual": "Removed DATABASE_URL and recreated. /readyz 200; Avery Morgan signed in; the Contract list has the same 1 records as before; Sam External does not exist in the bundled database.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:51:06.155Z",
+      "at": "2026-09-16T18:51:19.223Z"
+    },
+    {
+      "phase": "mail",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Saved wizard relay is in use",
+      "expected": "Source app; a test send is delivered.",
+      "actual": "email-settings source \"app\"; Send test answered 200 and the message arrived at the owned relay.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:51:25.031Z",
+      "at": "2026-09-16T18:51:25.197Z"
+    },
+    {
+      "phase": "mail",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "SMTP_URL and SMTP_FROM pin email to the environment, even when the pinned relay does not work",
+      "expected": "Source env; saving a relay in the app is refused; the test send fails and nothing reaches the saved relay.",
+      "actual": "With both set to a relay host that does not exist, email-settings source is \"env\". Saving the app relay answered 409. The test send answered 502 \"The test email could not be sent. The relay host could not be found. Check the SMTP server name.\". The saved relay received nothing (3 before, 3 after).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:51:25.198Z",
+      "at": "2026-09-16T18:51:38.301Z"
+    },
+    {
+      "phase": "mail-no-from",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "SMTP_URL set to the working relay, SMTP_FROM unset, containers recreated: the API refuses a test email and the relay receives nothing",
+      "expected": "Source stays env with no From address; saving a relay in the app is refused; POST /api/v1/email-settings/test is refused; nothing reaches the relay.",
+      "actual": "Set SMTP_URL to the working relay ([redacted]), removed SMTP_FROM, and ran up -d --no-build --pull never (exit 0, /readyz 200). SMTP_FROM is empty in app and worker. email-settings source \"env\", fromAddress null. Saving an app relay answered 409. POST /api/v1/email-settings/test answered 502 \"The test email could not be sent. SMTP is not configured \u2014 save a relay first.\". The relay received 0 messages.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:51:38.526Z",
+      "at": "2026-09-16T18:51:54.838Z"
+    },
+    {
+      "phase": "mail-no-from",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "SMTP_URL without SMTP_FROM: the sign-in page does not show Set up or reset your password or Email me a sign-in link; the API refuses sign-in link and password-setup requests; no email reaches the relay",
+      "expected": "Both links are absent on the sign-in page; POST /api/v1/auth/magic-link and POST /api/v1/auth/password-setup answer with an error status; the relay count does not change.",
+      "actual": "/api/v1/auth/methods reports emailConfigured=false. On https://openlaw-r2.localhost:23321/auth/login the password form with Sign in showed; the page offered neither Set up or reset your password nor Email me a sign-in link. On /portal/login it offered neither. For a fictional address, POST /api/v1/auth/magic-link answered 403 \"Sign-in links are unavailable: this instance cannot send email. Contact your administrator.\" and POST /api/v1/auth/password-setup answered 503 \"Internal server error\". The relay received 0 messages (0 to that address).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:51:54.839Z",
+      "at": "2026-09-16T18:52:03.482Z"
+    },
+    {
+      "phase": "mail-no-from",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "SMTP_URL without SMTP_FROM: an invitation does not report the problem; Settings -> Users -> Invite user lists the person as Invited and no email is sent (#889)",
+      "expected": "The invitation is accepted with no email-unavailable report; the Users list shows the person as Invited before and after reload; the relay receives nothing.",
+      "actual": "Settings -> Users -> Invite user -> Send invite: POST /api/v1/auth/invites answered 201; the dialog closed; alerts on the page: \"none\". The row read \"DI DOC-029r2 no-From invitee doc029-r2-no-from-1789584723486@doc029-install.example Legal team member No Department Invited \u2014 Resend invite Revoke invite\" and after reload \"DI DOC-029r2 no-From invitee doc029-r2-no-from-1789584723486@doc029-install.example Legal team member No Department Invited \u2014 Resend invite Revoke invite\"; the API lists status invited. The relay received 0 messages (0 to the invitee). App log: 2026-09-16T18:52:04.072Z ERROR [Better Auth]: Failed to run background task: Error: SMTP is not configured. Set it up in the Welcome to OpenLaw wizard, or set S. Screenshot r2-2-invite-without-smtp-from.png. This matches the article and is tracked as bug #889.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:52:03.483Z",
+      "at": "2026-09-16T18:52:12.301Z"
+    },
+    {
+      "phase": "mail-no-from",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "SMTP_URL without SMTP_FROM: the welcome wizard email step warns about SMTP_FROM, has no Send test email button, and an Administrator cannot finish the wizard",
+      "expected": "On a fresh database under the same environment, the email step shows a warning that the environment sets SMTP_URL but not SMTP_FROM; no Send test email button; Continue is disabled; a direct completion request is refused.",
+      "actual": "Created an empty database doc029wiz on the external Postgres, pointed DATABASE_URL at it with SMTP_URL set and SMTP_FROM unset, and recreated. Created the fictional Administrator DOC-029r2 Wren Wizard and walked the wizard to the email step (Step 5 of 9). It showed \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\". It had 0 Send test email buttons and 0 Set up later buttons, and Continue was disabled. A direct completion request answered 409 \"Configure outbound email before finishing instance setup.\"; the onboarding state read completed=false. Screenshot r2-2-wizard-email-without-smtp-from.png. DATABASE_URL was then removed and the containers recreated on the bundled database, still with SMTP_URL set and SMTP_FROM unset.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:52:12.302Z",
+      "at": "2026-09-16T18:52:43.037Z"
+    },
+    {
+      "phase": "mail-no-from",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Contrast: restore the saved wizard relay (remove SMTP_URL) and recreate; the sign-in page shows both links again",
+      "expected": "With the saved relay in use, /auth/login offers Set up or reset your password and Email me a sign-in link.",
+      "actual": "Removed SMTP_URL and recreated (exit 0, /readyz 200). https://openlaw-r2.localhost:23321/auth/login now offers Set up or reset your password and Email me a sign-in link.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:52:43.038Z",
+      "at": "2026-09-16T18:52:58.392Z"
+    },
+    {
+      "phase": "mail-both",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Set both SMTP_URL and SMTP_FROM, then invite a test address: the invitation reaches the relay",
+      "expected": "Source env with the From address; Settings -> Users -> Invite user sends an invitation that arrives at the relay from SMTP_FROM, with its link on BASE_URL; the link sets a password through the proxy.",
+      "actual": "Check did not pass: page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\"",
+      "result": "fail",
+      "startedAt": "2026-09-16T18:52:58.630Z",
+      "at": "2026-09-16T18:53:42.435Z"
+    },
+    {
+      "phase": "mail-both",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove the override and recreate: the saved relay is used again",
+      "expected": "Source app; delivery works.",
+      "actual": "Removed SMTP_URL and SMTP_FROM and recreated. Source is \"app\" and the test message arrived through the saved relay.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:53:42.436Z",
+      "at": "2026-09-16T18:53:55.583Z"
+    },
+    {
+      "phase": "settings-email",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "No separate email Settings page after the wizard",
+      "expected": "Settings navigation offers no Email page; the Setup checklist Email row, if shown, has no link.",
+      "actual": "Settings -> Organization -> General shows 31 links (Skip to content, Help, Home, Inbox, My Tasks, Matters, Contracts, Documents, Entities, Knowledge, Auto-Docs, Profile, Appearance, Notifications, View Business Portal, General, Regions, Departments, Users, Matters, Contracts, Intake, Entities, Knowledge, Auto-Docs, Notifications, AI analysis, Integrations, Business-user portal, E-signature, AI analysis); none is for email or SMTP. The onboarding state's email step reads \"email\":{\"done\":true,\"settingsPath\":null}.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:53:55.859Z",
+      "at": "2026-09-16T18:53:57.119Z"
+    },
+    {
+      "phase": "mail-both",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Set both SMTP_URL and SMTP_FROM, then invite a test address: the invitation reaches the relay",
+      "expected": "Source env with the From address; Settings -> Users -> Invite user sends an invitation that arrives at the relay from SMTP_FROM, with its link on BASE_URL; the link sets a password through the proxy.",
+      "actual": "Set SMTP_URL=[redacted] and SMTP_FROM; recreated. email-settings source \"env\", fromAddress \"DOC-029 operator-install <openlaw@doc029-install.example>\". Settings -> Users -> Invite user -> Send invite answered 201; row \"DI DOC-029r2 env invitee doc029-r2-both-1789584867330@doc029-install.example Legal team member No Department Invited \u2014 Resend invite Revoke invite\". The relay received \"Set your OpenLaw password\" for the invitee from openlaw@doc029-install.example; its link uses origin https://openlaw-r2.localhost:23321 (token not recorded). Opening the link through the proxy set a password, and the invitee signed in (200).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:54:14.193Z",
+      "at": "2026-09-16T18:54:31.598Z"
+    },
+    {
+      "phase": "mail-both",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove the override and recreate: the saved relay is used again",
+      "expected": "Source app; delivery works.",
+      "actual": "Removed SMTP_URL and SMTP_FROM and recreated. Source is \"app\" and the test message arrived through the saved relay.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:54:31.599Z",
+      "at": "2026-09-16T18:54:44.785Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Rotate OPENLAW_SECRET_KEY: set OPENLAW_SECRET_KEY_PREVIOUS to the current value and a new key, then recreate",
+      "expected": "The app reports re-encryption and the stored relay still sends.",
+      "actual": "Recreated with the previous key and a newly generated key. The app logged \"Stored credentials resealed under the key in use: smtp_url (1).\". A test send through the stored relay answered 200 and arrived.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:54:50.373Z",
+      "at": "2026-09-16T18:55:05.653Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove OPENLAW_SECRET_KEY_PREVIOUS and recreate again",
+      "expected": "The stored relay still sends under the new key alone.",
+      "actual": "Removed OPENLAW_SECRET_KEY_PREVIOUS and recreated. Boot lines about stored credentials: none. A test send answered 200 and arrived.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:55:05.653Z",
+      "at": "2026-09-16T18:55:20.918Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Mismatched key: a valid but wrong OPENLAW_SECRET_KEY",
+      "expected": "Records stay readable; the saved relay cannot be used; restoring the correct key and recreating recovers without re-entering the relay.",
+      "actual": "With a different valid key, /readyz answered 200 and the app logged \"No configured key opens these stored credentials: smtp_url (1). They are left as they are, so they are still recoverable: boot once with the old key in OPENLAW_SECRET_KEY_PREVIOUS, or paste the credentials again in Settings.\". The Contract list answered 200. Email source read \"unset\" and a test send answered 502 \"The test email could not be sent. SMTP is not configured \u2014 save a relay first.\". Restoring the retained key and recreating (without re-saving the relay) made the test send answer 200 and arrive.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:55:20.918Z",
+      "at": "2026-09-16T18:55:49.310Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Missing or short OPENLAW_SECRET_KEY: both processes require it at startup",
+      "expected": "A blank key is refused by Compose; a short key stops app and worker startup; the correct key recovers.",
+      "actual": "A blank key made up exit 1 with \"error while interpolating services.app.environment.OPENLAW_SECRET_KEY: required variable OPENLAW_SECRET_KEY is missing a value: OPENLAW_SECRET_KEY is required \u2014 generate one with `openssl rand -base64 32` and set it in .env\". A 16-character key stopped startup: /readyz unreachable (ECONNRESET); app logged \"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\"; worker logged \"{\"reason\":\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\",\"level\":\"error\",\"time\":\"2026-09-1\". Restoring the key recovered readiness and delivery.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:55:49.310Z",
+      "at": "2026-09-16T18:56:20.284Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Changing AUTH_SECRET invalidates existing sessions",
+      "expected": "A session signed in before the change is no longer accepted after recreation; restoring the key restores normal sign-in.",
+      "actual": "An existing session answered /api/v1/me 200. After replacing AUTH_SECRET and recreating, the same session answered 401. Restoring the original AUTH_SECRET and signing in again answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:56:20.285Z",
+      "at": "2026-09-16T18:56:46.371Z"
+    },
+    {
+      "phase": "private-overlay",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Private VM: check Compose 2.24.4 or later and show why the overlay needs !override",
+      "expected": "Compose is new enough. A loopback mapping added without !override keeps the base all-interfaces mapping; with !override only the loopback mapping remains.",
+      "actual": "docker compose version --short is 5.5.1 (2.24.4 or later). Resolving only the app port list (the rest of the expanded configuration was not printed or recorded): with a plain added loopback mapping the app ports were [all:23320->3000, 127.0.0.1:23320->3000], so the all-interfaces mapping stayed; with ports: !override they were [127.0.0.1:23320->3000]. The probe files were deleted.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:56:46.585Z",
+      "at": "2026-09-16T18:56:46.750Z"
+    },
+    {
+      "phase": "private-overlay",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Private VM: create compose.private.yml, update COMPOSE_FILE, BASE_URL and PORT, and check that restart does not apply them",
+      "expected": "The overlay file exists; config --quiet passes; docker compose restart leaves the old BASE_URL in app and worker.",
+      "actual": "Wrote compose.private.yml with ports: !override and the single mapping \"127.0.0.1:23320:3000\". Host port 3000 is already used by an unrelated local service on this host, so the reviewer used the article's rule to change the mapping and the proxy upstream together (upstream 127.0.0.1:23320). Set COMPOSE_FILE=compose.yml:compose.operator.yml:compose.private.yml, BASE_URL=https://openlaw-r2.company.example:23327 (the placeholder hostname with the fixture's HTTPS port) and PORT=3000 as the article shows. The project name, image selection, volumes and keys stayed unchanged. config --quiet exited 0 with no output. docker compose restart app worker exited 0, and both containers still had BASE_URL https://openlaw-r2.localhost:23321.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:56:46.751Z",
+      "at": "2026-09-16T18:56:59.471Z"
+    },
+    {
+      "phase": "private-apply",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Private VM: validate and apply with up -d --no-build --pull never; the app port is on loopback only",
+      "expected": "App and worker get the new BASE_URL; the app publishes only 127.0.0.1:<port>; nothing publishes host port 3000; the direct port is not reachable on other host addresses; records and images are unchanged.",
+      "actual": "config --quiet exited 0; up -d --no-build --pull never exited 0 and recreated the containers; /readyz on 127.0.0.1:23320 answered 200. BASE_URL is now https://openlaw-r2.company.example:23327 in the app and https://openlaw-r2.company.example:23327 in the worker. The app's port bindings are {\"3000/tcp\":[{\"HostIp\":\"127.0.0.1\",\"HostPort\":\"23320\"}]}; the only host listener on port 23320 is 127.0.0.1:23320; no project container publishes host port 3000. Direct requests to the app port on other host addresses failed: 172.17.0.1:23320 curl exit 7; 192.168.0.59:23320 curl exit 7. The app still runs openlaw-local:57e77e386be31b2a319f7143dd54d00123e65efe on the same volumes.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:56:59.702Z",
+      "at": "2026-09-16T18:57:13.119Z"
+    },
+    {
+      "phase": "private-proxy",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Private VM: install a certificate from an owned private CA and validate the adapted Caddyfile",
+      "expected": "The certificate names the hostname and chains to the CA; caddy validate accepts the Caddyfile.",
+      "actual": "Created a fictional corporate CA and a certificate for openlaw-r2.company.example signed by it (openssl verify: \"leaf.pem: OK\"). Wrote the article's Caddyfile with these adaptations: site address openlaw-r2.company.example:23327 instead of port 443, bind 172.17.0.1 (a private host bridge address standing in for 10.20.30.40), upstream 127.0.0.1:23320, plus admin off and http_port 23328 so the fixture does not take host ports 80 and 2019. The tls, header and auto_https disable_redirects lines are as shown. caddy validate exited 0 (\"Valid configuration\").",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:57:13.376Z",
+      "at": "2026-09-16T18:57:13.742Z"
+    },
+    {
+      "phase": "private-serve",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Private VM: serve HTTPS on the private address with the supplied certificate",
+      "expected": "A client that trusts the CA gets HTTPS with the configured headers; an untrusting client refuses the certificate; the proxy is not on loopback; the app is reachable only through the proxy from another network namespace.",
+      "actual": "The private proxy started. curl with only the fictional CA as trust anchor and openlaw-r2.company.example resolved to 172.17.0.1 got HTTP 200 from /readyz with x-frame-options: DENY; referrer-policy: strict-origin-when-cross-origin; x-content-type-options: nosniff. curl without that CA exited 60 (\"curl: (60) SSL certificate OpenSSL verify result: self-signed certificate in certificate chain (19)\"). The only listener on port 23327 is 172.17.0.1:23327; port 23328 listeners: none. The direct app port on the host's LAN address 192.168.0.59:23320 failed (curl exit 7), and the proxy did not answer on 127.0.0.1:23327 (curl exit 7).",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:57:13.978Z",
+      "at": "2026-09-16T18:57:17.222Z"
+    },
+    {
+      "phase": "private-origin",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Private VM: sign in through the private HTTPS origin; the old origin is no longer accepted; one origin serves the web interface and API",
+      "expected": "Browser sign-in works at the private origin; sign-in with the previous origin is refused; / returns the web app and /api answers on the same origin.",
+      "actual": "Signed in as Avery Morgan in the browser at https://openlaw-r2.company.example:23327; /api/v1/me through the private proxy returned the Administrator; page title \"Home \u00b7 OpenLaw\". A sign-in request with the previous origin https://openlaw-r2.localhost:23321 answered 403. GET / on the private origin answered \"200 text/html; charset=utf-8\"; GET /api/auth/sso/callback without an identity provider answered \"302 application/json; charset=utf-8\" from the API on the same origin (no OIDC provider was configured, so the SSO return was not tested). No port 5173 service was used.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:57:17.461Z",
+      "at": "2026-09-16T18:57:18.049Z"
+    },
+    {
+      "phase": "private-origin",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Private VM: upload, download, processing and a live update through the private proxy",
+      "expected": "Bytes match, a PDF reaches ready, and a record frame arrives through the private origin.",
+      "actual": "Check did not pass: comment post 401 (legal_team_member)",
+      "result": "fail",
+      "startedAt": "2026-09-16T18:57:18.050Z",
+      "at": "2026-09-16T18:57:52.293Z"
+    },
+    {
+      "phase": "private-emails",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Private VM: new invitation, password-setup and sign-in emails use the private hostname; an earlier email is not rewritten",
+      "expected": "Invitation, password-setup and sign-in link emails sent after the change link to the private origin; the invitation sent before the change still links to the old origin; the new invitation link sets a password through the private proxy.",
+      "actual": "Settings -> Users -> Invite user at https://openlaw-r2.company.example:23327 answered 201. The invitation \"Set your OpenLaw password\" links to https://openlaw-r2.company.example:23327 (token not recorded); opening it through the private proxy set a password and the invitee signed in (200). A password-setup request for Avery Morgan (202) sent \"Set your OpenLaw password\" linking to https://openlaw-r2.company.example:23327. A sign-in link request (202) sent \"Sign in to OpenLaw\" linking to https://openlaw-r2.company.example:23327. The invitation sent to Rowan Operator before the change still links to https://openlaw-r2.localhost:23321.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:57:52.847Z",
+      "at": "2026-09-16T18:57:58.379Z"
+    },
+    {
+      "phase": "private-live",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Private VM: upload, download, processing and a live update through the private proxy",
+      "expected": "Bytes match, a PDF reaches ready, and a record frame arrives through the private origin.",
+      "actual": "Uploaded a PDF through https://openlaw-r2.company.example:23327 (201); its download matched the SHA-256; text extraction reached \"ready\". Live update: The Administrator's browser held Contract 1 open through https://openlaw-r2.company.example:23327 and read /api/events for that record (HTTP 200). Rowan Operator posted a comment through the proxy (201). A named record frame (record) for that Contract arrived 16 ms later. The comment text did not appear in the visible page within 10 s; the page's timeOrigin was unchanged.",
+      "result": "pass",
+      "startedAt": "2026-09-16T18:58:29.047Z",
+      "at": "2026-09-16T18:58:43.961Z"
+    },
+    {
+      "phase": "teardown",
+      "scenario": "V-C45",
+      "articles": ["deployment-configuration"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove the owned fixture and installation projects",
+      "expected": "Both projects' containers, networks and volumes are removed; nothing else is touched.",
+      "actual": "docker compose -p doc029r2-opinst2-fx down -v and docker compose -p doc029r2-opinst2 down -v exited 0; no containers or volumes remain with either project label. The locally built image tags were left in the cache.",
+      "result": "pass",
+      "startedAt": "2026-09-16T19:00:02.291Z",
+      "at": "2026-09-16T19:00:14.674Z"
+    }
+  ],
+  "fixtureImages": {
+    "relay": "axllent/mailpit:v1.30",
+    "minio": "minio/minio:RELEASE.2025-09-07T16-13-09Z",
+    "azurite": "mcr.microsoft.com/azure-storage/azurite:3.36.0",
+    "externalDatabase": "postgres:16",
+    "proxy": "caddy:2-alpine",
+    "privateProxy": "caddy:2-alpine with a certificate from a fictional CA created by the reviewer"
+  },
+  "failureNotes": [
+    {
+      "phase": "mail-both (first attempt)",
+      "kind": "environment",
+      "note": "Settings -> Users -> Invite user: the browser did not receive the answer to POST /api/v1/auth/invites within 30 s. The app created the invitee at 18:53:12Z and the relay received \"Set your OpenLaw password\" from openlaw@doc029-install.example 0.07 s later, so the app did the work. The repeated phase passed with a new invitee. Round 2 attempt 1 saw the same lost-answer symptom on this shared host."
+    },
+    {
+      "phase": "private-origin (upload, download, processing and live update step)",
+      "kind": "reviewer checker fault",
+      "note": "Rowan Operator's API sign-in inside the live-update check answered 429 at 18:57:22Z (app request log), because the check sent several sign-ins from one address within a few seconds and the sign-in rate limiter is enabled. The comment post then answered 401. A reviewer probe signed Rowan in with 200 afterwards. The same step ran again in the phase private-live and passed. This is not an article error: the article says the sign-in rate limiter remains enabled."
+    }
+  ],
+  "summary": {
+    "deployment-configuration": {
+      "scenario": "V-C45",
+      "result": "pass",
+      "basis": "Every V-C45 check passed on its final attempt against article bytes e50a783f. Two failed entries stay in the log: one lost browser answer (environment) and one sign-in rate-limit hit caused by the checker. Both are followed by a passing repeat.",
+      "previousFailure": "Round 2 attempt 1 failed the sentence that said test email, sign-in link and password-setup requests 'report that email is unavailable'. The corrected paragraph now says what this run observed with SMTP_URL set and SMTP_FROM unset: the email step warning, no Send test email button, a wizard that cannot finish, a sign-in page without Set up or reset your password and Email me a sign-in link, API refusals (test email 502, sign-in link 403, password setup 503 with title Internal server error), and no email at the relay. The invitation sentences (#889) also still match."
+    },
+    "install": {
+      "scenario": "V-C44",
+      "result": "pass",
+      "basis": "Run as the prerequisite installation for V-C45. Every V-C44 step passed on its first attempt. This log is not the V-C44 evidence of record; install.md has its own record."
+    }
+  },
+  "teardown": "Both owned projects were removed with docker compose -p <project> down -v --remove-orphans, including the private proxy service. No containers, networks or volumes with either project name remain, and ports 23320-23329 have no listeners. The shared image tags stay in the local cache. The private clone, .env, fixture passwords, certificates and state file were deleted after the run.",
+  "limitations": [
+    "Independent agent container-operation walkthrough, not a human operator study.",
+    "HTTPS for the public-style path used Caddy's internal CA for openlaw-r2.localhost, accepted only in the reviewer's browser context. Public certificate issuance and DNS-01 were not tested.",
+    "The private VM check used a fictional CA and the placeholder hostname openlaw-r2.company.example:23327, bound to the host bridge address 172.17.0.1 and resolved by browser and Node mappings, not internal DNS. Host port 3000 was already in use, so the mapping and proxy upstream were changed together to 23320 as the article allows. VPN routing, firewall and IPv6 rules, corporate CA trust on employee devices, and access from a real second device were not tested.",
+    "No OIDC provider was configured. GET /api/auth/sso/callback answered 302 from the API on the private origin, but an SSO return was not tested. Signing Polling and Webhook modes, AI provider traffic and provider outbound rules were not part of this run.",
+    "The live-update checks proved that a named record frame for the Contract arrived through each proxy within 25 ms. The comment text did not appear in the visible Contract page within 10 s, so on-screen rendering is not claimed.",
+    "The SMTP relay was an owned Mailpit container without authentication.",
+    "Known issue #889 (an invitation reports success when SMTP_FROM is unset) is open. The run confirmed the behavior the article describes.",
+    "With SMTP_URL set and SMTP_FROM unset, POST /api/v1/auth/password-setup answers 503 with title Internal server error and no detail. The article does not quote a message for this refusal. The sign-in page hides the entry point in this state."
+  ],
+  "counts": {
+    "V-C45": {
+      "pass": 48,
+      "fail": 2
+    },
+    "V-C44": {
+      "pass": 24,
+      "fail": 0
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "kind": "independent-article-walkthrough",
+  "batch": "DOC-029",
+  "group": "analysis-standin",
+  "round": 1,
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (analysis-standin, round 1)",
+  "reviewerKind": "agent",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "environment": "openlaw-docs-41255c61-analysis-r1",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0"
+    }
+  ],
+  "providerMode": "Local OpenAI-compatible stand-in (provider-standin.mjs) in its own container on this lab's backend network only; fictional paper and known answers; no real provider account or traffic.",
+  "browser": "Playwright 1.63.0 Chromium, headless, one context per identity at 1440x1000 CSS px",
+  "articleHashesTested": {
+    "contract-analysis": "ce182804fbd35ffb2e8ba24cff6bc848963a56f1b04a10222dea23aedebbee39",
+    "compare-versions": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63"
+  },
+  "stamp": 1789573314477,
+  "roles": ["administrator", "legal_team_member"],
+  "parts": ["archived-pair"],
+  "setup": [
+    {
+      "at": "2026-09-16T15:41:56.497Z",
+      "text": "administrator API: Contract C-98 with a placeholder primary and a two-Version Word Document that has never been compared."
+    },
+    {
+      "at": "2026-09-16T15:42:01.531Z",
+      "text": "legal_team_member API: Contract C-99 with a placeholder primary and a two-Version Word Document that has never been compared."
+    }
+  ],
+  "startedAt": "2026-09-16T15:41:54.478Z",
+  "steps": [
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Archiving does not stop comparing existing Versions (new pair on an archived Document)",
+      "expected": "On an archived Document, Compare with previous for a pair that was never compared opens a Comparison that reaches Changes, offers no export, and adds no Version.",
+      "actual": "Documents -> Actions -> Archive on doc029-archived-admin.docx; with Show archived on, its Actions still offered [\"Compare with previous\",\"Restore\",\"Delete\"]. Compare with previous opened a first-time v1 → v2 Comparison that reached Changes with no export control; the chain still has 2 Versions. The Document was restored afterwards (API).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:56.498Z",
+      "at": "2026-09-16T15:42:01.425Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Archiving does not stop comparing existing Versions (new pair on an archived Document)",
+      "expected": "On an archived Document, Compare with previous for a pair that was never compared opens a Comparison that reaches Changes, offers no export, and adds no Version.",
+      "actual": "Documents -> Actions -> Archive on doc029-archived-legal.docx; with Show archived on, its Actions still offered [\"Compare with previous\",\"Restore\"]. Compare with previous opened a first-time v1 → v2 Comparison that reached Changes with no export control; the chain still has 2 Versions. The Document was restored afterwards (API).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:01.532Z",
+      "at": "2026-09-16T15:42:06.447Z"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:42:06.473Z"
+}

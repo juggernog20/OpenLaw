@@ -1,0 +1,83 @@
+{
+  "section": "sso",
+  "reviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "approver-groups": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "authentication-and-email": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1"
+  },
+  "startedAt": "2026-09-16T15:40:14.592Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Turn on Single sign-on (SSO) under Legal User Authentication; an invited staff account signs in through the identity provider",
+      "expected": "Callback succeeds; role Legal team member retained; row becomes Active",
+      "startedAt": "2026-09-16T15:40:15.071Z",
+      "finishedAt": "2026-09-16T15:40:17.263Z",
+      "actual": "The switch saved (\"Saved\"). In a separate browser, Continue with single sign-on went through the fixture's authorize endpoint and the OpenLaw callback to /, signed in as legal_team_member. The invited row now read Active with a role control (true).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An uninvited identity on a matching email domain gets no staff role",
+      "expected": "No staff session; no staff account",
+      "startedAt": "2026-09-16T15:40:17.263Z",
+      "finishedAt": "2026-09-16T15:40:18.679Z",
+      "actual": "With Business Portal single sign-on off, doc029-auth-uninvited-mu49oprz@helix.example (matching the provider's helix.example domain, not an allowed Portal domain) ended on /auth/login?error=sso with me 401 and \"Single sign-on failed. Try again.\". Account created: none.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Save provider with Client secret left blank, then with a replacement secret; test a fresh sign-in after each",
+      "expected": "Saved both times; staff SSO still works",
+      "startedAt": "2026-09-16T15:40:18.680Z",
+      "finishedAt": "2026-09-16T15:40:23.191Z",
+      "actual": "The Client secret hint read \"Leave blank to keep the current secret. Paste a new value to rotate.\" Saving a Client ID change with a blank secret showed Saved; a fresh staff SSO sign-in worked (me 200). Saving a replacement secret showed Saved; another fresh sign-in worked (me 200). Stored client ID: doc029-client-mu49oprz.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Update the issuer to one that cannot be reached",
+      "expected": "Refused; the previous provider stays usable",
+      "startedAt": "2026-09-16T15:40:23.192Z",
+      "finishedAt": "2026-09-16T15:40:35.310Z",
+      "actual": "Save provider with an unreachable issuer showed \"The change could not be saved. Try again.\". The stored issuer stayed http://oidc:8080 and a fresh staff SSO sign-in still worked (me 200).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Turn on Single sign-on (SSO) under Business Portal Authentication; an existing Business User signs in through the identity provider, and still can after the domain is removed",
+      "expected": "Existing Business User on the provider's email domain enters the Portal before and after narrowing the list; no staff role is granted",
+      "startedAt": "2026-09-16T15:40:35.310Z",
+      "finishedAt": "2026-09-16T15:40:41.219Z",
+      "actual": "helix.example was added, and doc029-auth-bu-mu49oprz@helix.example entered the Portal through a sign-in link. The Business Portal SSO switch saved (\"Saved\"). Portal single sign-on for that existing Business User reached /portal/onboarding as business_user. After Remove helix.example (list now [\"northwind.example\"]), the same identity still signed in through single sign-on (/portal/onboarding, business_user). A never-seen identity on the removed domain ended on /portal/login?error=sso with \"Single sign-on failed. Try again.\" and no account was created.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Recover: Administrator password sign-in with Email and password off under Legal, then turn on Email and password and turn off SSO",
+      "expected": "Admin password sign-in works; staff login returns to password; SSO off",
+      "startedAt": "2026-09-16T15:40:41.219Z",
+      "finishedAt": "2026-09-16T15:40:44.802Z",
+      "actual": "With only Single sign-on (SSO) on for Legal users ({\"password\":false,\"magicLink\":false,\"sso\":true,\"requireTwoFactor\":false}), the Administrator still signed in with a password (me 200). Turning Email and password and Email magic link back on and SSO off in both cards gave {\"legal\":{\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false},\"business\":{\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}}, and the Legal Team Member signed in with a password again (me 200).",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:40:44.805Z"
+}

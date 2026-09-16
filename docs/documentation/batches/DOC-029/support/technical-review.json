@@ -1,0 +1,258 @@
+{
+  "batch": "DOC-029",
+  "group": "support",
+  "reviewer": "DOC-029 source-review author agent (support)",
+  "author": "DOC-029 source-review author agent (support)",
+  "technicalReviewer": "DOC-029 source-review author agent (support)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T15:03:29Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+  "changeRange": "git log 6a8873dbda333fd9992eb77525d4bfa3f47af20d..3fa407e3a846559914aa1a63249741f30cfb4f69 -- apps packages (275 commits)",
+  "note": "Source inspection only. No walkthrough was run and no catalog status was changed. An independent agent runs the V-C49, V-C50 and V-C51 walkthroughs against the corrected bytes recorded below.",
+  "articles": [
+    {
+      "articleId": "troubleshooting",
+      "scenario": "V-C49",
+      "priorContentSha256": "6663ad0a44d46bc234943d5834e21b3f909545a4d54a2b98b88face9ccd72aec",
+      "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa",
+      "result": "corrected",
+      "sources": [
+        "CONTEXT.md (Business User, Business Owner, Portal, Matter Manager, Grant, Key date, Soft gate, Approval request, Envelope, Unverified value)",
+        "messages/en-US.json",
+        "apps/web/src/routes/error-page.tsx",
+        "apps/web/src/routes/not-found.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/routes/knowledge-record.tsx",
+        "apps/web/src/routes/portal-contract.tsx",
+        "apps/web/src/routes/portal-matter.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/components/portal/notification-preferences.ts",
+        "apps/web/src/components/notification-preferences.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/api/src/modules/requests/routes.ts (Portal Request read, redirectTo)",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/modules/documents/routes.ts (Business User upload, folder refusal, primary Version append)",
+        "apps/api/src/modules/documents/documents.test.ts (Business User primary Version append test)",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/lib/uploads.ts",
+        "apps/api/src/lib/notifications/local-day.ts",
+        "packages/db/src/schema/auth.ts"
+      ],
+      "corrections": [
+        {
+          "section": "A record or search result is missing",
+          "before": "A direct link to missing or unreachable work shows \"Something went wrong.\" and \"Reload\".",
+          "after": "A direct link to missing or unreachable work shows a not-found answer, for example \"Contract not found\" with \"Back to Contracts\" in the app, or \"This Contract does not exist, or you cannot open it.\" in the Portal. \"Something went wrong.\" with \"Reload\" means the page could not load.",
+          "basis": "Contract, Matter, Entity, Knowledge Item and Auto-Doc record loaders now return RecordNotFoundPage on a 404 (not present at 6a8873db). Portal Contract and Matter pages render portal.contract.unreachable / portal.matter.unreachable. RouteErrorPage keeps error.title and action.reload for other load failures."
+        },
+        {
+          "section": "A record or search result is missing",
+          "before": "Ask the Contract Owner, Matter Manager, or Administrator.",
+          "after": "Ask the Legal Owner, Matter Manager, or Administrator.",
+          "basis": "The UI label for the Contract accountable person is Legal Owner (CONTEXT.md Matter Manager entry; activity.field owner {Legal Owner})."
+        },
+        {
+          "section": "A record or search result is missing",
+          "before": "Business Users need a team entry on that particular Contract or Matter.",
+          "after": "Business Users need a team entry on that particular Contract or Matter, and the record must not be archived.",
+          "basis": "contractTeamScope for business_user is isNull(archivedAt) AND team row."
+        },
+        {
+          "section": "A record or search result is missing",
+          "before": "Conversion does not grant access to the resulting staff Contract or Matter page.",
+          "after": "After conversion, the Request opens its Contract or Matter in the Portal while the Business User is on that team. If the converted Request no longer opens, ask Legal to check the team entry. Conversion does not open the staff page.",
+          "basis": "convert.ts sets businessOwnerId to the Requester; createContract and createMatter insert that person's team row. The Portal Request read returns redirectTo for a non-archived converted record in portalRecordScope, and answers 404 when the Requester is outside that scope."
+        },
+        {
+          "section": "An edit or action is unavailable",
+          "before": "A Business User can supply business information and supporting Documents on shared work.",
+          "after": "A Business User can read business Fields, add Documents and Versions, reply in the conversation, and add existing people to a non-Confidential team. A Business User cannot change record Fields or other legal-managed details.",
+          "basis": "CONTEXT.md Business User (DD-026: record Fields remain managed by Legal); commit 4fc9d70b keeps record fields with Legal and allows team additions."
+        },
+        {
+          "section": "An upload is refused or appears twice",
+          "before": "Business Users cannot append to a Contract's primary Document. Portal record pages offer supporting Document uploads and Add version.",
+          "after": "In the Portal, Business Users can use Add version on any Document of a shared record, including a Contract's primary Document. Portal uploads cannot go into folders. Added a link to contributor-guide.md#work-with-documents.",
+          "basis": "documents.test.ts 'lets a Business User append a primary Version while refusing Document metadata edits'; documents-section.tsx renders Add version on every row without a primary condition; documents routes refuse a folder destination for business_user ('Business Users may upload supporting Documents at the record root only.')."
+        },
+        {
+          "section": "A notification or email is missing",
+          "before": "Business Users check Request updates in Notification settings.",
+          "after": "Business Users check Request updates, Assigned to you, and Activity on your records in Notification settings.",
+          "basis": "PORTAL_GROUPS is requester_events, assigned_to_you, activity_on_your_records, with labels from GROUP_COPY and portal.settings.assignments."
+        },
+        {
+          "section": "Analysis is missing, fails, or keeps an earlier value",
+          "before": "Compare the run's Version and evidence with the actual saved Fields.",
+          "after": "Compare the run's Version and evidence with the actual saved Fields and Key dates.",
+          "basis": "Commit d6fb60be extracts Contract Key dates during Analysis; contract-analysis.md now describes Key date result rows."
+        }
+      ],
+      "confirmed": [
+        "Staff sign-in and Portal sign-in are separate procedures; expired-link recovery copy 'The link has expired or was already used...' and 'Sign-in link expired' exist.",
+        "Confidential Entities use a separate arrangement (Grant), and a linked record does not grant access.",
+        "Preview labels 'Preparing this document for reading…', 'This file could not be prepared for reading here. Download it to read it.' and 'Download' exist.",
+        "Upload ceiling refusal names the MB limit (refuseOversize) and the 255-character filename bound is unchanged since 6a8873db.",
+        "Staff notification caption: 'Email off keeps the bell items coming. In-app off turns the group off entirely, email included.'; In-app, Email and Briefing labels exist.",
+        "Morning briefing is served once the reader's local time has reached 08:00, not at an exact minute (local-day.ts).",
+        "Approval labels Pending and Rejected, soft-gate title 'Move past approval', and final decisions per CONTEXT.md Approval request.",
+        "Signing labels 'Signed' and 'Executed copy'; one live Envelope per Contract; manual hand-off needs no connector.",
+        "Analysis labels 'Kept', 'Unverified', 'AI analysis' and 'Retry Request-context Analysis' exist.",
+        "Every internal link and heading anchor in the article resolves to an existing article and heading."
+      ]
+    },
+    {
+      "articleId": "reference",
+      "scenario": "V-C50",
+      "priorContentSha256": "e931e7b629b6b4f89d0f888d44d3e6388b2ec4d7630fa1bc6a7de753dbe0637b",
+      "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd",
+      "result": "corrected",
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "packages/db/src/schema/auth.ts (USER_ROLES)",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/matter-access.ts",
+        "apps/api/src/modules/contract-key-dates/routes.ts",
+        "apps/api/src/modules/matter-key-dates/routes.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/lib/uploads.ts",
+        "apps/api/src/lib/render-family.ts",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "docs/user-guides/roles-and-access.md",
+        "docs/user-guides/contract-tasks-and-dates.md"
+      ],
+      "corrections": [
+        {
+          "section": "Work and people",
+          "before": "Term 'Owner / Matter Manager'.",
+          "after": "Term 'Legal Owner / Matter Manager'.",
+          "basis": "UI label for the Contract accountable person is Legal Owner."
+        },
+        {
+          "section": "Workflow and dates",
+          "before": "Key date has no assignee or individual reminder schedule.",
+          "after": "Key date has no assignee. It can add its own reminder lead times and choose reminder recipients from the record team.",
+          "basis": "contract-key-dates and matter-key-dates routes carry reminderOffsetDays and reminderRecipientIds (NOT-004 addendum 2026-09-10; CONTEXT.md Key date)."
+        },
+        {
+          "section": "Workflow and dates",
+          "before": "Analysis run reads a Contract's target Document Version.",
+          "after": "Analysis run reads a Contract's target Document Version, or its original Request context after conversion.",
+          "basis": "CONTEXT.md Analysis run; Retry Request-context Analysis."
+        },
+        {
+          "section": "Permissions at a glance",
+          "before": "Administrator reaches all Entities.",
+          "after": "Administrator needs a Grant for a Confidential Entity.",
+          "basis": "entityReachScope now treats administrator like legal_team_member (non-Confidential or entity_grants row). At 6a8873db the administrator case returned undefined (unrestricted)."
+        },
+        {
+          "section": "Permissions at a glance",
+          "before": "Legal Team Member: applicable Owner, Manager, or team access.",
+          "after": "Legal Team Member: applicable Legal Owner, Matter Manager, or team access.",
+          "basis": "Label alignment only."
+        },
+        {
+          "section": "Permissions at a glance",
+          "before": "Business User reaches team Contracts and Matters; conversion does not open the staff workspace.",
+          "after": "Business User reaches non-archived team Contracts and Matters in the Portal; record Fields stay with Legal; conversion adds the Requester to the new record's team but does not open the staff workspace.",
+          "basis": "contractTeamScope business_user case; convert.ts businessOwnerId plus team row in createContract/createMatter; CONTEXT.md Business User and Business Owner."
+        },
+        {
+          "section": "Documents and derived files",
+          "before": "Document owned by exactly one Contract, Matter, Entity, or Knowledge Item.",
+          "after": "Document owned by exactly one Contract, Matter, Entity, Knowledge Item, or Auto-Doc.",
+          "basis": "CONTEXT.md Document (ADO-001); documents.autoDocId in documents routes."
+        },
+        {
+          "section": "File behavior and limits",
+          "before": "Portal files: Request attachments and published Knowledge current-file downloads only.",
+          "after": "Portal files also include shared Contract and Matter Documents that open for reading and download, with earlier Versions.",
+          "basis": "apps/web/src/components/portal/documents-section.tsx (preview, download, portal.documents.earlierVersions)."
+        }
+      ],
+      "confirmed": [
+        "USER_ROLES is administrator, legal_team_member, business_user; Deployment operator is not an account role; the reference names no Contributor role.",
+        "Stage backbone Draft, Review, Approval, Signature, Active, Ended; Status maps to one Stage or Category; Category is Open or Closed.",
+        "Task has optional description, assignee, due date and its own conversation; Task due dates stay separate from Key dates and feed Next deadline.",
+        "Envelope is one round on one Version of the primary Document with at most one live Envelope.",
+        "Version kind labels include 'Draft · ours' and 'Executed'; the Executed pin is explicit.",
+        "No individual-Version delete route exists; permanent Document delete (hardDeleteDocument) requires an Administrator.",
+        "Default upload limit 100 MiB via MAX_UPLOAD_MB, refusal in MB; filename bound 255 characters. uploads.ts and render-family.ts are unchanged since 6a8873db.",
+        "SVG is download-only; EML and MSG use the email reader; PNG and JPEG are raster previews.",
+        "Published Knowledge in the Portal offers only the current file.",
+        "Every internal link and heading anchor in the article resolves."
+      ]
+    },
+    {
+      "articleId": "versions-and-support",
+      "scenario": "V-C51",
+      "priorContentSha256": "7574eb78939dd4eabb69bd1ebd798f762c1e4c32d8efa5785e56dfaaf1dc101e",
+      "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
+      "result": "corrected",
+      "sources": [
+        "apps/web/src/components/documentation/documentation-reader.tsx",
+        "apps/web/src/components/documentation/documentation-messages.ts",
+        "apps/web/src/components/documentation/help-link.tsx",
+        "apps/web/src/components/shell/app-header.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/routes/help.tsx",
+        "apps/web/src/router.tsx",
+        "scripts/documentation/compiler.mjs",
+        "scripts/documentation/standalone.mjs",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "docs/user-guides/contributor-guide.md",
+        "docs/user-guides/roles-and-access.md"
+      ],
+      "corrections": [
+        {
+          "section": "Find the applicable edition",
+          "before": "In a Help article, select 'Read this article in the full documentation' for the complete suite.",
+          "after": "Select 'All documentation' below 'Browse guides'. 'Read this article in the full documentation' appears only on an article outside your Help selection.",
+          "basis": "Commit 592f42e8 replaced the per-article footer link with a fixed Help / All documentation pair in the sidebar footer; M.formal now renders only in the !permitted branch."
+        },
+        {
+          "section": "Check the relevant limitation",
+          "before": "Administrators retain access to Confidential records.",
+          "after": "Administrators also need named access to Confidential Contracts and Matters, and a Grant for a Confidential Entity.",
+          "basis": "contractTeamScope administrator case requires a team row or Legal Owner for Confidential Contracts; entityReachScope administrator case requires a Grant for Confidential Entities; roles-and-access.md states the same."
+        },
+        {
+          "section": "Report a product defect or documentation correction",
+          "before": "Example cites section 'Supply a supporting Document'.",
+          "after": "Example cites section 'Work with Documents'.",
+          "basis": "contributor-guide.md has no 'Supply a supporting Document' heading; its Documents section is 'Work with Documents'."
+        }
+      ],
+      "confirmed": [
+        "Help is in both the staff header (app-header.tsx) and the Portal header (portal-shell.tsx).",
+        "/documentation is public; signed-out /help redirects to /documentation.",
+        "Edition details is the last element of the reader and lists Edition details, Supported app ({version} / {commit} or 'Not yet verified'), Distribution commit (with 'Working changes'), Content digest and Publication target.",
+        "'Open standalone edition' and 'Download standalone edition' links, and the retention sentence, are present.",
+        "'Validation in progress' badge is used when validationPending, otherwise 'Unverified article'; the development preview notice text matches.",
+        "Unknown edition shows 'Article unavailable' with the wrongEdition body; a missing section shows the missingSection notice and 'On this page' outline.",
+        "Standalone export index includes a noscript notice that search requires JavaScript.",
+        "Every internal link and heading anchor in the article resolves."
+      ]
+    }
+  ],
+  "limitations": [
+    "Source inspection supports technical accuracy only. Independent browser walkthroughs are still required before any status change.",
+    "The in-memory documentation compile stopped on another group's in-flight evidence hash mismatch (auto-doc-template), so links and anchors for these three articles were checked with a separate heading-anchor script."
+  ]
+}

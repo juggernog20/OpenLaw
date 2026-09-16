@@ -8,8 +8,8 @@ Sign in as a Legal Team Member or Administrator and open an Entity you can reach
 
 ## Record Officers and resignations
 
-1. On **Overview**, find **Officers** and select **Add officer**.
-2. Enter **Officer name**, choose **Role**, and enter **Appointed on** if known. Optionally select **Linked user**; an Officer does not need an OpenLaw account.
+1. On **Overview**, find **Directors & Officers** and select **Add director or officer**.
+2. Enter **Director or officer name**, choose **Role**, and enter **Appointed on** if known. Optionally select **Linked user**; an Officer does not need an OpenLaw account.
 3. Select **Add**. Check the saved name, role, and date.
 4. Correct an existing row's text or date and move focus away to save. Choosing another role or linked user saves that selection.
 5. To retain a resignation, enter **Resigned on**. Turn on **Show former** to read former Officers. Clear the resignation date if it was entered by mistake.

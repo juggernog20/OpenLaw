@@ -22,8 +22,8 @@ Changing away from Auto-renewing clears a renewal period the new type cannot hol
 
 ## Confirm a renewal on the same Contract
 
-1. On an Auto-renewing Contract with an expiry, open **Approvals** and select **Renew**, or use the **Renewal pending confirmation** prompt when shown.
-2. Choose **Confirm the roll** under **How to record it**.
+1. On an Auto-renewing Contract with an expiry, open **Approvals** and select **Renew**. If the **Renewal date passed — pending confirmation** banner shows, you can select **Review renewal** instead.
+2. Choose **Confirm the roll**. It is the default option.
 3. Review **New expiry date**. A known renewal period supplies a proposed date; enter the actual date if it differs. The new date must be after the current expiry.
 4. Select **Confirm renewal**. Check the new expiry, notice deadline, **Last renewal**, and the renewal row on **Approvals & signing**.
 
@@ -37,7 +37,7 @@ The same **Renew** dialog offers other routes:
 - **Create child contract** opens the create dialog for a new Contract parented to this one.
 - **New successor contract** opens the create dialog for a new Contract linked as renewing this predecessor.
 
-For a child or successor, review and edit the prefilled Title and Contract type and complete required Fields. Check the resulting new C- reference and relationship after creation. The deal's Entity, Counterparties, value, and term shape carry over; Owner, team, Status, Priority, Risk, and Confidential flag need their own review. A relationship does not grant access or keep future changes synchronized.
+For a child or successor, review and edit the prefilled Title and Contract type and complete required Fields. Check the resulting new C- reference and relationship after creation. The deal's Entity, Counterparties, value, and term shape carry over; Legal Owner, team, Status, Priority, Risk, and Confidential flag need their own review. A relationship does not grant access or keep future changes synchronized.
 
 ## If the dates look wrong
 

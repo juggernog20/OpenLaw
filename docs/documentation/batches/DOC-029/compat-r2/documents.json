@@ -1,0 +1,1012 @@
+{
+  "kind": "compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "documents",
+  "reviewer": "DOC-029r2 compatibility reviewer (documents)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "commits": [
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "1ea249dd Show organization branding on sign-in and raise the logo limit"
+  ],
+  "appDiffFiles": [
+    "apps/api/openapi.json",
+    "apps/api/src/modules/email-settings/config.test.ts",
+    "apps/api/src/modules/email-settings/config.ts",
+    "apps/api/src/modules/email-settings/email-settings.test.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/org/general.test.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/web/src/components/comments/comment-applet.tsx",
+    "apps/web/src/components/contracts/contracts-columns.tsx",
+    "apps/web/src/components/default-fields.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/components/inline-add-form.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/matters/matters-columns.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/components/taxonomy-types-pane.tsx",
+    "apps/web/src/components/user-identity.tsx",
+    "apps/web/src/lib/ai-connector-config.ts",
+    "apps/web/src/lib/field-catalog.ts",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/auth-layout.test.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/routes/set-password.test.tsx",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/web/src/routes/settings-contract-fields.test.tsx",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/web/src/routes/settings-contract-statuses.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "apps/web/src/routes/settings-contract-types.test.tsx",
+    "apps/web/src/routes/settings-default-fields.test.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-matter-statuses.test.tsx",
+    "apps/web/src/routes/settings-matter-statuses.tsx",
+    "apps/web/src/routes/settings-matter-types.test.tsx",
+    "apps/web/src/routes/settings-reminders.test.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/welcome.test.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/testing/helpers.tsx",
+    "packages/api-client/src/schema.ts",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/logo.ts"
+  ],
+  "diffFilesWithPossibleDocumentContact": {
+    "apps/web/src/components/documents/documents-columns.tsx": "The repository Uploader column now marks an archived uploader with the text-muted color instead of 50% opacity. Visual only. No article states how an archived uploader looks.",
+    "apps/web/src/components/user-identity.tsx": "Archived user identity uses text-muted instead of opacity. Visual only.",
+    "apps/web/src/components/comments/comment-applet.tsx": "Archived comment author uses text-muted instead of opacity. Filing actions, attachment names and the File attachment dialog did not change.",
+    "apps/web/src/components/list-editor.tsx": "Settings list editor gains collapsible cards and a disabled Add button while a row is being added. Used by Settings panes, not by the Documents tab or repository.",
+    "apps/web/src/routes/auth-layout.tsx": "Sign-in pages show organization branding and a Legal Portal label. The replay signed in on staff and Portal pages with the round 1 helpers unchanged.",
+    "apps/web/src/routes/settings.tsx": "Adds a Return to setup link in Settings for Administrators coming from first run. Not on any Document surface.",
+    "apps/web/src/router.tsx": "Changes only /welcome revalidation.",
+    "messages/en-US.json": "No added or removed message relates to Documents, Document Versions, folders, previews, archive or delete. Removed and changed messages are AI analysis, welcome email, logo, and settings help text."
+  },
+  "diffMethod": [
+    "git diff 3fa407e3..57e77e38 -- apps packages styles (43 files) and messages/en-US.json, searched for document, folder, version, preview, upload and archive."
+  ],
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-41255c61-work2",
+    "summary": "work2: http://127.0.0.1:23301; source 57e77e386be31b2a319f7143dd54d00123e65efe; seed complete",
+    "appUrl": "http://127.0.0.1:23301",
+    "mailUrl": "http://127.0.0.1:23401",
+    "images": {
+      "app": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "doc-engine": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    },
+    "seed": "Helix light seed 7"
+  },
+  "replay": {
+    "script": {
+      "path": "batches/DOC-029/compat-r2/documents-r2/walkthrough-r2.mjs",
+      "sha256": "e74472b394bf9511cc68af9854e3b9084d9ba7943bebd35a15383e5dcde8e397"
+    },
+    "adaptedFrom": {
+      "path": "batches/DOC-029/documents/walkthrough-r1.mjs",
+      "sha256": "91c685f6887631d72f18a6f21ef2231ddc467ec110e1b395d10f8016e58e4cc6"
+    },
+    "helpers": {
+      "path": "batches/DOC-029/documents/lib-r1.mjs",
+      "sha256": "2a5c45e6fd6d991adf2364c1377e8a7ffdd1105d38c7364b5527567da9aa1737",
+      "note": "Used unchanged; its default URLs are the work2 ports 23301 and 23401."
+    },
+    "adaptations": "Lab name work to work2 in the lab status call, record and folder names DOC-029 to DOC-029r2, output and screenshot paths, round metadata. No step, selector, expectation or fixture changed.",
+    "results": {
+      "path": "batches/DOC-029/compat-r2/documents-r2/walkthrough-r2.json",
+      "sha256": "17126ea6ac8ec39d68f48403924bc6699d76b2a3290022a406f6e848847a38ef"
+    },
+    "log": {
+      "path": "batches/DOC-029/compat-r2/documents-r2/walkthrough-r2.log",
+      "sha256": "c07c2ed271293c4b65002acfd28a59885c2d3d985892e57713d1cab9dd429541"
+    },
+    "browser": "Playwright 1.63.0 Chromium, headless, one browser context per identity",
+    "roles": "administrator (daniel.okafor), legal_team_member (nadia.haddad), business_user (jonas.weber by magic link; ravi.menon), one browser context per identity",
+    "startedAt": "2026-09-16T17:52:21.040Z",
+    "finishedAt": "2026-09-16T17:55:54.205Z",
+    "stepsPassed": 117,
+    "stepsTotal": 117,
+    "records": [
+      {
+        "role": "administrator",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Admin versions Contract 140665",
+        "ref": "C-49"
+      },
+      {
+        "role": "administrator",
+        "kind": "matter",
+        "name": "DOC-029r2 documents Admin versions Matter 140665",
+        "ref": "M-60"
+      },
+      {
+        "role": "administrator",
+        "kind": "entity",
+        "name": "DOC-029r2 documents Admin versions Entity 140665 Ltd",
+        "ref": "01a0ab59-41c5-7f17-823a-fa188bb27521"
+      },
+      {
+        "role": "administrator",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Admin archived owner 140665",
+        "ref": "C-54"
+      },
+      {
+        "role": "administrator",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Admin folders Contract 140665",
+        "ref": "C-55"
+      },
+      {
+        "role": "administrator",
+        "kind": "matter",
+        "name": "DOC-029r2 documents Admin folders Matter 140665",
+        "ref": "M-70"
+      },
+      {
+        "role": "administrator",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Admin previews Contract 140665",
+        "ref": "C-61"
+      },
+      {
+        "role": "administrator",
+        "kind": "contract",
+        "name": "DOC-029r2 documents hidden owner 140665",
+        "ref": "C-62"
+      },
+      {
+        "role": "administrator",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Admin repository Contract 140665",
+        "ref": "C-63"
+      },
+      {
+        "role": "administrator",
+        "kind": "matter",
+        "name": "DOC-029r2 documents Admin repository Matter 140665",
+        "ref": "M-73"
+      },
+      {
+        "role": "administrator",
+        "kind": "entity",
+        "name": "DOC-029r2 documents Admin repository Entity 140665 Ltd",
+        "ref": "01a0ab59-ed5e-7f69-a5d0-1d5afdee095b"
+      },
+      {
+        "role": "administrator",
+        "kind": "knowledge_item",
+        "name": "DOC-029r2 documents Admin repository Knowledge 140665",
+        "ref": "01a0ab59-ed90-7837-a87d-1b1e91a4df7b"
+      },
+      {
+        "role": "administrator",
+        "kind": "auto_doc",
+        "name": "DOC-029r2 documents Admin repository Auto-Doc 140665",
+        "ref": "01a0ab59-edb6-7035-b5dd-770275f7eb65"
+      },
+      {
+        "role": "administrator",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Admin archive Contract 140665",
+        "ref": "C-79"
+      },
+      {
+        "role": "administrator",
+        "kind": "knowledge_item",
+        "name": "DOC-029r2 documents Admin archive Knowledge 140665",
+        "ref": "01a0ab5a-afcb-7950-be2c-c8ad17a77f45"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Legal versions Contract 140665",
+        "ref": "C-81"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "matter",
+        "name": "DOC-029r2 documents Legal versions Matter 140665",
+        "ref": "M-83"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "entity",
+        "name": "DOC-029r2 documents Legal versions Entity 140665 Ltd",
+        "ref": "01a0ab5a-cee2-77ec-8896-de9de27b7be0"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Legal archived owner 140665",
+        "ref": "C-82"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Legal folders Contract 140665",
+        "ref": "C-83"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "matter",
+        "name": "DOC-029r2 documents Legal folders Matter 140665",
+        "ref": "M-86"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Legal previews Contract 140665",
+        "ref": "C-87"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Legal repository Contract 140665",
+        "ref": "C-89"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "matter",
+        "name": "DOC-029r2 documents Legal repository Matter 140665",
+        "ref": "M-87"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "entity",
+        "name": "DOC-029r2 documents Legal repository Entity 140665 Ltd",
+        "ref": "01a0ab5b-7a77-7e26-964b-e76677a8c511"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "knowledge_item",
+        "name": "DOC-029r2 documents Legal repository Knowledge 140665",
+        "ref": "01a0ab5b-7ac0-7fb1-9d0d-115e8c159acc"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "auto_doc",
+        "name": "DOC-029r2 documents Legal repository Auto-Doc 140665",
+        "ref": "01a0ab5b-7b02-7c8a-b2e1-110af9517ef1"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Legal archive Contract 140665",
+        "ref": "C-97"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "knowledge_item",
+        "name": "DOC-029r2 documents Legal archive Knowledge 140665",
+        "ref": "01a0ab5c-3784-7e94-baa5-42ab9b5d2d0d"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Portal Contract 140665",
+        "ref": "C-99"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "contract",
+        "name": "DOC-029r2 documents Portal not on team 140665",
+        "ref": "C-100"
+      },
+      {
+        "role": "legal_team_member",
+        "kind": "knowledge_item",
+        "name": "DOC-029r2 documents Portal Knowledge 140665",
+        "ref": "01a0ab5c-42fa-72c6-97ad-11ea3fc9e690"
+      },
+      {
+        "role": "business_user",
+        "kind": "request",
+        "name": "DOC-029r2 documents Portal request 140665",
+        "ref": "R-54"
+      }
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "document-versions",
+      "contentSha256": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14",
+      "diffFilesInspected": [
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "messages/en-US.json"
+      ],
+      "conclusion": "compatible: the app diff changes nothing this article states or asks, and every replayed step passed on the 57e77e38 lab.",
+      "replay": {
+        "passed": 30,
+        "total": 30,
+        "steps": [
+          {
+            "role": "administrator",
+            "action": "Upload a new Document steps 1-4: Documents tab, Upload, Choose files with one file, Kind, Note, Upload",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Upload step 2 variant: choosing several files opens the bulk import dialog",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Upload step 4: Actions menu, Edit details, Save changes the name and description",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Add another Version steps 1-3: Add version, Choose file, Kind, Note, Upload; expand and read the earlier Version",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "History note: uploading the same paper as a new Document creates a separate chain",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Correct the Kind control on an existing hand-set Version",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Executed pin: Mark as executed copy on an earlier Version; a later upload does not move it; Unmark clears it",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Primary Document: the Primary mark and Make primary move the designation",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "A Matter upload has no Kind control, and a Matter has no Primary mark or Executed pin",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Before you start: an archived owning record must be restored before uploading",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Recover from a refusal: a failed upload shows a message and does not alter the chain",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "File a Contract conversation attachment steps 1-4: File to Contract, New Document, Confidential preselected for Legal Only",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "File a Contract conversation attachment: open the preview, File to Contract, New Version on an existing Document with a Note",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "File a Matter conversation attachment: File to Matter, no Kind, same Confidential switch label",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Upload a new Document steps 1-4: Documents tab, Upload, Choose files with one file, Kind, Note, Upload",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Upload step 2 variant: choosing several files opens the bulk import dialog",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Upload step 4: Actions menu, Edit details, Save changes the name and description",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Add another Version steps 1-3: Add version, Choose file, Kind, Note, Upload; expand and read the earlier Version",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "History note: uploading the same paper as a new Document creates a separate chain",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Correct the Kind control on an existing hand-set Version",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Executed pin: Mark as executed copy on an earlier Version; a later upload does not move it; Unmark clears it",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Primary Document: the Primary mark and Make primary move the designation",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "A Matter upload has no Kind control, and a Matter has no Primary mark or Executed pin",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Before you start: an archived owning record must be restored before uploading",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Recover from a refusal: a failed upload shows a message and does not alter the chain",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "File a Contract conversation attachment steps 1-4: File to Contract, New Document, Confidential preselected for Legal Only",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "File a Contract conversation attachment: open the preview, File to Contract, New Version on an existing Document with a Note",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "File a Matter conversation attachment: File to Matter, no Kind, same Confidential switch label",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Before you start: Business Users on the team upload Documents and add Versions in the Portal, including a new Version of the primary Document",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Before you start and Recover: Business Users cannot change designations, kinds or folders, archive or delete, and get no filing action",
+            "result": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "articleId": "document-folders",
+      "contentSha256": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
+      "diffFilesInspected": [
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "messages/en-US.json"
+      ],
+      "conclusion": "compatible: the app diff changes nothing this article states or asks, and every replayed step passed on the 57e77e38 lab.",
+      "replay": {
+        "passed": 31,
+        "total": 31,
+        "steps": [
+          {
+            "role": "administrator",
+            "action": "Create and maintain folders steps 1-2: New folder, Name, Save; an empty folder has no expand control",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Create and maintain folders step 3: New subfolder and Rename from Actions for the … folder",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Folder name rules: case-only duplicate sibling, blank name, slash, '.' and '..' are refused",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Create and maintain folders step 3: Move, Move into, None; a folder cannot move into itself or a descendant",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Create and maintain folders step 4: Move to folder, File in, Move; None moves it out",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Create and maintain folders step 4: drag a Document row onto a folder row, then onto Drop here to move out of folders",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Create and maintain folders step 4: select checkboxes and Move in the selection bar",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Folder Delete dissolves the folder: contents move to its parent or the record, nothing is deleted",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Import several files steps 1-5 with a partial failure: Destination Record root, Version kind, counts, Retry",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Recover a partial import: a size refusal is not offered a retry; Done closes",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Import step 5: when every file uploads the dialog closes after the list refreshes",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Recover a partial import: Cancel remaining stops queued work and uploaded files remain",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Keep a local folder structure: Choose folder keeps nested paths; the folder picker drops empty folders; a matching path is reused",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Import step 1-2 and Keep structure: drop files and a local folder on a folder row; the Destination is that folder; a dropped tree recreates empty folders",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Import step 3: a Matter import has no Version kind control",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Create and maintain folders steps 1-2: New folder, Name, Save; an empty folder has no expand control",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Create and maintain folders step 3: New subfolder and Rename from Actions for the … folder",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Folder name rules: case-only duplicate sibling, blank name, slash, '.' and '..' are refused",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Create and maintain folders step 3: Move, Move into, None; a folder cannot move into itself or a descendant",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Create and maintain folders step 4: Move to folder, File in, Move; None moves it out",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Create and maintain folders step 4: drag a Document row onto a folder row, then onto Drop here to move out of folders",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Create and maintain folders step 4: select checkboxes and Move in the selection bar",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Folder Delete dissolves the folder: contents move to its parent or the record, nothing is deleted",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Import several files steps 1-5 with a partial failure: Destination Record root, Version kind, counts, Retry",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Recover a partial import: a size refusal is not offered a retry; Done closes",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Import step 5: when every file uploads the dialog closes after the list refreshes",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Recover a partial import: Cancel remaining stops queued work and uploaded files remain",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Keep a local folder structure: Choose folder keeps nested paths; the folder picker drops empty folders; a matching path is reused",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Import step 1-2 and Keep structure: drop files and a local folder on a folder row; the Destination is that folder; a dropped tree recreates empty folders",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Import step 3: a Matter import has no Version kind control",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Before you start: Business Users upload several files at the record root but cannot create folders, move Documents or import a folder structure",
+            "result": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "articleId": "document-previews",
+      "contentSha256": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b",
+      "diffFilesInspected": [
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "messages/en-US.json"
+      ],
+      "conclusion": "compatible: the app diff changes nothing this article states or asks, and every replayed step passed on the 57e77e38 lab.",
+      "replay": {
+        "passed": 21,
+        "total": 21,
+        "steps": [
+          {
+            "role": "administrator",
+            "action": "Read a managed Document steps 1-4 (PDF): name opens the reader; v… indicator; Previous page, Next page, Zoom out, Zoom in, Find in document; Download; Close the document",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Supported reading surfaces: Word and PowerPoint render as a PDF rendition; Download stays the uploaded file; a preview is not a new Version",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Processing, scans: an image-only PDF stays a scan; Find has no match; OCR text arrives in the background; global search finds it",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Supported reading surfaces: PNG shows inline; EML shows headers, body and attachment list without remote images; a PDF attachment previews; a Word attachment downloads",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Supported reading surfaces: other formats download from the name; a reader link shows the download-only card",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Processing: Preparing this document for reading… while conversion is pending; the stored original is already downloadable",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Failed previews: the failure message, Download of the original, and recovery by adding a readable Version",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Read a managed Document steps 1-4 (PDF): name opens the reader; v… indicator; Previous page, Next page, Zoom out, Zoom in, Find in document; Download; Close the document",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Supported reading surfaces: Word and PowerPoint render as a PDF rendition; Download stays the uploaded file; a preview is not a new Version",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Processing, scans: an image-only PDF stays a scan; Find has no match; OCR text arrives in the background; global search finds it",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Supported reading surfaces: PNG shows inline; EML shows headers, body and attachment list without remote images; a PDF attachment previews; a Word attachment downloads",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Supported reading surfaces: other formats download from the name; a reader link shows the download-only card",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Processing: Preparing this document for reading… while conversion is pending; the stored original is already downloadable",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Failed previews: the failure message, Download of the original, and recovery by adding a readable Version",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Read files in the Business Portal: Documents section, select a name to read the current Version, download beside it",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Read files in the Business Portal: … earlier versions lists earlier Versions; a filename reads that Version",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Read files in the Business Portal: archived Documents and records outside your audience are not listed",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Read files in the Business Portal: on your own Request, select a file under Attachments to download it",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Read files in the Business Portal: a comment attachment name opens its preview with Download; Preview unavailable appears for a file with no preview",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Read files in the Business Portal: Knowledge lists the primary Document first with Download beside each file and no preview or Version picker; an archived item is no longer available",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Before you start: the Portal does not grant access to the staff Documents repository",
+            "result": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "articleId": "document-repository",
+      "contentSha256": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3",
+      "diffFilesInspected": [
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "messages/en-US.json"
+      ],
+      "conclusion": "compatible: the app diff changes nothing this article states or asks, and every replayed step passed on the 57e77e38 lab.",
+      "replay": {
+        "passed": 16,
+        "total": 16,
+        "steps": [
+          {
+            "role": "administrator",
+            "action": "Search and narrow step 1: Documents from navigation; Recent shows up to five Documents by current-Version upload, not by opening",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Search and narrow step 2: Filter, Owner, Contracts/Matters/Entities/Auto-Docs/Knowledge, Apply",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Search and narrow step 3: Record with Search choices; Folder becomes available with Record root",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Search and narrow steps 4-5: Format and Uploader accept several values; different filters must all match; Uploaded From/To includes both dates; remove one filter and Clear all; Recent hides while filtered",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Open the matching paper: selecting the name opens the owning record with the current Version; expand the chain for an earlier round",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Missing or archived: a hidden record's Document does not appear through a filter or direct link",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Missing or archived: Filter, Show archived includes archived Documents; the offered Restore brings one back",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Before you start: drag a live Contract Document row onto a Move to folder target inside its owning record",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Search and narrow step 1: Documents from navigation; Recent shows up to five Documents by current-Version upload, not by opening",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Search and narrow step 2: Filter, Owner, Contracts/Matters/Entities/Auto-Docs/Knowledge, Apply",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Search and narrow step 3: Record with Search choices; Folder becomes available with Record root",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Search and narrow steps 4-5: Format and Uploader accept several values; different filters must all match; Uploaded From/To includes both dates; remove one filter and Clear all; Recent hides while filtered",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Open the matching paper: selecting the name opens the owning record with the current Version; expand the chain for an earlier round",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Missing or archived: a hidden record's Document does not appear through a filter or direct link",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Missing or archived: Filter, Show archived includes archived Documents; the offered Restore brings one back",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Before you start: drag a live Contract Document row onto a Move to folder target inside its owning record",
+            "result": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "9b7236766f07ea15cba334194bf2b4d638e65663627ea6c004b417ecd318f01e",
+      "diffFilesInspected": [
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "messages/en-US.json"
+      ],
+      "conclusion": "compatible: the app diff changes nothing this article states or asks, and every replayed step passed on the 57e77e38 lab.",
+      "replay": {
+        "passed": 19,
+        "total": 19,
+        "steps": [
+          {
+            "role": "administrator",
+            "action": "Archive a Document steps 1-3: Actions, Archive; it leaves the normal list; Show archived finds its Archived row",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Restore a Document steps 1-3: Show archived, Restore from the row Actions menu; Versions and designations come back",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Archive several live Documents with checkboxes and Archive; restore several archived Documents with Restore in the selection bar",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Restore a Document: refused while the owning record is archived; restore the record first",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Restore a Document: a stale-state message when someone already restored the same Document",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Permanently delete steps 1-4: Actions, Delete; the dialog names the Document and Version count; Delete stays disabled until delete is typed; Cancel keeps it",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "If deletion fails: a rename while the dialog is open makes OpenLaw refuse the deletion",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Permanently delete: type delete, select Delete; every Version and the primary reference go; no other Document becomes primary; the activity record remains",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Permanently delete: several Documents with checkboxes and Delete in the selection bar, also confirmed by typing delete",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "You cannot delete just one Version",
+            "result": "pass"
+          },
+          {
+            "role": "administrator",
+            "action": "Archive a Document step 1: a Knowledge Item's Documents section archives and restores; it has Set as primary and no Document folders",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Archive a Document steps 1-3: Actions, Archive; it leaves the normal list; Show archived finds its Archived row",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Restore a Document steps 1-3: Show archived, Restore from the row Actions menu; Versions and designations come back",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Archive several live Documents with checkboxes and Archive; restore several archived Documents with Restore in the selection bar",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Restore a Document: refused while the owning record is archived; restore the record first",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Restore a Document: a stale-state message when someone already restored the same Document",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Before you start and Permanently delete: only an Administrator deletes; this role gets no Delete control and the seam refuses",
+            "result": "pass"
+          },
+          {
+            "role": "legal_team_member",
+            "action": "Archive a Document step 1: a Knowledge Item's Documents section archives and restores; it has Set as primary and no Document folders",
+            "result": "pass"
+          },
+          {
+            "role": "business_user",
+            "action": "Before you start: Business Users cannot archive, restore or delete; they have no managed-Document deletion controls",
+            "result": "pass"
+          }
+        ]
+      }
+    }
+  ]
+}

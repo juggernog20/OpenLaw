@@ -1,0 +1,1030 @@
+{
+  "kind": "compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "operator-lifecycle",
+  "issues": [745, 747],
+  "reviewer": "DOC-029r2 compatibility reviewer (operator-lifecycle)",
+  "reviewerKind": "agent",
+  "independence": "The reviewer did not write, correct, technically review or walk either article in round 1, and did not edit article text.",
+  "reviewedAt": "2026-09-16T18:19:04.022Z",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "commitsReviewed": [
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "1ea249dd Show organization branding on sign-in and raise the logo limit"
+  ],
+  "diffCommand": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+  "diffFilesAll": [
+    "apps/api/openapi.json",
+    "apps/api/src/modules/email-settings/config.test.ts",
+    "apps/api/src/modules/email-settings/config.ts",
+    "apps/api/src/modules/email-settings/email-settings.test.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/org/general.test.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/web/src/components/comments/comment-applet.tsx",
+    "apps/web/src/components/contracts/contracts-columns.tsx",
+    "apps/web/src/components/default-fields.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/components/inline-add-form.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/matters/matters-columns.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/components/taxonomy-types-pane.tsx",
+    "apps/web/src/components/user-identity.tsx",
+    "apps/web/src/lib/ai-connector-config.ts",
+    "apps/web/src/lib/field-catalog.ts",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/auth-layout.test.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/routes/set-password.test.tsx",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/web/src/routes/settings-contract-fields.test.tsx",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/web/src/routes/settings-contract-statuses.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "apps/web/src/routes/settings-contract-types.test.tsx",
+    "apps/web/src/routes/settings-default-fields.test.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-matter-statuses.test.tsx",
+    "apps/web/src/routes/settings-matter-statuses.tsx",
+    "apps/web/src/routes/settings-matter-types.test.tsx",
+    "apps/web/src/routes/settings-reminders.test.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/welcome.test.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/testing/helpers.tsx",
+    "packages/api-client/src/schema.ts",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/logo.ts"
+  ],
+  "unchangedDeploymentFiles": {
+    "command": "git diff --quiet 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- compose.yml Dockerfile services apps/worker packages/db",
+    "exit": 0,
+    "note": "compose.yml, Dockerfile, services (doc engine), apps/worker and packages/db (migrations, journal, reconcile logic, secrets) did not change in the range."
+  },
+  "method": "source inspection of the app diff, then a replay of the round 1 container-operation walkthrough scripts in disposable Compose projects built from a fresh public clone at the starting build d1d098ba and the candidate 57e77e38",
+  "replayAdaptations": "Each replay script is a copy of the round 1 script. Only these values changed: the candidate revision (3fa407e3 to 57e77e38), the private lab directory, the Compose project prefix, the network subnets, the log and screenshot file names, and the fixture record names (DOC-029r2 operator-lifecycle ...). Every step, command, expectation and check is the round 1 text.",
+  "labNotes": [
+    "All lab projects and support containers used ports 23330-23337 on 127.0.0.1 and were destroyed at the end: docker ps, docker network ls and docker volume ls show no object with the d029c2 prefix. The private lab directories with keys, clones and backups were deleted.",
+    "Docker Compose 5.5.1 labels each built image with its project, so one source revision has a different image ID in each project. During the operator-troubleshooting replay another agent's project (openlaw-docs-d029r21-lc-upgrade) rebuilt and retagged openlaw-local:57e77e38, so later container recreations in the diag project used image sha256:79ac46d4f838. That image has the same root filesystem layer list (sha256 of the RootFS.Layers JSON 6026f3cebda7...) as sha256:df58f2ffb09e, sha256:4410f70ff16b and sha256:d8e3a929e803. Only the Compose project label differs.",
+    "The fixtures were populated through the API on the starting build d1d098ba, which only accepts the legacy smtpUrl/smtpFrom body. The candidate kept that relay readable and usable after the upgrade and after the restore.",
+    "The Mailpit relay, MinIO, the port occupier and the nginx proxy were owned local containers. No real provider, public DNS or TLS was used."
+  ],
+  "articles": [
+    {
+      "articleId": "backup-and-restore",
+      "scenario": "V-C47",
+      "article": "docs/user-guides/backup-and-restore.md",
+      "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/router.tsx",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "compose.yml (unchanged)",
+        "Dockerfile (unchanged)",
+        "packages/db (unchanged)"
+      ],
+      "diffFindings": [
+        "No change to pg_dump/pg_restore use, the file volume path /var/lib/openlaw/files, the Compose services, the app image layout or the migrations. compose.yml, Dockerfile and packages/db did not change.",
+        "2b6d167f changes SMTP entry to discrete fields. smtpSettingsToStorage still writes the same encrypted smtpUrl and smtpFrom columns, the legacy body is still accepted, and the test-send refusal text 'The test email could not be sent. SMTP is not configured — save a relay first.' is unchanged. The article's 'sending through the saved SMTP relay' check and its wrong-key row stay correct.",
+        "1ea249dd adds a public GET /api/v1/org/branding for the sign-in screen and raises the logo limit to 5 MB. The logo stays inline in org_settings, so the database dump still holds it. Sign-in with a restored account is unchanged.",
+        "The welcome wizard now keeps its step in the URL. welcomeLoader still redirects to / after onboarding is complete, so a restored instance does not reopen first-run setup.",
+        "d64309f5 redefines BASE_URL in .env.example and docs/DEPLOYMENT.md as a browser-facing origin that may be private. The article only asks for 'the target's origin and port', which stays correct.",
+        "6d34ac59, e3800b43 and 57e77e38 change Settings list editing, locked default Field display and muted archived-user styles. The article states nothing about them."
+      ],
+      "conclusion": "compatible",
+      "conclusionReason": "No statement, command, prerequisite or result in the article changed. Every replay step passed on 57e77e38.",
+      "replay": {
+        "script": "docs/documentation/batches/DOC-029/compat-r2/operator-lifecycle/replay-backup-and-restore.mjs",
+        "scriptSha256": "eed60590262fb7bd75825c2a1bd8be179fd460fc5b3c03fa8615deffb317d6a8",
+        "replayOf": "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.mjs",
+        "log": "docs/documentation/batches/DOC-029/compat-r2/operator-lifecycle/replay-backup-and-restore.json",
+        "logSha256": "4f070e8b524d7d6c0bbac1e36dbd485ec1130782221f7b5195090943ae4901f4",
+        "screenshot": "docs/documentation/batches/DOC-029/compat-r2/operator-lifecycle/r2c-restore-admin-confidential-contract.png",
+        "screenshotSha256": "e19866e0c570ad7b1dd970fefd5b380c7c03557672e0d44d55780cead266d004",
+        "phases": [
+          "support-up",
+          "baseline-install",
+          "populate",
+          "upgrade",
+          "upgrade-start",
+          "backup",
+          "restore",
+          "restore-negatives",
+          "portal-reach restore",
+          "diag-log-scan",
+          "status",
+          "destroy"
+        ],
+        "phasesNotRun": "recovery, recovery-verify and upgrade-verify cover the upgrade article (V-C46), not this article. The diag-* phases of walkthrough-r1.mjs were superseded by walkthrough-r2.mjs and are replayed for operator-troubleshooting.",
+        "counts": {
+          "pass": 45,
+          "fail": 0
+        },
+        "keyObservations": [
+          "Backup steps 1-5 ran as written on 57e77e38: pg_restore --list 684 TOC entries, tar listed 4 files, SHA256SUMS written, restart gave readiness, a Contract read and a matching Version hash, and the retained copy passed sha256sum --check.",
+          "Restore into openlaw-docs-d029c2-lcbr-restore on 127.0.0.1:23332: the target database had 0 tables and the volume 0 entries, pg_restore --exit-on-error exited 0, tar restored 4 files, and the target became ready.",
+          "Administrator, Legal Team Member and the former Contributor (now Business User) signed in through the browser. Contract, Matter, Entity and Field values matched, all four Version hashes matched, the Confidential Contract and its Document were refused to lower-access accounts, and portal reach stayed on the member Contract only.",
+          "A new PDF reached text ready, and a test email through the restored saved relay reached the controlled recipient.",
+          "Wrong valid-length OPENLAW_SECRET_KEY: Contract read 200, email source unset, test send 502 'The test email could not be sent. SMTP is not configured — save a relay first.', nothing delivered, and the log named 'No configured key opens these stored credentials: smtp_url (1)'. The retained key restored delivery.",
+          "A removed blob left the Document listed with download HTTP 500. Reapplying the retained file archive restored both Version hashes. With OPENLAW_SECRET_KEY removed, docker compose config --quiet and up both exited 1."
+        ],
+        "steps": [
+          {
+            "phase": "support-up",
+            "scenario": "setup",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Create project networks with explicit subnets (host address pools are exhausted)",
+            "result": "pass",
+            "at": "2026-09-16T17:59:35.071Z"
+          },
+          {
+            "phase": "support-up",
+            "scenario": "setup",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Start an owned Mailpit relay for controlled recipients",
+            "result": "pass",
+            "at": "2026-09-16T17:59:35.355Z"
+          },
+          {
+            "phase": "baseline-install",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Clone and select the starting build",
+            "result": "pass",
+            "at": "2026-09-16T17:59:38.802Z"
+          },
+          {
+            "phase": "baseline-install",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Write .env and compose.operator.yml per the installation guide",
+            "result": "pass",
+            "at": "2026-09-16T17:59:38.823Z"
+          },
+          {
+            "phase": "baseline-install",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Build and start the starting build",
+            "result": "pass",
+            "at": "2026-09-16T17:59:51.191Z"
+          },
+          {
+            "phase": "populate",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: create the first Administrator and save an encrypted SMTP relay",
+            "result": "pass",
+            "at": "2026-09-16T17:59:51.457Z"
+          },
+          {
+            "phase": "populate",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: invite and activate a Legal Team Member and a Contributor",
+            "result": "pass",
+            "at": "2026-09-16T17:59:51.716Z"
+          },
+          {
+            "phase": "populate",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: Entity, custom Contract Field, three Contracts (one Confidential), a Matter",
+            "result": "pass",
+            "at": "2026-09-16T17:59:51.904Z"
+          },
+          {
+            "phase": "populate",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: two Documents with original and later Versions (one a PDF), and Contributor membership",
+            "result": "pass",
+            "at": "2026-09-16T17:59:52.131Z"
+          },
+          {
+            "phase": "populate",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: record baseline reach for the lower-access accounts",
+            "result": "pass",
+            "at": "2026-09-16T18:00:07.320Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Before you start: record source revision, image identities, project, file list and storage configuration",
+            "result": "pass",
+            "at": "2026-09-16T18:00:07.524Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Prepare step 1: fetch the source and inspect local changes",
+            "result": "pass",
+            "at": "2026-09-16T18:00:08.200Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Prepare step 2: select the target, update OPENLAW_BUILD_COMMIT, validate and build without recreating containers",
+            "result": "pass",
+            "at": "2026-09-16T18:00:20.592Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 1: create a fresh private backup directory",
+            "result": "pass",
+            "at": "2026-09-16T18:00:20.598Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 2: stop app and worker, keep Postgres running",
+            "result": "pass",
+            "at": "2026-09-16T18:00:31.273Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 3: dump the database, archive the file volume, record source and images",
+            "result": "pass",
+            "at": "2026-09-16T18:00:32.064Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 4: list both archives and record hashes",
+            "result": "pass",
+            "at": "2026-09-16T18:00:32.199Z"
+          },
+          {
+            "phase": "upgrade-start",
+            "scenario": "V-C46",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Start step 1: start the target with the retained project and volumes",
+            "result": "pass",
+            "at": "2026-09-16T18:00:36.565Z"
+          },
+          {
+            "phase": "backup",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 1: create a fresh private backup directory",
+            "result": "pass",
+            "at": "2026-09-16T18:00:36.621Z"
+          },
+          {
+            "phase": "backup",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 2: stop app and worker, keep Postgres running",
+            "result": "pass",
+            "at": "2026-09-16T18:00:47.305Z"
+          },
+          {
+            "phase": "backup",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 3: dump the database, archive the file volume, record source and images",
+            "result": "pass",
+            "at": "2026-09-16T18:00:47.979Z"
+          },
+          {
+            "phase": "backup",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 4: list both archives and record hashes",
+            "result": "pass",
+            "at": "2026-09-16T18:00:48.094Z"
+          },
+          {
+            "phase": "backup",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Backup step 5: restart app and worker, confirm readiness and an actual operation",
+            "result": "pass",
+            "at": "2026-09-16T18:00:51.744Z"
+          },
+          {
+            "phase": "backup",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Copy the backup to its retained location and verify hashes there",
+            "result": "pass",
+            "at": "2026-09-16T18:00:51.753Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Restore step 1: prepare source 57e77e38 and images, retained keys, distinct project and port",
+            "result": "pass",
+            "at": "2026-09-16T18:00:57.371Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Restore step 2: verify hashes on the target host and start Postgres",
+            "result": "pass",
+            "at": "2026-09-16T18:00:57.905Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Confirm the target database and file store are empty before importing",
+            "result": "pass",
+            "at": "2026-09-16T18:01:00.634Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Restore step 3: restore the database with --exit-on-error",
+            "result": "pass",
+            "at": "2026-09-16T18:01:02.235Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Restore step 4: restore local files through the target app volume",
+            "result": "pass",
+            "at": "2026-09-16T18:01:03.399Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Restore step 5: start the target and check readiness (controlled relay reachable under its saved name first)",
+            "result": "pass",
+            "at": "2026-09-16T18:01:07.535Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "restored target: Administrator signs in through the origin and sees representative records",
+            "result": "pass",
+            "at": "2026-09-16T18:01:10.478Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "administrator",
+            "method": "container-operation",
+            "action": "restored target: download original and later Versions and compare hashes with the inventory",
+            "result": "pass",
+            "at": "2026-09-16T18:01:10.527Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "legal_team_member",
+            "method": "browser-walkthrough",
+            "action": "restored target: lower-access account (reader) signs in; Confidential record outside its audience stays refused",
+            "result": "pass",
+            "at": "2026-09-16T18:01:13.026Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "contributor",
+            "method": "browser-walkthrough",
+            "action": "restored target: lower-access account (contributor) signs in; Confidential record outside its audience stays refused",
+            "result": "pass",
+            "at": "2026-09-16T18:01:15.500Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "administrator",
+            "method": "container-operation",
+            "action": "restored target: a new upload is processed by the worker",
+            "result": "pass",
+            "at": "2026-09-16T18:01:32.609Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "administrator",
+            "method": "container-operation",
+            "action": "restored target: actual use of the saved encrypted relay (test email)",
+            "result": "pass",
+            "at": "2026-09-16T18:01:32.679Z"
+          },
+          {
+            "phase": "restore",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "restored target: inspect outstanding jobs and Envelopes",
+            "result": "pass",
+            "at": "2026-09-16T18:01:32.890Z"
+          },
+          {
+            "phase": "restore-negatives",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Negative: wrong OPENLAW_SECRET_KEY (valid length) on the restored target",
+            "result": "pass",
+            "at": "2026-09-16T18:02:02.396Z"
+          },
+          {
+            "phase": "restore-negatives",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Recovery: restore the retained key, recreate app and worker, send through the saved relay",
+            "result": "pass",
+            "at": "2026-09-16T18:02:16.506Z"
+          },
+          {
+            "phase": "restore-negatives",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Negative: remove one stored blob from the restored file volume",
+            "result": "pass",
+            "at": "2026-09-16T18:02:17.054Z"
+          },
+          {
+            "phase": "restore-negatives",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Recovery: reapply the retained file backup to the isolated target and compare hashes",
+            "result": "pass",
+            "at": "2026-09-16T18:02:17.527Z"
+          },
+          {
+            "phase": "restore-negatives",
+            "scenario": "V-C47",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Negative: startup with a missing key",
+            "result": "pass",
+            "at": "2026-09-16T18:02:17.610Z"
+          },
+          {
+            "phase": "portal-reach",
+            "scenario": "V-C47",
+            "role": "business_user",
+            "method": "browser-walkthrough",
+            "action": "restore: former Contributor (now Business User) portal reach; Confidential Contract stays refused",
+            "result": "pass",
+            "at": "2026-09-16T18:02:19.873Z"
+          },
+          {
+            "phase": "diag-log-scan",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Negative: container logs after every induced fault omit keys, relay and storage credentials, and fixture passwords",
+            "result": "pass",
+            "at": "2026-09-16T18:02:20.086Z"
+          },
+          {
+            "phase": "destroy",
+            "scenario": "teardown",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Destroy owned projects, support containers, networks and private backups",
+            "result": "pass",
+            "at": "2026-09-16T18:02:43.259Z"
+          }
+        ]
+      },
+      "lab": {
+        "projects": [
+          "openlaw-docs-d029c2-lcbr-upgrade (source, 127.0.0.1:23330)",
+          "openlaw-docs-d029c2-lcbr-restore (target, 127.0.0.1:23332)"
+        ],
+        "supportContainers": ["openlaw-docs-d029c2-lcbr-mail (Mailpit, UI 127.0.0.1:23335)"],
+        "startingBuild": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+        "images": {
+          "sourceStartingApp": "sha256:d7ccc51dd8726e14bb41b25dfa2a7d01471fafd0bce3597b9d7a0e7554043589",
+          "sourceCandidateApp": "sha256:4410f70ff16bb7a1b6814d864692114e85b81788d127b53f6771050385c34b74",
+          "sourceCandidateEngine": "sha256:dc6224bb3887ab482f444a318d1b22956ee78192e8ce26f63825a7e48f4130f9",
+          "targetApp": "sha256:d8e3a929e803e52e8f1adf12702e693b7fe0fa27d15e89cd4ce7120badc9baf8",
+          "targetEngine": "sha256:46a820cb154cc7e29b0cab50de53143959f6038e9e01ca5307952e36e867f52c",
+          "postgres": "postgres:16 sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+        },
+        "destroyed": true
+      }
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "article": "docs/user-guides/operator-troubleshooting.md",
+      "contentSha256": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/router.tsx",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "compose.yml (unchanged)",
+        "packages/db (unchanged)",
+        "apps/worker (unchanged)",
+        "services (unchanged)"
+      ],
+      "diffFindings": [
+        "Startup, port, readiness, migration and storage behavior sits in compose.yml, packages/db, apps/worker, services and the unchanged API startup code. None of them changed, so the key refusals, the reconciled log line, 'This database cannot apply the migrations it is missing', the 0060_account_issuer refusals and the storage and worker rows keep their basis.",
+        "2b6d167f only changes the SMTP save body and the send-failure reason texts, which the article does not quote. The SMTP_URL pin still refuses a save with 409, and the wrong-key test-send text is unchanged at routes.ts line 174.",
+        "d64309f5 now calls BASE_URL the browser-facing origin, which may be private. The proxy row says 'Public BASE_URL' and 'the public address'. For the proxy case in that row this is the origin the browser uses, and the auth layer still checks Origin against BASE_URL, so the check and recovery stay correct. This is a wording difference from DEPLOYMENT.md, not a behavior change.",
+        "1ea249dd adds the public branding request on the sign-in screen. A failed branding request does not block sign-in, and origin checks are unchanged.",
+        "settings-ai-analysis.tsx changes only the intro text and moves the key-reuse helper. The Test connection control is unchanged. Signing settings did not change.",
+        "The other commits change Settings list editing, locked default Field display and archived-user styles. The article states nothing about them."
+      ],
+      "conclusion": "compatible",
+      "conclusionReason": "No statement, command, quoted message or recovery in the article changed. Every replay step passed on 57e77e38.",
+      "replay": {
+        "script": "docs/documentation/batches/DOC-029/compat-r2/operator-lifecycle/replay-operator-troubleshooting.mjs",
+        "scriptSha256": "a584e7b44a530f748d52e42366c9ac13a78ec1248ca828077433ad68f9e72828",
+        "replayOf": "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2.mjs",
+        "log": "docs/documentation/batches/DOC-029/compat-r2/operator-lifecycle/replay-operator-troubleshooting.json",
+        "logSha256": "4988a4d0f58799855bae360af50530cd2092ecd7fb3a2fba64774a3e11f19a0e",
+        "screenshot": "docs/documentation/batches/DOC-029/compat-r2/operator-lifecycle/r2c-signing-updates-webhook-hint.png",
+        "screenshotSha256": "e168aa30318143b6a422e9fbdd0a02aba8f6e8df39e10cd4e182cc45444b0bfb",
+        "phases": [
+          "support-up",
+          "baseline-install",
+          "populate",
+          "upgrade",
+          "diag-baseline",
+          "occupier-up",
+          "diag-startup",
+          "diag-migration",
+          "diag-mail",
+          "diag-storage",
+          "diag-worker",
+          "diag-providers",
+          "diag-proxy",
+          "diag-log-scan",
+          "destroy"
+        ],
+        "phasesNotRun": "diag-live-retry was a round 2 retry of a fault injection that did not take. diag-proxy already uses the corrected buffering and gzip fault, and it passed on the first run.",
+        "counts": {
+          "pass": 39,
+          "fail": 0
+        },
+        "keyObservations": [
+          "Upgrade from d1d098ba to 57e77e38 logged 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'.",
+          "Missing AUTH_SECRET or OPENLAW_SECRET_KEY: config and up exited 1 and no container changed. A short OPENLAW_SECRET_KEY passed config, but app and worker restarted with 'OPENLAW_SECRET_KEY is shorter than 32 characters'. A short AUTH_SECRET only logged the better-auth warning.",
+          "PORT on an occupied port: up exited 1 with 'port is already allocated', ps --all showed app created and worker created, plain ps did not list them, and the same up command after correcting PORT gave readiness. An unused port with BASE_URL updated gave sign-in through that origin.",
+          "An unreachable DATABASE_URL made the app restart with a connection error. Stopped Postgres gave /healthz 200 and /readyz 503. Both recovered with a record read and write.",
+          "Journal fault: 'This database cannot apply the migrations it is missing.' and both read-only commands ran. The shipped 0060_account_issuer.sql refused with 'Cannot resolve an issuer for accounts under provider(s): doc029-retired-idp' and 'Two accounts share one 1.7 identity', left no issuer column, and applied on the corrected shape.",
+          "SMTP_URL pin: source env, delivery from SMTP_FROM, save refused 409. Removing it restored the saved relay. Wrong valid-length key: source unset and exactly 'The test email could not be sent. SMTP is not configured — save a relay first.', with a Contract read and a download still working.",
+          "Storage: volume owned by uid 1000 (node). Wrong S3 endpoint: /readyz 200, Document listed, download 500. Missing bucket: upload 500 with the app ready. Both recovered with matching bytes. MAX_UPLOAD_MB=1 refused 1,100,000 bytes with 413 and accepted 900,000 bytes.",
+          "Worker stopped: docker compose ps worker doc-engine did not list the worker, a new PDF stayed pending and downloaded intact, then reached ready. Engine stopped: a PDF reached failed after 222 s with /readyz 200. A new PDF after the restart reached ready.",
+          "Signing updates offered Polling (outbound access only) and Webhook (public HTTPS gateway and Connect subscription). The AI analysis Provider card offered Test connection. No provider credential was used.",
+          "Behind the proxy, sign-in answered 403 INVALID_ORIGIN until BASE_URL named the proxy origin. Then sign-in, an invitation link with that origin, its acceptance and the invited sign-in worked. A buffering and compressing proxy held back a comment frame for the 20 s window. Without buffering it arrived in 19 ms.",
+          "The log scan found none of 10 known secret values and no relay URL with credentials."
+        ],
+        "steps": [
+          {
+            "phase": "support-up",
+            "scenario": "setup",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Create project networks with explicit subnets (host address pools are exhausted)",
+            "result": "pass",
+            "at": "2026-09-16T18:02:43.438Z"
+          },
+          {
+            "phase": "support-up",
+            "scenario": "setup",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Start an owned Mailpit relay for controlled recipients",
+            "result": "pass",
+            "at": "2026-09-16T18:02:43.651Z"
+          },
+          {
+            "phase": "baseline-install",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: clone and select the starting build",
+            "result": "pass",
+            "at": "2026-09-16T18:02:46.853Z"
+          },
+          {
+            "phase": "baseline-install",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: write .env and compose.operator.yml per the installation guide",
+            "result": "pass",
+            "at": "2026-09-16T18:02:46.871Z"
+          },
+          {
+            "phase": "baseline-install",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: build and start the starting build",
+            "result": "pass",
+            "at": "2026-09-16T18:02:59.152Z"
+          },
+          {
+            "phase": "populate",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: first Administrator and a saved encrypted SMTP relay",
+            "result": "pass",
+            "at": "2026-09-16T18:02:59.433Z"
+          },
+          {
+            "phase": "populate",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: invite and activate a Legal Team Member",
+            "result": "pass",
+            "at": "2026-09-16T18:02:59.561Z"
+          },
+          {
+            "phase": "populate",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: two Contracts and two Documents with Versions (one PDF)",
+            "result": "pass",
+            "at": "2026-09-16T18:03:01.679Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: the starting database recorded the earlier 0090_request_triage_assignee migration",
+            "result": "pass",
+            "at": "2026-09-16T18:03:01.923Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: coherent pre-upgrade database dump kept privately",
+            "result": "pass",
+            "at": "2026-09-16T18:03:12.729Z"
+          },
+          {
+            "phase": "upgrade",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: select the candidate, build, start; the app logs the automatic repair",
+            "result": "pass",
+            "at": "2026-09-16T18:03:18.183Z"
+          },
+          {
+            "phase": "diag-baseline",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Start with the observed failure: the three commands",
+            "result": "pass",
+            "at": "2026-09-16T18:03:18.563Z"
+          },
+          {
+            "phase": "occupier-up",
+            "scenario": "setup",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Start an unrelated listener that holds the occupied port",
+            "result": "pass",
+            "at": "2026-09-16T18:03:19.039Z"
+          },
+          {
+            "phase": "diag-startup",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Missing key: Compose refuses config and up for either key",
+            "result": "pass",
+            "at": "2026-09-16T18:03:19.537Z"
+          },
+          {
+            "phase": "diag-startup",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Short OPENLAW_SECRET_KEY: config passes, app and worker refuse; supply the key, config --quiet, recreate, check startup",
+            "result": "pass",
+            "at": "2026-09-16T18:03:55.697Z"
+          },
+          {
+            "phase": "diag-startup",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Short AUTH_SECRET: only a warning is logged and the app starts; restore the retained value",
+            "result": "pass",
+            "at": "2026-09-16T18:04:24.026Z"
+          },
+          {
+            "phase": "diag-startup",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Port is already allocated: failed bind; ps --all shows app and worker created; plain ps omits them; instance down; correct PORT and run the same up again",
+            "result": "pass",
+            "at": "2026-09-16T18:04:42.283Z"
+          },
+          {
+            "phase": "diag-startup",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Port recovery by choosing an unused port: update PORT and BASE_URL together, then check the actual origin; return to the original origin",
+            "result": "pass",
+            "at": "2026-09-16T18:05:10.783Z"
+          },
+          {
+            "phase": "diag-startup",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "App keeps restarting: unresolvable DATABASE_URL; first specific error in app logs; correct and recreate",
+            "result": "pass",
+            "at": "2026-09-16T18:06:21.373Z"
+          },
+          {
+            "phase": "diag-startup",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "/healthz works but /readyz fails: database stopped; restore; verify a record read and write",
+            "result": "pass",
+            "at": "2026-09-16T18:06:38.539Z"
+          },
+          {
+            "phase": "diag-migration",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Migration failure: controlled journal fault; refusal text; both read-only commands; custodian undo",
+            "result": "pass",
+            "at": "2026-09-16T18:07:23.822Z"
+          },
+          {
+            "phase": "diag-migration",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "accounts.issuer refusals: run the shipped 0060_account_issuer.sql against a scratch pre-0060 accounts shape; each refusal names its case and applies none of the migration",
+            "result": "pass",
+            "at": "2026-09-16T18:07:26.330Z"
+          },
+          {
+            "phase": "diag-mail",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "SMTP_URL pins the environment: saved relay ignored; valid SMTP_FROM; recreate app and worker; then remove the override and verify delivery",
+            "result": "pass",
+            "at": "2026-09-16T18:07:54.999Z"
+          },
+          {
+            "phase": "diag-mail",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Wrong OPENLAW_SECRET_KEY: email state unset, test send gives the exact message, unrelated Contract readable; restore the key",
+            "result": "pass",
+            "at": "2026-09-16T18:08:23.456Z"
+          },
+          {
+            "phase": "diag-storage",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Local storage: the file volume belongs to the image's unprivileged user",
+            "result": "pass",
+            "at": "2026-09-16T18:08:24.022Z"
+          },
+          {
+            "phase": "diag-storage",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "automated-test",
+            "action": "Fixture: owned MinIO with a pre-created bucket; write driver s3 on app and worker; upload one file",
+            "result": "pass",
+            "at": "2026-09-16T18:08:43.877Z"
+          },
+          {
+            "phase": "diag-storage",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Storage: wrong S3 endpoint; app ready; Document listed but its download fails; local Documents intact; correct and verify bytes",
+            "result": "pass",
+            "at": "2026-09-16T18:10:00.995Z"
+          },
+          {
+            "phase": "diag-storage",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Storage: the bucket must already exist; a missing bucket leaves the app ready and fails the upload; restore",
+            "result": "pass",
+            "at": "2026-09-16T18:10:29.432Z"
+          },
+          {
+            "phase": "diag-storage",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Upload too large: MAX_UPLOAD_MB=1; test above and below; restore",
+            "result": "pass",
+            "at": "2026-09-16T18:10:57.995Z"
+          },
+          {
+            "phase": "diag-worker",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Worker stopped: the two commands; new upload stays pending; original downloadable; resume; new fictional Document processed",
+            "result": "pass",
+            "at": "2026-09-16T18:11:21.874Z"
+          },
+          {
+            "phase": "diag-worker",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Engine down: a PDF reaches failed while the API stays ready; original downloadable; restore engine; a new controlled PDF is processed; earlier failure not retried",
+            "result": "pass",
+            "at": "2026-09-16T18:15:04.377Z"
+          },
+          {
+            "phase": "diag-providers",
+            "scenario": "V-C48",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Signing updates: Polling and Webhook options and their hints; Analysis settings offer a connection test",
+            "result": "pass",
+            "at": "2026-09-16T18:15:07.967Z"
+          },
+          {
+            "phase": "diag-proxy",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Sign-in behind the proxy fails while BASE_URL names a different origin",
+            "result": "pass",
+            "at": "2026-09-16T18:15:08.312Z"
+          },
+          {
+            "phase": "diag-proxy",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Correct BASE_URL to the proxy origin, recreate app and worker; sign-in and a newly issued link through the public address work",
+            "result": "pass",
+            "at": "2026-09-16T18:15:22.896Z"
+          },
+          {
+            "phase": "diag-proxy",
+            "scenario": "V-C48",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Live updates: a buffering proxy holds back the event stream; a change from a second signed-in browser does not arrive",
+            "result": "pass",
+            "at": "2026-09-16T18:16:29.013Z"
+          },
+          {
+            "phase": "diag-proxy",
+            "scenario": "V-C48",
+            "role": "administrator",
+            "method": "browser-walkthrough",
+            "action": "Live updates: allow the stream to stay open without buffering; a change from a second signed-in browser arrives",
+            "result": "pass",
+            "at": "2026-09-16T18:16:38.890Z"
+          },
+          {
+            "phase": "diag-proxy",
+            "scenario": "setup",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Return BASE_URL to the direct origin and remove the proxy",
+            "result": "pass",
+            "at": "2026-09-16T18:16:53.422Z"
+          },
+          {
+            "phase": "diag-log-scan",
+            "scenario": "V-C48",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Negative: container logs after every induced fault omit keys, relay and storage credentials, and fixture passwords",
+            "result": "pass",
+            "at": "2026-09-16T18:16:53.577Z"
+          },
+          {
+            "phase": "destroy",
+            "scenario": "teardown",
+            "role": "operator",
+            "method": "container-operation",
+            "action": "Destroy the owned project, support containers, networks and private backups",
+            "result": "pass",
+            "at": "2026-09-16T18:17:24.633Z"
+          }
+        ]
+      },
+      "lab": {
+        "projects": [
+          "openlaw-docs-d029c2-lcdiag-diag (127.0.0.1:23330; 23332 for the unused-port check)"
+        ],
+        "supportContainers": [
+          "openlaw-docs-d029c2-lcdiag-mail (Mailpit, UI 127.0.0.1:23335)",
+          "openlaw-docs-d029c2-lcdiag-minio (127.0.0.1:23336)",
+          "openlaw-docs-d029c2-lcdiag-occupier (127.0.0.1:23331)",
+          "openlaw-docs-d029c2-lcdiag-proxy (nginx, 127.0.0.1:23337)"
+        ],
+        "startingBuild": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+        "images": {
+          "startingApp": "sha256:c33dc72dfd1b6889e8ddb7dbfb7bd0c10cd998fd24f228554c01e9e83d8ce248",
+          "candidateAppAtUpgrade": "sha256:df58f2ffb09eafefe466b50e3bbaceac967cdb21a481bc7671ec29cae376a914",
+          "candidateAppAtEnd": "sha256:79ac46d4f83803ecc29b11af1f885281154598930404d0a9bc54476b739c7719 (same layers, retagged by another project; see labNotes)",
+          "candidateEngineAtUpgrade": "sha256:4c42b579d2cd810a9df216ae6d09651cd0b0618e6f3c6e1196fe826cc894b8e7",
+          "candidateEngineAtEnd": "sha256:d7bc25991932159bc7e0727fd639db8500592c3f72f294dd06d0f5973b991fec",
+          "postgres": "postgres:16 sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+        },
+        "destroyed": true
+      }
+    }
+  ],
+  "needsRewalk": [],
+  "productBugs": []
+}

@@ -1,0 +1,1703 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-029",
+  "group": "documents",
+  "round": 1,
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (documents, round 1)",
+  "reviewerKind": "agent",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "lab": {
+    "summary": "work: http://127.0.0.1:23301; source 3fa407e3a846559914aa1a63249741f30cfb4f69; seed complete",
+    "project": "openlaw-docs-41255c61-work",
+    "images": {
+      "app": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0",
+      "worker": "sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0",
+      "doc-engine": "sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837"
+    }
+  },
+  "appUrl": "http://127.0.0.1:23301",
+  "mailUrl": "http://127.0.0.1:23401",
+  "browser": "Playwright 1.63.0 Chromium, headless, one browser context per identity",
+  "articleHashes": {
+    "document-versions": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14",
+    "document-folders": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
+    "document-previews": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b",
+    "document-repository": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3",
+    "archive-and-delete-documents": "9b7236766f07ea15cba334194bf2b4d638e65663627ea6c004b417ecd318f01e"
+  },
+  "fixtures": [
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-broken.docx",
+      "sha256": "3a65b1b9a930629c38caec11baed28a56c569c38bde0038b2f4f706587b2611e"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-a.txt",
+      "sha256": "c0dbc1f2090728af690515624fde1ce37d172b484369ff01bca40a5a4a038749"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-b.txt",
+      "sha256": "a3686c10a2d63e59d8e601e9a58c7eea07eddb39b88f1a3ed8b6df5d59b9c916"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-c.txt",
+      "sha256": "342c505925518d24e3503bdf2a7afe209e6ced5595047b831f151f274467ffdb"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-d.txt",
+      "sha256": "b7336358ec54ea046d5c273a35ce5ca5d6e0540885838d5e6ee2e765e5cb8fc8"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bundle.zip",
+      "sha256": "5c019d5a25f221f1737c271c26f3ad74f86b0ea5dceb9859d9437904e7e94abb"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-deck.pptx",
+      "sha256": "27bb27ee1a181b1415a36e9fefb95b1e50316312f6b74884afdbcab03ba8c2eb"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-draft-v1.docx",
+      "sha256": "7ef62e21080b131fe52983809b9c4120003179cf4bad2616abe23ef5b559f24d"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-draft-v2.docx",
+      "sha256": "a48db865f959bb77e4dd8c954cec865721c3e80422c5dd0211cd34fe7757181a"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-message.eml",
+      "sha256": "3b06dcfa36dba6f9a590944b4b72e933e5b8e0cff579876ec66f62c0c56ff966"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-scan.pdf",
+      "sha256": "bc1dad800ab8e67121dbf0f05c6eed62c592f2706ca50435f1752ffd34f8dd96"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-schedule.csv",
+      "sha256": "438b5f30d7bd6c963a345a71a705f6fa9b9248fb5db4bee7f85482ae8576dbc4"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-services-text.pdf",
+      "sha256": "dac0eda00e4fb895be58fed622322e660f7a47c8a73f4ab9e8a2a6886d7f09b4"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-stamp.png",
+      "sha256": "c4d6267a51844dbc5c4ebb6ffdbcc72b0182cf897c06b0639af9b671b6a54460"
+    }
+  ],
+  "sections": ["versions", "folders", "previews", "portal", "repository", "archive"],
+  "roles": ["administrator", "legal_team_member"],
+  "stamp": "215751",
+  "startedAt": "2026-09-16T15:40:16.045Z",
+  "finishedAt": "2026-09-16T15:43:31.283Z",
+  "records": [
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-029 documents Admin versions Contract 215751",
+      "ref": "C-228"
+    },
+    {
+      "role": "administrator",
+      "kind": "matter",
+      "name": "DOC-029 documents Admin versions Matter 215751",
+      "ref": "M-160"
+    },
+    {
+      "role": "administrator",
+      "kind": "entity",
+      "name": "DOC-029 documents Admin versions Entity 215751 Ltd",
+      "ref": "01a0aae0-4f48-7d85-8278-03f3f0d60d49"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-029 documents Admin archived owner 215751",
+      "ref": "C-229"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-029 documents Admin folders Contract 215751",
+      "ref": "C-230"
+    },
+    {
+      "role": "administrator",
+      "kind": "matter",
+      "name": "DOC-029 documents Admin folders Matter 215751",
+      "ref": "M-161"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-029 documents Admin previews Contract 215751",
+      "ref": "C-231"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-029 documents hidden owner 215751",
+      "ref": "C-233"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-029 documents Admin repository Contract 215751",
+      "ref": "C-234"
+    },
+    {
+      "role": "administrator",
+      "kind": "matter",
+      "name": "DOC-029 documents Admin repository Matter 215751",
+      "ref": "M-162"
+    },
+    {
+      "role": "administrator",
+      "kind": "entity",
+      "name": "DOC-029 documents Admin repository Entity 215751 Ltd",
+      "ref": "01a0aae0-eeb9-709f-82a5-f628b0287e76"
+    },
+    {
+      "role": "administrator",
+      "kind": "knowledge_item",
+      "name": "DOC-029 documents Admin repository Knowledge 215751",
+      "ref": "01a0aae0-eee7-71ba-957f-1e5d09993dc4"
+    },
+    {
+      "role": "administrator",
+      "kind": "auto_doc",
+      "name": "DOC-029 documents Admin repository Auto-Doc 215751",
+      "ref": "01a0aae0-ef06-74ce-830c-ba65526865e0"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-029 documents Admin archive Contract 215751",
+      "ref": "C-239"
+    },
+    {
+      "role": "administrator",
+      "kind": "knowledge_item",
+      "name": "DOC-029 documents Admin archive Knowledge 215751",
+      "ref": "01a0aae1-a998-7f64-8e3c-2c350a609ebd"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-029 documents Legal versions Contract 215751",
+      "ref": "C-240"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "matter",
+      "name": "DOC-029 documents Legal versions Matter 215751",
+      "ref": "M-163"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "entity",
+      "name": "DOC-029 documents Legal versions Entity 215751 Ltd",
+      "ref": "01a0aae1-c6bd-73a4-9f28-b94e2fa3962d"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-029 documents Legal archived owner 215751",
+      "ref": "C-241"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-029 documents Legal folders Contract 215751",
+      "ref": "C-254"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "matter",
+      "name": "DOC-029 documents Legal folders Matter 215751",
+      "ref": "M-166"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-029 documents Legal previews Contract 215751",
+      "ref": "C-255"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-029 documents Legal repository Contract 215751",
+      "ref": "C-256"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "matter",
+      "name": "DOC-029 documents Legal repository Matter 215751",
+      "ref": "M-167"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "entity",
+      "name": "DOC-029 documents Legal repository Entity 215751 Ltd",
+      "ref": "01a0aae2-5d3b-7bd3-879e-80f0464b6c2c"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "knowledge_item",
+      "name": "DOC-029 documents Legal repository Knowledge 215751",
+      "ref": "01a0aae2-5d5f-7346-a2fc-821c10c3e959"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "auto_doc",
+      "name": "DOC-029 documents Legal repository Auto-Doc 215751",
+      "ref": "01a0aae2-5d80-7bca-9741-6fd4a2f813ae"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-029 documents Legal archive Contract 215751",
+      "ref": "C-257"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "knowledge_item",
+      "name": "DOC-029 documents Legal archive Knowledge 215751",
+      "ref": "01a0aae3-0b32-76f9-a3b0-201fabdae1ad"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-029 documents Portal Contract 215751",
+      "ref": "C-258"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-029 documents Portal not on team 215751",
+      "ref": "C-259"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "knowledge_item",
+      "name": "DOC-029 documents Portal Knowledge 215751",
+      "ref": "01a0aae3-14ee-7522-bc7b-ce8ea6137bb0"
+    },
+    {
+      "role": "business_user",
+      "kind": "request",
+      "name": "DOC-029 documents Portal request 215751",
+      "ref": "R-130"
+    }
+  ],
+  "steps": [
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Upload a new Document steps 1-4: Documents tab, Upload, Choose files with one file, Kind, Note, Upload",
+      "expected": "One file creates a Document named from its filename with a v1 row; Kind offers the six hand-set kinds",
+      "actual": "Upload document dialog opened with Choose files, Kind and Note. Kind offered Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Amendment, Executed; no Generated redline. After Upload the list held one row \"doc029-draft-v1.docx\" (from the filename) showing v1, Draft · ours and the note.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:16.971Z",
+      "at": "2026-09-16T15:40:17.810Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Upload step 2 variant: choosing several files opens the bulk import dialog",
+      "expected": "The Import dialog replaces the one-file composer; Cancel creates nothing",
+      "actual": "Two chosen files opened the Import 2 files dialog instead of the composer. Cancel closed it and the record still held one Document.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:17.811Z",
+      "at": "2026-09-16T15:40:17.964Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Upload step 4: Actions menu, Edit details, Save changes the name and description",
+      "expected": "Name and description change; the Version chain is untouched",
+      "actual": "Edit details saved the name \"DOC-029 Admin supply draft 215751\" and a description. Read-back: still one Version, v1.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:17.964Z",
+      "at": "2026-09-16T15:40:18.193Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Add another Version steps 1-3: Add version, Choose file, Kind, Note, Upload; expand and read the earlier Version",
+      "expected": "The Version number increases; the earlier Version stays readable with its note, author and bytes",
+      "actual": "Add version dialog showed Choose file, Kind and Note; after Upload the row read v2. Expanding the chain listed doc029-draft-v1.docx; selecting it opened the reader \"DOC-029 Admin supply draft 215751, version 1\" with the v1 chip visible. Download returned the original v1 bytes (SHA-256 match). v1 kept its note, kind, filename and uploader.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:18.193Z",
+      "at": "2026-09-16T15:40:18.665Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "History note: uploading the same paper as a new Document creates a separate chain",
+      "expected": "A second Document appears; the first chain is not merged or changed",
+      "actual": "The same file uploaded again made a second Document \"doc029-draft-v1.docx\" at v1; the first Document still had two Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:18.665Z",
+      "at": "2026-09-16T15:40:18.893Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Correct the Kind control on an existing hand-set Version",
+      "expected": "The kind changes; bytes and Executed pin do not; Generated redline is not offered",
+      "actual": "The Kind control on v2 offered Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Amendment, Executed. Choosing Redline · theirs saved (read-back kind redline_theirs); no Executed pin was set by the change; the v2 download still answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:18.893Z",
+      "at": "2026-09-16T15:40:19.189Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Executed pin: Mark as executed copy on an earlier Version; a later upload does not move it; Unmark clears it",
+      "expected": "The pin stays on the earlier Version after a newer Version arrives",
+      "actual": "Mark as executed copy on version 1 set the pin there. A v3 upload left the pin on v1. Unmark as executed copy on v1 cleared the pin.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:19.189Z",
+      "at": "2026-09-16T15:40:19.994Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Primary Document: the Primary mark and Make primary move the designation",
+      "expected": "Primary moves to the other Document",
+      "actual": "\"DOC-029 Admin supply draft 215751\" carried the Primary mark and its menu had no Make primary. Make primary on \"doc029-draft-v1.docx\" moved the mark there (read-back isPrimary). The designation was then moved back for the next checks.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:19.994Z",
+      "at": "2026-09-16T15:40:21.208Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A Matter upload has no Kind control, and a Matter has no Primary mark or Executed pin",
+      "expected": "No Kind column or composer Kind, no Make primary or Mark as executed copy",
+      "actual": "The Matter Upload document dialog had no Kind control and the list had no Kind column or Kind correction. The row menu offered Add version, Edit details, Move to folder, Mark confidential, Archive, Delete: no Make primary and no Mark as executed copy. On an Entity the Document row had no Primary mark and its menu offered Add version, Edit details, Move to folder, Mark confidential, Archive, Delete.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:21.211Z",
+      "at": "2026-09-16T15:40:23.045Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: an archived owning record must be restored before uploading",
+      "expected": "The archived record offers no Upload; restoring brings it back; the seam refuses an upload meanwhile",
+      "actual": "While the Contract was archived its Documents section showed no Upload button and a direct upload answered 409 (This contract is archived. Restore it before uploading.). After restoring the Contract the Upload button returned.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:23.046Z",
+      "at": "2026-09-16T15:40:24.355Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Recover from a refusal: a failed upload shows a message and does not alter the chain",
+      "expected": "An upload message appears; the Version count stays the same",
+      "actual": "With a browser-network fixture answering 413 for the Version upload, the Add version dialog stayed open with the message \"DOC-029 fixture: this file is larger than the upload limit.\". The Document still had 3 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:24.355Z",
+      "at": "2026-09-16T15:40:25.207Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "File a Contract conversation attachment steps 1-4: File to Contract, New Document, Confidential preselected for Legal Only",
+      "expected": "A Legal Only attachment files as a new Confidential Document and the comment reads Filed to",
+      "actual": "The attachment offered File to Contract. File attachment opened with Destination New Document and \"Confidential — restrict to the contract team\" already on, plus Document name and Kind. File created \"DOC-029 Admin filed paper 215751\" (Confidential, one Version) and the comment read \"Filed to DOC-029 Admin filed paper 215751, version 1\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:25.260Z",
+      "at": "2026-09-16T15:40:26.237Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "File a Contract conversation attachment: open the preview, File to Contract, New Version on an existing Document with a Note",
+      "expected": "The preview offers the same action; the Version is appended with its note",
+      "actual": "Selecting the attachment name opened its preview with Download and File to Contract. Choosing New Version on an existing Document, Document \"DOC-029 Admin supply draft 215751\" and a Note appended v4 with that note; the comment read \"Filed to DOC-029 Admin supply draft 215751, version 4\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:26.238Z",
+      "at": "2026-09-16T15:40:26.532Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "File a Matter conversation attachment: File to Matter, no Kind, same Confidential switch label",
+      "expected": "The Matter offers File to Matter without Kind; filing creates a Matter Document",
+      "actual": "The Matter attachment offered File to Matter. File attachment had no Kind control and the switch read \"Confidential — restrict to the contract team\". File created the Matter Document.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:26.533Z",
+      "at": "2026-09-16T15:40:27.520Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders steps 1-2: New folder, Name, Save; an empty folder has no expand control",
+      "expected": "The folder row appears without an expand control",
+      "actual": "New folder opened a dialog with Name and Save. The \"DOC-029 Admin Parent\" row appeared reading \"DOC-029 Admin Parent Empty\" with no expand control.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:27.912Z",
+      "at": "2026-09-16T15:40:28.660Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 3: New subfolder and Rename from Actions for the … folder",
+      "expected": "The subfolder is created inside; the parent gains an expand control; Rename changes the name",
+      "actual": "New subfolder opened \"New folder in DOC-029 Admin Parent\"; the child appeared under the now-open parent (Collapse DOC-029 Admin Parent control present). Rename folder changed \"DOC-029 Admin Child draft\" to \"DOC-029 Admin Child\". Read-back: the child's parent is DOC-029 Admin Parent.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:28.660Z",
+      "at": "2026-09-16T15:40:29.001Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Folder name rules: case-only duplicate sibling, blank name, slash, '.' and '..' are refused",
+      "expected": "Each attempt shows a refusal and creates nothing",
+      "actual": "All five names were refused in the dialog and no folder was created. \"DOC-029 ADMIN PARENT\": A folder named DOC-029 ADMIN PARENT is already here.; \"   \": Give the folder a name.; \"DOC-029 a/b\": A folder name cannot contain a slash. Make a folder inside instead.; \".\": A folder cannot be named . or .. — those address a path, not a folder.; \"..\": A folder cannot be named . or .. — those address a path, not a folder..",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:29.002Z",
+      "at": "2026-09-16T15:40:29.841Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 3: Move, Move into, None; a folder cannot move into itself or a descendant",
+      "expected": "Move into omits the folder and its descendant, the seam refuses a cycle, and None returns a folder to the top level",
+      "actual": "Move into for \"DOC-029 Admin Parent\" offered None, DOC-029 Admin Other: not the folder itself or its child. The seam refused a move into its own child (409: A folder cannot be moved inside itself.) and into itself (409). Moving \"DOC-029 Admin Child\" into \"DOC-029 Admin Other\" read back as DOC-029 Admin Other/DOC-029 Admin Child; Move into None put it at the top level.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:29.842Z",
+      "at": "2026-09-16T15:40:30.475Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 4: Move to folder, File in, Move; None moves it out",
+      "expected": "The Document is filed in the folder and then moved back to the record",
+      "actual": "Move to folder opened \"Move doc029-admin-loose-a.txt\" with File in; choosing \"DOC-029 Admin Parent\" filed the Document there and the folder gained an expand control showing it. File in None moved it back onto the record.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:30.476Z",
+      "at": "2026-09-16T15:40:31.565Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 4: drag a Document row onto a folder row, then onto Drop here to move out of folders",
+      "expected": "Dragging files the Document into the folder and back out",
+      "actual": "Dragging the \"doc029-admin-loose-b.txt\" row onto the \"DOC-029 Admin Other\" folder row filed it there (read-back). Dragging it from inside the folder showed \"Drop here to move out of folders\"; dropping on it moved the Document back to the record.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:31.565Z",
+      "at": "2026-09-16T15:40:33.629Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 4: select checkboxes and Move in the selection bar",
+      "expected": "Both selected Documents move into the chosen folder",
+      "actual": "Selecting both checkboxes showed \"2 selected\" with Move. The Move 2 documents dialog with File in \"DOC-029 Admin Parent\" filed both Documents there (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:33.630Z",
+      "at": "2026-09-16T15:40:34.512Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Folder Delete dissolves the folder: contents move to its parent or the record, nothing is deleted",
+      "expected": "The confirmation says where contents go; the Documents stay live on the record",
+      "actual": "The confirmation read \"Delete the DOC-029 Admin Parent folder? Anything in it moves onto the contract itself. Nothing is deleted. Cancel Delete\". After Delete the folder was gone and both Documents were live at the record root.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:34.512Z",
+      "at": "2026-09-16T15:40:35.387Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Import several files steps 1-5 with a partial failure: Destination Record root, Version kind, counts, Retry",
+      "expected": "The good files stay as v1 Documents, the failed row is named with Retry, and Retry sends only the failed file",
+      "actual": "Choose files with three files opened \"Import 3 files\" showing Destination Record root and Version kind (\"Applied to every file in this import. Notes are not collected in bulk.\"). With a browser-network fixture answering 503 once for one file, the dialog read \"Imported 2 of 3 files 2 of 3 files uploaded doc029-bulk-c.txt DOC-029 fixture: the upload service is unavailable. Retry doc029-bulk-a.txt Done doc029-bulk-b.txt Done 1 file failed. The other 2 are on the contract. Retry uploads the selected file again. Files o\" with a row Retry and Retry 1 file. The two good files were already v1 Documents (Draft · theirs). Row Retry sent only the failed file and the dialog closed; the record gained exactly 3 Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:35.387Z",
+      "at": "2026-09-16T15:40:36.663Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Recover a partial import: a size refusal is not offered a retry; Done closes",
+      "expected": "The failed row has no Retry, and the good file remains",
+      "actual": "With a fixture answering 413 for one file, the dialog read \"Imported 1 of 2 files 1 of 2 files uploaded doc029-bulk-d.txt DOC-029 fixture: this file is larger than the upload limit. doc029-bulk-a.txt Done 1 file failed. The other 1 is on the contract. Retry uploads the selected f\" and offered no Retry control. Done closed it; the other file was on the record.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:36.664Z",
+      "at": "2026-09-16T15:40:36.968Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Import step 5: when every file uploads the dialog closes after the list refreshes",
+      "expected": "The dialog closes by itself and both files are listed",
+      "actual": "A two-file import with no failure closed the dialog by itself; the record gained two Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:36.969Z",
+      "at": "2026-09-16T15:40:37.278Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Recover a partial import: Cancel remaining stops queued work and uploaded files remain",
+      "expected": "Queued files are cancelled; the finished uploads stay on the record; final counts are shown",
+      "actual": "With uploads slowed by a fixture, the running dialog said \"Keep this dialog open until the import finishes.\" Cancel remaining settled it at \"Imported 3 of 5 files\": 2 file(s) read \"Cancelled before it was uploaded.\" and the 3 uploaded file(s) were on the record (read-back +3).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:37.279Z",
+      "at": "2026-09-16T15:40:41.941Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keep a local folder structure: Choose folder keeps nested paths; the folder picker drops empty folders; a matching path is reused",
+      "expected": "The top-level folder and its nested child are created with their files; the empty folder is not; a second import reuses the path",
+      "actual": "Choose folder on a local tree (two files, one nested folder, one empty folder) opened \"Import 2 files\" reading \"Import 2 files Destination Record root Folder structure is kept doc029-tree-215751 1 folder · 2 files sub-a 1 file doc029-nested.txt 23 byte doc029-top.txt 20 byte Version kind Draft · ours Draft · th\". The import created doc029-tree-215751 and doc029-tree-215751/sub-a with the files; the empty folder was not created. Importing the same tree again reused the existing doc029-tree-215751 folder (still one).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:41.941Z",
+      "at": "2026-09-16T15:40:43.152Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Import step 1-2 and Keep structure: drop files and a local folder on a folder row; the Destination is that folder; a dropped tree recreates empty folders",
+      "expected": "The Import dialog names the folder as Destination and the empty folder is recreated",
+      "actual": "Dropping the local tree on the \"DOC-029 Admin Other\" row opened a dialog reading \"Import 2 files Destination DOC-029 Admin Other Folder structure is kept doc029-tree-215751 2 folders · 2 files empty-dir Empty sub-a 1 file doc029-nested.txt 23 byte doc029-top.txt 20 byte Version kin\". The import created DOC-029 Admin Other/doc029-tree-215751/sub-a and the empty DOC-029 Admin Other/doc029-tree-215751/empty-dir.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:43.153Z",
+      "at": "2026-09-16T15:40:44.067Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Import step 3: a Matter import has no Version kind control",
+      "expected": "The Matter batch dialog shows Destination but no Version kind",
+      "actual": "On a Matter, Choose files with two files opened Import 2 files with Destination Record root and no Version kind control.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:44.068Z",
+      "at": "2026-09-16T15:40:44.794Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Read a managed Document steps 1-4 (PDF): name opens the reader; v… indicator; Previous page, Next page, Zoom out, Zoom in, Find in document; Download; Close the document",
+      "expected": "The reader shows the title and v1, the PDF controls work, Download returns the original bytes, and Close returns to the record",
+      "actual": "Selecting \"admin-doc029-services-text.pdf\" opened the reader \"admin-doc029-services-text.pdf, version 1\" with the v1 chip and Page 1 of 2. Previous page, Next page, Zoom out, Zoom in and Find in document were present; Next page reached Page 2 of 2 and Previous page returned. Find for a word in the text layer read \"1 of 2\". Download returned the uploaded bytes (SHA-256 match). Close the document closed the reader.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:45.388Z",
+      "at": "2026-09-16T15:40:47.262Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: Word and PowerPoint render as a PDF rendition; Download stays the uploaded file; a preview is not a new Version",
+      "expected": "Both open in the PDF reader after preparation and download the original bytes; the chain stays at one Version",
+      "actual": "admin-doc029-draft-v1.docx: rendition ready, PDF reader pages shown, download matched the uploaded file; admin-doc029-deck.pptx: rendition ready, PDF reader pages shown, download matched the uploaded file. Each chain still had one Version.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:47.262Z",
+      "at": "2026-09-16T15:40:50.440Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Processing, scans: an image-only PDF stays a scan; Find has no match; OCR text arrives in the background; global search finds it",
+      "expected": "Reader Find reports no match, text read-back source is OCR, and global search lists the Document",
+      "actual": "The scan opened as Page 1 of 1 in the reader and Find in document for \"Marrowbridge\" read \"No matches\". The text read-back became ready from source ocr and contained the word. Global search for \"Marrowbridge\" listed \"admin-doc029-scan.pdf\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:50.441Z",
+      "at": "2026-09-16T15:40:52.069Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: PNG shows inline; EML shows headers, body and attachment list without remote images; a PDF attachment previews; a Word attachment downloads",
+      "expected": "Image inline; email headers and 2 attachments; no remote image request; PDF attachment opens; DOCX attachment is a download",
+      "actual": "The PNG drew as an inline image. The EML reader showed From, To, Subject, Date, the sandboxed \"Message body\" text and \"2 attachments\"; the body's remote image (src \"\") made no request to the remote host. The PDF attachment opened in a preview with \"Back to the message\"; the Word attachment was a download link and returned its bytes. Reading the email created no new Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:52.069Z",
+      "at": "2026-09-16T15:40:54.636Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: other formats download from the name; a reader link shows the download-only card",
+      "expected": "CSV and ZIP names download directly; a reader link to one shows the card",
+      "actual": "Selecting \"admin-doc029-schedule.csv\" and \"admin-doc029-bundle.zip\" downloaded the original files (SHA-256 match) without opening a reader (0 -> 0 panels). Opening the CSV through a reader link showed \"This file type does not open here. Download it to read it.\" with Download.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:54.637Z",
+      "at": "2026-09-16T15:40:55.470Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Processing: Preparing this document for reading… while conversion is pending; the stored original is already downloadable",
+      "expected": "The pending message shows and Download returns the uploaded file",
+      "actual": "With a browser-network fixture holding the rendition read at pending, the reader showed \"Preparing this document for reading…\" and Download returned the uploaded Word file (SHA-256 match).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:55.470Z",
+      "at": "2026-09-16T15:40:56.318Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Failed previews: the failure message, Download of the original, and recovery by adding a readable Version",
+      "expected": "A damaged Word file shows the failure card and downloads; a new Version renders while the failed Version stays in the chain",
+      "actual": "The malformed Word container reached rendition state failed. The reader showed \"This file could not be prepared for reading here. Download it to read it.\" and Download returned the original bytes. Add version with a readable Word file made v2 (rendition ready), which opened in the PDF reader; expanding the chain and selecting the v1 filename still showed the failure card for v1.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:40:56.318Z",
+      "at": "2026-09-16T15:41:02.035Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Search and narrow step 1: Documents from navigation; Recent shows up to five Documents by current-Version upload, not by opening",
+      "expected": "Recent lists at most five, in the order of the newest current Versions, and opening an older Document does not change it",
+      "actual": "The Documents navigation link opened the repository. Recent listed 5 Documents in the same order as the newest-current-Version read (repo-autodoc-admin-215751.docx, repo-knowledge-admin-215751.pdf, …). After opening the older \"repo-folder-admin-215751.docx\" and returning, Recent still matched the upload-time order and did not add it.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:03.161Z",
+      "at": "2026-09-16T15:41:03.937Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Search and narrow step 2: Filter, Owner, Contracts/Matters/Entities/Auto-Docs/Knowledge, Apply",
+      "expected": "Owner offers the five kinds and each narrows to paper of that owner kind",
+      "actual": "Owner offered Contracts, Matters, Entities, Auto-Docs, Knowledge. Contracts: 50 rows, including repo-root-admin-215751.pdf; Matters: 50 rows, including repo-matter-admin-215751.pdf; Entities: 50 rows, including repo-entity-admin-215751.pdf; Knowledge: 35 rows, including repo-knowledge-admin-215751.pdf; Auto-Docs: 4 rows, including repo-autodoc-admin-215751.docx. Each list left out the fixture paper of the other owner kinds.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:03.938Z",
+      "at": "2026-09-16T15:41:12.682Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Search and narrow step 3: Record with Search choices; Folder becomes available with Record root",
+      "expected": "Record narrows to one Contract; Folder picks the folder or Record root",
+      "actual": "Record with Search choices \"C-234\" narrowed the list to the Contract's 4 live Documents, and the Filter menu then offered Folder. Folder \"DOC-029 Admin Repo folder\" showed only \"repo-folder-admin-215751.docx\"; Record root showed the Documents outside folders. With Owner Knowledge, and with Owner Auto-Docs, the Filter menu offered no Folder.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:12.682Z",
+      "at": "2026-09-16T15:41:19.310Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Search and narrow steps 4-5: Format and Uploader accept several values; different filters must all match; Uploaded From/To includes both dates; remove one filter and Clear all; Recent hides while filtered",
+      "expected": "Any-of within a filter, all-of across filters, inclusive dates, and Recent only without filters",
+      "actual": "On C-234, Format PDF + Word (\"Matches any selected value\") kept the PDF and the Word Document. Kind Draft · ours left out \"repo-root-admin-215751.pdf\", whose v1 is Draft · ours but whose current v2 is Draft · theirs. Kind Executed left only \"repo-folder-admin-215751.docx\"; Counterparty DOC-029 Admin Northwind 215751 and Uploader Daniel Okafor kept it. Uploaded From 2026-09-16 To 2026-09-16 (\"Includes both dates\") kept it; From 2026-09-17 showed \"No documents match these filters.\". Removing the Kind filter left the list empty; removing Uploaded widened it again. Recent was hidden while filters were active and returned after Clear all.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:19.311Z",
+      "at": "2026-09-16T15:41:29.548Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open the matching paper: selecting the name opens the owning record with the current Version; expand the chain for an earlier round",
+      "expected": "The record opens with the reader on v2 and the chain lists v1",
+      "actual": "Selecting \"repo-root-admin-215751.pdf\" opened C-234's Documents tab with the reader on \"repo-root-admin-215751.pdf, version 2\". Expanding the chain and selecting the earlier filename opened version 1.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:29.548Z",
+      "at": "2026-09-16T15:41:30.606Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Missing or archived: a hidden record's Document does not appear through a filter or direct link",
+      "expected": "An Administrator reaches every Contract, so the Confidential Contract's paper is listed",
+      "actual": "As Administrator, Record choices for C-233 offered \"DOC-029 documents hidden owner 215751\", the repository read listed its Document, and the record's Documents read answered 200. The article does not claim that an Administrator is refused.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:30.607Z",
+      "at": "2026-09-16T15:41:31.499Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Missing or archived: Filter, Show archived includes archived Documents; the offered Restore brings one back",
+      "expected": "The archived row appears with Archived and Restore; Restore makes it live",
+      "actual": "After archiving \"repo-archive-admin-215751.txt\" it was absent from the Record-filtered list. Filter, Show archived added its row marked Archived with a Restore action; Restore made it live again (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:31.500Z",
+      "at": "2026-09-16T15:41:35.076Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: drag a live Contract Document row onto a Move to folder target inside its owning record",
+      "expected": "The Move to folder panel names the record's folders and the drop files the Document",
+      "actual": "Dragging the \"repo-drag-admin-215751.txt\" row showed the Move to folder panel for C-234 with None and \"DOC-029 Admin Repo folder\"; dropping on the folder filed the Document there (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:35.077Z",
+      "at": "2026-09-16T15:41:37.109Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive a Document steps 1-3: Actions, Archive; it leaves the normal list; Show archived finds its Archived row",
+      "expected": "The Document leaves the list, reappears marked Archived, and keeps its Versions, files and designations",
+      "actual": "Archive removed \"archive-main-admin-215751.docx\" from the Documents list. Show archived drew its row with the Archived mark. Read-back: 3 Versions, still Primary, Executed pin on v2, and every Version download answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:37.615Z",
+      "at": "2026-09-16T15:41:39.180Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restore a Document steps 1-3: Show archived, Restore from the row Actions menu; Versions and designations come back",
+      "expected": "The Document is live again with its Versions, primary and executed-copy designation",
+      "actual": "Restore in the archived row's Actions menu made the Document live. With Show archived off its row read \"archive-main-admin-215751.docx Primary Draft · ours Draft · theirs Redline · theirs Redlin\"; read-back kept 3 Versions, Primary, and the Executed pin on v2.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:39.181Z",
+      "at": "2026-09-16T15:41:40.051Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive several live Documents with checkboxes and Archive; restore several archived Documents with Restore in the selection bar",
+      "expected": "Both leave the list together and return together",
+      "actual": "Selecting two live Documents and Archive in the selection bar removed both rows. With Show archived on, selecting both archived rows offered Restore, which made both live again (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:40.052Z",
+      "at": "2026-09-16T15:41:42.091Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restore a Document: refused while the owning record is archived; restore the record first",
+      "expected": "The archived record offers no Show archived or Document controls; restore is refused; after restoring the record the Document restores",
+      "actual": "While the Contract was archived, its Documents section showed no Show archived switch and no Upload (0); row menus offered only Compare with previous; restoring the archived Document was refused 409 (\"This contract is archived. Restore it before changing its paper.\"). After the Contract was restored, Show archived and Restore made the Document live.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:42.091Z",
+      "at": "2026-09-16T15:41:45.292Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Restore a Document: a stale-state message when someone already restored the same Document",
+      "expected": "Restore on a stale row shows a message; reloading shows the live Document",
+      "actual": "A second session restored the Document while this page still showed it archived. Restore on the stale row showed \"This document is not archived.\". After a reload the Document was live.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:45.293Z",
+      "at": "2026-09-16T15:41:47.247Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Permanently delete steps 1-4: Actions, Delete; the dialog names the Document and Version count; Delete stays disabled until delete is typed; Cancel keeps it",
+      "expected": "Cancel and a wrong word leave the Document; the dialog text matches the guide",
+      "actual": "Delete opened \"Delete this document?\" reading \"Delete this document? archive-main-admin-215751.docx and its 3 versions are removed, and the stored files with them. You cannot undo this. Type \"delete\" to confirm Cancel Delete\". Delete stayed disabled with the field empty and with the Document name typed instead of the word. Cancel closed the dialog and the Document kept its 3 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:47.248Z",
+      "at": "2026-09-16T15:41:48.071Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "If deletion fails: a rename while the dialog is open makes OpenLaw refuse the deletion",
+      "expected": "The deletion is refused with a message and the Document stays",
+      "actual": "With the dialog open, a second request renamed the Document. Typing delete and selecting Delete was refused with \"Type the document's name exactly to delete it.\"; the Document remained under its new name.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:48.072Z",
+      "at": "2026-09-16T15:41:48.304Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Permanently delete: type delete, select Delete; every Version and the primary reference go; no other Document becomes primary; the activity record remains",
+      "expected": "The row is gone, Version downloads fail, no replacement primary, activity names the deletion",
+      "actual": "Typing delete enabled Delete; after it the row was gone (also with archived rows included). The three Version downloads answered 404, 404, 404. No remaining Document was marked Primary. The Contract activity read still named \"archive-main-admin-215751.docx\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:48.304Z",
+      "at": "2026-09-16T15:41:49.172Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Permanently delete: several Documents with checkboxes and Delete in the selection bar, also confirmed by typing delete",
+      "expected": "The bulk dialog asks for delete and removes both",
+      "actual": "Selecting two Documents and Delete in the selection bar opened \"Delete 2 documents?\" reading \"Delete 2 documents? archive-del-2-admin-215751.txt archive-del-1-admin-215751.txt The selected documents and all their versions will be permanently deleted. Thi\". Delete was disabled until delete was typed; then both Documents were removed.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:49.173Z",
+      "at": "2026-09-16T15:41:50.060Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "You cannot delete just one Version",
+      "expected": "No Version-level delete control; the seam has no single-Version delete",
+      "actual": "The earlier Version's menu offered Mark as executed copy: no Delete. A request to delete one Version answered 404; the Document kept both Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:50.061Z",
+      "at": "2026-09-16T15:41:50.850Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive a Document step 1: a Knowledge Item's Documents section archives and restores; it has Set as primary and no Document folders",
+      "expected": "Archive and Restore work in the Knowledge Documents section; Set as primary is offered; no New folder",
+      "actual": "The Knowledge Item's Documents section had no New folder button. The menu of a non-primary Document offered Set as primary, Add version, Edit details, Mark confidential, Archive, Delete (including Set as primary). Archive removed \"knowledge-b-admin-215751.txt\", Show archived showed it marked Archived, and Restore made it live again.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:50.851Z",
+      "at": "2026-09-16T15:41:52.829Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Upload a new Document steps 1-4: Documents tab, Upload, Choose files with one file, Kind, Note, Upload",
+      "expected": "One file creates a Document named from its filename with a v1 row; Kind offers the six hand-set kinds",
+      "actual": "Upload document dialog opened with Choose files, Kind and Note. Kind offered Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Amendment, Executed; no Generated redline. After Upload the list held one row \"doc029-draft-v1.docx\" (from the filename) showing v1, Draft · ours and the note.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:53.177Z",
+      "at": "2026-09-16T15:41:54.018Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Upload step 2 variant: choosing several files opens the bulk import dialog",
+      "expected": "The Import dialog replaces the one-file composer; Cancel creates nothing",
+      "actual": "Two chosen files opened the Import 2 files dialog instead of the composer. Cancel closed it and the record still held one Document.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:54.019Z",
+      "at": "2026-09-16T15:41:54.156Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Upload step 4: Actions menu, Edit details, Save changes the name and description",
+      "expected": "Name and description change; the Version chain is untouched",
+      "actual": "Edit details saved the name \"DOC-029 Legal supply draft 215751\" and a description. Read-back: still one Version, v1.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:54.157Z",
+      "at": "2026-09-16T15:41:54.411Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Add another Version steps 1-3: Add version, Choose file, Kind, Note, Upload; expand and read the earlier Version",
+      "expected": "The Version number increases; the earlier Version stays readable with its note, author and bytes",
+      "actual": "Add version dialog showed Choose file, Kind and Note; after Upload the row read v2. Expanding the chain listed doc029-draft-v1.docx; selecting it opened the reader \"DOC-029 Legal supply draft 215751, version 1\" with the v1 chip visible. Download returned the original v1 bytes (SHA-256 match). v1 kept its note, kind, filename and uploader.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:54.412Z",
+      "at": "2026-09-16T15:41:54.861Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "History note: uploading the same paper as a new Document creates a separate chain",
+      "expected": "A second Document appears; the first chain is not merged or changed",
+      "actual": "The same file uploaded again made a second Document \"doc029-draft-v1.docx\" at v1; the first Document still had two Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:54.862Z",
+      "at": "2026-09-16T15:41:55.070Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Correct the Kind control on an existing hand-set Version",
+      "expected": "The kind changes; bytes and Executed pin do not; Generated redline is not offered",
+      "actual": "The Kind control on v2 offered Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Amendment, Executed. Choosing Redline · theirs saved (read-back kind redline_theirs); no Executed pin was set by the change; the v2 download still answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:55.072Z",
+      "at": "2026-09-16T15:41:55.363Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Executed pin: Mark as executed copy on an earlier Version; a later upload does not move it; Unmark clears it",
+      "expected": "The pin stays on the earlier Version after a newer Version arrives",
+      "actual": "Mark as executed copy on version 1 set the pin there. A v3 upload left the pin on v1. Unmark as executed copy on v1 cleared the pin.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:55.363Z",
+      "at": "2026-09-16T15:41:56.348Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Primary Document: the Primary mark and Make primary move the designation",
+      "expected": "Primary moves to the other Document",
+      "actual": "\"DOC-029 Legal supply draft 215751\" carried the Primary mark and its menu had no Make primary. Make primary on \"doc029-draft-v1.docx\" moved the mark there (read-back isPrimary). The designation was then moved back for the next checks.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:56.348Z",
+      "at": "2026-09-16T15:41:57.484Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A Matter upload has no Kind control, and a Matter has no Primary mark or Executed pin",
+      "expected": "No Kind column or composer Kind, no Make primary or Mark as executed copy",
+      "actual": "The Matter Upload document dialog had no Kind control and the list had no Kind column or Kind correction. The row menu offered Add version, Edit details, Move to folder, Mark confidential, Archive: no Make primary and no Mark as executed copy. On an Entity the Document row had no Primary mark and its menu offered Add version, Edit details, Move to folder, Mark confidential, Archive.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:57.484Z",
+      "at": "2026-09-16T15:41:58.993Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Before you start: an archived owning record must be restored before uploading",
+      "expected": "The archived record offers no Upload; restoring brings it back; the seam refuses an upload meanwhile",
+      "actual": "While the Contract was archived its Documents section showed no Upload button and a direct upload answered 409 (This contract is archived. Restore it before uploading.). After restoring the Contract the Upload button returned.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:41:58.994Z",
+      "at": "2026-09-16T15:42:00.380Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Recover from a refusal: a failed upload shows a message and does not alter the chain",
+      "expected": "An upload message appears; the Version count stays the same",
+      "actual": "With a browser-network fixture answering 413 for the Version upload, the Add version dialog stayed open with the message \"DOC-029 fixture: this file is larger than the upload limit.\". The Document still had 3 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:00.381Z",
+      "at": "2026-09-16T15:42:01.292Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "File a Contract conversation attachment steps 1-4: File to Contract, New Document, Confidential preselected for Legal Only",
+      "expected": "A Legal Only attachment files as a new Confidential Document and the comment reads Filed to",
+      "actual": "The attachment offered File to Contract. File attachment opened with Destination New Document and \"Confidential — restrict to the contract team\" already on, plus Document name and Kind. File created \"DOC-029 Legal filed paper 215751\" (Confidential, one Version) and the comment read \"Filed to DOC-029 Legal filed paper 215751, version 1\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:01.379Z",
+      "at": "2026-09-16T15:42:02.381Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "File a Contract conversation attachment: open the preview, File to Contract, New Version on an existing Document with a Note",
+      "expected": "The preview offers the same action; the Version is appended with its note",
+      "actual": "Selecting the attachment name opened its preview with Download and File to Contract. Choosing New Version on an existing Document, Document \"DOC-029 Legal supply draft 215751\" and a Note appended v4 with that note; the comment read \"Filed to DOC-029 Legal supply draft 215751, version 4\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:02.382Z",
+      "at": "2026-09-16T15:42:02.614Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "File a Matter conversation attachment: File to Matter, no Kind, same Confidential switch label",
+      "expected": "The Matter offers File to Matter without Kind; filing creates a Matter Document",
+      "actual": "The Matter attachment offered File to Matter. File attachment had no Kind control and the switch read \"Confidential — restrict to the contract team\". File created the Matter Document.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:02.614Z",
+      "at": "2026-09-16T15:42:03.528Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders steps 1-2: New folder, Name, Save; an empty folder has no expand control",
+      "expected": "The folder row appears without an expand control",
+      "actual": "New folder opened a dialog with Name and Save. The \"DOC-029 Legal Parent\" row appeared reading \"DOC-029 Legal Parent Empty\" with no expand control.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:03.948Z",
+      "at": "2026-09-16T15:42:04.682Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 3: New subfolder and Rename from Actions for the … folder",
+      "expected": "The subfolder is created inside; the parent gains an expand control; Rename changes the name",
+      "actual": "New subfolder opened \"New folder in DOC-029 Legal Parent\"; the child appeared under the now-open parent (Collapse DOC-029 Legal Parent control present). Rename folder changed \"DOC-029 Legal Child draft\" to \"DOC-029 Legal Child\". Read-back: the child's parent is DOC-029 Legal Parent.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:04.683Z",
+      "at": "2026-09-16T15:42:05.056Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Folder name rules: case-only duplicate sibling, blank name, slash, '.' and '..' are refused",
+      "expected": "Each attempt shows a refusal and creates nothing",
+      "actual": "All five names were refused in the dialog and no folder was created. \"DOC-029 LEGAL PARENT\": A folder named DOC-029 LEGAL PARENT is already here.; \"   \": Give the folder a name.; \"DOC-029 a/b\": A folder name cannot contain a slash. Make a folder inside instead.; \".\": A folder cannot be named . or .. — those address a path, not a folder.; \"..\": A folder cannot be named . or .. — those address a path, not a folder..",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:05.056Z",
+      "at": "2026-09-16T15:42:05.883Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 3: Move, Move into, None; a folder cannot move into itself or a descendant",
+      "expected": "Move into omits the folder and its descendant, the seam refuses a cycle, and None returns a folder to the top level",
+      "actual": "Move into for \"DOC-029 Legal Parent\" offered None, DOC-029 Legal Other: not the folder itself or its child. The seam refused a move into its own child (409: A folder cannot be moved inside itself.) and into itself (409). Moving \"DOC-029 Legal Child\" into \"DOC-029 Legal Other\" read back as DOC-029 Legal Other/DOC-029 Legal Child; Move into None put it at the top level.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:05.884Z",
+      "at": "2026-09-16T15:42:06.580Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 4: Move to folder, File in, Move; None moves it out",
+      "expected": "The Document is filed in the folder and then moved back to the record",
+      "actual": "Move to folder opened \"Move doc029-legal-loose-a.txt\" with File in; choosing \"DOC-029 Legal Parent\" filed the Document there and the folder gained an expand control showing it. File in None moved it back onto the record.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:06.581Z",
+      "at": "2026-09-16T15:42:07.686Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 4: drag a Document row onto a folder row, then onto Drop here to move out of folders",
+      "expected": "Dragging files the Document into the folder and back out",
+      "actual": "Dragging the \"doc029-legal-loose-b.txt\" row onto the \"DOC-029 Legal Other\" folder row filed it there (read-back). Dragging it from inside the folder showed \"Drop here to move out of folders\"; dropping on it moved the Document back to the record.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:07.686Z",
+      "at": "2026-09-16T15:42:09.298Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create and maintain folders step 4: select checkboxes and Move in the selection bar",
+      "expected": "Both selected Documents move into the chosen folder",
+      "actual": "Selecting both checkboxes showed \"2 selected\" with Move. The Move 2 documents dialog with File in \"DOC-029 Legal Parent\" filed both Documents there (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:09.298Z",
+      "at": "2026-09-16T15:42:10.091Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Folder Delete dissolves the folder: contents move to its parent or the record, nothing is deleted",
+      "expected": "The confirmation says where contents go; the Documents stay live on the record",
+      "actual": "The confirmation read \"Delete the DOC-029 Legal Parent folder? Anything in it moves onto the contract itself. Nothing is deleted. Cancel Delete\". After Delete the folder was gone and both Documents were live at the record root.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:10.092Z",
+      "at": "2026-09-16T15:42:10.853Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Import several files steps 1-5 with a partial failure: Destination Record root, Version kind, counts, Retry",
+      "expected": "The good files stay as v1 Documents, the failed row is named with Retry, and Retry sends only the failed file",
+      "actual": "Choose files with three files opened \"Import 3 files\" showing Destination Record root and Version kind (\"Applied to every file in this import. Notes are not collected in bulk.\"). With a browser-network fixture answering 503 once for one file, the dialog read \"Imported 2 of 3 files 2 of 3 files uploaded doc029-bulk-c.txt DOC-029 fixture: the upload service is unavailable. Retry doc029-bulk-a.txt Done doc029-bulk-b.txt Done 1 file failed. The other 2 are on the contract. Retry uploads the selected file again. Files o\" with a row Retry and Retry 1 file. The two good files were already v1 Documents (Draft · theirs). Row Retry sent only the failed file and the dialog closed; the record gained exactly 3 Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:10.854Z",
+      "at": "2026-09-16T15:42:11.933Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Recover a partial import: a size refusal is not offered a retry; Done closes",
+      "expected": "The failed row has no Retry, and the good file remains",
+      "actual": "With a fixture answering 413 for one file, the dialog read \"Imported 1 of 2 files 1 of 2 files uploaded doc029-bulk-d.txt DOC-029 fixture: this file is larger than the upload limit. doc029-bulk-a.txt Done 1 file failed. The other 1 is on the contract. Retry uploads the selected f\" and offered no Retry control. Done closed it; the other file was on the record.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:11.933Z",
+      "at": "2026-09-16T15:42:12.188Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Import step 5: when every file uploads the dialog closes after the list refreshes",
+      "expected": "The dialog closes by itself and both files are listed",
+      "actual": "A two-file import with no failure closed the dialog by itself; the record gained two Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:12.189Z",
+      "at": "2026-09-16T15:42:12.424Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Recover a partial import: Cancel remaining stops queued work and uploaded files remain",
+      "expected": "Queued files are cancelled; the finished uploads stay on the record; final counts are shown",
+      "actual": "With uploads slowed by a fixture, the running dialog said \"Keep this dialog open until the import finishes.\" Cancel remaining settled it at \"Imported 3 of 5 files\": 2 file(s) read \"Cancelled before it was uploaded.\" and the 3 uploaded file(s) were on the record (read-back +3).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:12.425Z",
+      "at": "2026-09-16T15:42:16.958Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keep a local folder structure: Choose folder keeps nested paths; the folder picker drops empty folders; a matching path is reused",
+      "expected": "The top-level folder and its nested child are created with their files; the empty folder is not; a second import reuses the path",
+      "actual": "Choose folder on a local tree (two files, one nested folder, one empty folder) opened \"Import 2 files\" reading \"Import 2 files Destination Record root Folder structure is kept doc029-tree-215751 1 folder · 2 files sub-a 1 file doc029-nested.txt 23 byte doc029-top.txt 20 byte Version kind Draft · ours Draft · th\". The import created doc029-tree-215751 and doc029-tree-215751/sub-a with the files; the empty folder was not created. Importing the same tree again reused the existing doc029-tree-215751 folder (still one).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:16.959Z",
+      "at": "2026-09-16T15:42:18.032Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Import step 1-2 and Keep structure: drop files and a local folder on a folder row; the Destination is that folder; a dropped tree recreates empty folders",
+      "expected": "The Import dialog names the folder as Destination and the empty folder is recreated",
+      "actual": "Dropping the local tree on the \"DOC-029 Legal Other\" row opened a dialog reading \"Import 2 files Destination DOC-029 Legal Other Folder structure is kept doc029-tree-215751 2 folders · 2 files empty-dir Empty sub-a 1 file doc029-nested.txt 23 byte doc029-top.txt 20 byte Version kin\". The import created DOC-029 Legal Other/doc029-tree-215751/sub-a and the empty DOC-029 Legal Other/doc029-tree-215751/empty-dir.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:18.033Z",
+      "at": "2026-09-16T15:42:18.856Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Import step 3: a Matter import has no Version kind control",
+      "expected": "The Matter batch dialog shows Destination but no Version kind",
+      "actual": "On a Matter, Choose files with two files opened Import 2 files with Destination Record root and no Version kind control.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:18.857Z",
+      "at": "2026-09-16T15:42:19.589Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Read a managed Document steps 1-4 (PDF): name opens the reader; v… indicator; Previous page, Next page, Zoom out, Zoom in, Find in document; Download; Close the document",
+      "expected": "The reader shows the title and v1, the PDF controls work, Download returns the original bytes, and Close returns to the record",
+      "actual": "Selecting \"legal-doc029-services-text.pdf\" opened the reader \"legal-doc029-services-text.pdf, version 1\" with the v1 chip and Page 1 of 2. Previous page, Next page, Zoom out, Zoom in and Find in document were present; Next page reached Page 2 of 2 and Previous page returned. Find for a word in the text layer read \"1 of 2\". Download returned the uploaded bytes (SHA-256 match). Close the document closed the reader.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:20.061Z",
+      "at": "2026-09-16T15:42:21.873Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: Word and PowerPoint render as a PDF rendition; Download stays the uploaded file; a preview is not a new Version",
+      "expected": "Both open in the PDF reader after preparation and download the original bytes; the chain stays at one Version",
+      "actual": "legal-doc029-draft-v1.docx: rendition ready, PDF reader pages shown, download matched the uploaded file; legal-doc029-deck.pptx: rendition ready, PDF reader pages shown, download matched the uploaded file. Each chain still had one Version.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:21.874Z",
+      "at": "2026-09-16T15:42:24.948Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Processing, scans: an image-only PDF stays a scan; Find has no match; OCR text arrives in the background; global search finds it",
+      "expected": "Reader Find reports no match, text read-back source is OCR, and global search lists the Document",
+      "actual": "The scan opened as Page 1 of 1 in the reader and Find in document for \"Marrowbridge\" read \"No matches\". The text read-back became ready from source ocr and contained the word. Global search for \"Marrowbridge\" listed \"legal-doc029-scan.pdf\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:24.949Z",
+      "at": "2026-09-16T15:42:26.545Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: PNG shows inline; EML shows headers, body and attachment list without remote images; a PDF attachment previews; a Word attachment downloads",
+      "expected": "Image inline; email headers and 2 attachments; no remote image request; PDF attachment opens; DOCX attachment is a download",
+      "actual": "The PNG drew as an inline image. The EML reader showed From, To, Subject, Date, the sandboxed \"Message body\" text and \"2 attachments\"; the body's remote image (src \"\") made no request to the remote host. The PDF attachment opened in a preview with \"Back to the message\"; the Word attachment was a download link and returned its bytes. Reading the email created no new Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:26.547Z",
+      "at": "2026-09-16T15:42:29.095Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: other formats download from the name; a reader link shows the download-only card",
+      "expected": "CSV and ZIP names download directly; a reader link to one shows the card",
+      "actual": "Selecting \"legal-doc029-schedule.csv\" and \"legal-doc029-bundle.zip\" downloaded the original files (SHA-256 match) without opening a reader (0 -> 0 panels). Opening the CSV through a reader link showed \"This file type does not open here. Download it to read it.\" with Download.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:29.097Z",
+      "at": "2026-09-16T15:42:29.908Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Processing: Preparing this document for reading… while conversion is pending; the stored original is already downloadable",
+      "expected": "The pending message shows and Download returns the uploaded file",
+      "actual": "With a browser-network fixture holding the rendition read at pending, the reader showed \"Preparing this document for reading…\" and Download returned the uploaded Word file (SHA-256 match).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:29.909Z",
+      "at": "2026-09-16T15:42:30.726Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Failed previews: the failure message, Download of the original, and recovery by adding a readable Version",
+      "expected": "A damaged Word file shows the failure card and downloads; a new Version renders while the failed Version stays in the chain",
+      "actual": "The malformed Word container reached rendition state failed. The reader showed \"This file could not be prepared for reading here. Download it to read it.\" and Download returned the original bytes. Add version with a readable Word file made v2 (rendition ready), which opened in the PDF reader; expanding the chain and selecting the v1 filename still showed the failure card for v1.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:30.727Z",
+      "at": "2026-09-16T15:42:36.395Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Search and narrow step 1: Documents from navigation; Recent shows up to five Documents by current-Version upload, not by opening",
+      "expected": "Recent lists at most five, in the order of the newest current Versions, and opening an older Document does not change it",
+      "actual": "The Documents navigation link opened the repository. Recent listed 5 Documents in the same order as the newest-current-Version read (repo-autodoc-legal-215751.docx, repo-knowledge-legal-215751.pdf, …). After opening the older \"repo-folder-legal-215751.docx\" and returning, Recent still matched the upload-time order and did not add it.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:36.972Z",
+      "at": "2026-09-16T15:42:37.515Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Search and narrow step 2: Filter, Owner, Contracts/Matters/Entities/Auto-Docs/Knowledge, Apply",
+      "expected": "Owner offers the five kinds and each narrows to paper of that owner kind",
+      "actual": "Owner offered Contracts, Matters, Entities, Auto-Docs, Knowledge. Contracts: 50 rows, including repo-root-legal-215751.pdf; Matters: 50 rows, including repo-matter-legal-215751.pdf; Entities: 50 rows, including repo-entity-legal-215751.pdf; Knowledge: 38 rows, including repo-knowledge-legal-215751.pdf; Auto-Docs: 5 rows, including repo-autodoc-legal-215751.docx. Each list left out the fixture paper of the other owner kinds.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:37.516Z",
+      "at": "2026-09-16T15:42:46.141Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Search and narrow step 3: Record with Search choices; Folder becomes available with Record root",
+      "expected": "Record narrows to one Contract; Folder picks the folder or Record root",
+      "actual": "Record with Search choices \"C-256\" narrowed the list to the Contract's 4 live Documents, and the Filter menu then offered Folder. Folder \"DOC-029 Legal Repo folder\" showed only \"repo-folder-legal-215751.docx\"; Record root showed the Documents outside folders. With Owner Knowledge, and with Owner Auto-Docs, the Filter menu offered no Folder.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:46.142Z",
+      "at": "2026-09-16T15:42:52.757Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Search and narrow steps 4-5: Format and Uploader accept several values; different filters must all match; Uploaded From/To includes both dates; remove one filter and Clear all; Recent hides while filtered",
+      "expected": "Any-of within a filter, all-of across filters, inclusive dates, and Recent only without filters",
+      "actual": "On C-256, Format PDF + Word (\"Matches any selected value\") kept the PDF and the Word Document. Kind Draft · ours left out \"repo-root-legal-215751.pdf\", whose v1 is Draft · ours but whose current v2 is Draft · theirs. Kind Executed left only \"repo-folder-legal-215751.docx\"; Counterparty DOC-029 Legal Northwind 215751 and Uploader Nadia Haddad kept it. Uploaded From 2026-09-16 To 2026-09-16 (\"Includes both dates\") kept it; From 2026-09-17 showed \"No documents match these filters.\". Removing the Kind filter left the list empty; removing Uploaded widened it again. Recent was hidden while filters were active and returned after Clear all.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:42:52.758Z",
+      "at": "2026-09-16T15:43:02.914Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Open the matching paper: selecting the name opens the owning record with the current Version; expand the chain for an earlier round",
+      "expected": "The record opens with the reader on v2 and the chain lists v1",
+      "actual": "Selecting \"repo-root-legal-215751.pdf\" opened C-256's Documents tab with the reader on \"repo-root-legal-215751.pdf, version 2\". Expanding the chain and selecting the earlier filename opened version 1.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:02.915Z",
+      "at": "2026-09-16T15:43:04.012Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Missing or archived: a hidden record's Document does not appear through a filter or direct link",
+      "expected": "The Confidential Contract outside this reader's team is absent from Record choices and lists, and its address is refused",
+      "actual": "As Legal Team Member outside its team, Record choices for C-233 read \"No matching choices\", the repository read did not include its Document, the direct Documents read answered 404, and the address showed \"C-233 does not exist, or you cannot open it. Back to Contracts\".",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:04.013Z",
+      "at": "2026-09-16T15:43:04.910Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Missing or archived: Filter, Show archived includes archived Documents; the offered Restore brings one back",
+      "expected": "The archived row appears with Archived and Restore; Restore makes it live",
+      "actual": "After archiving \"repo-archive-legal-215751.txt\" it was absent from the Record-filtered list. Filter, Show archived added its row marked Archived with a Restore action; Restore made it live again (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:04.911Z",
+      "at": "2026-09-16T15:43:08.556Z"
+    },
+    {
+      "article": "document-repository",
+      "scenario": "V-C30",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Before you start: drag a live Contract Document row onto a Move to folder target inside its owning record",
+      "expected": "The Move to folder panel names the record's folders and the drop files the Document",
+      "actual": "Dragging the \"repo-drag-legal-215751.txt\" row showed the Move to folder panel for C-256 with None and \"DOC-029 Legal Repo folder\"; dropping on the folder filed the Document there (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:08.557Z",
+      "at": "2026-09-16T15:43:10.541Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Archive a Document steps 1-3: Actions, Archive; it leaves the normal list; Show archived finds its Archived row",
+      "expected": "The Document leaves the list, reappears marked Archived, and keeps its Versions, files and designations",
+      "actual": "Archive removed \"archive-main-legal-215751.docx\" from the Documents list. Show archived drew its row with the Archived mark. Read-back: 3 Versions, still Primary, Executed pin on v2, and every Version download answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:11.067Z",
+      "at": "2026-09-16T15:43:12.639Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Restore a Document steps 1-3: Show archived, Restore from the row Actions menu; Versions and designations come back",
+      "expected": "The Document is live again with its Versions, primary and executed-copy designation",
+      "actual": "Restore in the archived row's Actions menu made the Document live. With Show archived off its row read \"archive-main-legal-215751.docx Primary Draft · ours Draft · theirs Redline · theirs Redlin\"; read-back kept 3 Versions, Primary, and the Executed pin on v2.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:12.640Z",
+      "at": "2026-09-16T15:43:13.729Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Archive several live Documents with checkboxes and Archive; restore several archived Documents with Restore in the selection bar",
+      "expected": "Both leave the list together and return together",
+      "actual": "Selecting two live Documents and Archive in the selection bar removed both rows. With Show archived on, selecting both archived rows offered Restore, which made both live again (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:13.730Z",
+      "at": "2026-09-16T15:43:15.757Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Restore a Document: refused while the owning record is archived; restore the record first",
+      "expected": "The archived record offers no Show archived or Document controls; restore is refused; after restoring the record the Document restores",
+      "actual": "While the Contract was archived, its Documents section showed no Show archived switch and no Upload (0); row menus offered only Compare with previous; restoring the archived Document was refused 409 (\"This contract is archived. Restore it before changing its paper.\"). After the Contract was restored, Show archived and Restore made the Document live.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:15.758Z",
+      "at": "2026-09-16T15:43:18.657Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Restore a Document: a stale-state message when someone already restored the same Document",
+      "expected": "Restore on a stale row shows a message; reloading shows the live Document",
+      "actual": "A second session restored the Document while this page still showed it archived. Restore on the stale row showed \"This document is not archived.\". After a reload the Document was live.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:18.658Z",
+      "at": "2026-09-16T15:43:20.605Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Before you start and Permanently delete: only an Administrator deletes; this role gets no Delete control and the seam refuses",
+      "expected": "No Delete in the row menu or selection bar; direct deletion is refused and the Document stays",
+      "actual": "The row menu offered Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive: no Delete. The selection bar had no Delete. A direct deletion answered 403; the Document kept its 3 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:20.606Z",
+      "at": "2026-09-16T15:43:21.367Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Archive a Document step 1: a Knowledge Item's Documents section archives and restores; it has Set as primary and no Document folders",
+      "expected": "Archive and Restore work in the Knowledge Documents section; Set as primary is offered; no New folder",
+      "actual": "The Knowledge Item's Documents section had no New folder button. The menu of a non-primary Document offered Set as primary, Add version, Edit details, Mark confidential, Archive (including Set as primary). Archive removed \"knowledge-b-legal-215751.txt\", Show archived showed it marked Archived, and Restore made it live again.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:21.368Z",
+      "at": "2026-09-16T15:43:23.376Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: Documents section, select a name to read the current Version, download beside it",
+      "expected": "The reader opens the current Version and the download returns its bytes",
+      "actual": "On the Portal Contract, selecting \"portal-chain-v1.pdf\" opened the reader \"portal-chain-v1.pdf, version 2\" with the v2 chip and the converted pages. The download button beside it (\"Download portal-chain-v1.pdf, version 2\") returned the uploaded Word bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:24.958Z",
+      "at": "2026-09-16T15:43:25.944Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: … earlier versions lists earlier Versions; a filename reads that Version",
+      "expected": "The earlier Version opens in the reader and downloads",
+      "actual": "\"1 earlier version\" listed portal-chain-v1.pdf; selecting it opened \"portal-chain-v1.pdf, version 1\" in the reader, and its download returned the v1 bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:25.945Z",
+      "at": "2026-09-16T15:43:26.180Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: archived Documents and records outside your audience are not listed",
+      "expected": "The archived Document is absent; a Contract without team membership is not found",
+      "actual": "The archived \"portal-archived.txt\" was not in the Portal Documents list. A Contract without the Business User on its team showed \"Contract not found\" (read 404).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:26.181Z",
+      "at": "2026-09-16T15:43:26.282Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: on your own Request, select a file under Attachments to download it",
+      "expected": "The Request attachment downloads with its original bytes",
+      "actual": "On R-130, the Attachments file portal-request-attachment.csv downloaded with its original bytes; no Document reader opened (0 reader controls).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:26.283Z",
+      "at": "2026-09-16T15:43:26.393Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: a comment attachment name opens its preview with Download; Preview unavailable appears for a file with no preview",
+      "expected": "The PDF previews and downloads; a ZIP shows the unavailable message with Download; no filing action",
+      "actual": "In Comments, selecting portal-thread.pdf opened its preview (PDF pages) and Download returned the bytes. portal-thread.docx also opened as a converted preview and Download returned the original Word bytes. portal-thread.zip showed \"Preview unavailable. You can download the original file.\" and Download returned the ZIP bytes. No File to Contract action was offered to the Business User.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:26.394Z",
+      "at": "2026-09-16T15:43:29.056Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: Knowledge lists the primary Document first with Download beside each file and no preview or Version picker; an archived item is no longer available",
+      "expected": "Primary first; downloads return bytes; no reader; archived item unavailable",
+      "actual": "The Portal Knowledge page listed portal-knowledge-primary.pdf Download | portal-knowledge-first.txt Download: the primary Document first although it was uploaded second. Download returned its bytes; file names were plain text, not reader buttons. After Legal archived the item, the same address landed on /portal (\"What do you need from Legal? Help with this page NDA request…\") with no files.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:29.057Z",
+      "at": "2026-09-16T15:43:29.811Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start: the Portal does not grant access to the staff Documents repository",
+      "expected": "The staff repository address and its read are refused",
+      "actual": "Opening /documents as the Business User landed on /portal; the repository read answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:29.812Z",
+      "at": "2026-09-16T15:43:30.411Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start: Business Users on the team upload Documents and add Versions in the Portal, including a new Version of the primary Document",
+      "expected": "Upload documents creates a Document; Add version appends to the primary Document",
+      "actual": "Add version on the Primary Document \"portal-chain-v1.pdf\" opened Upload documents with Add as preset to that Document (New version of it); the upload appended v3. Upload documents with two files created two Documents at the record root (read-back by Legal).",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:30.412Z",
+      "at": "2026-09-16T15:43:30.941Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start and Recover: Business Users cannot change designations, kinds or folders, archive or delete, and get no filing action",
+      "expected": "The Portal shows no such controls and the staff seams refuse them",
+      "actual": "The Portal Documents section offered none of Make primary, Mark as executed copy, Move to folder, Archive, Delete, New folder or Edit details. Direct attempts were refused: {\"primary\":403,\"kind\":403,\"executed\":403,\"folder\":403,\"archive\":403,\"delete\":403}. The Document stayed live and Primary.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:30.942Z",
+      "at": "2026-09-16T15:43:31.013Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start: Business Users upload several files at the record root but cannot create folders, move Documents or import a folder structure",
+      "expected": "No folder controls or folder picker in the Portal; folder and move seams refuse",
+      "actual": "Upload documents in the Portal offered Add as, a file drop zone, Kind and Note but no Choose folder or New folder. The folder create seam answered 403 and moving a Document into a folder answered 403; the staff folder read answered 403. The two-file Portal upload in the previous step landed at the record root.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:31.015Z",
+      "at": "2026-09-16T15:43:31.133Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start: Business Users cannot archive, restore or delete; they have no managed-Document deletion controls",
+      "expected": "No archive, restore or delete controls; the seams refuse",
+      "actual": "The Portal Documents section had no Archive, Restore, Delete or Show archived control. Restore answered 403, archive 403, delete 403; the archived Document stayed archived.",
+      "result": "pass",
+      "startedAt": "2026-09-16T15:43:31.135Z",
+      "at": "2026-09-16T15:43:31.275Z"
+    }
+  ],
+  "screenshots": [
+    "docs/documentation/batches/DOC-029/documents/r1-admin-delete-dialog.png",
+    "docs/documentation/batches/DOC-029/documents/r1-legal-partial-import.png",
+    "docs/documentation/batches/DOC-029/documents/r1-legal-failed-preview.png",
+    "docs/documentation/batches/DOC-029/documents/r1-business-portal-preview-unavailable.png"
+  ]
+}

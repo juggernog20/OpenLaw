@@ -1,0 +1,558 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-029",
+  "group": "admin-config",
+  "round": 2,
+  "issues": [745, 747],
+  "walkthroughReviewer": "DOC-029r2 compatibility reviewer (admin-config)",
+  "reviewerKind": "agent",
+  "articles": [
+    {
+      "articleId": "types-statuses-fields",
+      "articlePath": "docs/user-guides/types-statuses-fields.md",
+      "contentSha256": "6959a5dfd5960d5bf12d807ec1fadf7c8197ca91b1c7dcbb2f003026c3b4d604"
+    },
+    {
+      "articleId": "matter-templates",
+      "articlePath": "docs/user-guides/matter-templates.md",
+      "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed"
+    },
+    {
+      "articleId": "request-forms",
+      "articlePath": "docs/user-guides/request-forms.md",
+      "contentSha256": "b7be99eb4442a012c4e00fbe17cc964a74d347ac4195e5b28b3faafb11be64fd"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "articlePath": "docs/user-guides/reminders-and-audit.md",
+      "contentSha256": "8ca186fcbb821a59d6b0591a467fac3674421df48337d519d3e7ff0d9593648d"
+    }
+  ],
+  "scenarios": {
+    "V-C38": "types-statuses-fields",
+    "V-C39": "matter-templates",
+    "V-C40": "request-forms",
+    "V-C41": "reminders-and-audit"
+  },
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "labProject": "openlaw-docs-41255c61-admin2",
+  "images": {
+    "app": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engine": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+  },
+  "appUrl": "http://127.0.0.1:23300",
+  "sections": ["forms", "templates", "access"],
+  "startedAt": "2026-09-16T17:54:50.557Z",
+  "stamp": "mu4eht6p",
+  "steps": [
+    {
+      "scenario": "all",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Sign in as the seeded Administrator",
+      "expected": "The app opens with the Administrator's name in the header.",
+      "startedAt": "2026-09-16T17:54:50.655Z",
+      "at": "2026-09-16T17:54:51.383Z",
+      "actual": "Signed in through /auth/login; /api/v1/me reports role \"administrator\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "all",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Sign in as the seeded Legal Team Member in a separate browser context",
+      "expected": "The app opens with the Legal Team Member's name in the header.",
+      "startedAt": "2026-09-16T17:54:51.420Z",
+      "at": "2026-09-16T17:54:52.007Z",
+      "actual": "Signed in through /auth/login in its own browser context.",
+      "result": "pass"
+    },
+    {
+      "scenario": "all",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Sign in as the seeded Business User with a fresh emailed sign-in link in a separate browser context",
+      "expected": "The Portal opens.",
+      "startedAt": "2026-09-16T17:54:52.040Z",
+      "at": "2026-09-16T17:54:52.659Z",
+      "actual": "Requested a fresh link at /portal/login and followed it from Mailpit; the browser opened /portal.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: live destination types and Fields (fixtures created through Settings)",
+      "expected": "A Contract type with the Global Deal value (USD) Field, a Matter type with a Global Entity Field, and a Global User Field exist.",
+      "startedAt": "2026-09-16T17:54:52.661Z",
+      "at": "2026-09-16T17:54:58.256Z",
+      "actual": "Created Global Entity Field \"DOC-029r2 admin-config compat Supplier entity mu4eht6p\" and Global User Field \"DOC-029r2 admin-config compat Account manager mu4eht6p\" in Matters > Fields. Created Contract type \"DOC-029r2 admin-config compat Forms MSA mu4eht6p\" with Deal value (USD) attached, Matter type \"DOC-029r2 admin-config compat Forms matter type mu4eht6p\" with \"DOC-029r2 admin-config compat Supplier entity mu4eht6p\" attached, and Contract type \"DOC-029r2 admin-config compat Target to archive mu4eht6p\" with no Fields. Registered Entity \"DOC-029r2 admin-config compat Portal supplier mu4eht6p\" and turned on Portal-listed on its record; no seeded Entity in this lab is Portal-listed.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create the request type, steps 1-4: Settings > Intake > Request types > Add request type with Enter, Edit, Description saved on leaving the field; the list Target column and the editor have no Target control",
+      "expected": "The new row shows Target: No target; the editor has Display name, Description, and Target turnaround, and no Target or Slug control; the Description persists after reload.",
+      "startedAt": "2026-09-16T17:54:58.257Z",
+      "at": "2026-09-16T17:55:05.161Z",
+      "actual": "Add request type with Enter created \"DOC-029r2 admin-config compat Contract form mu4eht6p\", \"DOC-029r2 admin-config compat Matter form mu4eht6p\" and \"DOC-029r2 admin-config compat Archived target form mu4eht6p\". The list row reads \"DOC-029r2 admin-config compat Contract form mu4eht6p Target: No target Form fields: 0 fields\". Edit opened each editor; the Description saved on Tab and read \"Use this DOC-029 form for a supplier contract review.\" after reload. Editor labels [\"Display name\",\"Description\",\"Target turnaround (business days)\"]; Target controls 0, Slug controls 0.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Publish an estimated turnaround: 36501 is refused, 5 saves on leaving the control",
+      "expected": "36501 shows an error and is not saved; 5 is saved and persists after reload.",
+      "startedAt": "2026-09-16T17:55:05.161Z",
+      "at": "2026-09-16T17:55:09.853Z",
+      "actual": "The control note reads \"Counts Monday–Friday from submission in the organization’s timezone, without excluding public holidays, for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged.\". 36501 with Tab showed \"Enter a whole number from 0 to 36,500 business days, or leave it blank.\". 5 with Enter saved; after reload the value is \"5\". The Matter form was set to 0.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Choose the form fields, steps 1-3: Attach field, Required, reorder with the arrow keys; No target offers only Global Fields; the fixed basics; a User Field cannot be required, an Entity Field can",
+      "expected": "The No target menu lists only Global Fields; Required persists; the order changes; Department is a required basic; the User Field's Required is refused; the Entity Field's Required saves.",
+      "startedAt": "2026-09-16T17:55:09.853Z",
+      "at": "2026-09-16T17:55:15.248Z",
+      "actual": "No target menu: 8 items, all \"· global\" ([\"Region Single select · global\",\"Counterparty name Text · global\",\"Needed by Date · global\",\"Deal value (USD) Number · global\"]...). Basics: [\"Title required: true\",\"Description required: true\",\"Attachments required: false\",\"Department required: true\",\"Urgency required: true\"]. Attached Deal value (USD), Country and Needed by; Required on Deal value (USD); ArrowUp on Needed by; after reload the order is [\"Deal value (USD)\",\"Needed by\",\"Country\"] and Deal value (USD) is still required. Seeded menus (read only, no change): {\"Vendor onboarding (Contract · Vendor)\":{\"global\":4,\"moduleScoped\":[\"Governing law Text\",\"Jurisdiction Text\",\"Our position Single select\",\"Security review Single select\",\"Processes personal data Boolean\",\"Liability cap Text\",\"Territories Multi select\",\"Deal desk reference Text\",\"Signed copy filed on Date\"]},\"Employment question (Matter · Employment)\":{\"global\":7,\"moduleScoped\":[\"External counsel Text\",\"Budget approved Number\",\"Budget currency Currency\",\"Regulator Single select\"]}}. On \"DOC-029r2 admin-config compat Matter form mu4eht6p\" the Entity Field's Required saved and persisted; the User Field: Required checkbox disabled; its row reads \"DOC-029r2 admin-config compat Account manager mu4eht6p User · global DOC-029r2 admin-config compat Account manager mu4eht6p can be on the form, but it can't be required. A requester cannot pick a person in the Portal.\"; after reload it is not required.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Offer guidance before submission, steps 1-4: Deflection links > Add link with an External address (refuse an address without https://) and with a Knowledge item; Placement on each form; Edit; reorder",
+      "expected": "An address without http:// or https:// is refused; both links save with the chosen placement; Edit changes the label; a handle moves with the arrow keys.",
+      "startedAt": "2026-09-16T17:55:15.249Z",
+      "at": "2026-09-16T17:55:18.974Z",
+      "actual": "Address \"example.com/doc-029-supplier-checklist\" was refused with \"Enter a full web address that starts with http:// or https://.\"; with https:// the external link saved. Knowledge item offered 10 items; \"How to ask legal for help\" saved. Edit changed the Knowledge link label to \"DOC-029r2 admin-config compat Ask Legal guidance mu4eht6p\". Rows: \"DOC-029r2 admin-config compat Supplier checklist mu4eht6p example.com/doc-029-supplier-checklist Placement: DOC-029r2 admin-config compat Contract form mu4eht6p\"; \"DOC-029r2 admin-config compat Ask Legal guidance mu4eht6p How to ask legal for help Placement: DOC-029r2 admin-config compat Matter form mu4eht6p\". ArrowUp moved the Knowledge link from position 7 to 6, kept after reload.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Check the result on the Portal: request-type cards, Before you submit, Fields, order, and required markers; submit with a required answer missing, then with valid answers",
+      "expected": "Both cards show the description and estimated turnaround; each form shows its own guidance; Fields appear in the configured order with required markers; a missing required answer is refused; valid answers create a Request.",
+      "startedAt": "2026-09-16T17:55:18.975Z",
+      "at": "2026-09-16T17:55:21.841Z",
+      "actual": "Portal cards: \"DOC-029r2 admin-config compat Contract form mu4eht6p Estimated turnaround: 5 business days Use this DOC-029 form for a supplier contract review.\"; \"DOC-029r2 admin-config compat Matter form mu4eht6p Estimated turnaround: 0 business days Use this DOC-029 form for supplier advice that is not a contract.\". \"DOC-029r2 admin-config compat Contract form mu4eht6p\" opened /portal/new/doc_029r2_admin_config_compat_contract_form_mu4eht6p; Before you submit links to https://example.com/doc-029-supplier-checklist (target \"_blank\"); detail Fields read [\"Deal value (USD) (required)\",\"Needed by\",\"Country\"]. Submit without Deal value stayed on the form and showed \"Deal value (USD) is required.\". With 125000 and Country \"United Kingdom\", Submit showed \"Request R-16 is with Legal\". \"DOC-029r2 admin-config compat Matter form mu4eht6p\" lists labels [\"Title (required)\",\"Description (required)\",\"Attachments\",\"Department (required)\",\"Urgency (required)\",\"DOC-029r2 admin-config compat Supplier entity mu4eht6p (required)\",\"DOC-029r2 admin-config compat Account manager mu4eht6p\"]; Before you submit shows only \"DOC-029r2 admin-config compat Ask Legal guidance mu4eht6p\"; the User Field is present on the Portal form; the Entity choices are [\"Not set\",\"DOC-029r2 admin-config compat Portal supplier mu4eht6p\"]: only Entities this walkthrough made Portal-listed, out of 28 live Entities the Administrator can read. Following the Knowledge link opened /portal/knowledge/01a0ab53-2a5c-75bb-92fc-82f6cea83646 with heading \"How to ask legal for help\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Submit the Matter form with a valid Entity answer",
+      "expected": "A Request is created.",
+      "startedAt": "2026-09-16T17:55:21.841Z",
+      "at": "2026-09-16T17:55:22.321Z",
+      "actual": "Submitted \"DOC-029r2 admin-config compat Supplier advice request mu4eht6p\" with Urgency High and Entity \"DOC-029r2 admin-config compat Portal supplier mu4eht6p\"; the confirmation reads \"Request R-17 is with Legal\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Have Legal convert the Contract Request: a blank Type is refused; the attached Field carries; the answer the destination type does not attach is listed under Does not carry into the contract",
+      "expected": "Convert without a type shows Pick a contract type.; with the Contract type chosen, Deal value (USD) carries, Counterparty name is listed as not carrying, and the Contract is created with the value.",
+      "startedAt": "2026-09-16T17:55:22.321Z",
+      "at": "2026-09-16T17:55:47.213Z",
+      "actual": "The Convert dialog opened with Contract type \"Type…\". Convert without a type showed \"Pick a contract type.\" and stayed open. With \"DOC-029r2 admin-config compat Forms MSA mu4eht6p\" chosen the dialog read \"Does not carry into the contract Country Deal value (USD) Documents Attach documents or drag and drop files here Convert to matter instead Cancel Convert to contract\"; Country is not attached to that Contract type. Convert created C-41; GET /api/v1/contracts/41 shows type \"DOC-029r2 admin-config compat Forms MSA mu4eht6p\" and Deal value 125000.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "If a configured destination type is archived, select a live type during conversion (fixture: the Target set through the API, because the editor has no Target control)",
+      "expected": "The Target column names the configured Contract type; after that type is archived, conversion does not use it or switch module; a live type must be chosen and the Request becomes a Contract of that type.",
+      "startedAt": "2026-09-16T17:55:47.214Z",
+      "at": "2026-09-16T17:56:20.950Z",
+      "actual": "PATCH /api/v1/request-types/<id> set the Target (200); the list row then read \"DOC-029r2 admin-config compat Archived target form mu4eht6p DOC-029 form bound to a Contract type that will be archived. Target: Contract · DOC-029r2 admin-config compat Target to archive mu4eht6p Form fields: 0 fields\". Jonas Weber submitted R-20. The Target Contract type was archived. The Request Overview read \"Requester JW Jonas Weber Type DOC-029r2 admin-config compat Archived target form mu4eht6p Converts to Contract Department Sales Urgency Medium Submitted this minute\". Convert to contract opened with Contract type \"Type…\"; the archived type was not offered. Convert without a type showed \"Pick a contract type.\". With \"DOC-029r2 admin-config compat Forms MSA mu4eht6p\" chosen, R-20 became C-51 of that type, not a Matter. The fixture type was restored afterwards.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Archive a request type: the dialog reports no usage and no replacement; the Portal drops the card and the form; the Request stays readable; Show archived > Restore offers it again",
+      "expected": "Archive removes the card and form from the Portal; the earlier Request still opens for the Requester; Restore brings the card back.",
+      "startedAt": "2026-09-16T17:56:20.951Z",
+      "at": "2026-09-16T17:56:31.491Z",
+      "actual": "Jonas Weber submitted R-21 on \"DOC-029r2 admin-config compat Archived target form mu4eht6p\" (/portal/new/doc_029r2_admin_config_compat_archived_target_form_mu4eht6p). The Archive dialog read \"Archive DOC-029r2 admin-config compat Archived target form mu4eht6p DOC-029r2 admin-config compat Archived target form mu4eht6p is not used by any requests — it can be archived without reassignment. Reassign requests to \" ; its 1 reassignment select(s) are disabled (0 enabled), although R-21 and an earlier converted Request name this type. After Archive the Portal home had no card for it (seen on load 1 of up to 10, 2 seconds apart), and /portal/new/doc_029r2_admin_config_compat_archived_target_form_mu4eht6p sent the browser to /portal. /portal/requests/21 still showed the Request title. Show archived > Restore brought the card back (1).",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Remove the walkthrough's deflection links and turn off Portal-listed on its Entities",
+      "expected": "Remove deletes each link at once with no archive; the Knowledge Item stays published; the Entities leave Portal pickers.",
+      "startedAt": "2026-09-16T17:56:31.492Z",
+      "at": "2026-09-16T17:56:47.637Z",
+      "actual": "Check did not complete: Knowledge Item no longer opens",
+      "result": "fail"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: a live Matter type with the Fields the template should fill",
+      "expected": "The type has an optional Text Field, a required Text Field, and the Entity Field the Matter form collects.",
+      "startedAt": "2026-09-16T17:56:47.639Z",
+      "at": "2026-09-16T17:56:49.876Z",
+      "actual": "Created Matter Fields \"DOC-029r2 admin-config compat Template region mu4eht6p\" and \"DOC-029r2 admin-config compat Template counsel mu4eht6p\", and Matter type \"DOC-029r2 admin-config compat Template type mu4eht6p\" with both and \"DOC-029r2 admin-config compat Supplier entity mu4eht6p\" attached; \"DOC-029r2 admin-config compat Template counsel mu4eht6p\" is Required.",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create and edit a template, steps 1-7: Templates > Matter type > Add template (Name, Description); Edit; Matter defaults; Custom field defaults; Tasks with offsets, roles and reorder; Key dates; Save template; reopen and confirm",
+      "expected": "The template saves, and after reload all four areas hold the entered values in the chosen order.",
+      "startedAt": "2026-09-16T17:56:49.877Z",
+      "at": "2026-09-16T17:56:56.168Z",
+      "actual": "Add template created the row \"DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p DOC-029 fictional onboarding checklist for a supplier. 0 tasks 0 dates 0 fields\". Edit opened the editor (\"Matter type: DOC-029r2 admin-config compat Template type mu4eht6p\"). Save template reported saved=true. After reload: Priority \"Low\", Risk \"Medium\", Title prefix \"Supplier -\"; Field defaults [\"EMEA default\",\"DOC-029 Fictional Counsel LLP\"]; Tasks [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2\",\"Matter Manager\"],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"5\",\"Matter Manager\"],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",\"\",\"Unassigned\"]] (the third Task moved up with ArrowUp); Key dates [[\"DOC-029r2 admin-config compat Supplier review mu4eht6p\",\"10\",\"Fictional review with the supplier.\"],[\"DOC-029r2 admin-config compat Kick-off mu4eht6p\",\"0\",\"\"]].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Offsets are whole numbers from 0 to 3650; a Key date needs an offset; the editor names the problem",
+      "expected": "3651 and a blank Key date offset are refused with an error, and the saved template stays unchanged.",
+      "startedAt": "2026-09-16T17:56:56.168Z",
+      "at": "2026-09-16T17:57:03.360Z",
+      "actual": "Priority Critical with Task 1 offset 3651: Save template showed \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload Priority is \"Low\" and Task 1 offset \"2\", so no section saved. A blank Key date 1 offset showed \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload it reads \"10\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Test both creation paths, direct creation: Create matter with the template; suggested title, Priority, Risk and Fields; Matter Manager starts as the person who opens it; clear the optional Field; check Overview, Tasks, assignments and Key dates",
+      "expected": "Dialog shows the template defaults; the Matter keeps the cleared optional Field empty; Tasks and Key dates use the Matter's UTC creation date; Matter Manager Tasks go to the manager; the Task with no offset has no due date.",
+      "startedAt": "2026-09-16T17:57:03.361Z",
+      "at": "2026-09-16T17:57:08.801Z",
+      "actual": "Template choices for the type: [\"No template\",\"DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p\"]. Choosing the template filled {\"title\":\"Supplier -\",\"priority\":\"Low\",\"risk\":\"Medium\",\"manager\":\"Daniel Okafor\",\"region\":\"EMEA default\",\"counsel\":\"DOC-029 Fictional Counsel LLP\"}. With the optional region cleared, Create opened M-23, created 2026-09-16T17:57:05.421Z (UTC anchor 2026-09-16). API: priority \"low\", risk \"medium\", region null, counsel \"DOC-029 Fictional Counsel LLP\". Tasks page rows [\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p Due Sep 18 DO Daniel Okafor\",\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p Due Sep 21 DO Daniel Okafor\",\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p Unassigned\"]. Key dates page rows [\"Sep 16 (today) DOC-029r2 admin-config compat Kick-off mu4eht6p\",\"Sep 26 (in 10 days) DOC-029r2 admin-config compat Supplier review mu4eht6p Fictional review with the supplier.\"]. Task facts [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",null,null]]; Key date facts [[\"DOC-029r2 admin-config compat Kick-off mu4eht6p\",\"2026-09-16\"],[\"DOC-029r2 admin-config compat Supplier review mu4eht6p\",\"2026-09-26\"]].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Direct creation with Matter Manager set to Unassigned",
+      "expected": "Matter Manager Tasks stay unassigned.",
+      "startedAt": "2026-09-16T17:57:08.802Z",
+      "at": "2026-09-16T17:57:13.995Z",
+      "actual": "M-24 with Matter Manager Unassigned has Tasks [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2026-09-18\",null],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"2026-09-21\",null],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",null,null]]; the Tasks page rows read [\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p Due Sep 18 Unassigned\",\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p Due Sep 21 Unassigned\",\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p Unassigned\"].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39,V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Test both creation paths, Request conversion: convert the Matter form Request with the Matter type and template; check carried answers, defaults, Priority, Risk, title, Manager, Tasks and Key dates",
+      "expected": "The Entity answer carries; template Field defaults fill the rest; Priority stays the Request's Urgency, Risk stays unset, the title has no template prefix; the converting person is Matter Manager and gets the Manager Tasks; dates use the new Matter's UTC creation date.",
+      "startedAt": "2026-09-16T17:57:13.995Z",
+      "at": "2026-09-16T17:57:20.587Z",
+      "actual": "Convert R-17 to a matter opened with Priority \"High\" (the Request's Urgency). Template choices [\"No template\",\"DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p\"]. After choosing type and template the dialog showed {\"title\":\"DOC-029r2 admin-config compat Supplier advice request mu4eht6p\",\"priority\":\"High\",\"region\":\"EMEA default\",\"counsel\":\"DOC-029 Fictional Counsel LLP\"} and no \"Does not carry into the matter\" list. Convert created M-25 (created 2026-09-16T17:57:17.185Z, UTC anchor 2026-09-16; the Request was submitted earlier). API: title \"DOC-029r2 admin-config compat Supplier advice request mu4eht6p\", priority \"high\" (template default was Low), risk null (template default was Medium), manager \"Daniel Okafor\", Entity value present, template Field defaults present. Task facts [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",null,null]]; Key date facts [[\"DOC-029r2 admin-config compat Kick-off mu4eht6p\",\"2026-09-16\"],[\"DOC-029r2 admin-config compat Supplier review mu4eht6p\",\"2026-09-26\"]].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Change or archive a template: edit and save; existing Matters keep their Tasks and dates; a new Matter uses the change; Archive template removes it from creation; Show archived > Restore brings it back",
+      "expected": "The earlier Matter is unchanged; a new Matter shows the edited Task; the archived template is not offered and cannot be used; Restore makes it available.",
+      "startedAt": "2026-09-16T17:57:20.587Z",
+      "at": "2026-09-16T17:57:30.427Z",
+      "actual": "Task 1 was renamed \"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p revised\" with offset 3 and saved. M-23 still has Tasks [[\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p\",\"2026-09-18\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Check the sanctions list mu4eht6p\",\"2026-09-21\",\"Daniel Okafor\"],[\"DOC-029r2 admin-config compat Open the evidence folder mu4eht6p\",null,null]]. New M-26 (created 2026-09-16T17:57:25.100Z) has [\"DOC-029r2 admin-config compat Confirm the supplier scope mu4eht6p revised\",\"2026-09-19\",\"Daniel Okafor\"]. The Archive dialog read \"Archive DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p? The template leaves new Matter creation. Existing Matters are unchanged, and restoring the template brings its full definit\"; after Archive template the Create matter dialog offered [\"No template\"]. POST /api/v1/matters with the archived template id (same body the dialog sent earlier) answered 400 \"The template must be live and belong to the selected matter type.\". Show archived > Restore made it available again: [\"No template\",\"DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p\"].",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A Field detached from the template's type: the editor names its retained saved value; reattach restores it",
+      "expected": "After Detach the editor says the Field is no longer attached and shows the retained value; after reattach the default is editable again.",
+      "startedAt": "2026-09-16T17:57:30.428Z",
+      "at": "2026-09-16T17:57:33.253Z",
+      "actual": "After Detach on the type, the template editor read \"DOC-029r2 admin-config compat Template region mu4eht6p is no longer attached to this Matter type. Its saved value (EMEA default) is retained.\". After Attach field on the type again, the default control shows \"EMEA default\".",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/matters/types and calls POST /api/v1/matter-types",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:33.261Z",
+      "at": "2026-09-16T17:57:35.791Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/matters/types sent the browser to /settings/profile. POST /api/v1/matter-types answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/matters/fields and calls POST /api/v1/fields",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:35.792Z",
+      "at": "2026-09-16T17:57:38.321Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/matters/fields sent the browser to /settings/profile. POST /api/v1/fields answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/matters/templates and calls GET /api/v1/matter-templates",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:38.322Z",
+      "at": "2026-09-16T17:57:40.847Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/matters/templates sent the browser to /settings/profile. GET /api/v1/matter-templates answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/intake/request-types and calls POST /api/v1/request-types",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:40.848Z",
+      "at": "2026-09-16T17:57:43.380Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/intake/request-types sent the browser to /settings/profile. POST /api/v1/request-types answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/reminders and calls PUT /api/v1/org/reminder-offsets",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:43.381Z",
+      "at": "2026-09-16T17:57:45.907Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/reminders sent the browser to /settings/profile. PUT /api/v1/org/reminder-offsets answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Negative: Nadia Haddad (legal_team_member) opens /settings/audit-log and calls GET /api/v1/audit-log",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:45.907Z",
+      "at": "2026-09-16T17:57:48.435Z",
+      "actual": "/api/v1/me reports \"legal_team_member\". /settings/audit-log sent the browser to /settings/profile. GET /api/v1/audit-log answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/matters/types and calls POST /api/v1/matter-types",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:48.441Z",
+      "at": "2026-09-16T17:57:50.972Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/matters/types sent the browser to /portal. POST /api/v1/matter-types answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C38",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/matters/fields and calls POST /api/v1/fields",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:50.973Z",
+      "at": "2026-09-16T17:57:53.508Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/matters/fields sent the browser to /portal. POST /api/v1/fields answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C39",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/matters/templates and calls GET /api/v1/matter-templates",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:53.509Z",
+      "at": "2026-09-16T17:57:56.054Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/matters/templates sent the browser to /portal. GET /api/v1/matter-templates answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/intake/request-types and calls POST /api/v1/request-types",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:56.054Z",
+      "at": "2026-09-16T17:57:58.586Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/intake/request-types sent the browser to /portal. POST /api/v1/request-types answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/reminders and calls PUT /api/v1/org/reminder-offsets",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:57:58.586Z",
+      "at": "2026-09-16T17:58:01.120Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/reminders sent the browser to /portal. PUT /api/v1/org/reminder-offsets answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C41",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Negative: Jonas Weber (business_user) opens /settings/audit-log and calls GET /api/v1/audit-log",
+      "expected": "The Settings page does not open for this role and the API refuses the call.",
+      "startedAt": "2026-09-16T17:58:01.121Z",
+      "at": "2026-09-16T17:58:03.655Z",
+      "actual": "/api/v1/me reports \"business_user\". /settings/audit-log sent the browser to /portal. GET /api/v1/audit-log answered 403 (\"You do not have permission to perform this action.\").",
+      "result": "pass"
+    }
+  ],
+  "records": [
+    {
+      "kind": "field",
+      "name": "DOC-029r2 admin-config compat Supplier entity mu4eht6p",
+      "type": "Entity",
+      "scope": "Global"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029r2 admin-config compat Account manager mu4eht6p",
+      "type": "User",
+      "scope": "Global"
+    },
+    {
+      "kind": "contract type",
+      "name": "DOC-029r2 admin-config compat Forms MSA mu4eht6p",
+      "attached": ["Deal value (USD)"]
+    },
+    {
+      "kind": "matter type",
+      "name": "DOC-029r2 admin-config compat Forms matter type mu4eht6p",
+      "attached": ["DOC-029r2 admin-config compat Supplier entity mu4eht6p"]
+    },
+    {
+      "kind": "contract type",
+      "name": "DOC-029r2 admin-config compat Target to archive mu4eht6p"
+    },
+    {
+      "kind": "entity (Portal-listed)",
+      "name": "DOC-029r2 admin-config compat Portal supplier mu4eht6p",
+      "id": "01a0ab5b-87bc-7233-a387-9247f320a1f5"
+    },
+    {
+      "kind": "request type",
+      "name": "DOC-029r2 admin-config compat Contract form mu4eht6p"
+    },
+    {
+      "kind": "request type",
+      "name": "DOC-029r2 admin-config compat Matter form mu4eht6p"
+    },
+    {
+      "kind": "request type",
+      "name": "DOC-029r2 admin-config compat Archived target form mu4eht6p"
+    },
+    {
+      "kind": "deflection link",
+      "name": "DOC-029r2 admin-config compat Supplier checklist mu4eht6p"
+    },
+    {
+      "kind": "deflection link",
+      "name": "DOC-029r2 admin-config compat Ask Legal guidance mu4eht6p"
+    },
+    {
+      "kind": "request",
+      "name": "DOC-029r2 admin-config compat Supplier contract request mu4eht6p",
+      "number": "16"
+    },
+    {
+      "kind": "request",
+      "name": "DOC-029r2 admin-config compat Supplier advice request mu4eht6p",
+      "number": "17"
+    },
+    {
+      "kind": "contract",
+      "number": 41,
+      "from": "R-16"
+    },
+    {
+      "kind": "request",
+      "name": "DOC-029r2 admin-config compat Archived target request mu4eht6p",
+      "number": "20"
+    },
+    {
+      "kind": "contract",
+      "number": 51,
+      "from": "R-20"
+    },
+    {
+      "kind": "request (left open)",
+      "name": "DOC-029r2 admin-config compat Open request on archived form mu4eht6p",
+      "number": "21"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029r2 admin-config compat Template region mu4eht6p",
+      "type": "Text",
+      "scope": "Matter"
+    },
+    {
+      "kind": "field",
+      "name": "DOC-029r2 admin-config compat Template counsel mu4eht6p",
+      "type": "Text",
+      "scope": "Matter"
+    },
+    {
+      "kind": "matter type",
+      "name": "DOC-029r2 admin-config compat Template type mu4eht6p",
+      "attached": [
+        "DOC-029r2 admin-config compat Template region mu4eht6p",
+        "DOC-029r2 admin-config compat Template counsel mu4eht6p",
+        "DOC-029r2 admin-config compat Supplier entity mu4eht6p"
+      ]
+    },
+    {
+      "kind": "matter template",
+      "name": "DOC-029r2 admin-config compat Supplier onboarding template mu4eht6p"
+    },
+    {
+      "kind": "matter",
+      "name": "Supplier - DOC-029r2 admin-config compat Direct matter mu4eht6p",
+      "number": "23"
+    },
+    {
+      "kind": "matter",
+      "name": "Supplier - DOC-029r2 admin-config compat Unassigned matter mu4eht6p",
+      "number": "24"
+    },
+    {
+      "kind": "matter",
+      "from": "R-17",
+      "number": 25
+    },
+    {
+      "kind": "matter",
+      "name": "Supplier - DOC-029r2 admin-config compat After change matter mu4eht6p",
+      "number": "26"
+    }
+  ],
+  "finishedAt": "2026-09-16T17:58:03.656Z",
+  "summary": {
+    "total": 34,
+    "pass": 33,
+    "fail": 1
+  }
+}

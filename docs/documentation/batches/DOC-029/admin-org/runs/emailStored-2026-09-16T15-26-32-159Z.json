@@ -1,0 +1,73 @@
+{
+  "section": "emailStored",
+  "reviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "reviewerKind": "agent",
+  "labProject": "openlaw-docs-41255c61-adminorg-auth",
+  "appUrl": "http://127.0.0.1:23310",
+  "mailUrl": "http://127.0.0.1:23410",
+  "articleHashes": {
+    "organisation-and-users": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
+    "approver-groups": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
+    "authentication-and-email": "72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1"
+  },
+  "startedAt": "2026-09-16T15:26:32.159Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "First-run: create the first Administrator; the wizard needs email before it can finish",
+      "expected": "Welcome wizard opens; Skip optional steps on Welcome opens Outbound email while email is unset",
+      "startedAt": "2026-09-16T15:26:32.267Z",
+      "finishedAt": "2026-09-16T15:26:32.977Z",
+      "actual": "The first Administrator was created and landed on /welcome. Skip optional steps on the Welcome step opened Outbound email with \"Set up outbound email to finish instance setup...\". The step had no Set up later (buttons [\"Save relay\",\"Back\",\"Continue\"]) and Continue was disabled.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Outbound email: an SMTP relay URL that does not begin with smtp:// or smtps:// is refused",
+      "expected": "Refused; source stays unset",
+      "startedAt": "2026-09-16T15:26:32.977Z",
+      "finishedAt": "2026-09-16T15:26:33.051Z",
+      "actual": "Saving http://mailpit:1025 showed \"Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications.\". The email settings source stayed unset.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Save relay, then Send test email to the signed-in Administrator",
+      "expected": "Saved; URL not shown again; test message arrives from the stored From address",
+      "startedAt": "2026-09-16T15:26:33.052Z",
+      "finishedAt": "2026-09-16T15:26:33.385Z",
+      "actual": "\"Relay saved.\" appeared and the step read \"Outbound email is set in the app. Mail is sent from DOC-029 Stored <stored-relay@helix.example>.\" No field or text showed the relay URL. Send test email showed \"Test email sent to doc029-auth-admin@helix.example\" and Mailpit received \"OpenLaw test email\" from stored-relay@helix.example. Continue became available.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Replace relay with a relay that cannot deliver; the test fails; replace again and retest",
+      "expected": "Saved relay alone does not prove delivery; a corrected relay delivers",
+      "startedAt": "2026-09-16T15:26:33.386Z",
+      "finishedAt": "2026-09-16T15:26:54.126Z",
+      "actual": "An unreachable relay saved with \"Relay saved.\", but Send test email showed \"The test email could not be sent. The relay host could not be found. Check the host name in the relay URL.\". Replace relay with the working relay, save, and a second test delivered \"OpenLaw test email\" from stored-relay@helix.example.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Clear relay stops email delivery when there is no environment override; save a valid replacement",
+      "expected": "Source unset, Continue unavailable, no mail; saved replacement restores delivery",
+      "startedAt": "2026-09-16T15:26:54.126Z",
+      "finishedAt": "2026-09-16T15:26:58.089Z",
+      "actual": "Clear relay showed \"Relay cleared. This instance can no longer send email.\" The source became unset and Continue was disabled again. A password setup request for the Administrator answered 503 (\"undefined\") and no message arrived. After a valid replacement was saved, a test message arrived again.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-16T15:26:58.093Z",
+  "phase": "stored: SMTP_URL and SMTP_FROM empty for app and worker (overlay-phase-stored.json)"
+}

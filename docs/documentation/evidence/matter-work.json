@@ -1,56 +1,122 @@
 {
   "articleId": "matter-work",
-  "contentSha256": "020bf3cc086bafd7efbd28255bb5c607fb5864836abef8e58d17336ae12a2836",
-  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
-  "environment": "dev integration source review",
-  "author": "Codex integration author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "contentSha256": "0c4586d601262514f49a617fa47f6bd3c45accadd851fd6bfb9a2f3d817d8d9b",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-work",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (matters, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "blocked",
+  "technicalReviewer": "DOC-029 source-review author agent (matters)",
+  "verifiedAt": "2026-09-16T15:38:37.588Z",
+  "status": "pass",
+  "author": "Codex integration author; corrections by DOC-029 source-review author agent (matters)",
   "sources": [
+    "docs/user-guides/matter-work.md",
     "CONTEXT.md",
     "docs/decision-records/DECISIONS-MATTERS.md",
     "apps/web/src/components/matters/tasks-card.tsx",
+    "apps/web/src/components/tasks/task-dialog.tsx",
+    "apps/web/src/components/tasks/assignee-picker.tsx",
+    "apps/web/src/components/tasks/completed-toggle.tsx",
+    "apps/web/src/lib/comments.ts",
     "apps/web/src/components/matters/key-dates-card.tsx",
+    "apps/web/src/components/key-date-reminder-fields.tsx",
     "apps/web/src/components/matters/related-matters-card.tsx",
     "apps/web/src/components/matters/relation-dialog.tsx",
     "apps/web/src/components/matters/linked-contracts-card.tsx",
     "apps/web/src/components/contracts/contract-matter-link-dialog.tsx",
+    "apps/web/src/routes/matter-record.tsx",
     "apps/api/src/modules/matter-tasks/routes.ts",
+    "apps/api/src/modules/matter-tasks/create.ts",
+    "apps/api/src/lib/task-assignment.ts",
+    "apps/api/src/modules/comments/audience.ts",
     "apps/api/src/modules/matter-key-dates/routes.ts",
+    "apps/api/src/lib/key-date-reminders.ts",
+    "apps/api/src/lib/next-deadline.ts",
     "apps/api/src/modules/matter-relations/routes.ts",
-    "apps/api/src/modules/contract-matters/routes.ts"
+    "apps/api/src/modules/contract-matters/routes.ts",
+    "docs/documentation/batches/DOC-029/matters/technical-review.json",
+    "docs/documentation/batches/DOC-029/matters/walkthrough-r1.json"
   ],
   "scenarios": [
     {
       "id": "V-C24",
       "coverage": ["C24"],
-      "role": "legal_team_member",
+      "role": "administrator",
       "method": "browser-walkthrough",
-      "expected": "Tasks, Key dates, Matter relationships, and linked Contracts remain distinct and accurate, and History records the changes. Invalid hierarchy loops, restricted targets, and unauthorized changes do not expose or alter hidden work.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "prerequisites": [
+        "Seeded shared work lab openlaw-docs-41255c61-work built from 3fa407e3; Daniel Okafor (Administrator) signs in with a password in an isolated browser context; Nadia Haddad is the second legal session for restricted-record fixtures.",
+        "Jonas Weber (Business User) signs in to the Portal with a fresh magic link from the lab Mailpit.",
+        "Per-role fixture from the walkthrough: a work Matter with the acting person as Manager and Jonas Weber on the team, parent, related and second-work Matters, a Confidential Matter related by the other legal account, a Confidential NDA with a Counterparty, and a second NDA."
+      ],
+      "expected": "Tasks, Key dates, Matter relationships, and linked Contracts remain distinct and accurate, and History records the changes. Invalid hierarchy loops (the Matter itself or a descendant as parent), restricted targets, and unauthorized changes do not expose or alter hidden work.",
+      "actual": "16 recorded browser steps passed for this role (Daniel Okafor). On M-135, Add Task without a title showed \"Name what needs doing.\"; a person staged through Add someone to the team… > Use this person was discarded by Cancel; saving a Task with a staged person, due date and Add a note saved the Task, team membership and assignment, and the note sat on the Task conversation with the Working team audience. Add to team and assign on a row saved at once; Unassigned kept the membership; Close in Task details discarded a staged person. Tasks listed by due date with the undated Task last; a done Task was hidden until Show completed and its Reopen Task control reopened it; Actions > Edit Task > Save renamed a Task and the done count updated. Task details offered Legal only and Working team only; Remove Task removed an empty Task and refused the Task with a conversation (\"This Task has a conversation on it, so it cannot be removed. Mark it done instead.\"). An aborted initial note left \"Task saved. Your note and attachments could not be added.\" with Retry note & attachments, and the retry added the note to the one Task. Add date refused a missing Date (\"Pick a date.\") and Event (\"Name what the date is.\"); Reminders showed the global ladder and combined schedule; 3 days was added and removed, 731 was not accepted, 0 showed On the day, and no more than 20 lead times could be added; recipient checkboxes listed the team without Jonas Weber (Business User); the saved date kept lead time 45 and two recipients. The header read \"2 upcoming · 1 overdue\" and the tab \"Key dates 2\". After Tom Iwu left the team, Edit date showed the departed notice with Remove unavailable recipients and Use the usual audience (only Use the usual audience when he was the sole recipient), and clearing every checkbox saved the usual audience. Edit date saved; Remove date asked \"Remove Key date? … This cannot be undone.\" and Cancel kept the date. While the Matter was closed its dates stayed listed and editable and Next deadline was null; reopening restored it, and an overdue unfinished Task became Next deadline on M-138. Set parent Cancel changed nothing; Set parent saved M-136 (shown as Children there, button now Change parent); setting M-135 as the parent of M-136 showed \"That parent would close a loop in the Matter hierarchy.\"; search worked by number and by title. Add related Matter showed the relation on both Matters and Remove deleted only the link; New sub-Matter showed \"Parent: M-135 …\" and created a child with its own Manager, team and no Tasks; Remove on the child Parent row detached it. M-139, Confidential and created by Nadia Haddad, appeared as \"Restricted Matter\" with no title or link and its read answered 404. Link Contract for Confidential C-161 said the flags differ, Link opened Confidentiality differs with Leave them as they are, both flags stayed unchanged and the Counterparty stayed on the Contract; Nadia Haddad saw \"Restricted contract\". A second link answered 409 \"This contract already belongs to a matter. Unlink it before linking it elsewhere.\"; Unlink then linking from M-138 moved it. New contract opened Create contract with M-135 in the Matter control. Archived C-162 left the Linked Contracts list while its Matter link stayed. An archived Matter showed no Add Task, Add date, relationship or link controls and refused writes with 409; Restore kept the Tasks and Key dates; History recorded Task, Key date, status and relationship changes. Jonas Weber opening the Tasks route ended at /portal and his Task, Key date and relation writes answered 403.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/matters/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/matters/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/matters/wt-matter-work-r1.mjs",
+        "docs/documentation/batches/DOC-029/matters/setup-r1.mjs",
+        "docs/documentation/batches/DOC-029/matters/technical-review.json"
+      ]
     },
     {
       "id": "V-C24",
       "coverage": ["C24"],
-      "role": "administrator",
+      "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "expected": "Tasks, Key dates, Matter relationships, and linked Contracts remain distinct and accurate, and History records the changes. Invalid hierarchy loops, restricted targets, and unauthorized changes do not expose or alter hidden work.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "prerequisites": [
+        "Seeded shared work lab openlaw-docs-41255c61-work built from 3fa407e3; Nadia Haddad (Legal Team Member) signs in with a password in an isolated browser context; Daniel Okafor is the second legal session for restricted-record fixtures.",
+        "Jonas Weber (Business User) signs in to the Portal with a fresh magic link from the lab Mailpit.",
+        "Per-role fixture from the walkthrough: a work Matter with the acting person as Manager and Jonas Weber on the team, parent, related and second-work Matters, a Confidential Matter related by the other legal account, a Confidential NDA with a Counterparty, and a second NDA."
+      ],
+      "expected": "Tasks, Key dates, Matter relationships, and linked Contracts remain distinct and accurate, and History records the changes. Invalid hierarchy loops (the Matter itself or a descendant as parent), restricted targets, and unauthorized changes do not expose or alter hidden work.",
+      "actual": "16 recorded browser steps passed for this role (Nadia Haddad). On M-141, Add Task without a title showed \"Name what needs doing.\"; a person staged through Add someone to the team… > Use this person was discarded by Cancel; saving a Task with a staged person, due date and Add a note saved the Task, team membership and assignment, and the note sat on the Task conversation with the Working team audience. Add to team and assign on a row saved at once; Unassigned kept the membership; Close in Task details discarded a staged person. Tasks listed by due date with the undated Task last; a done Task was hidden until Show completed and its Reopen Task control reopened it; Actions > Edit Task > Save renamed a Task and the done count updated. Task details offered Legal only and Working team only; Remove Task removed an empty Task and refused the Task with a conversation (\"This Task has a conversation on it, so it cannot be removed. Mark it done instead.\"). An aborted initial note left \"Task saved. Your note and attachments could not be added.\" with Retry note & attachments, and the retry added the note to the one Task. Add date refused a missing Date (\"Pick a date.\") and Event (\"Name what the date is.\"); Reminders showed the global ladder and combined schedule; 3 days was added and removed, 731 was not accepted, 0 showed On the day, and no more than 20 lead times could be added; recipient checkboxes listed the team without Jonas Weber (Business User); the saved date kept lead time 45 and two recipients. The header read \"2 upcoming · 1 overdue\" and the tab \"Key dates 2\". After Tom Iwu left the team, Edit date showed the departed notice with Remove unavailable recipients and Use the usual audience (only Use the usual audience when he was the sole recipient), and clearing every checkbox saved the usual audience. Edit date saved; Remove date asked \"Remove Key date? … This cannot be undone.\" and Cancel kept the date. While the Matter was closed its dates stayed listed and editable and Next deadline was null; reopening restored it, and an overdue unfinished Task became Next deadline on M-144. Set parent Cancel changed nothing; Set parent saved M-142 (shown as Children there, button now Change parent); setting M-141 as the parent of M-142 showed \"That parent would close a loop in the Matter hierarchy.\"; search worked by number and by title. Add related Matter showed the relation on both Matters and Remove deleted only the link; New sub-Matter showed \"Parent: M-141 …\" and created a child with its own Manager, team and no Tasks; Remove on the child Parent row detached it. M-145, Confidential and created by Daniel Okafor, appeared as \"Restricted Matter\" with no title or link and its read answered 404. Link Contract for Confidential C-172 said the flags differ, Link opened Confidentiality differs with Leave them as they are, both flags stayed unchanged and the Counterparty stayed on the Contract; Daniel Okafor saw \"Restricted contract\". A second link answered 409 \"This contract already belongs to a matter. Unlink it before linking it elsewhere.\"; Unlink then linking from M-144 moved it. New contract opened Create contract with M-141 in the Matter control. Archived C-173 left the Linked Contracts list while its Matter link stayed. An archived Matter showed no Add Task, Add date, relationship or link controls and refused writes with 409; Restore kept the Tasks and Key dates; History recorded Task, Key date, status and relationship changes. Jonas Weber opening the Tasks route ended at /portal and his Task, Key date and relation writes answered 403.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/matters/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/matters/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/matters/wt-matter-work-r1.mjs",
+        "docs/documentation/batches/DOC-029/matters/setup-r1.mjs",
+        "docs/documentation/batches/DOC-029/matters/technical-review.json"
+      ]
     }
   ],
-  "authorEvidence": [],
+  "authorEvidence": ["docs/documentation/batches/DOC-029/matters/technical-review.json"],
   "limitations": [
-    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
-    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+    "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner approval.",
+    "The work lab is shared with other DOC-029 agents. A private lab could not be created (Docker address pools exhausted), so setup-r1.mjs added DOC-029-named Fields, two Matter types and three Matter templates; no existing setting changed, and teardown-r1.mjs archived them after the runs (moving the DOC-029 walkthrough Matters to the Other type). Only records named DOC-029 matters were created.",
+    "Fixture records and some state changes (closing before archive, archiving the work Matter, a person leaving the team) were set up through the lab API and are labelled Fixture in walkthrough-r1.json; the article procedures credited here used the browser controls.",
+    "In the full run, five legal_team_member steps of matter-status-and-archive timed out waiting for the Matter header to render; an immediate rerun passed every step and replaced them. The cause was not reproduced and is recorded in walkthrough-r1.json harnessNotes.",
+    "The initial Task note failure was simulated by aborting the browser comment request once.",
+    "Reminder delivery, timing and notification preferences were not exercised; only the Key date dialog choices and saved values were checked.",
+    "Linked Documents guidance at the end of the article belongs to document-versions and document-previews and was not walked here.",
+    "Help discovery, themes, keyboard operation and zoom were not rechecked in this round."
   ],
-  "previousEvidence": "docs/documentation/batches/dev-integration/previous-matter-work.json",
-  "copyOnlyReview": null
+  "previousEvidence": {
+    "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+    "contentSha256": "020bf3cc086bafd7efbd28255bb5c607fb5864836abef8e58d17336ae12a2836",
+    "verifiedAt": null
+  },
+  "copyOnlyReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "0c4586d601262514f49a617fa47f6bd3c45accadd851fd6bfb9a2f3d817d8d9b",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (matters)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and found no change to Tasks, Key dates, reminders, Related Matters or Linked Contracts; the changes are archived-person styling, sign-in branding, first-run and Settings list rows. I replayed the round 1 V-C24 walkthrough on the work2 lab as Administrator and Legal Team Member, and all 32 steps passed after one rerun of a Set parent step that failed on shared-lab search data. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/matters.json",
+        "sha256": "25e0284bc0652683b0e7de5385bb6f62942b22df3ea44d08b383b66d37481603"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
+  }
 }

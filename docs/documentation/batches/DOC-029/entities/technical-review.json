@@ -1,0 +1,235 @@
+{
+  "batch": "DOC-029",
+  "group": "entities",
+  "issues": [745, 747],
+  "author": "DOC-029 source-review author agent (entities)",
+  "technicalReviewer": "DOC-029 source-review author agent (entities)",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T14:59:03Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "previousWalkthroughAppCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
+  "changeRangeInspected": "git diff 8539f4cc..3fa407e3 -- apps packages (entity, counterparty, Home obligation, access, chart, share capital files); the article history also shows commit 41390ca0 removed Contributor wording after the recorded evidence hashes.",
+  "classification": "Behavior, permission, and label changes. Not copy-only: V-C31, V-C32, V-C52, and V-C53 need a fresh independent walkthrough against the corrected content.",
+  "articles": [
+    {
+      "articleId": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "contentSha256Before": "71c5ae01033d3e5915b96d318f1eb0dd77faf2eac37c766a6051856734a224d0",
+      "contentSha256After": "ddbbf1cfcd46f72fc735c67dcd9162a47480641221e06d2fcd2362d660607c35",
+      "sources": [
+        "apps/web/src/routes/entities.tsx",
+        "apps/web/src/components/entities/entity-list-filter-bar.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/counterparty-picker.tsx",
+        "apps/api/src/modules/entities/routes.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/lib/counterparty-link.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "messages/en-US.json",
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS.md (DD-014 amendment 10 September 2026)",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-004 amendment)"
+      ],
+      "corrections": [
+        {
+          "location": "Before you start",
+          "before": "A Confidential Entity requires an explicit Grant unless you are an Administrator.",
+          "after": "A Confidential Entity requires a Grant for every person, including Administrators.",
+          "basis": "entityReachScope gives administrators the same grant-or-open rule as Legal Team Members (commit cb453470; DD-014 and ENT-004 amendments of 10 September 2026)."
+        },
+        {
+          "location": "Register and update an Entity, step 3",
+          "before": "Select Register entity.",
+          "after": "Select Add entity.",
+          "basis": "entities.register and entities.form.title are now 'Add entity' (commit 68624ded). The submit button is still 'Register'."
+        },
+        {
+          "location": "Register and update an Entity, step 2",
+          "before": "Only the list filters are named for checking existing records.",
+          "after": "Also names the 'Search entities by name' box, which filters by legal name.",
+          "basis": "entities.tsx search input (aria-label entities.search) and the API q parameter (ilike on legal_name)."
+        },
+        {
+          "location": "Register and update an Entity, step 5",
+          "before": "No statement about access for the person who registers the Entity.",
+          "after": "You receive a Grant for the Entity that you add.",
+          "basis": "POST /entities inserts an entity_grants row for the creator and records entity_grant.added."
+        }
+      ],
+      "confirmed": [
+        "Entities first view is Calendar; List and Chart are the other views.",
+        "List filters Type, Status, Jurisdiction, Majority owner, Clear all, and Show archived.",
+        "Add entity dialog fields: Legal name, Entity type, Status (default Active), Formation jurisdiction, Formed on, Registration no., Tax ID, Registered agent, Registered address; submit Register; blank name refused with 'Name the entity — its registered legal name.'",
+        "Legal names are not unique; the create route has no uniqueness check.",
+        "Entity Status values Active, Dormant, Dissolved, Divested are separate from archive.",
+        "Entities loader redirects non-Member+ users; the API is Member+ only. Contributor is a removed role (DD-023).",
+        "Contract Overview labels: Our entity (select), Counterparties, Create \"name\", Primary, Make primary, 'Take {name} off the contract'.",
+        "Picker hides create when a case-insensitive exact name exists and excludes Counterparties already on the Contract; the API reuses a live same-name Counterparty.",
+        "Removing the primary passes the mark to the next-joined party; frozen (archived) Contracts hide party controls."
+      ]
+    },
+    {
+      "articleId": "entity-records",
+      "scenario": "V-C32",
+      "contentSha256Before": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
+      "contentSha256After": "e8bd443312eb75490ecd396313913b1a050ea9751aa63e03ca55d43e22c7e56d",
+      "sources": [
+        "apps/web/src/components/entities/officers-card.tsx",
+        "apps/web/src/components/entities/registrations-card.tsx",
+        "apps/web/src/components/entities/ownership-card.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/routes/entities.tsx",
+        "apps/web/src/components/entities/entity-list-filter-bar.tsx",
+        "apps/api/src/modules/entities/record-routes.ts",
+        "apps/api/src/modules/entities/holding-routes.ts",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-ENTITIES.md"
+      ],
+      "corrections": [
+        {
+          "location": "Record Officers and resignations, steps 1-2",
+          "before": "Card 'Officers', button 'Add officer', field 'Officer name'.",
+          "after": "Card 'Directors & Officers', button 'Add director or officer', field 'Director or officer name'.",
+          "basis": "officers-card.tsx label change (commit 9ec5e8a2 series). The heading and the Officer domain term are kept."
+        }
+      ],
+      "confirmed": [
+        "Officers and Registrations cards are on Overview; Holdings are on the Ownership tab with Add Holding, Relationship (Owns this Entity / This Entity owns), Entity, Ownership percent, Add, Owners, Owned Entities, Remove {name}.",
+        "Officer fields Role, Appointed on, Resigned on, Linked user, Show former, Remove {officer}.",
+        "Registration fields Jurisdiction, Registration number, Registered agent, Status Active/Lapsed/Withdrawn, 'Remove {jurisdiction} registration'.",
+        "Ownership total over 100 shows 'Ownership totals {total}% for {name}.' and saves.",
+        "Record routes, holding routes, and obligation routes are unchanged between 8539f4cc and 3fa407e3.",
+        "Archive/Restore buttons on the record, 'This entity is archived. Restore it to edit.', Show archived in the List, row Restore.",
+        "No seeded Entity folders (ENT-005)."
+      ]
+    },
+    {
+      "articleId": "entity-obligations",
+      "scenario": "V-C52",
+      "contentSha256Before": "b4a8ade34e728a7cb4de68a659779fe45d68781028d899b97c580771c1d0f604",
+      "contentSha256After": "9e66336f58ac640455e2953d4231f4cb5e05c30dc9eee207e33908f372206b66",
+      "sources": [
+        "apps/web/src/components/entities/obligations-panel.tsx",
+        "apps/web/src/routes/entities.tsx",
+        "apps/api/src/modules/entities/obligation-routes.ts",
+        "apps/api/src/modules/home/sections/obligations.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "apps/api/src/lib/notifications/audience.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "location": "Read the calendar and Home",
+          "before": "Administrators also see unassigned Obligations and those whose named assignee cannot reach the Entity.",
+          "after": "On the Entities they can reach, Administrators also see those Obligations.",
+          "basis": "Home section composes entityReachScope; administrators no longer reach Confidential Entities without a Grant."
+        },
+        {
+          "location": "Recover from a mistake or refusal",
+          "before": "ask an Administrator to review access",
+          "after": "ask a person with a Grant on that Entity to review access",
+          "basis": "canManageEntityAccess: only grantees manage a Confidential Entity; an Administrator without a Grant cannot."
+        }
+      ],
+      "confirmed": [
+        "Obligations tab labels: Add obligation, Label, Due date, Repeat every (months), Registration, Assignee, Matter, Note, 'Mark {label} filed', Filed on, Mark filed, 'Delete {label}', Filed.",
+        "Assignee must be a live Legal Team Member or Administrator; Matter must be live and reachable; Registration must belong to the Entity.",
+        "Calendar: Due-date list, Month, Entity, Assignee, From, To, Include completed, Apply, Previous month, Next month, Today, Clear all; overdue rows first.",
+        "Recurring filing advances until the next due date is after the filing date (fileRecurring message and obligation-routes).",
+        "Morning round reminders use entityReachedBy, which already follows the grant rule.",
+        "obligation-routes.ts is unchanged since the earlier walkthrough build."
+      ],
+      "limitations": [
+        "Home fallback bug (reported in productBugs): assigneeCanReachEntity still treats every Administrator assignee as reaching the Entity, so an Obligation on a Confidential Entity assigned to an Administrator without a Grant is not surfaced to granted Administrators. The article describes the intended rule."
+      ]
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "scenario": "V-C53",
+      "contentSha256Before": "60720b9e39912ec6e2aa74265d583fa90647a1d847ccbb89313b5d320b2953ed",
+      "contentSha256After": "f6d077cc3b817a0c097844fb00d800525777503bab0ba0bff52b222f14b1ea2f",
+      "sources": [
+        "apps/web/src/components/entities/share-capital-card.tsx",
+        "apps/web/src/lib/format.ts",
+        "apps/web/src/components/entities/entity-chart.tsx",
+        "apps/web/src/components/entities/entity-chart-layout.ts",
+        "apps/api/src/modules/entities/holding-routes.ts",
+        "apps/web/src/components/entities/entity-grants-dialog.tsx",
+        "apps/web/src/components/confidential-toggle.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/api/src/modules/entities/grant-routes.ts",
+        "apps/api/src/modules/entities/routes.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/modules/entities/linked-records.ts",
+        "apps/web/src/components/entities/ownership-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "packages/db/migrations/0096_entity_par_value_currency.sql",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS.md (DD-014 amendment)",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-004 amendment, ENT-010)"
+      ],
+      "corrections": [
+        {
+          "location": "Before you start",
+          "before": "Only an Administrator changes the Confidential flag or Grants.",
+          "after": "A Confidential Entity needs a Grant for every person, including Administrators. Grant holders change the flag and Grants; an Administrator also can while the Entity is not Confidential. The person who adds an Entity receives a Grant.",
+          "basis": "canManageEntityAccess, entityReachScope, creator grant in POST /entities; DD-014/ENT-004 amendments."
+        },
+        {
+          "location": "Maintain share capital",
+          "before": "Field 'Par value (minor units)', whole numbers only, no currency selector.",
+          "after": "Choose Currency first; Par value is unavailable until then and takes an amount with up to the currency's decimal places; changing Currency keeps the amount.",
+          "basis": "share-capital-card.tsx (Currency select, toMinorUnits, invalidAmount message); API refuses a par value without a currency."
+        },
+        {
+          "location": "Read the ownership chart, step 2",
+          "before": "Secondary connections; an Entity with no recorded owner can appear separately.",
+          "after": "Primary Holding is a solid line, others dashed; an Entity with no Holdings appears in a separate row.",
+          "basis": "entities.chart.description and layoutEntityChart (unconnected nodes in the final row; an unowned owner is a root, not separate)."
+        },
+        {
+          "location": "Read the ownership chart, step 4",
+          "before": "Open a named Entity from its chart link; unreachable nodes are 'Restricted Entity'.",
+          "after": "Single click or Space highlights the ownership chain (Clear highlight / Escape); double-click or Enter opens; unreachable nodes show 'Confidential Entity'.",
+          "basis": "entity-chart.tsx onClick/onDoubleClick/onKeyDown and entities.chart.navigationHint, entities.chart.confidential."
+        },
+        {
+          "location": "Read the ownership chart, note",
+          "before": "Primary owner is chosen from the recorded percentages.",
+          "after": "Primary owner is the owner with the highest recorded percentage.",
+          "basis": "holding-routes.ts chart projection sorts owners by percent, then name."
+        },
+        {
+          "location": "Grant access to a Confidential Entity",
+          "before": "Administrator turns on 'Confidential — restrict to the grant list' first, Administrators keep access, grants only to Legal Team Members, Legal Team Members cannot manage access.",
+          "after": "A grantee (or an Administrator on an open Entity) opens Manage access, grants live Legal Team Members or Administrators in Person, includes themselves, then turns on 'Confidential — restrict to the access list'; enabling with no live grantee and removing the last live grantee are refused; grant holders manage access; an Administrator without a Grant cannot open or self-grant.",
+          "basis": "grant-routes.ts (requireAccessManager, candidates include administrators, 409 on last grantee), routes.ts PATCH (409 'Grant at least one person access before making this entity confidential.'), confidential-toggle.tsx label, entity-grants-dialog.tsx."
+        },
+        {
+          "location": "Grant access, restricted-name paragraph",
+          "before": "Restricted Entity only.",
+          "after": "Adds that the ownership chart shows such an Entity as Confidential Entity.",
+          "basis": "ownership-card.tsx and contract-record.tsx still use 'Restricted Entity'; entity-chart.tsx uses 'Confidential Entity'."
+        }
+      ],
+      "confirmed": [
+        "Share capital labels Authorized shares, Issued shares, Par value, Currency; whole numbers of zero or more for share counts; Enter/blur saves; Escape reverts.",
+        "Chart keyboard: arrows pan, plus/minus zoom, zero fits; Fit to window; drag and wheel.",
+        "Contracts tab lists Contracts by Our entity; Matters tab by saved Entity-valued Field values (matterNamesEntity checks all entity Fields, so a detached Field value keeps the link); both compose record reach.",
+        "Issue #774 (Matter Overview Entity choices) is fixed and closed; the article makes no claim that depends on it.",
+        "Business Users reach no Entity (entityReachScope returns false)."
+      ],
+      "limitations": [
+        "A par value saved before migration 0096 has no currency and shows blank until a Currency is chosen (reported in productBugs); the article does not describe this legacy case.",
+        "Chart description copy says 'Majority Holdings' although the primary owner need not hold a majority (reported in productBugs); the article describes the actual rule."
+      ]
+    }
+  ],
+  "limitations": [
+    "Source inspection only. No browser walkthrough was run by this author seat; the independent walkthrough is still required before verification.",
+    "Catalog status was not changed."
+  ]
+}

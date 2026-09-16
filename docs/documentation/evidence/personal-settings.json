@@ -1,143 +1,94 @@
 {
   "articleId": "personal-settings",
-  "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8",
-  "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-  "buildId": "app sha256:69c7cd47338eff05c787e985743dd45b2229792827d82fd5f54a50a9c63d8757; engine sha256:1dce5b67898cc8ae720231fa66e049208ed207e69053a2cf4c1bd0e172cea401",
-  "environment": "openlaw-docs-b8e31260-pilot",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Fable review seat (agent source check against d1d098ba); the feature owner's human technical review is not recorded here",
-  "walkthroughReviewer": "Fable review seat (agent), a different agent from the author",
+  "contentSha256": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-work",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (access, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-07T04:50:31.333Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (access)",
+  "technicalReviewer": "DOC-029 source-review author agent (access)",
+  "verifiedAt": "2026-09-16T16:23:21Z",
   "status": "pass",
   "sources": [
-    "apps/web/src/routes/settings-profile.tsx",
-    "apps/web/src/routes/settings-appearance.tsx",
-    "apps/web/src/components/portal/portal-shell.tsx",
-    "apps/web/src/components/timezone-picker.tsx",
-    "docs/decision-records/DECISIONS-SETTINGS.md"
+    "docs/user-guides/personal-settings.md",
+    "docs/documentation/batches/DOC-029/access/technical-review.json",
+    "docs/documentation/batches/DOC-029/access/walkthrough-r1.json"
   ],
   "scenarios": [
     {
       "id": "V-C05",
       "coverage": ["C05"],
-      "role": "legal_team_member",
-      "method": "browser-walkthrough",
-      "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
-      "actual": "Full name saved on leaving the field, updated the header and survived reload; Email is read-only and Role is not editable. Searching Dubai and selecting Asia/Dubai stored the zone; the Use browser timezone option removed it. A small PNG saved as the photo; a 1.1 MB file and a text file were refused with the JPG or PNG, 1 MB max. hint. Dark, Warm and Light each applied and persisted, and another seed account's preferences stayed unchanged. The App view card at the top of Profile opened the Portal with the Viewing as business user banner and Return to legal view came back to Profile with the role unchanged. Change password refused a wrong current password, then the change signed the other browser out and kept this session; Sign out other devices ended the other session only; Sign out ended this one. The seed password, name, theme, timezone and photo were restored afterwards.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-009/independent-discovery.json"
-      ]
-    },
-    {
-      "id": "V-C05",
-      "coverage": ["C05"],
       "role": "administrator",
       "method": "browser-walkthrough",
-      "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
-      "actual": "Full name saved on leaving the field, updated the header and survived reload; Email is read-only and Role is not editable. Searching Dubai and selecting Asia/Dubai stored the zone; the Use browser timezone option removed it. A small PNG saved as the photo; a 1.1 MB file and a text file were refused with the JPG or PNG, 1 MB max. hint. Dark, Warm and Light each applied and persisted, and another seed account's preferences stayed unchanged. The App view card at the top of Profile opened the Portal with the Viewing as business user banner and Return to legal view came back to Profile with the role unchanged. Change password refused a wrong current password, then the change signed the other browser out and kept this session; Sign out other devices ended the other session only; Sign out ended this one. The seed password, name, theme, timezone and photo were restored afterwards.",
+      "prerequisites": [
+        "Fresh DOC-029 access Administrator and Legal Team Member accounts with light theme, no timezone and no photo; each is the unchanged control for the other.",
+        "Seeded Jonas Weber (Business User) for the absent-control check. The Contributor role no longer exists (DD-023)."
+      ],
+      "expected": "Preferences persist for the intended user. Administrators and Legal Team Members open their own Portal view from View Business Portal under Personal, with a working Return to legal view link; Business Users have no such control. Another account's preferences remain unchanged.",
+      "actual": "6 recorded steps passed on 3fa407e3 for a fresh Administrator. Settings in the name menu opened the Personal group. On Profile, Full name saved on leaving the field and kept its value after reload, and the header menu showed the new name. Timezone search Tokyo selected Asia/Tokyo, saved, and kept it after reload; Use browser timezone saved and cleared the stored zone. Email was shown read-only, and Role had Roles are managed in Organization → Users. Upload in Profile photo saved a 64-pixel PNG; a 1.47 MB PNG showed The change could not be saved. Try again. Appearance saved Warm, Dark and Light for this account, Dark stayed after reload, and the session stayed open. The other fresh account's name, timezone, theme and photo did not change. View Business Portal under Personal > View as business user opened the Portal with the Viewing as business user banner and its real-work text, under this account's own email and unchanged role; Return to legal view returned to /settings/app-view. Change password refused a wrong Current password and a 6-character New password with the documented message. Save then changed the password, kept this session and sent a second browser to sign-in, and the old password was refused. Sign out other devices saved and ended a third browser's session while this one stayed. Sign out in the name menu returned to sign-in. Seeded Jonas Weber (Business User): /settings/app-view and /settings/profile sent him to /portal, and no View as business user control or banner appeared.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-009/independent-discovery.json"
+        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
+        "docs/documentation/batches/DOC-029/access/wt-personal-settings-r1.mjs",
+        "docs/documentation/batches/DOC-029/access/r1-administrator-portal-view-banner.png"
       ]
     },
     {
       "id": "V-C05",
       "coverage": ["C05"],
-      "role": "contributor",
+      "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "expected": "Preferences persist for the intended user. App view is a card within Profile for Member+, with a working Return to legal view link. Contributors have personal settings without this card. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
-      "actual": "Full name saved on leaving the field, updated the header and survived reload; Email is read-only and Role is not editable. Searching Dubai and selecting Asia/Dubai stored the zone; the Use browser timezone option removed it. A small PNG saved as the photo; a 1.1 MB file and a text file were refused with the JPG or PNG, 1 MB max. hint. Dark, Warm and Light each applied and persisted, and another seed account's preferences stayed unchanged. Profile had no App view card or View as business user control; a direct /portal address still opened the Portal. Change password refused a wrong current password, then the change signed the other browser out and kept this session; Sign out other devices ended the other session only; Sign out ended this one. The seed password, name, theme, timezone and photo were restored afterwards.",
+      "prerequisites": [
+        "Fresh DOC-029 access Administrator and Legal Team Member accounts with light theme, no timezone and no photo; each is the unchanged control for the other.",
+        "Seeded Jonas Weber (Business User) for the absent-control check. The Contributor role no longer exists (DD-023)."
+      ],
+      "expected": "Preferences persist for the intended user. Administrators and Legal Team Members open their own Portal view from View Business Portal under Personal, with a working Return to legal view link; Business Users have no such control. Another account's preferences remain unchanged.",
+      "actual": "7 recorded steps passed on 3fa407e3 for a fresh Legal Team Member. The profile, timezone, photo, theme, View Business Portal, Change password, Sign out other devices and Sign out results matched the Administrator's, and the fresh Administrator's preferences did not change. In addition, a Legal Team Member account that signed in only by an email link (no password) had a Profile without the Password & two-factor card.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-009/independent-walkthrough.json",
-        "docs/documentation/batches/DOC-009/independent-discovery.json"
+        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
+        "docs/documentation/batches/DOC-029/access/wt-personal-settings-r1.mjs",
+        "docs/documentation/batches/DOC-029/access/r1-administrator-portal-view-banner.png"
       ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-009/README.md"],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study and not the feature owner's approval.",
-    "Profile offers no photo removal; the fixture photo was cleared in the lab database after the check.",
-    "Normal publication waits for the linked canonical articles to finish their owning batches; the article stays in review."
+    "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
+    "The work lab is shared with other DOC-029 agents. Seeded records and counts changed during the run. The walkthrough created only accounts and records named DOC-029 access and changed no organisation settings. Nothing was deleted. Two earlier full runs are kept as walkthrough-r1-attempt1.json and walkthrough-r1-attempt2.json; their dispositions (a reviewer script timing error and shared-lab data drift) are in walkthrough-r1.json.",
+    "The lab app container runs with AUTH_RATE_LIMIT=off (lab configuration).",
+    "The Contributor part of V-C05 no longer applies (DD-023 removed the role). The absent-control check used a Business User instead.",
+    "A JPG upload and a non-image file were not tried; a PNG within the limit and an oversize PNG were.",
+    "Profile has no photo removal control, so the fresh fixture accounts keep their test photo. Names, timezones and themes were restored."
   ],
-  "previousEvidence": null,
+  "previousEvidence": {
+    "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+    "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8",
+    "verifiedAt": "2026-09-07T04:50:31.333Z"
+  },
   "copyOnlyReview": null,
   "compatibilityReview": {
-    "fromAppCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-    "toAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8",
-    "applicationSha256": "b7bc6323f8e3d95a4ee006eab289f434502dccfdb7aee4c5fcb2026e7c41cd30",
-    "reviewer": "Independent DOC-025 acceptance seat (Opus 5 agent), separate from the documentation author",
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-08T13:42:44.735Z",
-    "summary": "This seat re-checked the source ranges, the four saved diffs and the cited independent walkthroughs, and corrected the a28331f7 conversations attribution from DOC-010 to DOC-011 with DOC-012 added for the Portal Request thread. The recorded walkthrough for this article keeps its own app build, timestamps and observations; nothing was replayed at the target. See batches/DOC-025/independent-compatibility.json, which is separate from the authored source audit it re-checked.",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (access)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38, with messages/en-US.json; the new 5 MB limit is for the organization logo, and the Return to setup link does not change Profile, Appearance, View Business Portal, password or sessions. I replayed the round 1 V-C05 walkthrough on the work2 lab, and all 14 steps passed, including the 1 MB profile photo refusal. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. Password & two-factor in Profile uses the shared two-factor component, which did not change. The wizard is not mentioned.",
     "evidence": [
       {
-        "path": "batches/DOC-025/compatibility.json",
-        "sha256": "0ff7f7cfa20fe6d4b7cdeb768f6bd2ae0965ac50e88c3e2e2f8dc5f3e274e9c8"
+        "path": "batches/DOC-029/compat-r2/access.json",
+        "sha256": "0439676e5a91edbbfd06066c56706e08609c7e99c3e074f1e90ba7c538cc1e9a"
       },
       {
-        "path": "batches/DOC-025/independent-compatibility.json",
-        "sha256": "c925d3f1ce3e04c3ff3b7044c634655a90351136324be7614ccd7cc02b23b4ca"
-      },
-      {
-        "path": "batches/DOC-011/independent-walkthrough.json",
-        "sha256": "63d36cf23af169046d54d342b1aecda43a64339f6fa36bd75ac2cc026c69dc12"
-      },
-      {
-        "path": "batches/DOC-012/independent-walkthrough.json",
-        "sha256": "f327834cc56aeae3ab6fe3e04257ee93cd113ddfd8d387a24b47965b11a023aa"
-      },
-      {
-        "path": "batches/DOC-025/source-6a8873db.diff",
-        "sha256": "8cd083e289202edabcb0b747783c0935d2a6be17e8db533990b400ee3306c77a"
-      },
-      {
-        "path": "batches/DOC-025/source-8539f4cc.diff",
-        "sha256": "84e4ce0b6f4d9df8b7472cd18f37ca0a66425ad75035e936ccd5632b05c06161"
-      },
-      {
-        "path": "batches/DOC-025/source-a28331f7.diff",
-        "sha256": "2612e70d9c4c033ae157606a1dff357e5ce90120137993408e0dd8d82585af63"
-      },
-      {
-        "path": "batches/DOC-025/source-d1d098ba.diff",
-        "sha256": "4b461123d37fc1e0aea0dc197f7c1461143c84c9acb4ca606a35b8f2247e8840"
-      },
-      {
-        "path": "batches/DOC-010/independent-walkthrough.json",
-        "sha256": "1b5f0c18e22708eb763b5eaac87abc889777f0ac28b343082597214db385fe22"
-      },
-      {
-        "path": "batches/DOC-018/independent-c31.json",
-        "sha256": "0b645d4e404761df17bcca0ed4ebbdfd4f52608c648f7ee07b62f8ce23795a77"
-      },
-      {
-        "path": "batches/DOC-018/independent-c52.json",
-        "sha256": "fbd026728c9fda605e50b741300b1189bff7d88ecba59aa7afdf6ffd1720c871"
-      },
-      {
-        "path": "batches/DOC-019/independent-c33.json",
-        "sha256": "6f1cf40b5b56805d79e92ebf39de90be67bcf60b2e2f87954c93f426c60d1922"
-      },
-      {
-        "path": "batches/DOC-019/independent-c34.json",
-        "sha256": "7f3dbee20dab93cf3624c83dd57c2fda2cba5dce99ec67a7fac6afcaf0d5b645"
-      },
-      {
-        "path": "batches/DOC-019/independent-supplement.json",
-        "sha256": "6228340ea7202ff7f0b814d8aa502b72a9669204b64e7f30c4c410305e242b4a"
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
       }
-    ],
-    "authoredSourceAudit": {
-      "path": "batches/DOC-025/compatibility.json",
-      "reviewer": "Codex DOC-025 source compatibility audit (agent)",
-      "reviewedAt": "2026-09-08T12:56:21.570227Z",
-      "note": "Authored source inspection, retained with its original identity and time. It shares its root author with this article, which is why an independent seat re-checked it."
-    }
+    ]
   }
 }

@@ -1,0 +1,36 @@
+{
+  "batch": "DOC-029",
+  "group": "signing-standin",
+  "addendumTo": "docs/documentation/batches/DOC-029/signing-standin/technical-review.json",
+  "author": "DOC-029 integration author agent",
+  "reviewer": "DOC-029 integration author agent",
+  "reviewerKind": "agent",
+  "method": "source-inspection",
+  "reviewedAt": "2026-09-16T17:14:44Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "note": "Source review only. No walkthrough ran and no catalog status changed. The article bytes changed, so the existing V-C17-electronic walkthrough no longer matches. An independent agent must run it again against the new bytes.",
+  "articles": [
+    {
+      "articleId": "electronic-signing",
+      "scenarios": ["V-C17-electronic"],
+      "contentSha256Before": "bb311a48eb2d4495ab88402b2e88ff410e03f5f2e207903e7ce10b3dcb48130c",
+      "contentSha256After": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
+      "result": "corrected",
+      "classification": "missing prerequisite added. The article did not say how the signature position is chosen. This is a new prerequisite, not a copy-only change.",
+      "where": "Before you start, new paragraph 2",
+      "before": "(No text. The article did not say where a Signer signs.)",
+      "after": "Mark each signature place in the paper before you upload the Document Version you will send. Type `/sig/` where each signature goes. You can make the text white so that it does not show. DocuSign puts a Sign Here field for each Signer at every `/sig/` it finds. In this version, all Signers share the same marks, so you cannot give one Signer a different place. If the paper has no `/sig/`, DocuSign puts no Sign Here field, and each Signer chooses where to sign.",
+      "sources": [
+        "apps/api/src/lib/signing/docusign.ts buildEnvelopeDefinition: every Signer gets the same signHereTabs entry with anchorString \"/sig/\", anchorUnits pixels, offsets 0, and anchorIgnoreIfNotPresent \"true\". The doc comment says DocuSign falls back to free-form signing when the paper has no anchor.",
+        "apps/api/src/lib/signing/docusign.ts: every Signer has routingOrder 1, so all Signers are asked at once (already in the article).",
+        "CONTEXT.md Signer: a name and an email address, asked in parallel, no routing order."
+      ],
+      "standInCheck": [
+        "apps/api/src/lib/signing/fake.ts sendEnvelope stores the signers, file name, subject and document bytes. It does not read tabs or anchors and does not look inside the document. It does not contradict the new paragraph, and it cannot prove it.",
+        "docs/documentation/batches/DOC-029/signing-standin/fixture/server.mjs reads recipients.signers from the envelope definition and keeps only name, email and routingOrder. It drops the tabs. A walkthrough on this stand-in cannot see Sign Here placement."
+      ],
+      "noTestCoverage": "No test at 3fa407e3 asserts the /sig/ anchor or anchorIgnoreIfNotPresent. The claim rests on the payload builder source.",
+      "walkthroughGuidance": "A stand-in walkthrough can check that the paragraph is present and that a Document Version with /sig/ text sends as before. To observe the anchor in the payload, the stand-in must keep the posted envelope definition. Real Sign Here placement and free-form fallback in DocuSign need a live-provider-check, which stays blocked under #742."
+    }
+  ]
+}

@@ -192,6 +192,40 @@ describe("welcome wizard guard", () => {
   });
 });
 
+describe("welcome wizard authentication step", () => {
+  it("sends the Administrator to two-factor enrollment after requiring it", async () => {
+    const signedIn = { ...ADMIN, twoFactorSetupRequired: false };
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn,
+      onboarding: { completed: false, steps: {} },
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/auth/policy/legal" && call.method === "PATCH") {
+          writes.push(call.body);
+          signedIn.twoFactorSetupRequired = true;
+          return json(200, {
+            legal: call.body,
+            business: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+          });
+        }
+        return wizardExtra()(call);
+      },
+    });
+    const { router } = renderAt("/welcome");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Get started" }));
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    await user.click(
+      await screen.findByRole("switch", { name: "Require two-factor authentication" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    await vi.waitFor(() => expect(router.state.location.pathname).toBe("/auth/two-factor/enroll"));
+    expect(writes).toEqual([expect.objectContaining({ requireTwoFactor: true })]);
+  });
+});
+
 describe("welcome wizard portal step", () => {
   it("saves the domain allowlist through the API and reports email status", async () => {
     let putBody: unknown;

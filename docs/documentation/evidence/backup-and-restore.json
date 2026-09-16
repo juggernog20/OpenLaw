@@ -1,25 +1,19 @@
 {
   "articleId": "backup-and-restore",
-  "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361",
-  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-  "buildId": "app sha256:2851d6acd05418a0ddc57750ac75908892643af481f2755cb13a46f946d073b6; engine sha256:d0997fb7187067bc03f82e04ad45365ca5e3132b872e0b73c3934ceb2d67457a",
-  "environment": "openlaw-docs-b8e31260-ops-author; ops-upgrade; ops-restore (author); openlaw-docs-b8e31260-rev-install; rev-upgrade; rev-restore; rev-recovery (independent)",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "source app sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52 (openlaw-docs-41255c61-lc-upgrade); target app sha256:14e6658c2a6665d1e3385bd76f172707fdf7a0977d283ea6cf8dd4a9896e6080; engine sha256:e22cf78fe1195a40da922956d16717064bde8f274af28610483d57fd3ba6331b (openlaw-docs-41255c61-lc-restore)",
+  "environment": "openlaw-docs-41255c61-lc-upgrade (source); openlaw-docs-41255c61-lc-restore (target)",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle)",
+  "technicalReviewer": "DOC-029 source-review author agent (operator-lifecycle)",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (operator-lifecycle, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T10:04:19.834Z",
+  "verifiedAt": "2026-09-16T15:31:52Z",
   "status": "pass",
   "sources": [
-    "compose.yml",
-    "Dockerfile",
-    "docs/DEPLOYMENT.md",
-    "packages/db/src/migration-journal.ts",
-    "apps/api/src/lib/storage/config.ts",
-    "apps/api/src/modules/email-settings/routes.ts",
-    "apps/api/src/pipeline/pg-boss.ts",
-    "apps/api/src/pipeline/text-extraction.ts",
-    "e2e/scripts/upgrade-fidelity.mjs"
+    "docs/user-guides/backup-and-restore.md",
+    "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review.json",
+    "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.json"
   ],
   "scenarios": [
     {
@@ -27,86 +21,56 @@
       "coverage": ["C47"],
       "role": "operator",
       "method": "container-operation",
+      "prerequisites": [
+        "The populated installation upgraded to 3fa407e3 in openlaw-docs-41255c61-lc-upgrade, with known Version hashes, a saved encrypted relay, and retained keys copied to a private secret store.",
+        "A separate fresh clone at 3fa407e3 for the target project openlaw-docs-41255c61-lc-restore on 127.0.0.1:23332, with its own volumes."
+      ],
       "expected": "Records and permissions work, file hashes match, and required encrypted configuration is usable with the retained key. Missing/wrong keys or missing files are detected; a backup archive alone never counts as a successful restore.",
-      "actual": "Took the coherent backup exactly as the article describes from the populated instance: stopped app and worker with Postgres left running, dumped the database in custom format, archived the local file volume through the app service, recorded the source and image identities, listed both archives and wrote SHA256SUMS, then restarted the services and confirmed readiness. Restored it into a different empty target with its own project, port and volumes: verified the retained hashes on that host, confirmed the target database held zero public tables, imported with pg_restore --exit-on-error, extracted the file archive into the app volume, and started the target with the separately retained AUTH_SECRET and OPENLAW_SECRET_KEY. The restored instance passed every verification in the article: existing accounts signed in, all records were present, both original and later Document Versions downloaded with matching SHA-256 values, the Contributor kept exactly its earlier reach including the Confidential refusal, the restored encrypted relay delivered a real message to a controlled recipient, and a new upload processed. Both failure cases in the article were exercised: a wrong OPENLAW_SECRET_KEY left records readable while the saved relay was unusable and nothing was delivered, and the retained key restored it; and removing one stored blob left the Document listed while its download failed with HTTP 500, which re-extracting the retained file archive into the same isolated target repaired back to the recorded hash.",
+      "actual": "Took the backup exactly as written: a fresh mode-700 directory, app and worker stopped with Postgres running, pg_dump custom format, the file volume archived through the app service, app-source.txt and images.json recorded (all exit 0), pg_restore --list gave 684 entries and tar listed 5 files, and SHA256SUMS was written. Step 5 restarted the services; readiness, a Contract read and a Version hash passed, and the copy in a separate retained directory passed sha256sum --check. The target was prepared from the recorded source with the retained AUTH_SECRET and OPENLAW_SECRET_KEY and no first-run setup. The hashes passed on the target, the database had zero tables and the file volume zero entries, pg_restore --exit-on-error --no-owner --no-privileges exited 0, and the archive filled the volume with 5 files. The target came up ready. The Administrator and the Legal Team Member signed in through the browser. Contracts, the Matter, the Entity and Field values matched the inventory, and all four original and later Version downloads matched their SHA-256. The Legal Team Member was refused the Confidential Contract and its Document. The Business User (former Contributor) kept portal reach on its member Contract only. A new PDF reached text ready, and a test email through the restored relay reached the controlled recipient. Negative checks: a valid-length wrong OPENLAW_SECRET_KEY kept Contracts readable, logged 'No configured key opens these stored credentials: smtp_url (1)', showed email as unset and refused the test send with 'SMTP is not configured \u2014 save a relay first.', and nothing was delivered. The retained key and a recreate restored delivery. Removing one stored blob left the Document listed while its download returned HTTP 500; extracting the retained archive again restored both Version hashes. With OPENLAW_SECRET_KEY removed, docker compose config --quiet and up both refused.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-023/README.md",
-        "docs/documentation/batches/DOC-023/independent-after-restore.json",
-        "docs/documentation/batches/DOC-023/independent-restore-wrong-key.json",
-        "docs/documentation/batches/DOC-023/independent-restore-key-restored.json",
-        "docs/documentation/batches/DOC-023/independent-restore-missing-file.json",
-        "docs/documentation/batches/DOC-023/independent-pre-upgrade-recovery.json",
-        "docs/documentation/batches/DOC-023/independent-corrections-confirmed.json"
-      ],
-      "verifiedAt": "2026-09-08T10:04:19.834Z"
+        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/r1-restore-admin-confidential-contract.png"
+      ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-023/README.md"],
   "limitations": [
-    "The backup and restore covered the bundled Postgres database and the local file volume; object-store snapshot tooling was not exercised in this pass.",
-    "The restored target's controlled recipient was an owned mail catcher reachable under the same name as the source deployment's.",
-    "Local TLS uses an isolated Caddy internal CA and does not certify public DNS or certificate issuance.",
-    "S3 and Azure operations use owned local compatible services and explicit disposable keys; no cloud identity credential-chain claim.",
-    "Provider guides remain on unmerged PR #783; real provider checks C42/C43 are still blocked and are not waived.",
-    "The user will proofread the assembled complete suite; no human proofreading or feature-owner sign-off is recorded."
+    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human operator study and not feature-owner approval.",
+    "The upgrade ran between two development revisions (d1d098ba to 3fa407e3), not between published releases.",
+    "Host Docker address pools were exhausted by other projects, so the walkthrough pre-created each project's two Compose networks with explicit subnets and Compose labels. The Compose files, services and network names were the articles' own.",
+    "The controlled relay was an owned Mailpit reachable as lc-mail on every project network, so the restored and recovered targets reached a controlled recipient under the relay name saved on the source.",
+    "Only the bundled Postgres and the local file volume were backed up and restored. Object-store snapshot tooling was not exercised.",
+    "Docker Compose 5.5.1 labels each built image with its project, so the same source has a different image ID in each project; build steps came from the build cache.",
+    "Provider guides and real provider checks C42/C43 stay blocked and are not waived. No human proofreading is recorded.",
+    "No account had two-factor authentication enrolled, so the 'Existing two-factor authentication no longer works' row was not exercised. The 'Import stopped partway through' row was not induced.",
+    "The pre-upgrade backup was also restored onto the starting build as part of V-C46 (see evidence/upgrade.json); that run used the HTTP sign-in API because the starting build's web client did not load in headless Chromium.",
+    "Walkthrough-r1.json keeps four failed restore-negative steps from a reviewer-script error (an async helper read as a plain result). They were fixed and all four passed on rerun; the dispositions are in the log."
   ],
-  "previousEvidence": null,
-  "copyOnlyReview": null,
-  "independentEvidence": [
-    "docs/documentation/batches/DOC-023/independent-after-restore.json",
-    "docs/documentation/batches/DOC-023/independent-restore-wrong-key.json",
-    "docs/documentation/batches/DOC-023/independent-restore-key-restored.json",
-    "docs/documentation/batches/DOC-023/independent-restore-missing-file.json",
-    "docs/documentation/batches/DOC-023/independent-pre-upgrade-recovery.json",
-    "docs/documentation/batches/DOC-023/independent-corrections-confirmed.json"
-  ],
-  "technicalReview": {
-    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-    "reviewerKind": "agent",
-    "method": "source-inspection",
-    "completedAt": "2026-09-08T09:15:18.163Z",
+  "previousEvidence": {
     "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "scope": "Read the release under test for the behaviour the operator guides claim: the credential-key floor and the absence of one on AUTH_SECRET (packages/db/src/secrets.ts, apps/api/src/index.ts, apps/worker/src/index.ts), the doc-engine bounds and their boot-time refusal (apps/api/src/lib/doc-engine/config.ts, apps/api/src/lib/doc-engine/http.ts), the upload ceiling's silent fallback (apps/api/src/lib/uploads.ts), where outbound email is resolved and tested (apps/api/src/modules/email-settings/routes.ts), the event stream's frames and headers (apps/api/src/modules/events/routes.ts), the journal guard and its messages (packages/db/src/migration-journal.ts), the two refusals of 0060_account_issuer (packages/db/migrations/0060_account_issuer.sql), and the deployment topology and defaults (compose.yml, Dockerfile, .env.example, docs/DEPLOYMENT.md). This reading produced the five corrections in the first review commit. It is recorded separately from the container-operation walkthroughs and does not close a scenario on its own.",
-    "files": [
-      "packages/db/src/secrets.ts",
-      "apps/api/src/index.ts",
-      "apps/worker/src/index.ts",
-      "apps/api/src/lib/doc-engine/config.ts",
-      "apps/api/src/lib/doc-engine/http.ts",
-      "apps/api/src/lib/uploads.ts",
-      "apps/api/src/modules/email-settings/routes.ts",
-      "apps/api/src/modules/events/routes.ts",
-      "packages/db/src/migration-journal.ts",
-      "packages/db/migrations/0060_account_issuer.sql",
-      "compose.yml",
-      "Dockerfile",
-      ".env.example",
-      "docs/DEPLOYMENT.md"
-    ],
-    "completedAtBasis": "The completion of this session's source-review report, the reading that produced the corrections in commit 18b93c11 (committed 2026-09-08T09:14:37Z). The review ran across this session before that report; only its delivery time is separately recorded, so that is the time given rather than an invented finer one."
+    "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361",
+    "verifiedAt": "2026-09-08T10:04:19.834Z"
   },
-  "verifiedAtBasis": "The latest observation in the independent records that cover this article: independent-corrections-confirmed, whose last recorded action is 2026-09-08T10:04:19.834Z. Each article carries its own time rather than one batch-wide maximum. That record's last step is bounded rather than logged to the millisecond: its own timingBasis names the command log and the target .env modification time it sits between.",
-  "independentBuild": {
-    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-    "note": "Images the reviewer built from the same sources with the installation article's own commands. They are not the author's images: the same source builds to a different digest here.",
-    "candidate": {
-      "source": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-      "app": "sha256:a7d883a0682569f98af530d0fccba8714f607fbf57fbb8711c91bce4e390e6f5",
-      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856"
-    },
-    "baseline": {
-      "source": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-      "app": "sha256:f065f6cd830092da90a4958c1e7ea75e6f992bc8eda1c9b6cadf086c4727c16e",
-      "doc-engine": "sha256:6fe444660a91bd72d621a08ff0919a2bb99ab413f283abe83fdaa2f296446856",
-      "note": "The document-engine image is byte-identical across the two revisions; only its tag differs."
-    },
-    "projects": [
-      "openlaw-docs-b8e31260-rev-install",
-      "openlaw-docs-b8e31260-rev-upgrade",
-      "openlaw-docs-b8e31260-rev-restore",
-      "openlaw-docs-b8e31260-rev-recovery"
-    ],
-    "postgres": "postgres:16"
+  "copyOnlyReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (operator-lifecycle)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff (SMTP discrete fields and storage format, public sign-in branding, logo limit, welcome URL steps, BASE_URL wording) and found no change to any backup, restore or verification statement. Replayed the round 1 V-C47 script on 57e77e38 in disposable Compose projects: backup, restore into an empty target, role and Confidential checks, Version hashes, relay test email, and the wrong-key, missing-blob and missing-key negatives all passed (45 of 45 steps). From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article mentions two-factor authentication only for a retained AUTH_SECRET after restore. The enrollment flow and key handling did not change.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/operator-lifecycle.json",
+        "sha256": "df6ecde75c37a04ffeb0856df7b56d0181c38de7f9e55fe056bbf194f94535d3"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
   }
 }

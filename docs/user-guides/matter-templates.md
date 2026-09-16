@@ -18,7 +18,7 @@ A Task targeting **Matter Manager** remains unassigned if the new Matter has no 
 
 ## Test both creation paths
 
-First follow [Create a Matter](create-matter.md): choose the template's Matter type, select its template, inspect the suggested title, Priority, Risk, and Fields, and choose a Matter Manager. Create a fictional Matter. Check its Overview, Tasks, Task assignments, and Key dates.
+First follow [Create a Matter](create-matter.md): choose the template's Matter type, select its template, inspect the suggested title, Priority, Risk, and Fields, and check **Matter Manager**. It starts as you; choose another person or **Unassigned** to test a different Task assignment. Create a fictional Matter. Check its Overview, Tasks, Task assignments, and Key dates.
 
 Next configure a Matter-targeting [Request form](request-forms.md), submit a fictional Request, and follow [Convert a Request to a Contract or Matter](convert-request.md). Confirm the configured Matter type, or choose a type if the form left it to Legal, then select the template. Review carried answers and suggested defaults before confirming. Check the created Matter and its relative dates; conversion does not reuse the Request's age as the date anchor.
 

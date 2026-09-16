@@ -4,7 +4,7 @@ Open the right Document Version, read supported formats in place, and download t
 
 ## Before you start
 
-Staff readers need access to the owning record and the Document. Business Users read permitted Contract and Matter paper, their Request thread attachments and published Knowledge through the Portal; the portal does not grant access to the staff Documents repository or a Contract's full Version history.
+Staff readers need access to the owning record and the Document. Business Users read permitted Contract and Matter paper, including earlier Versions, their Request and comment attachments, and published Knowledge through the Portal. The Portal does not grant access to the staff Documents repository.
 
 ## Read a managed Document
 
@@ -39,6 +39,8 @@ A failed original download is different from a failed preview. Reopen the record
 
 ## Read files in the Business Portal
 
-On your own Request thread, select a Request or comment attachment to download it. Only files within that thread's permitted audience are available. Follow [Request updates](follow-request.md) for supplying another file; an attachment is not a Version-history control.
+On a Contract or Matter in the Portal, use its **Documents** section. Select a Document name to read its current Version in the reader, or use the download button beside it. Select **… earlier versions** to list earlier Versions, then select a filename to read that Version. Archived Documents and Documents outside your audience are not listed.
+
+On your own Request, select a file under **Attachments** to download it. In a conversation, select a comment attachment name to open its preview, and select **Download** for the original. If **Preview unavailable. You can download the original file.** appears, use **Download**. Only files within that thread's permitted audience are available. Follow [Request updates](follow-request.md) for supplying another file; an attachment is not a Version-history control.
 
 Open [Knowledge shared with the business](portal-knowledge.md) for published guidance. Its primary Document is listed first when available. Use **Download** beside a listed file to read its current Version outside the portal; this page has no in-app Document preview or Version-history picker. An unpublished or archived item, or an item whose audience changed, may no longer be available. Ask Legal about the missing material rather than trying the staff record's address.

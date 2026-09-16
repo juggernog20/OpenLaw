@@ -1,0 +1,18 @@
+{
+  "kind": "compatibility-extra-check",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "environment": "openlaw-docs-41255c61-sign-r2",
+  "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+  "startedAt": "2026-09-16T18:01:32.606Z",
+  "steps": [
+    {
+      "role": "legal_team_member",
+      "actor": "Nadia Haddad",
+      "method": "browser-walkthrough",
+      "expected": "In Polling mode, the note under a live row still says that status arrives by webhook; the note is absent with no live round",
+      "result": "pass",
+      "actual": "Connector updateMode polling, enabled true. C-38: note count before sending 0; send answered 201; after the Out for signature row rendered, note count 1; after reload 1; void answered 200; after the Voided row rendered, note count 0. Note text: \"Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active.\""
+    }
+  ],
+  "finishedAt": "2026-09-16T18:01:33.961Z"
+}

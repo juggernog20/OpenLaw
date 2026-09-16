@@ -1,0 +1,75 @@
+{
+  "batch": "DOC-029",
+  "round": 2,
+  "group": "operator-lifecycle",
+  "author": "DOC-029r2 source-review author agent (operator-lifecycle)",
+  "reviewer": "DOC-029r2 source-review author agent (operator-lifecycle)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T17:51:47Z",
+  "method": "source-inspection",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "scopeNote": "Source reading only. This agent ran no walkthrough, lab, or container operation, and changed no catalog status or evidence file. The review read the app diff 3fa407e3..57e77e38 (commits 1ea249dd, 2b6d167f, 6d34ac59, e3800b43, d64309f5, 57e77e38) and the non-app deployment files that changed in the same range (.env.example, docs/DEPLOYMENT.md, docs/user-guides/install.md). git diff --quiet confirmed that packages/db, compose.yml, Dockerfile, services, apps/worker, apps/api/src/index.ts, apps/api/src/auth, apps/api/src/lib/mailer.ts and apps/api/src/modules/onboarding did not change in that range.",
+  "upgradePair": {
+    "baseline": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+    "baselineBasis": "The starting build that round 1 used for V-C46. git merge-base --is-ancestor confirms it is an ancestor of 57e77e38.",
+    "candidate": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "migrationPathFinding": "No file under packages/db changed between 3fa407e3 and 57e77e38, so the migration list, journal and reconcileHomeBranch are the same as in round 1. From d1d098ba the app must still log 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations' first. No new migration runs."
+  },
+  "articles": [
+    {
+      "articleId": "upgrade",
+      "previousContentSha256": "4ef9d09163a7db9453fdbf3a237aad580c345b3461d8c02ad2f74d1a47d2cd6d",
+      "contentSha256": "8ede534213fe2e4e33beef06f32b8da1d0d54327d37ef593c9136dd0ed3655cc",
+      "result": "corrected",
+      "classification": "Supported-version change. The article now names the candidate revision 57e77e38 and checks out that revision, so an operator action changed. The app diff changed no upgrade behavior: no migration, startup check, image layout or stored-configuration format changed. The existing V-C46 evidence records 3fa407e3 and content hash 4ef9d091. A compatibility review cannot carry it, because the content hash changed. Rerun the V-C46 container-operation walkthrough from d1d098ba to 57e77e38 before the article is verified on this build.",
+      "sources": [
+        "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+        "git log --oneline 3fa407e3a846559914aa1a63249741f30cfb4f69..57e77e386be31b2a319f7143dd54d00123e65efe",
+        "docs/user-guides/upgrade.md",
+        "docs/user-guides/install.md",
+        "docs/DEPLOYMENT.md",
+        ".env.example",
+        "compose.yml",
+        "Dockerfile",
+        "packages/db (unchanged in range)",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/router.tsx",
+        "packages/shared/src/logo.ts",
+        "docs/documentation/evidence/upgrade.json",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review.json",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.json"
+      ],
+      "corrections": [
+        {
+          "where": "Before you start (candidate revision) and Prepare the target step 2 (git checkout)",
+          "before": "The candidate and checkout target is 3fa407e3a846559914aa1a63249741f30cfb4f69.",
+          "after": "The candidate and checkout target is 57e77e386be31b2a319f7143dd54d00123e65efe. The starting build stays d1d098ba9f4ba6557a542857d530446b76b1847c.",
+          "sources": [
+            "Batch instruction: install.md and upgrade.md name the round 2 candidate revision",
+            "git merge-base --is-ancestor d1d098ba 57e77e38"
+          ]
+        }
+      ],
+      "confirmed": [
+        "The startup log line 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations' is still correct from d1d098ba, because packages/db did not change.",
+        "compose.yml and Dockerfile did not change, so the app still runs migrations at boot, the worker still starts after the app, and OPENLAW_BUILD_COMMIT with the per-revision tags from install.md still builds without recreating running containers. Postgres stays postgres:16.",
+        "SMTP is now entered as discrete fields (server, port, security, authentication, sender). smtpSettingsToStorage writes the same encrypted smtpUrl and smtpFrom columns, the legacy smtpUrl/smtpFrom body is still accepted, and mailer.ts did not change. A relay saved on the starting build therefore still sends, and 'a test email through the saved relay' stays a valid check. Only the failure reason texts changed; the article does not quote them.",
+        "welcomeLoader still redirects to / when onboarding is completed, and apps/api/src/modules/onboarding did not change, so an upgraded instance is not sent back into the Welcome to OpenLaw wizard. The new shouldRevalidate rule only keeps the wizard on its URL step.",
+        "The sign-in screen now reads the public GET /api/v1/org/branding route and shows the organization name and logo. A failed branding request does not block sign-in. Step 2 'Sign in through the normal origin' needs no change.",
+        "The logo limit rose to 5 MB decoded. It changes no stored format; existing logos stay valid under the larger limit.",
+        "The .env.example and docs/DEPLOYMENT.md changes redefine BASE_URL as a browser-facing origin that can be private, and add a private VM overlay for new installs. The article already says to keep existing deployment settings unchanged, so it needs no new step.",
+        "The other commits change Settings list editing (explicit Save and Cancel), locked default Field display, and muted archived-user styles. They change no upgrade action or result.",
+        "docs/DEPLOYMENT.md still documents no supported downgrade. Restoring the pre-upgrade backup into a separate empty target with the old image stays the recovery path.",
+        "Prettier --check passes on the corrected article. Only the two revision strings changed."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": []
+}

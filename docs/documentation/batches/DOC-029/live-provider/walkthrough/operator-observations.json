@@ -1,0 +1,56 @@
+{
+  "phase": "operator",
+  "reviewer": "DOC-029 independent live-provider walkthrough agent",
+  "reviewerKind": "agent",
+  "lab": "openlaw-docs-41255c61-live",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "note": "Sanitized. The agent listed environment variable names only and compared the credential key by hash equality without printing a value or a hash. Log checks print counts and message names only.",
+  "observedAt": "2026-09-16T15:38:00Z",
+  "steps": [
+    {
+      "id": "O01",
+      "articles": ["configure-signing", "configure-analysis"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check that the app and worker hold the same credential encryption key",
+      "actual": "Both the app and worker containers set OPENLAW_SECRET_KEY and OPENLAW_SECRET_KEY_PREVIOUS. The OPENLAW_SECRET_KEY value is not empty and is the same in both containers (compared by hash equality, no value or hash printed). No provider credential is set as an environment variable (no AI_, DOCUSIGN or OPENROUTER variable). This agrees with deployment-configuration.md: provider credentials are runtime Settings, and both processes need the same key.",
+      "result": "pass"
+    },
+    {
+      "id": "O02",
+      "articles": ["configure-analysis"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check that both the app and worker reach the AI provider",
+      "actual": "The app answered Test connection (Connection successful.) and Load models (444 OpenRouter models), so the app reached openrouter.ai. The worker log has 'contract analysis finished' at 15:30:01Z, 15:30:18Z, 15:32:39Z and 15:34:03Z, and each run finished ready with deepseek/deepseek-v4.1-flash, so the worker also reached the provider. No proxy variable is set in either container; the lab uses direct outbound access.",
+      "result": "pass"
+    },
+    {
+      "id": "O03",
+      "articles": ["configure-signing"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the Polling reconciliation sweep and outbound DocuSign access",
+      "actual": "The worker logs 'the scheduled reconciliation sweep finished' every 5 minutes (15:00, 15:05, ... 15:35). Before the Envelope was sent it scanned 0 Envelopes. The app reached DocuSign Demo for Test connection (Connected to OpenLaw.). Worker access to DocuSign is proven only by the round trip in walkthrough-c42-send.json.",
+      "result": "pass"
+    },
+    {
+      "id": "O04",
+      "articles": ["configure-signing", "configure-analysis"],
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check that the app and worker logs do not contain provider secrets",
+      "actual": "Since 15:00Z the app log has 5509 lines and the worker log 19 lines. Counts of 'sk-or-', 'PRIVATE KEY' and 'bearer ' are 0 in both. Earlier app error lines come from the author's credential-free checks with fictional values (unreadable RSA key, refused webhook delivery, closed loopback endpoint) and one DocuSign credential refusal at about 15:16Z before the user's final save; they name the refusal, not a secret.",
+      "result": "pass"
+    },
+    {
+      "id": "O05",
+      "articles": ["configure-analysis"],
+      "role": "operator",
+      "method": "source-inspection",
+      "action": "Check the article's operator facts against source",
+      "actual": "Load models runs in the app route POST /ai-connector/models and uses the stored key only for the same destination. Test connection runs provider.probe() in the app. Contract analysis runs in the worker. POST /ai-connector/disable and /enable change only disabledAt, so turning the switch off and on does not touch the stored key. The prompt Escape handler reverts the draft and then blurs the input, and the blur handler saves the stale draft (apps/web/src/components/ai-field-prompts-card.tsx); see issue #887.",
+      "result": "pass"
+    }
+  ]
+}

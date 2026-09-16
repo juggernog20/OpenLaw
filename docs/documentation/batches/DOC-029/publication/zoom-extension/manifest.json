@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "DOC-029 zoom probe",
+  "version": "1.0",
+  "description": "Sets real browser zoom for the publication review. Test use only.",
+  "permissions": ["tabs"],
+  "background": { "service_worker": "worker.js" }
+}

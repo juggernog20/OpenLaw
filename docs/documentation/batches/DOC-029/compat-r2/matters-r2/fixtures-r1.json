@@ -1,0 +1,71 @@
+{
+  "fieldRequired": {
+    "id": "01a0ab58-8a3b-76ae-a777-51a3eb9fd4cf",
+    "slug": "doc_029r2_matters_required_note",
+    "displayName": "DOC-029r2 matters required note"
+  },
+  "fieldOptional": {
+    "id": "01a0ab58-8a42-7493-a385-ed80e64e7929",
+    "slug": "doc_029r2_matters_optional_note",
+    "displayName": "DOC-029r2 matters optional note"
+  },
+  "fieldEntity": {
+    "id": "01a0ab58-8a4a-729a-82e0-b22665a88d2f",
+    "slug": "doc_029r2_matters_entity",
+    "displayName": "DOC-029r2 matters Entity"
+  },
+  "fieldPerson": {
+    "id": "01a0ab58-8a50-7a10-bbd0-70c58ef88e24",
+    "slug": "doc_029r2_matters_person",
+    "displayName": "DOC-029r2 matters person"
+  },
+  "fieldNumber": {
+    "id": "01a0ab58-8a57-746f-90ba-628bfcc618b4",
+    "slug": "doc_029r2_matters_retype_number",
+    "displayName": "DOC-029r2 matters retype number"
+  },
+  "typeMain": {
+    "id": "01a0ab58-8a62-7391-af5d-5f7b5e6b1596",
+    "displayName": "DOC-029r2 matters type"
+  },
+  "typeRetype": {
+    "id": "01a0ab58-8a9c-7b31-9ef9-ad1b143b9d80",
+    "displayName": "DOC-029r2 matters retype"
+  },
+  "templateAlpha": {
+    "id": "01a0ab58-8ab6-7334-9c57-7ef69c45989d",
+    "name": "DOC-029r2 matters alpha playbook",
+    "titlePrefix": "DOC-029r2 alpha review -"
+  },
+  "templateBeta": {
+    "id": "01a0ab58-8ad1-79b7-95f8-54358cff9810",
+    "name": "DOC-029r2 matters beta playbook",
+    "titlePrefix": "DOC-029r2 beta review -"
+  },
+  "templateGamma": {
+    "id": "01a0ab58-8aed-750c-be5d-881fabcfb233",
+    "name": "DOC-029r2 matters gamma playbook",
+    "titlePrefix": "DOC-029r2 gamma review -"
+  },
+  "entity": {
+    "id": "01a0ab53-1ac4-7a9a-9e49-88313121881b",
+    "legalName": "Helix Analytics, Inc."
+  },
+  "createdAt": "2026-09-16T17:51:41.832Z",
+  "teardown": {
+    "at": "2026-09-16T17:56:09.087Z",
+    "earlier": {},
+    "results": {
+      "templateAlpha": 200,
+      "templateBeta": 200,
+      "templateGamma": 200,
+      "typeMain": 200,
+      "typeRetype": 200,
+      "fieldRequired": 200,
+      "fieldOptional": 200,
+      "fieldEntity": 200,
+      "fieldPerson": 200,
+      "fieldNumber": 200
+    }
+  }
+}

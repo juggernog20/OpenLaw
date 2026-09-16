@@ -1,0 +1,182 @@
+{
+  "batch": "DOC-029",
+  "round": 2,
+  "group": "operator-install",
+  "reviewer": "DOC-029r2 source-review author agent (operator-install)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T17:52:02Z",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "method": "source-inspection",
+  "diffReviewed": [
+    "git log --oneline 3fa407e3a846559914aa1a63249741f30cfb4f69..57e77e386be31b2a319f7143dd54d00123e65efe (1ea249dd, 2b6d167f, 6d34ac59, e3800b43, d64309f5, 57e77e38)",
+    "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+    "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- compose.yml Dockerfile .env.example services scripts README.md docs/DEPLOYMENT.md docs/user-guides/install.md docs/user-guides/deployment-configuration.md"
+  ],
+  "note": "Source review only. No walkthrough ran. No catalog status, evidence file, or edition.json entry changed. Both articles changed bytes in this round. The merge of dev brought in commit d64309f5, which added a private-VM procedure to both articles. That text changes prerequisites and actions, so it is not a copy-only change. Neither article can keep its round 1 evidence through a compatibility review, because verifyArticleEvidence in scripts/documentation/compiler.mjs requires compatibilityReview.contentSha256 to equal the evidence contentSha256. An independent agent must run V-C44 and V-C45 with container-operation on images built from 57e77e38 against the new bytes.",
+  "articles": [
+    {
+      "articleId": "install",
+      "author": "DOC-029r2 source-review author agent (operator-install)",
+      "reviewer": "DOC-029r2 source-review author agent (operator-install)",
+      "reviewerKind": "agent",
+      "reviewedAt": "2026-09-16T17:52:02Z",
+      "method": "source-inspection",
+      "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "evidenceContentSha256": "901abfbaf0673b8ded65013bb43d10bc65fcbc6a087073ea376377c0cfadd2fe",
+      "mergedContentSha256": "dd2f2540a4b31f1be993b75d6854028acbe7d46c3cabcfcb99c5a00d8a99ec9a",
+      "contentSha256": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc",
+      "result": "corrected",
+      "classification": "prerequisite and build change. The merge from dev added a private-VM prerequisite and a pointer to the private Compose overlay (d64309f5). This round moves the documented revision to the candidate build and limits the private-VM step to private installations. The round 1 V-C44 walkthrough does not cover these bytes. Rerun V-C44 with container-operation at 57e77e38.",
+      "sources": [
+        "compose.yml (app ports \"${PORT:-3000}:3000\", in-container PORT 3000; unchanged in the diff)",
+        "Dockerfile, services/doc-engine/Dockerfile (unchanged in the diff)",
+        ".env.example (BASE_URL comment now says browser-facing origin that may be private; no variable added or removed)",
+        "docs/DEPLOYMENT.md (new Private company VM section)",
+        "apps/api/src/modules/onboarding/routes.ts (POST /onboarding/complete still returns 409 'Configure outbound email before finishing instance setup.'; unchanged in the diff)",
+        "apps/api/src/app.ts (/readyz; @fastify/static serves index.html, so one origin serves web and API)",
+        "apps/web/src/routes/setup.tsx (Set up OpenLaw; unchanged in the diff)",
+        "docs/user-guides/deployment-configuration.md#deploy-on-a-private-vm (anchor exists)"
+      ],
+      "infrastructureDiff": "3fa407e3..57e77e38 does not change compose.yml, the Dockerfiles, or any .env variable name. .env.example changes only the BASE_URL comment. scripts/dev-hot.sh adds --smtp-in-app for local development only. The app diff changes the welcome wizard email step to discrete SMTP fields (2b6d167f), sign-in branding (1ea249dd), Settings list rows (6d34ac59, e3800b43), and archived-user styling (57e77e38). None of those changes an install step.",
+      "corrections": [
+        {
+          "where": "Before you start (paragraph 3), Prepare the source step 1, and the .env example in step 3",
+          "before": "Application revision 3fa407e3a846559914aa1a63249741f30cfb4f69 (prose, git checkout, and OPENLAW_BUILD_COMMIT).",
+          "after": "Application revision 57e77e386be31b2a319f7143dd54d00123e65efe in all three places.",
+          "sources": [
+            "task candidate build identity; docs/user-guides/upgrade.md already names 57e77e386be31b2a319f7143dd54d00123e65efe"
+          ]
+        },
+        {
+          "where": "Before you start (paragraph 2)",
+          "before": "Follow [Deploy on a private VM](deployment-configuration.md#deploy-on-a-private-vm) to arrange DNS, certificates, and restricted port bindings before starting the stack.",
+          "after": "For a private installation, follow [Deploy on a private VM](deployment-configuration.md#deploy-on-a-private-vm) to arrange DNS, certificates, and restricted port bindings before you start the stack.",
+          "sources": [
+            "docs/DEPLOYMENT.md (the private VM path is one option; the Caddy example with automatic HTTPS stays the default path)",
+            "docs/user-guides/install.md line 65 (the private overlay applies only 'For a private VM')"
+          ],
+          "reason": "The merged sentence told every team deployment to follow the private-VM procedure. A deployment with a publicly resolvable hostname does not use compose.private.yml or a corporate certificate."
+        }
+      ],
+      "confirmed": [
+        "The base Compose services are still app, worker, postgres, and doc-engine.",
+        "The base app port mapping is \"${PORT:-3000}:3000\" with no host address, so Docker publishes it on all host interfaces. The line 65 warning is correct.",
+        "Compose still refuses to start without AUTH_SECRET and OPENLAW_SECRET_KEY, and .env.example still leaves both empty.",
+        "The welcome wizard still cannot finish without a configured mailer. The email step now collects server, port, connection security, authentication, and sender, and the API stores them as the same encrypted relay URL and From address (apps/api/src/modules/email-settings/config.ts smtpSettingsToStorage). The install.md sentence about email stays true.",
+        "The first page title 'Set up OpenLaw' is unchanged.",
+        "Links to upgrade.md, deployment-configuration.md, deployment-configuration.md#serve-the-intended-origin, deployment-configuration.md#deploy-on-a-private-vm, first-run.md, backup-and-restore.md, and operator-troubleshooting.md resolve."
+      ]
+    },
+    {
+      "articleId": "deployment-configuration",
+      "author": "DOC-029r2 source-review author agent (operator-install)",
+      "reviewer": "DOC-029r2 source-review author agent (operator-install)",
+      "reviewerKind": "agent",
+      "reviewedAt": "2026-09-16T17:52:02Z",
+      "method": "source-inspection",
+      "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "evidenceContentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468",
+      "evidenceAppCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+      "round1ContentSha256": "989452ae353446b1157c3294d36f72ea0522c902d19dfce94a999a5effc6225d",
+      "mergedContentSha256": "76dc223896adfe988720be6a41e68b4666583df4149f154b6a96b9ee0ba88371",
+      "contentSha256": "8fbdc418a5a9497a39cfb1e1b93ec42d139cb2e5cc30e3d9209b8891c78ed2ae",
+      "result": "corrected",
+      "classification": "behavior and procedure change. The merge from dev added the 'Deploy on a private VM' section (compose.private.yml with ports !override, loopback binding, corporate certificate Caddyfile, SSO callback, outbound-only email and Polling) and renamed 'public origin' to 'browser-facing origin' (d64309f5). The welcome wizard email step now collects discrete SMTP fields (2b6d167f). The round 1 V-C45 walkthrough does not cover these bytes. Rerun V-C45 with container-operation at 57e77e38, and include the private overlay: config --quiet with compose.private.yml, the app published on 127.0.0.1:3000 only, and no listener on other host addresses.",
+      "sources": [
+        "compose.yml (app ports \"${PORT:-3000}:3000\"; app environment PORT 3000 and HOST 0.0.0.0; BASE_URL shared by app and worker through x-openlaw-environment)",
+        ".env.example (BASE_URL comment)",
+        "docs/DEPLOYMENT.md (Private company VM, BASE_URL row, reverse proxy contract, Email section)",
+        "apps/api/src/app.ts (@fastify/static serves the web build and index.html from the app origin)",
+        "apps/api/src/auth/instance.ts (sso plugin redirectURI '/sso/callback' under the /api/auth prefix)",
+        "apps/api/src/modules/email-settings/config.ts (SmtpSettingsSchema: host, port, security starttls/tls/none, authentication none/password, senderName, senderEmail; smtpSettingsToStorage writes smtpUrl with credentials and smtpFrom)",
+        "apps/api/src/modules/email-settings/routes.ts (PUT still refused with 409 while SMTP_URL pins the environment; accepts discrete fields or legacy smtpUrl/smtpFrom)",
+        "apps/api/src/modules/onboarding/routes.ts (email step settingsPath null; completion still 409 without a configured mailer)",
+        "apps/api/src/lib/mailer.ts (unchanged in the diff)",
+        "apps/api/src/modules/auth/routes.ts and apps/api/src/auth/instance.ts (unchanged in the diff; invitation still answers 201 without SMTP_FROM, GitHub issue #889 open)",
+        "apps/web/src/routes/settings.tsx (new 'Return to setup' link only; no email Settings page added)",
+        "packages/db/src/schema/org.ts (smtp_url is encryptedText; smtp_from is plain text)"
+      ],
+      "corrections": [
+        {
+          "where": "Preserve and rotate encryption keys, paragraph 2",
+          "before": "`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP URL, the SSO client secret, and the AI-provider key.",
+          "after": "`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP server address and credentials, the SSO client secret, and the AI-provider key.",
+          "sources": [
+            "apps/api/src/modules/email-settings/config.ts (the wizard no longer shows a relay URL; smtpSettingsToStorage builds the URL from server, port, security, username, and password)",
+            "packages/db/src/schema/org.ts (smtp_url encryptedText, smtp_from not encrypted)"
+          ],
+          "reason": "Since 2b6d167f an Administrator never sees or enters an SMTP URL. The encrypted column holds the server, port, security flags, and credentials. The sender address stays unencrypted, so the sentence names only what the key protects."
+        }
+      ],
+      "confirmed": [
+        "The #serve-the-intended-origin and #deploy-on-a-private-vm anchors exist. The article title and scope are unchanged.",
+        "BASE_URL is one value shared by app and worker; up -d recreates both with a changed .env, and restart does not.",
+        "The private overlay path is sound against compose.yml: the base mapping has no host address, so a plain added loopback mapping would keep the all-interfaces mapping; ports: !override replaces the list. Docker documents !override for Compose 2.24.4 and later. The app still listens on container port 3000, so the fixed 127.0.0.1:3000:3000 mapping matches the proxy upstream 127.0.0.1:3000.",
+        "compose.private.yml appended after compose.operator.yml keeps the image selection from compose.operator.yml.",
+        "The production app serves the web interface and API from one origin; port 5173 appears only in the development loop.",
+        "The OIDC callback is BASE_URL + /api/auth/sso/callback.",
+        "The Caddyfile uses valid directives: global auto_https disable_redirects, site bind, tls with certificate and key files, header, reverse_proxy. Supplied certificate files stop automatic issuance for that site.",
+        "The welcome wizard is still the only in-app place to save the relay; onboarding email settingsPath stays null, and settings.tsx adds only a 'Return to setup' link.",
+        "SMTP_URL still pins the environment and a set SMTP_URL without SMTP_FROM still leaves the mailer unconfigured (mailer.ts unchanged).",
+        "The round 1 integration correction about invitations without SMTP_FROM still describes the code. Issue #889 is open.",
+        "The storage, database, file-limit, and key-rotation sections have no source change in 3fa407e3..57e77e38.",
+        "The logo limit change in 1ea249dd (5 MB decoded image) does not need a proxy note: the article already requires a proxy body limit at least as large as MAX_UPLOAD_MB, default 100 MB."
+      ],
+      "notCheckedBySource": [
+        "Real internal DNS, VPN routing, firewall and IPv6 rules, corporate CA trust, and DNS-01 issuance. A walkthrough can check the loopback binding and a supplied-certificate Caddy site, but not an organization's network."
+      ]
+    }
+  ],
+  "sharedFileRequests": [
+    "docs/documentation/evidence/install.json records contentSha256 901abfba... at appCommit 3fa407e3. docs/documentation/evidence/deployment-configuration.json still records contentSha256 b661e8eb... at appCommit 67dbe788, so round 1 did not record a passing V-C45 for it. The walkthrough agent must record the new hashes (install ce45a62c..., deployment-configuration 8fbdc418...) and appCommit 57e77e38 after its run.",
+    "docs/documentation/edition.json publication.articles lists stale contentSha256 values for install and deployment-configuration. Its owner should refresh them from the final bytes.",
+    "docs/user-guides/upgrade.md already names 57e77e386be31b2a319f7143dd54d00123e65efe (lines 9 and 28). No change requested."
+  ],
+  "corrections": [
+    {
+      "correctionRound": 1,
+      "reviewer": "DOC-029r2 source-review author agent (operator-install)",
+      "reviewerKind": "agent",
+      "reviewedAt": "2026-09-16T19:10:00Z",
+      "method": "source-inspection",
+      "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "articleId": "deployment-configuration",
+      "trigger": "Independent walkthrough failure, step 'Configure outbound email and providers: SMTP_URL set, SMTP_FROM unset, request a password-setup link', kind doc-error.",
+      "previousContentSha256": "8fbdc418a5a9497a39cfb1e1b93ec42d139cb2e5cc30e3d9209b8891c78ed2ae",
+      "contentSha256": "e50a783f16931ee6132b052fd520ee348b6dd73952cdf687e3cdce31366cd622",
+      "result": "corrected",
+      "corrections": [
+        {
+          "where": "Configure outbound email and providers, paragraph 1, sentences 4 and 5",
+          "before": "If the effective source does not have both a relay URL and a From address, the test email, sign-in link requests, and password-setup requests report that email is unavailable. An Administrator also cannot finish the welcome wizard in that state.",
+          "after": "If `SMTP_URL` is set and `SMTP_FROM` is not, OpenLaw cannot send email. The email step of the welcome wizard shows a warning that the environment sets `SMTP_URL` but not `SMTP_FROM`, and it has no **Send test email** button. An Administrator cannot finish the welcome wizard in that state. The sign-in page does not show **Set up or reset your password** or **Email me a sign-in link**. The API also refuses test email, sign-in link, and password-setup requests, and no email reaches the relay.",
+          "reason": "The three refusals do not share one message, and the password-setup refusal has no readable message. The UI never offers these requests in this state. The new text names what an operator sees: the wizard warning, the missing buttons, and no delivery.",
+          "sources": [
+            "apps/api/src/modules/email-settings/routes.ts:171-176 (POST /email-settings/test: 502 'The test email could not be sent. SMTP is not configured — save a relay first.' with expose true)",
+            "apps/api/src/modules/auth/routes.ts:1156-1160 and apps/api/src/auth/instance.ts:177-181 (sign-in link: 403 'Sign-in links are unavailable: this instance cannot send email. Contact your administrator.')",
+            "apps/api/src/modules/auth/authentication-policy-routes.ts:139-140 (POST /auth/password-setup: httpError 503 'Email is not configured. Contact your administrator.' without expose)",
+            "apps/api/src/app.ts:453-462 (5xx without expose: title 'Internal server error', detail omitted)",
+            "apps/api/src/modules/auth/routes.ts:341-357 (GET sign-in methods: emailConfigured is mailer.configured)",
+            "apps/web/src/routes/login.tsx:61 and 376-390 ('Set up or reset your password' needs emailConfigured; 'Email me a sign-in link' needs magicLink and emailConfigured)",
+            "apps/web/src/routes/welcome.tsx:1416-1441 (source env without fromAddress: warning 'The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.'; the Send test email button renders only for source app at 1443-1462)",
+            "apps/web/src/routes/welcome.tsx:466-470 and 2170 (finish returns to the email step; Next disabled on the email step without email)",
+            "apps/api/src/modules/onboarding/routes.ts:203 (POST /onboarding/complete 409 without a configured mailer)"
+          ]
+        }
+      ],
+      "confirmed": [
+        "The walkthrough observations match the source at 57e77e38: test email 502 with the SMTP message, sign-in link 403 with the 'Sign-in links are unavailable' message, password setup 503 with title 'Internal server error' and no detail.",
+        "The sign-in page hides both links in this state because GET sign-in methods returns emailConfigured false.",
+        "The invitation sentences that follow still match the source (invitation answers 201 without SMTP_FROM, issue #889 open)."
+      ],
+      "productObservations": [
+        "POST /api/v1/auth/password-setup throws httpError(503, 'Email is not configured. Contact your administrator.') without { expose: true }, so the client gets only 'Internal server error'. The sign-in page hides the entry point in this state, so the documented procedure is not blocked. The article no longer quotes a message for this refusal."
+      ],
+      "walkthroughRequest": "Rerun V-C45 at 57e77e38 against contentSha256 e50a783f... . For this step, set SMTP_URL without SMTP_FROM, recreate app and worker, and check: the wizard email step warning and no Send test email button, Next disabled, the sign-in page without the two links, API refusals, and an empty Mailpit."
+    }
+  ]
+}

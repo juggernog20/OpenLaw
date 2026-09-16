@@ -1,15 +1,15 @@
 {
   "articleId": "contract-tasks-and-dates",
-  "contentSha256": "05701bf7e4daa6099cca5ced8e61e360dbef0641fd53aa93c031bbcb29a59d67",
-  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
-  "environment": "dev integration source review",
-  "author": "Codex integration author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "contentSha256": "a277d41d51e94aa2c850bebfc96f7e6e107c287cda273c3c302f7ab21e74a9f2",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-work",
+  "author": "Codex integration author; corrections by DOC-029 source-review author agent (contracts-b)",
+  "technicalReviewer": "DOC-029 source-review author agent (contracts-b)",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (contracts-b, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "blocked",
+  "verifiedAt": "2026-09-16T15:50:47.488Z",
+  "status": "pass",
   "sources": [
     "CONTEXT.md",
     "apps/web/src/components/contracts/tasks-card.tsx",
@@ -18,7 +18,20 @@
     "apps/web/src/components/home/tasks-card.tsx",
     "apps/web/src/components/home/dates-card.tsx",
     "apps/api/src/modules/contract-tasks/routes.ts",
-    "apps/api/src/modules/contract-key-dates/routes.ts"
+    "apps/api/src/modules/contract-key-dates/routes.ts",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/components/tasks/task-dialog.tsx",
+    "apps/web/src/components/tasks/completed-toggle.tsx",
+    "apps/web/src/components/key-date-reminder-fields.tsx",
+    "apps/web/src/lib/key-dates.ts",
+    "apps/web/src/lib/comments.ts",
+    "apps/web/src/components/contracts/contracts-columns.tsx",
+    "apps/web/src/components/portal/record-work.tsx",
+    "apps/api/src/modules/comments/audience.ts",
+    "apps/api/src/lib/key-date-reminders.ts",
+    "apps/api/src/lib/notifications/audience.ts",
+    "apps/api/src/pipeline/morning-round.ts",
+    "apps/api/src/lib/next-deadline.ts"
   ],
   "scenarios": [
     {
@@ -26,39 +39,75 @@
       "coverage": ["C19"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Signed-in fictional role in the shared work lab.",
+        "A reviewer-created NDA Contract with the acting role as Legal Owner and the other staff role and a Business User on the team.",
+        "Ravi Menon signed in as a Business User by a new magic link from the lab's Mailpit."
+      ],
       "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "actual": "15 recorded steps passed for this role. The picker offered: Unassigned, DODaniel Okafor, NHNadia Haddad, Add someone to the team… (no Ravi Menon). Add someone to the team… -> Priya Raman showed \"This person will join the team, gain access to this record, and be assigned this task.\" and \"Team membership and assignment are saved when you save the task.\"; Use this person set the Assignee to \"PRPriya Raman\". Cancel: no Task saved and Priya Raman is not on the team. Row: \"DOC-029 contracts-b C19 review notice legal_team_member 1789573440047Due Oct 6PRPriya Raman\". Task assigned to Priya Raman, due 2026-10-06; Priya Raman joined the Contract team on save. Task details shows the initial note and the attached PDF; the comment visibility is working_team. With one comment POST answered 503 by the reviewer's route, the dialog said \"Task saved. Your note and attachments could not be added. Please try again.\" and offered Retry note & attachments; 1 Task existed. After the retry there is 1 Task named \"DOC-029 contracts-b C19 retry legal_team_member 1789573440047\" with 1 comment; the dialog closed. Count \"0 of 2 done\" -> \"1 of 2 done\" after completion; the row left the list; Show completed showed it checked; selecting the checkbox again reopened it (\"0 of 2 done\", isDone false). Title click opened Task details; Save persisted \"DOC-029 contracts-b C19 empty legal_team_member 1789573440047 edited\". The row actions menu offered Edit task, Remove task; Edit task opened the same details. Remove task on the empty Task answered 200 and removed it. Remove task on the Task with a note answered 409 (\"Tasks20 of 2 doneShow completedThis Task has a conversation on it, so it cannot be removed.\") and kept it; after the comment was deleted (200) Remove task still answered 409 and the Task stayed. Row picker -> Add someone to the team… -> Ines Duarte: \"This person will join the team, gain access to this record, and be assigned this task.\"; Add to team and assign made Ines Duarte the assignee and a team member. Choosing Unassigned cleared the assignee; Ines Duarte is still on the team. Tasks section: 0 draggable elements and 0 move/reorder buttons. Task details Audience group reads \"AudienceLegal onlyWorking team\". The Contract's own conversation does not contain the Task note. \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 and -1 left Add lead time disabled; 0 enabled it. After adding 45 and 30 (Add lead time enabled for 30): \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (30 appears once). Adding 60 then Remove left \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\". The recipient checkboxes include Daniel Okafor and not Ravi Menon. Saved row \"Oct 26DOC-029 price review legal_team_member 1789573440047Fictional price review window.Key date\" with one actions button. Cancel kept the event; Save changed it to \"DOC-029 price review legal_team_member 1789573440047 saved\"; Remove date (no confirmation dialog) removed \"remove me\". Rows in order: Sep 26DOC-029 near check legal_team_member 1789573440047Key date | Oct 26DOC-029 price review legal_team_member 1789573440047 savedFictional price review window.Key date | Jul 13, 2027Current term expiresDerived | Sep 6DOC-029 past check legal_team_member 1789573440047Key date. 1 derived row(s), each without actions. Saved selection before: \"reminderRecipientIds\":[\"01a0aaad-746c-7e44-a84c-5947852cfcf4\"]. After Daniel Okafor left the team the dialog said \"Some selected recipients have left the team and will not be reminded.Use the usual audience\"; Use the usual audience then Save stored \"reminderRecipientIds\":[]. Daniel Okafor was re-added (201). view Default view (previously selected: My commercial desk). With an open Task due 2026-09-13, the C-266 Next deadline cell read \"DOC-029 contracts-b C19 overdue legal_team_member 1789573440047Sep 13 (3 days overdue)\". After the Task was completed it read \"DOC-029 near check legal_team_member 1789573440047Sep 26 (in 10 days)\" (the Key date due 2026-09-26; the review Task is due 2026-10-06, other Key dates and the 2027-07-13 expiry are later). The reviewer re-selected view \"My commercial desk\" afterwards. Home sections: Approvals waiting on you, Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts, Your matters. Home Tasks assigned to you shows the first rows only and did not include it; View all opens My Tasks. My Tasks listed \"DOC-029 contracts-b C19 mine legal_team_member 1789573440047\" and its link opened /contracts/266/tasks. Dates approaching showed only its first rows (\"Dates approaching21View all 21DOC-029 alpha kickoffDOC-029 m…\"); View all opened Your dates, which lists \"DOC-029 near check legal_team_member 1789573440047DOC-029 contracts-b C19 legal_team_member 1789573440047·Key date·Contract C-266Sep 26 (in 10 days)\" -> /contracts/266/key-dates; the link opened /contracts/266/key-dates. Archived: Tasks had 0 Add task buttons and 0 enabled checkboxes; Key dates had 0 Add date buttons and 0 row action buttons; Task and Key date writes answered 409 and 409. After Restore (200) Add task is back. Ravi Menon (Business User, on the team) got 403 for Tasks and 403 for Key dates; opening /contracts/266/tasks landed on /portal without a Tasks section.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/contracts-b/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/contracts-b/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/contracts-b/c19-r1.mjs",
+        "docs/documentation/batches/DOC-029/contracts-b/lib-r1.mjs"
+      ]
     },
     {
       "id": "V-C19",
       "coverage": ["C19"],
       "role": "administrator",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Signed-in fictional role in the shared work lab.",
+        "A reviewer-created NDA Contract with the acting role as Legal Owner and the other staff role and a Business User on the team.",
+        "Ravi Menon signed in as a Business User by a new magic link from the lab's Mailpit."
+      ],
       "expected": "Task and Key date updates persist and affect their distinct supported surfaces. Read-only/archived restrictions and missing recipients do not produce misleading reminder promises. The current Contract Task screen exposes no reorder control; verify that limit rather than crediting an API reorder as a user workflow.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "actual": "15 recorded steps passed for this role. The picker offered: Unassigned, DODaniel Okafor, NHNadia Haddad, Add someone to the team… (no Ravi Menon). Add someone to the team… -> Tom Iwu showed \"This person will join the team, gain access to this record, and be assigned this task.\" and \"Team membership and assignment are saved when you save the task.\"; Use this person set the Assignee to \"TITom Iwu\". Cancel: no Task saved and Tom Iwu is not on the team. Row: \"DOC-029 contracts-b C19 review notice administrator 1789573440047Due Oct 6TITom Iwu\". Task assigned to Tom Iwu, due 2026-10-06; Tom Iwu joined the Contract team on save. Task details shows the initial note and the attached PDF; the comment visibility is working_team. With one comment POST answered 503 by the reviewer's route, the dialog said \"Task saved. Your note and attachments could not be added. Please try again.\" and offered Retry note & attachments; 1 Task existed. After the retry there is 1 Task named \"DOC-029 contracts-b C19 retry administrator 1789573440047\" with 1 comment; the dialog closed. Count \"0 of 2 done\" -> \"1 of 2 done\" after completion; the row left the list; Show completed showed it checked; selecting the checkbox again reopened it (\"0 of 2 done\", isDone false). Title click opened Task details; Save persisted \"DOC-029 contracts-b C19 empty administrator 1789573440047 edited\". The row actions menu offered Edit task, Remove task; Edit task opened the same details. Remove task on the empty Task answered 200 and removed it. Remove task on the Task with a note answered 409 (\"Tasks20 of 2 doneShow completedThis Task has a conversation on it, so it cannot be removed.\") and kept it; after the comment was deleted (200) Remove task still answered 409 and the Task stayed. Row picker -> Add someone to the team… -> Marcus Oyelaran: \"This person will join the team, gain access to this record, and be assigned this task.\"; Add to team and assign made Marcus Oyelaran the assignee and a team member. Choosing Unassigned cleared the assignee; Marcus Oyelaran is still on the team. Tasks section: 0 draggable elements and 0 move/reorder buttons. Task details Audience group reads \"AudienceLegal onlyWorking team\". The Contract's own conversation does not contain the Task note. \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 and -1 left Add lead time disabled; 0 enabled it. After adding 45 and 30 (Add lead time enabled for 30): \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (30 appears once). Adding 60 then Remove left \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\". The recipient checkboxes include Nadia Haddad and not Ravi Menon. Saved row \"Oct 26DOC-029 price review administrator 1789573440047Fictional price review window.Key date\" with one actions button. Cancel kept the event; Save changed it to \"DOC-029 price review administrator 1789573440047 saved\"; Remove date (no confirmation dialog) removed \"remove me\". Rows in order: Sep 26DOC-029 near check administrator 1789573440047Key date | Oct 26DOC-029 price review administrator 1789573440047 savedFictional price review window.Key date | Jul 13, 2027Current term expiresDerived | Sep 6DOC-029 past check administrator 1789573440047Key date. 1 derived row(s), each without actions. Saved selection before: \"reminderRecipientIds\":[\"01a0aaad-7476-705f-9805-48c41b149062\"]. After Nadia Haddad left the team the dialog said \"Some selected recipients have left the team and will not be reminded.Use the usual audience\"; Use the usual audience then Save stored \"reminderRecipientIds\":[]. Nadia Haddad was re-added (201). view Default view (previously selected: Default view). With an open Task due 2026-09-13, the C-284 Next deadline cell read \"DOC-029 contracts-b C19 overdue administrator 1789573440047Sep 13 (3 days overdue)\". After the Task was completed it read \"DOC-029 near check administrator 1789573440047Sep 26 (in 10 days)\" (the Key date due 2026-09-26; the review Task is due 2026-10-06, other Key dates and the 2027-07-13 expiry are later). The reviewer made no view change. Home sections: Approvals waiting on you, Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts, Your matters. Home Tasks assigned to you shows the first rows only and did not include it; View all opens My Tasks. My Tasks listed \"DOC-029 contracts-b C19 mine administrator 1789573440047\" and its link opened /contracts/284/tasks. Dates approaching showed only its first rows (\"Dates approaching35View all 35DOC-029 alpha kickoffDOC-029 m…\"); View all opened Your dates, which lists \"DOC-029 near check administrator 1789573440047DOC-029 contracts-b C19 administrator 1789573440047·Key date·Contract C-284Sep 26 (in 10 days)\" -> /contracts/284/key-dates; the link opened /contracts/284/key-dates. Archived: Tasks had 0 Add task buttons and 0 enabled checkboxes; Key dates had 0 Add date buttons and 0 row action buttons; Task and Key date writes answered 409 and 409. After Restore (200) Add task is back. Ravi Menon (Business User, on the team) got 403 for Tasks and 403 for Key dates; opening /contracts/284/tasks landed on /portal without a Tasks section.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/contracts-b/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/contracts-b/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/contracts-b/c19-r1.mjs",
+        "docs/documentation/batches/DOC-029/contracts-b/lib-r1.mjs"
+      ]
     }
   ],
-  "authorEvidence": [],
   "limitations": [
-    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
-    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
+    "Prerequisite records and some supporting actions used the acting or other staff role's API session: record creation, team changes, the competing expiry write, archiving before the C18 and C19 read-only checks, and the extra Tasks and Key dates for the ordering and Next deadline checks. The actions each article instructs were done in the browser.",
+    "The partial-save case used a reviewer route that answered one comment POST with 503; it proves the dialog's handling, not a real storage outage.",
+    "Reminder email delivery and timing were not exercised; notifications.md owns those rules. Only the saved lead times and recipient selection were checked.",
+    "The shared work lab also carried other agents' records; list, Home and calendar checks searched for this run's own DOC-029 contracts-b records.",
+    "The technical source review is recorded in docs/documentation/batches/DOC-029/contracts-b/technical-review.json.",
+    "Home checks read Tasks assigned to you, My Tasks and the Your dates calendar opened from Dates approaching; the Home sections list only their first rows."
   ],
-  "previousEvidence": "docs/documentation/batches/dev-integration/previous-contract-tasks-and-dates.json",
+  "previousEvidence": {
+    "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+    "contentSha256": "05701bf7e4daa6099cca5ced8e61e360dbef0641fd53aa93c031bbcb29a59d67",
+    "verifiedAt": null
+  },
   "copyOnlyReview": null,
-  "publicationBlockers": [
-    "DOC-025 complete-suite acceptance and DOC-027 publication remain pending; live-provider C42/C43 are blocked under #742. Linked non-provider guides now exist with passing article evidence and remain in catalog review."
-  ],
-  "publicationBlockersBeforeDOC025": [
-    "notifications, roles-and-access and terms-and-renewals are in review; reminder delivery evidence belongs to the notifications guide."
-  ],
-  "publicationBlockerReconciliation": {
-    "reviewer": "Codex DOC-025 evidence audit (agent)",
-    "reviewedAt": "2026-09-08T13:10:20.947051Z",
-    "priorEvidenceCommit": "d6df148c2d6a94fa0b8f053aa5e2494f697c65f5",
-    "summary": "Preserves earlier blocker notes separately and identifies current suite gates. No walkthrough date, build, result or catalog status changed."
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "a277d41d51e94aa2c850bebfc96f7e6e107c287cda273c3c302f7ab21e74a9f2",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-b)) found the article compatible: I inspected the app diff 3fa407e3..57e77e38 and found only Settings, sign-in, first-run and archived-user styling changes, none in the Contract record surfaces this article describes. I replayed the round 1 V-C19 (Tasks, assignee picker, Task conversation, Key dates and reminders, Next deadline, archived refusal) walkthrough for Legal Team Member and Administrator on lab openlaw-docs-41255c61-work2 built from 57e77e38, and every step passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-b.json",
+        "sha256": "7122687e213dbfc245ed3fb3d669dc2960da017bb61e7772a7169d2b7eac6d57"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
   }
 }

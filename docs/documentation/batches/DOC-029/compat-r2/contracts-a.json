@@ -1,0 +1,872 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "contracts-a",
+  "reviewer": "DOC-029r2 compatibility reviewer (contracts-a)",
+  "reviewerKind": "agent",
+  "independence": "The reviewer did not write or correct any of these articles and did not write the round 1 walkthrough script. It changed no article text.",
+  "reviewedAt": "2026-09-16T18:08:54.558Z",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "appDiffCommand": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles",
+  "appDiffFiles": [
+    "apps/api/openapi.json",
+    "apps/api/src/modules/email-settings/config.test.ts",
+    "apps/api/src/modules/email-settings/config.ts",
+    "apps/api/src/modules/email-settings/email-settings.test.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/org/general.test.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/web/src/components/comments/comment-applet.tsx",
+    "apps/web/src/components/contracts/contracts-columns.tsx",
+    "apps/web/src/components/default-fields.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/components/inline-add-form.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/matters/matters-columns.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/components/taxonomy-types-pane.tsx",
+    "apps/web/src/components/user-identity.tsx",
+    "apps/web/src/lib/ai-connector-config.ts",
+    "apps/web/src/lib/field-catalog.ts",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/auth-layout.test.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/routes/set-password.test.tsx",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/web/src/routes/settings-contract-fields.test.tsx",
+    "apps/web/src/routes/settings-contract-fields.tsx",
+    "apps/web/src/routes/settings-contract-statuses.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "apps/web/src/routes/settings-contract-types.test.tsx",
+    "apps/web/src/routes/settings-default-fields.test.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-matter-statuses.test.tsx",
+    "apps/web/src/routes/settings-matter-statuses.tsx",
+    "apps/web/src/routes/settings-matter-types.test.tsx",
+    "apps/web/src/routes/settings-reminders.test.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/welcome.test.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/testing/helpers.tsx",
+    "messages/en-US.json",
+    "packages/api-client/src/schema.ts",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/logo.ts"
+  ],
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-41255c61-work2",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appUrl": "http://127.0.0.1:23301",
+    "mailUrl": "http://127.0.0.1:23401",
+    "seed": {
+      "scale": "light",
+      "randomSeed": 7,
+      "ai": "disabled",
+      "signing": "unconfigured"
+    },
+    "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "containerImages": [
+      {
+        "service": "app",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      },
+      {
+        "service": "doc-engine",
+        "imageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+      },
+      {
+        "service": "mailpit",
+        "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+      },
+      {
+        "service": "postgres",
+        "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+      },
+      {
+        "service": "worker",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      }
+    ]
+  },
+  "replay": {
+    "script": {
+      "path": "batches/DOC-029/compat-r2/contracts-a-r2/replay-r2.mjs",
+      "sha256": "c8c41bcfd640357826fa25253e3a36a40d3c30a392808b3df4c8bf90ac68777b",
+      "adaptedFrom": "batches/DOC-029/contracts-a/walkthrough-r1.mjs",
+      "changes": [
+        "Lab metadata path work to work2 (app 127.0.0.1:23301 and Mailpit 127.0.0.1:23401), and the repository root depth for the new folder.",
+        "Record and fixture names DOC-029 contracts-a to DOC-029r2 contracts-a; output and screenshot names r1 to r2; reviewer label and round.",
+        "Harness only: the Portal magic-link sign-in retries with a fresh link and reads the newest message first. Other groups sign Jonas Weber in on the same lab, and the first attempt reached /auth/link-expired. No article step or assertion changed."
+      ]
+    },
+    "runs": [
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-a-r2/replay-r2.json",
+        "sha256": "84689b35ae26fdfa2f0582dc3f7f6e95cbeeb2f76a43e4fa46adc9a7050cf3f7",
+        "scope": "all four articles, legal_team_member and administrator",
+        "startedAt": "2026-09-16T18:02:49.809Z",
+        "finishedAt": "2026-09-16T18:06:25.457Z",
+        "steps": 64,
+        "failed": 2
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-a-r2/replay-r2-create-contract-administrator.json",
+        "sha256": "d3bbd4018b07698e3721cffa4d74dd435d5a73aa970bc0a659616d29b3c022c2",
+        "scope": "create-contract, administrator (ONLY=create-contract ROLES=administrator)",
+        "startedAt": "2026-09-16T18:06:45.355Z",
+        "finishedAt": "2026-09-16T18:07:13.947Z",
+        "steps": 11,
+        "failed": 0
+      }
+    ],
+    "screenshots": [
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-a-r2/r2-c14-change-contract-type.png",
+        "sha256": "d1986f1dc71a88a36e4d958939da2ade083c377a1f42836e0e2bda21dcc62d60"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-a-r2/r2-c16-move-past-approval.png",
+        "sha256": "f87c130106adb1c9622b7e66504fb4584cc0e14c04c971d4ccf298dc2356e1fd"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/contracts-a-r2/r2-c17-executed-designation.png",
+        "sha256": "a8094e21221189f6331724690a33f05b355c05bffaa156d661110003c0af14af"
+      }
+    ],
+    "failureNote": "In the full run, two create-contract administrator steps timed out. After the Fields step, the Overview Contract type select and the Contract sections navigation were not found on the Daniel Okafor page. The same steps passed for the Legal Team Member in that run, and the Portal step between the two failures passed. A rerun of all 11 create-contract administrator steps, with no script change, passed. At that time the app logs show many concurrent sign-ins and 401 answers from other groups on the shared lab. The cause was not isolated. It is not attributed to the app diff, which does not touch the Contract record.",
+    "browser": "Playwright Chromium from e2e/node_modules, headless, 1280x900 CSS px, one isolated context per identity",
+    "fixturesCleanup": "Each run archived its DOC-029r2 contracts-a fixture Fields, Contract type, Contract Status and Approver group (all answered 200). Test Contracts stay on the lab, which the orchestrator owns."
+  },
+  "articles": [
+    {
+      "articleId": "create-contract",
+      "scenario": "V-C14",
+      "contentSha256": "9ddc15162c743f9502cd7bf98f7d3c1229895b9e275a730bc203e860d4f316d1",
+      "articleBytesSha256": "9ddc15162c743f9502cd7bf98f7d3c1229895b9e275a730bc203e860d4f316d1",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/web/src/components/contracts/create-contract-dialog.tsx, apps/web/src/routes/contract-record.tsx, apps/web/src/routes/contracts.tsx, apps/api/src/modules/contracts/* (not in the diff)",
+        "apps/web/src/routes/settings-regions.tsx (not in the diff; the Settings > Regions path in the article is still valid)",
+        "apps/web/src/components/contracts/contracts-columns.tsx (Contracts list Legal Owner column: archived person style changes from opacity-50 to text-muted only)",
+        "apps/web/src/components/user-identity.tsx (archived person style only)",
+        "apps/web/src/components/comments/comment-applet.tsx (archived author style only)",
+        "apps/web/src/components/documents/documents-columns.tsx (archived uploader style only)",
+        "apps/web/src/components/list-editor.tsx (Settings list editor: optional help, collapsible, Add disabled while adding)",
+        "apps/web/src/components/inline-add-form.tsx (new explicit Save and Cancel for Settings list rows)",
+        "apps/web/src/routes/settings-contract-statuses.tsx (adding a Status in Settings now uses Save status and Cancel; the Stage is still picked once at creation)",
+        "apps/web/src/routes/settings-contract-fields.tsx, apps/web/src/components/default-fields.tsx, apps/web/src/lib/field-catalog.ts (Settings Fields catalog shows locked default fields; no change on the Contract record)",
+        "apps/web/src/routes/settings.tsx (Return to setup link for Administrators who come from /welcome)",
+        "apps/web/src/routes/auth-layout.tsx, apps/api/src/modules/org/routes.ts, packages/shared/src/logo.ts (sign-in branding and logo limit)",
+        "apps/api/src/modules/email-settings/*, apps/web/src/components/smtp-settings-fields.tsx, apps/web/src/routes/welcome.tsx, apps/web/src/router.tsx (SMTP fields and first-run)",
+        "apps/web/src/routes/settings-ai-analysis.tsx, apps/web/src/lib/ai-connector-config.ts (AI settings copy)",
+        "messages/en-US.json (new auth, Settings Fields, welcome and AI strings; no key used by the Contract record, Create contract dialog, Stage pipeline, Approvals & signing card or Documents card changed)",
+        "apps/api/openapi.json, packages/api-client/src/schema.ts (org branding and email-settings endpoints only)"
+      ],
+      "conclusion": "Compatible. The diff does not change the Create contract dialog, Overview fields, Region or Department choices, Counterparties, Contract team, Fields save rules, Change contract type, the archive refusal or the Portal refusals. The only Contracts change is the archived Legal Owner style in the Contracts list, and the article does not describe it.",
+      "result": "compatible",
+      "replaySteps": [
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Negative: Create contract refuses a blank Title, a missing Contract type, a blank required Field and an invalid number; archived references are not offered; Cancel creates nothing",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:02:53.022Z",
+          "finishedAt": "2026-09-16T18:02:54.593Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Create the record: Title, Contract type, Fields, Owner, Confidential, optional Matter search, Create",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:02:54.594Z",
+          "finishedAt": "2026-09-16T18:02:55.551Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "A link does not copy access: a Legal Team Member outside the Confidential team reads the Matter but not the Contract",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:02:55.551Z",
+          "finishedAt": "2026-09-16T18:02:57.632Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Rename keeps the C- reference",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:02:57.633Z",
+          "finishedAt": "2026-09-16T18:02:58.499Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Record the parties and ownership on Overview: Legal Owner, Business Owner, Our entity, Department, Region, Priority, Risk, Description, Value",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:02:58.499Z",
+          "finishedAt": "2026-09-16T18:03:05.532Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Counterparties: search, inspect the create action, link two, Make primary, remove one link",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:05.532Z",
+          "finishedAt": "2026-09-16T18:03:06.251Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Contract team: Add team member > Person > Add; membership rows and separate statements; removing membership keeps the Business Owner statement",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:06.252Z",
+          "finishedAt": "2026-09-16T18:03:07.567Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Maintain the values on Fields: text saves on leave or Enter; a choice saves when selected; Escape abandons an unsaved edit",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:07.567Z",
+          "finishedAt": "2026-09-16T18:03:09.744Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Change contract type on Overview asks for missing required Fields; Cancel keeps the type; Change type applies it; long text Enter makes a new line",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:09.744Z",
+          "finishedAt": "2026-09-16T18:03:12.496Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Negative: a Business User in the Portal cannot create a Contract directly or assign its Legal Owner",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:12.497Z",
+          "finishedAt": "2026-09-16T18:03:17.663Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Negative: an archived Contract must be restored before editing",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:17.664Z",
+          "finishedAt": "2026-09-16T18:03:18.208Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Negative: Create contract refuses a blank Title, a missing Contract type, a blank required Field and an invalid number; archived references are not offered; Cancel creates nothing",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:39.660Z",
+          "finishedAt": "2026-09-16T18:04:41.294Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Create the record: Title, Contract type, Fields, Owner, Confidential, optional Matter search, Create",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:41.294Z",
+          "finishedAt": "2026-09-16T18:04:42.175Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "A link does not copy access: a Legal Team Member outside the Confidential team reads the Matter but not the Contract",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:42.175Z",
+          "finishedAt": "2026-09-16T18:04:44.252Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Rename keeps the C- reference",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:44.253Z",
+          "finishedAt": "2026-09-16T18:04:45.123Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Record the parties and ownership on Overview: Legal Owner, Business Owner, Our entity, Department, Region, Priority, Risk, Description, Value",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:45.124Z",
+          "finishedAt": "2026-09-16T18:04:51.981Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Counterparties: search, inspect the create action, link two, Make primary, remove one link",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:51.982Z",
+          "finishedAt": "2026-09-16T18:04:52.598Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Contract team: Add team member > Person > Add; membership rows and separate statements; removing membership keeps the Business Owner statement",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:52.599Z",
+          "finishedAt": "2026-09-16T18:04:53.963Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Maintain the values on Fields: text saves on leave or Enter; a choice saves when selected; Escape abandons an unsaved edit",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:53.964Z",
+          "finishedAt": "2026-09-16T18:04:56.150Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Change contract type on Overview asks for missing required Fields; Cancel keeps the type; Change type applies it; long text Enter makes a new line",
+          "result": "fail",
+          "startedAt": "2026-09-16T18:04:56.151Z",
+          "finishedAt": "2026-09-16T18:05:26.166Z",
+          "detail": "Check did not complete: locator.selectOption: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('main').getByLabel('Contract type')\u001b[22m "
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Negative: a Business User in the Portal cannot create a Contract directly or assign its Legal Owner",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:05:26.167Z",
+          "finishedAt": "2026-09-16T18:05:31.304Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Negative: an archived Contract must be restored before editing",
+          "result": "fail",
+          "startedAt": "2026-09-16T18:05:31.304Z",
+          "finishedAt": "2026-09-16T18:06:01.305Z",
+          "detail": "Check did not complete: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('navigation', { name: 'Contract sections' }).getByRole('link', { name: 'Overview' })\u001b[22m "
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Negative: Create contract refuses a blank Title, a missing Contract type, a blank required Field and an invalid number; archived references are not offered; Cancel creates nothing",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:48.358Z",
+          "finishedAt": "2026-09-16T18:06:49.888Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Create the record: Title, Contract type, Fields, Owner, Confidential, optional Matter search, Create",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:49.889Z",
+          "finishedAt": "2026-09-16T18:06:50.820Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "A link does not copy access: a Legal Team Member outside the Confidential team reads the Matter but not the Contract",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:50.820Z",
+          "finishedAt": "2026-09-16T18:06:52.885Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Rename keeps the C- reference",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:52.885Z",
+          "finishedAt": "2026-09-16T18:06:53.809Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Record the parties and ownership on Overview: Legal Owner, Business Owner, Our entity, Department, Region, Priority, Risk, Description, Value",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:53.810Z",
+          "finishedAt": "2026-09-16T18:07:01.054Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Counterparties: search, inspect the create action, link two, Make primary, remove one link",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:07:01.055Z",
+          "finishedAt": "2026-09-16T18:07:02.028Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Contract team: Add team member > Person > Add; membership rows and separate statements; removing membership keeps the Business Owner statement",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:07:02.028Z",
+          "finishedAt": "2026-09-16T18:07:03.195Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Maintain the values on Fields: text saves on leave or Enter; a choice saves when selected; Escape abandons an unsaved edit",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:07:03.196Z",
+          "finishedAt": "2026-09-16T18:07:05.386Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Change contract type on Overview asks for missing required Fields; Cancel keeps the type; Change type applies it; long text Enter makes a new line",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:07:05.386Z",
+          "finishedAt": "2026-09-16T18:07:08.112Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Negative: a Business User in the Portal cannot create a Contract directly or assign its Legal Owner",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:07:08.113Z",
+          "finishedAt": "2026-09-16T18:07:13.255Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2-create-contract-administrator.json",
+          "role": "administrator",
+          "action": "Negative: an archived Contract must be restored before editing",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:07:13.255Z",
+          "finishedAt": "2026-09-16T18:07:13.797Z"
+        }
+      ],
+      "replayResult": "pass"
+    },
+    {
+      "articleId": "contract-stages",
+      "scenario": "V-C15",
+      "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+      "articleBytesSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/web/src/components/stage-pipeline.tsx, apps/api/src/modules/contracts/routes.ts, apps/api/src/lib/soft-gate.ts, apps/api/src/modules/contract-statuses/routes.ts (not in the diff)",
+        "apps/web/src/components/contracts/contracts-columns.tsx (Contracts list Legal Owner column: archived person style changes from opacity-50 to text-muted only)",
+        "apps/web/src/components/user-identity.tsx (archived person style only)",
+        "apps/web/src/components/comments/comment-applet.tsx (archived author style only)",
+        "apps/web/src/components/documents/documents-columns.tsx (archived uploader style only)",
+        "apps/web/src/components/list-editor.tsx (Settings list editor: optional help, collapsible, Add disabled while adding)",
+        "apps/web/src/components/inline-add-form.tsx (new explicit Save and Cancel for Settings list rows)",
+        "apps/web/src/routes/settings-contract-statuses.tsx (adding a Status in Settings now uses Save status and Cancel; the Stage is still picked once at creation)",
+        "apps/web/src/routes/settings-contract-fields.tsx, apps/web/src/components/default-fields.tsx, apps/web/src/lib/field-catalog.ts (Settings Fields catalog shows locked default fields; no change on the Contract record)",
+        "apps/web/src/routes/settings.tsx (Return to setup link for Administrators who come from /welcome)",
+        "apps/web/src/routes/auth-layout.tsx, apps/api/src/modules/org/routes.ts, packages/shared/src/logo.ts (sign-in branding and logo limit)",
+        "apps/api/src/modules/email-settings/*, apps/web/src/components/smtp-settings-fields.tsx, apps/web/src/routes/welcome.tsx, apps/web/src/router.tsx (SMTP fields and first-run)",
+        "apps/web/src/routes/settings-ai-analysis.tsx, apps/web/src/lib/ai-connector-config.ts (AI settings copy)",
+        "messages/en-US.json (new auth, Settings Fields, welcome and AI strings; no key used by the Contract record, Create contract dialog, Stage pipeline, Approvals & signing card or Documents card changed)",
+        "apps/api/openapi.json, packages/api-client/src/schema.ts (org branding and email-settings endpoints only)"
+      ],
+      "conclusion": "Compatible. The Stage pipeline, Status menu, Move past approval Soft gate, History and archive behavior are unchanged. The Settings add row for a Contract Status now has Save status and Cancel, but the article does not describe how to add a Status, and a Stage is still fixed after creation.",
+      "result": "compatible",
+      "replaySteps": [
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:18.246Z",
+          "finishedAt": "2026-09-16T18:03:19.635Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Move backwards and skip Stages",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:19.635Z",
+          "finishedAt": "2026-09-16T18:03:20.237Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Negative: renaming a Status does not change its Stage",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:20.237Z",
+          "finishedAt": "2026-09-16T18:03:20.558Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:20.559Z",
+          "finishedAt": "2026-09-16T18:03:23.193Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Ended Contracts stay editable",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:23.194Z",
+          "finishedAt": "2026-09-16T18:03:23.707Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Negative: archived records and Business Users get no Status control; Restore brings it back",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:23.708Z",
+          "finishedAt": "2026-09-16T18:03:26.173Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:01.359Z",
+          "finishedAt": "2026-09-16T18:06:03.796Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Move backwards and skip Stages",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:03.796Z",
+          "finishedAt": "2026-09-16T18:06:04.396Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Negative: renaming a Status does not change its Stage",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:04.397Z",
+          "finishedAt": "2026-09-16T18:06:05.121Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:05.121Z",
+          "finishedAt": "2026-09-16T18:06:07.718Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Ended Contracts stay editable",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:07.718Z",
+          "finishedAt": "2026-09-16T18:06:08.195Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Negative: archived records and Business Users get no Status control; Restore brings it back",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:08.196Z",
+          "finishedAt": "2026-09-16T18:06:11.022Z"
+        }
+      ],
+      "replayResult": "pass"
+    },
+    {
+      "articleId": "contract-approvals",
+      "scenario": "V-C16",
+      "contentSha256": "d33d268780abc6592242a140452187a3233bad9a1bb337a15dcd24e5ecf3b3d3",
+      "articleBytesSha256": "d33d268780abc6592242a140452187a3233bad9a1bb337a15dcd24e5ecf3b3d3",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/web/src/components/approvals/approvals-signing-card.tsx, apps/api/src/modules/contract-approvals/routes.ts, apps/api/src/lib/approvers.ts, apps/api/src/lib/soft-gate.ts (not in the diff)",
+        "apps/web/src/routes/settings-approver-groups.tsx (not in the diff; it uses list-editor, whose change affects only the Settings list and not Apply group on the Contract)",
+        "apps/web/src/components/contracts/contracts-columns.tsx (Contracts list Legal Owner column: archived person style changes from opacity-50 to text-muted only)",
+        "apps/web/src/components/user-identity.tsx (archived person style only)",
+        "apps/web/src/components/comments/comment-applet.tsx (archived author style only)",
+        "apps/web/src/components/documents/documents-columns.tsx (archived uploader style only)",
+        "apps/web/src/components/list-editor.tsx (Settings list editor: optional help, collapsible, Add disabled while adding)",
+        "apps/web/src/components/inline-add-form.tsx (new explicit Save and Cancel for Settings list rows)",
+        "apps/web/src/routes/settings-contract-statuses.tsx (adding a Status in Settings now uses Save status and Cancel; the Stage is still picked once at creation)",
+        "apps/web/src/routes/settings-contract-fields.tsx, apps/web/src/components/default-fields.tsx, apps/web/src/lib/field-catalog.ts (Settings Fields catalog shows locked default fields; no change on the Contract record)",
+        "apps/web/src/routes/settings.tsx (Return to setup link for Administrators who come from /welcome)",
+        "apps/web/src/routes/auth-layout.tsx, apps/api/src/modules/org/routes.ts, packages/shared/src/logo.ts (sign-in branding and logo limit)",
+        "apps/api/src/modules/email-settings/*, apps/web/src/components/smtp-settings-fields.tsx, apps/web/src/routes/welcome.tsx, apps/web/src/router.tsx (SMTP fields and first-run)",
+        "apps/web/src/routes/settings-ai-analysis.tsx, apps/web/src/lib/ai-connector-config.ts (AI settings copy)",
+        "messages/en-US.json (new auth, Settings Fields, welcome and AI strings; no key used by the Contract record, Create contract dialog, Stage pipeline, Approvals & signing card or Documents card changed)",
+        "apps/api/openapi.json, packages/api-client/src/schema.ts (org branding and email-settings endpoints only)"
+      ],
+      "conclusion": "Compatible. Add approver, Request approvals, Apply group, decisions with Note, Cancel request and Move past approval are unchanged. The archived-person style change does not alter any label or action the article names.",
+      "result": "compatible",
+      "replaySteps": [
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Ask for approval: Approvals > Add approver > choose two people > Request approvals",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:26.193Z",
+          "finishedAt": "2026-09-16T18:03:26.669Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Apply group: choose the Approver group, inspect named and skipped people, confirm; a later group edit does not rewrite requests",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:26.669Z",
+          "finishedAt": "2026-09-16T18:03:27.355Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Give a decision as the named approver with a Note; another person cannot answer; a decision is final",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:27.355Z",
+          "finishedAt": "2026-09-16T18:03:28.099Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Ask again after a decision: a new request; the earlier decision stays",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:28.100Z",
+          "finishedAt": "2026-09-16T18:03:28.242Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Cancel request: requester, Legal Owner or Administrator can cancel a pending row; another Legal Team Member cannot; a decided approval is not erased",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:28.243Z",
+          "finishedAt": "2026-09-16T18:03:29.418Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Move beyond Approval: Move past approval lists Pending and Rejected rows; Cancel keeps; Move anyway records an override and leaves decisions",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:29.418Z",
+          "finishedAt": "2026-09-16T18:03:31.258Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Negative: on Confidential work a person without access is not offered and a group with such a person is refused; applying a group does not grant access; an archived Contract offers no approval actions",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:31.258Z",
+          "finishedAt": "2026-09-16T18:03:32.198Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Ask for approval: Approvals > Add approver > choose two people > Request approvals",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:11.044Z",
+          "finishedAt": "2026-09-16T18:06:11.530Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Apply group: choose the Approver group, inspect named and skipped people, confirm; a later group edit does not rewrite requests",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:11.532Z",
+          "finishedAt": "2026-09-16T18:06:12.156Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Give a decision as the named approver with a Note; another person cannot answer; a decision is final",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:12.157Z",
+          "finishedAt": "2026-09-16T18:06:12.910Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Ask again after a decision: a new request; the earlier decision stays",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:12.911Z",
+          "finishedAt": "2026-09-16T18:06:13.069Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Cancel request: requester, Legal Owner or Administrator can cancel a pending row; another Legal Team Member cannot; a decided approval is not erased",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:13.070Z",
+          "finishedAt": "2026-09-16T18:06:14.330Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Move beyond Approval: Move past approval lists Pending and Rejected rows; Cancel keeps; Move anyway records an override and leaves decisions",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:14.331Z",
+          "finishedAt": "2026-09-16T18:06:16.440Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Negative: on Confidential work a person without access is not offered and a group with such a person is refused; applying a group does not grant access; an archived Contract offers no approval actions",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:16.441Z",
+          "finishedAt": "2026-09-16T18:06:17.375Z"
+        }
+      ],
+      "replayResult": "pass"
+    },
+    {
+      "articleId": "manual-signing",
+      "scenario": "V-C17-manual",
+      "contentSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
+      "articleBytesSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "diffFilesInspected": [
+        "apps/web/src/components/documents/* other than documents-columns.tsx, apps/api/src/modules/documents/*, apps/api/src/modules/signing/* (not in the diff)",
+        "apps/web/src/components/contracts/contracts-columns.tsx (Contracts list Legal Owner column: archived person style changes from opacity-50 to text-muted only)",
+        "apps/web/src/components/user-identity.tsx (archived person style only)",
+        "apps/web/src/components/comments/comment-applet.tsx (archived author style only)",
+        "apps/web/src/components/documents/documents-columns.tsx (archived uploader style only)",
+        "apps/web/src/components/list-editor.tsx (Settings list editor: optional help, collapsible, Add disabled while adding)",
+        "apps/web/src/components/inline-add-form.tsx (new explicit Save and Cancel for Settings list rows)",
+        "apps/web/src/routes/settings-contract-statuses.tsx (adding a Status in Settings now uses Save status and Cancel; the Stage is still picked once at creation)",
+        "apps/web/src/routes/settings-contract-fields.tsx, apps/web/src/components/default-fields.tsx, apps/web/src/lib/field-catalog.ts (Settings Fields catalog shows locked default fields; no change on the Contract record)",
+        "apps/web/src/routes/settings.tsx (Return to setup link for Administrators who come from /welcome)",
+        "apps/web/src/routes/auth-layout.tsx, apps/api/src/modules/org/routes.ts, packages/shared/src/logo.ts (sign-in branding and logo limit)",
+        "apps/api/src/modules/email-settings/*, apps/web/src/components/smtp-settings-fields.tsx, apps/web/src/routes/welcome.tsx, apps/web/src/router.tsx (SMTP fields and first-run)",
+        "apps/web/src/routes/settings-ai-analysis.tsx, apps/web/src/lib/ai-connector-config.ts (AI settings copy)",
+        "messages/en-US.json (new auth, Settings Fields, welcome and AI strings; no key used by the Contract record, Create contract dialog, Stage pipeline, Approvals & signing card or Documents card changed)",
+        "apps/api/openapi.json, packages/api-client/src/schema.ts (org branding and email-settings endpoints only)"
+      ],
+      "conclusion": "Compatible. Upload, Add version, the reader and Download, Mark as executed copy, Unmark as executed copy and the Stage control are unchanged. The Documents repository column change is a style for archived uploaders only.",
+      "result": "compatible",
+      "replaySteps": [
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Step 1: Stage control to the Signature Status Out for signature without a Signing connector",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:32.236Z",
+          "finishedAt": "2026-09-16T18:03:32.722Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Step 2: Documents; no Document yet, so upload the first Document; then Add version with the executed file and Kind Executed",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:32.723Z",
+          "finishedAt": "2026-09-16T18:03:33.258Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Step 3: read or download the uploaded Document Version and check it is the executed copy",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:03:33.259Z",
+          "finishedAt": "2026-09-16T18:04:33.391Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Negative: the Executed kind alone does not set the executed designation",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:33.392Z",
+          "finishedAt": "2026-09-16T18:04:33.404Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Step 4: Document actions > Mark as executed copy; check the designation and primary Document; the Status does not change",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:33.405Z",
+          "finishedAt": "2026-09-16T18:04:33.924Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Correct the wrong selection and a later round: Add version keeps the chain; the earlier Version keeps the designation; Unmark and mark again through that Version's own actions",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:33.924Z",
+          "finishedAt": "2026-09-16T18:04:34.698Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Step 5: Stage control to Active; check Status and Activity; no Envelope row",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:34.699Z",
+          "finishedAt": "2026-09-16T18:04:35.423Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "legal_team_member",
+          "action": "Negative: unsupported users cannot perform the legal action; an archived record offers no legal actions",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:04:35.424Z",
+          "finishedAt": "2026-09-16T18:04:39.659Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Step 1: Stage control to the Signature Status Out for signature without a Signing connector",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:17.422Z",
+          "finishedAt": "2026-09-16T18:06:17.855Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Step 2: Documents; no Document yet, so upload the first Document; then Add version with the executed file and Kind Executed",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:17.856Z",
+          "finishedAt": "2026-09-16T18:06:18.378Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Step 3: read or download the uploaded Document Version and check it is the executed copy",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:18.379Z",
+          "finishedAt": "2026-09-16T18:06:18.716Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Negative: the Executed kind alone does not set the executed designation",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:18.717Z",
+          "finishedAt": "2026-09-16T18:06:18.730Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Step 4: Document actions > Mark as executed copy; check the designation and primary Document; the Status does not change",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:18.731Z",
+          "finishedAt": "2026-09-16T18:06:19.191Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Correct the wrong selection and a later round: Add version keeps the chain; the earlier Version keeps the designation; Unmark and mark again through that Version's own actions",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:19.195Z",
+          "finishedAt": "2026-09-16T18:06:20.148Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Step 5: Stage control to Active; check Status and Activity; no Envelope row",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:20.149Z",
+          "finishedAt": "2026-09-16T18:06:21.166Z"
+        },
+        {
+          "run": "contracts-a-r2/replay-r2.json",
+          "role": "administrator",
+          "action": "Negative: unsupported users cannot perform the legal action; an archived record offers no legal actions",
+          "result": "pass",
+          "startedAt": "2026-09-16T18:06:21.167Z",
+          "finishedAt": "2026-09-16T18:06:25.404Z"
+        }
+      ],
+      "replayResult": "pass"
+    }
+  ],
+  "limitations": [
+    "Agent replay of the round 1 walkthrough on a shared lab. It is not a human user study and not a new walkthrough written from the article text.",
+    "No live Signing or AI credentials are involved. manual-signing needs no Signing connector, and the lab has signing unconfigured."
+  ]
+}

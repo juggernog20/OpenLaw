@@ -1,0 +1,566 @@
+{
+  "batch": "DOC-029",
+  "round": 2,
+  "group": "signing-standin",
+  "kind": "application-compatibility-review",
+  "reviewer": "DOC-029r2 compatibility reviewer (signing-standin)",
+  "reviewerKind": "agent",
+  "independence": "The reviewer did not write or edit electronic-signing.md or any earlier DOC-029 evidence for it. No article text was changed.",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "commitsInRange": [
+    "57e77e38 Update user and comment display styles to use 'text-muted' for archived users",
+    "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+    "e3800b43 Show locked default fields above each custom field catalog",
+    "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+    "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+    "1ea249dd Show organization branding on sign-in and raise the logo limit"
+  ],
+  "lab": {
+    "name": "sign-r2",
+    "project": "openlaw-docs-41255c61-sign-r2",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appUrl": "http://127.0.0.1:23312",
+    "mailUrl": "http://127.0.0.1:23412",
+    "seed": "Helix light, random seed 7",
+    "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "signingStandinImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "containerImages": [
+      {
+        "service": "app",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      },
+      {
+        "service": "worker",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      },
+      {
+        "service": "signing-standin",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      },
+      {
+        "service": "doc-engine",
+        "imageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+      },
+      {
+        "service": "mailpit",
+        "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+      },
+      {
+        "service": "postgres",
+        "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+      }
+    ],
+    "providerMode": "Local DocuSign protocol stand-in from rewalk/signing/server.mjs and signing-overlay.yml (unchanged), applied by up-r2.sh. No real provider account and no real credentials. The RSA key and Connect secret were generated in memory per run.",
+    "lifecycle": "The lab was created and seeded once for attempt 1, destroyed, created and seeded again for the counted run, and destroyed after the run (no containers or volumes remain)."
+  },
+  "articles": [
+    {
+      "articleId": "electronic-signing",
+      "path": "docs/user-guides/electronic-signing.md",
+      "contentSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
+      "evidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "scenarios": ["V-C17-electronic"],
+      "diffFilesInspected": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/email-settings/config.test.ts",
+        "apps/api/src/modules/email-settings/config.ts",
+        "apps/api/src/modules/email-settings/email-settings.test.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/org/general.test.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/matters/matters-columns.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.test.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/set-password.test.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/routes/settings-contract-fields.test.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/routes/settings-contract-statuses.test.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-contract-types.test.tsx",
+        "apps/web/src/routes/settings-default-fields.test.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-matter-statuses.test.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-matter-types.test.tsx",
+        "apps/web/src/routes/settings-reminders.test.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.test.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/testing/helpers.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json"
+      ],
+      "signingSourcesConfirmedUnchanged": [
+        "apps/api/src/lib/signing/docusign.ts",
+        "apps/api/src/lib/signing/fake.ts",
+        "apps/api/src/lib/signing/resolver.ts",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "apps/api/src/modules/signing-connector/routes.ts",
+        "apps/api/src/modules/signing-webhook/routes.ts",
+        "apps/api/src/pipeline/reconciliation.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "apps/api/src/lib/document-access.ts",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/settings-e-signature.tsx",
+        "packages/db/src/schema/signing-connectors.ts",
+        "packages/db/src/schema/contract-envelopes.ts"
+      ],
+      "diffFindings": [
+        "No file under apps/api/src/lib/signing, apps/api/src/pipeline, apps/api/src/modules/contract-envelopes, signing-connector, signing-webhook, packages/db, apps/web/src/components/approvals, or apps/web/src/routes/contract-* changed in the range.",
+        "messages/en-US.json changed no signing.*, approvals.* or contracts.record.* key. The changed keys cover sign-in branding, SMTP fields, default fields, AI connector copy, and the welcome wizard.",
+        "apps/api/openapi.json adds GET /api/v1/org/branding and SMTP settings fields. No Envelope or signing connector route changed.",
+        "contracts-columns.tsx, documents-columns.tsx, user-identity.tsx and comment-applet.tsx change archived-user styling from opacity-50 to text-muted. The article does not describe that styling.",
+        "settings-contract-statuses.tsx now saves a new Status row with explicit Save and Cancel. The article only refers to the first configured live Active Status, and the executed-copy logic that picks it is unchanged.",
+        "welcome.test.tsx names a SigningCalls helper in the AI analysis step tests only. The E-signature wizard step and settings-e-signature.tsx are unchanged, and the article does not cover the wizard."
+      ],
+      "conclusion": "compatible",
+      "conclusionDetail": "Nothing in the range changes what electronic-signing.md states or asks. The full V-C17-electronic replay passed on 57e77e38 for both roles.",
+      "replay": {
+        "script": "docs/documentation/batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2.mjs",
+        "basedOn": "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.mjs (the walkthrough in the current evidence). Changes: lab name sign-r2, output file names, and record names DOC-029r2 signing-standin ... Nothing else changed.",
+        "phases": {
+          "main": {
+            "counts": {
+              "pass": 35
+            },
+            "startedAt": "2026-09-16T17:58:49.610Z",
+            "finishedAt": "2026-09-16T17:59:57.927Z",
+            "contracts": [
+              {
+                "role": "legal_team_member",
+                "number": 32,
+                "noPaperNumber": 33,
+                "title": "DOC-029r2 signing-standin legal_team_member 20260916175849"
+              },
+              {
+                "role": "administrator",
+                "number": 34,
+                "noPaperNumber": 35,
+                "title": "DOC-029r2 signing-standin administrator 20260916175849"
+              }
+            ]
+          },
+          "polling": {
+            "counts": {
+              "pass": 2
+            },
+            "startedAt": "2026-09-16T18:00:04.437Z",
+            "finishedAt": "2026-09-16T18:00:37.281Z",
+            "contracts": [
+              {
+                "role": "polling",
+                "number": 36,
+                "title": "DOC-029r2 signing-standin polling 20260916180004"
+              }
+            ]
+          },
+          "noteCheck": {
+            "counts": {
+              "pass": 1
+            },
+            "startedAt": "2026-09-16T18:01:32.606Z",
+            "finishedAt": "2026-09-16T18:01:33.961Z"
+          }
+        },
+        "steps": [
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "The lab starts with no Signing connector",
+            "result": "pass",
+            "actual": "Connector configured=false, enabled=false, updateMode default polling"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "Send for signature is absent with no connector configured, both before and after a primary Document exists",
+            "result": "pass",
+            "actual": "C-32: no Send for signature without paper; after a primary Document (2 Versions) and a supporting Document it is still absent; API signingConfigured=false, primary doc029-primary-legal_team_member.pdf"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Send for signature is absent with no connector configured, both before and after a primary Document exists",
+            "result": "pass",
+            "actual": "C-34: no Send for signature without paper; after a primary Document (2 Versions) and a supporting Document it is still absent; API signingConfigured=false, primary doc029-primary-administrator.pdf"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Setup: the Administrator saves and enables a Webhook-mode DocuSign connector that points at the stand-in, and Test connection reaches it",
+            "result": "pass",
+            "actual": "Signing updates showed polling before the change; saved Demo/Webhook, enabled=true, updateMode=webhook; Test connection said \"Connected to DOC-029 signing stand-in.\""
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "With the connector enabled, Send for signature stays absent when no primary Document is set and appears when one is",
+            "result": "pass",
+            "actual": "C-33 (no paper): Send for signature absent; C-32 (primary Document): Send for signature shown"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "With the connector enabled, Send for signature stays absent when no primary Document is set and appears when one is",
+            "result": "pass",
+            "actual": "C-35 (no paper): Send for signature absent; C-34 (primary Document): Send for signature shown"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Setup: the Administrator turns Send for signature from records off, then on again",
+            "result": "pass",
+            "actual": "legal_team_member C-32 disabled: 0 Send; administrator C-34 disabled: 0 Send; legal_team_member C-32 enabled: 1 Send; administrator C-34 enabled: 1 Send"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "Before you start (/sig/ paragraph): the paper to send is marked with /sig/ before its Document Version is uploaded; the article paragraph is present in the reviewed bytes",
+            "result": "pass",
+            "actual": "Version 1 (doc029-primary-legal_team_member.pdf) was uploaded with two /sig/ marks already in the paper; its download answered 200 with the same bytes and 2 /sig/ marks. Version 2 has none. The stand-in cannot render placement or white text."
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "Before you start: the sender moves the Contract to the Signature Status Out for signature",
+            "result": "pass",
+            "actual": "Status Out for signature (stage signature)"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "Send the Envelope steps 1-3 and 5: Approvals > Send for signature opens the dialog; Version lists only primary Document Versions with the current one selected; empty and duplicate Signers are refused; Add signer and remove work; Cancel sends nothing",
+            "result": "pass",
+            "actual": "Version options: Version 2 — doc029-primary-v2-legal_team_member.pdf (current) | Version 1 — doc029-primary-legal_team_member.pdf; selected \"Version 2 — doc029-primary-v2-legal_team_member.pdf (current)\"; help texts shown 1/1; empty Signers: \"Give every signer a name and an email address.\"; Remove signer 3 left 2 rows; duplicate address: \"Each signer needs their own email address.\"; Cancel closed the dialog with 0 Envelopes in the app and 0 (unchanged) at the provider"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "If sending fails: during a provider outage the dialog shows the error and no round exists; after reload the retry sends Version 1 with a blank Subject; the row shows Out for signature, Version, Signers and sent time; the provider receives only that primary PDF with subject C-<number> <title>; the Status does not move",
+            "result": "pass",
+            "actual": "Sign Here on the wire for Version 1 (with /sig/): each of 2 Signers carried the same single signHereTabs entry {\"documentId\":\"1\",\"anchorString\":\"/sig/\",\"anchorUnits\":\"pixels\",\"anchorXOffset\":\"0\",\"anchorYOffset\":\"0\",\"anchorIgnoreIfNotPresent\":\"true\"}; Outage alert: \"The provider could not be reached. It may still have taken the envelope — check at the provider before you send again.\"; 0 rounds in app and after reload; retry row: \"DOC-029 Signer One r1 signer.one.legal_team_member.r1@counterparty.example DOC-029 Signer Two r1 signer.two.legal_team_member.r1@counterparty.example doc029-primary-legal_team_member.pdf Version 1 Out for signature Sep 16 by Nadia Haddad —\"; header Envelope sent; note under live row: \"Signed, declined, and voided status arrives by webhook. …\"; provider envelope subject \"C-32 DOC-029r2 signing-standin legal_team_member 20260916175849\", 1 document equal to Version 1 bytes, 2 fictional Signers with the same routingOrder 1; Status still Out for signature"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "One live Envelope only: Send for signature is absent while it is out, and a direct second send is refused",
+            "result": "pass",
+            "actual": "Send for signature absent; direct second send answered 409: \"This contract already has an envelope out for signature. Void it before sending another.\""
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Marcus Oyelaran, Nadia Haddad, Daniel Okafor",
+            "expected": "Withdraw: an unrelated Legal Team Member has no envelope actions and cannot void; the sender has the actions; the Administrator who is neither sender nor Legal Owner voids with a required Reason, Cancel keeps the round, and a Voided round frees a new send without moving the Status",
+            "result": "pass",
+            "actual": "Marcus Oyelaran: 0 envelope actions, void answered 403; sender Nadia Haddad: actions menu shown; Daniel Okafor (Administrator who is neither sender nor Legal Owner): empty Reason refused with \"Say why this envelope is being voided.\", Cancel kept status sent, confirm answered 200; row \"DOC-029 Signer One r1 signer.one.legal_team_member.r1@counterparty.example DOC-029 Signer Two r1 signer.two.legal_team_member.r1@counterparty.example doc029-primary-legal_team_member.pdf Version 1 Voided DOC-029 wrong signatory legal_team_member 20260916175849 Sep 16 by Nadia Haddad Sep 16\"; header Envelope voided 1; provider status voided with the reason; Send for signature shown again; Status still Out for signature"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "Decline: a provider-reported Declined round records its reason, keeps the Voided round in history, files nothing, does not end or archive the Contract, and allows another send",
+            "result": "pass",
+            "actual": "Current Version 2 (no /sig/) sent with the same anchor request (each of 2 Signers carried the same single signHereTabs entry {\"documentId\":\"1\",\"anchorString\":\"/sig/\",\"anchorUnits\":\"pixels\",\"anchorXOffset\":\"0\",\"anchorYOffset\":\"0\",\"anchorIgnoreIfNotPresent\":\"true\"}), so a missing mark is left to anchorIgnoreIfNotPresent; Signed provider decline delivery answered 204; rows: \"DOC-029 Signer One r2 signer.one.legal_team_member.r2@counterparty.example DOC-029 Signer Two r2 signer.two.legal_team_member.r2@counterparty.example doc029-primary-legal_team_member.pdf Version 2 Declined DOC-029 fictional signer declined 20260916175849 Sep 16 by Nadia Haddad Sep 16\" / \"DOC-029 Signer One r1 signer.one.legal_team_member.r1@counterparty.example DOC-029 Signer Two r1 signer.two.legal_team_member.r1@counterparty.example doc029-primary-legal_team_member.pdf Version 1 Voided DOC-029 wrong signatory legal_team_member 20260916175849 Sep 16 by Nadia Haddad Sep 16\"; header Envelope declined; primary Document still 2 Versions; Status Out for signature, archivedAt null; Send for signature shown"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad, Priya Raman",
+            "expected": "If another sender won: with both dialogs open, the second send is refused in the dialog, and reloading shows the winner's live round instead of creating another",
+            "result": "pass",
+            "actual": "Priya Raman's later send showed \"This contract already has an envelope out for signature. Void it before sending another.\"; after reload the first row reads \"DOC-029 Signer One r3 signer.one.legal_team_member.r3@counterparty.example DOC-029 Signer Two r3 signer.two.legal_team_member.r3@counterparty.example doc029-primary-legal_team_member.pdf Version 2 Out for signature Sep 16 by Nadia Haddad —\"; the provider holds 1 new envelope"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "Follow completion: a provider-reported completion shows Signed, then Executed copy; the executed PDF equals the provider's output, is filed once as the pinned executed Version on the primary Document chain, the supporting Document is untouched, and the Contract moves to Active; a repeated delivery adds nothing",
+            "result": "pass",
+            "actual": "Completion delivery answered 204; API right after: status signed, executedFetch pending; first page read: \"DOC-029 Signer One r3 signer.one.legal_team_member.r3@counterparty.example DOC-029 Signer Two r3 signer.two.legal_team_member.r3@counterparty.example doc029-primary-legal_team_member.pdf Version 2 Signed Sep 16 by Nadia Haddad Sep 16 Executed copy\"; final row: \"DOC-029 Signer One r3 signer.one.legal_team_member.r3@counterparty.example DOC-029 Signer Two r3 signer.two.legal_team_member.r3@counterparty.example doc029-primary-legal_team_member.pdf Version 2 Signed Sep 16 by Nadia Haddad Sep 16 Executed copy\"; header Envelope signed; Executed copy opened as a download and its bytes equal the provider output; primary Document Version 3 \"doc029-primary-v2-legal_team_member (executed).pdf\" kind executed, current, designated; Documents row \"doc029-primary-legal_team_member.pdf Primary Draft · ours Draft · theirs Redline · theirs Redline · ours Amendment Execu\" with Unmark as executed copy; supporting Document still 1 Version; Status Active; repeated delivery answered 204 and added no Version or Envelope"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "If someone moved the Contract to another Stage before completion, filing still pins the executed Version but completion does not overwrite that Stage",
+            "result": "pass",
+            "actual": "Moved to Internal review after sending; completion (204) filed Version 4 as current and designated executed; Status stayed Internal review"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "If voiding is refused because the provider already completed the round: the dialog shows the refusal; after the provider's feed arrives, reloading shows the recorded Signed outcome",
+            "result": "pass",
+            "actual": "Void refused in the dialog: \"The provider says this envelope is no longer live. Its ending arrives on the record from the provider's own feed.\"; reload before the provider feed: \"DOC-029 Signer One r5 signer.one.legal_team_member.r5@counterparty.example DOC-029 Signer Two r5 signer.two.legal_team_member.r5@counterparty.example doc029-primary-legal_team_member.pdf Version 4 Out for signature Sep 16 by Nadia Haddad —\"; after the feed (204) and reload: \"DOC-029 Signer One r5 signer.one.legal_team_member.r5@counterparty.example DOC-029 Signer Two r5 signer.two.legal_team_member.r5@counterparty.example doc029-primary-legal_team_member.pdf Version 4 Signed Sep 16 by Nadia Haddad Sep 16 Executed copy\""
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "If the row says the executed copy could not be filed: a Signed round whose executed file cannot be fetched shows that message and creates no Version",
+            "result": "pass",
+            "actual": "Delivery 204; row: \"DOC-029 Signer One r6 signer.one.legal_team_member.r6@counterparty.example DOC-029 Signer Two r6 signer.two.legal_team_member.r6@counterparty.example doc029-primary-legal_team_member.pdf Version 5 Signed Sep 16 by Nadia Haddad Sep 16 The executed copy could not be filed. Upload it to the record instead.\"; primary Document still 5 Versions"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Ravi Menon (Business User on the team)",
+            "expected": "Negative: a Business User on the Contract team cannot read or send Envelopes",
+            "result": "pass",
+            "actual": "Team add answered 201; Ravi Menon signed in by a fresh magic link to the Portal; envelope read answered 403, send answered 403"
+          },
+          {
+            "phase": "main",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "Send for signature is absent on an archived Contract; its recorded rounds stay readable",
+            "result": "pass",
+            "actual": "Archived C-32: 6 rounds readable, Send for signature absent, 0 envelope actions, direct send answered 409"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Before you start (/sig/ paragraph): the paper to send is marked with /sig/ before its Document Version is uploaded; the article paragraph is present in the reviewed bytes",
+            "result": "pass",
+            "actual": "Version 1 (doc029-primary-administrator.pdf) was uploaded with two /sig/ marks already in the paper; its download answered 200 with the same bytes and 2 /sig/ marks. Version 2 has none. The stand-in cannot render placement or white text."
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Before you start: the sender moves the Contract to the Signature Status Out for signature",
+            "result": "pass",
+            "actual": "Status Out for signature (stage signature)"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Send the Envelope steps 1-3 and 5: Approvals > Send for signature opens the dialog; Version lists only primary Document Versions with the current one selected; empty and duplicate Signers are refused; Add signer and remove work; Cancel sends nothing",
+            "result": "pass",
+            "actual": "Version options: Version 2 — doc029-primary-v2-administrator.pdf (current) | Version 1 — doc029-primary-administrator.pdf; selected \"Version 2 — doc029-primary-v2-administrator.pdf (current)\"; help texts shown 1/1; empty Signers: \"Give every signer a name and an email address.\"; Remove signer 3 left 2 rows; duplicate address: \"Each signer needs their own email address.\"; Cancel closed the dialog with 0 Envelopes in the app and 6 (unchanged) at the provider"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "If sending fails: during a provider outage the dialog shows the error and no round exists; after reload the retry sends Version 1 with a blank Subject; the row shows Out for signature, Version, Signers and sent time; the provider receives only that primary PDF with subject C-<number> <title>; the Status does not move",
+            "result": "pass",
+            "actual": "Sign Here on the wire for Version 1 (with /sig/): each of 2 Signers carried the same single signHereTabs entry {\"documentId\":\"1\",\"anchorString\":\"/sig/\",\"anchorUnits\":\"pixels\",\"anchorXOffset\":\"0\",\"anchorYOffset\":\"0\",\"anchorIgnoreIfNotPresent\":\"true\"}; Outage alert: \"The provider could not be reached. It may still have taken the envelope — check at the provider before you send again.\"; 0 rounds in app and after reload; retry row: \"DOC-029 Signer One r1 signer.one.administrator.r1@counterparty.example DOC-029 Signer Two r1 signer.two.administrator.r1@counterparty.example doc029-primary-administrator.pdf Version 1 Out for signature Sep 16 by Daniel Okafor —\"; header Envelope sent; note under live row: \"Signed, declined, and voided status arrives by webhook. …\"; provider envelope subject \"C-34 DOC-029r2 signing-standin administrator 20260916175849\", 1 document equal to Version 1 bytes, 2 fictional Signers with the same routingOrder 1; Status still Out for signature"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "One live Envelope only: Send for signature is absent while it is out, and a direct second send is refused",
+            "result": "pass",
+            "actual": "Send for signature absent; direct second send answered 409: \"This contract already has an envelope out for signature. Void it before sending another.\""
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Priya Raman, Daniel Okafor, Nadia Haddad",
+            "expected": "Withdraw: an unrelated Legal Team Member has no envelope actions and cannot void; the sender has the actions; the Legal Owner voids with a required Reason, Cancel keeps the round, and a Voided round frees a new send without moving the Status",
+            "result": "pass",
+            "actual": "Priya Raman: 0 envelope actions, void answered 403; sender Daniel Okafor: actions menu shown; Nadia Haddad (Legal Owner): empty Reason refused with \"Say why this envelope is being voided.\", Cancel kept status sent, confirm answered 200; row \"DOC-029 Signer One r1 signer.one.administrator.r1@counterparty.example DOC-029 Signer Two r1 signer.two.administrator.r1@counterparty.example doc029-primary-administrator.pdf Version 1 Voided DOC-029 wrong signatory administrator 20260916175849 Sep 16 by Daniel Okafor Sep 16\"; header Envelope voided 1; provider status voided with the reason; Send for signature shown again; Status still Out for signature"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Decline: a provider-reported Declined round records its reason, keeps the Voided round in history, files nothing, does not end or archive the Contract, and allows another send",
+            "result": "pass",
+            "actual": "Current Version 2 (no /sig/) sent with the same anchor request (each of 2 Signers carried the same single signHereTabs entry {\"documentId\":\"1\",\"anchorString\":\"/sig/\",\"anchorUnits\":\"pixels\",\"anchorXOffset\":\"0\",\"anchorYOffset\":\"0\",\"anchorIgnoreIfNotPresent\":\"true\"}), so a missing mark is left to anchorIgnoreIfNotPresent; Signed provider decline delivery answered 204; rows: \"DOC-029 Signer One r2 signer.one.administrator.r2@counterparty.example DOC-029 Signer Two r2 signer.two.administrator.r2@counterparty.example doc029-primary-administrator.pdf Version 2 Declined DOC-029 fictional signer declined 20260916175849 Sep 16 by Daniel Okafor Sep 16\" / \"DOC-029 Signer One r1 signer.one.administrator.r1@counterparty.example DOC-029 Signer Two r1 signer.two.administrator.r1@counterparty.example doc029-primary-administrator.pdf Version 1 Voided DOC-029 wrong signatory administrator 20260916175849 Sep 16 by Daniel Okafor Sep 16\"; header Envelope declined; primary Document still 2 Versions; Status Out for signature, archivedAt null; Send for signature shown"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor, Nadia Haddad",
+            "expected": "If another sender won: with both dialogs open, the second send is refused in the dialog, and reloading shows the winner's live round instead of creating another",
+            "result": "pass",
+            "actual": "Nadia Haddad's later send showed \"This contract already has an envelope out for signature. Void it before sending another.\"; after reload the first row reads \"DOC-029 Signer One r3 signer.one.administrator.r3@counterparty.example DOC-029 Signer Two r3 signer.two.administrator.r3@counterparty.example doc029-primary-administrator.pdf Version 2 Out for signature Sep 16 by Daniel Okafor —\"; the provider holds 1 new envelope"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Follow completion: a provider-reported completion shows Signed, then Executed copy; the executed PDF equals the provider's output, is filed once as the pinned executed Version on the primary Document chain, the supporting Document is untouched, and the Contract moves to Active; a repeated delivery adds nothing",
+            "result": "pass",
+            "actual": "Completion delivery answered 204; API right after: status signed, executedFetch pending; first page read: \"DOC-029 Signer One r3 signer.one.administrator.r3@counterparty.example DOC-029 Signer Two r3 signer.two.administrator.r3@counterparty.example doc029-primary-administrator.pdf Version 2 Signed Sep 16 by Daniel Okafor Sep 16 Executed copy\"; final row: \"DOC-029 Signer One r3 signer.one.administrator.r3@counterparty.example DOC-029 Signer Two r3 signer.two.administrator.r3@counterparty.example doc029-primary-administrator.pdf Version 2 Signed Sep 16 by Daniel Okafor Sep 16 Executed copy\"; header Envelope signed; Executed copy opened as a download and its bytes equal the provider output; primary Document Version 3 \"doc029-primary-v2-administrator (executed).pdf\" kind executed, current, designated; Documents row \"doc029-primary-administrator.pdf Primary Draft · ours Draft · theirs Redline · theirs Redline · ours Amendment Executed \" with Unmark as executed copy; supporting Document still 1 Version; Status Active; repeated delivery answered 204 and added no Version or Envelope"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "If someone moved the Contract to another Stage before completion, filing still pins the executed Version but completion does not overwrite that Stage",
+            "result": "pass",
+            "actual": "Moved to Internal review after sending; completion (204) filed Version 4 as current and designated executed; Status stayed Internal review"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "If voiding is refused because the provider already completed the round: the dialog shows the refusal; after the provider's feed arrives, reloading shows the recorded Signed outcome",
+            "result": "pass",
+            "actual": "Void refused in the dialog: \"The provider says this envelope is no longer live. Its ending arrives on the record from the provider's own feed.\"; reload before the provider feed: \"DOC-029 Signer One r5 signer.one.administrator.r5@counterparty.example DOC-029 Signer Two r5 signer.two.administrator.r5@counterparty.example doc029-primary-administrator.pdf Version 4 Out for signature Sep 16 by Daniel Okafor —\"; after the feed (204) and reload: \"DOC-029 Signer One r5 signer.one.administrator.r5@counterparty.example DOC-029 Signer Two r5 signer.two.administrator.r5@counterparty.example doc029-primary-administrator.pdf Version 4 Signed Sep 16 by Daniel Okafor Sep 16 Executed copy\""
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "If the row says the executed copy could not be filed: a Signed round whose executed file cannot be fetched shows that message and creates no Version",
+            "result": "pass",
+            "actual": "Delivery 204; row: \"DOC-029 Signer One r6 signer.one.administrator.r6@counterparty.example DOC-029 Signer Two r6 signer.two.administrator.r6@counterparty.example doc029-primary-administrator.pdf Version 5 Signed Sep 16 by Daniel Okafor Sep 16 The executed copy could not be filed. Upload it to the record instead.\"; primary Document still 5 Versions"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Ravi Menon (Business User on the team)",
+            "expected": "Negative: a Business User on the Contract team cannot read or send Envelopes",
+            "result": "pass",
+            "actual": "Team add answered 201; Ravi Menon signed in by a fresh magic link to the Portal; envelope read answered 403, send answered 403"
+          },
+          {
+            "phase": "main",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Send for signature is absent on an archived Contract; its recorded rounds stay readable",
+            "result": "pass",
+            "actual": "Archived C-34: 6 rounds readable, Send for signature absent, 0 envelope actions, direct send answered 409"
+          },
+          {
+            "phase": "polling",
+            "role": "administrator",
+            "actor": "Daniel Okafor",
+            "expected": "Setup: the Administrator switches Signing updates to Polling",
+            "result": "pass",
+            "actual": "Saved updateMode polling; the Polling hint about 15 to 20 minutes is shown (1)"
+          },
+          {
+            "phase": "polling",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "Polling: the live row still carries the webhook note; a completion reported only at the provider reaches the row without a webhook, within about 15 to 20 minutes while the worker runs",
+            "result": "pass",
+            "actual": "C-36: webhook note under the live row shown (0); a signed delivery in Polling mode answered 401; with no delivery accepted, the record read Signed 0.5 minutes after the provider completion (0.5 minutes after sending); row \"DOC-029 Signer One p1 signer.one.polling.p1@counterparty.example DOC-029 Signer Two p1 signer.two.polling.p1@counterparty.example doc029-polling.pdf Version 1 Signed Sep 16 by Nadia Haddad Sep 16 Executed copy\"; Status Active"
+          },
+          {
+            "phase": "note-check",
+            "role": "legal_team_member",
+            "actor": "Nadia Haddad",
+            "expected": "In Polling mode, the note under a live row still says that status arrives by webhook; the note is absent with no live round",
+            "result": "pass",
+            "actual": "Connector updateMode polling, enabled true. C-38: note count before sending 0; send answered 201; after the Out for signature row rendered, note count 1; after reload 1; void answered 200; after the Voided row rendered, note count 0. Note text: \"Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active.\""
+          }
+        ]
+      },
+      "attempts": [
+        {
+          "attempt": 1,
+          "result": "fail",
+          "counts": {
+            "pass": 19,
+            "fail": 1,
+            "not-run": 15
+          },
+          "detail": "Main phase on the first sign-r2 lab, started about 13 seconds after the stand-in overlay restarted the app. legal_team_member passed its 16 steps. The administrator step 'With the connector enabled, Send for signature stays absent when no primary Document is set and appears when one is' timed out after 30 s waiting for the Contract sections Approvals link on C-38, and the 15 later administrator steps did not run. A probe right after opened C-36, C-37 and C-38 as Daniel Okafor, and the Approvals link appeared in 135 to 242 ms, with no container restart. I judged it a transient load delay. I destroyed the lab, built a fresh one, warmed the app, and ran the whole main phase again. That run is the counted one.",
+          "files": [
+            "docs/documentation/batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2-main-attempt1.raw.json",
+            "docs/documentation/batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2-main-attempt1.log"
+          ]
+        },
+        {
+          "attempt": 2,
+          "result": "pass",
+          "detail": "Counted run: main 35 of 35 steps passed, polling 2 of 2 passed, note check 1 of 1 passed."
+        }
+      ],
+      "observations": [
+        "Polling phase: the script counts the webhook note right after the send answers and does not assert the count. It read 0 here and 1 in round 1. approvals-signing-card.tsx is unchanged. note-check-r2.mjs waited for the Out for signature row in Polling mode and found the note once, still there after reload, and gone after a void. The article sentence 'The note under a live row still says that status arrives by webhook in both modes.' holds.",
+        "Polling phase: the record read Signed 0.5 minutes after the provider completion (round 1: 4.0 minutes). The first worker sweep happened to fall soon after the send. The article says an update 'can take about 15 to 20 minutes', and this faster result does not contradict it."
+      ],
+      "limitations": [
+        "Local DocuSign protocol stand-in only. It cannot show Sign Here placement, white text, or free-form fallback. docusign.ts is unchanged, so the live-provider evidence and the /sig/ limitations in the current evidence still apply.",
+        "One counted run per phase. Browser contexts were 1280x1800 CSS px, headless Chromium."
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/note-check-r2.mjs",
+      "sha256": "7e959199bcf5c82ab5e9640f5e1bb180ac9af235805f30e4aa92a6f7eece7851"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/note-check-r2.raw.json",
+      "sha256": "238e05dfad2fa2d14bbb8e2d730db17e651058f766b99e0e0cc582cc7e331040"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/up-r2.sh",
+      "sha256": "f22c67e4adb19270ef4e0a1c664b3cb2e2f724d7cf5b4689aa7357799a61b1a4"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2-main-attempt1.log",
+      "sha256": "970235115b2744110499d60c09683ca83f46fd1a8df4edc122fd0c8fa62d9eaf"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2-main-attempt1.raw.json",
+      "sha256": "749447379bc10eb5d3afc91147ad04ad4b254d1d10f3259d5452c6fa97fe2922"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2-main.log",
+      "sha256": "552e14f52bc65a7548419b61098069086f70a3408b6c894d648a98b381d20975"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2-main.raw.json",
+      "sha256": "c44a451563cf75130826ebf9ddecfc56308dded78370bd8e4410da4cfcd94232"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2-polling.log",
+      "sha256": "9924303cd750aae715e5fbcade3e502355a9442cc6e1c3aba975dccddb0f022e"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2-polling.raw.json",
+      "sha256": "a64418d4dab128f7b78cac9c5214d03bb50fdb5c76feb058ed7fbdf26fc5a92c"
+    },
+    {
+      "path": "batches/DOC-029/compat-r2/signing-standin-r2/walkthrough-r2.mjs",
+      "sha256": "efb493b221569c9f37a5871217bd7fc16468a1a565eefb4e5da86e4b9c68bc14"
+    }
+  ],
+  "reviewedAt": "2026-09-16T18:03:07.993Z"
+}

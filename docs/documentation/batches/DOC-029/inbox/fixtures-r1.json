@@ -1,0 +1,96 @@
+{
+  "note": "Fixture identifiers for the DOC-029 inbox round 1 walkthrough. No credentials.",
+  "createdAt": "2026-09-16T15:06:40.864Z",
+  "contractType": {
+    "id": "01a0aac1-75d9-7a25-bba7-5cbb21933af6",
+    "name": "DOC-029 inbox Supplier agreement"
+  },
+  "matterType": {
+    "id": "01a0aac1-75e8-7444-a8b9-e13d458718de",
+    "name": "DOC-029 inbox Advisory"
+  },
+  "requestTypes": {
+    "contract": {
+      "id": "01a0aac1-7646-782d-b3ec-d0a4437713a1",
+      "name": "DOC-029 inbox Supplier contract request"
+    },
+    "matter": {
+      "id": "01a0aac1-7653-72bc-a002-8bd91fd1010d",
+      "name": "DOC-029 inbox Advisory matter request"
+    }
+  },
+  "fields": {
+    "carry": {
+      "id": "01a0aac1-75f7-7d5d-b0ed-5430771db9fa",
+      "slug": "doc_029_inbox_supplier_name",
+      "name": "DOC-029 inbox Supplier name"
+    },
+    "stay": {
+      "id": "01a0aac1-7607-7b3f-af90-55011285dfd1",
+      "slug": "doc_029_inbox_budget_note",
+      "name": "DOC-029 inbox Budget note"
+    },
+    "required": {
+      "id": "01a0aac1-7618-7997-bad8-2329e25a6010",
+      "slug": "doc_029_inbox_cost_centre",
+      "name": "DOC-029 inbox Cost centre"
+    },
+    "entity": {
+      "id": "01a0aac1-762a-7059-8f39-bcd6f0b135f6",
+      "slug": "doc_029_inbox_contracting_entity",
+      "name": "DOC-029 inbox Contracting entity"
+    },
+    "choice": {
+      "id": "01a0aac1-763a-7776-b25b-676a96f7a29a",
+      "slug": "doc_029_inbox_region",
+      "name": "DOC-029 inbox Region"
+    }
+  },
+  "entities": {
+    "live": {
+      "id": "01a0aac1-76eb-75bb-af61-da43182da2d3",
+      "name": "DOC-029 inbox Live Holdings Ltd"
+    },
+    "old": {
+      "id": "01a0aac1-76f4-731b-ba2e-60f35194e8bb",
+      "name": "DOC-029 inbox Old Holdings Ltd"
+    }
+  },
+  "templates": {
+    "good": {
+      "id": "01a0aac1-771a-719b-baef-d1800b43d023",
+      "name": "DOC-029 inbox Advisory template"
+    },
+    "stale": {
+      "id": "01a0aac1-773d-75f4-b125-12d4c32ce0ec",
+      "name": "DOC-029 inbox Stale template"
+    }
+  },
+  "contractTypeDefaultPerson": "Priya Raman",
+  "departments": [
+    {
+      "id": "01a0aaad-b888-7803-97c6-c587668f47f8",
+      "name": "Engineering"
+    },
+    {
+      "id": "01a0aaad-b8c0-7663-a781-abccd167df1f",
+      "name": "Finance"
+    },
+    {
+      "id": "01a0aaad-b8da-76fa-9a83-19461311ca9c",
+      "name": "Marketing"
+    },
+    {
+      "id": "01a0aaad-b8a4-7288-96d4-c85e364e7350",
+      "name": "People"
+    },
+    {
+      "id": "01a0aaad-b865-714e-8fc4-46a98113d455",
+      "name": "Procurement"
+    },
+    {
+      "id": "01a0aaad-b833-71b8-b426-c00edd03cabe",
+      "name": "Sales"
+    }
+  ]
+}

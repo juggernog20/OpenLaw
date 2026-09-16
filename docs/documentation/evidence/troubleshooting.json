@@ -1,24 +1,19 @@
 {
   "articleId": "troubleshooting",
-  "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b",
-  "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-  "buildId": "app sha256:01f561a674f91137c4e3bb0e0b267c3e1731361dc13182687a5026510b87d7bb; engine sha256:1c2f7f6f03395c6cdf05c8e2ab716334a4248587ec655f3cbdfebefb8ffafbf7",
-  "environment": "openlaw-docs-b8e31260-configuration (immutable backend); working documentation preview at 127.0.0.1:43333",
-  "author": "Codex documentation author",
-  "technicalReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-  "walkthroughReviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
+  "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-admin",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (support, round 1)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-08T11:54:09.727Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (support)",
+  "technicalReviewer": "DOC-029 source-review author agent (support)",
+  "verifiedAt": "2026-09-16T16:25:31Z",
   "status": "pass",
   "sources": [
-    "CONTEXT.md",
-    "docs/documentation/PUBLISHING.md",
-    "docs/documentation/edition.json",
-    "apps/web/src/components/documentation/documentation-reader.tsx",
-    "apps/api/src/lib/uploads.ts",
-    "apps/api/src/lib/render-family.ts",
-    "apps/api/src/modules/contracts/routes.ts",
-    "apps/web/src/components/approvals/approvals-signing-card.tsx"
+    "docs/user-guides/troubleshooting.md",
+    "docs/documentation/batches/DOC-029/support/technical-review.json",
+    "docs/documentation/batches/DOC-029/support/walkthrough-r1.json"
   ],
   "scenarios": [
     {
@@ -26,133 +21,96 @@
       "coverage": ["C49"],
       "role": "administrator",
       "method": "browser-walkthrough",
-      "expected": "Symptom checks lead to supported recovery or specific escalation without access bypass or unsupported provider claims.",
-      "actual": "Read the escalation the article routes to this reader. On the request naming Nadia Haddad the requesting Administrator was offered only \"Cancel request\"; on the request naming himself he was offered Approve, Reject and Cancel request. He opened a Confidential Contract he did not create, added the Contributor team entry that recovered another reader's access, and reached the integrations settings where the connector state is read. Help and the formal reader reached all three guides and their recovery links.",
+      "prerequisites": [
+        "Seeded fictional Administrator (Daniel Okafor) account in its own browser context on the shared admin documentation lab.",
+        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+      ],
+      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
+      "actual": "11 recorded steps passed for this role on 3fa407e3. Header Help reached Resolve common problems. A wrong password showed \"Check your email and password.\" and the account still signed in. C-999999 and a Confidential Contract without named access both showed \"Contract not found\" with \"Back to Contracts\"; two reloads changed nothing and no title leaked. After the Legal Owner added a team entry, the same link opened. A 315-character filename was refused with \"Rename the file to 255 characters or fewer before uploading it.\" and nothing was stored. The failed Word Version showed \"This file could not be prepared for reading here. Download it to read it.\" and Download returned the original bytes. Notification preferences showed In-app, Email and Briefing with \"In-app off turns the group off entirely, email included.\" and Profile had Timezone. On a request naming Nadia Haddad only \"Cancel request\" was offered; on his own request Approve, Reject and Cancel request; a direct decision on Nadia's request answered 403. Moving to Active opened \"Move past approval\" listing the Pending request, and Cancel kept Draft. E-signature read \"DocuSign Not connected\", no Send for signature appeared, and Mark as executed copy stayed available. AI analysis read \"Provider Not connected\" with Field prompts. Settings > Contracts > Fields opened.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-024/README.md",
-        "docs/documentation/batches/DOC-024/independent-discovery.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
-        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
-        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
-      ],
-      "verifiedAt": "2026-09-08T11:52:53.570Z"
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/lib-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/r1-admin-contract-not-found.png",
+        "docs/documentation/batches/DOC-029/support/r1-admin-move-past-approval.png"
+      ]
     },
     {
       "id": "V-C49",
       "coverage": ["C49"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "expected": "Symptom checks lead to supported recovery or specific escalation without access bypass or unsupported provider claims.",
-      "actual": "Followed the symptom families that reach this reader. A wrong password answered \"Check your email and password.\" and left the account usable. An over-long filename was refused with copy naming the filename problem, nothing was stored, and the corrected name uploaded exactly once in the destination list. A deliberately damaged archive named .docx showed \"Preparing this document for reading…\" and then \"This file could not be prepared for reading here. Download it to read it.\", while Download returned the original 2,058 bytes and no Version was appended. The preference pane carried the In-app and Email switches, a Briefing section, and the app's own sentence \"In-app off turns the group off entirely, email included.\" The named approver decided once through a dialog that says \"A decision is final. To change it, ask for a new approval.\", and no decision control remained afterwards. Moving past Approval with one unresolved request raised the \"Move past approval\" warning, and Cancel left the Status on Draft. Signing offered no send control and no Analysis surface existed, so both symptoms ended at the configuration escalation the article names.",
+      "prerequisites": [
+        "Seeded fictional Legal Team Member (Nadia Haddad) account in its own browser context on the shared admin documentation lab.",
+        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+      ],
+      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
+      "actual": "11 recorded steps passed for this role on 3fa407e3. Header Help reached the guide. A wrong password showed \"Check your email and password.\" and the account still signed in. With the record read failing, the page showed \"Something went wrong.\" and Reload; after the connection returned, Reload opened the Contract. M-999999 showed \"Matter not found\", and a Confidential Contract without access showed \"Contract not found\" until its Legal Owner added a team entry. The archived Contract offered no Upload. Notice period (days) 99999 showed \"One or more request fields are invalid.\" and kept the entered value; a reload showed the value had not saved. Organization settings stayed closed. A 105 MiB file was refused with \"That file is over the 100 MB upload limit.\", a 305-character filename was refused, nothing was stored, the corrected name uploaded once, and uploading it again as a new Document made a second row. A damaged Word file showed \"Preparing this document for reading…\" and then the failure message; Download returned the original 2,046 bytes and reopening added no Version. The named approver's dialog said \"A decision is final. To change it, ask for a new approval.\"; afterwards no decision control remained and a second decision answered 409. No Send for signature appeared and Mark as executed copy was offered. The Contract had no Analysis control, and Triage > Convert to contract opened a manual Convert dialog with no Conversion draft; Cancel left the Request open.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-024/README.md",
-        "docs/documentation/batches/DOC-024/independent-discovery.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
-        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
-        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
-      ],
-      "verifiedAt": "2026-09-08T11:54:09.727Z"
-    },
-    {
-      "id": "V-C49",
-      "coverage": ["C49"],
-      "role": "contributor",
-      "method": "browser-walkthrough",
-      "expected": "Symptom checks lead to supported recovery or specific escalation without access bypass or unsupported provider claims.",
-      "actual": "Started from the article's missing-record symptom. A direct link to a Confidential Contract with no team entry answered \"Something went wrong.\" with a Reload control, leaked no record title, and did not change on a second Reload. After the Administrator added the qualifying team entry the same link opened the record, so the refusal was access and not deletion. The Entities module stayed closed. On the shared Contract there was no Add approver, no Apply group and no Add task, so the article's instruction to ask Legal for the legal action is the only route the app leaves open. Nothing in the article offered a way around any refusal.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-024/README.md",
-        "docs/documentation/batches/DOC-024/independent-discovery.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
-        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
-        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
-      ],
-      "verifiedAt": "2026-09-08T11:41:36.342Z"
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/lib-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/r1-member-page-could-not-load.png",
+        "docs/documentation/batches/DOC-029/support/r1-member-preview-failed.png"
+      ]
     },
     {
       "id": "V-C49",
       "coverage": ["C49"],
       "role": "business_user",
       "method": "browser-walkthrough",
-      "expected": "Symptom checks lead to supported recovery or specific escalation without access bypass or unsupported provider claims.",
-      "actual": "Followed the Portal symptoms. A Portal sign-in link worked once and was refused on reuse with the app's expired or already-used wording, which is the article's \"request a new link and open the newest message\" recovery. Notification settings in the Portal offered \"Request updates\". A staff Contract workspace stayed closed to this reader. Portal Help listed all three reference guides and their recovery links resolved.",
+      "prerequisites": [
+        "Seeded fictional Business User (Jonas Weber, fresh magic links from the lab Mailpit) account in its own browser context on the shared admin documentation lab.",
+        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+      ],
+      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
+      "actual": "8 recorded steps passed for this role on 3fa407e3. Portal Help reached the guide. A spent sign-in link opened \"Sign-in link expired\" with \"The link has expired or was already used. Enter your email to get a fresh one.\"; a new link from the newest message signed in, and /contracts in that session landed on /portal. C-999999 and a Confidential Contract without a team entry both showed \"This Contract does not exist, or you cannot open it.\" with no title. A team Contract opened, and after Legal archived it the same link showed the not-found copy, also after reload. A Matter linked to a shared Contract stayed closed. The converted Request opened its Contract in the Portal. After Legal removed the team entry, the Request address returned to the Portal home, and it opened again after Legal restored the entry. On a shared Contract, Overview and Fields had no editable controls, a direct Field write answered 403, and no Approval, Task, signing, Stage or archive control appeared. The reply posted in Comments, and Add team member added Amara Nwosu. On a Confidential Contract, Add team member was disabled and a direct add answered 403. Add version on the Primary Document made Version 2, the upload dialog had no folder choice, and a folder destination was refused with \"Business Users may upload supporting Documents at the record root only.\". Notification settings listed Request updates, Assigned to you and Activity on your records with In-app and Email.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-024/README.md",
-        "docs/documentation/batches/DOC-024/independent-discovery.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
-        "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-        "docs/documentation/batches/DOC-024/independent-approval-decision.json",
-        "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
-        "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
-      ],
-      "verifiedAt": "2026-09-08T11:48:32.343Z"
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
+        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/lib-r1.mjs",
+        "docs/documentation/batches/DOC-029/support/r1-portal-link-expired.png"
+      ]
     }
   ],
-  "authorEvidence": [
-    "docs/documentation/batches/DOC-024/README.md",
-    "docs/documentation/batches/DOC-024/author-approval-first.json",
-    "docs/documentation/batches/DOC-024/author-approval.json",
-    "docs/documentation/batches/DOC-024/author-discovery-first.json",
-    "docs/documentation/batches/DOC-024/author-discovery.json",
-    "docs/documentation/batches/DOC-024/author-discovery-second.json",
-    "docs/documentation/batches/DOC-024/author-files.json",
-    "docs/documentation/batches/DOC-024/author-files-retry.json",
-    "docs/documentation/batches/DOC-024/author-offline.json",
-    "docs/documentation/batches/DOC-024/author-recovery.json",
-    "docs/documentation/batches/DOC-024/author-reference-first.json",
-    "docs/documentation/batches/DOC-024/author-reference.json",
-    "docs/documentation/batches/DOC-024/author-symptoms.json"
-  ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; it is not a human user study and not the feature owner's approval.",
-    "Articles were read from the working documentation preview over the immutable configuration backend, so the intended development-preview and Unverified article notices were visible throughout.",
-    "Real provider configuration C42/C43 stays blocked under #742. Signing and Analysis were observed unconfigured; that is not evidence that any live provider works.",
-    "Full-suite compatibility and publication acceptance remain DOC-025/027 work.",
-    "The user will proofread the assembled full suite; no human feature-owner sign-off is claimed."
+    "Independent agent walkthrough by a different agent from the source-review author; not a human user study and not feature-owner approval.",
+    "The lab Help and formal readers serve the article bytes committed at 3fa407e3, which differ from the reviewed corrected bytes. Steps followed the reviewed bytes against the app. Reader checks prove the routes, headings and UI behavior; link checks opened every internal link of the reviewed bytes in the bundled formal reader.",
+    "The admin lab is shared with other DOC-029 agents. The walkthrough created only records named DOC-029 support ... and changed no organisation settings.",
+    "Two earlier recorded attempts (walkthrough-r1-attempt1.json, walkthrough-r1-attempt2.json) each had one reviewer harness fault and are kept with their disposition. Exploratory probes and development runs before them are not evidence.",
+    "Signing and Analysis were observed unconfigured in this lab (DocuSign Not connected, AI Provider Not connected). The Signed Envelope, Executed copy filing, Kept, Unverified, Retry Request-context Analysis, purple border, sparkle evidence and Conversion draft preparation checks were not exercised; the provider stand-in groups verify those workflows, and neither is live-provider evidence.",
+    "Email delivery, spam filtering and morning briefing timing were not exercised. The walkthrough checked only the preference and Timezone controls the article names.",
+    "Page-could-not-load was produced by blocking the browser's request for one Contract read, as a controlled fixture, not by a real network outage.",
+    "The save error shown for an out-of-range Notice period was the general message \"One or more request fields are invalid.\", not a field-specific correction. The article's reload check still showed what saved.",
+    "The Contributor role no longer exists at this build, so no Contributor walkthrough was run. Ravi Menon is a Business User in this lab and was not used."
   ],
-  "authorCopyUpdate": "After author walkthroughs, copy-only review clarified target Document/source Document Version, assigned person and internal record-sharing wording. Historical records retain the bytes observed; that sentence was written while independent acceptance was still pending, and it is kept as the historical note it was. Independent acceptance has since been recorded; see sourceReview and the scenario results above.",
-  "independentEvidence": [
-    "docs/documentation/batches/DOC-024/README.md",
-    "docs/documentation/batches/DOC-024/independent-discovery.json",
-    "docs/documentation/batches/DOC-024/independent-symptoms.json",
-    "docs/documentation/batches/DOC-024/independent-symptoms-second.json",
-    "docs/documentation/batches/DOC-024/independent-symptoms-retry.json",
-    "docs/documentation/batches/DOC-024/independent-approval-decision.json",
-    "docs/documentation/batches/DOC-024/independent-discovery-first-tool-output.txt",
-    "docs/documentation/batches/DOC-024/independent-discovery-first.capture.json"
-  ],
-  "verifiedAtBasis": "Each scenario's verifiedAt is the recorded time of that role's last passing observation for this article, taken from the independent records listed in its evidence. The article-level verifiedAt is the latest of those scenario times. It is not a single acceptance ceremony and no finer time is claimed.",
-  "sourceReview": {
-    "reviewer": "Independent reviewer (Claude Opus 5 CLI documentation review seat)",
-    "reviewerKind": "agent",
-    "method": "source-inspection",
-    "completedAt": "2026-09-08T11:28:16Z",
-    "recordedIn": "commit 2570232af33f8f0a4e77e90cb69c70a04898fae9 on docs/744-support-reference",
+  "previousEvidence": {
     "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "scope": [
-      "messages/en-US.json for every quoted UI label",
-      "apps/api/src/lib/uploads.ts for the upload ceiling, its MAX_UPLOAD_MB control and the 255-character filename bound",
-      "apps/api/src/lib/render-family.ts for the stored-type and preview families, including SVG as download-only",
-      "apps/api/src/lib/notifications/notifier.ts and catalog.ts for the in-app and email rule",
-      "apps/api/src/modules/contract-analysis/routes.ts and contract-envelopes/routes.ts for the Analysis target and the single live Envelope",
-      "CONTEXT.md and the canonical guides for the glossary, permission and Document rows",
-      "every internal link and heading anchor in the three articles"
-    ],
-    "outcome": "One correction was needed and applied: the reference article's title read \"file behaviour\", against the en-US rule in EDITORIAL.md and against the article's own \"File behavior and limits\" heading. Every other claim checked held. The same commit linked the batch record from WRITING-BATCHES.md and noted the aborted-run record shape.",
-    "note": "This source review is separate from the browser walkthroughs recorded in the scenarios below. Its completion time is the commit time of 2570232a converted to UTC, and that commit is the identity of this review's own correction. It does not cover any source read later in the session; those are recorded in sourceReviewAddendum or in the independent records that carry them, and none of them is backdated into this object."
+    "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b",
+    "verifiedAt": "2026-09-08T11:54:09.727Z"
+  },
+  "copyOnlyReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to record not-found pages, Portal pages, uploads, previews, notifications, Approval, signing or Analysis; the sign-in page gains branding only. I replayed the round 1 V-C49 walkthrough on the admin2 lab and all 30 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. The sign-in section points to staff and Portal sign-in and to Authentication settings. It makes no claim about the wizard or two-factor enrollment.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/support.json",
+        "sha256": "2a585ecc57a52770b2a537f10edc806b7b22535f91701f6265ecef59d916f18f"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
   }
 }

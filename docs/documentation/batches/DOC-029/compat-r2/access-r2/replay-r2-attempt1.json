@@ -1,0 +1,407 @@
+{
+  "batch": "DOC-029",
+  "group": "access",
+  "round": 2,
+  "reviewer": "DOC-029r2 compatibility reviewer (access)",
+  "reviewerKind": "agent",
+  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "environment": "openlaw-docs-41255c61-work2",
+  "appUrl": "http://127.0.0.1:23301",
+  "mailUrl": "http://127.0.0.1:23401",
+  "runningImages": {
+    "app": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "worker": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "doc-engine": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+  },
+  "labStatusImages": {
+    "project": "openlaw-docs-41255c61-work2",
+    "sourceCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "appImageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+    "engineImageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-16T17:45:41.767Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-16T17:46:02.188Z"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  "modules": ["home", "search", "settings"],
+  "startedAt": "2026-09-16T17:51:48.715Z",
+  "finishedAt": "2026-09-16T17:53:57.759Z",
+  "fixtures": {
+    "accounts": {
+      "administrator": {
+        "email": "doc029r2.access.admin.1789581109183@helix.example",
+        "displayName": "DOC-029r2 access Administrator 9183"
+      },
+      "legal_team_member": {
+        "email": "doc029r2.access.member.1789581109183@helix.example",
+        "displayName": "DOC-029r2 access Legal Team Member 9183"
+      }
+    },
+    "created": [
+      "administrator account doc029r2.access.admin.1789581109183@helix.example (DOC-029r2 access Administrator 9183)",
+      "legal_team_member account doc029r2.access.member.1789581109183@helix.example (DOC-029r2 access Legal Team Member 9183)",
+      "Contract C-34 DOC-029r2 access Home contract 1789581110179",
+      "Confidential Contract C-35 DOC-029r2 access confidential contract 1789581110179 (Daniel's team only)",
+      "55 Tasks on C-34 assigned to doc029r2.access.admin.1789581109183@helix.example",
+      "55 Tasks on C-34 assigned to doc029r2.access.member.1789581109183@helix.example",
+      "Contracts C-58 (PDF with the unique word), C-59, Confidential C-60 for search",
+      "legal_team_member account doc029r2.access.nopassword.1789581188982@helix.example without a password"
+    ]
+  },
+  "sanitization": "No passwords, cookies, sign-in links, set-password tokens or mail bodies are stored. Fixture account passwords exist only in memory for the run.",
+  "summary": {
+    "total": 38,
+    "passed": 37,
+    "failed": 1
+  },
+  "steps": [
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Open work from Home, steps 1-5",
+      "expected": "Home lists only sections with work, in the documented order; a Task title opens its record; the record shows its number and title; Fields and Documents section links work; Home returns",
+      "actual": "Sections shown in order: Tasks assigned to you > Dates approaching > Entity obligations > Inbox > Your contracts (order matches true); API sections tasks:3, dates:4, obligations:27, inbox:21, contracts:5 (no zero-total section true); reviewer Task on the card true; opened C-34 with number and title true; Fields true; Documents true; Home true",
+      "result": "pass",
+      "at": "2026-09-16T17:51:53.733Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "section contents: Your contracts by Owner, Your matters by Matter Manager, Tasks open and assigned",
+      "expected": "Your contracts rows have you as Owner; Your matters rows have you as Matter Manager; Tasks rows are open",
+      "actual": "Your contracts rows 4, all managed by this account true; Your matters rows 0, all managed by this account true; Task rows open true; Approvals section present false",
+      "result": "pass",
+      "at": "2026-09-16T17:51:54.023Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Task due dates do not feed Dates approaching; View all opens Your dates",
+      "expected": "The reviewer Task's due date is absent from Dates approaching and Your dates; View all opens Your dates",
+      "actual": "Task or its Contract in Dates approaching false; Your dates opened without the Task true",
+      "result": "pass",
+      "at": "2026-09-16T17:51:54.608Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "keyboard: ?, Escape, /, Tab and Enter; typing in a field keeps the characters",
+      "expected": "? opens Keyboard shortcuts; Escape closes a dialog and a menu; / focuses record search; Tab moves focus; Enter activates a link; ? and / typed in a field stay in the field",
+      "actual": "Sheet opened true, closed by Escape true; name menu open true, closed by Escape true; / focused Search true; typed value \"?/x\" with no sheet true; Tab moved focus to \"Documents\"; Enter on Contracts link navigated true",
+      "result": "pass",
+      "at": "2026-09-16T17:51:55.518Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Help in the header opens product instructions and its search searches guides",
+      "expected": "Help opens from Home; its search finds the guide, not records",
+      "actual": "Help URL /help?topic=home&topic=home.obligations&topic=notifications&topic; result summary \"6 results\"; guide found true; reviewer Contract title in Help results false",
+      "result": "pass",
+      "at": "2026-09-16T17:51:55.771Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "unavailable record pages",
+      "expected": "Contract not found or Matter not found says the record does not exist or you cannot open it; Back to Contracts or Back to Matters returns to the list",
+      "actual": "{'/contracts/999999':{'title':true,'message':true,'backLink':true,'leaked':false},'/matters/999999':{'title':true,'message':true,'backLink':true,'leaked':false}}",
+      "result": "pass",
+      "at": "2026-09-16T17:51:56.156Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Open work from Home, steps 1-5",
+      "expected": "Home lists only sections with work, in the documented order; a Task title opens its record; the record shows its number and title; Fields and Documents section links work; Home returns",
+      "actual": "Sections shown in order: Tasks assigned to you > Dates approaching > Entity obligations > Inbox > Your contracts (order matches true); API sections tasks:3, dates:1, obligations:12, inbox:25, contracts:5, matters:1 (no zero-total section true); reviewer Task on the card true; opened C-34 with number and title true; Fields true; Documents true; Home true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:00.433Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "section contents: Your contracts by Owner, Your matters by Matter Manager, Tasks open and assigned",
+      "expected": "Your contracts rows have you as Owner; Your matters rows have you as Matter Manager; Tasks rows are open",
+      "actual": "Your contracts rows 4, all managed by this account true; Your matters rows 1, all managed by this account true; Task rows open true; Approvals section present false",
+      "result": "pass",
+      "at": "2026-09-16T17:52:00.981Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Task due dates do not feed Dates approaching; View all opens Your dates",
+      "expected": "The reviewer Task's due date is absent from Dates approaching and Your dates; View all opens Your dates",
+      "actual": "Task or its Contract in Dates approaching false; Your dates opened without the Task true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:01.587Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "keyboard: ?, Escape, /, Tab and Enter; typing in a field keeps the characters",
+      "expected": "? opens Keyboard shortcuts; Escape closes a dialog and a menu; / focuses record search; Tab moves focus; Enter activates a link; ? and / typed in a field stay in the field",
+      "actual": "Sheet opened true, closed by Escape true; name menu open true, closed by Escape true; / focused Search true; typed value \"?/x\" with no sheet true; Tab moved focus to \"Documents\"; Enter on Contracts link navigated true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:02.538Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Help in the header opens product instructions and its search searches guides",
+      "expected": "Help opens from Home; its search finds the guide, not records",
+      "actual": "Help URL /help?q=Find+your+work+on+Home&topic=home&topic=home.obligations&; result summary \"6 results\"; guide found true; reviewer Contract title in Help results false",
+      "result": "pass",
+      "at": "2026-09-16T17:52:02.784Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "unavailable record pages",
+      "expected": "Contract not found or Matter not found says the record does not exist or you cannot open it; Back to Contracts or Back to Matters returns to the list",
+      "actual": "{'/contracts/999999':{'title':true,'message':true,'backLink':true,'leaked':false},'/matters/999999':{'title':true,'message':true,'backLink':true,'leaked':false},'/contracts/35':{'title':true,'message':true,'backLink':true,'leaked':false}}",
+      "result": "pass",
+      "at": "2026-09-16T17:52:03.510Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "empty Tasks list and absent Home card",
+      "expected": "No open Tasks assigned to you. on Your Tasks; no Tasks assigned to you card on Home",
+      "actual": "Empty message true; Home Tasks card absent true; Home sections for this account: obligations, inbox; Welcome to OpenLaw shown false",
+      "result": "pass",
+      "at": "2026-09-16T17:52:06.742Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Open all your Tasks: View all, Your Tasks, Load more Tasks, due-date order with undated last",
+      "expected": "View all with the count opens Your Tasks; Load more Tasks adds the next page; Tasks follow due date with undated Tasks last",
+      "actual": "View all 55 opened /home/tasks true; rows 50 then 55 after Load more Tasks (shown true); order by due date true; last two rows undated true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:12.123Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "complete, Undo, Show completed / Hide completed, reopen by clearing the control",
+      "expected": "Completion shows Completed with Undo; Undo reopens; Show completed adds completed Tasks and the label says Hide completed; clearing a completed Task's control shows Reopened",
+      "actual": "Completed message true; Undo reopened (database open true, row present true); completed row left the open list true; after Show completed: label Hide completed true, completed row listed true; Reopened message true, database open true; switch turned off, label Show completed true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:20.824Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Your Tasks: Task title opens its owning record; Home in the app navigation returns",
+      "expected": "Task title opens the Contract; Home returns",
+      "actual": "Opened /contracts/34/tasks true; Home true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:21.245Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "empty Tasks list and absent Home card",
+      "expected": "No open Tasks assigned to you. on Your Tasks; no Tasks assigned to you card on Home",
+      "actual": "Empty message true; Home Tasks card absent true; Home sections for this account: inbox; Welcome to OpenLaw shown false",
+      "result": "pass",
+      "at": "2026-09-16T17:52:24.667Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Open all your Tasks: View all, Your Tasks, Load more Tasks, due-date order with undated last",
+      "expected": "View all with the count opens Your Tasks; Load more Tasks adds the next page; Tasks follow due date with undated Tasks last",
+      "actual": "View all 55 opened /home/tasks true; rows 50 then 55 after Load more Tasks (shown true); order by due date true; last two rows undated true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:30.444Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "complete, Undo, Show completed / Hide completed, reopen by clearing the control",
+      "expected": "Completion shows Completed with Undo; Undo reopens; Show completed adds completed Tasks and the label says Hide completed; clearing a completed Task's control shows Reopened",
+      "actual": "Completed message true; Undo reopened (database open true, row present true); completed row left the open list true; after Show completed: label Hide completed true, completed row listed true; Reopened message true, database open true; switch turned off, label Show completed true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:39.336Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Your Tasks: Task title opens its owning record; Home in the app navigation returns",
+      "expected": "Task title opens the Contract; Home returns",
+      "actual": "Opened /contracts/34/tasks true; Home true",
+      "result": "pass",
+      "at": "2026-09-16T17:52:39.651Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "fixture: Document text processed and searchable",
+      "expected": "The PDF's word becomes searchable",
+      "actual": "Indexed true for a unique word in the PDF on C-58",
+      "result": "pass",
+      "at": "2026-09-16T17:52:42.217Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "Search across your work, steps 1-4, and the Document result",
+      "expected": "/ focuses Search; results include the reachable records and the Document whose words match; the Document result names its owning record and Version; the kind filter narrows; opening the result shows the matching Version with find filled; the Confidential record outside reach never appears",
+      "actual": "Header results listed; See all results opened the results page; title match C-59 true; Document result \"v1 doc029r2-access-search-1789581160080.pdf Owned by C-58 fictional clause mentions quilli\" names owner and version true; Document filter left only Document rows true (1); opened /contracts/58/documents with find text filled true and reader showing the file true; Confidential C-60 in header false, on page false",
+      "result": "pass",
+      "at": "2026-09-16T17:52:53.426Z"
+    },
+    {
+      "article": "search-and-views",
+      "role": "administrator",
+      "step": "the Confidential record outside reach stays hidden",
+      "expected": "Direct link and search do not reveal it",
+      "actual": "Direct link shows Contract not found true; API contract results include it false",
+      "result": "pass",
+      "at": "2026-09-16T17:52:53.602Z"
+    },
+    {
+      "article": "search",
+      "role": "-",
+      "step": "script error",
+      "expected": "module completes",
+      "actual": "search: locator.waitFor: Timeout 15000ms exceeded.",
+      "result": "fail",
+      "at": "2026-09-16T17:53:08.628Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Update your profile, steps 1-5, with Email and Role read-only",
+      "expected": "Settings from the name menu; Profile under Personal; Full name saves on leaving the field; Timezone search and select saves; reload keeps both; Use browser timezone removes the preference; Email and Role are read-only",
+      "actual": "Personal group true; name Saved true, after reload \"DOC-029r2 access Administrator 9183 edited\", header menu updated true; timezone Saved true, after reload \"Asia/Tokyo\"; Use browser timezone Saved true, stored null; Email shown and not editable true; Role note true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:12.636Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Profile photo: Upload a PNG within 1 MB; a larger file fails",
+      "expected": "A JPG or PNG no larger than 1 MB saves; a failed update is reported",
+      "actual": "64 px PNG (12420 bytes) Saved true, stored true; 1470983-byte PNG shows The change could not be saved. Try again. true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:14.150Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Choose a theme, steps 1-3; another account unchanged",
+      "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing theme does not sign out; the other account's preferences stay the same",
+      "actual": "Saved/stored: {\"Warm\":\"true/warm\",\"Dark\":\"true/dark\",\"Light\":\"true/light\"}; Dark kept after reload true (document theme \"dark\"); still signed in true; other legal_team_member account name|timezone|theme|photo before \"|light|false\", after \"|light|false\", equal true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:18.127Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Open your own Portal view, steps 1-4",
+      "expected": "View Business Portal under Personal; View as business user opens the Portal with the Viewing as business user banner; it is your own identity and role; Return to legal view returns to View Business Portal",
+      "actual": "Portal URL reached; banner true; banner text true; Portal header shows own email true; role unchanged true; Return to legal view -> /settings/app-view true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:20.906Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Change your password, steps 1-3",
+      "expected": "Password & two-factor shows Change password; a wrong current password or a short new password is refused; Save changes the password, keeps this session, and signs out other devices",
+      "actual": "Card shown true; wrong current password message true; 6-character new password refused true; dialog closed after Save true; this session open after reload true; other device sent to sign-in true; old password refused true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:25.477Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "End sessions: Sign out other devices and Sign out",
+      "expected": "Sign out other devices saves and ends every other session; this one stays; Sign out ends the current session",
+      "actual": "Saved true; other device sent to sign-in true; this session still open true; name restored with Enter true; Sign out -> sign-in page true; protected page afterwards requires sign-in true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:30.070Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Update your profile, steps 1-5, with Email and Role read-only",
+      "expected": "Settings from the name menu; Profile under Personal; Full name saves on leaving the field; Timezone search and select saves; reload keeps both; Use browser timezone removes the preference; Email and Role are read-only",
+      "actual": "Personal group true; name Saved true, after reload \"DOC-029r2 access Legal Team Member 9183 edited\", header menu updated true; timezone Saved true, after reload \"Asia/Tokyo\"; Use browser timezone Saved true, stored null; Email shown and not editable true; Role note true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:34.089Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Profile photo: Upload a PNG within 1 MB; a larger file fails",
+      "expected": "A JPG or PNG no larger than 1 MB saves; a failed update is reported",
+      "actual": "64 px PNG (12420 bytes) Saved true, stored true; 1470983-byte PNG shows The change could not be saved. Try again. true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:35.487Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Choose a theme, steps 1-3; another account unchanged",
+      "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing theme does not sign out; the other account's preferences stay the same",
+      "actual": "Saved/stored: {\"Warm\":\"true/warm\",\"Dark\":\"true/dark\",\"Light\":\"true/light\"}; Dark kept after reload true (document theme \"dark\"); still signed in true; other administrator account name|timezone|theme|photo before \"|light|true\", after \"|light|true\", equal true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:39.471Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Open your own Portal view, steps 1-4",
+      "expected": "View Business Portal under Personal; View as business user opens the Portal with the Viewing as business user banner; it is your own identity and role; Return to legal view returns to View Business Portal",
+      "actual": "Portal URL reached; banner true; banner text true; Portal header shows own email true; role unchanged true; Return to legal view -> /settings/app-view true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:42.257Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Change your password, steps 1-3",
+      "expected": "Password & two-factor shows Change password; a wrong current password or a short new password is refused; Save changes the password, keeps this session, and signs out other devices",
+      "actual": "Card shown true; wrong current password message true; 6-character new password refused true; dialog closed after Save true; this session open after reload true; other device sent to sign-in true; old password refused true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:46.838Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "End sessions: Sign out other devices and Sign out",
+      "expected": "Sign out other devices saves and ends every other session; this one stays; Sign out ends the current session",
+      "actual": "Saved true; other device sent to sign-in true; this session still open true; name restored with Enter true; Sign out -> sign-in page true; protected page afterwards requires sign-in true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:51.367Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Password & two-factor is absent for an account without a password",
+      "expected": "Profile shows Password & two-factor only when the account has a password",
+      "actual": "Invite 201; email-link sign-in reached the app true; Profile without a Password & two-factor card true",
+      "result": "pass",
+      "at": "2026-09-16T17:53:52.529Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "business_user",
+      "step": "Business Users do not have the View Business Portal control",
+      "expected": "A Business User cannot open the staff Settings view control",
+      "actual": "Signed in true; {\"/settings/app-view\":\"/portal\",\"/settings/profile\":\"/portal\"}; View as business user control or banner shown false",
+      "result": "pass",
+      "at": "2026-09-16T17:53:57.730Z"
+    }
+  ]
+}

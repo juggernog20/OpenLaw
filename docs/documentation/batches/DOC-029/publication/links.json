@@ -1,0 +1,90 @@
+{
+  "kind": "publication-link-check",
+  "scenario": "V-HELP",
+  "task": "DOC-029",
+  "independentReview": true,
+  "method": "browser-walkthrough",
+  "appUrl": "http://127.0.0.1:23340",
+  "edition": {
+    "id": "documentation-development",
+    "channel": "development",
+    "supportedAppVersion": "0.0.1",
+    "supportedAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "distributionCommit": "366a78a83a4f7ece2e5d63a739b6cd6d2ebc0f57",
+    "workingChanges": true,
+    "publicationTarget": "development-app",
+    "contentDigest": "09293453cbde7ba5da56f0e9e2fce299d5770bb1985e1535b81923c27a0c5277"
+  },
+  "articleCount": 57,
+  "reviewer": "DOC-029 independent publication reviewer agent",
+  "reviewerKind": "agent",
+  "steps": [
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Read every formal guide and collect its links and heading anchors",
+      "startedAt": "2026-09-16T19:54:24.410Z",
+      "at": "2026-09-16T19:54:30.764Z",
+      "result": "pass",
+      "actual": {
+        "articles": 57,
+        "links": 327,
+        "images": 0
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Every internal link names a published guide and an existing anchor",
+      "startedAt": "2026-09-16T19:54:30.765Z",
+      "at": "2026-09-16T19:54:30.766Z",
+      "result": "pass",
+      "actual": {
+        "internalLinks": 307,
+        "withAnchor": 26,
+        "distinctTargets": 77,
+        "externalLinks": 20
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Follow every distinct internal target in the browser and land on its title and section",
+      "startedAt": "2026-09-16T19:54:30.766Z",
+      "at": "2026-09-16T19:54:48.013Z",
+      "result": "pass",
+      "actual": {
+        "followed": 77,
+        "failures": 0
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Help-destination links (staff and Portal) resolve to guides in that destination or the formal reader",
+      "startedAt": "2026-09-16T19:54:48.013Z",
+      "at": "2026-09-16T19:54:48.016Z",
+      "result": "pass",
+      "actual": {
+        "checked": 345,
+        "broken": 0,
+        "basis": "compiled bundle HTML, anchors from the formal reader pages"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "The link check made no API or internet request",
+      "startedAt": "2026-09-16T19:54:48.016Z",
+      "at": "2026-09-16T19:54:48.016Z",
+      "result": "pass",
+      "actual": {
+        "apiCalls": 0,
+        "blockedExternal": []
+      }
+    }
+  ],
+  "startedAt": "2026-09-16T19:54:24.328Z",
+  "completedAt": "2026-09-16T19:54:48.075Z",
+  "passed": true
+}

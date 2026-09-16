@@ -1,0 +1,1704 @@
+{
+  "batch": "DOC-029",
+  "group": "operator-lifecycle",
+  "round": 1,
+  "reviewer": "DOC-029 independent walkthrough agent (operator-lifecycle, round 1)",
+  "reviewerKind": "agent",
+  "method": "container-operation",
+  "candidate": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "baseline": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+  "script": "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.mjs",
+  "labProjects": [
+    "openlaw-docs-41255c61-lc-upgrade",
+    "openlaw-docs-41255c61-lc-recovery",
+    "openlaw-docs-41255c61-lc-restore"
+  ],
+  "supportContainers": ["openlaw-docs-41255c61-lc-mail", "openlaw-docs-41255c61-lc-minio"],
+  "articles": {
+    "upgrade": {
+      "contentSha256": "4ef9d09163a7db9453fdbf3a237aad580c345b3461d8c02ad2f74d1a47d2cd6d"
+    },
+    "backup-and-restore": {
+      "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811"
+    },
+    "operator-troubleshooting": {
+      "contentSha256": "c1b48dee9be32950c9c6356a4d87cb833494a6a5fb9b93544dd5854517acd349"
+    }
+  },
+  "images": {
+    "baseline-install": {
+      "project": "openlaw-docs-41255c61-lc-upgrade",
+      "at": "2026-09-16T15:21:53.313Z",
+      "services": [
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-postgres-1",
+          "repository": "postgres",
+          "tag": "16",
+          "id": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-app-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-worker-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2"
+        }
+      ]
+    },
+    "upgrade-before": {
+      "project": "openlaw-docs-41255c61-lc-upgrade",
+      "at": "2026-09-16T15:22:23.302Z",
+      "services": [
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-postgres-1",
+          "repository": "postgres",
+          "tag": "16",
+          "id": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-app-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-worker-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2"
+        }
+      ]
+    },
+    "candidateBuilt": {
+      "app": "openlaw-local:3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "appId": "sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52",
+      "engine": "openlaw-engine-local:3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "engineId": "sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26",
+      "at": "2026-09-16T15:22:26.688Z"
+    },
+    "upgrade-after": {
+      "project": "openlaw-docs-41255c61-lc-upgrade",
+      "at": "2026-09-16T15:23:05.441Z",
+      "services": [
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+          "id": "sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-app-1",
+          "repository": "openlaw-local",
+          "tag": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+          "id": "sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-worker-1",
+          "repository": "openlaw-local",
+          "tag": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+          "id": "sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-upgrade-postgres-1",
+          "repository": "postgres",
+          "tag": "16",
+          "id": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+        }
+      ]
+    },
+    "recovery-start": {
+      "project": "openlaw-docs-41255c61-lc-recovery",
+      "at": "2026-09-16T15:26:11.005Z",
+      "services": [
+        {
+          "container": "openlaw-docs-41255c61-lc-recovery-app-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-recovery-worker-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-recovery-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:17a8ab67173de69c007dc5c6327ef3ea6e8a13a7afdac81591f1f8df5f4672b5"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-recovery-postgres-1",
+          "repository": "postgres",
+          "tag": "16",
+          "id": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+        }
+      ]
+    },
+    "recovery": {
+      "project": "openlaw-docs-41255c61-lc-recovery",
+      "at": "2026-09-16T15:29:13.042Z",
+      "services": [
+        {
+          "container": "openlaw-docs-41255c61-lc-recovery-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:17a8ab67173de69c007dc5c6327ef3ea6e8a13a7afdac81591f1f8df5f4672b5"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-recovery-postgres-1",
+          "repository": "postgres",
+          "tag": "16",
+          "id": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-recovery-app-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-recovery-worker-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780"
+        }
+      ]
+    },
+    "restore-start": {
+      "project": "openlaw-docs-41255c61-lc-restore",
+      "at": "2026-09-16T15:29:57.981Z",
+      "services": [
+        {
+          "container": "openlaw-docs-41255c61-lc-restore-postgres-1",
+          "repository": "postgres",
+          "tag": "16",
+          "id": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-restore-worker-1",
+          "repository": "openlaw-local",
+          "tag": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+          "id": "sha256:14e6658c2a6665d1e3385bd76f172707fdf7a0977d283ea6cf8dd4a9896e6080"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-restore-app-1",
+          "repository": "openlaw-local",
+          "tag": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+          "id": "sha256:14e6658c2a6665d1e3385bd76f172707fdf7a0977d283ea6cf8dd4a9896e6080"
+        },
+        {
+          "container": "openlaw-docs-41255c61-lc-restore-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+          "id": "sha256:e22cf78fe1195a40da922956d16717064bde8f274af28610483d57fd3ba6331b"
+        }
+      ]
+    }
+  },
+  "phases": [
+    {
+      "phase": "support-up",
+      "startedAt": "2026-09-16T15:19:04.114Z",
+      "finishedAt": "2026-09-16T15:19:04.917Z",
+      "failures": 0
+    },
+    {
+      "phase": "baseline-install",
+      "startedAt": "2026-09-16T15:19:10.821Z",
+      "finishedAt": "2026-09-16T15:19:57.891Z",
+      "failures": 0
+    },
+    {
+      "phase": "populate",
+      "startedAt": "2026-09-16T15:20:11.192Z",
+      "finishedAt": "2026-09-16T15:20:14.633Z",
+      "failures": 1,
+      "error": "critical step failed: Fixture: record baseline reach for the lower-access accounts"
+    },
+    {
+      "phase": "baseline-install",
+      "startedAt": "2026-09-16T15:21:40.170Z",
+      "finishedAt": "2026-09-16T15:21:53.392Z",
+      "failures": 0
+    },
+    {
+      "phase": "populate",
+      "startedAt": "2026-09-16T15:21:53.467Z",
+      "finishedAt": "2026-09-16T15:22:11.839Z",
+      "failures": 0
+    },
+    {
+      "phase": "upgrade",
+      "startedAt": "2026-09-16T15:22:23.203Z",
+      "finishedAt": "2026-09-16T15:22:38.851Z",
+      "failures": 0
+    },
+    {
+      "phase": "upgrade-start",
+      "startedAt": "2026-09-16T15:22:59.087Z",
+      "finishedAt": "2026-09-16T15:23:05.491Z",
+      "failures": 0
+    },
+    {
+      "phase": "upgrade-verify",
+      "startedAt": "2026-09-16T15:23:18.305Z",
+      "finishedAt": "2026-09-16T15:23:19.489Z",
+      "failures": 1,
+      "error": "critical step failed: after upgrade: Administrator signs in through the origin and sees representative records"
+    },
+    {
+      "phase": "upgrade-verify",
+      "startedAt": "2026-09-16T15:24:47.344Z",
+      "finishedAt": "2026-09-16T15:25:13.449Z",
+      "failures": 0
+    },
+    {
+      "phase": "portal-reach",
+      "startedAt": "2026-09-16T15:25:42.365Z",
+      "finishedAt": "2026-09-16T15:25:45.120Z",
+      "failures": 0
+    },
+    {
+      "phase": "recovery",
+      "startedAt": "2026-09-16T15:25:51.475Z",
+      "finishedAt": "2026-09-16T15:27:12.394Z",
+      "failures": 1,
+      "error": "critical step failed: recovery target: Administrator signs in through the origin and sees representative records"
+    },
+    {
+      "phase": "recovery-verify",
+      "startedAt": "2026-09-16T15:28:54.122Z",
+      "finishedAt": "2026-09-16T15:29:13.213Z",
+      "failures": 0
+    },
+    {
+      "phase": "backup",
+      "startedAt": "2026-09-16T15:29:21.338Z",
+      "finishedAt": "2026-09-16T15:29:36.816Z",
+      "failures": 0
+    },
+    {
+      "phase": "restore",
+      "startedAt": "2026-09-16T15:29:43.375Z",
+      "finishedAt": "2026-09-16T15:30:23.676Z",
+      "failures": 0
+    },
+    {
+      "phase": "restore-negatives",
+      "startedAt": "2026-09-16T15:30:30.347Z",
+      "finishedAt": "2026-09-16T15:30:56.270Z",
+      "failures": 4
+    },
+    {
+      "phase": "restore-negatives",
+      "startedAt": "2026-09-16T15:31:06.860Z",
+      "finishedAt": "2026-09-16T15:31:52.005Z",
+      "failures": 0
+    },
+    {
+      "phase": "diag-baseline",
+      "startedAt": "2026-09-16T15:31:58.577Z",
+      "finishedAt": "2026-09-16T15:31:58.872Z",
+      "failures": 0
+    },
+    {
+      "phase": "diag-startup",
+      "startedAt": "2026-09-16T15:31:58.942Z",
+      "finishedAt": "2026-09-16T15:35:15.041Z",
+      "failures": 0
+    },
+    {
+      "phase": "diag-port-recheck",
+      "startedAt": "2026-09-16T15:36:14.921Z",
+      "finishedAt": "2026-09-16T15:36:30.325Z",
+      "failures": 1
+    },
+    {
+      "phase": "diag-migration",
+      "startedAt": "2026-09-16T15:36:37.462Z",
+      "finishedAt": "2026-09-16T15:37:22.715Z",
+      "failures": 0
+    },
+    {
+      "phase": "diag-mail",
+      "startedAt": "2026-09-16T15:37:22.765Z",
+      "finishedAt": "2026-09-16T15:38:20.459Z",
+      "failures": 0
+    },
+    {
+      "phase": "diag-storage",
+      "startedAt": "2026-09-16T15:38:32.044Z",
+      "finishedAt": "2026-09-16T15:40:39.909Z",
+      "failures": 0
+    },
+    {
+      "phase": "diag-providers",
+      "startedAt": "2026-09-16T15:40:39.957Z",
+      "finishedAt": "2026-09-16T15:40:44.137Z",
+      "failures": 1
+    },
+    {
+      "phase": "diag-providers",
+      "startedAt": "2026-09-16T15:41:11.787Z",
+      "finishedAt": "2026-09-16T15:41:15.902Z",
+      "failures": 0
+    },
+    {
+      "phase": "diag-worker",
+      "startedAt": "2026-09-16T15:41:21.743Z",
+      "finishedAt": "2026-09-16T15:44:46.230Z",
+      "failures": 0
+    },
+    {
+      "phase": "diag-log-scan",
+      "startedAt": "2026-09-16T15:44:58.951Z",
+      "finishedAt": "2026-09-16T15:44:59.139Z",
+      "failures": 0
+    },
+    {
+      "phase": "destroy",
+      "startedAt": "2026-09-16T15:45:29.678Z",
+      "finishedAt": "2026-09-16T15:46:03.681Z",
+      "failures": 0
+    }
+  ],
+  "steps": [
+    {
+      "phase": "support-up",
+      "scenario": "setup",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Create project networks with explicit subnets (host address pools are exhausted)",
+      "startedAt": "2026-09-16T15:19:04.114Z",
+      "at": "2026-09-16T15:19:04.583Z",
+      "actual": "created 6 networks: openlaw-docs-41255c61-lc-upgrade_openlaw-backend, openlaw-docs-41255c61-lc-upgrade_openlaw-doc-engine, openlaw-docs-41255c61-lc-recovery_openlaw-backend, openlaw-docs-41255c61-lc-recovery_openlaw-doc-engine, openlaw-docs-41255c61-lc-restore_openlaw-backend, openlaw-docs-41255c61-lc-restore_openlaw-doc-engine",
+      "result": "pass"
+    },
+    {
+      "phase": "support-up",
+      "scenario": "setup",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start an owned Mailpit relay for controlled recipients",
+      "startedAt": "2026-09-16T15:19:04.584Z",
+      "at": "2026-09-16T15:19:04.916Z",
+      "actual": "Mailpit openlaw-docs-41255c61-lc-mail on openlaw-docs-41255c61-lc-upgrade_openlaw-backend as lc-mail, UI 127.0.0.1:23335",
+      "result": "pass"
+    },
+    {
+      "phase": "baseline-install",
+      "article": "install",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Clone and select the starting build",
+      "startedAt": "2026-09-16T15:19:10.821Z",
+      "at": "2026-09-16T15:19:11.047Z",
+      "actual": "git checkout --detach d1d098ba9f4ba6557a542857d530446b76b1847c: exit 0; HEAD d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "result": "pass"
+    },
+    {
+      "phase": "baseline-install",
+      "article": "install",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Write .env and compose.operator.yml per the installation guide",
+      "startedAt": "2026-09-16T15:19:11.049Z",
+      "at": "2026-09-16T15:19:11.073Z",
+      "actual": "project openlaw-docs-41255c61-lc-upgrade, OPENLAW_BUILD_COMMIT d1d098ba9f4ba6557a542857d530446b76b1847c, BASE_URL http://127.0.0.1:23330; keys copied to the private secret store",
+      "result": "pass"
+    },
+    {
+      "phase": "baseline-install",
+      "article": "install",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build and start the starting build",
+      "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
+      "startedAt": "2026-09-16T15:19:11.073Z",
+      "at": "2026-09-16T15:19:57.891Z",
+      "actual": "{\"readyz\":200,\"images\":[{\"container\":\"openlaw-docs-41255c61-lc-upgrade-doc-engine-1\",\"repository\":\"openlaw-engine-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-app-1\",\"repository\":\"openlaw-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-postgres-1\",\"repository\":\"postgres\",\"tag\":\"16\",\"id\":\"sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-worker-1\",\"repository\":\"openlaw-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2\"}]}",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: create the first Administrator and save an encrypted SMTP relay",
+      "startedAt": "2026-09-16T15:20:11.193Z",
+      "at": "2026-09-16T15:20:11.457Z",
+      "actual": "Administrator administrator; saved relay source app; test email delivered to the controlled recipient",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: invite and activate a Legal Team Member and a Contributor",
+      "startedAt": "2026-09-16T15:20:11.458Z",
+      "at": "2026-09-16T15:20:11.813Z",
+      "actual": "reader legal_team_member activated; contributor contributor activated",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: Entity, custom Contract Field, three Contracts (one Confidential), a Matter",
+      "startedAt": "2026-09-16T15:20:11.814Z",
+      "at": "2026-09-16T15:20:12.085Z",
+      "actual": "{\"contracts\":[\"1 confidential=false field=ref-1\",\"2 confidential=false field=ref-2\",\"3 confidential=true field=ref-3\"],\"matter\":1,\"entity\":\"DOC-029 lifecycle Holdings Ltd\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: two Documents with original and later Versions (one a PDF), and Contributor membership",
+      "startedAt": "2026-09-16T15:20:12.086Z",
+      "at": "2026-09-16T15:20:14.389Z",
+      "actual": "[\"doc029-lifecycle-draft.txt: v1 137cb3cc0b99 text=unsupported, v2 675520b66ed2 text=unsupported\",\"doc029-lifecycle-settlement.pdf: v1 e81205bb1654 text=ready, v2 693967e289de text=ready\"]",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: record baseline reach for the lower-access accounts",
+      "startedAt": "2026-09-16T15:20:14.390Z",
+      "at": "2026-09-16T15:20:14.630Z",
+      "actual": "POST /api/auth/sign-in/email answered 429: {\"message\":\"Too many requests. Please try again later.\"}",
+      "result": "fail"
+    },
+    {
+      "phase": "baseline-install",
+      "article": "install",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Clone and select the starting build",
+      "startedAt": "2026-09-16T15:21:40.170Z",
+      "at": "2026-09-16T15:21:40.262Z",
+      "actual": "git checkout --detach d1d098ba9f4ba6557a542857d530446b76b1847c: exit 0; HEAD d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "result": "pass"
+    },
+    {
+      "phase": "baseline-install",
+      "article": "install",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Write .env and compose.operator.yml per the installation guide",
+      "startedAt": "2026-09-16T15:21:40.266Z",
+      "at": "2026-09-16T15:21:40.267Z",
+      "actual": "project openlaw-docs-41255c61-lc-upgrade, OPENLAW_BUILD_COMMIT d1d098ba9f4ba6557a542857d530446b76b1847c, BASE_URL http://127.0.0.1:23330; keys copied to the private secret store",
+      "result": "pass"
+    },
+    {
+      "phase": "baseline-install",
+      "article": "install",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build and start the starting build",
+      "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
+      "startedAt": "2026-09-16T15:21:40.268Z",
+      "at": "2026-09-16T15:21:53.391Z",
+      "actual": "{\"readyz\":200,\"images\":[{\"container\":\"openlaw-docs-41255c61-lc-upgrade-doc-engine-1\",\"repository\":\"openlaw-engine-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-postgres-1\",\"repository\":\"postgres\",\"tag\":\"16\",\"id\":\"sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-app-1\",\"repository\":\"openlaw-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-worker-1\",\"repository\":\"openlaw-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2\"}]}",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: create the first Administrator and save an encrypted SMTP relay",
+      "startedAt": "2026-09-16T15:21:53.468Z",
+      "at": "2026-09-16T15:21:53.772Z",
+      "actual": "Administrator administrator; saved relay source app; test email delivered to the controlled recipient",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: invite and activate a Legal Team Member and a Contributor",
+      "startedAt": "2026-09-16T15:21:53.773Z",
+      "at": "2026-09-16T15:21:54.153Z",
+      "actual": "reader legal_team_member activated; contributor contributor activated",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: Entity, custom Contract Field, three Contracts (one Confidential), a Matter",
+      "startedAt": "2026-09-16T15:21:54.154Z",
+      "at": "2026-09-16T15:21:54.370Z",
+      "actual": "{\"contracts\":[\"1 confidential=false field=ref-1\",\"2 confidential=false field=ref-2\",\"3 confidential=true field=ref-3\"],\"matter\":1,\"entity\":\"DOC-029 lifecycle Holdings Ltd\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: two Documents with original and later Versions (one a PDF), and Contributor membership",
+      "startedAt": "2026-09-16T15:21:54.371Z",
+      "at": "2026-09-16T15:21:56.636Z",
+      "actual": "[\"doc029-lifecycle-draft.txt: v1 137cb3cc0b99 text=unsupported, v2 675520b66ed2 text=unsupported\",\"doc029-lifecycle-settlement.pdf: v1 e81205bb1654 text=ready, v2 693967e289de text=ready\"]",
+      "result": "pass"
+    },
+    {
+      "phase": "populate",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: record baseline reach for the lower-access accounts",
+      "startedAt": "2026-09-16T15:21:56.638Z",
+      "at": "2026-09-16T15:22:11.838Z",
+      "actual": "{\"reader\":{\"1\":200,\"2\":200,\"3\":404},\"contributor\":{\"1\":200,\"2\":404,\"3\":404}}",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Before you start: record source revision, image identities, project, file list and storage configuration",
+      "startedAt": "2026-09-16T15:22:23.204Z",
+      "at": "2026-09-16T15:22:23.447Z",
+      "actual": "{\"sourceRevision\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"images\":[{\"container\":\"openlaw-docs-41255c61-lc-upgrade-postgres-1\",\"repository\":\"postgres\",\"tag\":\"16\",\"id\":\"sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-app-1\",\"repository\":\"openlaw-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-doc-engine-1\",\"repository\":\"openlaw-engine-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-worker-1\",\"repository\":\"openlaw-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2\"}],\"project\":\"openlaw-docs-41255c61-lc-upgrade\",\"composeFile\":\"compose.yml:compose.operator.yml\",\"storage\":{\"STORAGE_DRIVER\":\"(unset: local)\",\"STORAGE_PATH\":\"/var/lib/openlaw/files\",\"S3_BUCKET\":\"(unset)\"},\"keysRetained\":true}",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 1: fetch the source and inspect local changes",
+      "command": "git status --short; git fetch origin; git rev-parse HEAD",
+      "startedAt": "2026-09-16T15:22:23.449Z",
+      "at": "2026-09-16T15:22:24.370Z",
+      "actual": "git status --short: \"?? compose.operator.yml\"; git fetch origin exit 0; HEAD d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 2: select the target, update OPENLAW_BUILD_COMMIT, validate and build without recreating containers",
+      "command": "git checkout --detach 3fa407e3a846559914aa1a63249741f30cfb4f69; docker compose config --quiet; docker compose build app doc-engine",
+      "startedAt": "2026-09-16T15:22:24.371Z",
+      "at": "2026-09-16T15:22:26.688Z",
+      "actual": "build 2 s; 4 containers kept their IDs and kept running on the starting images; app and worker both resolve to openlaw-local:3fa407e3a846559914aa1a63249741f30cfb4f69 (sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52); engine sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26; postgres stays postgres:16",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade",
+      "article": "backup-and-restore (called from upgrade step 3)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 1: create a fresh private backup directory",
+      "command": "BACKUP_DIR=...; umask 077; mkdir -p \"$BACKUP_DIR\"; chmod 700 \"$BACKUP_DIR\"",
+      "startedAt": "2026-09-16T15:22:26.690Z",
+      "at": "2026-09-16T15:22:26.700Z",
+      "actual": "mode 700",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade",
+      "article": "backup-and-restore (called from upgrade step 3)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 2: stop app and worker, keep Postgres running",
+      "command": "docker compose stop app worker; docker compose ps --all",
+      "startedAt": "2026-09-16T15:22:26.701Z",
+      "at": "2026-09-16T15:22:37.840Z",
+      "actual": "{\"app\":\"exited\",\"doc-engine\":\"running\",\"postgres\":\"running\",\"worker\":\"exited\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade",
+      "article": "backup-and-restore (called from upgrade step 3)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 3: dump the database, archive the file volume, record source and images",
+      "command": "pg_dump --format=custom > \"$BACKUP_DIR/database.dump\"; run app tar -czf - ...; git rev-parse HEAD; docker compose images --format json",
+      "startedAt": "2026-09-16T15:22:37.841Z",
+      "at": "2026-09-16T15:22:38.713Z",
+      "actual": "four commands exit 0, exit 0, exit 0, exit 0; app-source.txt 3fa407e3a846559914aa1a63249741f30cfb4f69; images.json app openlaw-local:d1d098ba9f4ba6557a542857d530446b76b1847c sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2; pre-upgrade revision d1d098ba9f4ba6557a542857d530446b76b1847c recorded beside it; dump 259309 bytes, files 744 bytes",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade",
+      "article": "backup-and-restore (called from upgrade step 3)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 4: list both archives and record hashes",
+      "command": "pg_restore --list; tar -tzf; sha256sum > SHA256SUMS",
+      "startedAt": "2026-09-16T15:22:38.715Z",
+      "at": "2026-09-16T15:22:38.851Z",
+      "actual": "pg_restore --list 549 TOC entries; tar lists 4 files; SHA256SUMS 95b015bcc164a845c8828b3d3b033e75877eaf34a7b5f1e2cf08e488cf855946 database.dump 938e4572225a40a46abb49fa217c729d10f2023d3b574433dbe6ced9e672f20c files.tar.gz",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade-start",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start step 1: start the target with the retained project and volumes",
+      "command": "docker compose up -d --no-build --pull never; docker compose ps; docker compose logs --tail=100 app worker",
+      "expected": "Readiness after migrations. The app log first shows 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'.",
+      "startedAt": "2026-09-16T15:22:59.088Z",
+      "at": "2026-09-16T15:23:05.489Z",
+      "actual": "{\"readyAfterSeconds\":6,\"ps\":[\"app running openlaw-local:3fa407e3a846559914aa1a63249741f30cfb4f69\",\"doc-engine running openlaw-engine-local:3fa407e3a846559914aa1a63249741f30cfb4f69\",\"postgres running postgres:16\",\"worker running openlaw-local:3fa407e3a846559914aa1a63249741f30cfb4f69\"],\"migrationLogLines\":[\"migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations\",\"postgres: relation \\\"__drizzle_migrations\\\" already exists, skipping\"],\"reconciledLineIsFirstMigrationLine\":true,\"journalRowsAndLatest\":\"139|1789471001683\",\"tail100ErrorLikeLines\":1,\"images\":[{\"container\":\"openlaw-docs-41255c61-lc-upgrade-doc-engine-1\",\"repository\":\"openlaw-engine-local\",\"tag\":\"3fa407e3a846559914aa1a63249741f30cfb4f69\",\"id\":\"sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-app-1\",\"repository\":\"openlaw-local\",\"tag\":\"3fa407e3a846559914aa1a63249741f30cfb4f69\",\"id\":\"sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-worker-1\",\"repository\":\"openlaw-local\",\"tag\":\"3fa407e3a846559914aa1a63249741f30cfb4f69\",\"id\":\"sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52\"},{\"container\":\"openlaw-docs-41255c61-lc-upgrade-postgres-1\",\"repository\":\"postgres\",\"tag\":\"16\",\"id\":\"sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2\"}]}",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: Administrator signs in through the origin and sees representative records",
+      "startedAt": "2026-09-16T15:23:18.305Z",
+      "at": "2026-09-16T15:23:19.488Z",
+      "actual": "role null",
+      "result": "fail"
+    },
+    {
+      "phase": "upgrade-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: Administrator signs in through the origin and sees representative records",
+      "startedAt": "2026-09-16T15:24:47.345Z",
+      "at": "2026-09-16T15:24:50.891Z",
+      "actual": "{\"signIn\":\"password\",\"landed\":\"/\",\"role\":\"administrator\",\"contracts\":{\"1\":\"title, Confidential flag, Entity and Field value match\",\"2\":\"title, Confidential flag, Entity and Field value match\",\"3\":\"title, Confidential flag, Entity and Field value match\"},\"fields\":{},\"entity\":\"legal name matches\",\"matter\":\"1 title matches\",\"screenshot\":\"docs/documentation/batches/DOC-029/operator-lifecycle/r1-upgrade-admin-confidential-contract.png\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "after upgrade: download original and later Versions and compare hashes with the inventory",
+      "startedAt": "2026-09-16T15:24:50.892Z",
+      "at": "2026-09-16T15:24:50.926Z",
+      "actual": "[\"doc029-lifecycle-draft.txt v1 137cb3cc0b993c18 match\",\"doc029-lifecycle-draft.txt v2 675520b66ed23756 match\",\"doc029-lifecycle-settlement.pdf v1 e81205bb16545be0 match\",\"doc029-lifecycle-settlement.pdf v2 693967e289de4851 match\"]",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: lower-access account (reader) signs in; Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-16T15:24:50.927Z",
+      "at": "2026-09-16T15:24:53.449Z",
+      "actual": "{\"signIn\":\"password\",\"landed\":\"/\",\"role\":\"legal_team_member\",\"baselineReach\":{\"1\":200,\"2\":200,\"3\":404},\"reachNow\":{\"1\":200,\"2\":200,\"3\":404},\"confidentialDocumentDownload\":404,\"confidentialTitleVisibleInBrowser\":false}",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: lower-access account (contributor) signs in; Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-16T15:24:53.450Z",
+      "at": "2026-09-16T15:24:55.940Z",
+      "actual": "{\"signIn\":\"password\",\"landed\":\"/portal/onboarding\",\"role\":\"business_user\",\"baselineReach\":{\"1\":200,\"2\":404,\"3\":404},\"reachNow\":{\"1\":403,\"2\":403,\"3\":403},\"confidentialDocumentDownload\":404,\"confidentialTitleVisibleInBrowser\":false}",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "after upgrade: a new upload is processed by the worker",
+      "startedAt": "2026-09-16T15:24:55.940Z",
+      "at": "2026-09-16T15:25:13.081Z",
+      "actual": "Document doc029-lifecycle-upgrade-1789572311008.pdf on Contract 2: text ready, extracted words present",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "after upgrade: actual use of the saved encrypted relay (test email)",
+      "startedAt": "2026-09-16T15:25:13.082Z",
+      "at": "2026-09-16T15:25:13.172Z",
+      "actual": "email-settings source app; POST test 200; message delivered to the controlled recipient through the saved relay",
+      "result": "pass"
+    },
+    {
+      "phase": "upgrade-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "after upgrade: inspect outstanding jobs and Envelopes",
+      "command": "psql: pg-boss job states; envelopes count",
+      "startedAt": "2026-09-16T15:25:13.173Z",
+      "at": "2026-09-16T15:25:13.430Z",
+      "actual": "pg-boss job states: completed 11; contract_envelopes: (none)",
+      "result": "pass"
+    },
+    {
+      "phase": "portal-reach",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "upgrade: former Contributor (now Business User) portal reach; Confidential Contract stays refused",
+      "startedAt": "2026-09-16T15:25:42.365Z",
+      "at": "2026-09-16T15:25:45.119Z",
+      "actual": "{\"role\":\"business_user\",\"baselineStaffReach\":{\"1\":200,\"2\":404,\"3\":404},\"portalReach\":{\"1\":200,\"2\":404,\"3\":404},\"portalListCount\":1}",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 1: prepare source d1d098ba and images, retained keys, distinct project and port",
+      "startedAt": "2026-09-16T15:25:51.475Z",
+      "at": "2026-09-16T15:25:57.101Z",
+      "actual": "git clone https://github.com/juggernog20/OpenLaw.git: exit 0; git checkout --detach d1d098ba9f4ba6557a542857d530446b76b1847c: exit 0; HEAD d1d098ba9f4ba6557a542857d530446b76b1847c; project openlaw-docs-41255c61-lc-recovery, port 23331; retained AUTH_SECRET and OPENLAW_SECRET_KEY supplied from the secret store; backup images.json names openlaw-local:d1d098ba9f4ba6557a542857d530446b76b1847c; target app image openlaw-local:d1d098ba9f4ba6557a542857d530446b76b1847c (sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780); no first-run setup done",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 2: verify hashes on the target host and start Postgres",
+      "command": "(cd \"$BACKUP_DIR\" && sha256sum --check SHA256SUMS); docker compose up -d postgres",
+      "startedAt": "2026-09-16T15:25:57.104Z",
+      "at": "2026-09-16T15:25:57.691Z",
+      "actual": "database.dump: OK; files.tar.gz: OK",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Confirm the target database and file store are empty before importing",
+      "startedAt": "2026-09-16T15:25:57.693Z",
+      "at": "2026-09-16T15:26:02.860Z",
+      "actual": "non-system tables 0; entries in /var/lib/openlaw/files 0",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 3: restore the database with --exit-on-error",
+      "command": "docker compose exec -T postgres pg_restore -U openlaw -d openlaw --exit-on-error --no-owner --no-privileges < \"$BACKUP_DIR/database.dump\"",
+      "startedAt": "2026-09-16T15:26:02.861Z",
+      "at": "2026-09-16T15:26:05.568Z",
+      "actual": "pg_restore exit 0; stderr lines 0",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 4: restore local files through the target app volume",
+      "command": "docker compose run -T --rm --no-deps app tar -xzf - -C /var/lib/openlaw/files < \"$BACKUP_DIR/files.tar.gz\"",
+      "startedAt": "2026-09-16T15:26:05.569Z",
+      "at": "2026-09-16T15:26:06.805Z",
+      "actual": "tar exit 0; files now in the target volume 4",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 5: start the target and check readiness (controlled relay reachable under its saved name first)",
+      "command": "docker compose up -d --no-build --pull never; docker compose ps",
+      "startedAt": "2026-09-16T15:26:06.807Z",
+      "at": "2026-09-16T15:26:11.073Z",
+      "actual": "{\"readyz\":200,\"ps\":[\"app running\",\"doc-engine running\",\"postgres running\",\"worker running\"],\"images\":[{\"container\":\"openlaw-docs-41255c61-lc-recovery-app-1\",\"repository\":\"openlaw-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780\"},{\"container\":\"openlaw-docs-41255c61-lc-recovery-worker-1\",\"repository\":\"openlaw-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780\"},{\"container\":\"openlaw-docs-41255c61-lc-recovery-doc-engine-1\",\"repository\":\"openlaw-engine-local\",\"tag\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"id\":\"sha256:17a8ab67173de69c007dc5c6327ef3ea6e8a13a7afdac81591f1f8df5f4672b5\"},{\"container\":\"openlaw-docs-41255c61-lc-recovery-postgres-1\",\"repository\":\"postgres\",\"tag\":\"16\",\"id\":\"sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2\"}]}",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery",
+      "article": "upgrade (If the upgrade cannot be accepted)",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "recovery target: Administrator signs in through the origin and sees representative records",
+      "startedAt": "2026-09-16T15:26:11.075Z",
+      "at": "2026-09-16T15:27:12.393Z",
+      "actual": "locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Email').first()\u001b[22m\n",
+      "result": "fail"
+    },
+    {
+      "phase": "recovery-verify",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "recovery target: starting-build web client at /login",
+      "startedAt": "2026-09-16T15:28:54.122Z",
+      "at": "2026-09-16T15:28:55.367Z",
+      "actual": "observation only: Something went wrong. The page could not load. Reload to try again. Reload",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery-verify",
+      "article": "upgrade (If the upgrade cannot be accepted)",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "recovery target: Administrator signs in through the origin and sees representative records",
+      "startedAt": "2026-09-16T15:28:55.368Z",
+      "at": "2026-09-16T15:28:55.538Z",
+      "actual": "{\"signIn\":\"api (POST /api/auth/sign-in/email with the origin header)\",\"landed\":null,\"role\":\"administrator\",\"contracts\":{\"1\":\"title, Confidential flag, Entity and Field value match\",\"2\":\"title, Confidential flag, Entity and Field value match\",\"3\":\"title, Confidential flag, Entity and Field value match\"},\"fields\":{},\"entity\":\"legal name matches\",\"matter\":\"1 title matches\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery-verify",
+      "article": "upgrade (If the upgrade cannot be accepted)",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "recovery target: download original and later Versions and compare hashes with the inventory",
+      "startedAt": "2026-09-16T15:28:55.539Z",
+      "at": "2026-09-16T15:28:55.568Z",
+      "actual": "[\"doc029-lifecycle-draft.txt v1 137cb3cc0b993c18 match\",\"doc029-lifecycle-draft.txt v2 675520b66ed23756 match\",\"doc029-lifecycle-settlement.pdf v1 e81205bb16545be0 match\",\"doc029-lifecycle-settlement.pdf v2 693967e289de4851 match\"]",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery-verify",
+      "article": "upgrade (If the upgrade cannot be accepted)",
+      "scenario": "V-C46",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "recovery target: lower-access account (reader) signs in; Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-16T15:28:55.569Z",
+      "at": "2026-09-16T15:28:55.623Z",
+      "actual": "{\"signIn\":\"api (POST /api/auth/sign-in/email with the origin header)\",\"landed\":null,\"role\":\"legal_team_member\",\"baselineReach\":{\"1\":200,\"2\":200,\"3\":404},\"reachNow\":{\"1\":200,\"2\":200,\"3\":404},\"portalReach\":{},\"confidentialDocumentDownload\":404,\"confidentialTitleVisibleInBrowser\":null}",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery-verify",
+      "article": "upgrade (If the upgrade cannot be accepted)",
+      "scenario": "V-C46",
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "recovery target: lower-access account (contributor) signs in; Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-16T15:28:55.623Z",
+      "at": "2026-09-16T15:28:55.680Z",
+      "actual": "{\"signIn\":\"api (POST /api/auth/sign-in/email with the origin header)\",\"landed\":null,\"role\":\"contributor\",\"baselineReach\":{\"1\":200,\"2\":404,\"3\":404},\"reachNow\":{\"1\":200,\"2\":404,\"3\":404},\"portalReach\":{},\"confidentialDocumentDownload\":404,\"confidentialTitleVisibleInBrowser\":null}",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery-verify",
+      "article": "upgrade (If the upgrade cannot be accepted)",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "recovery target: a new upload is processed by the worker",
+      "startedAt": "2026-09-16T15:28:55.681Z",
+      "at": "2026-09-16T15:29:12.764Z",
+      "actual": "Document doc029-lifecycle-recovery-1789572550715.pdf on Contract 2: text ready, extracted words present",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery-verify",
+      "article": "upgrade (If the upgrade cannot be accepted)",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "recovery target: actual use of the saved encrypted relay (test email)",
+      "startedAt": "2026-09-16T15:29:12.765Z",
+      "at": "2026-09-16T15:29:12.832Z",
+      "actual": "email-settings source app; POST test 200; message delivered to the controlled recipient through the saved relay",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery-verify",
+      "article": "upgrade (If the upgrade cannot be accepted)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "recovery target: inspect outstanding jobs and Envelopes",
+      "command": "psql: pg-boss job states; envelopes count",
+      "startedAt": "2026-09-16T15:29:12.832Z",
+      "at": "2026-09-16T15:29:13.029Z",
+      "actual": "pg-boss job states: completed 3; contract_envelopes: (none)",
+      "result": "pass"
+    },
+    {
+      "phase": "recovery-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "recovery target: work accepted after the backup is absent; running image is the starting build",
+      "startedAt": "2026-09-16T15:29:13.030Z",
+      "at": "2026-09-16T15:29:13.211Z",
+      "actual": "upload accepted on the upgraded instance after the backup (doc029-lifecycle-upgrade-1789572311008.pdf) is absent; app runs openlaw-local:d1d098ba9f4ba6557a542857d530446b76b1847c (sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780); journal rows 91; the migrated database of openlaw-docs-41255c61-lc-upgrade was never opened by an older image",
+      "result": "pass"
+    },
+    {
+      "phase": "backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 1: create a fresh private backup directory",
+      "command": "BACKUP_DIR=...; umask 077; mkdir -p \"$BACKUP_DIR\"; chmod 700 \"$BACKUP_DIR\"",
+      "startedAt": "2026-09-16T15:29:21.338Z",
+      "at": "2026-09-16T15:29:21.348Z",
+      "actual": "mode 700",
+      "result": "pass"
+    },
+    {
+      "phase": "backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 2: stop app and worker, keep Postgres running",
+      "command": "docker compose stop app worker; docker compose ps --all",
+      "startedAt": "2026-09-16T15:29:21.351Z",
+      "at": "2026-09-16T15:29:32.085Z",
+      "actual": "{\"app\":\"exited\",\"doc-engine\":\"running\",\"postgres\":\"running\",\"worker\":\"exited\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 3: dump the database, archive the file volume, record source and images",
+      "command": "pg_dump --format=custom > \"$BACKUP_DIR/database.dump\"; run app tar -czf - ...; git rev-parse HEAD; docker compose images --format json",
+      "startedAt": "2026-09-16T15:29:32.086Z",
+      "at": "2026-09-16T15:29:32.889Z",
+      "actual": "four commands exit 0, exit 0, exit 0, exit 0; app-source.txt 3fa407e3a846559914aa1a63249741f30cfb4f69; images.json app openlaw-local:3fa407e3a846559914aa1a63249741f30cfb4f69 sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52; dump 339279 bytes, files 867 bytes",
+      "result": "pass"
+    },
+    {
+      "phase": "backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 4: list both archives and record hashes",
+      "command": "pg_restore --list; tar -tzf; sha256sum > SHA256SUMS",
+      "startedAt": "2026-09-16T15:29:32.891Z",
+      "at": "2026-09-16T15:29:33.043Z",
+      "actual": "pg_restore --list 684 TOC entries; tar lists 5 files; SHA256SUMS 09b778559ee9616577e1f1869668b754287dc2ae56734fc2665f237288760a1a database.dump 674e5f529b32f7a18fb1b280d8292a096020c7b94af3dc387eb044300f61e7dd files.tar.gz",
+      "result": "pass"
+    },
+    {
+      "phase": "backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 5: restart app and worker, confirm readiness and an actual operation",
+      "command": "docker compose up -d --no-build --pull never",
+      "startedAt": "2026-09-16T15:29:33.044Z",
+      "at": "2026-09-16T15:29:36.802Z",
+      "actual": "readyz 200; Contract 1 read 200; Version download hash matches 137cb3cc0b99",
+      "result": "pass"
+    },
+    {
+      "phase": "backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Copy the backup to its retained location and verify hashes there",
+      "startedAt": "2026-09-16T15:29:36.803Z",
+      "at": "2026-09-16T15:29:36.814Z",
+      "actual": "~/.cache/openlaw-docs-lc/backups/candidate-retained: database.dump: OK; files.tar.gz: OK",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 1: prepare source 3fa407e3 and images, retained keys, distinct project and port",
+      "startedAt": "2026-09-16T15:29:43.375Z",
+      "at": "2026-09-16T15:29:48.249Z",
+      "actual": "git clone https://github.com/juggernog20/OpenLaw.git: exit 0; git checkout --detach 3fa407e3a846559914aa1a63249741f30cfb4f69: exit 0; HEAD 3fa407e3a846559914aa1a63249741f30cfb4f69; project openlaw-docs-41255c61-lc-restore, port 23332; retained AUTH_SECRET and OPENLAW_SECRET_KEY supplied from the secret store; backup images.json names openlaw-local:3fa407e3a846559914aa1a63249741f30cfb4f69; target app image openlaw-local:3fa407e3a846559914aa1a63249741f30cfb4f69 (sha256:14e6658c2a6665d1e3385bd76f172707fdf7a0977d283ea6cf8dd4a9896e6080); no first-run setup done",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 2: verify hashes on the target host and start Postgres",
+      "command": "(cd \"$BACKUP_DIR\" && sha256sum --check SHA256SUMS); docker compose up -d postgres",
+      "startedAt": "2026-09-16T15:29:48.254Z",
+      "at": "2026-09-16T15:29:48.692Z",
+      "actual": "database.dump: OK; files.tar.gz: OK",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Confirm the target database and file store are empty before importing",
+      "startedAt": "2026-09-16T15:29:48.693Z",
+      "at": "2026-09-16T15:29:51.458Z",
+      "actual": "non-system tables 0; entries in /var/lib/openlaw/files 0",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 3: restore the database with --exit-on-error",
+      "command": "docker compose exec -T postgres pg_restore -U openlaw -d openlaw --exit-on-error --no-owner --no-privileges < \"$BACKUP_DIR/database.dump\"",
+      "startedAt": "2026-09-16T15:29:51.459Z",
+      "at": "2026-09-16T15:29:52.902Z",
+      "actual": "pg_restore exit 0; stderr lines 0",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 4: restore local files through the target app volume",
+      "command": "docker compose run -T --rm --no-deps app tar -xzf - -C /var/lib/openlaw/files < \"$BACKUP_DIR/files.tar.gz\"",
+      "startedAt": "2026-09-16T15:29:52.903Z",
+      "at": "2026-09-16T15:29:53.996Z",
+      "actual": "tar exit 0; files now in the target volume 5",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 5: start the target and check readiness (controlled relay reachable under its saved name first)",
+      "command": "docker compose up -d --no-build --pull never; docker compose ps",
+      "startedAt": "2026-09-16T15:29:53.998Z",
+      "at": "2026-09-16T15:29:58.025Z",
+      "actual": "{\"readyz\":200,\"ps\":[\"app running\",\"doc-engine running\",\"postgres running\",\"worker running\"],\"images\":[{\"container\":\"openlaw-docs-41255c61-lc-restore-postgres-1\",\"repository\":\"postgres\",\"tag\":\"16\",\"id\":\"sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2\"},{\"container\":\"openlaw-docs-41255c61-lc-restore-worker-1\",\"repository\":\"openlaw-local\",\"tag\":\"3fa407e3a846559914aa1a63249741f30cfb4f69\",\"id\":\"sha256:14e6658c2a6665d1e3385bd76f172707fdf7a0977d283ea6cf8dd4a9896e6080\"},{\"container\":\"openlaw-docs-41255c61-lc-restore-app-1\",\"repository\":\"openlaw-local\",\"tag\":\"3fa407e3a846559914aa1a63249741f30cfb4f69\",\"id\":\"sha256:14e6658c2a6665d1e3385bd76f172707fdf7a0977d283ea6cf8dd4a9896e6080\"},{\"container\":\"openlaw-docs-41255c61-lc-restore-doc-engine-1\",\"repository\":\"openlaw-engine-local\",\"tag\":\"3fa407e3a846559914aa1a63249741f30cfb4f69\",\"id\":\"sha256:e22cf78fe1195a40da922956d16717064bde8f274af28610483d57fd3ba6331b\"}]}",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: Administrator signs in through the origin and sees representative records",
+      "startedAt": "2026-09-16T15:29:58.027Z",
+      "at": "2026-09-16T15:30:01.042Z",
+      "actual": "{\"signIn\":\"password\",\"landed\":\"/\",\"role\":\"administrator\",\"contracts\":{\"1\":\"title, Confidential flag, Entity and Field value match\",\"2\":\"title, Confidential flag, Entity and Field value match\",\"3\":\"title, Confidential flag, Entity and Field value match\"},\"fields\":{},\"entity\":\"legal name matches\",\"matter\":\"1 title matches\",\"screenshot\":\"docs/documentation/batches/DOC-029/operator-lifecycle/r1-restore-admin-confidential-contract.png\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "restored target: download original and later Versions and compare hashes with the inventory",
+      "startedAt": "2026-09-16T15:30:01.043Z",
+      "at": "2026-09-16T15:30:01.096Z",
+      "actual": "[\"doc029-lifecycle-draft.txt v1 137cb3cc0b993c18 match\",\"doc029-lifecycle-draft.txt v2 675520b66ed23756 match\",\"doc029-lifecycle-settlement.pdf v1 e81205bb16545be0 match\",\"doc029-lifecycle-settlement.pdf v2 693967e289de4851 match\"]",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "restored target: lower-access account (reader) signs in; Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-16T15:30:01.097Z",
+      "at": "2026-09-16T15:30:03.655Z",
+      "actual": "{\"signIn\":\"password\",\"landed\":\"/\",\"role\":\"legal_team_member\",\"baselineReach\":{\"1\":200,\"2\":200,\"3\":404},\"reachNow\":{\"1\":200,\"2\":200,\"3\":404},\"portalReach\":{},\"confidentialDocumentDownload\":404,\"confidentialTitleVisibleInBrowser\":false}",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "contributor",
+      "method": "browser-walkthrough",
+      "action": "restored target: lower-access account (contributor) signs in; Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-16T15:30:03.657Z",
+      "at": "2026-09-16T15:30:06.178Z",
+      "actual": "{\"signIn\":\"password\",\"landed\":\"/portal/onboarding\",\"role\":\"business_user\",\"baselineReach\":{\"1\":200,\"2\":404,\"3\":404},\"reachNow\":{\"1\":403,\"2\":403,\"3\":403},\"portalReach\":{\"1\":200,\"2\":404,\"3\":404},\"confidentialDocumentDownload\":404,\"confidentialTitleVisibleInBrowser\":false}",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "restored target: a new upload is processed by the worker",
+      "startedAt": "2026-09-16T15:30:06.179Z",
+      "at": "2026-09-16T15:30:23.338Z",
+      "actual": "Document doc029-lifecycle-restore-1789572621239.pdf on Contract 2: text ready, extracted words present",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "restored target: actual use of the saved encrypted relay (test email)",
+      "startedAt": "2026-09-16T15:30:23.340Z",
+      "at": "2026-09-16T15:30:23.433Z",
+      "actual": "email-settings source app; POST test 200; message delivered to the controlled recipient through the saved relay",
+      "result": "pass"
+    },
+    {
+      "phase": "restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "restored target: inspect outstanding jobs and Envelopes",
+      "command": "psql: pg-boss job states; envelopes count",
+      "startedAt": "2026-09-16T15:30:23.433Z",
+      "at": "2026-09-16T15:30:23.664Z",
+      "actual": "pg-boss job states: completed 20; contract_envelopes: (none)",
+      "result": "pass"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: wrong OPENLAW_SECRET_KEY (valid length) on the restored target",
+      "expected": "Records work but the saved relay credentials are unavailable; nothing is delivered.",
+      "startedAt": "2026-09-16T15:30:30.348Z",
+      "at": "2026-09-16T15:30:42.570Z",
+      "actual": "Cannot read properties of undefined (reading 'slice')",
+      "result": "fail"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Recovery: restore the retained key, recreate app and worker, send through the saved relay",
+      "startedAt": "2026-09-16T15:30:42.573Z",
+      "at": "2026-09-16T15:30:54.781Z",
+      "actual": "Cannot read properties of undefined (reading 'slice')",
+      "result": "fail"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: remove one stored blob from the restored file volume",
+      "expected": "The Document is still listed while its download fails.",
+      "startedAt": "2026-09-16T15:30:54.783Z",
+      "at": "2026-09-16T15:30:55.518Z",
+      "actual": "fetch failed",
+      "result": "fail"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Recovery: reapply the retained file backup to the isolated target and compare hashes",
+      "command": "docker compose run -T --rm --no-deps app tar -xzf - -C /var/lib/openlaw/files < \"$BACKUP_DIR/files.tar.gz\"",
+      "startedAt": "2026-09-16T15:30:55.519Z",
+      "at": "2026-09-16T15:30:56.160Z",
+      "actual": "fetch failed",
+      "result": "fail"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: startup with a missing key",
+      "command": "docker compose config --quiet (OPENLAW_SECRET_KEY removed)",
+      "expected": "Compose refuses before any container changes.",
+      "startedAt": "2026-09-16T15:30:56.163Z",
+      "at": "2026-09-16T15:30:56.268Z",
+      "actual": "config --quiet exit 1: error while interpolating x-openlaw-environment.OPENLAW_SECRET_KEY: required variable OPENLAW_SECRET_KEY is missing a value: OPENLAW_SECRET_KEY is required \u2014 generate one with `openssl rand -base64 32` and set it in .env; up exit 1; key restored",
+      "result": "pass"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: wrong OPENLAW_SECRET_KEY (valid length) on the restored target",
+      "expected": "Records work but the saved relay credentials are unavailable; nothing is delivered.",
+      "startedAt": "2026-09-16T15:31:06.861Z",
+      "at": "2026-09-16T15:31:36.397Z",
+      "actual": "{\"contractRead\":200,\"emailSettingsSource\":\"unset\",\"testSend\":502,\"testDetail\":\"The test email could not be sent. SMTP is not configured \u2014 save a relay first.\",\"delivered\":false,\"bootLogLines\":[\"No configured key opens these stored credentials: smtp_url (1). They are left as they are, so they are still recoverable: boot once with the old key in OPENLAW_SECRET_KEY_PREVIOUS, or paste the credentials again in Settings.\"]}",
+      "result": "pass"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Recovery: restore the retained key, recreate app and worker, send through the saved relay",
+      "startedAt": "2026-09-16T15:31:36.400Z",
+      "at": "2026-09-16T15:31:50.693Z",
+      "actual": "test send 200 and delivered to the controlled recipient",
+      "result": "pass"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: remove one stored blob from the restored file volume",
+      "expected": "The Document is still listed while its download fails.",
+      "startedAt": "2026-09-16T15:31:50.694Z",
+      "at": "2026-09-16T15:31:51.344Z",
+      "actual": "Document listed true; version 1 download HTTP 500",
+      "result": "pass"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Recovery: reapply the retained file backup to the isolated target and compare hashes",
+      "command": "docker compose run -T --rm --no-deps app tar -xzf - -C /var/lib/openlaw/files < \"$BACKUP_DIR/files.tar.gz\"",
+      "startedAt": "2026-09-16T15:31:51.345Z",
+      "at": "2026-09-16T15:31:51.897Z",
+      "actual": "v1 137cb3cc0b993c18 match; v2 675520b66ed23756 match",
+      "result": "pass"
+    },
+    {
+      "phase": "restore-negatives",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: startup with a missing key",
+      "command": "docker compose config --quiet (OPENLAW_SECRET_KEY removed)",
+      "expected": "Compose refuses before any container changes.",
+      "startedAt": "2026-09-16T15:31:51.899Z",
+      "at": "2026-09-16T15:31:52.003Z",
+      "actual": "config --quiet exit 1: error while interpolating x-openlaw-environment.OPENLAW_SECRET_KEY: required variable OPENLAW_SECRET_KEY is missing a value: OPENLAW_SECRET_KEY is required \u2014 generate one with `openssl rand -base64 32` and set it in .env; up exit 1; key restored",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-baseline",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start with the observed failure: baseline health commands",
+      "command": "docker compose config --quiet; docker compose ps --all; docker compose logs --since=10m app worker",
+      "startedAt": "2026-09-16T15:31:58.577Z",
+      "at": "2026-09-16T15:31:58.868Z",
+      "actual": "{\"ps\":[\"app running\",\"doc-engine running\",\"postgres running\",\"worker running\"],\"healthz\":200,\"readyz\":200,\"logLines\":551,\"secretsInLogs\":false}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-startup",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Missing key: Compose refuses the command",
+      "startedAt": "2026-09-16T15:31:58.942Z",
+      "at": "2026-09-16T15:31:59.062Z",
+      "actual": "{\"AUTH_SECRET\":\"exit 1: error while interpolating services.app.environment.AUTH_SECRET: required variable AUTH_SECRET is missing a value: AUTH_SECRET is required \u2014 generate one with `openssl rand -base64 32` and set it in .env\",\"OPENLAW_SECRET_KEY\":\"exit 1: error while interpolating x-openlaw-environment.OPENLAW_SECRET_KEY: required variable OPENLAW_SECRET_KEY is missing a value: OPENLAW_SECRET_KEY is required \u2014 generate one with `openssl rand -base64 32` and set it in .env\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-startup",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Short OPENLAW_SECRET_KEY: config passes but app and worker refuse to start; recover",
+      "expected": "config --quiet passes; app and worker stop at startup; correct key and recreate restores readiness.",
+      "startedAt": "2026-09-16T15:31:59.066Z",
+      "at": "2026-09-16T15:32:35.663Z",
+      "actual": "{\"configQuiet\":0,\"readyzWhileShort\":0,\"ps\":[\"app restarting Restarting (1) Less than a second ago\",\"doc-engine running Up 21 seconds (healthy)\",\"postgres running Up 10 minutes (healthy)\",\"worker restarting Restarting (1) 3 seconds ago\"],\"appLog\":[\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\",\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\",\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\",\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\"],\"workerLog\":[\"{\\\"reason\\\":\\\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\\\",\\\"level\\\":\\\"error\\\",\\\"time\\\":\\\"2026-09-16T15:32:12.975Z\\\",\\\"message\\\":\\\"the worker is misconfigured\\\"}\",\"{\\\"reason\\\":\\\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\\\",\\\"level\\\":\\\"error\\\",\\\"time\\\":\\\"2026-09-16T15:32:14.864Z\\\",\\\"message\\\":\\\"the worker is misconfigured\\\"}\",\"{\\\"reason\\\":\\\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\\\",\\\"level\\\":\\\"error\\\",\\\"time\\\":\\\"2026-09-16T15:32:16.506Z\\\",\\\"message\\\":\\\"the worker is misconfigured\\\"}\",\"{\\\"reason\\\":\\\"OPENLAW_SECRET_KEY is shorter than 32 characters. Generate one with `openssl rand -base64 32`.\\\",\\\"level\\\":\\\"error\\\",\\\"time\\\":\\\"2026-09-16T15:32:18.449Z\\\",\\\"message\\\":\\\"the worker is misconfigured\\\"}\"],\"afterRecovery\":\"readyz 200; Contract read 200\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-startup",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Short AUTH_SECRET: only a warning in the log, the app starts; restore",
+      "startedAt": "2026-09-16T15:32:35.664Z",
+      "at": "2026-09-16T15:33:04.277Z",
+      "actual": "{\"readyzWithShortAuthSecret\":200,\"warning\":[\"2026-09-16T15:32:48.824Z WARN [Better Auth]: [better-auth] Warning: your BETTER_AUTH_SECRET should be at least 32 characters long for adequate security. Generate one with `npx auth secret` or `openssl rand -base64 32`.\",\"2026-09-16T15:32:48.824Z WARN [Better Auth]: [better-auth] Warning: your BETTER_AUTH_SECRET appears low-entropy. Use a randomly generated secret for production.\"],\"restored\":\"readyz 200 with the retained AUTH_SECRET\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-startup",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Port already allocated: failed bind, app and worker containers removed; recover on the intended port",
+      "startedAt": "2026-09-16T15:33:04.278Z",
+      "at": "2026-09-16T15:33:19.318Z",
+      "actual": "{\"occupiedBy\":\"openlaw-docs-41255c61-lc-recovery (healthz 200)\",\"upExit\":1,\"error\":[\"Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint openlaw-docs-41255c61-lc-upgrade-app-1 (fd561e05876b32015b225da4f47bcca9bd9b7c70da0928621c84e9c7ee388e51): Bind for 127.0.0.1:23331 failed: port is already allocated\"],\"psAfterFailedBind\":[\"app created\",\"doc-engine running\",\"postgres running\",\"worker created\"],\"appContainerPresent\":true,\"workerContainerPresent\":true,\"recovery\":\"up exit 0; readyz 200 on 23330\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-startup",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "App keeps restarting: unresolvable DATABASE_URL; first specific error; recover",
+      "startedAt": "2026-09-16T15:33:19.320Z",
+      "at": "2026-09-16T15:34:57.778Z",
+      "actual": "{\"restartCountAndState\":\"2 running\",\"readyz\":0,\"firstErrorLines\":[\"Error: Connection terminated due to connection timeout\",\"[cause]: Error: Connection terminated unexpectedly\"],\"recovery\":\"DATABASE_URL override removed, app recreated, readyz 200\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-startup",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "/healthz works but /readyz fails: database stopped under a running app; restore and verify read and write",
+      "startedAt": "2026-09-16T15:34:57.781Z",
+      "at": "2026-09-16T15:35:15.039Z",
+      "actual": "{\"healthz\":200,\"readyz\":\"503 {\\\"status\\\":\\\"unavailable\\\"}\",\"afterRestore\":\"readyz 200; Contract read 200; write 200\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-port-recheck",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Port row recheck: container state after a failed bind, read with docker compose ps --all and docker compose ps",
+      "expected": "Article: a failed bind leaves the app and worker containers removed.",
+      "startedAt": "2026-09-16T15:36:14.922Z",
+      "at": "2026-09-16T15:36:30.324Z",
+      "actual": "app and worker are not removed after the failed bind: {\"upExit\":1,\"psAll\":[\"app created\",\"doc-engine running\",\"postgres running\",\"worker created\"],\"ps\":[\"doc-engine running\",\"postgres running\"],\"recovery\":\"up exit 0; readyz 200\"}",
+      "result": "fail"
+    },
+    {
+      "phase": "diag-migration",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Migration failure: controlled journal fault gives the refusal; both read-only commands run; fixture undo restores readiness",
+      "expected": "App refuses with 'This database cannot apply the migrations it is missing'; the two commands list the journal and shipped hashes.",
+      "startedAt": "2026-09-16T15:36:37.462Z",
+      "at": "2026-09-16T15:37:22.650Z",
+      "actual": "{\"refusal\":[\"This database cannot apply the migrations it is missing.\",\"That happens when a stamp recorded in drizzle.__drizzle_migrations is later than migrations that come after it.\",\"This database cannot apply the migrations it is missing.\",\"That happens when a stamp recorded in drizzle.__drizzle_migrations is later than migrations that come after it.\"],\"readyzWhileRefusing\":0,\"psqlCommandExit\":0,\"faultyRowListed\":true,\"lintHashesExit\":0,\"shippedEntryForOriginalHash\":\"0137_custom-value-cadence\\t1789471001683\\tc8748427237b32bb3cfb730a85870941a37cd8de02cea315b55ba52b1f52fc67\",\"undo\":\"the fixture custodian wrote back the exact recorded hash; readyz 200\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-migration",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Known automatic repair: reconciled log line observed during the upgrade",
+      "startedAt": "2026-09-16T15:37:22.651Z",
+      "at": "2026-09-16T15:37:22.714Z",
+      "actual": "upgrade start step recorded migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations; current log retains 0 such lines after recreations",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-mail",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Email: SMTP_URL pins the environment and the saved relay is ignored; remove override to restore",
+      "startedAt": "2026-09-16T15:37:22.765Z",
+      "at": "2026-09-16T15:37:51.613Z",
+      "actual": "{\"pinnedSource\":\"env\",\"fromAddress\":\"DOC-029 Env Override <env@lifecycle.example>\",\"saveWhilePinned\":409,\"testWhilePinned\":\"502 The test email could not be sent. The relay did not respond in time. Check the host, port, and smtp/smtps scheme.\",\"afterRemoval\":\"source app; test 200; delivered through the saved relay\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-mail",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Email: wrong OPENLAW_SECRET_KEY reads the saved relay as absent; restore the key",
+      "expected": "Email state unset; test fails with 'The test email could not be sent. SMTP is not configured \u2014 save a relay first.'; unrelated Contract readable.",
+      "startedAt": "2026-09-16T15:37:51.616Z",
+      "at": "2026-09-16T15:38:20.458Z",
+      "actual": "{\"emailSettingsWithWrongKey\":{\"source\":\"unset\",\"fromAddress\":null},\"testSend\":\"502 The test email could not be sent. SMTP is not configured \u2014 save a relay first.\",\"unrelatedContractRead\":200,\"afterKeyRestored\":\"test 200; delivered\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-storage",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: owned MinIO with a pre-created bucket; switch the write driver to s3 and upload one file",
+      "startedAt": "2026-09-16T15:38:32.045Z",
+      "at": "2026-09-16T15:38:51.840Z",
+      "actual": "write driver s3; new Version stored under s3:; download hash matches; earlier local Versions untouched",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-storage",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Storage fault: wrong retained S3 endpoint; ready app, failing download on that store only; correct and verify",
+      "startedAt": "2026-09-16T15:38:51.842Z",
+      "at": "2026-09-16T15:40:08.718Z",
+      "actual": "{\"readyzWithWrongEndpoint\":200,\"s3DocumentListed\":true,\"s3Download\":500,\"localDownloadHashMatches\":true,\"afterCorrection\":\"s3 download hash matches\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-storage",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Upload too large: MAX_UPLOAD_MB=1 refuses above and accepts below; restore",
+      "startedAt": "2026-09-16T15:40:08.720Z",
+      "at": "2026-09-16T15:40:39.907Z",
+      "actual": "{\"over\":\"413 That file is over the 1 MB upload limit.\",\"under\":201,\"restored\":\"MAX_UPLOAD_MB removed; readyz 200\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-providers",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "External providers: Signing updates mode and AI Test connection controls exist (no provider access)",
+      "startedAt": "2026-09-16T15:40:39.957Z",
+      "at": "2026-09-16T15:40:44.136Z",
+      "actual": "{\"signingConnectorApi\":200,\"settingsLinks\":[\"AI analysis\"]}",
+      "result": "fail"
+    },
+    {
+      "phase": "diag-providers",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "External providers: Signing updates mode and AI Test connection controls exist (no provider access)",
+      "startedAt": "2026-09-16T15:41:11.788Z",
+      "at": "2026-09-16T15:41:15.901Z",
+      "actual": "{\"signingConnectorApi\":200,\"settingsLinks\":[\"AI analysis\"],\"signingPage\":\"/settings/integrations/e-signature\",\"polling\":true,\"webhook\":true,\"pollingHint\":\"Keeps OpenLaw private. Only outbound access to DocuSign is needed. Updates can take about 15 to 20 minutes while the worker is running. Documents are still sent to DocuSign for signing.\",\"webhookHint\":\"Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates.\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-worker",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Worker stopped: new upload stays pending with original downloadable; resume and verify",
+      "command": "docker compose ps worker doc-engine; docker compose logs --since=10m worker doc-engine",
+      "startedAt": "2026-09-16T15:41:21.743Z",
+      "at": "2026-09-16T15:41:45.741Z",
+      "actual": "{\"ps\":[\"doc-engine running\"],\"stateWhileStopped\":\"pending\",\"originalDownload\":\"hash matches\",\"logsLines\":7,\"afterResume\":\"ready\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-worker",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Engine unavailable: a PDF reaches a terminal failed state while the API stays ready; restore engine and process a new PDF",
+      "startedAt": "2026-09-16T15:41:45.743Z",
+      "at": "2026-09-16T15:44:46.229Z",
+      "actual": "{\"failedAfterSeconds\":180,\"readyzWhileEngineDown\":200,\"originalDownload\":200,\"engineState\":\"exited\",\"newPdfAfterRestore\":\"ready\",\"earlierFailedRecordNow\":\"failed\"}",
+      "result": "pass"
+    },
+    {
+      "phase": "diag-log-scan",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: container logs after every induced fault omit keys, relay and storage credentials, and fixture passwords",
+      "startedAt": "2026-09-16T15:44:58.951Z",
+      "at": "2026-09-16T15:44:59.136Z",
+      "actual": "{\"openlaw-docs-41255c61-lc-upgrade\":{\"logLines\":478,\"secretValuesChecked\":19,\"hits\":0,\"relayUrlWithCredentials\":false},\"openlaw-docs-41255c61-lc-recovery\":{\"logLines\":226,\"secretValuesChecked\":19,\"hits\":0,\"relayUrlWithCredentials\":false},\"openlaw-docs-41255c61-lc-restore\":{\"logLines\":86,\"secretValuesChecked\":19,\"hits\":0,\"relayUrlWithCredentials\":false}}",
+      "result": "pass"
+    },
+    {
+      "phase": "destroy",
+      "scenario": "teardown",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Destroy owned projects, support containers, networks and private backups",
+      "startedAt": "2026-09-16T15:45:29.678Z",
+      "at": "2026-09-16T15:46:03.677Z",
+      "actual": "openlaw-docs-41255c61-lc-upgrade down -v exit 0; openlaw-docs-41255c61-lc-recovery down -v exit 0; openlaw-docs-41255c61-lc-restore down -v exit 0; openlaw-docs-41255c61-lc-mail rm exit 0; openlaw-docs-41255c61-lc-minio rm exit 0; openlaw-docs-41255c61-lc-upgrade_openlaw-backend rm exit 0; openlaw-docs-41255c61-lc-recovery_openlaw-backend rm exit 0; openlaw-docs-41255c61-lc-restore_openlaw-backend rm exit 0; remaining containers with prefix: 0",
+      "result": "pass"
+    }
+  ],
+  "updatedAt": "2026-09-16T15:46:03.681Z",
+  "finishedAt": "2026-09-16T15:46:14Z",
+  "environmentNotes": [
+    "Host Docker address pools were exhausted by other projects. The walkthrough pre-created each project's two Compose networks with explicit 10.239.30-35.x/24 subnets and the Compose project/network labels. The Compose files, services and network names stay as the articles define them.",
+    "An owned Mailpit (openlaw-docs-41255c61-lc-mail, alias lc-mail) was the controlled relay recipient on every project network. An owned MinIO (alias lc-minio) served the S3 storage fault. Both are removed.",
+    "Production authentication rate limits stayed on. Sign-ins that got HTTP 429 were retried after a pause.",
+    "Docker Compose 5.5.1 labels each built image with its project name, so the same source builds to a different image ID in each project. The build steps came from the build cache.",
+    "Installation directories were fresh git clones of https://github.com/juggernog20/OpenLaw.git under ~/.cache/openlaw-docs-lc. Keys, fixture passwords and backups stayed there and were deleted at teardown."
+  ],
+  "imageIdentities": {
+    "upgrade project (openlaw-docs-41255c61-lc-upgrade)": {
+      "baseline d1d098ba app/worker": "sha256:2d2894a8d72282deb89b9ac5334df6d0f435da6149614a3251135471a4a1bad2",
+      "baseline d1d098ba engine": "sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26",
+      "candidate 3fa407e3 app/worker": "sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52",
+      "candidate 3fa407e3 engine": "sha256:02021831b2d8e557ab12a76d580965856b7f7df712571e68a9a4755f3fbcef26 (same ID as the baseline engine: the engine sources did not change and the project label is the same)"
+    },
+    "recovery project (openlaw-docs-41255c61-lc-recovery)": {
+      "baseline d1d098ba app/worker": "sha256:946e12014e33dee18417274ab50e7d226055b9880f08ecaf53d4000cee1de780",
+      "baseline d1d098ba engine": "sha256:17a8ab67173de69c007dc5c6327ef3ea6e8a13a7afdac81591f1f8df5f4672b5"
+    },
+    "restore project (openlaw-docs-41255c61-lc-restore)": {
+      "candidate 3fa407e3 app/worker": "sha256:14e6658c2a6665d1e3385bd76f172707fdf7a0977d283ea6cf8dd4a9896e6080",
+      "candidate 3fa407e3 engine": "sha256:e22cf78fe1195a40da922956d16717064bde8f274af28610483d57fd3ba6331b"
+    },
+    "postgres": "postgres:16 sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+  },
+  "failedStepDispositions": [
+    {
+      "step": "populate 15:20:14Z, record baseline reach",
+      "kind": "reviewer script",
+      "disposition": "The script did not wait out the production sign-in rate limit (HTTP 429). That first fixture was destroyed with its own project (down -v) and rebuilt from the same baseline; the rerun passed. Not an article observation."
+    },
+    {
+      "step": "upgrade-verify 15:23:18Z, Administrator sign-in",
+      "kind": "reviewer script",
+      "disposition": "The browser helper read /api/v1/me before the session existed. The helper now polls the session; the rerun at 15:24 passed on the same upgraded instance."
+    },
+    {
+      "step": "recovery 15:26:11Z, Administrator sign-in",
+      "kind": "environment (starting build web client)",
+      "disposition": "The starting build d1d098ba web client showed 'Something went wrong. The page could not load.' at /login in headless Chromium with no failed request. The recovery target was then checked through the same origin with the HTTP sign-in API (recorded as recovery-verify). The candidate web client works; the upgrade article does not depend on the older client."
+    },
+    {
+      "step": "restore-negatives 15:30:30Z to 15:30:55Z, four steps",
+      "kind": "reviewer script",
+      "disposition": "recreate() was declared async and its result was read as a plain object. The helper was fixed and all four steps were rerun and passed from 15:31. The interrupted run left the retained key in place and had already re-extracted the file archive."
+    },
+    {
+      "step": "diag-port-recheck 15:36:14Z",
+      "kind": "doc-error (operator-troubleshooting)",
+      "disposition": "Confirmed twice (diag-startup and this recheck, plus one manual run). After a failed bind, docker compose ps --all lists app and worker in state 'created'; they are not removed. docker compose ps without --all does not list them. The article's port row says the failed bind 'leaves the app and worker containers removed'. The recovery it gives (correct the port, start the containers again) worked."
+    },
+    {
+      "step": "diag-providers 15:40:39Z",
+      "kind": "reviewer script",
+      "disposition": "The DocuSign card must be opened before the Signing updates control appears. Rerun passed."
+    }
+  ],
+  "observations": [
+    "Upgrade start: the worker exited once with 'the worker could not start the job queue' (a query on auto_doc_generations) about 0.4 s after the app logged the reconcile line, and the restart policy started it 2 s later. The upgrade article already tells the operator to read docker compose logs --tail=100 app worker and wait for readiness; nothing needed an action.",
+    "Upgrade: the Contributor became a Business User through migration 0109. Its staff API reach changed from 200 to 403, and its portal reach matched its baseline reach exactly (member Contract 200, other and Confidential Contracts 404).",
+    "App keeps restarting row: with an unresolvable DATABASE_URL host, the first app error on this host was 'Connection terminated due to connection timeout', not getaddrinfo ENOTFOUND. The daemon uses a fixed DNS server. The article names no specific message.",
+    "AI analysis Settings: the Test connection button was not found on an unconfigured AI analysis page. Not needed for any claimed result; provider diagnostics stay blocked under C42/C43."
+  ],
+  "results": {
+    "upgrade": {
+      "scenario": "V-C46",
+      "result": "pass"
+    },
+    "backup-and-restore": {
+      "scenario": "V-C47",
+      "result": "pass"
+    },
+    "operator-troubleshooting": {
+      "scenario": "V-C48",
+      "result": "fail",
+      "reason": "Port row: a failed bind leaves app and worker in state 'created', not removed (doc-error). Every other induced fault matched the article."
+    }
+  }
+}

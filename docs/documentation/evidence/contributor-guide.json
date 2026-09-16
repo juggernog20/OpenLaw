@@ -1,41 +1,90 @@
 {
   "articleId": "contributor-guide",
-  "contentSha256": "279714f01601850e530c33fc253bf68bbf5efb8ea8585651ff3a4053e8fc437e",
-  "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-  "buildId": "Source integration only; no walkthrough build recorded for this article revision",
-  "environment": "dev integration source review",
-  "author": "Codex integration author",
-  "technicalReviewer": null,
-  "walkthroughReviewer": null,
+  "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+  "environment": "openlaw-docs-41255c61-work",
+  "walkthroughReviewer": "DOC-029 independent walkthrough agent (roles, round 2)",
   "reviewerKind": "agent",
-  "verifiedAt": null,
-  "status": "blocked",
+  "technicalReviewer": "DOC-029 source-review author agent (roles)",
+  "verifiedAt": "2026-09-16T16:20:59.865Z",
+  "status": "pass",
+  "author": "Codex integration author; corrections by DOC-029 source-review author agent (roles); link label correction by DOC-029 integration author agent",
   "sources": [
-    "apps/api/src/modules/contracts/routes.ts",
-    "apps/api/src/modules/matters/routes.ts",
-    "apps/api/src/modules/documents/contributor-documents.test.ts",
-    "apps/web/src/routes/contract-record.tsx",
-    "apps/web/src/routes/matter-record.tsx",
-    "apps/web/src/components/documents/documents-card.tsx",
-    "apps/web/src/components/comments/comment-applet.tsx"
+    "docs/user-guides/contributor-guide.md",
+    "docs/documentation/batches/DOC-029/roles/technical-review.json",
+    "docs/documentation/batches/DOC-029/roles/walkthrough-r2.json"
   ],
   "scenarios": [
     {
       "id": "V-C25",
       "coverage": ["C25"],
-      "role": "contributor",
+      "role": "business_user",
       "method": "browser-walkthrough",
+      "prerequisites": [
+        "Seeded fictional Business User account signed in on the shared work documentation lab (openlaw-docs-41255c61-work).",
+        "Reviewer-created records named DOC-029 roles ... from setup-r1.mjs and setup-r1-part2.mjs (fixtures-r1.json); round 2 restored the 25 paging Matters that round 1 archived and archived them again at the end.",
+        "Ravi signed in with a fresh magic link from the work lab Mailpit; the link was not stored. Ravi is on the M-24, M-50 and paging Matter teams and on a freshly converted Contract, and absent from M-19."
+      ],
       "expected": "Contributor actions succeed only on reached work and the guide identifies the actual legal-action limits. Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access.",
-      "actual": "Re-verification required after the dev integration changed these guide instructions. Earlier observations are preserved in previousEvidence and do not verify this revision.",
-      "result": "blocked",
-      "evidence": ["docs/documentation/batches/dev-integration/README.md"]
+      "actual": "16 Business User steps passed on 3fa407e3, with 2 Legal fixture steps. Before Legal added him, M-24 showed Matter not found; after, Portal > Matters listed it with its M- reference, and M-19 stayed refused. Search by title with Enter, by reference with Search, and by primary Counterparty worked. Filter offered Type, Legal Owner, Stage and Expiry date on Contracts and Type, Matter Manager, Status and Lifecycle on Matters; one chip and Clear all worked. Heading sort cycled asc, desc and default in the address; Back and a bookmark kept it; Show more went from 25 to 27 rows; a heading edge drag resized Reference. Details and Fields showed Department and Region and Legal's Description change after reload, with no editable controls, while Original request kept the ask. Documents listed the Primary Document first, a PDF preview opened and download answered 200. Upload documents with New documents, Kind and Note uploaded two files; Retry failed uploads resent only an injected failure. Add version opened with the Document selected and a single-file input; earlier versions and Signed copy showed and the Primary designation stayed. Drop opened the dialog, there were no folder or archive controls, and Search Documents and Show more worked. Comments had no audience picker, kept the draft and attachment across applet switches, offered @ mentions, and Comment actions edited and deleted. Ravi's replies showed Matter Team on M-24 and Contract Team on the Contract, with Visible to Legal and all Matter team members. and Visible to Legal and all Contract team members. below the composer; Legal Only and Working Team comments stayed hidden. He added Amara from Matter team with existing members excluded and no remove control; on Confidential M-20 Add team member was disabled with Ask Legal. No Stage, Status, owner, party, confidentiality, relationship, Task, Key date or Approval controls appeared, and a direct write answered 403. A Closed Matter and an Expired (ended) Contract stayed open to him with Upload documents; an archived Matter left the Portal; removal from the team refused the link and the Documents read.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.json",
+        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.mjs"
+      ]
     }
   ],
-  "authorEvidence": [],
   "limitations": [
-    "This article changed during the dev integration and requires fresh technical and walkthrough acceptance. Its earlier hash, reviewers, timestamps and observations are preserved in previousEvidence.",
-    "No full-suite acceptance, human proofreading or publication is claimed. DOC-025 must verify the combined candidate."
+    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
+    "Legal-side changes used API stand-ins, named in each step: Request conversion and primary upload, the primary Counterparty, the signed-copy pin, closing, archiving, restoring and reopening M-24, moving the Contract to Expired and back, and Legal Only and Working Team probe comments.",
+    "The upload failure was injected by the reviewer's browser route, not produced by the server.",
+    "The drop onto Documents was a synthetic drag-and-drop event, not a native file drag from the desktop.",
+    "The work lab is shared with other DOC-029 agents. This walkthrough created only records named DOC-029 roles ... and changed no organisation settings.",
+    "Round 1 failed on the reply tier label sentence (walkthrough-r1.json). Round 2 ran the whole article again against the corrected text."
   ],
-  "previousEvidence": "docs/documentation/batches/dev-integration/previous-contributor-guide.json",
-  "copyOnlyReview": null
+  "previousEvidence": {
+    "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+    "contentSha256": "279714f01601850e530c33fc253bf68bbf5efb8ea8585651ff3a4053e8fc437e",
+    "verifiedAt": null
+  },
+  "copyOnlyReview": {
+    "classification": "copy-only",
+    "reviewer": "DOC-029 independent re-walk agent",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T17:37:45Z",
+    "previousContentSha256": "0062352d67a7c20bc2a0500f59ac4fcbfc8d663004bdb5f391b6f2069392cc0b",
+    "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
+    "priorEvidence": {
+      "path": "docs/documentation/evidence/contributor-guide.json",
+      "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "0062352d67a7c20bc2a0500f59ac4fcbfc8d663004bdb5f391b6f2069392cc0b",
+      "verifiedAt": "2026-09-16T16:20:59.865Z",
+      "walkthroughReviewer": "DOC-029 independent walkthrough agent (roles, round 2)"
+    },
+    "changes": [
+      "Line 41: the link label for comments-and-activity.md changed from \"Comments, attachments, and activity\" to \"Choose who can read a comment\". That is the article title in articles.json and its H1. The link target did not change."
+    ],
+    "whyPriorWalkthroughsApply": "No action, prerequisite, result, control name or meaning changed. Only the visible text of one link changed, so the link now names the article it opens. The walkthrough evidence above ran against the previous bytes and is kept unchanged. No fresh walkthrough is claimed for these bytes."
+  },
+  "compatibilityReview": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
+    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-16T19:11:55Z",
+    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (roles)) found the article compatible: I inspected the 43 app files and messages/en-US.json changed from 3fa407e3 to 57e77e38; none touches Portal lists, record pages, Documents, Comments or team applets. I replayed the round 1 V-C25 walkthrough on the work2 lab built from 57e77e38, and all 18 contributor-guide steps passed as Business User with Legal fixture steps. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "evidence": [
+      {
+        "path": "batches/DOC-029/compat-r2/roles.json",
+        "sha256": "9ef1cd3fcd7dc772b27d0d8dd82c46bee4ab0f9724ab0ef0d695ff4eac59e48e"
+      },
+      {
+        "path": "batches/DOC-029/compat-r3/review.json",
+        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      }
+    ]
+  }
 }

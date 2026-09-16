@@ -1,0 +1,445 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-029",
+  "round": 2,
+  "group": "analysis-standin",
+  "reviewer": "DOC-029r2 compatibility reviewer (analysis-standin)",
+  "reviewerKind": "agent",
+  "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "toAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+  "applicationSha256": "e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1",
+  "lab": {
+    "name": "analysis-r2",
+    "project": "openlaw-docs-41255c61-analysis-r2",
+    "app": "http://127.0.0.1:23313",
+    "mail": "http://127.0.0.1:23413",
+    "source": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "seed": "Helix light, seed 7",
+    "images": {
+      "app": "openlaw-docs-41255c61-analysis-r2-app:57e77e386be3 sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612",
+      "engine": "openlaw-docs-41255c61-analysis-r2-engine:57e77e386be3 sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+    },
+    "containerImages": [
+      {
+        "service": "app",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      },
+      {
+        "service": "doc-engine",
+        "imageId": "sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9"
+      },
+      {
+        "service": "mailpit",
+        "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+      },
+      {
+        "service": "postgres",
+        "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+      },
+      {
+        "service": "worker",
+        "imageId": "sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612"
+      }
+    ],
+    "provider": "Local OpenAI-compatible stand-in, analysis-standin/provider-standin.mjs unchanged, in container openlaw-docs-41255c61-analysis-r2-provider on the lab backend network with alias analysis-provider and no published port. It ran on the lab app image. The keys were generated at run time and never written to a file. No real provider account and no external provider traffic.",
+    "destroyed": "The stand-in container was removed after each run. The lab was destroyed with lab.mjs destroy analysis-r2 after the recorded run."
+  },
+  "diffInspection": {
+    "command": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 57e77e386be31b2a319f7143dd54d00123e65efe -- apps packages styles messages",
+    "commits": [
+      "1ea249dd Show organization branding on sign-in and raise the logo limit",
+      "2b6d167f Collect SMTP as discrete fields and keep first-run on the URL",
+      "6d34ac59 Save new settings list rows with explicit Save and Cancel",
+      "e3800b43 Show locked default fields above each custom field catalog",
+      "d64309f5 Document private-VM installs and a browser-facing BASE_URL",
+      "57e77e38 Update user and comment display styles to use 'text-muted' for archived users"
+    ],
+    "finding": "No changed file is an Analysis, Key dates, Contract record, Document reader, Comparison or Generated redline module. The diff touches no styles/ file. settings-ai-analysis.tsx moves the stored-key reuse check into lib/ai-connector-config.ts with the same logic and changes the page intro text. messages/en-US.json changes the AI analysis Settings intro, the AI analysis status sentences on Settings and the welcome AI step text; neither article quotes those strings. contracts-columns.tsx and documents-columns.tsx change an archived person's name from opacity-50 to text-muted in list columns only. settings-contract-fields.tsx adds a read-only Default fields list above the custom Field catalog; Field prompts and the Fields API are unchanged. The remaining files are sign-in branding, SMTP settings, settings list rows, Return to setup and the welcome flow."
+  },
+  "articles": [
+    {
+      "articleId": "contract-analysis",
+      "scenario": "V-C21",
+      "contentSha256": "ce182804fbd35ffb2e8ba24cff6bc848963a56f1b04a10222dea23aedebbee39",
+      "diffFilesInspected": [
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json"
+      ],
+      "conclusion": "compatible",
+      "reasoning": "The article states no Settings intro text and no AI status sentence from Settings. Run analysis, the AI analysis card, outcome labels, Unverified markers, Confirm, Confirm all, Key dates, Request-context Analysis and the role rules are in files the diff does not change. The replay of every round 1 V-C21 step passed for both roles on 57e77e38.",
+      "replaySteps": [
+        {
+          "role": "administrator",
+          "step": "Before you start: a Contract without a primary Document",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Before you start: the primary Document text failed to extract",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "If the card is absent: disabled connector, no marked values and no run",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Run Analysis: an automatic run starts when the primary Document text becomes ready",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "The card updates when a run finishes while preserving typed drafts",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Run Analysis from the Contract actions menu and Unverified markers on Overview",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Evidence sparkle opens the cited Document Version in the same-page doc panel",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Unverified values are already usable",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Confirm or correct one value",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Rerun after a change: the executed pin is the target and a newer upload does not displace it",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Rerun on changed input while another legal person edits a value",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Key date removal is not undone by a later run, and an explicit clear is preserved",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "If Analysis cannot finish: a failed run reports its reason, Version and model and changes nothing",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Supporting Documents are not the target",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Roles and states: Ended, archived, disabled connector and Confirm all",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Business Users cannot run Analysis or confirm its values",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Before you start: a Contract without a primary Document",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Before you start: the primary Document text failed to extract",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "If the card is absent: disabled connector, no marked values and no run",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Run Analysis: an automatic run starts when the primary Document text becomes ready",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "The card updates when a run finishes while preserving typed drafts",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Run Analysis from the Contract actions menu and Unverified markers on Overview",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Evidence sparkle opens the cited Document Version in the same-page doc panel",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Unverified values are already usable",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Confirm or correct one value",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Rerun after a change: the executed pin is the target and a newer upload does not displace it",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Rerun on changed input while another legal person edits a value",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Key date removal is not undone by a later run, and an explicit clear is preserved",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "If Analysis cannot finish: a failed run reports its reason, Version and model and changes nothing",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Supporting Documents are not the target",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Roles and states: Ended, archived, disabled connector and Confirm all",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Business Users cannot run Analysis or confirm its values",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Analysis after Request conversion: filling, failure, Retry Request-context Analysis and completion",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Analysis after Request conversion: filling, failure, Retry Request-context Analysis and completion",
+          "result": "pass"
+        }
+      ]
+    },
+    {
+      "articleId": "compare-versions",
+      "scenario": "V-C29",
+      "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
+      "diffFilesInspected": [
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/contracts/contracts-columns.tsx",
+        "apps/web/src/components/user-identity.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/openapi.json",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/logo.ts",
+        "messages/en-US.json"
+      ],
+      "conclusion": "compatible",
+      "reasoning": "The diff changes no Comparison page, Document reader, Document access guard, comparison pipeline or export route. documents-columns.tsx changes only the archived uploader style in the Documents list. The replay of every round 1 V-C29 step and the archived-pair supplement passed for both roles on 57e77e38.",
+      "replaySteps": [
+        {
+          "role": "administrator",
+          "step": "Choose the Versions: Compare with previous, Preparing comparison, then Changes",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Pair control, change list, Previous change and Next change",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "The Document reader offers Compare with the change count",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Export a Word Comparison as a Generated redline",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "A text Comparison (PDF against Word)",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "If the Comparison fails: reason, Download links, no retry, corrected new Version",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Archiving keeps Comparisons readable and blocks new Generated redlines until restored",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Close comparison returns to the owning record",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Only Administrators and Legal Team Members open Comparisons",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Choose the Versions: Compare with previous, Preparing comparison, then Changes",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Pair control, change list, Previous change and Next change",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "The Document reader offers Compare with the change count",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Export a Word Comparison as a Generated redline",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "A text Comparison (PDF against Word)",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "If the Comparison fails: reason, Download links, no retry, corrected new Version",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Archiving keeps Comparisons readable and blocks new Generated redlines until restored",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Close comparison returns to the owning record",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Only Administrators and Legal Team Members open Comparisons",
+          "result": "pass"
+        },
+        {
+          "role": "administrator",
+          "step": "Archiving does not stop comparing existing Versions (new pair on an archived Document)",
+          "result": "pass"
+        },
+        {
+          "role": "legal_team_member",
+          "step": "Archiving does not stop comparing existing Versions (new pair on an archived Document)",
+          "result": "pass"
+        }
+      ]
+    }
+  ],
+  "replay": {
+    "method": "Replayed analysis-standin/walkthrough-r1.mjs with harness-r1.mjs, parts analysis, conversion, compare and archived-pair, against analysis-r2. Adaptations: the lab manifest path and default project (analysis-r2), the repository root depth for the new folder, the output file name, the reviewer and round labels, and record names DOC-029 became DOC-029r2. No check, selector, wait or expectation changed.",
+    "runs": [
+      {
+        "file": "batches/DOC-029/compat-r2/analysis-standin-r2/replay-r2-attempt1.json",
+        "startedAt": "2026-09-16T17:56:35.004Z",
+        "finishedAt": "2026-09-16T18:01:29.684Z",
+        "stepsTotal": 54,
+        "stepsFailed": 1,
+        "outcome": "1 step failed for the Administrator: Key date removal is not undone by a later run. The rerun reached state ready through the API, but the card status wait for Completed … on Version 2 timed out after 90 seconds. The same step passed for the Legal Team Member in this run and for both roles in the recorded run. The diff changes no AI analysis card or Key dates file. The host load average was about 7.6 from parallel labs. This is recorded as a transient page wait, not an article failure."
+      },
+      {
+        "file": "batches/DOC-029/compat-r2/analysis-standin-r2/replay-r2.json",
+        "startedAt": "2026-09-16T18:02:19.236Z",
+        "finishedAt": "2026-09-16T18:05:52.068Z",
+        "stepsTotal": 54,
+        "stepsFailed": 0,
+        "outcome": "Recorded run. All steps passed. The script made its built-in single reload twice (navigationRetries), as in round 1."
+      }
+    ],
+    "stepsTotal": 54,
+    "stepsFailed": 0,
+    "files": [
+      {
+        "path": "batches/DOC-029/compat-r2/analysis-standin-r2/harness-r2.mjs",
+        "sha256": "b4db8ae66e1ce8b844cc1cf7feedc859f482e83e65fecf98101f5a6b3f253c26"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/analysis-standin-r2/walkthrough-r2.mjs",
+        "sha256": "d7b2a88ed6d5a40982033c0c8b21d6fedf7d9bb91f5280aa47e3154bd9575271"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/analysis-standin-r2/replay-r2.json",
+        "sha256": "4b95beecf54768fe080d37814e3104756cfd3cf1f920086cebbd06544765f4c5"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/analysis-standin-r2/replay-r2.log",
+        "sha256": "315c81e0742071bb93db6ff8d4bf47d0012c9d883409b47b3de85b135debdbcd"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/analysis-standin-r2/replay-r2-attempt1.json",
+        "sha256": "578406218261cbc0865a48a2846d3080ecd69f45cadbbdf438fb0c0a0ce1ba7b"
+      },
+      {
+        "path": "batches/DOC-029/compat-r2/analysis-standin-r2/replay-r2-attempt1.log",
+        "sha256": "4619c0d16dcd0707819ea9748d4f59e6a98e10b6760887df09e8dc9353931a2e"
+      },
+      {
+        "path": "batches/DOC-029/analysis-standin/provider-standin.mjs",
+        "sha256": "3d72495bab9a8c45851e245a16978ddec49458dfefe4278eb722dde41f716ce2"
+      }
+    ]
+  },
+  "limitations": [
+    "Agent replay of the round 1 scripts, not a new walkthrough written from the article text, and not a human review.",
+    "Browser contexts were 1440x1000 CSS px in the default theme, as in round 1.",
+    "The same limitations as the round 1 evidence apply: no real provider, no retryable provider outage, no unavailable citation, and Request-context Analysis without a Request attachment."
+  ]
+}

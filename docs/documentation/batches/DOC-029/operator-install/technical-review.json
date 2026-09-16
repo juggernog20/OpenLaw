@@ -1,0 +1,183 @@
+{
+  "batch": "DOC-029",
+  "group": "operator-install",
+  "reviewer": "DOC-029 source-review author agent (operator-install)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T15:01:35Z",
+  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+  "method": "source-inspection",
+  "note": "Source review only. No walkthrough ran and no catalog status changed. An independent agent must run V-C44 and V-C45 with container-operation on images built from 3fa407e3.",
+  "articles": [
+    {
+      "articleId": "install",
+      "author": "DOC-029 source-review author agent (operator-install)",
+      "reviewer": "DOC-029 source-review author agent (operator-install)",
+      "reviewerKind": "agent",
+      "reviewedAt": "2026-09-16T15:01:35Z",
+      "method": "source-inspection",
+      "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "previousAppCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
+      "previousContentSha256": "35b1bd584e291c4b42741097c9aa66ebd9db95092d293ed80821d3e7eee01b0f",
+      "contentSha256": "901abfbaf0673b8ded65013bb43d10bc65fcbc6a087073ea376377c0cfadd2fe",
+      "result": "corrected",
+      "classification": "behavior and build change: the documented source revision moved to the verification build, and the welcome wizard now needs outbound email before it can finish. Prior walkthrough evidence does not cover the corrected text. The V-C44 container-operation walkthrough must be rerun from images built at 3fa407e3.",
+      "sources": [
+        "compose.yml",
+        "Dockerfile",
+        ".env.example",
+        "services/doc-engine/Dockerfile",
+        "docs/DEPLOYMENT.md",
+        "apps/api/src/index.ts",
+        "apps/api/src/app.ts (/healthz, /readyz)",
+        "apps/api/src/lib/mailer.ts",
+        "apps/api/src/modules/onboarding/routes.ts (POST /onboarding/complete, SETTINGS_PATHS)",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/web/src/routes/setup.tsx",
+        "messages/en-US.json (auth.setup.title)",
+        "packages/db/src/secrets.ts",
+        "CONTEXT.md"
+      ],
+      "infrastructureDiff": "git diff 6a8873db..3fa407e3 shows no change to compose.yml, Dockerfile, .env.example, or services/doc-engine. apps/api/src/index.ts adds a boot stop when the better-auth schema check fails, and an in-process Auto-Doc fill engine. Neither changes an install step.",
+      "corrections": [
+        {
+          "where": "Before you start (paragraph 3), Prepare the source step 1, and the .env example in step 3",
+          "before": "The documentation candidate builds application revision 6a8873dbda333fd9992eb77525d4bfa3f47af20d (git checkout and OPENLAW_BUILD_COMMIT).",
+          "after": "The documentation candidate builds application revision 3fa407e3a846559914aa1a63249741f30cfb4f69, the recorded verification build.",
+          "sources": ["task verification build identity"]
+        },
+        {
+          "where": "Before you start (paragraph 2)",
+          "before": "An SMTP relay is needed for invitations and sign-in links; initial Administrator creation does not require email.",
+          "after": "An SMTP relay is needed for invitations, sign-in links, and the welcome wizard. Creating the initial Administrator account does not send email, but the welcome wizard cannot finish until outbound email is configured.",
+          "sources": [
+            "apps/api/src/modules/onboarding/routes.ts (POST /onboarding/complete returns 409 'Configure outbound email before finishing instance setup.' when the resolved mailer is not configured)",
+            "apps/web/src/routes/setup.tsx (Create Administrator form has no email send)",
+            "apps/api/src/lib/mailer.ts (configured is false without both URL and From)"
+          ]
+        }
+      ],
+      "confirmed": [
+        "Base Compose services are app, worker, postgres, doc-engine; the dev overlay compose.dev.yml adds Mailpit.",
+        "Compose refuses to start without AUTH_SECRET and OPENLAW_SECRET_KEY (${VAR:?} guards), and .env.example leaves both empty, so the sed substitutions for '^AUTH_SECRET=$' and '^OPENLAW_SECRET_KEY=$' match.",
+        "OPENLAW_BUILD_COMMIT and OPENLAW_BUILD_DIRTY are build args of the app service; the worker uses the same image with command node apps/worker/dist/index.js, so only app and doc-engine are built.",
+        "The app container listens on 3000; PORT moves the published host port.",
+        "GET /readyz returns ok only when a bounded database query succeeds; it does not test email, storage, processing, or providers. The doc-engine has its own /healthz healthcheck; the worker has no healthcheck.",
+        "The doc engine and Postgres have no published ports.",
+        "The first page is titled 'Set up OpenLaw' with the 'Create Administrator' action, and disables itself once a user exists.",
+        "BASE_URL is shared by app and worker and defaults to a localhost origin when unset.",
+        "AUTH_SECRET and OPENLAW_SECRET_KEY are separate keys; OPENLAW_SECRET_KEY seals Settings credentials.",
+        "Links to deployment-configuration.md#serve-the-intended-origin, first-run.md, upgrade.md, backup-and-restore.md, operator-troubleshooting.md keep their targets."
+      ]
+    },
+    {
+      "articleId": "deployment-configuration",
+      "author": "DOC-029 source-review author agent (operator-install)",
+      "reviewer": "DOC-029 source-review author agent (operator-install)",
+      "reviewerKind": "agent",
+      "reviewedAt": "2026-09-16T15:01:35Z",
+      "method": "source-inspection",
+      "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "previousAppCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
+      "previousContentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468",
+      "contentSha256": "3d17dd0899784766faeb0007751aa8707f544ced34d83f0ebeeb14d6dab1801c",
+      "result": "corrected",
+      "classification": "behavior change: the welcome wizard now refuses to finish without a complete email configuration, and Conversion drafts are a second worker AI workload. The existing evidence already required fresh acceptance. The V-C45 container-operation walkthrough must be rerun at 3fa407e3.",
+      "sources": [
+        "compose.yml",
+        ".env.example",
+        "Dockerfile",
+        "docs/DEPLOYMENT.md",
+        "apps/api/src/index.ts",
+        "apps/api/src/app.ts",
+        "apps/api/src/lib/mailer.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/onboarding/routes.ts",
+        "apps/web/src/routes/settings-general.tsx (Setup checklist, Email row has no Settings link)",
+        "apps/api/src/lib/storage/config.ts",
+        "apps/api/src/lib/uploads.ts",
+        "apps/api/src/lib/doc-engine/config.ts",
+        "apps/api/src/lib/doc-engine/http.ts",
+        "apps/api/src/lib/auto-doc-fill/real.ts",
+        "apps/api/src/modules/events/routes.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/modules/ai-connector/routes.ts",
+        "apps/api/src/pipeline/pg-boss.ts",
+        "apps/api/src/pipeline/conversion-draft.ts",
+        "packages/db/src/rewrap.ts",
+        "packages/db/src/secrets.ts",
+        "packages/db/src/schema/org.ts",
+        "packages/db/src/schema/ai-connector.ts",
+        "packages/db/src/schema/signing-connectors.ts",
+        "packages/db/src/schema/auth.ts",
+        "CONTEXT.md (AI connector, Conversion draft)"
+      ],
+      "corrections": [
+        {
+          "where": "Configure outbound email and providers, paragraph 1",
+          "before": "When neither source is configured, email-dependent flows report that email is unavailable.",
+          "after": "If the effective source does not have both a relay URL and a From address, email-dependent flows report that email is unavailable. An Administrator also cannot finish the welcome wizard in that state.",
+          "sources": [
+            "apps/api/src/lib/mailer.ts (createMailerResolver: SMTP_URL without SMTP_FROM pins source env with an unconfigured mailer; app source needs both smtpUrl and smtpFrom)",
+            "apps/api/src/modules/onboarding/routes.ts (409 /problems/email-setup-required)"
+          ]
+        },
+        {
+          "where": "Configure outbound email and providers, paragraph 3",
+          "before": "AI model discovery and connection probes run in the app; Contract extraction runs in the worker.",
+          "after": "AI model discovery and connection probes run in the app; Contract extraction and Conversion drafts run in the worker.",
+          "sources": [
+            "apps/api/src/pipeline/pg-boss.ts (conversionDraft and contractAnalysis queues call resolveAiProvider in job handlers)",
+            "CONTEXT.md AI connector entry (the worker resolves it for every Analysis run and Conversion draft)"
+          ]
+        }
+      ],
+      "confirmed": [
+        "restart does not apply a changed .env; up -d recreates containers with the new environment.",
+        "App and worker share the x-openlaw-environment block (DATABASE_URL, OPENLAW_SECRET_KEY, storage, doc engine, BASE_URL) and the openlaw-files volume; doc-engine gets only DOC_ENGINE_COMPARE_TIMEOUT_MS, is on the internal openlaw-doc-engine network only, and has no database route.",
+        "/api/events is the live-update stream route.",
+        "Auth rate limiting stays on unless AUTH_RATE_LIMIT=off.",
+        "DATABASE_URL unset uses bundled postgres:16; the app migrates on boot; the postgres service stays in the topology.",
+        "STORAGE_DRIVER local/s3/azure-blob; STORAGE_PATH default /var/lib/openlaw/files prepared for the node user; configured S3 bucket or Azure container is a reader at boot; path-style defaults on with S3_ENDPOINT; Azure variables reach the containers through env_file .env.",
+        "MAX_UPLOAD_MB default 100; unreadable values fall back to the default.",
+        "DOC_ENGINE_TIMEOUT_MS default 300000, max 420000; DOC_ENGINE_COMPARE_TIMEOUT_MS default 600000, max 840000; larger values throw DocEngineConfigError at startup; DOC_ENGINE_TMPFS_SIZE default 2g.",
+        "SMTP_URL set pins source env and PUT /email-settings is refused with 409; the test email goes to the signed-in Administrator; the onboarding Email step has settingsPath null, so no Settings page edits the relay after the wizard.",
+        "The five sealed columns are unchanged: AI connector api_key, signing private_key and webhook_secret, org smtp_url, SSO oidc_config. Boot logs resealed and unreadable counts; unreadable values stay untouched.",
+        "OPENLAW_SECRET_KEY_PREVIOUS is accepted for reads during rotation; both app and worker need OPENLAW_SECRET_KEY.",
+        "The Auto-Doc fill engine runs inside the app process (worker thread) and needs no new environment variable or service.",
+        "Heading anchor #serve-the-intended-origin is kept."
+      ]
+    }
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/upgrade.md names 6a8873dbda333fd9992eb77525d4bfa3f47af20d as the candidate revision (lines 9 and 28); its owner should move it to 3fa407e3a846559914aa1a63249741f30cfb4f69 so it agrees with install.md.",
+    "docs/documentation/evidence/install.json and deployment-configuration.json still record the old contentSha256 and appCommit; the walkthrough agent must record the new hashes after its run."
+  ],
+  "integrationCorrections": [
+    {
+      "articleId": "deployment-configuration",
+      "author": "DOC-029 integration author agent",
+      "reviewerKind": "agent",
+      "reviewedAt": "2026-09-16T17:14:44Z",
+      "method": "source-inspection",
+      "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "previousContentSha256": "3d17dd0899784766faeb0007751aa8707f544ced34d83f0ebeeb14d6dab1801c",
+      "contentSha256": "989452ae353446b1157c3294d36f72ea0522c902d19dfce94a999a5effc6225d",
+      "result": "corrected",
+      "trigger": "The independent V-C45 walkthrough (walkthrough-r1.json, phases mail and mail-flows) failed the claim that every email-dependent flow reports that email is unavailable when the effective source has no From address.",
+      "where": "Configure outbound email and providers, paragraph 1",
+      "before": "If the effective source does not have both a relay URL and a From address, email-dependent flows report that email is unavailable. An Administrator also cannot finish the welcome wizard in that state.",
+      "after": "If the effective source does not have both a relay URL and a From address, the test email, sign-in link requests, and password-setup requests report that email is unavailable. An Administrator also cannot finish the welcome wizard in that state. An invitation does not report the problem in this build. Settings → Users → Invite user lists the person as Invited, but OpenLaw sends no email. Set both values, then invite a test address and check that the invitation reaches the relay.",
+      "observations": [
+        "walkthrough-r1.json mail phase: with SMTP_URL set and SMTP_FROM unset, source stays env and the test send is refused; the relay received nothing.",
+        "walkthrough-r1.json mail-flows phase: the magic-link request answered 403 with \"Sign-in links are unavailable: this instance cannot send email.\"; the password-setup request answered 503; POST /api/v1/auth/invites answered 201; Settings → Users → Invite user closed the dialog and listed the invitee as Invited; the relay received 0 messages. Screenshot r1-invite-without-smtp-from.png."
+      ],
+      "sources": [
+        "apps/api/src/modules/auth/routes.ts (POST /auth/invites calls sendSetPasswordEmail, which calls requestPasswordReset, then answers 201)",
+        "apps/api/src/auth/instance.ts (sendResetPassword calls mailer.send on the resolved mailer; the walkthrough app log shows \"Email is not configured\" logged as an error while the invite still answered 201)",
+        "apps/api/src/lib/mailer.ts (configured is false without both URL and From)"
+      ],
+      "knownBug": "#889",
+      "classification": "behavior claim corrected. The V-C45 container-operation walkthrough must run again at 3fa407e3 against the new bytes. It must check the invitation sentence as written, which describes current behavior and is expected to change when #889 is fixed."
+    }
+  ]
+}

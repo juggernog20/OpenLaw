@@ -8,7 +8,7 @@ Sign in as a Legal Team Member or Administrator, open **Auto-Docs**, and create 
 
 ## Mark a Placeholder
 
-Type a name in double braces where the answer goes, for example `{{counterparty_name}}`. Start the name with a lowercase letter, then use lowercase letters, digits, and underscores. Keep it to 120 characters. Type a Placeholder anywhere in the document, including headers, footers, and footnotes. Each new Placeholder gets its own form field on upload, in document order. Edit the field's label, type, and help from its card.
+Type a name in double braces where the answer goes, for example `{{counterparty_name}}`. Start the name with a lowercase letter, then use lowercase letters, digits, and underscores. Keep it to 120 characters. Type a Placeholder in the body, a header, a footer, a footnote, or an endnote. Each new Placeholder gets its own form field on upload, in the order the file on the left shows them. The body comes first, then the other parts. Edit the field's label, type, and help from its card.
 
 ## Format a value
 
