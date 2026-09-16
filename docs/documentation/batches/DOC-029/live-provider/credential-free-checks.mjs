@@ -628,7 +628,7 @@ try {
     "browser-walkthrough",
     "Custom endpoint: save a Base URL that contains credentials",
     async () => {
-      await page.locator("#ai-base-url").fill("http://user:pass@127.0.0.1:9/v1");
+      await page.locator("#ai-base-url").fill("http://user:pass@127.0.0.1:9/v1"); // secretlint-disable-line -- fictional credential-in-URL refusal check
       await page.locator("#ai-api-key").fill(FICTION.aiKey);
       await page.getByRole("button", { name: "Enter model ID manually" }).click();
       await page.locator("#ai-model").fill(FICTION.model);
