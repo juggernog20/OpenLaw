@@ -4,7 +4,7 @@
 //   LAB_ADMIN_EMAIL=... LAB_ADMIN_PASSWORD=... node docs/documentation/batches/DOC-028/walkthrough.mjs
 // Credentials come only from the environment and are never written to the results.
 import { createRequire } from "node:module";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -112,14 +112,6 @@ async function mailLink(email) {
 function tab(page, name) {
   return page.getByRole("navigation", { name: "Auto-Doc sections" }).getByRole("link", { name });
 }
-function pane(page) {
-  return page
-    .locator("h2")
-    .filter({ hasText: /\.docx$|^Template$/ })
-    .first()
-    .locator("xpath=ancestor::div[contains(@class,'flex-col')][1]");
-}
-
 async function uploadExpectingRefusal(page, file) {
   await page.getByRole("button", { name: "Upload version" }).click();
   const dialog = page.getByRole("dialog", { name: "Upload version" });
@@ -148,10 +140,6 @@ async function uploadExpectingReport(page, file) {
 }
 
 async function fieldOrder(page) {
-  const names = await page
-    .getByRole("button", { name: /^Edit / })
-    .allInnerTexts()
-    .catch(() => []);
   const labels = await page
     .getByRole("button", { name: /^Edit / })
     .evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
@@ -332,7 +320,6 @@ async function walkthrough(role, page, displayName, options = {}) {
       const before = (
         await page.getByRole("button", { name: "Block arbitration" }).textContent()
       ).trim();
-      const clauses = page.getByRole("region", { name: "Clauses" });
       const clauseNote = (
         await page.getByText("A Block with no rule is always included.").textContent()
       ).trim();
