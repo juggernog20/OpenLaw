@@ -1440,11 +1440,11 @@
         "Unknown or missing article/anchor and unavailable external support/reference destinations preserve useful local navigation."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "blocked",
+      "status": "pass",
       "acceptance": {
         "task": "DOC-025",
-        "basis": "Final complete-content Help/offline publication scenarios require provider articles and DOC-027 environment; batch and DOC-025 preview observations do not replace this gate.",
-        "evidence": []
+        "basis": "Independent agent browser walkthrough of the complete 57-article edition (content digest 09293453…, distribution 366a78a8, app 432dba3a) by DOC-029's publication reviewer, for every required role and method. Agent check, not human approval.",
+        "evidence": ["docs/documentation/evidence/publication.json"]
       }
     },
     {
@@ -1466,11 +1466,11 @@
         "With JavaScript disabled or an optional image/search asset missing, the standalone index and prose remain usable; a missing article file is reported as a failed completeness check."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "blocked",
+      "status": "pass",
       "acceptance": {
         "task": "DOC-025",
-        "basis": "Final complete-content Help/offline publication scenarios require provider articles and DOC-027 environment; batch and DOC-025 preview observations do not replace this gate.",
-        "evidence": []
+        "basis": "Independent agent browser walkthrough of the complete 57-article edition (content digest 09293453…, distribution 366a78a8, app 432dba3a) by DOC-029's publication reviewer, for every required role and method. Agent check, not human approval.",
+        "evidence": ["docs/documentation/evidence/publication.json"]
       }
     },
     {

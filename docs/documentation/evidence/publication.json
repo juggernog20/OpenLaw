@@ -1,0 +1,189 @@
+{
+  "editionId": "documentation-development",
+  "contentDigest": "09293453cbde7ba5da56f0e9e2fce299d5770bb1985e1535b81923c27a0c5277",
+  "appCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+  "status": "pass",
+  "reviewer": "DOC-029 independent publication reviewer agent",
+  "reviewerKind": "agent",
+  "humanApproval": false,
+  "reviewedAt": "2026-09-16T20:00:53.943Z",
+  "observedFrom": "2026-09-16T19:54:24.410Z",
+  "task": "DOC-029",
+  "acceptanceTask": "DOC-025",
+  "distributionCommit": "366a78a83a4f7ece2e5d63a739b6cd6d2ebc0f57",
+  "publicationTarget": "development-app",
+  "environment": {
+    "lab": "openlaw-docs-41255c61-pub",
+    "appUrl": "http://127.0.0.1:23340",
+    "sourceCommit": "366a78a83a4f7ece2e5d63a739b6cd6d2ebc0f57",
+    "appImage": "sha256:5bc2f29195468624a9295f5671e308531adaccde39b6fe8740ef9e41d3e3ffa9",
+    "engineImage": "sha256:6fd061b40b4e19b6e6af90e365f72b3ed4af71a942cbb4d83ca6bec03cbac934",
+    "seed": "Helix light profile, random seed 7",
+    "browser": "Playwright 1.63.0 Chromium, headless; the zoom check used a disposable profile with a tabs-permission extension"
+  },
+  "export": {
+    "command": "mise exec -- pnpm docs:export",
+    "workingChanges": false,
+    "archiveSha256": "0668244ebac435b12a79b3e13151d88e106559b837184cc80fe44bfbeb14b22e",
+    "manifestSha256": "ffca5a1056e9c9163a02e2330ac9e5fcd8ce197b7d907ba242097554d6d2879c",
+    "servedArchiveSha256": "1383495407e9ccd02754b1627c8e83740b7768aefc1947017d75259c8b398791",
+    "retainedLocation": "~/.cache/openlaw-pub-review on the review host, outside the worktree and the lab"
+  },
+  "scenarios": [
+    {
+      "id": "V-HELP",
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "startedAt": "2026-09-16T19:54:24.410Z",
+      "completedAt": "2026-09-16T19:55:45.828Z",
+      "steps": 27,
+      "actual": "Signed out, with internet blocked in the browser. /documentation listed all 57 guides and each opened with its title. Signed-out /help and /portal/help deep links redirected to the formal article and kept and focused the fragment. The four pilot queries and the retained queries, including the recorded failed query \"which version\", reached their guides by keyboard with title focus and working Back and Forward. The skip link, section focus, modified click, audience filter and theme selector worked. Light, Warm and Dark fit at 1280px and 320px, and real Chromium zoom at 200% reflowed to 640 CSS pixels without overflow. An unknown article, unknown anchor, unbundled edition and unknown topic each offered local recovery. The blocked GitHub support link left the article and its local links usable. Public reading made no API request. All 307 internal links (77 distinct targets, 26 with anchors) resolved in the browser, and 345 Help-destination links resolved in the compiled bundle.",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/publication/help.json",
+        "docs/documentation/batches/DOC-029/publication/links.json",
+        "docs/documentation/batches/DOC-029/publication/zoom.json"
+      ]
+    },
+    {
+      "id": "V-HELP",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "startedAt": "2026-09-16T19:55:18.815Z",
+      "completedAt": "2026-09-16T19:56:03.058Z",
+      "steps": 21,
+      "actual": "Daniel Okafor in staff Help, with internet blocked in the browser. /help listed 47 eligible guides and each opened. Header Help on /inbox, /contracts, /matters, /settings and the request-types settings page carried registered route topics and recommended guides, with no record identifier in the address. topic=inbox.convert narrowed results and an unknown topic fell back to the full index. Pilot and retained queries reached their guides by keyboard with title focus and Back and Forward, and search made only shell API requests. ? opened Keyboard shortcuts, Escape closed it, / focused app search, and the documentation search typed ?/ literally. Three themes fit at 1280px and 320px, and 200% browser zoom reflowed without overflow. /help/install offered the formal article, not an authorization error. Unknown article, anchor, edition and topic recovered locally, and a blocked external support link left Help usable.",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/publication/help.json",
+        "docs/documentation/batches/DOC-029/publication/zoom.json",
+        "docs/documentation/batches/DOC-029/publication/links.json"
+      ]
+    },
+    {
+      "id": "V-HELP",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "startedAt": "2026-09-16T19:55:20.379Z",
+      "completedAt": "2026-09-16T19:56:18.168Z",
+      "steps": 20,
+      "actual": "Nadia Haddad in staff Help, with internet blocked in the browser. /help listed 37 eligible guides and each opened. Header Help on bound routes carried route topics, and topic fallback returned the full index. The pilot queries assign request and convert request and the retained queries reached their guides by keyboard with title focus and Back and Forward, with only shell API requests. Existing shortcuts kept their behavior. Three themes fit at 1280px and 320px, and 200% browser zoom reflowed without overflow. /help/first-run offered the formal article. Unknown article, anchor, edition and topic recovered locally, and a blocked external support link left Help usable.",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/publication/help.json",
+        "docs/documentation/batches/DOC-029/publication/zoom.json",
+        "docs/documentation/batches/DOC-029/publication/links.json"
+      ]
+    },
+    {
+      "id": "V-HELP",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "startedAt": "2026-09-16T19:55:22.115Z",
+      "completedAt": "2026-09-16T19:56:27.064Z",
+      "steps": 16,
+      "actual": "Jonas Weber in Business Portal Help after a fresh magic link, with internet blocked in the browser. /portal/help listed 12 eligible guides and each opened. A staff /help deep link moved to /portal/help with its fragment. Help with this page on the Portal home, a request form and a Request page linked to portal.home, portal.form and portal.request, and the Request topic listed the follow-request guide. Unknown topic fell back to the index. submit request, which version and expired link reached their guides by keyboard with title focus and Back and Forward, with only shell API requests. The Portal has no global shortcuts, and ?/ typed literally. Three themes fit at 1280px and 320px, and 200% browser zoom reflowed without overflow. /portal/help/triage-requests offered the formal article. Unknown article, anchor, edition and topic recovered locally, and a blocked external support link left Help usable.",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/publication/help.json",
+        "docs/documentation/batches/DOC-029/publication/zoom.json"
+      ]
+    },
+    {
+      "id": "V-OFFLINE",
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "startedAt": "2026-09-16T19:58:24.599Z",
+      "completedAt": "2026-09-16T20:00:31.923Z",
+      "steps": 5,
+      "actual": "With the lab reachable and the browser unable to reach the internet (request guard plus DNS refusal), /documentation listed 57 guides, local search for restore found the backup guide, and reading made no external or API request. After the lab was stopped, the retained standalone copy opened from disk with JavaScript disabled: the index showed 12 collections and 57 guides, and every guide's prose opened. A copy without search.js and inter.woff2 still showed the index and all 57 guides, and a submitted search left the index visible. No http request was made from disk.",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/publication/offline-reachable.json",
+        "docs/documentation/batches/DOC-029/publication/offline-standalone.json",
+        "docs/documentation/batches/DOC-029/publication/export-checksums.txt"
+      ]
+    },
+    {
+      "id": "V-OFFLINE",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "result": "pass",
+      "startedAt": "2026-09-16T19:58:25.048Z",
+      "completedAt": "2026-09-16T20:00:53.943Z",
+      "steps": 11,
+      "actual": "With the lab reachable and internet blocked in the browser, the operator audience listed 10 guides; install, backup-and-restore, upgrade and operator-troubleshooting opened, search worked, and the app-served standalone edition searched and downloaded with no external request. pnpm docs:export ran on the clean distribution commit, and the directory and archive were copied outside the worktree and lab with a SHA256SUMS manifest. The pub lab was stopped and refused connection. The complete copy opened from disk: 57 guides with and without JavaScript, local search, theme persistence and the edition digest. A copy without search.js and inter.woff2 stayed readable. Removing backup-and-restore.html made sha256sum --check fail with that file named, and the browser crawl found 56 of 57 guides. Copying the file back from the complete retained copy made the check pass and all 57 guides open.",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/publication/offline-reachable.json",
+        "docs/documentation/batches/DOC-029/publication/offline-standalone.json",
+        "docs/documentation/batches/DOC-029/publication/export-checksums.txt"
+      ]
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/help.json",
+      "sha256": "41fb05d61352864b35e02e2f7f05dacf35e6d78cf094596450b967cc2679648f"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/links.json",
+      "sha256": "2992cbbae180038c8d8cacfd3a30f70573527ce6e2e204cd4496788bab051a76"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/zoom.json",
+      "sha256": "64560d37fdc4111222c4f0ccb1cb9ffef958a07343408e7afa26b183d7f6fdbd"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/offline-reachable.json",
+      "sha256": "741f97bb529cd7bfd6e520852ee2ed7467f7beb78085bb2cd6634d394d594a65"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/offline-standalone.json",
+      "sha256": "b473154665d496ba5162d85e85ccffbe180e0f70baecdee654e11c7dcc6693dd"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/export-checksums.txt",
+      "sha256": "112bf16a59cb95cbf93047857cbeebb03318507451b03664472bf59dea131d9b"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/lib.mjs",
+      "sha256": "b0ace67b40a8aef02474d72e7c6d090baa722454406d5f0ed965fc6dd6b8fa5b"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/help.mjs",
+      "sha256": "472c1bbb9341782c50d4a7886769520c14460e060f06bf7350082d47fe4364e2"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/links.mjs",
+      "sha256": "3932a0e60cba4cab2e1c70eefab9a73d368da0a2c11ccc1f80277ab2d7146d11"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/zoom.mjs",
+      "sha256": "33c355cd6c85324ade67d43ec71708bedd02f43d7778403816e5813e27584bc8"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/offline.mjs",
+      "sha256": "70825ca84f09a8f80b36513f4404ed884b20af53d754c732a8ba4a4d26f8276b"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/zoom-extension/manifest.json",
+      "sha256": "13ceab588386702b7c7cf46c0386881d3140df65d75fe82ac41d136018932c40"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/publication/zoom-extension/worker.js",
+      "sha256": "babdfaa12a27fca0cf480870a5f283a57bf80f5424432efc43057ee977d1a6c8"
+    }
+  ],
+  "findings": [
+    "The staff Inbox and Request pages no longer show the Help with this page link. Commit 41390ca0 removed it. DES-073, PUBLISHING.md and help-contexts.json (pilotEntry true for /inbox and /inbox/:number) still describe it. Header Help on /inbox still carries topic=inbox, and no guide tells the reader to use the removed link, so V-HELP's expected results hold. The design record or the app needs to be brought back in line.",
+    "The archive the app image serves differs in bytes from the pnpm docs:export archive (served sha256 differs from the local export). Every HTML, CSS and font file is identical. Only redirect.js and search.js differ, because the image build bundles the compiler and Function.toString() then returns the bundled formatting. The content digest is unaffected. A checksum taken from one build path does not verify a copy taken from the other."
+  ],
+  "limitations": [
+    "Agent check only. This is not human proofreading, a human user study, an assistive-technology study or product-owner approval.",
+    "redirects.json publishes no aliases in this edition, so no published alias existed to follow. The alias resolution code was not exercised against real aliases.",
+    "The standalone edition ships no completeness checker. The completeness check here is sha256sum --check against a SHA256SUMS manifest written when the copy was retained, plus a browser crawl from the index. The guides tell operators to recover missing files from a complete retained copy but do not describe this checksum step.",
+    "Internet was blocked inside the browser by a request guard that allowed only the loopback lab and by Chromium DNS refusal. The host itself still had internet access.",
+    "The lab ran from distribution commit 366a78a8. The edition supports app commit 432dba3a; the per-article compatibility reviews cover that range. Contributor Help is not part of V-HELP and has no eligible guides in this edition.",
+    "Real browser zoom was sampled on one guide per reader. Theme and 320px checks used one guide per reader; the link check covered every guide in the formal reader."
+  ]
+}
