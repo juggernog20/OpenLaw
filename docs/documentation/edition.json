@@ -3,9 +3,15 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": null,
+  "supportedAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
   "publicationTarget": "development-app",
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "testedAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+    "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
+    "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
+    "reviewedAt": "2026-09-16T10:03:12.494489+00:00",
+    "summary": "DOC-028 compatibility review covers the dependency and message-type changes since the independent walkthrough. Both roles passed a 35-step automated guide replay on the committed updated lab build, and journey 51 passed with zero axe violations. Original walkthrough evidence retains its tested commit. Only auto-doc-template is verified; other articles retain their existing status."
+  },
   "publication": {
     "status": "validation-pending",
     "approvedBy": "Blair Wentworth",
@@ -236,10 +242,6 @@
       {
         "id": "approver-groups",
         "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c"
-      },
-      {
-        "id": "auto-doc-template",
-        "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66"
       }
     ]
   }

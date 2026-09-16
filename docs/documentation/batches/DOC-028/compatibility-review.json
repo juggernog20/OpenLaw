@@ -1,0 +1,50 @@
+{
+  "articleId": "auto-doc-template",
+  "reviewer": "Codex completion agent (compatibility review; independent of the original guide author)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T10:03:12.494489+00:00",
+  "fromAppCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+  "toAppCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+  "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
+  "applicationSha256": "de02ac54a6a1936c44dc37a2e28d71cdca7f15838fe096d6ff0293d675d76a13",
+  "environment": "openlaw-docs-b6053521-auto-doc-875-compat",
+  "appImageId": "sha256:244dfb186e3b5857cd2367653188f8f5bdb17e7f309ddb359fdb6a8b204728b1",
+  "engineImageId": "sha256:33ee7d7f3e52e42173dc4ec163b356bc95e7812d183e2c1d8d90675989d84b61",
+  "appUrl": "http://127.0.0.1:49075",
+  "mailUrl": "http://127.0.0.1:49076",
+  "status": "pass",
+  "sourceReview": {
+    "range": "f8d7312c..7f7e917a",
+    "observed": "The dependency upgrade changes react-intl, react-router, AWS SDK and test/build tools. The Help message catalog, login titles and shared labels add TypeScript MessageDescriptor annotations without changing messages. Settings AI analysis removes padding. Auto-Doc builder routes, forms, template parser, permissions and the guide text are unchanged.",
+    "sources": [
+      "apps/web/package.json",
+      "apps/api/package.json",
+      "pnpm-lock.yaml",
+      "apps/web/src/components/documentation/documentation-messages.ts",
+      "apps/web/src/routes/login.tsx",
+      "apps/web/src/lib/roles.ts",
+      "apps/web/src/routes/settings-ai-analysis.tsx"
+    ]
+  },
+  "validation": [
+    {
+      "method": "automated-test",
+      "command": "Replay docs/documentation/batches/DOC-028/walkthrough.mjs with LAB_APP_URL=http://127.0.0.1:49075 and LAB_MAIL_URL=http://127.0.0.1:49076; credentials supplied through environment; copies of script and fixtures kept outside the original evidence directory.",
+      "actual": "35 scripted checks passed across Administrator and Legal Team Member: upload, template markers, field commits, Clause rule, all required refusals, orphan retention, publication pinning, Help navigation, keyboard and narrow layout. The original independent review also included two supplemental manual probes; those are not counted as part of this replay.",
+      "evidence": [
+        "docs/documentation/batches/DOC-028/compatibility-replay.json",
+        "docs/documentation/batches/DOC-028/compatibility-help.png"
+      ]
+    },
+    {
+      "method": "automated-test",
+      "command": "E2E_BASE_URL=http://127.0.0.1:49075 E2E_MAILPIT_URL=http://127.0.0.1:49076 pnpm --filter @openlaw/e2e exec playwright test tests/51-auto-doc-generation.spec.ts",
+      "actual": "One journey passed. Axe found no violations in the Form, generation record, or populated Generations tab."
+    }
+  ],
+  "limitations": [
+    "This is a compatibility source review and automated replay, not a second independent article walkthrough. The original independent V-C56 evidence remains bound to its original build.",
+    "The local storage lab does not validate external AWS storage providers.",
+    "The original narrow-screen clipping and keyboard travel observations remain recorded; these checks do not establish that those usability issues were fixed."
+  ]
+}

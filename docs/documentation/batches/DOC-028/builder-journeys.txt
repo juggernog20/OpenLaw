@@ -1,0 +1,24 @@
+
+Running 6 tests using 1 worker
+
+(node:3821592) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+axe(Auto-Doc-editor): no violations.
+  ✓  1 [chromium] › tests/49-auto-doc-editor.spec.ts:11:1 › Legal uploads a template, edits its form from the card, and retains orphaned fields on re-upload (4.8s)
+axe(Auto-Doc-publication): no violations.
+  ✓  2 [chromium] › tests/50-auto-doc-publication.spec.ts:12:1 › Legal publishes one pair, sees a stale Clause refusal, and restores an archived Auto-Doc (11.0s)
+axe(Auto-Doc-form): no violations.
+axe(Auto-Doc-Generation): no violations.
+axe(Auto-Doc-Generations-tab): no violations.
+  ✓  3 [chromium] › tests/51-auto-doc-generation.spec.ts:11:1 › Legal keeps answers through Unpublish, then generates and downloads the approved Word file (9.3s)
+axe(Auto-Doc-Contract-settings): no violations.
+axe(Auto-Doc-Contract-confirmation): no violations.
+  ✓  4 [chromium] › tests/53-auto-doc-contracts.spec.ts:11:1 › Legal targets a Contract Type and generates its draft Contract with a primary Word Document (5.7s)
+axe(Auto-Doc-assignment-editor): no violations.
+axe(Inbox-unassigned-Contracts): no violations.
+  ✓  5 [chromium] › tests/54-auto-doc-assignment.spec.ts:17:1 › Legal edits Assignment rules and assigns an unassigned generated Contract from the Inbox (5.1s)
+axe(M35-published-Auto-Doc): no violations.
+axe(M35-final-Generation): no violations.
+  ✓  6 [chromium] › tests/57-auto-doc-demo.spec.ts:36:1 › M35: Legal publishes, Sales generates, a Member claims, and a changed live pair refuses stale answers (48.3s)
+
+  6 passed (1.4m)

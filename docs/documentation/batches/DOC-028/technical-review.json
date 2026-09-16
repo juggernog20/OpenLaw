@@ -1,0 +1,63 @@
+{
+  "articleId": "auto-doc-template",
+  "reviewer": "Codex completion agent (technical source review)",
+  "reviewerKind": "agent",
+  "reviewedAt": "2026-09-16T09:29:11.753859+00:00",
+  "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
+  "appCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+  "result": "pass",
+  "authorHistory": [
+    {
+      "commit": "79812286",
+      "work": "Original guide authored with DES-087."
+    },
+    {
+      "commit": "019591c7",
+      "work": "Earlier proofreading corrected directive types, date formats, currency validation, and upper behavior."
+    }
+  ],
+  "checks": [
+    {
+      "claim": "Member and Administrator access; Form section and Upload version",
+      "sources": [
+        "apps/web/src/routes/auto-doc-record.tsx",
+        "apps/api/src/modules/auto-docs/routes.ts"
+      ],
+      "actual": "The routed builder is restricted to Member+ and opens Upload version from the template pane."
+    },
+    {
+      "claim": "Placeholder slug length and marker parts",
+      "sources": ["apps/api/src/lib/auto-doc-template.ts", "apps/api/src/lib/auto-doc-reading.ts"],
+      "actual": "Slug validation uses the saved field bound of 120; text parts include body, numbered headers/footers, footnotes and endnotes."
+    },
+    {
+      "claim": "Supported directives and new field types",
+      "sources": [
+        "apps/api/src/lib/auto-doc-template.ts",
+        "apps/api/src/modules/auto-docs/forms.ts"
+      ],
+      "actual": "Exactly one upper/date/currency directive is accepted. Date patterns are YYYY-MM-DD, DD/MM/YYYY and MMMM D, YYYY. Currency codes are validated against supported currencies. detectedFields mints date or currency fields when required; conflicting type requirements stay text. upper has no type requirement."
+    },
+    {
+      "claim": "Clause rule editing and detection refusals",
+      "sources": [
+        "apps/web/src/components/auto-docs/form-builder.tsx",
+        "apps/api/src/lib/auto-doc-template.ts"
+      ],
+      "actual": "When a rule matches exposes field, operator and value controls; absent rules include the Block. Invalid slugs, directives, braces and unclosed Blocks are refused with source text."
+    },
+    {
+      "claim": "Orphans, immutable file/form versions and publication",
+      "sources": [
+        "apps/api/src/modules/auto-docs/forms.ts",
+        "apps/web/src/components/auto-docs/form-builder.tsx",
+        "apps/web/src/components/auto-docs/publish-dialog.tsx"
+      ],
+      "actual": "Uploads retain prior fields and append a form version. Orphan fields say No Placeholder in file version N. The Publish dialog selects both file and form versions, leaving the live pair unchanged until publication."
+    }
+  ],
+  "limitations": [
+    "Source inspection supports technical accuracy; the separately recorded independent V-C56 browser walkthrough is required before verification."
+  ],
+  "proseChanges": []
+}

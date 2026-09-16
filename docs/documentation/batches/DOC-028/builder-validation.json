@@ -1,0 +1,21 @@
+{
+  "appCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+  "environment": "openlaw-docs-b6053521-auto-doc-875",
+  "appImageId": "sha256:f8dd152fd10a4d21b641e04eed24773e38b2ce05849aefd763006d99ebc61692",
+  "engineImageId": "sha256:2763862ff5c6fbef311720f1bc4b0f6b8ffd73b7f0fcd777d6bfd04415fc17fd",
+  "completedAt": "2026-09-16T09:31:00.160651+00:00",
+  "method": "automated-test",
+  "result": "pass",
+  "command": "E2E_BASE_URL=http://127.0.0.1:43375 E2E_MAILPIT_URL=http://127.0.0.1:43376 pnpm --filter @openlaw/e2e exec playwright test tests/49-auto-doc-editor.spec.ts tests/50-auto-doc-publication.spec.ts tests/51-auto-doc-generation.spec.ts tests/53-auto-doc-contracts.spec.ts tests/54-auto-doc-assignment.spec.ts tests/57-auto-doc-demo.spec.ts",
+  "passed": 6,
+  "tabAccessibility": {
+    "overview": "M35-published-Auto-Doc",
+    "form": "Auto-Doc-editor; Auto-Doc-publication",
+    "settings": "Auto-Doc-Contract-settings; Auto-Doc-assignment-editor",
+    "generations": "Auto-Doc-Generations-tab"
+  },
+  "evidence": ["docs/documentation/batches/DOC-028/builder-journeys.txt"],
+  "limitations": [
+    "Automated feature journeys support #874; they do not stand in for the independent browser walkthrough required by #875."
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "articleId": "auto-doc-template",
+  "reviewer": "Codex completion agent",
+  "reviewerKind": "agent",
+  "method": "automated-test",
+  "appCommit": "7f7e917aa1db4baee34fd6613466c6458a1f4b8e",
+  "appImageId": "sha256:244dfb186e3b5857cd2367653188f8f5bdb17e7f309ddb359fdb6a8b204728b1",
+  "environment": "openlaw-docs-b6053521-auto-doc-875-compat",
+  "startedAt": "2026-09-16T10:22:48.806Z",
+  "finishedAt": "2026-09-16T10:23:08.365Z",
+  "status": "pass",
+  "replaySummary": {
+    "steps": 35,
+    "passed": 35,
+    "failed": 0
+  },
+  "corrections": [
+    {
+      "observation": "Help destination URL",
+      "cause": "The earlier script waited for the correct Help route and heading, then read page.url() after returning to Form.",
+      "fix": "Capture the Help URL before leaving the Help page."
+    },
+    {
+      "observation": "Keyboard-selected field card visibility",
+      "cause": "The earlier script derived a region label from the Placeholder slug after the field label had been renamed. That stale lookup returned false.",
+      "fix": "Read the current field Label and wait for that region to be visible; assert that Enter selected the chip."
+    }
+  ],
+  "steps": [
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "The Help link on the template pane resolves to this article",
+      "startedAt": "2026-09-16T10:22:57.805Z",
+      "at": "2026-09-16T10:22:58.023Z",
+      "actual": "Link href \"/help/auto-doc-template\" opened \"/help/auto-doc-template\" with h1 \"Write an Auto-Doc template\" and sections [\"Before you start\",\"Mark a Placeholder\",\"Format a value\",\"Mark a Block\",\"Upload a new version\"].",
+      "result": "pass"
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard: reach a Placeholder chip with Tab and select it with Enter; open and close Upload version with the keyboard",
+      "startedAt": "2026-09-16T10:22:58.023Z",
+      "at": "2026-09-16T10:22:58.215Z",
+      "actual": "Tab reached \"Placeholder counterparty_name\" after 3 presses (focus outline style \"solid\"); Enter set aria-pressed=\"true\" and its card visible=true. Enter on Upload version opened the dialog (focus inside: true); Escape closed it.",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "The Help link on the template pane resolves to this article",
+      "startedAt": "2026-09-16T10:23:07.153Z",
+      "at": "2026-09-16T10:23:07.423Z",
+      "actual": "Link href \"/help/auto-doc-template\" opened \"/help/auto-doc-template\" with h1 \"Write an Auto-Doc template\" and sections [\"Before you start\",\"Mark a Placeholder\",\"Format a value\",\"Mark a Block\",\"Upload a new version\"].",
+      "result": "pass"
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard: reach a Placeholder chip with Tab and select it with Enter; open and close Upload version with the keyboard",
+      "startedAt": "2026-09-16T10:23:07.423Z",
+      "at": "2026-09-16T10:23:07.591Z",
+      "actual": "Tab reached \"Placeholder counterparty_name\" after 3 presses (focus outline style \"solid\"); Enter set aria-pressed=\"true\" and its card visible=true. Enter on Upload version opened the dialog (focus inside: true); Escape closed it.",
+      "result": "pass"
+    }
+  ],
+  "supersedesOnly": [
+    "The Help URL string in independent-walkthrough.json and compatibility-replay.json.",
+    "The card visible=false diagnostic in those records. The original independent follow-up already confirmed the card was visible."
+  ],
+  "limitations": [
+    "This is an automated correction replay against the updated compatibility build. It does not relabel the earlier independent walkthrough as a new run."
+  ]
+}

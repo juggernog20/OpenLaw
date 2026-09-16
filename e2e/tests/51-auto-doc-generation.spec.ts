@@ -110,4 +110,5 @@ test("Legal keeps answers through Unpublish, then generates and downloads the ap
   // Every commit writes a form version, so the number is not fixed.
   await expect(generations).toContainText(/File version 1, form version \d+/);
   await expect(generations.getByRole("link", { name: "Download Word", exact: true })).toBeVisible();
+  expect(await reportAxeViolations(page, testInfo, "Auto-Doc-Generations-tab")).toEqual([]);
 });

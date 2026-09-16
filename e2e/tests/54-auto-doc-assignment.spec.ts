@@ -85,6 +85,8 @@ test("Legal edits Assignment rules and assigns an unassigned generated Contract 
     .getByRole("dialog")
     .getByRole("button", { name: "Save assignment", exact: true })
     .click();
+  // A modal hides background rows from role locators before the save finishes.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(row).toHaveCount(0);
   const queue = await page.request.get("/api/v1/inbox/unassigned-contracts");
   expect(

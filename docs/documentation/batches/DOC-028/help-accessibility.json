@@ -1,0 +1,30 @@
+{
+  "reviewer": "Codex completion agent",
+  "reviewerKind": "agent",
+  "method": "automated-test",
+  "appCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
+  "checkedAt": "2026-09-16T09:39:31.751Z",
+  "route": "/help/auto-doc-template",
+  "checks": [
+    {
+      "theme": "light",
+      "violations": []
+    },
+    {
+      "theme": "warm",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "violations": []
+    }
+  ],
+  "narrowLayout": {
+    "scrollWidth": 390,
+    "clientWidth": 390
+  },
+  "result": "pass",
+  "limitations": [
+    "Theme checks apply the app data-theme attribute to inspect rendered accessibility; preference persistence is not tested. These checks support the independently performed V-C56 walkthrough."
+  ]
+}
