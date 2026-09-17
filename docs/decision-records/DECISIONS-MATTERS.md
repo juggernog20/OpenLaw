@@ -532,20 +532,20 @@ Matters need human identification (what is this?) and stable citation (which one
 
 ---
 
-## MTR-011: Custom fields — global field catalog with per-type attachment (Jira model)
+## MTR-011: Custom fields — module field catalog with per-type attachment (Jira model)
 
-- **Status:** Accepted (storage revised by **CTR-016**: `matter_fields` renamed to `fields` with a `module_scope` of `matter | contract | global`, an `ai_prompt` column, and a new `entity` field type; the decision itself stands)
+- **Status:** Accepted (storage revised by **CTR-016**: `matter_fields` renamed to `fields` with a `module_scope` of `matter | contract | entity`, an `ai_prompt` column, and a new `entity` field type; the decision itself stands)
 - **Date:** 2026-08-02
 
 ### Context
 
-The queued question was per-type field _templates_. The actual requirement (per user): templates aren't necessarily needed, but a **full custom fields capability** is. The shape settled on is the global-Jira model: fields are defined once globally, and each matter type's settings control which fields are attached to it.
+The queued question was per-type field _templates_. The actual requirement (per user): templates aren't necessarily needed, but a **full custom fields capability** is. The shape settled on is the module catalog model: fields are defined once within Matters, and each matter type's settings control which fields are attached to it.
 
 ### Decision
 
-**Global custom-field catalog + per-type attachment.**
+**Module custom-field catalog + per-type attachment.**
 
-1. **Global catalog** — Admins define fields once in **Matters Settings → Fields** (MTR-001 machinery: slug, display name, description, archive). A field's definition (name, type, options) lives in exactly one place.
+1. **Matter catalog** — Admins define fields once in **Matters Settings → Fields** (MTR-001 machinery: slug, display name, description, archive). A field's definition (name, type, options) lives in exactly one place.
 2. **Field types (8)**: text, long text, number, date, boolean, single-select, multi-select, user reference. Currency/money deliberately excluded until the spend module (per **MTR-006**).
 3. **Per-type attachment** — each matter type's settings add/remove fields from that type and order them. A field appears on a matter iff it's attached to the matter's type. Creating a field offers an "attach to all current types" convenience action (one-time, not a live flag).
 4. **DD-015 interplay** — every custom field carries the `business | legal` tag, exactly like built-in fields, so Contributor visibility rules apply uniformly.
@@ -562,7 +562,7 @@ Behavior details:
 
 ### Rationale
 
-1. **Define-once beats per-type duplicates** — "Separation date" defined globally means one slug for reporting even if attached to three types; Jira's global-field model is battle-tested.
+1. **Define-once beats per-type duplicates** — "Separation date" defined once within Matters means one slug for reporting even if attached to three types; one definition can serve several Matter types.
 2. **Attachment lives in type settings** because that's where an admin thinks "what does an Employment matter look like?" — the template use case falls out for free without templates as a concept.
 3. **jsonb over EAV** — Postgres jsonb with a GIN index handles filtering at this scale; EAV's join sprawl isn't warranted.
 4. **No type-change on fields** — silent coercion of existing values is a data-integrity trap.
@@ -570,7 +570,7 @@ Behavior details:
 ### Alternatives considered
 
 - **Per-type field templates** (fields defined inside a type) — rejected; duplicates definitions across types, fragments reporting.
-- **Global fields with no per-type attachment** — rejected; Employment-only fields would clutter every matter's form.
+- **Fields on every Matter with no per-type attachment** — rejected; Employment-only fields would clutter every matter's form.
 - **Defer custom fields entirely** (the original recommendation) — overridden by the user: the capability is needed in v1.
 - **EAV value table** — rejected per rationale 3.
 
@@ -585,12 +585,12 @@ Behavior details:
 
 ### Settings touchpoints
 
-- **Matters Settings → Fields** — global catalog: add / rename / describe / archive; type picker at creation (immutable); DD-015 tag picker; options editor for selects.
+- **Matters Settings → Fields** — module catalog: add / rename / describe / archive; type picker at creation (immutable); DD-015 tag picker; options editor for selects.
 - **Matters Settings → Types → [type]** — attach/detach fields, per-type display order.
 
 ### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — the matter scope is open
 
-M22 widened the shared field catalog to admit `matter`, mounted the Fields pane under Matters, and let each matter type attach `matter` and `global` fields through the existing editor. Create, record read/edit, re-type, list completeness, and Request conversion all use the same attachment definition and store values by slug in `matters.custom_fields`; detached values stay stored and disappear from the active form. The original `matter_fields` table name in the consequence above is historical: **CTR-016**'s shared `fields` table and `module_scope` are the shipped schema.
+M22 widened the shared field catalog to admit `matter`, mounted the Fields pane under Matters, and let each matter type attach `matter` fields through the existing editor. Create, record read/edit, re-type, list completeness, and Request conversion all use the same attachment definition and store values by slug in `matters.custom_fields`; detached values stay stored and disappear from the active form. The original `matter_fields` table name in the consequence above is historical: **CTR-016**'s shared `fields` table and `module_scope` are the shipped schema.
 
 ---
 
@@ -823,7 +823,7 @@ The create callable writes `opened_at` once. The status write sets `closed_at` o
 | MTR-008 | Closing is a signal, not a lock; archiving separate; no retention engine in v1                      | Accepted                                                                                         |
 | MTR-009 | Naming — free-text title plus immutable global sequence number (M-42)                               | Accepted                                                                                         |
 | MTR-010 | Tags — deferred out of v1                                                                           | Accepted                                                                                         |
-| MTR-011 | Custom fields — global field catalog with per-type attachment (Jira model)                          | Accepted                                                                                         |
+| MTR-011 | Custom fields — module field catalog with per-type attachment (Jira model)                          | Accepted                                                                                         |
 | MTR-012 | Priority and risk — both first-class default fields on every matter                                 | Accepted                                                                                         |
 | MTR-013 | Matter templates — named template entity per type, pre-fills fields and instantiates task checklist | Accepted                                                                                         |
 | MTR-014 | Custom fields — hard-required per type at creation; conditional logic deferred                      | Accepted                                                                                         |

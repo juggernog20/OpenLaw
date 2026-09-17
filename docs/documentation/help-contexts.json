@@ -250,7 +250,7 @@
       "pilotEntry": false
     },
     {
-      "routes": ["/settings/authentication"],
+      "routes": ["/settings/authentication", "/settings/email"],
       "contexts": ["settings.authentication", "settings.email"],
       "surface": "staff",
       "pilotEntry": false
@@ -330,6 +330,18 @@
     {
       "routes": ["/auto-docs", "/auto-docs/:id/:tab?"],
       "contexts": ["auto-docs.template"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": [
+        "/settings/instance",
+        "/settings/uploads",
+        "/settings/storage",
+        "/settings/document-processing",
+        "/settings/system-status"
+      ],
+      "contexts": ["settings.advanced"],
       "surface": "staff",
       "pilotEntry": false
     }

@@ -24,10 +24,10 @@ const base = {
 };
 
 describe("the Entities Fields pane", () => {
-  it("shows Entity and global Fields while excluding other module scopes", async () => {
+  it("shows Entity Fields while excluding other module scopes", async () => {
     const fields = [
       { ...base, id: "f1", slug: "lei", displayName: "LEI", moduleScope: "entity" },
-      { ...base, id: "f2", slug: "region", displayName: "Region", moduleScope: "global" },
+      { ...base, id: "f2", slug: "region", displayName: "Region", moduleScope: "entity" },
       { ...base, id: "f3", slug: "term", displayName: "Term", moduleScope: "contract" },
     ];
     const api = (call: StubCall): Response | undefined =>
@@ -40,7 +40,6 @@ describe("the Entities Fields pane", () => {
     expect(await screen.findByRole("button", { name: "Rename LEI" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rename Region" })).toBeInTheDocument();
     expect(screen.queryByText("Term")).not.toBeInTheDocument();
-    expect(screen.getByText("Entity and global fields")).toBeInTheDocument();
     const tabs = screen.getByRole("navigation", { name: "Entities panes" });
     expect(within(tabs).getByRole("link", { name: "Fields" })).toHaveAttribute(
       "aria-current",

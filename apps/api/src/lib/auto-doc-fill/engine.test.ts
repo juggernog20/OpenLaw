@@ -173,3 +173,158 @@ it("refuses an expanded package above 32 MiB before rendering", async () => {
     }),
   ).rejects.toThrow("expanded Word template exceeds 32 MiB");
 });
+
+it("fills the downloadable agreement and its optional clause after removing the instructions page", async () => {
+  const { detectAutoDocTemplate } = await import("../auto-doc-template.js");
+  const template = await readFile(
+    new URL("../../../../web/public/downloads/openlaw-auto-doc-starter.docx", import.meta.url),
+  );
+  const packageWithInstructions = new PizZip(template);
+  const document = packageWithInstructions.file("word/document.xml")!.asText();
+  const pageBreak = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  expect(document.split(pageBreak)).toHaveLength(2);
+  expect(document.split(pageBreak)[0]).toContain("{{start_date|date:MMMM D, YYYY}}");
+  // Follow the download's instructions: delete page one and its page break in Word.
+  packageWithInstructions.file(
+    "word/document.xml",
+    document.replace(/(<w:body>)[\s\S]*?<w:p><w:r><w:br w:type="page"\/><\/w:r><\/w:p>/, "$1"),
+  );
+  const agreement = packageWithInstructions.generate({ type: "nodebuffer" });
+  const detected = detectAutoDocTemplate(agreement);
+  expect(detected.blocks).toEqual(["confidentiality"]);
+  expect([...new Set(detected.placeholders)]).toEqual([
+    "start_date",
+    "provider_name",
+    "client_name",
+    "services",
+    "fee",
+  ]);
+  expect(detected.directives).toEqual([
+    { slug: "start_date", directive: "date:DD/MM/YYYY" },
+    { slug: "provider_name", directive: "upper" },
+    { slug: "client_name", directive: "upper" },
+    { slug: "services", directive: "italic" },
+    { slug: "fee", directive: "currency:USD" },
+    { slug: "provider_name", directive: "bold" },
+    { slug: "client_name", directive: "underline" },
+  ]);
+  const definition = form("start_date", "provider_name", "client_name", "services", "fee");
+  definition.fields[0]!.fieldType = "date";
+  definition.fields[4]!.fieldType = "currency";
+  const output = await engine.fill({
+    template: agreement,
+    definition,
+    answers: {
+      start_date: "2026-10-01",
+      provider_name: "Acme Advisory Ltd",
+      client_name: "Wentworth Family Office",
+      services: "Review and report on the Client’s supplier contracts.",
+      fee: 2500,
+    },
+  });
+  const filled = text(output);
+  expect(filled).toContain("01/10/2026");
+  expect(filled).toContain("ACME ADVISORY LTD");
+  expect(filled).toContain("WENTWORTH FAMILY OFFICE");
+  expect(filled.split("Fees and payment")[1]).toContain("$2,500.00");
+  expect(filled).toContain("Review and report on the Client’s supplier contracts.");
+  expect(filled).toContain("For Acme Advisory Ltd");
+  expect(filled).toContain("For Wentworth Family Office");
+  expect(filled).not.toContain("{{");
+  expect(filled).toContain("Confidentiality");
+  definition.fields.push({
+    ...definition.fields[0]!,
+    slug: "include_confidentiality",
+    label: "Include confidentiality",
+    fieldType: "boolean",
+    placeholder: false,
+    displayOrder: 5,
+  });
+  definition.clauseRules = [
+    {
+      blockName: "confidentiality",
+      fieldSlug: "include_confidentiality",
+      operator: "equals",
+      value: true,
+    },
+  ];
+  for (const include of [true, false]) {
+    const result = text(
+      await engine.fill({
+        template: agreement,
+        definition,
+        answers: { include_confidentiality: include },
+      }),
+    );
+    expect(result.includes("Confidentiality")).toBe(include);
+    expect(result.includes("non-public information")).toBe(include);
+    expect(result).toContain("Changes");
+    expect(result).not.toContain("{{");
+  }
+});
+
+it.each([
+  ["bold", "b", "1"],
+  ["italic", "i", "1"],
+  ["underline", "u", "single"],
+])(
+  "applies %s only to the answer, preserving surrounding runs and XML escaping",
+  async (style, property, expected) => {
+    const zip = new PizZip(await fixture("plain"));
+    zip.file(
+      "word/document.xml",
+      `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:rPr><w:b w:val="0"/><w:i w:val="0"/><w:u w:val="none"/><w:color w:val="336699"/></w:rPr><w:t>Before {{name|${style}}} after {{other}}.</w:t></w:r></w:p></w:body></w:document>`,
+    );
+    const output = await engine.fill({
+      template: zip.generate({ type: "nodebuffer" }),
+      definition: form("name", "other"),
+      answers: { name: "A & <B>\nSecond line", other: "plain" },
+    });
+    expect(text(output)).toContain("Before A & <B>\nSecond line after plain.");
+    const { DOMParser } = await import("@xmldom/xmldom");
+    const xml = new PizZip(output).file("word/document.xml")!.asText();
+    const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    const runs = Array.from(
+      new DOMParser().parseFromString(xml, "application/xml").getElementsByTagNameNS(ns, "r"),
+    );
+    expect(runs[0]!.textContent).toBe("Before ");
+    expect(runs.at(-1)!.textContent).toBe(" after plain.");
+    const prop = (index: number) =>
+      runs[index]!.getElementsByTagNameNS(ns, property!)[0]!.getAttributeNS(ns, "val");
+    expect(prop(0)).toBe(style === "underline" ? "none" : "0");
+    for (let index = 1; index < runs.length - 1; index++) expect(prop(index)).toBe(expected);
+    expect(prop(runs.length - 1)).toBe(style === "underline" ? "none" : "0");
+    expect(runs[1]!.getElementsByTagNameNS(ns, "color")[0]!.getAttributeNS(ns, "val")).toBe(
+      "336699",
+    );
+    expect(xml).not.toContain("OPENLAW_STYLE_");
+  },
+);
+
+it("styles split markers and headers, and leaves no style markers when a block is omitted", async () => {
+  const zip = new PizZip(await fixture("parts"));
+  const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  zip.file(
+    "word/document.xml",
+    `<w:document xmlns:w="${ns}"><w:body><w:p><w:r><w:t>Before {{na</w:t></w:r><w:r><w:t>me|bold}} after.</w:t></w:r></w:p><w:p><w:r><w:t>{{#block extra}}Optional {{name|italic}}{{/block}}</w:t></w:r></w:p></w:body></w:document>`,
+  );
+  zip.file(
+    "word/header1.xml",
+    `<w:hdr xmlns:w="${ns}"><w:p><w:r><w:t>Header {{name|underline}}.</w:t></w:r></w:p></w:hdr>`,
+  );
+  const definition = form("name", "include");
+  definition.clauseRules = [
+    { blockName: "extra", fieldSlug: "include", operator: "equals", value: "yes" },
+  ];
+  const output = await engine.fill({
+    template: zip.generate({ type: "nodebuffer" }),
+    definition,
+    answers: { name: "Acme", include: "no" },
+  });
+  expect(text(output)).toContain("Before Acme after.");
+  expect(text(output)).not.toContain("Optional");
+  const result = new PizZip(output);
+  expect(result.file("word/document.xml")!.asText()).toContain('<w:b w:val="1"');
+  expect(result.file("word/header1.xml")!.asText()).toContain('<w:u w:val="single"');
+  expect(result.file("word/header1.xml")!.asText()).not.toContain("OPENLAW_STYLE_");
+});

@@ -79,7 +79,6 @@ export function ContractTypePeople({
   return (
     <SettingsCard
       title={<FormattedMessage id="settings.contractTypePeople.title" defaultMessage="People" />}
-      className="w-140 shrink-0 grow-0"
     >
       <p className="text-sm text-muted">
         <FormattedMessage

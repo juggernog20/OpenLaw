@@ -4,9 +4,32 @@ Set the origin, services, storage, and secrets used by an OpenLaw installation. 
 
 ## Know where a setting belongs
 
-| Operator configuration in `.env`                                                                                                                                 | Administrator configuration in OpenLaw                                                                                                                                                                                |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Browser-facing origin, app port, database, storage, upload limits, document engine, authentication and credential encryption keys. SMTP can also be pinned here. | Organization identity, users, authentication choices and domains, module definitions, Signing connector, AI connector and prompts. The first-run wizard can save an SMTP relay when the environment does not pin one. |
+| Deployment configuration                                                                                                                                             | Administrator configuration in OpenLaw                                                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Database, listening ports, volume mounts, local storage path, sidecar resources, authentication signing key and credential encryption keys. SMTP can be pinned here. | Organization identity, users, authentication, module definitions, Signing and AI connectors, outbound email, instance address, upload limit, object storage and document-service client settings. |
+
+### Advanced settings
+
+Administrators open **Settings → Advanced** at the bottom of the navigation. It contains **Outbound email**, **Authentication**, **Audit log**, and these additional pages:
+
+- **Instance address** sets the origin used in emailed links and authentication. Use the HTTPS hostname employees can reach over the office network or VPN; a public endpoint is not required. Changing this does not configure DNS, TLS, firewall rules or the identity provider's callback registration.
+- **File uploads** sets the per-file limit in MiB, from 1 to 10,240. Coordinate it with reverse-proxy limits and available resources.
+- **Document storage** selects local, S3-compatible or Azure Blob storage for new documents. Enter the object-store settings, select **Test connection**, then **Save**. The test writes, reads and deletes a temporary object in every configured store, including retained readers. It runs from the API; verify worker access separately after restarting. Credentials are encrypted and write-only. Blank credential fields preserve configured credentials; an initially unconfigured store can use the deployment credential chain. Existing locations cannot be renamed or removed here because that would strand old documents. A location migration and its reader configuration remain an operator task. The local path is read-only and managed by the deployment.
+- **Document processing** sets the document-service address and API/worker client timeouts. **Test connection** checks its health endpoint from the API. This does not alter sidecar timeouts or resources; coordinate those separately when raising a client timeout.
+- **System status** shows database availability, active storage and document-service addresses, and recent API/worker heartbeats. A heartbeat older than one minute is shown as stale. Configuration differences are flagged as requiring a restart. Use the connection tests and a real document-processing check to verify the dependent services; a running process alone does not prove them healthy.
+
+The four editable Advanced pages save settings in the database. Saved values override the corresponding deployment defaults. The pages show each value's source, and show the API's active value separately while a change is pending. Saves do not reconfigure a running process. Coordinate a maintenance window and restart **both** app and worker, for example `docker compose restart app worker` when only app-saved settings changed. Afterward, refresh **System status** and check that both processes have current configuration. Old process rows can remain stale for up to a day.
+
+Keep the same encryption key on both processes. An unreadable saved Advanced configuration stops startup rather than silently switching document storage. Restore the key before restarting. Database/bootstrap secrets and volume mounts remain deployment-managed. SMTP retains its separate rule: a deployment SMTP configuration takes precedence over an app-saved relay, and saving an app relay otherwise takes effect on the next send.
+
+If a saved address prevents sign-in, an operator can remove that section's overrides from the installation directory:
+
+```bash
+docker compose exec app node apps/api/dist/reset-advanced-settings.js instance
+docker compose restart app worker
+```
+
+The recovery command also accepts `uploads`, `storage` or `processing`. It removes only that section's app-saved overrides and never prints their values. For a storage migration, stop document writes, migrate and verify the files, configure the intended locations and credentials in the deployment, then remove the saved storage overrides and recreate both services. Removing overrides alone does not move files. Keep backups and the previous stores until verification is complete.
 
 Apply deployment changes with `docker compose up -d --no-build --pull never`. `docker compose restart` restarts the existing containers with their existing environment; it does not apply a changed `.env`. Check the effective behavior after recreation. Avoid printing `docker compose config` into a shared log: the expanded configuration can contain secrets. Use `docker compose config --quiet` for validation.
 
@@ -14,7 +37,7 @@ The app and worker must use the same database, file configuration, browser-facin
 
 ## Serve the intended origin
 
-Set `BASE_URL` to the browser-facing origin, such as `https://legal.example.com`, with no application subpath. This address can be reachable only on the company network or VPN; it does not need public internet access. It determines emailed links, authentication callbacks, signing callbacks, and accepted request origins. `PORT` changes the published host port; the app container still listens on port 3000.
+Set **Settings → Advanced → Instance address**, or set `BASE_URL` before first startup, to the browser-facing origin, such as `https://legal.example.com`, with no application subpath. This address can be reachable only on the company network or VPN; it does not need public internet access. It determines emailed links, authentication callbacks, signing callbacks, and accepted request origins. `PORT` changes the published host port; the app container still listens on port 3000.
 
 The reverse proxy must terminate TLS, preserve the incoming `Origin` and `Host`, forward paths without rewriting them, and allow uploads at least as large as the app limit. Disable response buffering for `/api/events` so live updates can arrive. Keep the database and document-engine ports unpublished.
 
@@ -103,7 +126,7 @@ docker compose config --quiet
 docker compose up -d --no-build --pull never
 ```
 
-The standard Compose configuration passes `BASE_URL` to both app and worker. Recreate both processes when changing it; a container restart alone does not update their environment. The production app serves both the web interface and API behind this one HTTPS origin. Port 5173 belongs to local frontend development and is not needed on the VM.
+The standard Compose configuration passes `BASE_URL` to both app and worker. An address saved in **Advanced → Instance address** overrides it; update that saved value if one exists. Recreate both processes when changing it; a container restart alone does not update their environment. The production app serves both the web interface and API behind this one HTTPS origin. Port 5173 belongs to local frontend development and is not needed on the VM.
 
 For OIDC SSO, register `https://openlaw.company.example/api/auth/sso/callback` with the identity provider, replacing the hostname with the real one. Employees' browsers must reach both the identity provider and the private OpenLaw callback, and the app must reach the provider's required endpoints. Match the callback to the configured origin.
 
@@ -162,7 +185,7 @@ An unavailable engine can leave the app ready while processing fails or retries.
 
 Set both `SMTP_URL` and `SMTP_FROM` to pin email to the deployment environment. A set `SMTP_URL` takes precedence over the saved wizard relay, even if the environment configuration is incomplete. Remove the override and recreate the containers if the saved relay should be used again. If `SMTP_URL` is set and `SMTP_FROM` is not, OpenLaw cannot send email. The email step of the welcome wizard shows a warning that the environment sets `SMTP_URL` but not `SMTP_FROM`, and it has no **Send test email** button. An Administrator cannot finish the welcome wizard in that state. The sign-in page does not show **Set up or reset your password** or **Email me a sign-in link**. The API also refuses test email, sign-in link, and password-setup requests, and no email reaches the relay. An invitation does not report the problem in this build. **Settings → Users → Invite user** lists the person as **Invited**, but OpenLaw sends no email. Set both values, then invite a test address and check that the invitation reaches the relay.
 
-An Administrator can initially save and test the relay in the welcome wizard. This build has no separate email Settings page after that wizard is finished. Use [authentication and email](authentication-and-email.md) for the Administrator steps. Verify real delivery to an intended test recipient, including the link's origin; a successful SMTP connection alone is insufficient.
+An Administrator can save and test the relay in the welcome wizard or afterward at **Settings → Advanced → Outbound email**. Use [authentication and email](authentication-and-email.md) for the Administrator steps. Verify real delivery to an intended test recipient, including the link's origin; a successful SMTP connection alone is insufficient.
 
 Configure [Signing](configure-signing.md) and [AI analysis](configure-analysis.md) in their Administrator Settings pages. Allow the required outbound provider traffic from both the app and worker. AI model discovery and connection probes run in the app; Contract extraction and Conversion drafts run in the worker. Signing in Polling mode uses outbound calls. Webhook mode also needs a publicly reachable HTTPS callback, which can use a separate gateway. Provider credentials and models are runtime Settings, not substitute environment variables.
 
@@ -170,7 +193,7 @@ Configure [Signing](configure-signing.md) and [AI analysis](configure-analysis.m
 
 `AUTH_SECRET` protects session signing and authentication material, including enrolled two-factor authentication. Changing it can invalidate sessions and make that material unreadable. Preserve it for a restore; do not use an ad hoc change as an account-recovery procedure.
 
-`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP server address and credentials, the SSO client secret, and the AI-provider key. It does not encrypt the database's Contract text or ordinary records. Store its recovery copy separately from database archives. Both processes require it at startup.
+`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP server address and credentials, the SSO client secret, the AI-provider key, and the saved Advanced configuration, including object-store credentials. It does not encrypt the database's Contract text or ordinary records. Store its recovery copy separately from database archives. Both processes require it at startup.
 
 To rotate this credential key:
 

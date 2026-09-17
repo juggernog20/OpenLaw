@@ -212,6 +212,7 @@ export function ApprovalsSigningCard({
   onRenew,
   users,
   approverGroups,
+  approvalDefault,
   team,
   onApprovals,
   onSigning,
@@ -241,6 +242,7 @@ export function ApprovalsSigningCard({
    * Administrator has configured none, and the apply control is then
    * absent rather than opening a dialog that can only say no. */
   approverGroups: readonly ApproverGroupOption[];
+  approvalDefault?: { groupId: string | null; canOverride: boolean };
   /** The contract's working group (CTR-004) — half of a confidential
    * record's audience, and the Owner is the other half. */
   team: readonly ContractTeamMember[];
@@ -772,6 +774,7 @@ export function ApprovalsSigningCard({
       {applying && (
         <ApplyGroupDialog
           groups={approverGroups}
+          approvalDefault={approvalDefault}
           peopleById={peopleById}
           pendingApprovers={pendingApprovers}
           busy={busy}
@@ -1336,6 +1339,7 @@ function AddApproverDialog({
  */
 function ApplyGroupDialog({
   groups,
+  approvalDefault,
   peopleById,
   pendingApprovers,
   busy,
@@ -1343,6 +1347,7 @@ function ApplyGroupDialog({
   onConfirm,
 }: Readonly<{
   groups: readonly ApproverGroupOption[];
+  approvalDefault?: { groupId: string | null; canOverride: boolean };
   peopleById: ReadonlyMap<string, UserOption>;
   pendingApprovers: ReadonlySet<string>;
   busy: boolean;
@@ -1352,7 +1357,8 @@ function ApplyGroupDialog({
   onConfirm: (groupId: string) => Promise<string | null>;
 }>) {
   const intl = useIntl();
-  const [groupId, setGroupId] = useState("");
+  const [groupId, setGroupId] = useState(approvalDefault?.groupId ?? "");
+  const locked = !!approvalDefault?.groupId && !approvalDefault.canOverride;
   const [error, setError] = useState<string | null>(null);
 
   const picked = groups.find((group) => group.id === groupId) ?? null;
@@ -1398,6 +1404,7 @@ function ApplyGroupDialog({
             </Label>
             <select
               id="approver-group"
+              disabled={locked}
               value={groupId}
               autoFocus
               className={CONTROL_CLASS}
@@ -1412,12 +1419,29 @@ function ApplyGroupDialog({
                   defaultMessage: "Pick a group",
                 })}
               </option>
+              {approvalDefault?.groupId &&
+                !groups.some((group) => group.id === approvalDefault.groupId) && (
+                  <option value={approvalDefault.groupId}>
+                    {intl.formatMessage({
+                      id: "approvals.defaultUnavailable",
+                      defaultMessage: "Default group unavailable — contact an administrator",
+                    })}
+                  </option>
+                )}
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}
                 </option>
               ))}
             </select>
+            {locked && (
+              <p className="text-sm text-muted">
+                <FormattedMessage
+                  id="approvals.defaultRestricted"
+                  defaultMessage="Only an administrator can choose a different group."
+                />
+              </p>
+            )}
           </div>
           {picked !== null && (
             <div className="flex flex-col gap-1 text-sm">

@@ -3,10 +3,9 @@
 /**
  * The Fields catalog routes (CTR-016, #83): the shared custom-field
  * catalog behind the module list-editor panes — list scoped to Contract,
- * Matter, Entity, and global fields, create across the nine field types, rename and
+ * Matter and Entity fields, create across the nine field types, rename and
  * describe, the options list on select types, the contract-scope-only
- * AI prompt (CTR-008), scope moves (promotion to global; narrowing back
- * only while no other module attaches the field), archive and restore.
+ * AI prompt (CTR-008), archive and restore. Scope is fixed at creation.
  * `slug` and `field_type` are immutable after creation: the update route
  * takes a strict body, so a request carrying either is refused rather
  * than silently stripped. There is no hard delete — stored values are
@@ -50,7 +49,7 @@ import { freeSlug } from "../../lib/slug.js";
  * The scopes this pane's catalog holds and its picker offers (CTR-016):
  * M22 added `matter`; `entity` joins with M27 and its module view.
  */
-const OPEN_SCOPES = ["contract", "matter", "entity", "global"] as const;
+const OPEN_SCOPES = ["contract", "matter", "entity"] as const;
 
 const ScopeSchema = z.enum(OPEN_SCOPES);
 const FieldTypeSchema = z.enum(FIELD_TYPES);
@@ -223,29 +222,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     return (await attachmentCounts(db, [field])).get(field.id) ?? 0;
   }
 
-  /**
-   * The CTR-016 narrowing guard's number: attachments in modules other
-   * than the narrow target's own. Each module's join counts against
-   * every other module's narrow, so a global field attached to matter
-   * types refuses to narrow to `contract` (and vice versa).
-   */
-  async function attachmentsOutsideModule(
-    db: Executor,
-    fieldId: string,
-    targetScope: string,
-  ): Promise<number> {
-    let outside = 0;
-    for (const { moduleScope, joinTable } of MODULE_JOINS) {
-      if (moduleScope === targetScope) continue;
-      const [row] = await db
-        .select({ tally: count() })
-        .from(joinTable)
-        .where(eq(joinTable.fieldId, fieldId));
-      outside += row?.tally ?? 0;
-    }
-    return outside;
-  }
-
   app.get(
     "/fields",
     {
@@ -254,7 +230,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listFields",
         summary:
           "The shared field catalog (CTR-016) scoped to contract, matter, " +
-          "entity, and global fields, in creation order; archived rows only with " +
+          "and entity fields, in creation order; archived rows only with " +
           "includeArchived=true",
         tags: ["fields"],
         querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
@@ -434,59 +410,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           action: "field.updated",
           visibility: "admin_only",
           payload: { slug: target.slug, changed },
-        });
-        return updated!;
-      });
-      return { field: toRow(row, await inUseCountOf(app.db, row)) };
-    },
-  );
-
-  app.put(
-    "/fields/:id/scope",
-    {
-      preHandler: requireRole("administrator"),
-      schema: {
-        operationId: "setFieldScope",
-        summary:
-          "Move a field's scope (CTR-016): promotion to global is always " +
-          "safe (values stay keyed by slug); any move into a module is " +
-          "refused while another module attaches the field",
-        tags: ["fields"],
-        params: z.object({ id: z.string() }),
-        body: z.object({ moduleScope: ScopeSchema }),
-        response: { 200: FieldEnvelope, default: problemResponse },
-      },
-    },
-    async (request) => {
-      const { moduleScope } = request.body;
-      const row = await app.db.transaction(async (tx) => {
-        const target = await lockedField(tx, request.params.id);
-        // Moving to the current scope changes nothing — answer with the
-        // row and write no misleading from==to audit entry.
-        if (target.moduleScope === moduleScope) return target;
-        // Any move into a module is guarded, whatever the current scope:
-        // a db-planted matter row moving to `contract` must answer for
-        // its matter attachments the same way a global row does. Only
-        // promotion to global is unconditionally safe.
-        const intoModule = moduleScope !== "global";
-        if (intoModule && (await attachmentsOutsideModule(tx, target.id, moduleScope)) > 0) {
-          throw httpError(
-            409,
-            `${target.displayName} is attached outside the ${moduleScope} module — ` +
-              "detach it there first, then narrow the scope.",
-          );
-        }
-        const [updated] = await tx
-          .update(fields)
-          .set({ moduleScope })
-          .where(eq(fields.id, target.id))
-          .returning();
-        await recordActivity(tx, {
-          entityType: "system",
-          actorId: request.user.id,
-          action: intoModule ? "field.narrowed" : "field.promoted",
-          visibility: "admin_only",
-          payload: { slug: target.slug, from: target.moduleScope, to: moduleScope },
         });
         return updated!;
       });

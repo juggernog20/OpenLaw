@@ -270,7 +270,7 @@ Support tables per **ENT-001/002/003/006**:
 - `entity_registrations` — `entity_id`, `jurisdiction`, `registration_number`, `registered_agent`, `status` (`active|lapsed|withdrawn`), timestamps.
 - `entity_holdings` — (`owner_entity_id`, `owned_entity_id`, `ownership_percent`, timestamps), compound PK on the pair; row CHECKs prohibit self-ownership and hold percentage to 0–100. Longer cycles remain application-enforced; soft ≤100% aggregate validation per owned Entity backs the v1 org chart (ENT-003).
 - `entity_obligations` — `entity_id`, `label` text (no kind taxonomy), `registration_id` nullable FK with `ON DELETE SET NULL`, `recurrence_months` integer (null = one-off), `next_due_on` date, `assignee_id` nullable FK, `note`, `matter_id` nullable FK, `completed_on`, timestamps. Blank-start; "Mark filed" logs the cycle and rolls recurring `next_due_on` forward until it is after the filing day, while a one-off records `completed_on`; nothing advances without that explicit write (ENT-006 and its M27/6 addendum). Feeds NOT-002 group 3 as `date.obligation_approaching`.
-- `entity_type_fields` — compound PK (`entity_type_id`, `field_id`) plus `display_order`, `is_required`, and `created_at`; attaches `entity`/`global` catalog Fields through the shared type-field machinery.
+- `entity_type_fields` — compound PK (`entity_type_id`, `field_id`) plus `display_order`, `is_required`, and `created_at`; attaches Entity catalog Fields through the shared type-field machinery.
 - `entity_grants` — compound PK (`entity_id`, `user_id`) plus `created_at`; the explicit-reader set for confidential Entities (ENT-004).
 
 ---
@@ -402,19 +402,19 @@ Source: **MTR-011**, revised by **CTR-016**
 
 Custom-field catalog (Jira model), shared across modules with a scope. A field is defined once here; which records render it is controlled by per-type attachment (`matter_type_fields` / `contract_type_fields`). `field_type` is immutable after creation (archive and recreate instead — no silent value coercion).
 
-| Column                     | Type        | Notes                                                                                                                                                                                               |
-| -------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                       | UUID        | PK                                                                                                                                                                                                  |
-| `slug`                     | text        | unique, not null, immutable; key used in the per-module `custom_fields` jsonb                                                                                                                       |
-| `display_name`             | text        | not null, user-editable                                                                                                                                                                             |
-| `description`              | text        | nullable; shown as help text on forms                                                                                                                                                               |
-| `module_scope`             | text (enum) | `matter` \| `contract` \| `entity` (**ENT-001**) \| `global` per **CTR-016**; global attaches across modules. Promotion to `global` allowed; narrowing blocked while cross-module attachments exist |
-| `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable**                                     |
-| `options`                  | jsonb       | nullable; option list for select types                                                                                                                                                              |
-| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Business User Portal projection and write permission                                                                                                   |
-| `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt for this catalog Field when it is attached to a Contract Type. Core target prompts do not live here                                             |
-| `archived_at`              | timestamptz | nullable; archived fields hidden everywhere, stored values retained                                                                                                                                 |
-| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                     |
+| Column                     | Type        | Notes                                                                                                                                                           |
+| -------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                              |
+| `slug`                     | text        | unique, not null, immutable; key used in the per-module `custom_fields` jsonb                                                                                   |
+| `display_name`             | text        | not null, user-editable                                                                                                                                         |
+| `description`              | text        | nullable; shown as help text on forms                                                                                                                           |
+| `module_scope`             | text (enum) | `matter` \| `contract` \| `entity`; fixed at creation per **CTR-016**, revised 2026-09-17                                                                       |
+| `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable** |
+| `options`                  | jsonb       | nullable; option list for select types                                                                                                                          |
+| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Business User Portal projection and write permission                                                               |
+| `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt for this catalog Field when it is attached to a Contract Type. Core target prompts do not live here         |
+| `archived_at`              | timestamptz | nullable; archived fields hidden everywhere, stored values retained                                                                                             |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                 |
 
 ---
 
@@ -438,12 +438,12 @@ Landed in M31/5, migration `0086_free_invisible_woman`. No `id`, `created_at`, o
 
 Source: **MTR-011**
 
-Attachment join: which global fields appear on which matter types, and in what order. Managed from each type's settings.
+Attachment join: which Matter fields appear on which matter types, and in what order. Managed from each type's settings.
 
 | Column           | Type        | Notes                                                                                                                   |
 | ---------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `matter_type_id` | UUID        | FK → `matter_types.id`, not null                                                                                        |
-| `field_id`       | UUID        | FK → `fields.id`, not null (renamed with the **CTR-016** catalog unification); scope must be `matter` or `global`       |
+| `field_id`       | UUID        | FK → `fields.id`, not null (renamed with the **CTR-016** catalog unification); scope must be `matter`                   |
 | `display_order`  | integer     | not null; per-type form order                                                                                           |
 | `is_required`    | boolean     | **MTR-014**; not null, default `false`; hard-enforced at creation/re-type/edit (not retro-enforced on existing matters) |
 | `created_at`     | timestamptz |                                                                                                                         |
@@ -740,7 +740,7 @@ Five invariants ride the table itself (M14/3). A **partial** unique index on (`c
 
 Source: **CTR-016** (mirrors `matter_type_fields`, MTR-011/MTR-014)
 
-Attachment join: which catalog fields appear on which contract types. Field scope must be `contract` or `global`.
+Attachment join: which catalog fields appear on which contract types. Field scope must be `contract`.
 
 | Column             | Type        | Notes                                                                                  |
 | ------------------ | ----------- | -------------------------------------------------------------------------------------- |
@@ -1188,7 +1188,7 @@ Source: **INT-002**
 
 `turnaround_days` on `request_types` is a nullable integer of 0–36,500 calendar days (**INT-003**, #806), enforced by `request_types_turnaround_days_check`. It is published on Portal request types and supplies an unconfirmed suggestion from the submission date in the organization timezone. Changing it never writes existing Requests. Both additions use migration 0100 with NULL defaults and no backfill.
 
-`request_type_fields`: (`request_type_id`, `field_id`, `display_order`, `is_required`, `created_at`), compound PK on the first two. Attachable fields: scope matching the target module, or `global`. One invariant here has no constraint behind it: a `user`- or `entity`-typed field may sit on a request form and may never be `is_required` on one, because the portal draws those pickers empty and a required one would refuse every submission of the type forever (the INT-002 M20/11 addendum, #400). Both write doors refuse the flag by name and migration 0063 cleared the rows an install could already hold; nothing in the table stops a hand-written `UPDATE`.
+`request_type_fields`: (`request_type_id`, `field_id`, `display_order`, `is_required`, `created_at`), compound PK on the first two. Attachable fields: scope matching the target module; an undecided target accepts Contract and Matter fields. One invariant here has no constraint behind it: a `user`- or `entity`-typed field may sit on a request form and may never be `is_required` on one, because the portal draws those pickers empty and a required one would refuse every submission of the type forever (the INT-002 M20/11 addendum, #400). Both write doors refuse the flag by name and migration 0063 cleared the rows an install could already hold; nothing in the table stops a hand-written `UPDATE`.
 
 `request_attachments`: (`id`, `request_id`, `file_ref`, `filename`, `uploaded_by`, `created_at`, `promoted_version_id`) — lightweight; promoted into `documents` on conversion (requests are not document owners per DOC-008). All original columns are not null. `promoted_version_id` is a nullable FK to the immutable Version created during ordinary conversion, with `on delete set null`; preparation does not populate it. It keeps source citations bound after conversion (#827). `request_id` is `on delete cascade`: an attachment is part of its Request and has no meaning without one. The cascade takes the row and **not the blob** — no database cascade reaches a storage driver — so whichever milestone builds a Request hard delete owes the same read-then-delete pass `documents` makes (DOC-010, DOC-012). `uploaded_by` is an FK to `users.id` with no cascade, and it is a column of its own because the Request's `requester_id` answers a different question: who asked, not who put this file here. `file_ref` is the storage seam's `<driver>:<key>` reference (DOC-012), whose key is minted from the attachment id and never from the filename. One index, `request_attachments_request_idx` on `(request_id, created_at)` — the one read there is, every attachment on one Request in the order they were attached. No declared media type and no byte count are stored, so the download answers `application/octet-stream` (the INT-002 M20/6 addendum). A row may be added only while its Request is `new`; after a disposition, paper arrives on `comment_attachments` and a Member+ files it onto the record (CMT-011, INT-002's #438 addendum). The table landed with M20/6 (#380), migration 0062, and was reconciled against the schema file again at the M21A close (#448).
 

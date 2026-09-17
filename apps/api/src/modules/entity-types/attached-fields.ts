@@ -12,10 +12,10 @@ export const entityAttachedFieldsRoutes = typeFieldRoutes({
   idInfix: "EntityType",
   noun: "entity type",
   scopeRule: {
-    scopes: ["entity", "global"],
-    refusal: "Only entity-scoped and global fields attach to entity types.",
+    scopes: ["entity"],
+    refusal: "Only entity-scoped fields attach to entity types.",
   },
-  scopeSummary: "entity-scoped and global fields (ENT-001)",
+  scopeSummary: "entity-scoped fields (ENT-001)",
   actionPrefix: "entity_type_field",
   requiredMilestone: "M27 record fields",
 });

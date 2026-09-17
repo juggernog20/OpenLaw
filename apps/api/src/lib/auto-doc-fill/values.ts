@@ -2,7 +2,7 @@
 
 /** ADO-002: conditions are data, and formatting uses a fixed set of directives. */
 import type { AutoDocCondition, CustomFieldValue } from "@openlaw/db";
-import type { TemplateToken } from "../auto-doc-template.js";
+import { isAutoDocTextStyle, type TemplateToken } from "../auto-doc-template.js";
 import { AutoDocFillError, type AutoDocFillInput } from "./engine.js";
 
 export function evaluateCondition(
@@ -36,7 +36,7 @@ export function resolveAutoDocValue(token: TemplateToken, input: AutoDocFillInpu
             : "No"
           : String(value);
   if (plain === undefined) throw new AutoDocFillError(`Choose a live Entity for "${field.label}".`);
-  if (!token.directive) return plain;
+  if (!token.directive || isAutoDocTextStyle(token.directive)) return plain;
   if (token.directive === "upper") return plain.toLocaleUpperCase("en-US");
   if (token.directive.startsWith("currency:")) {
     if (

@@ -58,6 +58,7 @@ import { autoDocFilingRoutes } from "./modules/auto-docs/filing-routes.js";
 import { autoDocErasureRoutes } from "./modules/auto-docs/erasure.js";
 import { autoDocsRoutes } from "./modules/auto-docs/routes.js";
 import { autoDocGenerationRoutes } from "./modules/auto-docs/generations.js";
+import { approvalDefaultsRoutes } from "./modules/contract-types/approval-defaults.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
 import { activityRoutes } from "./modules/activity/routes.js";
@@ -118,6 +119,12 @@ import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { currencyRoutes } from "./modules/org/currencies.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
+import { advancedSettingsRoutes } from "./modules/advanced-settings/routes.js";
+import {
+  effectiveEnvironment,
+  emptySettings,
+  type AdvancedRuntime,
+} from "./modules/advanced-settings/config.js";
 import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
 import { signerErasureRoutes } from "./modules/signer-erasure/routes.js";
 import { signingConnectorRoutes } from "./modules/signing-connector/routes.js";
@@ -199,6 +206,7 @@ export interface AppDeps {
    * take.
    */
   maxUploadBytes?: number;
+  advancedRuntime?: AdvancedRuntime;
   /**
    * Directory of the built SPA (TECH-017: the app serves the web bundle
    * same-origin). Unset — e.g. API-only development — leaves every
@@ -493,6 +501,12 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(orgRoutes, { prefix: "/api/v1" });
   await app.register(currencyRoutes, { prefix: "/api/v1" });
   await app.register(usersRoutes, { prefix: "/api/v1" });
+  await app.register(
+    advancedSettingsRoutes(
+      deps.advancedRuntime ?? { baseline: {}, active: effectiveEnvironment({}, emptySettings()) },
+    ),
+    { prefix: "/api/v1" },
+  );
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });
   await app.register(aiConnectorRoutes, { prefix: "/api/v1" });
@@ -503,6 +517,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(autoDocGenerationRoutes, { prefix: "/api/v1" });
   await app.register(autoDocFilingRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
+  await app.register(approvalDefaultsRoutes, { prefix: "/api/v1" });
   await app.register(defaultPeopleRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterTypesRoutes, { prefix: "/api/v1" });

@@ -24,8 +24,13 @@
  * Visual spec: designs/settings.pen per SETTINGS-INVENTORY.md.
  */
 
+import { advancedTitles } from "./settings-advanced";
 import { useState } from "react";
 import {
+  Activity,
+  Database,
+  Upload,
+  Cog,
   Bell,
   BellRing,
   Briefcase,
@@ -40,11 +45,12 @@ import {
   LibraryBig,
   PanelsTopLeft,
   Landmark,
+  Mail,
   Network,
   Palette,
   Plug,
   ScrollText,
-  Shield,
+  Settings2,
   Sparkles,
   User,
   Users,
@@ -136,10 +142,8 @@ const PERSONAL_GROUP: SettingsGroup = {
 
 /**
  * The Organization group, hidden entirely from non-Administrators
- * (SET-002's single role check) — absent, not disabled. Security is a
- * collapsible group per the SET-001 amendment: it holds policy about
- * how you get in, and it grew: the DD-017 audit log joined it in M9.
- * People-facing actions live in Users (SET-005).
+ * (SET-002's single role check) — absent, not disabled. Advanced holds
+ * technical administration in a collapsible group at the end of the rail.
  */
 const ORGANIZATION_GROUP: SettingsGroup = {
   id: "organization",
@@ -168,35 +172,6 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/users",
       icon: Users,
       label: defineMessage({ id: "settings.section.users", defaultMessage: "Users" }),
-    },
-    {
-      id: "security",
-      label: defineMessage({ id: "settings.group.security", defaultMessage: "Security" }),
-      icon: Shield,
-      sections: [
-        {
-          id: "authentication",
-          path: "/settings/authentication",
-          icon: KeyRound,
-          label: defineMessage({
-            id: "settings.section.authentication",
-            defaultMessage: "Authentication",
-          }),
-        },
-        // The DD-017 audit log, which SET-001 said would land here in
-        // M9 (#133). Administrator-only like everything in this group,
-        // so it is absent for everyone else rather than shown and
-        // refused (SET-002).
-        {
-          id: "audit-log",
-          path: "/settings/audit-log",
-          icon: ScrollText,
-          label: defineMessage({
-            id: "settings.section.auditLog",
-            defaultMessage: "Audit log",
-          }),
-        },
-      ],
     },
     // Each module section points at its first pane; more panes join as
     // tabs inside the section as their tickets land. The SET-001 rail
@@ -258,8 +233,7 @@ const ORGANIZATION_GROUP: SettingsGroup = {
     // #675 (SET-008): AI analysis is a section of its own, not an
     // Integrations tab. It holds the provider connector and the seven
     // core Field prompts, and it drives Contract analysis across the
-    // product, so it gets a rail entry. It sits before Integrations so
-    // that section stays last, as the SET-001 rail order draws it.
+    // product, so it gets a rail entry before Integrations.
     {
       id: "ai-analysis",
       path: "/settings/ai-analysis",
@@ -267,14 +241,59 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       label: defineMessage({ id: "settings.section.aiAnalysis", defaultMessage: "AI analysis" }),
     },
     // The Integrations section (SET-007), born with the E-signature
-    // pane in M15. It sits last in the Organization group, as the ST7
-    // mock and the SET-001 rail order both draw it. E-signature is its
-    // only pane: the AI pane moved out under SET-008.
+    // pane in M15. E-signature is its only pane: the AI pane moved out
+    // under SET-008.
     {
       id: "integrations",
       path: "/settings/integrations/e-signature",
       icon: Plug,
       label: defineMessage({ id: "settings.section.integrations", defaultMessage: "Integrations" }),
+    },
+    {
+      id: "advanced",
+      label: defineMessage({ id: "settings.group.advanced", defaultMessage: "Advanced" }),
+      icon: Settings2,
+      sections: [
+        {
+          id: "email",
+          path: "/settings/email",
+          icon: Mail,
+          label: defineMessage({ id: "settings.section.email", defaultMessage: "Outbound email" }),
+        },
+        {
+          id: "authentication",
+          path: "/settings/authentication",
+          icon: KeyRound,
+          label: defineMessage({
+            id: "settings.section.authentication",
+            defaultMessage: "Authentication",
+          }),
+        },
+        {
+          id: "audit-log",
+          path: "/settings/audit-log",
+          icon: ScrollText,
+          label: defineMessage({
+            id: "settings.section.auditLog",
+            defaultMessage: "Audit log",
+          }),
+        },
+        { id: "instance", path: "/settings/instance", icon: Globe, label: advancedTitles.instance },
+        { id: "uploads", path: "/settings/uploads", icon: Upload, label: advancedTitles.uploads },
+        { id: "storage", path: "/settings/storage", icon: Database, label: advancedTitles.storage },
+        {
+          id: "document-processing",
+          path: "/settings/document-processing",
+          icon: Cog,
+          label: advancedTitles.processing,
+        },
+        {
+          id: "system-status",
+          path: "/settings/system-status",
+          icon: Activity,
+          label: advancedTitles.status,
+        },
+      ],
     },
   ],
 };
@@ -310,7 +329,7 @@ function RailEntry({ section, nested }: { section: SettingsSection; nested?: boo
 }
 
 /**
- * A collapsible rail group (SET-001 amendment: Security). Collapse is
+ * A collapsible rail group. Collapse is
  * conditional rendering, not CSS, so it behaves the same in the phone
  * strip — where the disclosure sits inline as one more chip. A group
  * holding the active pane starts open; the button then has the say —

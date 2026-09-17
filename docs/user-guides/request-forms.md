@@ -6,7 +6,7 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 
 - Sign in as an Administrator.
 - Have live destination types and the Fields you want to collect. A Field must be attached to the destination Contract or Matter type if its answer should carry into that record. See [Configure types, Statuses, and Fields](types-statuses-fields.md).
-- This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and a Global **Deal value** Field. Use the names configured in your instance.
+- This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and a Contract **Deal value** Field. Use the names configured in your instance.
 
 ## Create the request type
 
@@ -15,7 +15,17 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 3. Select the new row's **Edit** control to open its form configuration.
 4. Enter a **Description** that helps a Business User choose this form. Leave the field to save it, and check that the save succeeds.
 
-Every submission creates a Request first. Legal chooses whether to convert it to a Contract or Matter, or resolve it in the thread. The **Target** column on the list shows each request type's routing default: a Contract or Matter type, a module alone, or **No target**. That default guides conversion and which Fields the form can attach. The form editor has no control to set or change it. A request type that you add here shows **No target**, so Legal chooses the Contract or Matter type at conversion.
+Every submission creates a Request first. Legal chooses whether to convert it to a Contract or Matter, or resolve it in the thread. The **Default destination** column shows the suggested destination for each request type.
+
+## Set the default destination
+
+1. In the request type editor, choose **Default destination**: **Contract**, **Matter**, or **Decide during triage**.
+2. For Contract or Matter, optionally select a **Default contract type** or **Default matter type**. Leave this as **Decide during triage** if Legal should select the type for each request.
+3. Check the saved indication. Changing the destination module clears its previous type selection. An archived selection is shown as unavailable; choose a live replacement.
+
+This supplies the initial choice during conversion. It does not automatically create a record, and Legal can choose a different destination. New request types start with **Decide during triage**.
+
+The destination also determines which Fields can be added to the form. It does not automatically attach Fields. If existing form Fields are incompatible with a new destination, the change is refused and names the Fields to detach; the saved destination and attachments remain unchanged.
 
 The **Display name** can change. Rename or reorder request types from the list. Archiving a request type takes it out of the Portal's choices and closes its form. The archive dialog shows how many Requests use the type. If it is used, choose a live replacement before archiving; those Requests move to the replacement. Check the replacement’s Fields and routing first. Use **Show archived**, then **Restore**, to offer the type again.
 
@@ -28,12 +38,13 @@ Check the Portal's request-type card for this duration as general guidance befor
 ## Choose the form fields
 
 1. Under **Form fields**, select **Attach field** and choose a Field, such as **Deal value**.
+   Fields are listed alphabetically. Use **Search fields** at the top of the menu to filter by name.
 2. Turn on that Field's **Required** checkbox if the Requester must answer it. Wait for the save to finish.
 3. Repeat for the other Fields you need. Use the reorder controls to put them in a useful order; with a reorder control focused, the arrow keys move its Field.
 
 Plan the form around its fixed basics: **Title**, **Description**, **Attachments**, **Department**, and **Urgency**. Title, Description, Department, and Urgency are required; attachments are optional. Department uses the shared list managed under **Settings → Organization → Departments** and carries into the converted record without a Field attachment. These basics cannot be removed or reordered here.
 
-The Target decides which Fields **Attach field** offers. A Contract target offers Contract-scoped and Global Fields. A Matter target offers Matter-scoped and Global Fields. **No target** offers only Global Fields. A User Field cannot be required on a Portal form, because the Portal does not offer people for the Requester to choose. An Entity Field can be required; the Portal offers only Portal-listed Entities for it. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
+The default destination decides which Fields **Attach field** offers. A Contract target offers Contract Fields. A Matter target offers Matter Fields. **Decide during triage** without a destination module offers Contract and Matter Fields, so you can build the questionnaire before deciding where requests will be converted. A User Field cannot be required on a Portal form, because the Portal does not offer people for the Requester to choose. An Entity Field can be required; the Portal offers only Portal-listed Entities for it. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
 
 ## Offer guidance before submission
 

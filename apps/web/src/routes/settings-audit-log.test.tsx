@@ -240,13 +240,13 @@ function filterBar() {
 }
 
 describe("who reaches the audit log", () => {
-  it("puts it in the Security group for an Administrator", async () => {
+  it("puts it in the Advanced group for an Administrator", async () => {
     stubApi({ signedIn: ADMIN, extra: auditApi(newCalls()) });
     renderAt("/settings/audit-log");
 
     const rail = await screen.findByRole("navigation", { name: "Settings sections" });
     expect(within(rail).getByRole("link", { name: "Audit log" })).toBeVisible();
-    // Beside Authentication, inside the Security group it opened for.
+    // Opening Audit log expands Advanced and exposes Authentication too.
     expect(within(rail).getByRole("link", { name: "Authentication" })).toBeVisible();
   });
 
@@ -259,7 +259,7 @@ describe("who reaches the audit log", () => {
     const rail = screen.getByRole("navigation", { name: "Settings sections" });
     expect(within(rail).queryByRole("link", { name: "Audit log" })).not.toBeInTheDocument();
     // Absent, not shown-and-refused: the whole group is gone (SET-002).
-    expect(within(rail).queryByText("Security")).not.toBeInTheDocument();
+    expect(within(rail).queryByText("Advanced")).not.toBeInTheDocument();
   });
 });
 

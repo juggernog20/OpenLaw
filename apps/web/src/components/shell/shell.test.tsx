@@ -13,7 +13,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, within, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi } from "../../testing/helpers";
 
@@ -25,6 +25,29 @@ const MEMBER = {
 };
 
 describe("app shell chrome", () => {
+  it("uses organization branding and refreshes it after an edit, retaining openlaw /", async () => {
+    let name = "Wentworth Family Office";
+    let logo: string | null = "data:image/png;base64,test";
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/org/branding" ? json(200, { name, logo }) : undefined,
+    });
+    renderAt("/");
+    const header = await screen.findByRole("banner");
+    expect(await within(header).findByText(name)).toBeInTheDocument();
+    expect(within(header).getByText("openlaw")).toBeInTheDocument();
+    expect(within(header).getAllByText("/").length).toBeGreaterThan(0);
+    const image = header.querySelector("img")!;
+    expect(image).toHaveAttribute("src", logo);
+    fireEvent.error(image);
+    expect(header.querySelector("img")).toBeNull();
+    name = "New organization";
+    logo = null;
+    act(() => window.dispatchEvent(new Event("openlaw:organization-branding-changed")));
+    expect(await within(header).findByText(name)).toBeInTheDocument();
+  });
+
   it("renders the header: product mark, search box, and the user-menu trigger", async () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/");

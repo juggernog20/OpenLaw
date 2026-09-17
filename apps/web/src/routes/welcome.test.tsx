@@ -488,7 +488,7 @@ describe("welcome wizard organization step (#697)", () => {
 });
 
 describe("welcome wizard email step (#37)", () => {
-  it("shows an env-pinned relay read-only, naming the variables to change", async () => {
+  it("shows an env-pinned relay read-only without the obsolete settings note", async () => {
     stubApi({
       signedIn: ADMIN,
       onboarding: { completed: false },
@@ -502,7 +502,7 @@ describe("welcome wizard email step (#37)", () => {
     expect(
       screen.getByText(/Outbound email is set by the deployment environment/),
     ).toBeInTheDocument();
-    expect(screen.getByText(/SMTP_URL and SMTP_FROM/)).toBeInTheDocument();
+    expect(screen.queryByText(/Settings saved here would never apply/)).not.toBeInTheDocument();
     // Read-only: no form, no save, and nothing to test from here.
     expect(screen.queryByLabelText("SMTP server")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send test email" })).not.toBeInTheDocument();
@@ -1522,7 +1522,7 @@ describe("welcome wizard Review step (#700)", () => {
     expect(writes).toEqual([]);
   });
 
-  it("counts each field catalog with globals and archived fields, excluding legacy Contract overview fields", async () => {
+  it("counts each field catalog including archived fields, excluding legacy Contract overview fields", async () => {
     const { user } = setup((call) => {
       if (call.method !== "GET" || call.url.pathname !== "/api/v1/fields") return undefined;
       const base = REVIEW_RESPONSES["/api/v1/fields"].fields[0];
@@ -1538,7 +1538,6 @@ describe("welcome wizard Review step (#700)", () => {
             archivedAt: "2026-09-01T00:00:00Z",
           },
           { ...base, id: "e", slug: "entity_custom", moduleScope: "entity" },
-          { ...base, id: "g", slug: "shared", moduleScope: "global" },
           { ...base, id: "r", slug: "region", moduleScope: "contract" },
           { ...base, id: "d", slug: "owning_department", moduleScope: "contract" },
         ],
@@ -1546,9 +1545,9 @@ describe("welcome wizard Review step (#700)", () => {
     });
     await goToReviewStep(user);
     for (const [label, count] of [
-      ["Matter fields", "2"],
-      ["Contract fields", "3"],
-      ["Entity fields", "2"],
+      ["Matter fields", "1"],
+      ["Contract fields", "2"],
+      ["Entity fields", "1"],
     ]) {
       const row = screen.getByRole("link", { name: label }).closest("tr")!;
       expect(within(row).getByRole("cell", { name: count })).toBeInTheDocument();

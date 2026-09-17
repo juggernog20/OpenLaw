@@ -5,7 +5,7 @@ import type { paths } from "@openlaw/api-client";
 import { CONTRACT_OVERVIEW_FIELD_SLUGS } from "@openlaw/shared";
 
 export type ModuleScope = "contract" | "matter" | "entity";
-export type Scope = ModuleScope | "global";
+export type Scope = ModuleScope;
 export type ApiField =
   paths["/api/v1/fields"]["get"]["responses"]["200"]["content"]["application/json"]["fields"][number];
 export type FieldRow = ApiField & { moduleScope: Scope };
@@ -14,7 +14,7 @@ export type FieldRow = ApiField & { moduleScope: Scope };
 export function isFieldRow(field: ApiField, module: ModuleScope): field is FieldRow {
   return (
     (module !== "contract" || !CONTRACT_OVERVIEW_FIELD_SLUGS.includes(field.slug)) &&
-    (field.moduleScope === module || field.moduleScope === "global")
+    field.moduleScope === module
   );
 }
 
@@ -56,17 +56,6 @@ export function typeLabel(intl: IntlShape, fieldType: FieldType): string {
         "multi_select {Multi select} user {User} entity {Entity} other {Unknown}}",
     },
     { type: fieldType },
-  );
-}
-
-export function scopeLabel(intl: IntlShape, scope: Scope): string {
-  return intl.formatMessage(
-    {
-      id: "settings.contractFields.scopeLabel",
-      defaultMessage:
-        "{scope, select, contract {Contract} matter {Matter} entity {Entity} global {Global} other {Unknown}}",
-    },
-    { scope },
   );
 }
 

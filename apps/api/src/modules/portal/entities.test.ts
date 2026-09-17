@@ -145,7 +145,7 @@ it("accepts a required Entity from the Portal list and refuses hidden, Confident
     cookies: admin,
     payload: {
       displayName: "Signing Entity",
-      moduleScope: "global",
+      moduleScope: "contract",
       fieldType: "entity",
       fieldTag: "business",
     },

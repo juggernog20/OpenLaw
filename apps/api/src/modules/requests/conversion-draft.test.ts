@@ -314,7 +314,7 @@ it("blocks narrowing a cited source until its unverified derivative is reviewed"
       slug: "conversion_context",
       displayName: "Business context",
       fieldType: "text",
-      moduleScope: "global",
+      moduleScope: "contract",
       fieldTag: "business",
     })
     .returning();

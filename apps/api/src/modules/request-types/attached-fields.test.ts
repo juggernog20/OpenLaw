@@ -152,7 +152,7 @@ const fieldIdBySlug = async (slug: string): Promise<string> => {
 
 const createField = async (
   displayName: string,
-  moduleScope: "contract" | "global",
+  moduleScope: "contract" | "matter",
   fieldType = "text",
 ): Promise<string> => {
   const res = await harness.app.inject({
@@ -202,10 +202,10 @@ const attachmentAuditRows = () =>
     .orderBy(asc(activityLog.createdAt));
 
 describe("attach and detach", () => {
-  it("attaches a scoped and a global field, in attachment order", async () => {
+  it("attaches a scoped and a contract field, in attachment order", async () => {
     const nda = await typeBySlug("nda_request");
     const counterparty = await createField("Counterparty name", "contract");
-    const department = await createField("Department", "global");
+    const department = await createField("Department", "contract");
 
     const first = await attach(nda.id, { fieldId: counterparty });
     expect(first.statusCode, first.body).toBe(201);
@@ -223,7 +223,7 @@ describe("attach and detach", () => {
     expect(second.statusCode, second.body).toBe(201);
     expect(second.json().attachedField).toMatchObject({
       slug: "department",
-      moduleScope: "global",
+      moduleScope: "contract",
       displayOrder: 2,
       isRequired: true,
     });
@@ -294,11 +294,11 @@ describe("attach and detach", () => {
 });
 
 describe("the scope rule, in all three target arms (INT-002)", () => {
-  it("takes contract-scoped and global fields when the target is Contract", async () => {
+  it("takes contract-scoped fields when the target is Contract", async () => {
     const type = await addType("Contract arm");
     await setTarget(type.id, { targetModule: "contract" });
     const contractField = await createField("Contract arm value", "contract");
-    const globalField = await createField("Contract arm owner", "global");
+    const secondField = await createField("Contract arm owner", "contract");
     const matterField = await plantScopedField(
       "contract_arm_practice",
       "Contract arm practice",
@@ -306,59 +306,67 @@ describe("the scope rule, in all three target arms (INT-002)", () => {
     );
 
     expect((await attach(type.id, { fieldId: contractField })).statusCode).toBe(201);
-    expect((await attach(type.id, { fieldId: globalField })).statusCode).toBe(201);
+    expect((await attach(type.id, { fieldId: secondField })).statusCode).toBe(201);
     const refused = await attach(type.id, { fieldId: matterField });
     expect(refused.statusCode, refused.body).toBe(400);
     expect(refused.headers["content-type"]).toContain("application/problem+json");
     expect(refused.json()).toMatchObject({
       status: 400,
       detail:
-        "This request type targets Contract, so its form takes " +
-        "contract-scoped and global fields only.",
+        "This request type targets Contract, so its form takes " + "contract-scoped fields only.",
     });
   });
 
-  it("takes matter-scoped and global fields when the target is Matter", async () => {
+  it("takes matter-scoped fields when the target is Matter", async () => {
     const type = await addType("Matter arm");
     await setTarget(type.id, { targetModule: "matter" });
-    // The Matter arm admits Matter and global fields after M22.
+    // The Matter arm admits Matter and contract fields after M22.
     const matterField = await plantScopedField(
       "matter_arm_practice",
       "Matter arm practice",
       "matter",
     );
-    const globalField = await createField("Matter arm owner", "global");
+    const secondField = await createField("Matter arm owner", "matter");
     const contractField = await createField("Matter arm value", "contract");
 
     expect((await attach(type.id, { fieldId: matterField })).statusCode).toBe(201);
-    expect((await attach(type.id, { fieldId: globalField })).statusCode).toBe(201);
+    expect((await attach(type.id, { fieldId: secondField })).statusCode).toBe(201);
     const refused = await attach(type.id, { fieldId: contractField });
     expect(refused.statusCode, refused.body).toBe(400);
     expect(refused.json().detail).toBe(
-      "This request type targets Matter, so its form takes " +
-        "matter-scoped and global fields only.",
+      "This request type targets Matter, so its form takes " + "matter-scoped fields only.",
     );
   });
 
-  it("takes global fields only when there is no target", async () => {
+  it("takes contract and matter fields when the destination is decided during triage", async () => {
     const type = await addType("No-target arm");
-    const globalField = await createField("No-target owner", "global");
+    const secondField = await createField("No-target owner", "contract");
     const contractField = await createField("No-target value", "contract");
-
-    expect((await attach(type.id, { fieldId: globalField })).statusCode).toBe(201);
-    const refused = await attach(type.id, { fieldId: contractField });
-    expect(refused.statusCode, refused.body).toBe(400);
-    expect(refused.json().detail).toBe(
-      "This request type has no target, so its form takes global fields only. " +
-        "Point it at Matter or Contract to attach that module's fields.",
+    const matterField = await plantScopedField(
+      "no_target_practice",
+      "No-target practice",
+      "matter",
     );
-    expect((await listAttached(type.id)).map((row) => row.slug)).toEqual(["no_target_owner"]);
+
+    expect((await attach(type.id, { fieldId: secondField })).statusCode).toBe(201);
+    expect((await attach(type.id, { fieldId: contractField })).statusCode).toBe(201);
+    expect((await attach(type.id, { fieldId: matterField })).statusCode).toBe(201);
+    expect((await listAttached(type.id)).map((row) => row.slug)).toEqual([
+      "no_target_owner",
+      "no_target_value",
+      "no_target_practice",
+    ]);
+    const refused = await setTarget(type.id, { targetModule: "contract" });
+    expect(refused.statusCode).toBe(409);
+    expect(refused.json().detail).toContain("No-target practice");
+    expect((await typeBySlug(type.slug)).targetModule).toBeNull();
   });
 
   it("reads the row's target on every attach, never a cached rule", async () => {
     const type = await addType("Re-pointed arm");
     const contractField = await createField("Re-point value", "contract");
 
+    await setTarget(type.id, { targetModule: "matter" });
     const beforeTargeting = await attach(type.id, { fieldId: contractField });
     expect(beforeTargeting.statusCode, beforeTargeting.body).toBe(400);
 
@@ -386,7 +394,7 @@ describe("the strand refusal on a target change (INT-002)", () => {
     await setTarget(type.id, { targetModule: "contract" });
     const value = await createField("Strand probe value", "contract");
     const owner = await createField("Strand probe owner", "contract");
-    const department = await createField("Strand probe department", "global");
+    const department = await createField("Strand probe department", "contract");
     for (const fieldId of [value, owner, department]) {
       expect((await attach(type.id, { fieldId })).statusCode).toBe(201);
     }
@@ -395,7 +403,7 @@ describe("the strand refusal on a target change (INT-002)", () => {
     expect(refused.statusCode, refused.body).toBe(409);
     expect(refused.headers["content-type"]).toContain("application/problem+json");
     expect(refused.json().detail).toBe(
-      "Strand probe value and Strand probe owner do not fit that target. " +
+      "Strand probe value, Strand probe owner, and Strand probe department do not fit that target. " +
         "Detach them from the form first.",
     );
 
@@ -404,19 +412,17 @@ describe("the strand refusal on a target change (INT-002)", () => {
     expect(unchanged.targetModule).toBe("contract");
     expect(unchanged.formFieldCount).toBe(3);
 
-    // Detaching them first lets the same change through, and the global
-    // field — which fits every arm — stays on the form.
+    // Every Contract field must be detached before switching to Matter.
     expect((await detach(type.id, value)).statusCode).toBe(204);
     expect((await detach(type.id, owner)).statusCode).toBe(204);
+    expect((await detach(type.id, department)).statusCode).toBe(204);
     const accepted = await setTarget(type.id, { targetModule: "matter" });
     expect(accepted.statusCode, accepted.body).toBe(200);
     expect(accepted.json().requestType).toMatchObject({
       targetModule: "matter",
-      formFieldCount: 1,
+      formFieldCount: 0,
     });
-    expect((await listAttached(type.id)).map((row) => row.slug)).toEqual([
-      "strand_probe_department",
-    ]);
+    expect(await listAttached(type.id)).toEqual([]);
   });
 
   it("names one stranded field in the singular", async () => {
@@ -425,24 +431,34 @@ describe("the strand refusal on a target change (INT-002)", () => {
     const value = await createField("Single strand value", "contract");
     expect((await attach(type.id, { fieldId: value })).statusCode).toBe(201);
 
-    const refused = await setTarget(type.id, { targetModule: null });
+    const refused = await setTarget(type.id, { targetModule: "matter" });
     expect(refused.statusCode, refused.body).toBe(409);
     expect(refused.json().detail).toBe(
       "Single strand value does not fit that target. Detach it from the form first.",
     );
   });
 
-  it("lets a target change that strands nothing through", async () => {
-    const type = await addType("Global-only strand probe");
-    await setTarget(type.id, { targetModule: "contract" });
-    const department = await createField("Global-only department", "global");
-    expect((await attach(type.id, { fieldId: department })).statusCode).toBe(201);
-
-    // Global fields fit every arm, so nothing is stranded by any move.
+  it("lets an empty form change its destination", async () => {
+    const type = await addType("Empty form destination");
+    expect((await setTarget(type.id, { targetModule: "contract" })).statusCode).toBe(200);
     expect((await setTarget(type.id, { targetModule: "matter" })).statusCode).toBe(200);
     expect((await setTarget(type.id, { targetModule: null })).statusCode).toBe(200);
-    expect((await listAttached(type.id)).map((row) => row.slug)).toEqual([
-      "global_only_department",
+  });
+
+  it("clears a destination without detaching module-specific fields", async () => {
+    const type = await addType("Clear destination probe");
+    await setTarget(type.id, { targetModule: "contract" });
+    const fieldId = await createField("Keep contract answer", "contract");
+    expect((await attach(type.id, { fieldId, isRequired: true })).statusCode).toBe(201);
+    const result = await setTarget(type.id, { targetModule: null });
+    expect(result.statusCode, result.body).toBe(200);
+    expect(result.json().requestType).toMatchObject({
+      targetModule: null,
+      targetTypeId: null,
+      formFieldCount: 1,
+    });
+    expect(await listAttached(type.id)).toEqual([
+      expect.objectContaining({ fieldId, isRequired: true }),
     ]);
   });
 
@@ -470,7 +486,7 @@ describe("the per-attachment required flag", () => {
   it("toggles and persists per attachment, not per field", async () => {
     const first = await addType("Required probe one");
     const second = await addType("Required probe two");
-    const shared = await createField("Required probe shared", "global");
+    const shared = await createField("Required probe shared", "contract");
     expect((await attach(first.id, { fieldId: shared })).statusCode).toBe(201);
     expect((await attach(second.id, { fieldId: shared })).statusCode).toBe(201);
 
@@ -503,7 +519,7 @@ describe("the per-attachment required flag", () => {
 describe("a user Field stays optional while an Entity Field may be required", () => {
   it("refuses the flag by name, and leaves the attachment optional", async () => {
     const type = await addType("Required reference probe");
-    const owner = await createField("Reference probe owner", "global", "user");
+    const owner = await createField("Reference probe owner", "contract", "user");
     expect((await attach(type.id, { fieldId: owner })).statusCode).toBe(201);
 
     const res = await setRequired(type.id, owner, true);
@@ -515,7 +531,7 @@ describe("a user Field stays optional while an Entity Field may be required", ()
 
   it("allows an Entity Field to be required", async () => {
     const type = await addType("Required entity probe");
-    const signer = await createField("Entity probe signer", "global", "entity");
+    const signer = await createField("Entity probe signer", "contract", "entity");
     expect((await attach(type.id, { fieldId: signer })).statusCode).toBe(201);
 
     const res = await setRequired(type.id, signer, true);
@@ -525,7 +541,7 @@ describe("a user Field stays optional while an Entity Field may be required", ()
 
   it("refuses an attach that arrives with the flag already set", async () => {
     const type = await addType("Required attach probe");
-    const owner = await createField("Attach probe owner", "global", "user");
+    const owner = await createField("Attach probe owner", "contract", "user");
 
     const res = await attach(type.id, { fieldId: owner, isRequired: true });
     expect(res.statusCode, res.body).toBe(400);
@@ -542,7 +558,7 @@ describe("a user Field stays optional while an Entity Field may be required", ()
     // The state a pre-#400 install can hold: the migration clears these
     // rows, and this plants one to prove the repair path stays open.
     const type = await addType("Required legacy probe");
-    const owner = await createField("Legacy probe owner", "global", "user");
+    const owner = await createField("Legacy probe owner", "contract", "user");
     expect((await attach(type.id, { fieldId: owner })).statusCode).toBe(201);
     await harness.db
       .update(requestTypeFields)
@@ -634,8 +650,8 @@ describe("the ST12 Form fields column", () => {
     const type = await addType("Count probe");
     expect((await typeBySlug(type.slug)).formFieldCount).toBe(0);
 
-    const first = await createField("Count probe one", "global");
-    const second = await createField("Count probe two", "global");
+    const first = await createField("Count probe one", "contract");
+    const second = await createField("Count probe two", "contract");
     expect((await attach(type.id, { fieldId: first })).statusCode).toBe(201);
     expect((await attach(type.id, { fieldId: second })).statusCode).toBe(201);
     expect((await typeBySlug(type.slug)).formFieldCount).toBe(2);
@@ -646,7 +662,7 @@ describe("the ST12 Form fields column", () => {
 
   it("drops an attachment whose field is archived, as the editor's list does", async () => {
     const type = await addType("Count archive probe");
-    const field = await createField("Count archive probe field", "global");
+    const field = await createField("Count archive probe field", "contract");
     expect((await attach(type.id, { fieldId: field })).statusCode).toBe(201);
     expect((await typeBySlug(type.slug)).formFieldCount).toBe(1);
 
@@ -693,8 +709,8 @@ describe("the DD-017 activity trail", () => {
 
   it("writes exactly one entry per mutation — a duplicate write fails the count", async () => {
     const probe = await addType("Form audit count probe");
-    const first = await createField("Form audit one", "global");
-    const second = await createField("Form audit two", "global");
+    const first = await createField("Form audit one", "contract");
+    const second = await createField("Form audit two", "contract");
 
     expect((await attach(probe.id, { fieldId: first })).statusCode).toBe(201);
     expect((await attach(probe.id, { fieldId: second })).statusCode).toBe(201);
@@ -736,7 +752,7 @@ describe("the DD-017 activity trail", () => {
       .select()
       .from(activityLog)
       .where(eq(activityLog.action, "request_type.updated"));
-    expect((await setTarget(probe.id, { targetModule: null })).statusCode).toBe(409);
+    expect((await setTarget(probe.id, { targetModule: "matter" })).statusCode).toBe(409);
     const after = await harness.db
       .select()
       .from(activityLog)

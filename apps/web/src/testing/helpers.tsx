@@ -255,7 +255,7 @@ const ONBOARDING_SETTINGS_PATHS: Record<OnboardingStep, string | null> = {
   organization: "/settings/general",
   authentication: "/settings/authentication",
   portal: "/settings/authentication",
-  email: null,
+  email: "/settings/email",
   invites: "/settings/users",
   "e-signature": "/settings/integrations/e-signature",
   "ai-analysis": "/settings/ai-analysis",

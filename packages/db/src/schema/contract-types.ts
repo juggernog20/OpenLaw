@@ -11,11 +11,17 @@
  * `contract_type_fields` (CTR-016), managed from the type editor.
  */
 
-import { pgTable, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { approverGroups } from "./approver-groups.js";
 import { taxonomyColumns } from "./helpers.js";
 
-export const contractTypes = pgTable("contract_types", taxonomyColumns(), (table) => [
-  uniqueIndex("contract_types_slug_unique").on(table.slug),
-]);
+export const contractTypes = pgTable(
+  "contract_types",
+  {
+    ...taxonomyColumns(),
+    defaultApproverGroupId: text("default_approver_group_id").references(() => approverGroups.id),
+  },
+  (table) => [uniqueIndex("contract_types_slug_unique").on(table.slug)],
+);
 
 export type ContractType = typeof contractTypes.$inferSelect;

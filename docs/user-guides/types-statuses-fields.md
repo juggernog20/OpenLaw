@@ -33,17 +33,18 @@ Matter and Contract Fields settings show **Default fields** as locked, read-only
 1. Open **Contracts**, **Matters**, or **Entities**, then **Fields**.
 2. Select **Add field**. Enter **Name** and, if useful, **Description** as help for the person completing it.
 3. Choose **Type**: Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, or Entity. The type cannot change after creation.
-4. Choose **Scope** for this module or **Global**, and a **Tag** of Business or Legal. For a select Field, enter **Options**, one per line in the intended order.
+4. Choose a **Tag** of Business or Legal. For a select Field, enter **Options**, one per line in the intended order.
 5. Select **Add field**, then check the new row.
 
-Global Fields share one definition across modules. In **Edit**, you can promote a module Field to Global. Narrowing it back to a module is refused while another module attaches it; detach those attachments first if narrowing is intended. Stored values are retained. After any failed multi-part save, reopen the editor to check which changes saved before retrying.
+Fields belong to the area where you create them: Contracts, Matters, or Entities. A field can be attached to several types within that area. To collect similar information in another area, create a separate field there.
 
 The Field catalog does not have reorder handles. Set order where Fields are attached to a type or form. Contract-scoped Fields may also have an **AI prompt**; [Configure the AI connector and Field prompts](configure-analysis.md) covers that separate setup.
 
 ## Attach Fields and set requiredness
 
 1. Open the module's **Types** tab and select **Edit** on the intended type.
-2. Under **Attached fields**, select **Attach field** and choose an eligible module or Global Field.
+2. Under **Attached fields**, select **Attach field** and choose a Field from the same area.
+   Fields are listed alphabetically. Use **Search fields** at the top of the menu to filter by name.
    In a Contract or Matter type editor, choose **Add new field** to create a Field without leaving the page. Enter its details and select **Add field** to create and attach it. New attachments start optional. If creation succeeds but attachment fails, choose the saved Field from **Attach field** to retry.
 3. Turn on its **Required** checkbox if it must be supplied. Reorder the attached Fields with their handles.
 4. Create a fictional record of this type, first leaving a required Field empty, then supplying a valid value. Confirm the accepted record contains the intended information.

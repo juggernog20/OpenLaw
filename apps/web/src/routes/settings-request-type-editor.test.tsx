@@ -54,7 +54,7 @@ interface StubField {
   id: string;
   slug: string;
   displayName: string;
-  moduleScope: "contract" | "matter" | "global";
+  moduleScope: "contract" | "matter" | "contract";
   fieldType: "text" | "number";
 }
 
@@ -77,7 +77,7 @@ const CATALOG: StubField[] = [
     id: "f-dept",
     slug: "department",
     displayName: "Department",
-    moduleScope: "global",
+    moduleScope: "contract",
     fieldType: "text",
   },
   // Contract-scoped and unattached, so the menu's scope is provable in
@@ -156,7 +156,7 @@ const ATTACHED_WITH_REFERENCE = [
     slug: "business_owner",
     displayName: "Business owner",
     fieldType: "user",
-    moduleScope: "global",
+    moduleScope: "contract",
     displayOrder: 2,
     isRequired: false,
   },
@@ -244,7 +244,7 @@ describe("identity (ST14's left card)", () => {
       "Review of a counterparty contract or redline.",
     );
     expect(screen.queryByLabelText("Slug")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Target")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Default destination")).toHaveValue("contract");
 
     await user.clear(screen.getByLabelText("Display name"));
     await user.type(screen.getByLabelText("Display name"), "Contract triage");
@@ -264,6 +264,71 @@ describe("identity (ST14's left card)", () => {
       "href",
       "/settings/intake/request-types",
     );
+  });
+});
+
+describe("default destination", () => {
+  it("saves a specific type, clears it on a module change, and refreshes eligible fields", async () => {
+    const calls = newCalls();
+    openEditor(editorApi(calls, review(), undefined, []));
+    const user = userEvent.setup();
+    const module = await screen.findByLabelText("Default destination");
+    await user.selectOptions(screen.getByLabelText("Default contract type"), "ct-nda");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Default contract type")).toHaveValue("ct-nda"),
+    );
+    await user.selectOptions(module, "matter");
+    const type = await screen.findByLabelText("Default matter type");
+    expect(type).toHaveValue("");
+    await user.selectOptions(type, "mt-lit");
+    await waitFor(() => expect(type).toHaveValue("mt-lit"));
+    expect(calls.patches).toEqual([
+      { targetModule: "contract", targetTypeId: "ct-nda" },
+      { targetModule: "matter", targetTypeId: null },
+      { targetModule: "matter", targetTypeId: "mt-lit" },
+    ]);
+    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    const menu = await screen.findByRole("menu");
+    expect(within(menu).getByText("Practice area")).toBeInTheDocument();
+    expect(within(menu).queryByText("Governing law")).not.toBeInTheDocument();
+    expect(calls.attached).toHaveLength(0);
+  });
+
+  it("clears both destination values when Legal should decide during triage", async () => {
+    const calls = newCalls();
+    openEditor(editorApi(calls, review({ targetTypeId: "ct-nda" }), undefined, []));
+    const user = userEvent.setup();
+    await user.selectOptions(await screen.findByLabelText("Default destination"), "");
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Default contract type")).not.toBeInTheDocument(),
+    );
+    expect(calls.patches).toEqual([{ targetModule: null, targetTypeId: null }]);
+    expect(screen.getByLabelText("Default destination")).toHaveValue("");
+  });
+
+  it("preserves the saved destination and fields when the API refuses a change", async () => {
+    const calls = newCalls();
+    openEditor(
+      editorApi(calls, review({ targetTypeId: "ct-nda" }), {
+        status: 409,
+        detail: "Counterparty name does not fit that target. Detach it from the form first.",
+      }),
+    );
+    const user = userEvent.setup();
+    await user.selectOptions(await screen.findByLabelText("Default destination"), "matter");
+    expect(await screen.findByText(/Counterparty name does not fit/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Default destination")).toHaveValue("contract");
+    expect(screen.getByLabelText("Default contract type")).toHaveValue("ct-nda");
+    expect(screen.getByRole("button", { name: "Detach Counterparty name" })).toBeInTheDocument();
+    expect(calls.detached).toHaveLength(0);
+  });
+
+  it("shows an archived selection by name but offers only live replacement types", async () => {
+    openEditor(editorApi(newCalls(), review({ targetTypeId: "ct-old" })));
+    const picker = within(await screen.findByLabelText("Default contract type"));
+    expect(picker.getByRole("option", { name: "Retired kind (unavailable)" })).toBeDisabled();
+    expect(picker.getByRole("option", { name: "NDA" })).toBeEnabled();
+    expect(picker.getByRole("option", { name: "MSA" })).toBeEnabled();
   });
 });
 
@@ -302,7 +367,7 @@ describe("the form definition (ST14's right card)", () => {
     await screen.findByText("Form fields");
     await user.click(screen.getByRole("button", { name: "Attach field" }));
     const menu = await screen.findByRole("menu");
-    // Contract target: contract-scoped and global. Counterparty name is
+    // Contract target: contract-scoped. Counterparty name is
     // already attached, so what is left is one of each.
     expect(within(menu).getAllByRole("menuitem")).toHaveLength(2);
     expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();
@@ -435,13 +500,14 @@ describe("moving between two request types on the same route (#372)", () => {
     );
     expect(screen.queryByText("Counterparty name")).not.toBeInTheDocument();
 
-    // No target means global fields only, so the menu proves the scope
-    // rule ran against the type in the URL.
+    // Undecided destinations can collect fields from either module.
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Attach field" }));
     const menu = await screen.findByRole("menu");
-    expect(within(menu).getAllByRole("menuitem")).toHaveLength(1);
+    expect(within(menu).getAllByRole("menuitem")).toHaveLength(4);
     expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();
+    expect(within(menu).getByRole("menuitem", { name: /Practice area/ })).toBeInTheDocument();
+    expect(within(menu).getByRole("menuitem", { name: /Governing law/ })).toBeInTheDocument();
   });
 });
 

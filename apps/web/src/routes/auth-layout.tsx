@@ -10,29 +10,17 @@
  */
 
 import { HelpLink } from "../components/documentation/help-link";
-import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { useLayoutEffect, useState, type ReactNode } from "react";
 import { Outlet } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { SkipLink } from "../components/skip-link";
 import { setDocumentTheme } from "../lib/theme";
-import { api } from "../lib/api";
+import { useOrganizationBranding } from "../lib/organization-branding";
 
 export function AuthLayout({ children }: Readonly<{ children?: ReactNode }>) {
   const intl = useIntl();
-  const [branding, setBranding] = useState<{ name: string; logo: string | null } | null>(null);
+  const branding = useOrganizationBranding();
   const [failedLogo, setFailedLogo] = useState<string | null>(null);
-  useEffect(() => {
-    const controller = new AbortController();
-    void api.GET("/api/v1/org/branding", { signal: controller.signal }).then(
-      ({ data }) => {
-        if (!controller.signal.aborted && data) setBranding(data);
-      },
-      () => {
-        // Branding is optional; a failed request must not prevent sign-in.
-      },
-    );
-    return () => controller.abort();
-  }, []);
   const name = branding?.name.trim();
   const logo = branding?.logo && branding.logo !== failedLogo ? branding.logo : null;
   // Pre-login screens render Light unconditionally (#44): presentation

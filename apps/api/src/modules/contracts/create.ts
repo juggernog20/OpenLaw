@@ -239,6 +239,7 @@ export async function createContract(
     .select({
       id: contractTypes.id,
       displayName: contractTypes.displayName,
+      defaultApproverGroupId: contractTypes.defaultApproverGroupId,
       archivedAt: contractTypes.archivedAt,
     })
     .from(contractTypes)
@@ -333,6 +334,7 @@ export async function createContract(
       owningDepartmentId: input.owningDepartmentId ?? null,
       region: await lockedRegionName(tx, input.region),
       contractTypeId: contractType.id,
+      defaultApproverGroupId: contractType.defaultApproverGroupId,
       statusId: draft.id,
       managerId,
       createdBy: actorId,

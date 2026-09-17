@@ -5,8 +5,7 @@
  * is defined once here with a module scope, and per-type attachment
  * joins control which records render it (the joins land with their
  * tickets — TECH-014). `slug` and `field_type` are immutable after
- * creation; scope moves only by promotion to `global`, and narrows back
- * only while no other module attaches the field. Three contract core
+ * creation, as is the module scope. Three contract core
  * fields are seeded by the migration that creates the table, each with
  * a default, editable AI extraction prompt (CTR-008). Archived fields
  * are hidden everywhere; stored values are always retained (MTR-014).
@@ -26,11 +25,9 @@ import { sql } from "drizzle-orm";
 import { uuidPk } from "./helpers.js";
 
 /**
- * The CTR-016 scope enum: module-scoped fields attach only inside their
- * module; `global` attaches across all of them. M22 opened `matter`,
- * and M27 opened `entity`.
+ * Fields belong to one module. Intake forms may collect Contract or Matter fields.
  */
-export const FIELD_MODULE_SCOPES = ["matter", "contract", "entity", "global"] as const;
+export const FIELD_MODULE_SCOPES = ["matter", "contract", "entity"] as const;
 export type FieldModuleScope = (typeof FIELD_MODULE_SCOPES)[number];
 
 /**
@@ -107,7 +104,7 @@ export const fields = pgTable(
     uniqueIndex("fields_slug_unique").on(table.slug),
     check(
       "fields_module_scope_check",
-      sql`${table.moduleScope} in ('matter', 'contract', 'entity', 'global')`,
+      sql`${table.moduleScope} in ('matter', 'contract', 'entity')`,
     ),
     check(
       "fields_field_type_check",

@@ -126,22 +126,19 @@ export async function validateMaps(db: Executor, definition: AutoDocFormDefiniti
     .for("share");
   const admitted = new Set(
     rows
-      .filter(
-        (field) =>
-          !field.archivedAt && (field.moduleScope === "contract" || field.moduleScope === "global"),
-      )
+      .filter((field) => !field.archivedAt && field.moduleScope === "contract")
       .map((field) => field.id),
   );
   const gaps = definition.fields
     .filter((field) => field.catalogFieldId && !admitted.has(field.catalogFieldId))
-    .map((field) => `Map "${field.label}" to a live catalog Field with contract or global scope.`);
+    .map((field) => `Map "${field.label}" to a live catalog Field with contract scope.`);
   if (gaps.length) throw httpError(400, gaps.join(" "));
 }
 
 /**
  * The form field types a format directive can print, matching the fill's
- * value resolver, with the type a fresh detection mints first. `upper`
- * prints any answer, so it asks for nothing.
+ * value resolver, with the type a fresh detection mints first. Text styles and `upper` accept
+ * any answer type.
  */
 function directiveNeeds(
   directive: string,

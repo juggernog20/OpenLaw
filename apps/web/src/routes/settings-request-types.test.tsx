@@ -301,8 +301,8 @@ describe("the Target column (INT-002)", () => {
     const [nda, review, question] = within(typeList()).getAllByRole("listitem");
     expect(within(nda!).getByText("Contract · NDA")).toBeInTheDocument();
     expect(within(review!).getByText("Contract")).toBeInTheDocument();
-    expect(within(question!).getByText("No target")).toBeInTheDocument();
-    expect(screen.getByText("Target")).toBeInTheDocument();
+    expect(within(question!).getByText("Decide during triage")).toBeInTheDocument();
+    expect(screen.getByText("Default destination")).toBeInTheDocument();
   });
 
   it("names a matter type the same way", async () => {

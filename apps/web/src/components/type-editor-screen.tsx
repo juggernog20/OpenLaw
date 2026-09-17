@@ -39,7 +39,7 @@
  * is only the flag that is refused, and the API refuses it too.
  */
 
-import { useRef, useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { ArrowLeft, GripVertical, Lock, Plus, X } from "lucide-react";
@@ -193,7 +193,6 @@ export interface TypeEditorAttachmentsMessages {
   empty: MessageDescriptor;
   reorder: MessageDescriptor;
   moved: MessageDescriptor;
-  globalCaption: MessageDescriptor;
   help?: MessageDescriptor;
 }
 
@@ -281,18 +280,17 @@ function AttachedFieldsCard({
 }: Readonly<TypeEditorAttachments & { typeId: string }>) {
   const intl = useIntl();
 
-  /** The ST16 field caption: the type, with the scope riding along only
-   * when it is global — "Single select · global". */
-  function fieldCaption(row: { fieldType: EditorFieldType; moduleScope: string }) {
-    const label = typeLabel(intl, row.fieldType);
-    return row.moduleScope === "global"
-      ? intl.formatMessage(messages.globalCaption, { type: label })
-      : label;
+  /** Display the field type beside its name. */
+  function fieldCaption(row: { fieldType: EditorFieldType }) {
+    return typeLabel(intl, row.fieldType);
   }
 
   const [rows, setRows] = useState<AttachedFieldRow[]>(initialAttached);
   const [createdFields, setCreatedFields] = useState<EditorCatalogRow[]>([]);
   const [addingField, setAddingField] = useState(false);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [fieldSearch, setFieldSearch] = useState("");
+  const searchInput = useRef<HTMLInputElement>(null);
   const attachTrigger = useRef<HTMLButtonElement>(null);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
@@ -306,6 +304,24 @@ function AttachedFieldsCard({
   const attachable: EditorCatalogRow[] = [...catalog, ...createdFields].filter(
     (field) => !rows.some((row) => row.fieldId === field.id),
   );
+  const matchingFields = attachable
+    .filter((field) =>
+      field.displayName
+        .toLocaleLowerCase(intl.locale)
+        .includes(fieldSearch.trim().toLocaleLowerCase(intl.locale)),
+    )
+    .sort((a, b) =>
+      a.displayName.localeCompare(b.displayName, intl.locale, {
+        sensitivity: "base",
+        numeric: true,
+      }),
+    );
+  useEffect(() => {
+    if (!attachMenuOpen) return;
+    // Wait for the menu's own focus handling before focusing its search.
+    const frame = requestAnimationFrame(() => searchInput.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [attachMenuOpen]);
   // A const binding, so the guard below narrows inside JSX — a property
   // access would not.
   const locked = basics;
@@ -408,7 +424,7 @@ function AttachedFieldsCard({
   }
 
   return (
-    <div className="flex min-w-80 flex-1 flex-col gap-2">
+    <div className="flex min-w-0 flex-[1_1_20rem] flex-col gap-2">
       <SettingsCard
         title={<FormattedMessage {...messages.attachedFields} />}
         flush
@@ -593,7 +609,13 @@ function AttachedFieldsCard({
           )}
         </ul>
         <div className="flex items-center gap-2 px-4 py-2.5">
-          <DropdownMenu>
+          <DropdownMenu
+            open={attachMenuOpen}
+            onOpenChange={(open) => {
+              setAttachMenuOpen(open);
+              if (open) setFieldSearch("");
+            }}
+          >
             <DropdownMenuTrigger asChild>
               {/* Not disabled when the catalog is exhausted: Radix
                   returns focus here when the menu closes, and a
@@ -612,34 +634,89 @@ function AttachedFieldsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
-              className="max-h-(--radix-dropdown-menu-content-available-height) overflow-y-auto"
+              className="flex max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] flex-col"
               onCloseAutoFocus={(event) => {
                 if (addingField) event.preventDefault();
               }}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "ArrowUp" &&
+                  event.target === event.currentTarget.querySelector('[role="menuitem"]')
+                ) {
+                  event.preventDefault();
+                  searchInput.current?.focus();
+                }
+              }}
             >
+              <div className="shrink-0 p-1">
+                <Input
+                  ref={searchInput}
+                  value={fieldSearch}
+                  placeholder={intl.formatMessage({
+                    id: "settings.typeEditor.searchFields",
+                    defaultMessage: "Search fields…",
+                  })}
+                  aria-label={intl.formatMessage({
+                    id: "settings.typeEditor.searchFieldsLabel",
+                    defaultMessage: "Search fields",
+                  })}
+                  onChange={(event) => setFieldSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    // Keep typing, spaces and caret movement out of menu typeahead.
+                    if (event.key !== "Escape") event.stopPropagation();
+                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                      event.preventDefault();
+                      const menu = event.currentTarget.closest('[role="menu"]');
+                      const fields = menu?.querySelectorAll<HTMLElement>(
+                        '[role="menuitem"][data-field-option]',
+                      );
+                      const items = fields?.length
+                        ? fields
+                        : menu?.querySelectorAll<HTMLElement>('[role="menuitem"]');
+                      const item =
+                        event.key === "ArrowDown" ? items?.[0] : items?.[items.length - 1];
+                      item?.focus();
+                    }
+                    if (event.key === "Enter") event.preventDefault();
+                  }}
+                />
+              </div>
               {createFieldModule && (
                 <>
-                  <DropdownMenuItem onSelect={() => setAddingField(true)}>
+                  <DropdownMenuItem className="shrink-0" onSelect={() => setAddingField(true)}>
                     <Plus size={16} aria-hidden="true" />
                     <FormattedMessage
                       id="settings.typeEditor.addNewField"
                       defaultMessage="Add new field"
                     />
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="shrink-0" />
                 </>
               )}
-              {attachable.map((field) => (
-                <DropdownMenuItem key={field.id} onSelect={() => void attach(field)}>
-                  <span className="text-base text-primary">{field.displayName}</span>
-                  <span className="text-sm text-muted">{fieldCaption(field)}</span>
-                </DropdownMenuItem>
-              ))}
-              {attachable.length === 0 && (
-                <div className="px-3 py-2 text-sm text-muted">
-                  <FormattedMessage {...messages.allAttached} />
-                </div>
-              )}
+              <div className="min-h-0 overflow-y-auto">
+                {matchingFields.map((field) => (
+                  <DropdownMenuItem
+                    key={field.id}
+                    data-field-option
+                    onSelect={() => void attach(field)}
+                  >
+                    <span className="text-base text-primary">{field.displayName}</span>
+                    <span className="text-sm text-muted">{fieldCaption(field)}</span>
+                  </DropdownMenuItem>
+                ))}
+                {matchingFields.length === 0 && (
+                  <div role="status" className="px-3 py-2 text-sm text-muted">
+                    {attachable.length === 0 ? (
+                      <FormattedMessage {...messages.allAttached} />
+                    ) : (
+                      <FormattedMessage
+                        id="settings.typeEditor.noMatchingFields"
+                        defaultMessage="No matching fields."
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
           <StatusNote status={attachStatus} detail={attachError} />
@@ -783,58 +860,60 @@ export function TypeEditorScreen({
           <FormattedMessage {...messages.allTypes} />
         </Link>
         <div className="flex flex-wrap items-start gap-4">
-          <SettingsCard title={saved.displayName} className="w-140 shrink-0 grow-0">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="type-display-name">
-                <FormattedMessage {...messages.displayName} />
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="type-display-name"
-                  className="w-80"
-                  value={nameDraft}
-                  onChange={(event) => setNameDraft(event.target.value)}
-                  onBlur={commitName}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") commitName();
-                    if (event.key === "Escape") setNameDraft(saved.displayName);
-                  }}
-                />
-                <StatusNote status={typeStatus.name} detail={typeError.name} />
+          <div className="flex min-w-0 max-w-full flex-[0_1_35rem] flex-col gap-4">
+            <SettingsCard title={saved.displayName}>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="type-display-name">
+                  <FormattedMessage {...messages.displayName} />
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="type-display-name"
+                    className="w-80 min-w-0 max-w-full"
+                    value={nameDraft}
+                    onChange={(event) => setNameDraft(event.target.value)}
+                    onBlur={commitName}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") commitName();
+                      if (event.key === "Escape") setNameDraft(saved.displayName);
+                    }}
+                  />
+                  <StatusNote status={typeStatus.name} detail={typeError.name} />
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="type-description">
-                <FormattedMessage {...messages.description} />
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="type-description"
-                  className="w-full"
-                  value={descriptionDraft}
-                  onChange={(event) => setDescriptionDraft(event.target.value)}
-                  onBlur={commitDescription}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") commitDescription();
-                    if (event.key === "Escape") setDescriptionDraft(saved.description ?? "");
-                  }}
-                />
-                <StatusNote status={typeStatus.description} detail={typeError.description} />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="type-description">
+                  <FormattedMessage {...messages.description} />
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="type-description"
+                    className="w-full"
+                    value={descriptionDraft}
+                    onChange={(event) => setDescriptionDraft(event.target.value)}
+                    onBlur={commitDescription}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") commitDescription();
+                      if (event.key === "Escape") setDescriptionDraft(saved.description ?? "");
+                    }}
+                  />
+                  <StatusNote status={typeStatus.description} detail={typeError.description} />
+                </div>
               </div>
-            </div>
 
-            {identityExtra}
+              {identityExtra}
 
-            {inUse && (
-              <p className="text-sm text-muted">
-                <FormattedMessage {...inUse} values={{ count: saved.inUseCount }} />
-              </p>
-            )}
-          </SettingsCard>
+              {inUse && (
+                <p className="text-sm text-muted">
+                  <FormattedMessage {...inUse} values={{ count: saved.inUseCount }} />
+                </p>
+              )}
+            </SettingsCard>
+            {extraCards}
+          </div>
 
           {attachments && <AttachedFieldsCard typeId={saved.id} {...attachments} />}
-          {extraCards}
         </div>
       </div>
     </>

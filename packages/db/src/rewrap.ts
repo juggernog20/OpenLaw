@@ -83,6 +83,7 @@ const SEALED_COLUMNS: SecretColumn[] = [
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.privateKey },
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.webhookSecret },
   { table: orgSettings, id: orgSettings.id, column: orgSettings.smtpUrl },
+  { table: orgSettings, id: orgSettings.id, column: orgSettings.advancedSettings },
   { table: ssoProviders, id: ssoProviders.id, column: ssoProviders.oidcConfig },
 ];
 

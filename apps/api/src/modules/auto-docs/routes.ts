@@ -397,10 +397,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
           })
           .from(catalogFields)
           .where(
-            and(
-              isNull(catalogFields.archivedAt),
-              inArray(catalogFields.moduleScope, ["contract", "global"]),
-            ),
+            and(isNull(catalogFields.archivedAt), inArray(catalogFields.moduleScope, ["contract"])),
           )
           .orderBy(asc(catalogFields.displayName)),
         app.db

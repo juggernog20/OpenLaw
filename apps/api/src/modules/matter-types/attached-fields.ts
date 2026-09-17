@@ -5,7 +5,7 @@
  * shared per-type field attachment machinery (`typeFieldRoutes`)
  * mounted on `matter_type_fields`. The scope rule is one line for every
  * matter type. M22 opened the `matter` field scope, so this mount admits
- * matter-scoped and global fields; Contract and Entity scopes are
+ * matter-scoped fields; Contract and Entity scopes are
  * refused here for good. See the factory for the behavior set.
  */
 
@@ -20,9 +20,9 @@ export const matterAttachedFieldsRoutes = typeFieldRoutes({
   idInfix: "MatterType",
   noun: "matter type",
   scopeRule: {
-    scopes: ["matter", "global"],
-    refusal: "Only matter-scoped and global fields attach to matter types.",
+    scopes: ["matter"],
+    refusal: "Only matter-scoped fields attach to matter types.",
   },
-  scopeSummary: "matter-scoped and global fields (MTR-011)",
+  scopeSummary: "matter-scoped fields (MTR-011)",
   actionPrefix: "matter_type_field",
 });

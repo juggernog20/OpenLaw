@@ -46,7 +46,7 @@ function field(overrides: Partial<Record<string, unknown>> = {}) {
     displayName: "Counterparty",
     fieldType: "text",
     fieldTag: "legal",
-    moduleScope: "global",
+    moduleScope: "contract",
     isRequired: false,
     displayOrder: 1,
     options: null,
