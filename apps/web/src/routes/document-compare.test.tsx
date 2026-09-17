@@ -483,3 +483,13 @@ describe("the Document comparison screen", () => {
     expect(await screen.findByText("Something went wrong.")).toBeInTheDocument();
   });
 });
+
+it("hides export on a ready Auto-Doc template Comparison", async () => {
+  const value = comparison();
+  value.document.owner = { kind: "auto_doc", id: "auto-1", title: "Template", number: null };
+  const api = comparisonApi(value);
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/documents/doc-1/compare?from=v2&to=v4");
+  expect(await screen.findByText("Template")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Export track changes" })).not.toBeInTheDocument();
+});

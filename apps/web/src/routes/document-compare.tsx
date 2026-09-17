@@ -210,7 +210,8 @@ function CompareSubbar({
         {/* The sentence stands where the CTA would. A Contributor never
             has the CTA, so the sentence would only tell them about an
             action they cannot take. */}
-        {comparison.document.archivedAt === null &&
+        {comparison.document.owner.kind !== "auto_doc" &&
+        comparison.document.archivedAt === null &&
         comparison.mode === "text" &&
         isMemberPlus(userRole) ? (
           <p className="text-sm text-muted">
@@ -219,7 +220,8 @@ function CompareSubbar({
               defaultMessage="Export needs two Word files."
             />
           </p>
-        ) : comparison.document.archivedAt === null &&
+        ) : comparison.document.owner.kind !== "auto_doc" &&
+          comparison.document.archivedAt === null &&
           comparison.state === "ready" &&
           isMemberPlus(userRole) ? (
           exportedVersionId ? (
