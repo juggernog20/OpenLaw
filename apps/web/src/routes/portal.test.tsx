@@ -168,7 +168,7 @@ describe("the portal front door", () => {
 
   it("sends a session holder past the door and into the portal", async () => {
     stubApi({ signedIn: REQUESTER });
-    renderAt("/portal/enter");
+    renderAt("/portal/login");
     expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
   });
 });

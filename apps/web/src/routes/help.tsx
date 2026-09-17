@@ -51,7 +51,7 @@ function useHelpLocation() {
 export function HelpPage() {
   const { user } = useLoaderData<typeof helpLoader>();
   const { portal, suffix } = useHelpLocation();
-  const signOut = useSignOut(portal ? "/portal/enter" : "/auth/login");
+  const signOut = useSignOut(portal ? "/portal/login" : "/auth/login");
   // Keep the fragment in the component. Loader Requests do not retain it.
   if (!user) return <Navigate replace to={`/documentation${suffix}`} />;
   if (!portal && user.role === "business_user")

@@ -13,10 +13,10 @@
          Runs synchronously in <head> on purpose. -->
     <script>
       (function () {
-        // Trailing slash stripped first: "/portal/enter/" is the same
+        // Trailing slash stripped first: "/portal/login/" is the same
         // screen to the router, so it must be the same screen here.
         var path = location.pathname.replace(/\/+$/, "");
-        if (path.startsWith("/auth") || path === "/portal/enter") return;
+        if (path.startsWith("/auth") || path === "/portal/login") return;
         try {
           var theme = localStorage.getItem("openlaw.theme");
           if (theme === "warm" || theme === "dark") {

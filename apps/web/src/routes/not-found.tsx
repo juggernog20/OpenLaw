@@ -107,14 +107,14 @@ export function SettingsNotFoundPane() {
 /** The /portal splat. Signed-out visitors go to the portal door, as every portal loader sends them. */
 export async function portalNotFoundLoader({ request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
-  if (!user) return redirect("/portal/enter");
+  if (!user) return redirect("/portal/login");
   return { user };
 }
 
 export function PortalNotFoundPage() {
   const { user } = useLoaderData<typeof portalNotFoundLoader>();
   const intl = useIntl();
-  const signOut = useSignOut("/portal/enter");
+  const signOut = useSignOut("/portal/login");
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>
       <PageTitle title={intl.formatMessage(NOT_FOUND_PAGE_TITLE)} />
