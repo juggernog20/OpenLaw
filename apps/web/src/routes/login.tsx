@@ -286,10 +286,17 @@ export function LoginPage() {
         )}
         {arrivedWithError && (
           <Alert variant="danger">
-            <FormattedMessage
-              id="auth.login.error.ssoCallback"
-              defaultMessage="Single sign-on failed. Try again."
-            />
+            {searchParams.get("method") === "magic-link" || searchParams.get("error") === "link" ? (
+              <FormattedMessage
+                id="auth.login.error.linkCallback"
+                defaultMessage="This sign-in link could not be used. Request a new link or contact your administrator."
+              />
+            ) : (
+              <FormattedMessage
+                id="auth.login.error.ssoCallback"
+                defaultMessage="Single sign-on failed. Try again."
+              />
+            )}
           </Alert>
         )}
         {error && <Alert variant="danger">{error}</Alert>}

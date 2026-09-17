@@ -1170,8 +1170,8 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
               callbackURL: request.body.group === "business" ? "/portal" : "/",
               errorCallbackURL:
                 request.body.group === "business"
-                  ? "/portal/login?error=link"
-                  : "/auth/login?error=link",
+                  ? "/portal/login?error=link&method=magic-link"
+                  : "/auth/login?error=link&method=magic-link",
             },
             headers: fromNodeHeaders(request.headers),
           });

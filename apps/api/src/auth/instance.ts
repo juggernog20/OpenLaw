@@ -566,13 +566,16 @@ export function createAuth(
                 authenticationPolicy(await getOrgSettings(db)),
                 row?.role,
               );
-              if (!(ctx.path === "/magic-link/verify" ? options.magicLink : options.sso))
+              if (!(ctx.path === "/magic-link/verify" ? options.magicLink : options.sso)) {
+                if (ctx.path === "/magic-link/verify") return false;
                 throw new APIError("FORBIDDEN", {
                   message: "This sign-in method is disabled for your account.",
                   code: "SIGN_IN_METHOD_DISABLED",
                 });
+              }
             }
             if (row?.archivedAt) {
+              if (ctx?.path === "/magic-link/verify") return false;
               // Coded so the browser-facing SSO callback redirects to the
               // app's error page instead of dumping bare JSON.
               throw new APIError("FORBIDDEN", {
@@ -639,6 +642,7 @@ export function createAuth(
               ) {
                 throw new APIError("FORBIDDEN", {
                   message: "This email address is not eligible for portal access.",
+                  code: "EMAIL_DOMAIN_NOT_ALLOWED",
                 });
               }
               return {

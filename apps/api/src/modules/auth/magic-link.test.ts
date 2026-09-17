@@ -306,3 +306,54 @@ describe("magic-link portal auth (POST /api/v1/auth/magic-link)", () => {
     await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
   });
 });
+
+it.each(["legal", "business"])(
+  "preserves the magic-link marker on a non-token %s refusal",
+  async (group) => {
+    const email = `refused-${group}@example.com`;
+    const issued = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/magic-link",
+      payload: { email, group },
+    });
+    expect(issued.statusCode, issued.body).toBe(202);
+    const link = linkFrom(harness.mailer.messagesTo(email).at(-1)!.text);
+    await harness.db.update(orgSettings).set({ allowedEmailDomains: [] });
+    try {
+      const response = await redeem(link);
+      expect(response.statusCode, response.body).toBe(302);
+      const location = new URL(response.headers.location!);
+      expect(location.pathname).toBe(group === "business" ? "/portal/login" : "/auth/login");
+      expect(location.searchParams.get("method")).toBe("magic-link");
+      expect(location.searchParams.get("error")).toBeTruthy();
+      expect(location.searchParams.get("error")).not.toBe("INVALID_TOKEN");
+    } finally {
+      await harness.db.update(orgSettings).set({ allowedEmailDomains: ALLOWED_DOMAINS });
+    }
+  },
+);
+
+it.each(["legal", "business"])(
+  "redirects a refused magic-link session back to the %s sign-in page",
+  async (group) => {
+    const email = "requester@acme.example";
+    await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/magic-link",
+      payload: { email, group },
+    });
+    const link = linkFrom(harness.mailer.messagesTo(email).at(-1)!.text);
+    await harness.db.update(users).set({ archivedAt: new Date() }).where(eq(users.email, email));
+    try {
+      const response = await redeem(link);
+      expect(response.statusCode, response.body).toBe(302);
+      const location = new URL(response.headers.location!);
+      expect(location.pathname).toBe(group === "business" ? "/portal/login" : "/auth/login");
+      expect(location.searchParams.get("method")).toBe("magic-link");
+      expect(location.searchParams.get("error")).toBe("failed_to_create_session");
+      expect(sessionCookies(response)).toBeNull();
+    } finally {
+      await harness.db.update(users).set({ archivedAt: null }).where(eq(users.email, email));
+    }
+  },
+);

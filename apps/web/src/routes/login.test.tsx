@@ -238,3 +238,12 @@ it("returns from password setup without sending a request", async () => {
   expect(await screen.findByLabelText("Password")).toBeVisible();
   expect(requests).toEqual([]);
 });
+
+it.each(["/auth/login", "/portal/login"])("describes a refused magic link at %s", async (path) => {
+  stubApi({});
+  renderAt(`${path}?method=magic-link&error=SIGN_IN_METHOD_DISABLED`);
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "This sign-in link could not be used.",
+  );
+  expect(screen.queryByText("Single sign-on failed. Try again.")).not.toBeInTheDocument();
+});

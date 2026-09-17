@@ -1037,6 +1037,9 @@
   "auth.login.error.invalidCredentials": {
     "defaultMessage": "Check your email and password."
   },
+  "auth.login.error.linkCallback": {
+    "defaultMessage": "This sign-in link could not be used. Request a new link or contact your administrator."
+  },
   "auth.login.error.magicLink": {
     "defaultMessage": "The link could not be sent. Try again."
   },
