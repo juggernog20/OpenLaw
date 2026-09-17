@@ -1403,6 +1403,9 @@
   "autoDocs.downloadPdf": {
     "defaultMessage": "Download PDF"
   },
+  "autoDocs.downloadStarter": {
+    "defaultMessage": "Download starter template (.docx)"
+  },
   "autoDocs.downloadWord": {
     "defaultMessage": "Download Word"
   },

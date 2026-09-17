@@ -2,6 +2,10 @@
 
 An Auto-Doc fills an approved Word file from a form. You write the file in Word, mark the places the form fills, and upload it. OpenLaw reads the markers and builds the form beside the file.
 
+## Download a starter template
+
+On the **Auto-Docs** page, choose **Download starter template (.docx)** beside the page title. The Word file has two pages: plain-English instructions with examples of placeholders, capital letters, all three supported date formats, currency formatting and conditional blocks, followed by an example services agreement. Save a copy and delete the instruction page and its page break before uploading it, so the examples in the guide are not treated as template content. The agreement uses five fields (start date, provider name, client name, services and fee) and a confidentiality block. The block is included by default; add a Boolean (Yes/No) field and a rule under **Clauses** if you want the person completing the form to choose whether to include it.
+
 ## Before you start
 
 Sign in as a Legal Team Member or Administrator, open **Auto-Docs**, and create an Auto-Doc or open one. The **Form** section shows the file on the left and its form on the right. Upload a `.docx` file with **Upload version**.

@@ -173,3 +173,47 @@ it("refuses an expanded package above 32 MiB before rendering", async () => {
     }),
   ).rejects.toThrow("expanded Word template exceeds 32 MiB");
 });
+
+it("detects and fills the downloadable starter without turning its instructions into form fields", async () => {
+  const { detectAutoDocTemplate } = await import("../auto-doc-template.js");
+  const template = await readFile(
+    new URL("../../../../web/public/downloads/openlaw-auto-doc-starter.docx", import.meta.url),
+  );
+  const detected = detectAutoDocTemplate(template);
+  expect([...new Set(detected.placeholders)]).toEqual([
+    "start_date",
+    "provider_name",
+    "client_name",
+    "services",
+    "fee",
+  ]);
+  expect(detected.directives).toEqual([
+    { slug: "start_date", directive: "date:DD/MM/YYYY" },
+    { slug: "provider_name", directive: "upper" },
+    { slug: "client_name", directive: "upper" },
+    { slug: "fee", directive: "currency:USD" },
+  ]);
+  const definition = form("start_date", "provider_name", "client_name", "services", "fee");
+  definition.fields[0]!.fieldType = "date";
+  definition.fields[4]!.fieldType = "currency";
+  const output = await engine.fill({
+    template,
+    definition,
+    answers: {
+      start_date: "2026-10-01",
+      provider_name: "Acme Advisory Ltd",
+      client_name: "Wentworth Family Office",
+      services: "Review and report on the Client’s supplier contracts.",
+      fee: 2500,
+    },
+  });
+  const filled = text(output);
+  expect(filled).toContain("01/10/2026");
+  expect(filled).toContain("ACME ADVISORY LTD");
+  expect(filled).toContain("WENTWORTH FAMILY OFFICE");
+  expect(filled.split("2. Fees and payment")[1]).toContain("$2,500.00");
+  expect(filled).toContain("Review and report on the Client’s supplier contracts.");
+  expect(filled).toContain("For Acme Advisory Ltd");
+  expect(filled).toContain("For Wentworth Family Office");
+  expect(filled).not.toContain("{{");
+});
