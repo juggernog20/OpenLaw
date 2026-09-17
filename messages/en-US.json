@@ -10062,7 +10062,7 @@
     "defaultMessage": "Form fields:"
   },
   "settings.requestTypes.help": {
-    "defaultMessage": "Every form collects title, description, attachments, and urgency. Attached catalog fields carry their values into the converted matter or contract."
+    "defaultMessage": "Every form collects title, description, Department, attachments, and urgency. Attached catalog fields carry their values into the converted matter or contract."
   },
   "settings.requestTypes.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
