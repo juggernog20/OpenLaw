@@ -58,6 +58,7 @@ import { autoDocFilingRoutes } from "./modules/auto-docs/filing-routes.js";
 import { autoDocErasureRoutes } from "./modules/auto-docs/erasure.js";
 import { autoDocsRoutes } from "./modules/auto-docs/routes.js";
 import { autoDocGenerationRoutes } from "./modules/auto-docs/generations.js";
+import { approvalDefaultsRoutes } from "./modules/contract-types/approval-defaults.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
 import { activityRoutes } from "./modules/activity/routes.js";
@@ -516,6 +517,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(autoDocGenerationRoutes, { prefix: "/api/v1" });
   await app.register(autoDocFilingRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
+  await app.register(approvalDefaultsRoutes, { prefix: "/api/v1" });
   await app.register(defaultPeopleRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterTypesRoutes, { prefix: "/api/v1" });

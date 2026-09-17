@@ -41,6 +41,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { contractStatuses } from "./contract-statuses.js";
+import { approverGroups } from "./approver-groups.js";
 import { contractTypes } from "./contract-types.js";
 // A cycle on purpose: a document names its owning contract (DOC-008)
 // and a contract names its primary document (CTR-014). Both sides are
@@ -93,6 +94,7 @@ export const contracts = pgTable(
   "contracts",
   {
     id: uuidPk(),
+    defaultApproverGroupId: text("default_approver_group_id").references(() => approverGroups.id),
     /** CTR-003's immutable global reference, shown as C-###. */
     number: integer("number")
       .notNull()

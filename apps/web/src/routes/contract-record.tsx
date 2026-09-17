@@ -409,6 +409,10 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
      * the paper: an empty roster is a fact about the record, not a
      * fallback for a read that did not happen. */
     approvals: approvals.data.approvals,
+    approvalDefault: {
+      groupId: approvals.data.defaultGroupId,
+      canOverride: approvals.data.canOverrideDefaultGroup,
+    },
     /** The record's signing state (M15/2). Required like the roster:
      * an install with no connector is a fact about the deployment, not
      * a fallback for a read that did not happen. */
@@ -665,6 +669,7 @@ function ContractRecord() {
     documents: contractDocuments,
     folders: contractFolders,
     approvals: contractApprovals,
+    approvalDefault,
     signing: contractSigning,
     deadlines: contractDeadlines,
     tasks: contractTasks,
@@ -3167,6 +3172,7 @@ function ContractRecord() {
                 onRenew={() => setRenewing(true)}
                 users={users}
                 approverGroups={approverGroups}
+                approvalDefault={approvalDefault}
                 // The live roster, not the loader's copy: putting
                 // somebody on the team widens a confidential record's
                 // audience on the same page.
