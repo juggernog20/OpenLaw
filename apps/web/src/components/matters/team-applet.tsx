@@ -43,6 +43,7 @@ export function useMatterTeamApplet(options: MatterTeamOptions) {
   return useRecordTeamApplet({
     ...options,
     module: "matter",
+    businessOwnerId: options.businessOwner?.id,
     statements,
     label: defineMessage({ id: "matters.applet.team", defaultMessage: "Matter team" }),
   });

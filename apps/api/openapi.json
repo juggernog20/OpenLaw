@@ -23781,7 +23781,7 @@
     "/api/v1/matters/{number}/team/{userId}": {
       "delete": {
         "operationId": "removeMatterTeamMember",
-        "summary": "Remove one person from a matter team",
+        "summary": "Remove one person from a matter team; reassign or clear the current Business Owner first",
         "tags": ["matters"],
         "parameters": [
           {
@@ -48895,7 +48895,7 @@
     "/api/v1/contracts/{number}/team/{userId}": {
       "delete": {
         "operationId": "removeContractTeamMember",
-        "summary": "Take a person off the contract team (DD-023). A Business User loses Portal access to the record on the next read",
+        "summary": "Take a person off the contract team (DD-023). A Business User loses Portal access to the record on the next read. The current Business Owner must be reassigned or cleared first",
         "tags": ["contracts"],
         "parameters": [
           {

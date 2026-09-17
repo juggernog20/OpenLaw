@@ -21,7 +21,7 @@ On **Overview**, the core fields appear as **Title**, **Contract type**, **Legal
 
 Under **Counterparties**, search and select each party. If a name is new, inspect the offered create action before selecting it. The first linked Counterparty is primary; use **Make primary** to change that designation. Removing a Counterparty from this Contract removes its link, not the Counterparty record.
 
-Open **Contract team** in the activity bar and select **Add team member**. Choose **Person**, then **Add**. The roster has one membership row per person. Legal Owner, Business Owner and Creator appear as separate statements. Removing membership does not erase those statements. A Business User on the team can work through the Portal. See [roles and record access](roles-and-access.md).
+Open **Contract team** in the activity bar and select **Add team member**. Choose **Person**, then **Add**. The roster has one membership row per person. Legal Owner, Business Owner and Creator appear as separate statements. Assigning a Business Owner automatically adds them to the team. Change or clear that assignment before removing their membership; a former owner stays on the team until removed explicitly. Creator remains historical. A Business User on the team can work through the Portal. See [roles and record access](roles-and-access.md).
 
 ## Maintain the values
 

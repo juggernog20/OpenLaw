@@ -1107,7 +1107,7 @@ A Contract or Matter has at most one team row per person. Member, Watcher, Contr
 
 The roster lists names. Legal Owner, Business Owner, and Creator appear as statements of responsibility or origin, not removable permission tags. The existing Matter Manager term remains the Matter's legal accountability statement. Owner assignments change through their owner controls; the Creator statement is historical. Preserve the creator's identity before removing the old Creator tag.
 
-For a **Business User, the team row is the only record grant**. Business Owner assignment, being the original Requester, being named in a comment, and being on a related record do not independently grant access. Creating a Contract or Matter with a Business Owner also adds that person to its team. Reassigning Business Owner later changes the statement only; Legal adds the person to the team separately. Changing Business Owner does not remove an existing team row. Removing a Business User's row removes their Portal access on the next read, including through old Request addresses, comments, Documents, downloads, and notifications. Every write also checks current membership.
+**The reassignment and Business Owner exclusion rules in this paragraph are superseded by the 2026-09-17 amendment below.** For a **Business User, the team row is the only record grant**. Business Owner assignment, being the original Requester, being named in a comment, and being on a related record do not independently grant access. Creating a Contract or Matter with a Business Owner also adds that person to its team. Reassigning Business Owner later changes the statement only; Legal adds the person to the team separately. Changing Business Owner does not remove an existing team row. Removing a Business User's row removes their Portal access on the next read, including through old Request addresses, comments, Documents, downloads, and notifications. Every write also checks current membership.
 
 Member+ who can reach an open record may add or remove people. On a Confidential record, roster changes retain CTR-023's actor restriction and the corresponding Matter rule. Being a Business User on the team never gives roster or owner-management rights.
 
@@ -1208,6 +1208,14 @@ After product review, write one Portal design record covering Contract and Matte
 3. **Matters in the Portal.** Add Your Matters, its record page, the matching access predicate, and converted Matter Request redirects.
 
 The sequence is a development order. Do not deploy an intermediate account migration that removes a former Contributor's working surface before the corresponding Portal surface is available.
+
+### DD-023 amendment — Business Owner membership (2026-09-17)
+
+The product owner clarified that the Business Owner must automatically be a member of the Contract or Matter, like its Legal Owner or Matter Manager. This supersedes the earlier rule that reassignment changes only a responsibility statement.
+
+Creating or assigning a Business Owner adds their team row in the same transaction. Current Business Owners are backfilled onto existing teams, including Confidential and archived records. Each backfilled membership records a system Activity entry; existing historical exclusion entries remain evidence of the earlier rule. The current Business Owner cannot be removed from the team until that assignment is cleared or changed. Reassignment adds the successor without removing the former owner's membership. The former member can then be removed explicitly.
+
+On a Confidential record, assigning a Business Owner uses the existing permission to change its audience. Ordinary team members cannot widen that audience through the owner control. Account archival, record archival, Portal capabilities, Document gates, and notification preferences continue to apply. Business Owner membership carries no Legal administration rights.
 
 ## DD-024: Business Users work with Document versions on their records
 

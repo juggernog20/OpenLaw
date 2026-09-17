@@ -75,18 +75,18 @@ const add = (number: number, name: string, cookies = admin) =>
   });
 
 describe("Portal Contract access", () => {
-  it("keeps Business Owner responsibility independent of the team grant", async () => {
+  it("adds each new Business Owner to the team without removing the former owner", async () => {
     const contract = await create("Portal ownership");
     expect((await patch(contract.number, { businessOwnerId: person("first").id })).statusCode).toBe(
       200,
     );
-    expect((await read(contract.number)).statusCode).toBe(404);
-    expect((await add(contract.number, "first", person("member").cookies)).statusCode).toBe(201);
+    expect((await read(contract.number)).statusCode).toBe(200);
+    expect((await add(contract.number, "first", person("member").cookies)).statusCode).toBe(409);
     expect(
       (await patch(contract.number, { businessOwnerId: person("second").id })).statusCode,
     ).toBe(200);
     expect((await read(contract.number)).statusCode).toBe(200);
-    expect((await read(contract.number, "second")).statusCode).toBe(404);
+    expect((await read(contract.number, "second")).statusCode).toBe(200);
     expect(
       (
         await harness.app.inject({
@@ -139,28 +139,21 @@ describe("Portal Contract access", () => {
     }
   });
 
-  it("requires the named team for Confidential Contracts even when someone owns the business relationship", async () => {
+  it("includes the Business Owner on a Confidential Contract and protects their membership", async () => {
     const contract = await create("Confidential Portal ownership");
     expect(
       (await patch(contract.number, { businessOwnerId: person("first").id, isConfidential: true }))
         .statusCode,
     ).toBe(200);
-    expect((await read(contract.number)).statusCode).toBe(404);
-    expect((await add(contract.number, "second", person("member").cookies)).statusCode).toBe(404);
-    const grant = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/contracts/${contract.number}/team`,
-      cookies: admin,
-      payload: { userId: person("first").id },
-    });
-    expect(grant.statusCode, grant.body).toBe(201);
     expect((await read(contract.number)).statusCode).toBe(200);
-    await harness.app.inject({
+    expect((await add(contract.number, "second", person("member").cookies)).statusCode).toBe(404);
+    const removed = await harness.app.inject({
       method: "DELETE",
       url: `/api/v1/contracts/${contract.number}/team/${person("first").id}`,
       cookies: admin,
     });
-    expect((await read(contract.number)).statusCode).toBe(404);
+    expect(removed.statusCode, removed.body).toBe(409);
+    expect((await read(contract.number)).statusCode).toBe(200);
   });
 
   it("returns only allowed record data and omits archived and unrelated Contracts before pagination", async () => {

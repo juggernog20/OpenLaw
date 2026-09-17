@@ -2025,18 +2025,24 @@ describe("the /contracts/:number record page", () => {
     await waitFor(() =>
       expect(api.patches).toEqual([{ businessOwnerId: "u3" }, { businessOwnerId: null }]),
     );
+    const team = await openTeam(user);
+    expect(within(team).getByText("Casey Contributor")).toBeInTheDocument();
+    expect(
+      within(team).getByRole("button", { name: "Take Casey Contributor off the contract team" }),
+    ).toBeInTheDocument();
   });
 
   it("heads the Contract team with both owners as statements", async () => {
-    const api = recordApi(contractRow({ manager: person("u2"), businessOwner: person("u3") }));
+    const api = recordApi(contractRow({ manager: person("u2"), businessOwner: person("u3") }), [
+      person("u3"),
+    ]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
     const team = await openTeam(userEvent.setup());
     expect(within(team).getByText("Legal Owner")).toBeInTheDocument();
     expect(within(team).getByText("Business Owner")).toBeInTheDocument();
-    // Statements, not memberships: the two selects on the Contract
-    // card are where they change, so neither tag has a remove control.
+    // The Business Owner remains a member until the owner control changes.
     expect(within(team).queryByRole("button", { name: /Nadia Counsel/ })).toBeNull();
     expect(within(team).queryByRole("button", { name: /Casey Contributor/ })).toBeNull();
   });

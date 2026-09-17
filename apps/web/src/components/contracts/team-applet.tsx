@@ -47,6 +47,7 @@ export function useTeamApplet(options: TeamAppletOptions) {
     label: defineMessage({ id: "contracts.applet.team", defaultMessage: "Contract team" }),
     statements,
     team: options.roster,
+    businessOwnerId: options.businessOwner?.id,
     users: options.users,
     frozen: options.frozen,
     audienceLocked: options.audienceLocked,

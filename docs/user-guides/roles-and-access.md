@@ -26,7 +26,7 @@ Open **Contract team** or **Matter team** in the record's activity bar. Select *
 
 In the full app, use the person's remove control to remove membership. That ends a Business User's record access on the next read, including old links, replies, Documents and notifications. Removing a Legal Team Member from an open record does not end their ordinary account access.
 
-Legal Owner, Matter Manager, Business Owner and Creator are statements on the person's row in both the main app and Portal. Use the owner controls on Overview to change responsibility. Changing Business Owner does not add or remove a team membership. Removing membership leaves the person's owner and Creator statements visible. Those statements alone do not grant Portal access.
+Legal Owner, Matter Manager, Business Owner and Creator are statements on the person's row in both the main app and Portal. Use the owner controls on Overview to change responsibility. Assigning a Business Owner automatically adds that person to the team and gives them record access through their usual app or Portal. Change or clear the Business Owner before removing that person from the team. Reassignment leaves the former owner on the team until explicitly removed. Creator is historical and does not itself grant Portal access.
 
 At conversion, the Requester becomes Business Owner and a team member on the new Contract or Matter. Their old Request address leads to that record. A Business User added later needs no Request.
 

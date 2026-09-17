@@ -1552,6 +1552,12 @@ function ContractRecord() {
     const row = data.contract;
     adoptSaved(row);
     setAttached(data.fields);
+    if (key === "businessOwnerId" && row.businessOwner) {
+      const owner = row.businessOwner;
+      setRoster((current) =>
+        current.some((person) => person.id === owner.id) ? current : [...current, owner],
+      );
+    }
     setRefs(data.customFieldRefs);
     if (key === "title" || key === "description" || key === "region") {
       setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));

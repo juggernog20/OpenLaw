@@ -11,7 +11,7 @@ beforeAll(async () => {
 });
 afterAll(async () => container?.stop());
 
-it("preserves membership and creator history while keeping excluded Confidential affiliations outside the wall", async () => {
+it("preserves creator and exclusion history while granting current Business Owners membership", async () => {
   const db = await freshDb(container, "portal_records_upgrade");
   try {
     await migrateThrough(db, "0108_normal_psynapse", migrationEntries());
@@ -65,6 +65,7 @@ it("preserves membership and creator history while keeping excluded Confidential
       { contract_id: "open", user_id: "business" },
       { contract_id: "open", user_id: "legal" },
       { contract_id: "open", user_id: "outsider" },
+      { contract_id: "walled", user_id: "business" },
       { contract_id: "walled", user_id: "former-contributor" },
       { contract_id: "walled", user_id: "legal" },
     ]);
@@ -79,6 +80,7 @@ it("preserves membership and creator history while keeping excluded Confidential
       { matter_id: "open-matter", user_id: "legal" },
       { matter_id: "walled-matter", user_id: "former-contributor" },
       { matter_id: "walled-matter", user_id: "legal" },
+      { matter_id: "walled-matter", user_id: "outsider" },
     ]);
     expect(
       (await db.execute(sql`select business_owner_id from matters where id = 'walled-matter'`))

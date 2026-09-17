@@ -967,6 +967,13 @@
       "when": 1789471001683,
       "tag": "0137_custom-value-cadence",
       "breakpoints": true
+    },
+    {
+      "idx": 138,
+      "version": "7",
+      "when": 1789608023396,
+      "tag": "0138_business-owner-membership",
+      "breakpoints": true
     }
   ]
 }

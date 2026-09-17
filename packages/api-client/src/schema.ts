@@ -2419,7 +2419,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Remove one person from a matter team */
+    /** Remove one person from a matter team; reassign or clear the current Business Owner first */
     delete: operations["removeMatterTeamMember"];
     options?: never;
     head?: never;
@@ -4292,7 +4292,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Take a person off the contract team (DD-023). A Business User loses Portal access to the record on the next read */
+    /** Take a person off the contract team (DD-023). A Business User loses Portal access to the record on the next read. The current Business Owner must be reassigned or cleared first */
     delete: operations["removeContractTeamMember"];
     options?: never;
     head?: never;

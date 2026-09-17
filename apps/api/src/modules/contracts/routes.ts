@@ -2442,6 +2442,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
                 "The Business Owner must be a live person.",
               )
             : null;
+          if (businessOwner) {
+            await assertMayChangeTeam(tx, current, request.user);
+            await addContractTeamMember(tx, app.notifier, target, request.user, businessOwner);
+          }
           patch.businessOwnerId = businessOwner?.id ?? null;
           changed.businessOwner = {
             from: current.businessOwner?.displayName ?? null,
@@ -3157,7 +3161,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "removeContractTeamMember",
         summary:
           "Take a person off the contract team (DD-023). A Business User " +
-          "loses Portal access to the record on the next read",
+          "loses Portal access to the record on the next read. The current Business Owner must be reassigned or cleared first",
         tags: ["contracts"],
         params: NumberParams.extend({
           userId: z.string(),
@@ -3173,6 +3177,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // decision as putting them on it, read the other way (CTR-023).
         await assertMayChangeTeam(tx, current, request.user);
         assertEditable(current);
+        if (userId === current.row.businessOwnerId) {
+          throw httpError(
+            409,
+            "Change the Business Owner before removing this person from the team.",
+          );
+        }
         const [removed] = await tx
           .delete(contractTeam)
           .where(and(eq(contractTeam.contractId, current.row.id), eq(contractTeam.userId, userId)))

@@ -103,52 +103,122 @@ function upload(url: string, cookies = business, portal = false) {
 }
 
 describe("DD-023 record membership", () => {
-  it("uses one row as the Portal grant, independently of Business Owner assignment", async () => {
-    const record = await create();
-    const path = `/api/v1/contracts/${record.number}`;
-    const portal = () =>
-      harness.app.inject({
-        method: "GET",
-        url: `/api/v1/portal/contracts/${record.number}`,
-        cookies: business,
+  it.each(["contract", "matter"] as const)(
+    "adds the Business Owner to the %s team and keeps membership until explicitly removed",
+    async (module) => {
+      const record = await create(module);
+      const path = `/api/v1/${module}s/${record.number}`;
+      const portal = () =>
+        harness.app.inject({
+          method: "GET",
+          url: `/api/v1/portal/${module}s/${record.number}`,
+          cookies: business,
+        });
+      expect((await portal()).statusCode).toBe(404);
+      const assign = () =>
+        harness.app.inject({
+          method: "PATCH",
+          url: path,
+          cookies: admin,
+          payload: { businessOwnerId: businessId },
+        });
+      const assigned = await assign();
+      expect(assigned.statusCode, assigned.body).toBe(200);
+      const detail = await harness.app.inject({ method: "GET", url: path, cookies: admin });
+      expect(detail.statusCode, detail.body).toBe(200);
+      expect(
+        detail.json().team.filter((person: { id: string }) => person.id === businessId),
+      ).toHaveLength(1);
+      expect((await portal()).statusCode).toBe(200);
+      expect((await assign()).statusCode).toBe(200);
+      const additions = await harness.db
+        .select()
+        .from(activityLog)
+        .where(
+          and(eq(activityLog.entityId, record.id), eq(activityLog.action, `${module}.team_added`)),
+        );
+      expect(additions).toHaveLength(1);
+      const remove = () =>
+        harness.app.inject({
+          method: "DELETE",
+          url: `${path}/team/${businessId}`,
+          cookies: admin,
+        });
+      expect((await remove()).statusCode).toBe(409);
+      expect((await portal()).statusCode).toBe(200);
+      const cleared = await harness.app.inject({
+        method: "PATCH",
+        url: path,
+        cookies: admin,
+        payload: { businessOwnerId: null },
       });
-    await harness.app.inject({
-      method: "PATCH",
-      url: path,
-      cookies: admin,
-      payload: { businessOwnerId: businessId },
-    });
-    expect((await portal()).statusCode).toBe(404);
-    const added = await harness.app.inject({
-      method: "POST",
-      url: `${path}/team`,
-      cookies: admin,
-      payload: { userId: businessId },
-    });
-    expect(added.statusCode, added.body).toBe(201);
-    expect(
-      added.json().team.filter((person: { id: string }) => person.id === businessId),
-    ).toHaveLength(1);
-    expect(added.json().team.every((person: object) => !("role" in person))).toBe(true);
-    expect((await portal()).statusCode).toBe(200);
-    const duplicate = await harness.app.inject({
-      method: "POST",
-      url: `${path}/team`,
-      cookies: admin,
-      payload: { userId: businessId },
-    });
-    expect(duplicate.statusCode).toBe(409);
-    expect(
-      (await harness.app.inject({ method: "GET", url: path, cookies: business })).statusCode,
-    ).toBe(403);
-    const removed = await harness.app.inject({
-      method: "DELETE",
-      url: `${path}/team/${businessId}`,
-      cookies: admin,
-    });
-    expect(removed.statusCode, removed.body).toBe(200);
-    expect((await portal()).statusCode).toBe(404);
-  });
+      expect(cleared.statusCode, cleared.body).toBe(200);
+      expect((await portal()).statusCode).toBe(200);
+      expect((await remove()).statusCode).toBe(200);
+      expect((await portal()).statusCode).toBe(404);
+    },
+  );
+
+  it.each(["contract", "matter"] as const)(
+    "requires Confidential audience permission when assigning the %s Business Owner",
+    async (module) => {
+      const fixture = {
+        email: `owner-writer-${module}@example.com`,
+        displayName: "Legal colleague",
+        password: "correct-horse-battery",
+      };
+      const person = await provisionUser(harness.app.auth, fixture);
+      await harness.db
+        .update(users)
+        .set({ role: "legal_team_member" })
+        .where(eq(users.id, person.id));
+      const colleague = await signInCookies(harness.app, fixture.email, fixture.password);
+      const record = await create(module);
+      const path = `/api/v1/${module}s/${record.number}`;
+      expect(
+        (
+          await harness.app.inject({
+            method: "PATCH",
+            url: path,
+            cookies: admin,
+            payload: { isConfidential: true },
+          })
+        ).statusCode,
+      ).toBe(200);
+      expect(
+        (
+          await harness.app.inject({
+            method: "POST",
+            url: `${path}/team`,
+            cookies: admin,
+            payload: { userId: person.id },
+          })
+        ).statusCode,
+      ).toBe(201);
+      const refused = await harness.app.inject({
+        method: "PATCH",
+        url: path,
+        cookies: colleague,
+        payload: { businessOwnerId: businessId },
+      });
+      expect(refused.statusCode, refused.body).toBe(403);
+      const portal = () =>
+        harness.app.inject({
+          method: "GET",
+          url: `/api/v1/portal/${module}s/${record.number}`,
+          cookies: business,
+        });
+      expect((await portal()).statusCode).toBe(404);
+      const assigned = await harness.app.inject({
+        method: "PATCH",
+        url: path,
+        cookies: admin,
+        payload: { businessOwnerId: businessId },
+      });
+      expect(assigned.statusCode, assigned.body).toBe(200);
+      expect((await portal()).statusCode).toBe(200);
+    },
+  );
 
   it("admits team Business Users to Full Thread and revokes the whole thread with membership", async () => {
     const record = await create();

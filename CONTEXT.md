@@ -162,7 +162,7 @@ The Administrator-managed list on a Contract Type of people who get a team row o
 _Avoid_: default team, auto-members, watchers
 
 **Business Owner**:
-The single nullable person named for the business on a Contract or Matter. Conversion sets the Requester as Business Owner and adds their team row. Changing the assignment later does not grant or remove access [DD-023].
+The single nullable person named for the business on a Contract or Matter. Conversion sets the Requester as Business Owner and adds their team row. Assigning a Business Owner also adds their team membership. They remain a member while assigned; change the assignment before removing their membership. Reassignment preserves the former owner’s membership until explicitly removed [DD-023].
 
 **Stakeholder**:
 Former separate Contract affiliation, removed by DD-023. Eligible existing links migrate to ordinary team membership. Use team member for current participation.

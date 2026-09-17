@@ -1011,6 +1011,31 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.businessOwnerId !== undefined && body.businessOwnerId !== target.businessOwnerId) {
           const next = body.businessOwnerId ? await lockedLiveUser(tx, body.businessOwnerId) : null;
           const previous = await recordPerson(tx, target.businessOwnerId);
+          if (next) {
+            if (target.isConfidential) {
+              await assertAudienceActor(
+                tx,
+                current,
+                request.user,
+                "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
+              );
+            }
+            const inserted = await tx
+              .insert(matterTeam)
+              .values({ matterId: target.id, userId: next.id })
+              .onConflictDoNothing()
+              .returning();
+            if (inserted.length > 0) {
+              await recordActivity(tx, {
+                entityType: "matter",
+                entityId: target.id,
+                actorId: request.user.id,
+                action: "matter.team_added",
+                visibility: RECORD_ACTIVITY_TIER,
+                payload: { number: target.number, title: target.title, member: next.displayName },
+              });
+            }
+          }
           patch.businessOwnerId = next?.id ?? null;
           changed.businessOwner = {
             from: previous?.displayName ?? null,
@@ -1319,7 +1344,8 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "removeMatterTeamMember",
-        summary: "Remove one person from a matter team",
+        summary:
+          "Remove one person from a matter team; reassign or clear the current Business Owner first",
         tags: ["matters"],
         params: NumberParams.extend({ userId: z.string() }),
         response: { 200: MatterTeamEnvelope, default: problemResponse },
@@ -1337,6 +1363,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           );
         }
         assertEditable(current);
+        if (request.params.userId === current.row.businessOwnerId) {
+          throw httpError(
+            409,
+            "Change the Business Owner before removing this person from the team.",
+          );
+        }
         const [removed] = await tx
           .delete(matterTeam)
           .where(

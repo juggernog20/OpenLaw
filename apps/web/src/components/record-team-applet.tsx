@@ -18,6 +18,7 @@ interface Options {
   label: MessageDescriptor;
   statements: readonly TeamRosterEntry[];
   team: readonly TeamPerson[];
+  businessOwnerId?: string;
   users: readonly TeamPerson[];
   frozen: boolean;
   audienceLocked: boolean;
@@ -58,6 +59,7 @@ function TeamPanel({
   module,
   number,
   statements,
+  businessOwnerId,
   team,
   users,
   frozen,
@@ -125,7 +127,8 @@ function TeamPanel({
           ...statements,
           ...team.map((person) => ({
             person,
-            onRemove: frozen ? undefined : () => void remove(person),
+            onRemove:
+              frozen || person.id === businessOwnerId ? undefined : () => void remove(person),
             removeDisabled: audienceLocked || removing !== null,
             removeLabel: intl.formatMessage(
               { id: "record.team.remove", defaultMessage: "Take {name} off the {module} team" },

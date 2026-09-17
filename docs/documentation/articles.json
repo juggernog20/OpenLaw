@@ -75,7 +75,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.entry"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "find-your-work",
@@ -127,7 +127,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["access"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "comments-and-activity",
@@ -231,7 +231,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.list", "contracts.overview"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "contract-stages",
@@ -348,7 +348,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["matters.list", "matters.overview"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "matter-status-and-archive",
@@ -387,7 +387,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.records"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "document-versions",
