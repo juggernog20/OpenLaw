@@ -453,7 +453,7 @@ export function CreateContractDialog({
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="contract-new-owner">
-                <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
+                <FormattedMessage id="contracts.form.owner" defaultMessage="Legal Owner" />
               </Label>
               <select
                 id="contract-new-owner"

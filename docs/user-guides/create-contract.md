@@ -1,6 +1,6 @@
 # Create and maintain a Contract
 
-Create a Contract, record the parties, and give its Owner and team the information they need.
+Create a Contract, record the parties, and give its Legal Owner and team the information they need.
 
 ## Before you start
 
@@ -9,11 +9,11 @@ Sign in as a Legal Team Member or Administrator with access to the intended work
 ## Create the record
 
 1. Open **Contracts** and select **Create contract**.
-2. Enter **Title** and select **Contract type**. Complete the required Fields and any optional Fields you want to supply. All attached Fields appear for that type. **Owner** starts on you. Choose another Legal Team Member or Administrator, or choose **Unassigned**.
+2. Enter **Title** and select **Contract type**. Complete the required Fields and any optional Fields you want to supply. All attached Fields appear for that type. **Legal Owner** starts on you. Choose another Legal Team Member or Administrator, or choose **Unassigned**.
 3. Set **Confidential** before creating sensitive work. If the Contract belongs to broader Matter work, use the optional Matter search and select the intended Matter. A link does not copy access or other record details.
 4. Select **Create**. The app opens the new Contract. Check its title, type, Legal Owner, and new C- reference. **Cancel** creates nothing.
 
-The new Contract starts in the configured system Draft Status. The **Owner** you chose is its Legal Owner. You are on its team as Creator. Default people set for the Contract type also join the team. Add the remaining details on the record. The C- reference stays the same when you rename or change its type.
+The new Contract starts in the configured system Draft Status. The **Legal Owner** you chose is its Legal Owner. You are on its team as Creator. Default people set for the Contract type also join the team. Add the remaining details on the record. The C- reference stays the same when you rename or change its type.
 
 ## Record the parties and ownership
 

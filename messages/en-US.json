@@ -2604,7 +2604,7 @@
     "defaultMessage": "Notice period (days)"
   },
   "contracts.form.owner": {
-    "defaultMessage": "Owner"
+    "defaultMessage": "Legal Owner"
   },
   "contracts.form.owningDepartment": {
     "defaultMessage": "Department"

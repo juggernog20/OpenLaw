@@ -391,7 +391,7 @@ describe("the /contracts destination", () => {
     await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
     // The Owner starts on the person creating it (CTR-004 focus-group
     // addendum, 2026-09-09): nobody selects themselves.
-    expect(screen.getByLabelText("Owner")).toHaveValue(MEMBER.id);
+    expect(screen.getByLabelText("Legal Owner")).toHaveValue(MEMBER.id);
     await user.upload(
       screen.getByLabelText("Attach documents"),
       new File(["NDA"], "nda.txt", { type: "text/plain" }),
@@ -424,7 +424,7 @@ describe("the /contracts destination", () => {
     await openCreateDialog(user);
     await user.type(screen.getByLabelText(/^Title\*?$/), "Nobody's NDA");
     await user.selectOptions(screen.getByLabelText(/^Contract type\*?$/), "t-nda");
-    await user.selectOptions(screen.getByLabelText("Owner"), "");
+    await user.selectOptions(screen.getByLabelText("Legal Owner"), "");
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     // Unassigned stays a real state: null on the wire, not a missing key.
