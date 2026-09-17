@@ -10175,6 +10175,15 @@
   "settings.typeEditor.createdNotAttached": {
     "defaultMessage": "{name} was created but could not be attached. Select it from Attach field to try again. {detail}"
   },
+  "settings.typeEditor.noMatchingFields": {
+    "defaultMessage": "No matching fields."
+  },
+  "settings.typeEditor.searchFields": {
+    "defaultMessage": "Search fields…"
+  },
+  "settings.typeEditor.searchFieldsLabel": {
+    "defaultMessage": "Search fields"
+  },
   "settings.users.action.archive": {
     "defaultMessage": "Archive"
   },

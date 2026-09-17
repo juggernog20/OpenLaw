@@ -39,7 +39,7 @@
  * is only the flag that is refused, and the API refuses it too.
  */
 
-import { useRef, useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { ArrowLeft, GripVertical, Lock, Plus, X } from "lucide-react";
@@ -293,6 +293,9 @@ function AttachedFieldsCard({
   const [rows, setRows] = useState<AttachedFieldRow[]>(initialAttached);
   const [createdFields, setCreatedFields] = useState<EditorCatalogRow[]>([]);
   const [addingField, setAddingField] = useState(false);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [fieldSearch, setFieldSearch] = useState("");
+  const searchInput = useRef<HTMLInputElement>(null);
   const attachTrigger = useRef<HTMLButtonElement>(null);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
@@ -306,6 +309,24 @@ function AttachedFieldsCard({
   const attachable: EditorCatalogRow[] = [...catalog, ...createdFields].filter(
     (field) => !rows.some((row) => row.fieldId === field.id),
   );
+  const matchingFields = attachable
+    .filter((field) =>
+      field.displayName
+        .toLocaleLowerCase(intl.locale)
+        .includes(fieldSearch.trim().toLocaleLowerCase(intl.locale)),
+    )
+    .sort((a, b) =>
+      a.displayName.localeCompare(b.displayName, intl.locale, {
+        sensitivity: "base",
+        numeric: true,
+      }),
+    );
+  useEffect(() => {
+    if (!attachMenuOpen) return;
+    // Wait for the menu's own focus handling before focusing its search.
+    const frame = requestAnimationFrame(() => searchInput.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [attachMenuOpen]);
   // A const binding, so the guard below narrows inside JSX — a property
   // access would not.
   const locked = basics;
@@ -593,7 +614,13 @@ function AttachedFieldsCard({
           )}
         </ul>
         <div className="flex items-center gap-2 px-4 py-2.5">
-          <DropdownMenu>
+          <DropdownMenu
+            open={attachMenuOpen}
+            onOpenChange={(open) => {
+              setAttachMenuOpen(open);
+              if (open) setFieldSearch("");
+            }}
+          >
             <DropdownMenuTrigger asChild>
               {/* Not disabled when the catalog is exhausted: Radix
                   returns focus here when the menu closes, and a
@@ -612,34 +639,89 @@ function AttachedFieldsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
-              className="max-h-(--radix-dropdown-menu-content-available-height) overflow-y-auto"
+              className="flex max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] flex-col"
               onCloseAutoFocus={(event) => {
                 if (addingField) event.preventDefault();
               }}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "ArrowUp" &&
+                  event.target === event.currentTarget.querySelector('[role="menuitem"]')
+                ) {
+                  event.preventDefault();
+                  searchInput.current?.focus();
+                }
+              }}
             >
+              <div className="shrink-0 p-1">
+                <Input
+                  ref={searchInput}
+                  value={fieldSearch}
+                  placeholder={intl.formatMessage({
+                    id: "settings.typeEditor.searchFields",
+                    defaultMessage: "Search fields…",
+                  })}
+                  aria-label={intl.formatMessage({
+                    id: "settings.typeEditor.searchFieldsLabel",
+                    defaultMessage: "Search fields",
+                  })}
+                  onChange={(event) => setFieldSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    // Keep typing, spaces and caret movement out of menu typeahead.
+                    if (event.key !== "Escape") event.stopPropagation();
+                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                      event.preventDefault();
+                      const menu = event.currentTarget.closest('[role="menu"]');
+                      const fields = menu?.querySelectorAll<HTMLElement>(
+                        '[role="menuitem"][data-field-option]',
+                      );
+                      const items = fields?.length
+                        ? fields
+                        : menu?.querySelectorAll<HTMLElement>('[role="menuitem"]');
+                      const item =
+                        event.key === "ArrowDown" ? items?.[0] : items?.[items.length - 1];
+                      item?.focus();
+                    }
+                    if (event.key === "Enter") event.preventDefault();
+                  }}
+                />
+              </div>
               {createFieldModule && (
                 <>
-                  <DropdownMenuItem onSelect={() => setAddingField(true)}>
+                  <DropdownMenuItem className="shrink-0" onSelect={() => setAddingField(true)}>
                     <Plus size={16} aria-hidden="true" />
                     <FormattedMessage
                       id="settings.typeEditor.addNewField"
                       defaultMessage="Add new field"
                     />
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="shrink-0" />
                 </>
               )}
-              {attachable.map((field) => (
-                <DropdownMenuItem key={field.id} onSelect={() => void attach(field)}>
-                  <span className="text-base text-primary">{field.displayName}</span>
-                  <span className="text-sm text-muted">{fieldCaption(field)}</span>
-                </DropdownMenuItem>
-              ))}
-              {attachable.length === 0 && (
-                <div className="px-3 py-2 text-sm text-muted">
-                  <FormattedMessage {...messages.allAttached} />
-                </div>
-              )}
+              <div className="min-h-0 overflow-y-auto">
+                {matchingFields.map((field) => (
+                  <DropdownMenuItem
+                    key={field.id}
+                    data-field-option
+                    onSelect={() => void attach(field)}
+                  >
+                    <span className="text-base text-primary">{field.displayName}</span>
+                    <span className="text-sm text-muted">{fieldCaption(field)}</span>
+                  </DropdownMenuItem>
+                ))}
+                {matchingFields.length === 0 && (
+                  <div role="status" className="px-3 py-2 text-sm text-muted">
+                    {attachable.length === 0 ? (
+                      <FormattedMessage {...messages.allAttached} />
+                    ) : (
+                      <FormattedMessage
+                        id="settings.typeEditor.noMatchingFields"
+                        defaultMessage="No matching fields."
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
           <StatusNote status={attachStatus} detail={attachError} />

@@ -44,6 +44,7 @@ The Field catalog does not have reorder handles. Set order where Fields are atta
 
 1. Open the module's **Types** tab and select **Edit** on the intended type.
 2. Under **Attached fields**, select **Attach field** and choose an eligible module or Global Field.
+   Fields are listed alphabetically. Use **Search fields** at the top of the menu to filter by name.
    In a Contract or Matter type editor, choose **Add new field** to create a Field without leaving the page. Enter its details and select **Add field** to create and attach it. New attachments start optional. If creation succeeds but attachment fails, choose the saved Field from **Attach field** to retry.
 3. Turn on its **Required** checkbox if it must be supplied. Reorder the attached Fields with their handles.
 4. Create a fictional record of this type, first leaving a required Field empty, then supplying a valid value. Confirm the accepted record contains the intended information.
