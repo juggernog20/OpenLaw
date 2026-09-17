@@ -5,7 +5,7 @@
  * the ST15/ST16 frames of settings.pen (DES-022): one taxonomy type's
  * own screen, reached from its row on a Types pane. The left card
  * edits identity — display name and description on DES-017
- * commit-on-confirm inputs, the immutable slug as a fact — and the
+ * commit-on-confirm inputs — and the
  * right card is the attachment surface: catalog fields in per-type
  * order with drag or arrow-key reorder, a per-attachment required
  * checkbox, detach, and an Attach menu over the module's attachable
@@ -20,7 +20,7 @@
  * omits `attachments` and the screen is the left card alone.
  *
  * **The left card takes one more control.** `identityExtra` draws below
- * the slug — ST14's Target select and its help line. It is the mount's
+ * the description — ST14's Target select and its help line. It is the mount's
  * own column, so it owns its own save, exactly as the extras hook owns
  * its own columns on the API side.
  *
@@ -170,8 +170,6 @@ export interface TypeEditorIdentityMessages {
   allTypes: MessageDescriptor;
   displayName: MessageDescriptor;
   description: MessageDescriptor;
-  slug: MessageDescriptor;
-  slugNote: MessageDescriptor;
   /** The count caption under the identity fields. A mount whose records
    * do not exist yet has nothing but a zero to print, so it omits the
    * slot and draws no caption — as the Types pane already does. */
@@ -639,7 +637,6 @@ export function TypeEditorScreen({
   identityExtra,
   extraCards,
   attachments,
-  showSlug = true,
 }: Readonly<{
   initialType: EditorTypeRow;
   /** The module's section head (title + tab strip). */
@@ -648,9 +645,8 @@ export function TypeEditorScreen({
   backPath: string;
   api: TypeEditorIdentityApi;
   messages: TypeEditorIdentityMessages;
-  showSlug?: boolean;
   /**
-   * One more control on the left card, below the slug (ST14's Target
+   * One more control on the left card, below the description (ST14's Target
    * select and its help line). It owns its own save, because what it
    * writes is the mount's column and not the shared identity — see the
    * request-type editor, the only mount that passes one.
@@ -769,24 +765,6 @@ export function TypeEditorScreen({
                 <StatusNote status={typeStatus.description} detail={typeError.description} />
               </div>
             </div>
-
-            {showSlug && (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="type-slug">
-                  <FormattedMessage {...messages.slug} />
-                </Label>
-                <Input
-                  id="type-slug"
-                  className="w-80 text-muted"
-                  value={saved.slug}
-                  readOnly
-                  aria-describedby="type-slug-note"
-                />
-                <p id="type-slug-note" className="text-xs text-muted">
-                  <FormattedMessage {...messages.slugNote} />
-                </p>
-              </div>
-            )}
 
             {identityExtra}
 

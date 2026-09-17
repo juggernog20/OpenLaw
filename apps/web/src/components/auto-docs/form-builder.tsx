@@ -250,7 +250,7 @@ export function FormBuilder({
         }
         rowCaption={(row) => (
           <>
-            {row.slug} · {typeName(row.fieldType)}
+            {typeName(row.fieldType)}
             {row.contractAttribute || row.catalogFieldId ? (
               <> · {mapName(row, options, intl)}</>
             ) : null}
@@ -594,7 +594,12 @@ function FieldCard({
           />
         </Control>
         <Control
-          label={<FormattedMessage id="autoDocs.fieldSlug" defaultMessage="Slug" />}
+          label={
+            <FormattedMessage
+              id="autoDocs.templatePlaceholder"
+              defaultMessage="Template placeholder"
+            />
+          }
           htmlFor={`${id}-slug`}
           status={status("slug")}
           error={commits.error.slug}
@@ -1006,10 +1011,10 @@ function RuleCard({
               >
                 {!field && (
                   <option value={draft.fieldSlug}>
-                    {intl.formatMessage(
-                      { id: "autoDocs.missingRuleField", defaultMessage: "{slug} (missing)" },
-                      { slug: draft.fieldSlug },
-                    )}
+                    {intl.formatMessage({
+                      id: "autoDocs.missingRuleField",
+                      defaultMessage: "Missing field",
+                    })}
                   </option>
                 )}
                 {fields.map((row) => (

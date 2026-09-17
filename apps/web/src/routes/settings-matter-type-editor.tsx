@@ -45,11 +45,6 @@ const MESSAGES = defineMessages({
   allTypes: { id: "settings.matterTypeEditor.allTypes", defaultMessage: "All types" },
   displayName: { id: "settings.matterTypeEditor.displayName", defaultMessage: "Display name" },
   description: { id: "settings.matterTypeEditor.description", defaultMessage: "Description" },
-  slug: { id: "settings.matterTypeEditor.slug", defaultMessage: "Slug" },
-  slugNote: {
-    id: "settings.matterTypeEditor.slugNote",
-    defaultMessage: "Slug is immutable — it keys templates, reporting, and the API.",
-  },
   inUse: {
     id: "settings.matterTypeEditor.inUse",
     defaultMessage:

@@ -53,6 +53,8 @@
  * `/inbox/{number}`.
  */
 
+import { identifierLabel } from "./identifier-label";
+
 import {
   Activity,
   AtSign,
@@ -594,7 +596,7 @@ export function narrateNotification(
   if (!arm) {
     return {
       icon: Activity,
-      sentence: intl.formatMessage(UNKNOWN, { contract: record, event: item.eventType }),
+      sentence: intl.formatMessage(UNKNOWN, { contract: record, event: identifierLabel(item.eventType) }),
       href,
     };
   }

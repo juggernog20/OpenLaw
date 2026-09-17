@@ -1116,9 +1116,9 @@ describe("core prompt narration", () => {
     );
   });
 
-  it("echoes a slug the pane does not label and names a missing one plainly", () => {
+  it("uses readable words when the pane has no label and names a missing one plainly", () => {
     expect(narrate("ai_field_prompt.updated", { slug: "governing_law" }).sentence).toBe(
-      "Nadia Counsel changed the analysis prompt for governing_law",
+      "Nadia Counsel changed the analysis prompt for Governing law",
     );
     expect(narrate("ai_field_prompt.reset", {}).sentence).toBe(
       "Nadia Counsel reset the analysis prompt for a field to its default",
@@ -1350,7 +1350,7 @@ describe("the sentences a reader gets", () => {
       "Nadia Counsel archived the entity type NDA",
     );
     expect(narrate("contract_type_field.attached", TYPE_FIELD_ATTACH).sentence).toBe(
-      "Nadia Counsel attached the field governing-law to the contract type nda",
+      "Nadia Counsel attached the field Governing law to the contract type Nda",
     );
   });
 

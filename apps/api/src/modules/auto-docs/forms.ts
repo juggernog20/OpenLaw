@@ -99,7 +99,7 @@ export const FormSaveInput = z
       ctx.addIssue({
         code: "custom",
         path: ["fields"],
-        message: "Each form field needs a distinct slug.",
+        message: "Each form field needs a distinct template placeholder.",
       });
     if (
       new Set(definition.clauseRules.map((rule) => rule.blockName)).size !==
@@ -159,7 +159,7 @@ export function conditionGaps(
 ): string[] {
   const gaps: string[] = [];
   const field = definition.fields.find((field) => field.slug === rule.fieldSlug);
-  if (!field) gaps.push(`${label} names missing form field "${rule.fieldSlug}".`);
+  if (!field) gaps.push(`${label} refers to a field that is no longer available.`);
   else if (field.options && rule.operator !== "is_set") {
     const values = Array.isArray(rule.value) ? rule.value : [rule.value];
     for (const value of values)

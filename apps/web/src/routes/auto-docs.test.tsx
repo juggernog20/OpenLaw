@@ -467,7 +467,7 @@ it("refuses a duplicate slug and empty options beside the control, before anythi
   const card = screen.getByRole("region", { name: "Signing date" });
 
   // Two fields on the same slug never reach the seam: the box reverts.
-  const slug = within(card).getByLabelText("Slug");
+  const slug = within(card).getByLabelText("Template placeholder");
   await user.clear(slug);
   await user.type(slug, "counterparty_name");
   await user.tab();

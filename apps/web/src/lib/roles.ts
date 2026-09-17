@@ -13,6 +13,8 @@
  * member" from becoming "Legal Team Member" on one of them.
  */
 
+import { identifierLabel } from "./identifier-label";
+
 import { defineMessage, defineMessages, type IntlShape, type MessageDescriptor } from "react-intl";
 
 export type Role = "administrator" | "legal_team_member" | "business_user";
@@ -35,7 +37,7 @@ export const ROLE_MESSAGES: Readonly<Record<Role, MessageDescriptor>> = defineMe
 /**
  * A role as plain text, for a place that needs a string rather than an
  * element, such as an accessible name or a value inside a narrated
- * sentence. A slug outside the union reads as itself. The activity log
+ * sentence. A slug outside the union gets a readable fallback. The activity log
  * is append-only, so a role this build no longer has can still sit in a
  * payload.
  */
@@ -45,7 +47,7 @@ export function roleLabel(intl: IntlShape, role: string): string {
   // case this function exists to answer.
   const catalog: Readonly<Partial<Record<string, MessageDescriptor>>> = ROLE_MESSAGES;
   const message = role === "contributor" ? HISTORICAL_CONTRIBUTOR : catalog[role];
-  return message ? intl.formatMessage(message) : role;
+  return message ? intl.formatMessage(message) : identifierLabel(role);
 }
 
 /** Member+ (CONTEXT.md): Administrators and Legal Team Members, the

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { identifierLabel } from "../../lib/identifier-label";
+
 /** The Contract record's CTR-008 review surface and inline marker. */
 
 import { useMemo, useState, type ReactNode } from "react";
@@ -93,7 +95,7 @@ function resultLabel(slug: string, fields: readonly AttachedField[]): ReactNode 
   return core ? (
     <FormattedMessage {...core} />
   ) : (
-    (fields.find((field) => field.slug === slug)?.displayName ?? slug)
+    (fields.find((field) => field.slug === slug)?.displayName ?? identifierLabel(slug))
   );
 }
 

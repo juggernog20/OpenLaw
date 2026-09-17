@@ -380,7 +380,9 @@ describe("the filters", () => {
 
     // A second one composes with the first rather than replacing it:
     // both ride the same request.
-    await user.selectOptions(filterBar().getByLabelText("Action"), "org_settings.updated");
+    const action = filterBar().getByLabelText("Action");
+    expect(within(action).getByRole("option", { name: "Org settings updated" })).toHaveValue("org_settings.updated");
+    await user.selectOptions(action, "org_settings.updated");
     await waitFor(() => {
       const query = calls.reads.at(-1)!;
       expect(query.get("entityType")).toBe("user");

@@ -159,11 +159,11 @@ function editorApi(calls: EditorCalls, attached = [DEPARTMENT]) {
 }
 
 describe("the editor screen on the matter mount", () => {
-  it("renders the identity card with the matter usage caption and the immutable slug", async () => {
+  it("renders the identity card with the matter usage caption without a slug", async () => {
     stubApi({ signedIn: ADMIN, extra: editorApi(newCalls()) });
     renderAt("/settings/matters/types/t1");
     expect(await screen.findByRole("textbox", { name: "Display name" })).toHaveValue("Employment");
-    expect(screen.getByRole("textbox", { name: "Slug" })).toHaveAttribute("readonly");
+    expect(screen.queryByRole("textbox", { name: "Slug" })).not.toBeInTheDocument();
     // The Matters vocabulary, not the Contracts one.
     expect(screen.getByText("0 matters use this type.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "All types" })).toHaveAttribute(

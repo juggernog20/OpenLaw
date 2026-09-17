@@ -498,7 +498,7 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
             items
               .map(
                 (rule) =>
-                  `${rule.fieldSlug} ${rule.operator}${rule.operator === "is_set" ? "" : ` ${JSON.stringify(rule.value)}`} → ${labels.get(rule.legalOwnerId) ?? "Former Member"}`,
+                  `${form?.definition.fields.find((field) => field.slug === rule.fieldSlug)?.label ?? "Missing field"} ${{ equals: "equals", is_one_of: "is one of", is_set: "is set", is_not: "is not" }[rule.operator]}${rule.operator === "is_set" ? "" : ` ${JSON.stringify(rule.value)}`} → ${labels.get(rule.legalOwnerId) ?? "Former Member"}`,
               )
               .join("; ") || null;
           changed.assignmentRules = { from: describe(previous, names), to: describe(next, owners) };

@@ -765,10 +765,10 @@ function AssignmentRuleDialog({
             >
               {!field && (
                 <option value={draft.fieldSlug}>
-                  {intl.formatMessage(
-                    { id: "autoDocs.missingRuleField", defaultMessage: "{slug} (missing)" },
-                    { slug: draft.fieldSlug },
-                  )}
+                  {intl.formatMessage({
+                    id: "autoDocs.missingRuleField",
+                    defaultMessage: "Missing field",
+                  })}
                 </option>
               )}
               {fields.map((row) => (

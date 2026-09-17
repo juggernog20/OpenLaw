@@ -1457,9 +1457,6 @@
   "autoDocs.fieldRequired": {
     "defaultMessage": "Required"
   },
-  "autoDocs.fieldSlug": {
-    "defaultMessage": "Slug"
-  },
   "autoDocs.fieldType": {
     "defaultMessage": "Type"
   },
@@ -1644,7 +1641,7 @@
     "defaultMessage": "Not in file version {number}"
   },
   "autoDocs.missingRuleField": {
-    "defaultMessage": "{slug} (missing)"
+    "defaultMessage": "Missing field"
   },
   "autoDocs.missingRuleOption": {
     "defaultMessage": "{value} (missing)"
@@ -1876,6 +1873,9 @@
   },
   "autoDocs.templateHelpLink": {
     "defaultMessage": "How to write an Auto-Doc template"
+  },
+  "autoDocs.templatePlaceholder": {
+    "defaultMessage": "Template placeholder"
   },
   "autoDocs.titlePattern": {
     "defaultMessage": "Title pattern"
@@ -8330,12 +8330,6 @@
   "settings.contractTypeEditor.requiredFor": {
     "defaultMessage": "{name} required"
   },
-  "settings.contractTypeEditor.slug": {
-    "defaultMessage": "Slug"
-  },
-  "settings.contractTypeEditor.slugNote": {
-    "defaultMessage": "Slug is immutable — it keys templates, approval rules, and the API."
-  },
   "settings.contractTypePeople.add": {
     "defaultMessage": "Add person"
   },
@@ -8713,12 +8707,6 @@
   },
   "settings.entityTypeEditor.requiredFor": {
     "defaultMessage": "{name} required"
-  },
-  "settings.entityTypeEditor.slug": {
-    "defaultMessage": "Slug"
-  },
-  "settings.entityTypeEditor.slugNote": {
-    "defaultMessage": "Slug is immutable — it keys reporting and the API."
   },
   "settings.entityTypes.add": {
     "defaultMessage": "Add type"
@@ -9491,12 +9479,6 @@
   "settings.matterTypeEditor.requiredFor": {
     "defaultMessage": "{name} required"
   },
-  "settings.matterTypeEditor.slug": {
-    "defaultMessage": "Slug"
-  },
-  "settings.matterTypeEditor.slugNote": {
-    "defaultMessage": "Slug is immutable — it keys templates, reporting, and the API."
-  },
   "settings.matterTypes.add": {
     "defaultMessage": "Add type"
   },
@@ -10006,12 +9988,6 @@
   },
   "settings.requestTypeEditor.requiredLocked": {
     "defaultMessage": "{name} can be on the form, but it can't be required. A requester cannot pick a person in the Portal."
-  },
-  "settings.requestTypeEditor.slug": {
-    "defaultMessage": "Slug"
-  },
-  "settings.requestTypeEditor.slugNote": {
-    "defaultMessage": "Slug is immutable — it keys the portal form, reporting, and the API."
   },
   "settings.requestTypeEditor.turnaround": {
     "defaultMessage": "Target turnaround (business days)"

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { identifierLabel } from "./identifier-label";
+
 /**
  * The narration layer (M9/6, DD-017): one activity-log entry in, one
  * sentence out.
@@ -194,7 +196,7 @@ export interface NarratedField {
  * mount hands over the names it already loaded for its own pickers.
  *
  * Everything here is optional and everything falls back. An unknown
- * slug reads as the slug, and an id nothing names reads as the id —
+ * identifier gets a readable label, and an id nothing names reads as the id —
  * which is the honest rendering for a field since detached, or a person
  * since deleted.
  */
@@ -335,12 +337,12 @@ function notSet(intl: IntlShape): string {
 /**
  * One changed key, named as the record names it. The record's own fields
  * have labels of their own; a `field.<slug>` key takes its name from the
- * catalog the mount supplied, and the bare slug when that catalog does
+ * catalog the mount supplied, and a readable fallback when that catalog does
  * not have it.
  */
 function changeLabel(intl: IntlShape, key: string, context: NarrationContext): string {
   const slug = customFieldSlug(key);
-  if (slug !== null) return customField(context, slug)?.displayName ?? slug;
+  if (slug !== null) return customField(context, slug)?.displayName ?? identifierLabel(slug);
   return intl.formatMessage(
     {
       id: "activity.field",
@@ -401,8 +403,7 @@ function customFieldSlug(key: string): string | null {
 }
 
 /** What the mount knows about that field, if it knows about it. A field
- * detached since the change was made is not here, and its slug is what
- * the row reads as. */
+ * detached since the change was made may need a readable fallback. */
 function customField(context: NarrationContext, slug: string): NarratedField | undefined {
   return context.fields?.find((field) => field.slug === slug);
 }
@@ -937,7 +938,7 @@ function aiPreset(intl: IntlShape, payload: Payload): string {
 /**
  * The core analysis target a prompt entry names, in the words the AI
  * analysis pane uses for it. A slug the pane does not label reads as
- * itself, and a payload with no slug says "a field".
+ * a readable fallback, and a payload with no slug says "a field".
  */
 function coreTarget(intl: IntlShape, payload: Payload): string {
   const slug = text(payload, "slug");
@@ -945,21 +946,22 @@ function coreTarget(intl: IntlShape, payload: Payload): string {
     return intl.formatMessage({ id: "activity.contract.unknownField", defaultMessage: "a field" });
   }
   const label = coreAnalysisLabel(slug);
-  return label ? intl.formatMessage(label) : slug;
+  return label ? intl.formatMessage(label) : identifierLabel(slug);
 }
 
 /**
  * What a payload calls the thing it is about — a taxonomy row, a field,
  * a registry record. Display name first, because that is what the reader
- * saw; the slug behind it when the payload carries no name, which is
+ * saw; a readable fallback when the payload carries no name, which is
  * what a rename's payload looks like; and a placeholder when it carries
  * neither, which only an ancient row shape can.
  */
 function thingName(intl: IntlShape, payload: Payload): string {
+  const slug = text(payload, "slug");
   return (
     text(payload, "displayName") ??
     text(payload, "legalName") ??
-    text(payload, "slug") ??
+    (slug ? identifierLabel(slug) : null) ??
     intl.formatMessage({ id: "activity.unnamed", defaultMessage: "(unnamed)" })
   );
 }
@@ -1217,8 +1219,8 @@ function typeFieldArms<Owner extends string>(
 ): Record<`${Owner}.${TypeFieldVerb}`, Arm> {
   const values = (intl: IntlShape, payload: Payload) => ({
     owner,
-    type: named(intl, payload, "typeSlug"),
-    field: named(intl, payload, "fieldSlug"),
+    type: identifierLabel(named(intl, payload, "typeSlug")),
+    field: identifierLabel(named(intl, payload, "fieldSlug")),
     required: String(payload.isRequired === true),
   });
   const arms: Record<TypeFieldVerb, Arm> = {
@@ -1377,7 +1379,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
           ? intl.formatMessage({ id: "keyDates.source.keyDate", defaultMessage: "Key date" })
           : key
             ? changeLabel(intl, key, context)
-            : (customField(context, slug)?.displayName ?? slug),
+            : (customField(context, slug)?.displayName ?? identifierLabel(slug)),
       };
     },
   },
@@ -3396,7 +3398,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
 };
 
 /**
- * The slug this build does not know, rendered plainly.
+ * An event this build does not know, rendered with a readable label.
  *
  * The log is append-only and nothing prunes it, so a slug written by a
  * version of this application that no longer exists is still in the
@@ -3447,7 +3449,7 @@ export function narrateActivity(
   if (!arm) {
     return {
       icon: Activity,
-      sentence: intl.formatMessage(UNKNOWN, { actor, action: entry.action }),
+      sentence: intl.formatMessage(UNKNOWN, { actor, action: identifierLabel(entry.action) }),
       changes: [],
     };
   }

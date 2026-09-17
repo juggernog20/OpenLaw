@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { identifierLabel } from "./identifier-label";
+
 /** ADO-009: reconcile saved Generation answers with the current published Auto-Doc form. */
 import type { IntlShape } from "react-intl";
 import type { Draft } from "../components/auto-docs/form-control";
@@ -78,7 +80,7 @@ export function reconcile(draft: Draft, previous: PreviousForm | null, current: 
     delete retained[slug];
     if (choices.some(Boolean))
       dropped.push({
-        label: old?.label ?? field?.label ?? slug,
+        label: old?.label ?? field?.label ?? identifierLabel(slug),
         fieldType: (old ?? field)?.fieldType,
         value:
           (old ?? field)?.fieldType === "entity"

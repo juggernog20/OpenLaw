@@ -48,11 +48,6 @@ const MESSAGES = defineMessages({
   allTypes: { id: "settings.requestTypeEditor.allTypes", defaultMessage: "All request types" },
   displayName: { id: "settings.requestTypeEditor.displayName", defaultMessage: "Display name" },
   description: { id: "settings.requestTypeEditor.description", defaultMessage: "Description" },
-  slug: { id: "settings.requestTypeEditor.slug", defaultMessage: "Slug" },
-  slugNote: {
-    id: "settings.requestTypeEditor.slugNote",
-    defaultMessage: "Slug is immutable — it keys the portal form, reporting, and the API.",
-  },
   // No `inUse`: requests land in M20, so the caption would read
   // "0 requests" on every type — the pane omits it for the same reason.
   attachedFields: {
@@ -346,7 +341,6 @@ export function SettingsRequestTypeEditorPage() {
           initial={requestType.turnaroundDays ?? null}
         />
       }
-      showSlug={false}
       attachments={{
         initialAttached: attachedFields,
         catalog: catalog.filter((field) => scopes.includes(field.moduleScope)),

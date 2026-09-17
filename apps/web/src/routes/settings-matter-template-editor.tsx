@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { identifierLabel } from "../lib/identifier-label";
+
 /** ST21 Matter-template editor for reusable defaults, tasks, and key dates. */
 
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
@@ -553,7 +555,7 @@ export function SettingsMatterTemplateEditorPage() {
                     id="settings.matterTemplateEditor.staleField"
                     defaultMessage="{field} is no longer attached to this Matter type. Its saved value ({value}) is retained."
                     values={{
-                      field: field?.displayName ?? slug,
+                      field: field?.displayName ?? identifierLabel(slug),
                       value: staleValueLabel(intl, value, field?.fieldType, people, entities),
                     }}
                   />

@@ -3,7 +3,7 @@
 /**
  * The contract type editor (#84) at the route seam: the ST16 screen —
  * the identity card with DES-017 commit-on-confirm name and description
- * and the immutable slug, and the attached-fields card with the
+ * and no slug, and the attached-fields card with the
  * per-attachment required checkbox, detach, arrow-key reorder, and the
  * Attach menu over unattached catalog fields. The API behaviors
  * themselves are covered at the HTTP seam in apps/api — these stubs
@@ -195,7 +195,7 @@ describe("the SET-002 gate on the editor", () => {
 });
 
 describe("the identity card (ST16 left)", () => {
-  it("renders name, description, the immutable slug, and the usage caption", async () => {
+  it("renders name, description, no slug, and the usage caption", async () => {
     stubApi({ signedIn: ADMIN, extra: editorApi(newCalls()) });
     renderAt("/settings/contracts/types/t1");
 
@@ -204,12 +204,7 @@ describe("the identity card (ST16 left)", () => {
     expect(screen.getByLabelText("Description")).toHaveValue(
       "Mutual or one-way non-disclosure agreements.",
     );
-    const slug = screen.getByLabelText("Slug");
-    expect(slug).toHaveValue("nda");
-    expect(slug).toHaveAttribute("readonly");
-    expect(
-      screen.getByText("Slug is immutable — it keys templates, approval rules, and the API."),
-    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Slug")).not.toBeInTheDocument();
     expect(screen.getByText("0 contracts use this type.")).toBeInTheDocument();
   });
 
@@ -384,7 +379,8 @@ describe("the way in from the Types pane", () => {
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Edit NDA" }));
-    expect(await screen.findByLabelText("Slug")).toHaveValue("nda");
+    expect(await screen.findByLabelText("Display name")).toHaveValue("NDA");
+    expect(screen.queryByLabelText("Slug")).not.toBeInTheDocument();
   });
 });
 
@@ -438,7 +434,7 @@ describe("moving between two types on the same route (#372)", () => {
     await router.navigate("/settings/contracts/types/t2");
 
     expect(await screen.findByRole("heading", { name: "MSA" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Slug")).toHaveValue("msa");
+    expect(screen.queryByLabelText("Slug")).not.toBeInTheDocument();
     expect(screen.getByText("Our position")).toBeInTheDocument();
     expect(screen.queryByText("Governing law")).not.toBeInTheDocument();
   });

@@ -38,11 +38,6 @@ const MESSAGES = defineMessages({
   allTypes: { id: "settings.entityTypeEditor.allTypes", defaultMessage: "All types" },
   displayName: { id: "settings.entityTypeEditor.displayName", defaultMessage: "Display name" },
   description: { id: "settings.entityTypeEditor.description", defaultMessage: "Description" },
-  slug: { id: "settings.entityTypeEditor.slug", defaultMessage: "Slug" },
-  slugNote: {
-    id: "settings.entityTypeEditor.slugNote",
-    defaultMessage: "Slug is immutable — it keys reporting and the API.",
-  },
   inUse: {
     id: "settings.entityTypeEditor.inUse",
     defaultMessage:

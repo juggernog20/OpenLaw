@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { identifierLabel } from "../lib/identifier-label";
+
 /**
  * The contract record page (M8), at the CTR-003 number-based address
  * `/contracts/42`: the breadcrumb sub-bar carrying the reference, the
@@ -1244,7 +1246,7 @@ function ContractRecord() {
       eventLabel ??
       (coreLabel
         ? intl.formatMessage(coreLabel)
-        : (attached.find((field) => field.slug === slug)?.displayName ?? slug));
+        : (attached.find((field) => field.slug === slug)?.displayName ?? identifierLabel(slug)));
     return (
       <>
         {analysisConfirmable && <ConfirmUnverified onConfirm={() => confirmAnalysisField(slug)} />}

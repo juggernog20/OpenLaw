@@ -165,9 +165,9 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     async function addField(slug: string, label: string, fieldType: string) {
       await fields.getByRole("button", { name: "Add field", exact: true }).click();
       const fresh = page.getByRole("region", { name: "New field", exact: true });
-      await fresh.getByLabel("Slug", { exact: true }).fill(slug);
-      await fresh.getByLabel("Slug", { exact: true }).press("Enter");
-      await expect(fields.getByText(`${slug} · Text`, { exact: true })).toBeVisible();
+      await fresh.getByLabel("Template placeholder", { exact: true }).fill(slug);
+      await fresh.getByLabel("Template placeholder", { exact: true }).press("Enter");
+      await expect(fields.getByText("Text", { exact: true }).last()).toBeVisible();
       await fresh.getByLabel("Label", { exact: true }).fill(label);
       await fresh.getByLabel("Label", { exact: true }).press("Enter");
       const field = page.getByRole("region", { name: label, exact: true });

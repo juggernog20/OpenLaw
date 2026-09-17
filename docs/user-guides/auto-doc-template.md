@@ -8,7 +8,7 @@ Sign in as a Legal Team Member or Administrator, open **Auto-Docs**, and create 
 
 ## Mark a Placeholder
 
-Type a name in double braces where the answer goes, for example `{{counterparty_name}}`. Start the name with a lowercase letter, then use lowercase letters, digits, and underscores. Keep it to 120 characters. Type a Placeholder in the body, a header, a footer, a footnote, or an endnote. Each new Placeholder gets its own form field on upload, in the order the file on the left shows them. The body comes first, then the other parts. Edit the field's label, type, and help from its card.
+Type a name in double braces where the answer goes, for example `{{counterparty_name}}`. Start the name with a lowercase letter, then use lowercase letters, digits, and underscores. Keep it to 120 characters. Type a Placeholder in the body, a header, a footer, a footnote, or an endnote. Each new Placeholder gets its own form field on upload, in the order the file on the left shows them. The body comes first, then the other parts. Edit the field's label, type, and help from its card. **Template placeholder** connects the field to the marker in Word; change it only when matching a different marker.
 
 ## Format a value
 
@@ -22,13 +22,13 @@ A directive also decides the new field's type. A date directive creates a date f
 
 `upper` prints any answer, so it asks nothing of the field. A date directive needs a date field. A currency directive needs a currency or a number field. Publish refuses a field that cannot print its directive and names it.
 
-An upload is refused when a name is not a valid slug, when a directive is not one of the three above, or when a currency code is not one OpenLaw knows. The refusal quotes the text to fix.
+An upload is refused when a name does not follow the naming rules above, when a directive is not one of the three above, or when a currency code is not one OpenLaw knows. The refusal quotes the text to fix.
 
 ## Mark a Block
 
 Wrap a span of text in `{{#block name}}` and `{{/block}}` to make a Block. A Block keeps its own formatting and is included unless a Clause rule leaves it out. Write the rule in the **Form** section: open the Block under **Clauses**, choose **When a rule matches**, and pick the form field, the operator, and the value. A Block with no rule is always included.
 
-Every Block must close. An upload with an open Block, an unclosed brace, or a name that is not a valid slug is refused, and the refusal quotes the text to fix.
+Every Block must close. An upload with an open Block, an unclosed brace, or a name that does not follow the naming rules above is refused, and the refusal quotes the text to fix.
 
 ## Upload a new version
 

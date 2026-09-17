@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { identifierLabel } from "../../lib/identifier-label";
+
 /** Prefilled conversion form. Edits apply to the new record when conversion succeeds. */
 
 import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
@@ -900,7 +902,7 @@ export function ConvertDialog({
                       (targetTypes
                         .flatMap((type) => type.fields)
                         .find((field) => `field:${field.slug}` === slug)?.displayName ??
-                      slug.slice(6))
+                      identifierLabel(slug.slice(6)))
                     ) : (
                       <FormattedMessage
                         id="conversion.targetLabel"

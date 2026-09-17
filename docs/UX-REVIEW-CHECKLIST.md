@@ -731,7 +731,7 @@ Route: `/settings/matters/types/:typeId`
 - [ ] Page review complete
 - [ ] Use All types and section tabs to leave the editor.
 - [ ] Edit Display name and Description; commit on blur and cancel an unfinished edit with Escape.
-- [ ] Inspect the immutable Slug and the count of records using this type.
+- [ ] Inspect the count of records using this type; internal identifiers are not shown.
 - [ ] Open Attach field, choose an eligible module/global field, and attach it.
 - [ ] Toggle Required on an attached field and inspect save feedback.
 - [ ] Reorder attached fields by dragging and keyboard handles.
@@ -816,7 +816,7 @@ Route: `/settings/contracts/types/:typeId`
 - [ ] Page review complete
 - [ ] Use All types and section tabs to leave the editor.
 - [ ] Edit Display name and Description; commit on blur and cancel an unfinished edit with Escape.
-- [ ] Inspect the immutable Slug and the count of records using this type.
+- [ ] Inspect the count of records using this type; internal identifiers are not shown.
 - [ ] Open Attach field, choose an eligible module/global field, and attach it.
 - [ ] Toggle Required on an attached field and inspect save feedback.
 - [ ] Reorder attached fields by dragging and keyboard handles.
@@ -881,7 +881,7 @@ Route: `/settings/intake/request-types/:typeId`
 
 - [ ] Page review complete
 - [ ] Use All request types and section tabs to leave the editor.
-- [ ] Edit Display name and Description and inspect the immutable Slug.
+- [ ] Edit Display name and Description; internal identifiers are not shown.
 - [ ] Choose No target, a module-only Matter/Contract target, or a specific Matter/Contract type.
 - [ ] Inspect the explanation of conversion routing, including an archived target that needs replacement.
 - [ ] Change target with attached fields present; handle a refusal that would leave incompatible fields on the form.
@@ -928,7 +928,7 @@ Route: `/settings/entities/types/:typeId`
 - [ ] Page review complete
 - [ ] Use All types and section tabs to leave the editor.
 - [ ] Edit Display name and Description; commit on blur and cancel an unfinished edit with Escape.
-- [ ] Inspect the immutable Slug and the count of records using this type.
+- [ ] Inspect the count of records using this type; internal identifiers are not shown.
 - [ ] Open Attach field, choose an eligible module/global field, and attach it.
 - [ ] Toggle Required on an attached field and inspect save feedback.
 - [ ] Reorder attached fields by dragging and keyboard handles.

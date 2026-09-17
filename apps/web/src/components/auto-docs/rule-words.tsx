@@ -21,10 +21,7 @@ export function useRuleWords() {
     const field = fields.find((row) => row.slug === rule.fieldSlug);
     const label =
       field?.label ??
-      intl.formatMessage(
-        { id: "autoDocs.missingRuleField", defaultMessage: "{slug} (missing)" },
-        { slug: rule.fieldSlug },
-      );
+      intl.formatMessage({ id: "autoDocs.missingRuleField", defaultMessage: "Missing field" });
     const value = Array.isArray(rule.value)
       ? intl.formatList(rule.value.map(scalar), { type: "conjunction", style: "narrow" })
       : rule.value === null

@@ -49,8 +49,8 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await expect(fields.getByText("seat · Text · Region", { exact: true })).toBeVisible();
   await fields.getByRole("button", { name: "Add field", exact: true }).click();
   const added = page.getByRole("region", { name: "New field", exact: true });
-  await added.getByLabel("Slug", { exact: true }).fill("jurisdiction");
-  await added.getByLabel("Slug", { exact: true }).press("Enter");
+  await added.getByLabel("Template placeholder", { exact: true }).fill("jurisdiction");
+  await added.getByLabel("Template placeholder", { exact: true }).press("Enter");
   await expect(fields.getByText("jurisdiction · Text", { exact: true })).toBeVisible();
   await added.getByLabel("Label", { exact: true }).fill("Jurisdiction");
   await added.getByLabel("Label", { exact: true }).press("Enter");

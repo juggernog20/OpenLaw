@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { identifierLabel } from "../lib/identifier-label";
+
 /**
  * Organization · Security · Audit log (#133, DD-017) — the second read
  * surface over the activity log, and the one an Administrator opens to
@@ -426,7 +428,7 @@ export function SettingsAuditLogPage() {
               </option>
               {actions.map((action) => (
                 <option key={action} value={action}>
-                  {action}
+                  {identifierLabel(action)}
                 </option>
               ))}
             </select>

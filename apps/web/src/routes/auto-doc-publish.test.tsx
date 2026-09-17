@@ -207,7 +207,7 @@ it("selects a field from its Placeholder chip, maps it, and writes each Clause o
   );
   expect(
     within(screen.getByRole("region", { name: "Fields" })).getByText(
-      "jurisdiction · Single select · Title",
+      "Single select · Title",
     ),
   ).toBeVisible();
 });

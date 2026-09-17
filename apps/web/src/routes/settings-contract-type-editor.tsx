@@ -50,11 +50,6 @@ const MESSAGES = defineMessages({
   allTypes: { id: "settings.contractTypeEditor.allTypes", defaultMessage: "All types" },
   displayName: { id: "settings.contractTypeEditor.displayName", defaultMessage: "Display name" },
   description: { id: "settings.contractTypeEditor.description", defaultMessage: "Description" },
-  slug: { id: "settings.contractTypeEditor.slug", defaultMessage: "Slug" },
-  slugNote: {
-    id: "settings.contractTypeEditor.slugNote",
-    defaultMessage: "Slug is immutable — it keys templates, approval rules, and the API.",
-  },
   inUse: {
     id: "settings.contractTypeEditor.inUse",
     defaultMessage:

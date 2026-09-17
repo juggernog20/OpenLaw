@@ -13,6 +13,8 @@
  * map moved here.
  */
 
+import { identifierLabel } from "./identifier-label";
+
 import { defineMessages, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 
@@ -33,11 +35,11 @@ export const AI_PRESET_MESSAGES: Readonly<Record<AiPreset, MessageDescriptor>> =
 
 /**
  * A preset as plain text, for an option element or a narrated sentence.
- * A slug outside the union reads as itself: the server owns the list,
+ * A slug outside the union gets a readable fallback: the server owns the list,
  * so a build can meet a preset it does not yet have wording for.
  */
 export function aiPresetLabel(intl: IntlShape, preset: string): string {
   const catalog: Readonly<Partial<Record<string, MessageDescriptor>>> = AI_PRESET_MESSAGES;
   const message = catalog[preset];
-  return message ? intl.formatMessage(message) : preset;
+  return message ? intl.formatMessage(message) : identifierLabel(preset);
 }

@@ -9,7 +9,7 @@ Configure the choices and information your organization uses on its records. Sig
 3. Select the row's **Rename** control to change its display name. Where **Edit** is available, open it to change the description and attached Fields. Leave a text field to save, and check the saved result.
 4. Drag a reorder handle, or focus it and use the arrow keys, to change the display order.
 
-A display name can change; the type's **Slug** stays fixed. Configuration saves affect the organization immediately. Test a new definition before asking colleagues to rely on it.
+A display name can change without breaking existing records or configuration. Configuration saves affect the organization immediately. Test a new definition before asking colleagues to rely on it.
 
 To archive a type, select its **Archive** control and read the usage count. If records use it, choose the live replacement requested by the dialog, then confirm. Those records move to the replacement. Check that replacement's Fields and required information first. **Other** is protected where it is provided as the module's fallback. Turn on **Show archived** and use **Restore** to make an archived definition available again; restoring it does not move reassigned records back.
 
