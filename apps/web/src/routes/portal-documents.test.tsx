@@ -76,6 +76,15 @@ const single: PortalDocument = {
 };
 
 describe.each(["contract", "matter"] as const)("Portal %s Documents", (module) => {
+  it("offers a negotiation Kind only for Contracts", async () => {
+    setup(module, []);
+    const section = await screen.findByRole("region", { name: "Documents" });
+    await userEvent.click(within(section).getByRole("button", { name: "Upload documents" }));
+    const dialog = await screen.findByRole("dialog");
+    if (module === "contract") expect(within(dialog).getByLabelText("Kind")).toBeInTheDocument();
+    else expect(within(dialog).queryByLabelText("Kind")).not.toBeInTheDocument();
+  });
+
   it("shows a sole version once, with no empty history control", async () => {
     setup(module, [{ ...single, isPrimary: module === "contract" }]);
     const section = await screen.findByRole("region", { name: "Documents" });

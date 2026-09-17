@@ -642,24 +642,26 @@ function UploadDocuments({
               ))}
             </ul>
           )}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="portal-upload-kind">
-              <FormattedMessage id="documents.kindLabel" defaultMessage="Kind" />
-            </Label>
-            <select
-              id="portal-upload-kind"
-              className={CONTROL_CLASS}
-              value={kind}
-              disabled={busy || completed.size > 0}
-              onChange={(event) => setKind(event.target.value as HandSetDocumentVersionKind)}
-            >
-              {["general" as const, ...DOCUMENT_VERSION_KINDS].map((kind) => (
-                <option key={kind} value={kind}>
-                  {documentKindLabel(intl, kind)}
-                </option>
-              ))}
-            </select>
-          </div>
+          {module === "contract" && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="portal-upload-kind">
+                <FormattedMessage id="documents.kindLabel" defaultMessage="Kind" />
+              </Label>
+              <select
+                id="portal-upload-kind"
+                className={CONTROL_CLASS}
+                value={kind}
+                disabled={busy || completed.size > 0}
+                onChange={(event) => setKind(event.target.value as HandSetDocumentVersionKind)}
+              >
+                {["general" as const, ...DOCUMENT_VERSION_KINDS].map((kind) => (
+                  <option key={kind} value={kind}>
+                    {documentKindLabel(intl, kind)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <Label htmlFor="portal-upload-note">
               <FormattedMessage id="portal.documents.note" defaultMessage="Note (optional)" />
