@@ -9950,8 +9950,26 @@
   "settings.requestTypeEditor.basicsCaption": {
     "defaultMessage": "Basics are always on the form"
   },
+  "settings.requestTypeEditor.decideLater": {
+    "defaultMessage": "Decide during triage"
+  },
   "settings.requestTypeEditor.description": {
     "defaultMessage": "Description"
+  },
+  "settings.requestTypeEditor.destination": {
+    "defaultMessage": "Default destination"
+  },
+  "settings.requestTypeEditor.destinationContract": {
+    "defaultMessage": "Contract"
+  },
+  "settings.requestTypeEditor.destinationHelp": {
+    "defaultMessage": "Suggests where Legal converts this request. Legal can choose a different destination during triage."
+  },
+  "settings.requestTypeEditor.destinationMatter": {
+    "defaultMessage": "Matter"
+  },
+  "settings.requestTypeEditor.destinationType": {
+    "defaultMessage": "{module, select, contract {Default contract type} other {Default matter type}}"
   },
   "settings.requestTypeEditor.detach": {
     "defaultMessage": "Detach {name}"
@@ -9977,6 +9995,9 @@
   "settings.requestTypeEditor.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
   },
+  "settings.requestTypeEditor.previousDestination": {
+    "defaultMessage": "Previous selection"
+  },
   "settings.requestTypeEditor.reorder": {
     "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
   },
@@ -9997,6 +10018,9 @@
   },
   "settings.requestTypeEditor.turnaroundInvalid": {
     "defaultMessage": "Enter a whole number from 0 to 36,500 business days, or leave it blank."
+  },
+  "settings.requestTypeEditor.unavailableDestination": {
+    "defaultMessage": "{name} (unavailable)"
   },
   "settings.requestTypes.add": {
     "defaultMessage": "Add request type"
@@ -10065,13 +10089,13 @@
     "defaultMessage": "Restore {name}"
   },
   "settings.requestTypes.targetColumn": {
-    "defaultMessage": "Target"
+    "defaultMessage": "Default destination"
   },
   "settings.requestTypes.targetModule": {
-    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {No target}}"
+    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {Decide during triage}}"
   },
   "settings.requestTypes.targetPrefix": {
-    "defaultMessage": "Target:"
+    "defaultMessage": "Default destination:"
   },
   "settings.requestTypes.targetType": {
     "defaultMessage": "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}"

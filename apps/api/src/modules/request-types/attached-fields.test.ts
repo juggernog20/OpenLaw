@@ -340,25 +340,35 @@ describe("the scope rule, in all three target arms (INT-002)", () => {
     );
   });
 
-  it("takes global fields only when there is no target", async () => {
+  it("takes contract, matter and global fields when the destination is decided during triage", async () => {
     const type = await addType("No-target arm");
     const globalField = await createField("No-target owner", "global");
     const contractField = await createField("No-target value", "contract");
+    const matterField = await plantScopedField(
+      "no_target_practice",
+      "No-target practice",
+      "matter",
+    );
 
     expect((await attach(type.id, { fieldId: globalField })).statusCode).toBe(201);
-    const refused = await attach(type.id, { fieldId: contractField });
-    expect(refused.statusCode, refused.body).toBe(400);
-    expect(refused.json().detail).toBe(
-      "This request type has no target, so its form takes global fields only. " +
-        "Point it at Matter or Contract to attach that module's fields.",
-    );
-    expect((await listAttached(type.id)).map((row) => row.slug)).toEqual(["no_target_owner"]);
+    expect((await attach(type.id, { fieldId: contractField })).statusCode).toBe(201);
+    expect((await attach(type.id, { fieldId: matterField })).statusCode).toBe(201);
+    expect((await listAttached(type.id)).map((row) => row.slug)).toEqual([
+      "no_target_owner",
+      "no_target_value",
+      "no_target_practice",
+    ]);
+    const refused = await setTarget(type.id, { targetModule: "contract" });
+    expect(refused.statusCode).toBe(409);
+    expect(refused.json().detail).toContain("No-target practice");
+    expect((await typeBySlug(type.slug)).targetModule).toBeNull();
   });
 
   it("reads the row's target on every attach, never a cached rule", async () => {
     const type = await addType("Re-pointed arm");
     const contractField = await createField("Re-point value", "contract");
 
+    await setTarget(type.id, { targetModule: "matter" });
     const beforeTargeting = await attach(type.id, { fieldId: contractField });
     expect(beforeTargeting.statusCode, beforeTargeting.body).toBe(400);
 
@@ -425,7 +435,7 @@ describe("the strand refusal on a target change (INT-002)", () => {
     const value = await createField("Single strand value", "contract");
     expect((await attach(type.id, { fieldId: value })).statusCode).toBe(201);
 
-    const refused = await setTarget(type.id, { targetModule: null });
+    const refused = await setTarget(type.id, { targetModule: "matter" });
     expect(refused.statusCode, refused.body).toBe(409);
     expect(refused.json().detail).toBe(
       "Single strand value does not fit that target. Detach it from the form first.",
@@ -443,6 +453,23 @@ describe("the strand refusal on a target change (INT-002)", () => {
     expect((await setTarget(type.id, { targetModule: null })).statusCode).toBe(200);
     expect((await listAttached(type.id)).map((row) => row.slug)).toEqual([
       "global_only_department",
+    ]);
+  });
+
+  it("clears a destination without detaching module-specific fields", async () => {
+    const type = await addType("Clear destination probe");
+    await setTarget(type.id, { targetModule: "contract" });
+    const fieldId = await createField("Keep contract answer", "contract");
+    expect((await attach(type.id, { fieldId, isRequired: true })).statusCode).toBe(201);
+    const result = await setTarget(type.id, { targetModule: null });
+    expect(result.statusCode, result.body).toBe(200);
+    expect(result.json().requestType).toMatchObject({
+      targetModule: null,
+      targetTypeId: null,
+      formFieldCount: 1,
+    });
+    expect(await listAttached(type.id)).toEqual([
+      expect.objectContaining({ fieldId, isRequired: true }),
     ]);
   });
 
@@ -736,7 +763,7 @@ describe("the DD-017 activity trail", () => {
       .select()
       .from(activityLog)
       .where(eq(activityLog.action, "request_type.updated"));
-    expect((await setTarget(probe.id, { targetModule: null })).statusCode).toBe(409);
+    expect((await setTarget(probe.id, { targetModule: "matter" })).statusCode).toBe(409);
     const after = await harness.db
       .select()
       .from(activityLog)
