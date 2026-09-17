@@ -303,7 +303,7 @@ test.describe("accessibility floor", () => {
     await page.goto("/documents");
 
     await expect(page).toHaveTitle("Documents · OpenLaw");
-    await expect(page.getByRole("region", { name: "Documents" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Documents", exact: true })).toBeVisible();
     await reportAxeViolations(page, testInfo, "documents");
   });
 

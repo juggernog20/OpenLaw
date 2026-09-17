@@ -316,9 +316,7 @@ test.describe.serial("M19 demo path", () => {
       // Attachments are optional. None can be changed.
       expect(await basics.getByRole("checkbox", { checked: true }).count()).toBe(4);
 
-      // Attaches two catalog fields. The Attach menu offers the
-      // catalog's unattached fields the target allows — contract-scoped
-      // and global under a Contract target (story 22).
+      // Attach two Contract fields from the catalog.
       for (const fieldName of [FIRST_FIELD, SECOND_FIELD]) {
         const attached = page.waitForResponse(
           (response) =>
