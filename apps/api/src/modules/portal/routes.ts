@@ -338,8 +338,8 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "One portal-readable Knowledge Item — published, audience " +
           "Everyone, not archived; every signed-in role reads it " +
-          "(Administrator, Legal Team Member, Contributor, and Business " +
-          "User per DD-013), and anything short of that gate answers 404",
+          "(Administrator, Legal Team Member, and Business " +
+          "User per DD-023), and anything short of that gate answers 404",
         tags: ["portal"],
         params: z.object({ id: z.string() }),
         response: {
@@ -410,7 +410,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           "The current Version's bytes for one Document on a " +
           "portal-readable Knowledge Item, behind the same gate as the " +
           "article; every signed-in role downloads it (Administrator, " +
-          "Legal Team Member, Contributor, and Business User per DD-013)",
+          "Legal Team Member, and Business User per DD-023)",
         tags: ["portal"],
         produces: ["application/octet-stream"],
         params: z.object({ id: z.string(), documentId: z.string() }),

@@ -381,7 +381,7 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "removeMatterTask",
         summary:
-          "Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed",
+          "Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 without changing the Task; mark it done instead",
         tags: ["matter-tasks"],
         params: TaskParams,
         response: { 200: TasksEnvelope, default: problemResponse },

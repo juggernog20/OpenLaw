@@ -427,7 +427,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "inviteUser",
         summary:
-          "Invite a user (Administrator, Legal Team Member, or Contributor); " +
+          "Invite a user (Administrator or Legal Team Member); " +
           "re-sends the set-password email if they have not activated",
         tags: ["auth"],
         body: z.object({

@@ -124,7 +124,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "convertRequest",
         description:
-          "Contract conversion makes the Requester its Business Owner, granting Portal reads subject to DD-021 confidentiality. Matter conversion assigns no Business Owner.",
+          "Contract and Matter conversion set the Requester as Business Owner and add them to the record team. Team membership grants Portal access to the non-archived record (DD-023).",
         summary:
           "Turn a Request into the contract or matter its request type targets " +
           "(INT-002, DD-018, M22/9). The Request row is locked so racing " +
@@ -147,7 +147,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "Both records narrate the conversion and requestStatusChanged raises " +
           "the Requester's In progress notification. Attachments become ordinary " +
           "root documents and the tiered thread moves onto either target while " +
-          "the Request remains the Requester's window. Member+ only",
+          "the Portal Request address redirects to the converted record. Member+ only",
         tags: ["requests"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.

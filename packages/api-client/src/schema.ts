@@ -164,7 +164,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Invite a user (Administrator, Legal Team Member, or Contributor); re-sends the set-password email if they have not activated */
+    /** Invite a user (Administrator or Legal Team Member); re-sends the set-password email if they have not activated */
     post: operations["inviteUser"];
     delete?: never;
     options?: never;
@@ -2598,7 +2598,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed */
+    /** Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 without changing the Task; mark it done instead */
     delete: operations["removeMatterTask"];
     options?: never;
     head?: never;
@@ -3032,7 +3032,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One portal-readable Knowledge Item — published, audience Everyone, not archived; every signed-in role reads it (Administrator, Legal Team Member, Contributor, and Business User per DD-013), and anything short of that gate answers 404 */
+    /** One portal-readable Knowledge Item — published, audience Everyone, not archived; every signed-in role reads it (Administrator, Legal Team Member, and Business User per DD-023), and anything short of that gate answers 404 */
     get: operations["readPortalKnowledgeItem"];
     put?: never;
     post?: never;
@@ -3049,7 +3049,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The current Version's bytes for one Document on a portal-readable Knowledge Item, behind the same gate as the article; every signed-in role downloads it (Administrator, Legal Team Member, Contributor, and Business User per DD-013) */
+    /** The current Version's bytes for one Document on a portal-readable Knowledge Item, behind the same gate as the article; every signed-in role downloads it (Administrator, Legal Team Member, and Business User per DD-023) */
     get: operations["downloadPortalKnowledgeDocument"];
     put?: never;
     post?: never;
@@ -3956,8 +3956,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one "Needed by" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only
-     * @description Contract conversion makes the Requester its Business Owner, granting Portal reads subject to DD-021 confidentiality. Matter conversion assigns no Business Owner.
+     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one "Needed by" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only
+     * @description Contract and Matter conversion set the Requester as Business Owner and add them to the record team. Team membership grants Portal access to the non-archived record (DD-023).
      */
     post: operations["convertRequest"];
     delete?: never;

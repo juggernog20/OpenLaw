@@ -864,7 +864,7 @@
     "/api/v1/auth/invites": {
       "post": {
         "operationId": "inviteUser",
-        "summary": "Invite a user (Administrator, Legal Team Member, or Contributor); re-sends the set-password email if they have not activated",
+        "summary": "Invite a user (Administrator or Legal Team Member); re-sends the set-password email if they have not activated",
         "tags": ["auth"],
         "requestBody": {
           "required": true,
@@ -26766,7 +26766,7 @@
       },
       "delete": {
         "operationId": "removeMatterTask",
-        "summary": "Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 and is marked done instead of removed",
+        "summary": "Remove one Task from a reached, non-archived Matter. A Task carrying any comment, deleted and redacted ones included, answers 409 without changing the Task; mark it done instead",
         "tags": ["matter-tasks"],
         "parameters": [
           {
@@ -31891,7 +31891,7 @@
     "/api/v1/portal/knowledge/{id}": {
       "get": {
         "operationId": "readPortalKnowledgeItem",
-        "summary": "One portal-readable Knowledge Item — published, audience Everyone, not archived; every signed-in role reads it (Administrator, Legal Team Member, Contributor, and Business User per DD-013), and anything short of that gate answers 404",
+        "summary": "One portal-readable Knowledge Item — published, audience Everyone, not archived; every signed-in role reads it (Administrator, Legal Team Member, and Business User per DD-023), and anything short of that gate answers 404",
         "tags": ["portal"],
         "parameters": [
           {
@@ -32016,7 +32016,7 @@
     "/api/v1/portal/knowledge/{id}/documents/{documentId}/download": {
       "get": {
         "operationId": "downloadPortalKnowledgeDocument",
-        "summary": "The current Version's bytes for one Document on a portal-readable Knowledge Item, behind the same gate as the article; every signed-in role downloads it (Administrator, Legal Team Member, Contributor, and Business User per DD-013)",
+        "summary": "The current Version's bytes for one Document on a portal-readable Knowledge Item, behind the same gate as the article; every signed-in role downloads it (Administrator, Legal Team Member, and Business User per DD-023)",
         "tags": ["portal"],
         "parameters": [
           {
@@ -41614,9 +41614,9 @@
     "/api/v1/requests/{number}/convert": {
       "post": {
         "operationId": "convertRequest",
-        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one \"Needed by\" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Request remains the Requester's window. Member+ only",
+        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one \"Needed by\" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only",
         "tags": ["requests"],
-        "description": "Contract conversion makes the Requester its Business Owner, granting Portal reads subject to DD-021 confidentiality. Matter conversion assigns no Business Owner.",
+        "description": "Contract and Matter conversion set the Requester as Business Owner and add them to the record team. Team membership grants Portal access to the non-archived record (DD-023).",
         "requestBody": {
           "required": true,
           "content": {
