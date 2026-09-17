@@ -102,6 +102,15 @@ async function startServer(
 function sharedAssertions(protocol: Protocol, request: CapturedRequest | undefined): void {
   expect(request).toBeDefined();
   const body = request!.body;
+  const messages = body.messages as { role: string; content: string }[] | undefined;
+  const contents = body.contents as { role: string; parts: { text: string }[] }[] | undefined;
+  const prompt = protocol === "gemini" ? contents?.[0]?.parts[0]?.text : messages?.[0]?.content;
+  expect(prompt).toContain("Use null when a value is missing, ambiguous, or unsupported");
+  expect(prompt).toContain("Boolean false requires explicit support");
+  expect(protocol === "gemini" ? contents : messages).toHaveLength(1);
+  expect(protocol === "gemini" ? contents?.[0]?.role : messages?.[0]?.role).toBe("user");
+  expect(body).not.toHaveProperty("system");
+  expect(body).not.toHaveProperty("systemInstruction");
   if (protocol === "anthropic") {
     expect(request!.headers["x-api-key"]).toBe(VALID_KEY);
     expect(request!.headers["anthropic-version"]).toBe("2023-06-01");
@@ -365,6 +374,8 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
       expect(request).toContain("source-b");
       expect(request).toContain("rev-b");
       expect(request).toContain("Counsel");
+      expect(request).toContain("Use null when a value is missing, ambiguous, or unsupported");
+      expect(request).toContain("Boolean false requires explicit support");
     } finally {
       await harness.stop();
     }

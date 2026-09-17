@@ -53,7 +53,7 @@ export function PortalShell({
   // channel. Consumers subscribe to the module and never open a stream.
   useRetainedLiveEvents(recordScope);
   const content = (
-    <div className="@container/page h-full overflow-y-auto px-page-x pt-8 pb-16">
+    <div className="@container/page relative h-full overflow-y-auto px-page-x pt-8 pb-16">
       <div
         className={`mx-auto flex w-full min-w-0 flex-col gap-section-gap ${wide ? "" : "max-w-(--width-portal-col)"}`}
       >

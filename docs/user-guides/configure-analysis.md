@@ -39,9 +39,11 @@ The **Connected** badge means the connector is saved and enabled, even before a 
 
 ## Set core Field prompts
 
-The **Field prompts** card is the last card on this page. It sits below **Provider**, and below **Request conversion** after a connector is saved. It holds seven prompts for core Contract values. It has no collapse control and is always open. Edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper, without inferring a period when it is absent.
+The **Field prompts** card is the last card on this page. It sits below **Provider**, and below **Request conversion** after a connector is saved. It holds seven prompts for core Contract values. It has no collapse control and is always open. Edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper.
 
 Press Enter or leave the input to save that prompt, and wait for its save result. Shift+Enter inserts a line break. Each prompt is required and can contain up to 2,000 characters. If you clear a prompt and leave the input, the saved text comes back. For an overridden prompt, **Reset to default** restores that one built-in prompt.
+
+OpenLaw adds shared instructions to every Analysis request to leave missing, ambiguous, or unsupported values blank and avoid inventing facts. Field prompts only need to describe what to extract and any field-specific interpretation; they do not need to repeat these shared rules.
 
 Prompt changes affect subsequent Analysis runs. They do not rewrite earlier results or confirm an existing **Unverified** value. Rerun deliberately after editing a prompt and review the resulting evidence.
 

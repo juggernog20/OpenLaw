@@ -168,6 +168,7 @@ export function SettingsContractTypeEditorPage() {
         />
       }
       attachments={{
+        createFieldModule: "contract",
         initialAttached: attachedFields,
         catalog,
         api: EDITOR_API,

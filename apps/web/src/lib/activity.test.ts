@@ -1440,13 +1440,13 @@ describe("the sentences a reader gets", () => {
 describe("the fallback arm (DD-017: the log outlives the code)", () => {
   it("renders a slug this build has never heard of", () => {
     const narration = narrate("matter.filed", { matterId: "mat_1" });
-    expect(narration.sentence).toBe("Nadia Counsel — matter.filed");
+    expect(narration.sentence).toBe("Nadia Counsel — Matter filed");
     expect(narration.changes).toEqual([]);
     expect(narration.icon).toBeDefined();
   });
 
   it("renders an unknown slug with no actor as OpenLaw", () => {
-    expect(narrate("matter.filed", {}, null).sentence).toBe("OpenLaw — matter.filed");
+    expect(narrate("matter.filed", {}, null).sentence).toBe("OpenLaw — Matter filed");
   });
 
   it("renders a slug that names something on Object.prototype", () => {
@@ -1454,8 +1454,13 @@ describe("the fallback arm (DD-017: the log outlives the code)", () => {
     // `constructor`. A bare index into the arms table would answer a
     // function for it and take the panel down on the one case the
     // fallback exists to survive.
-    for (const slug of ["constructor", "toString", "__proto__", "hasOwnProperty"]) {
-      expect(narrate(slug, {}).sentence).toBe(`Nadia Counsel — ${slug}`);
+    for (const [slug, label] of [
+      ["constructor", "Constructor"],
+      ["toString", "To String"],
+      ["__proto__", "Proto"],
+      ["hasOwnProperty", "Has Own Property"],
+    ] as const) {
+      expect(narrate(slug, {}).sentence).toBe(`Nadia Counsel — ${label}`);
     }
   });
 

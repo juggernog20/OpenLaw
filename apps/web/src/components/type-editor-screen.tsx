@@ -43,6 +43,7 @@ import { useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { ArrowLeft, GripVertical, Lock, Plus, X } from "lucide-react";
+import { FieldEditorDialog } from "./field-editor-dialog";
 import { PageTitle } from "./page-title";
 import { SettingsCard } from "./settings-card";
 import { StatusNote, type FieldStatus } from "./status-note";
@@ -52,6 +53,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
@@ -225,6 +227,7 @@ export type TypeEditorMessages = TypeEditorIdentityMessages & TypeEditorAttachme
  */
 export interface TypeEditorAttachments {
   initialAttached: AttachedFieldRow[];
+  createFieldModule?: "contract" | "matter";
   /** The module's attachable catalog (live fields, already scoped). */
   catalog: EditorCatalogRow[];
   api: TypeEditorAttachmentsApi;
@@ -269,6 +272,7 @@ function typeLabel(intl: IntlShape, fieldType: EditorFieldType): string {
 function AttachedFieldsCard({
   typeId,
   initialAttached,
+  createFieldModule,
   catalog,
   api,
   messages,
@@ -287,6 +291,9 @@ function AttachedFieldsCard({
   }
 
   const [rows, setRows] = useState<AttachedFieldRow[]>(initialAttached);
+  const [createdFields, setCreatedFields] = useState<EditorCatalogRow[]>([]);
+  const [addingField, setAddingField] = useState(false);
+  const attachTrigger = useRef<HTMLButtonElement>(null);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   const [orderStatus, setOrderStatus] = useState<FieldStatus>("idle");
@@ -296,7 +303,7 @@ function AttachedFieldsCard({
   const [announcement, setAnnouncement] = useState("");
   const dragFrom = useRef<number | null>(null);
 
-  const attachable: EditorCatalogRow[] = catalog.filter(
+  const attachable: EditorCatalogRow[] = [...catalog, ...createdFields].filter(
     (field) => !rows.some((row) => row.fieldId === field.id),
   );
   // A const binding, so the guard below narrows inside JSX — a property
@@ -329,6 +336,7 @@ function AttachedFieldsCard({
       setAttachStatus("error");
       setAttachError(detail);
     }
+    return !!data;
   }
 
   async function detach(row: AttachedFieldRow) {
@@ -592,12 +600,21 @@ function AttachedFieldsCard({
                   disabled trigger drops it to the body after the
                   last attach (DES-011). The empty state renders
                   inside the menu instead. */}
-              <Button variant="secondary" size="sm">
+              <Button ref={attachTrigger} variant="secondary" size="sm" disabled={attachStatus === "saving"}>
                 <Plus size={16} aria-hidden="true" />
                 <FormattedMessage {...messages.attach} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
+            <DropdownMenuContent align="start" className="max-h-(--radix-dropdown-menu-content-available-height) overflow-y-auto" onCloseAutoFocus={(event) => { if (addingField) event.preventDefault(); }}>
+              {createFieldModule && (
+                <>
+                  <DropdownMenuItem onSelect={() => setAddingField(true)}>
+                    <Plus size={16} aria-hidden="true" />
+                    <FormattedMessage id="settings.typeEditor.addNewField" defaultMessage="Add new field" />
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               {attachable.map((field) => (
                 <DropdownMenuItem key={field.id} onSelect={() => void attach(field)}>
                   <span className="text-base text-primary">{field.displayName}</span>
@@ -619,6 +636,27 @@ function AttachedFieldsCard({
           )}
         </div>
       </SettingsCard>
+      {addingField && createFieldModule && (
+        <FieldEditorDialog
+          target={null}
+          module={createFieldModule}
+          onOpenChange={setAddingField}
+          onRowChanged={() => {}}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            attachTrigger.current?.focus();
+          }}
+          onCreated={async (field) => {
+            setCreatedFields((current) => [...current, field]);
+            if (!(await attach(field))) {
+              setAttachError((detail) => intl.formatMessage({
+                id: "settings.typeEditor.createdNotAttached",
+                defaultMessage: "{name} was created but could not be attached. Select it from Attach field to try again. {detail}",
+              }, { name: field.displayName, detail: detail ?? "" }));
+            }
+          }}
+        />
+      )}
       {messages.help && (
         <p className="text-sm text-muted">
           <FormattedMessage {...messages.help} />

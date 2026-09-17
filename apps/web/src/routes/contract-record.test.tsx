@@ -5626,7 +5626,7 @@ describe("the contract record's history applet (M9/6)", () => {
 
     const feed = await screen.findByRole("list", { name: "History" });
     expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
-      "Nadia Counsel changed since_detached",
+      "Nadia Counsel changed Since detached",
     );
   });
 
@@ -5649,7 +5649,7 @@ describe("the contract record's history applet (M9/6)", () => {
     const rows = within(feed).getAllByRole("listitem");
     // The row still names the actor and the fact, and the rows around
     // it still read.
-    expect(rows[0]).toHaveTextContent("Nadia Counsel — contract.frobnicated");
+    expect(rows[0]).toHaveTextContent("Nadia Counsel — Contract frobnicated");
     expect(rows[1]).toHaveTextContent("Nadia Counsel created this contract");
   });
 

@@ -50,7 +50,7 @@ function failRebuild(watcher: EventEmitter) {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(compileWorkspace).mockReturnValue({
-    bundle: { articles: [], contexts: [], bindings: [] },
+    bundle: { articles: [], contexts: [], bindings: [], warnings: [] },
   } as unknown as ReturnType<typeof compileWorkspace>);
   vi.mocked(exportFiles).mockReturnValue(new Map([["index.html", "Recovered documentation"]]));
 });

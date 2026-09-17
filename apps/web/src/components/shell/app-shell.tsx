@@ -114,11 +114,12 @@ export function AppShell({
         {/* `min-h-0` is what lets it shrink: a flex item's floor is its
             content, so without this the region grows past the column and
             takes the scroll back to the document. */}
+        {/* Contain absolutely positioned accessibility labels inside this scroller. */}
         <main
           id="main"
           tabIndex={-1}
           className={cn(
-            "@container/page min-h-0 flex-1 overflow-y-auto",
+            "@container/page relative min-h-0 flex-1 overflow-y-auto",
             flush ? "flex flex-col" : "px-page-x py-page-y",
           )}
         >

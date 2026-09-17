@@ -154,6 +154,7 @@ export function SettingsMatterTypeEditorPage() {
       api={EDITOR_API}
       messages={MESSAGES}
       attachments={{
+        createFieldModule: "matter",
         initialAttached: attachedFields,
         catalog,
         api: EDITOR_API,

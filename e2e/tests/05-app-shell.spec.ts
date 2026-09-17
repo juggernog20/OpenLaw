@@ -87,6 +87,9 @@ test.describe("application shell", () => {
     await main.evaluate((region) => {
       const filler = document.createElement("div");
       filler.style.height = "4000px";
+      // A plain tall block misses the Fields regression: screen-reader labels
+      // are absolute and must remain inside the same scroll container.
+      filler.innerHTML = '<div style="height:3990px"></div><span class="sr-only">Field type</span>';
       region.append(filler);
     });
 
@@ -118,4 +121,48 @@ test.describe("application shell", () => {
       await subbar.boundingBox(),
     ]).toEqual(chromeBefore);
   });
+});
+
+test("long settings and portal pages contain screen-reader labels within one page scroller", async ({
+  page,
+  request,
+}) => {
+  test.setTimeout(60_000);
+  await ensureAdminExists(request);
+  await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const path of ["/settings/contracts/fields", "/settings/matters/fields", "/portal"]) {
+      await page.goto(path);
+      await expect(page.locator("main#main")).toBeVisible();
+      const result = await page.locator("main#main").evaluate((main) => {
+        const scroller = [main, ...main.querySelectorAll<HTMLElement>("*")].find(
+          (element) => getComputedStyle(element).overflowY === "auto",
+        );
+        if (!scroller) throw new Error("Page scroller not found");
+        const filler = document.createElement("div");
+        filler.style.cssText = "height:4000px; flex-shrink:0";
+        filler.innerHTML =
+          '<div style="height:3990px"></div><span class="sr-only">Field type</span>';
+        const settingsPane = main.querySelector(
+          'nav[aria-label="Settings sections"]',
+        )?.nextElementSibling;
+        (settingsPane ?? scroller).append(filler);
+        const root = document.documentElement;
+        const overflow = root.scrollHeight - root.clientHeight;
+        scroller.scrollTop = scroller.scrollHeight;
+        return {
+          overflow,
+          scrollTop: scroller.scrollTop,
+          windowScroll: window.scrollY,
+          bottomGap:
+            scroller.getBoundingClientRect().bottom - filler.getBoundingClientRect().bottom,
+        };
+      });
+      expect(result.overflow, `${path} at ${width}px`).toBeLessThanOrEqual(1);
+      expect(result.scrollTop, `${path} stays scrollable`).toBeGreaterThan(0);
+      expect(result.windowScroll).toBe(0);
+      if (path.startsWith("/settings/")) expect(result.bottomGap).toBeGreaterThanOrEqual(23);
+    }
+  }
 });

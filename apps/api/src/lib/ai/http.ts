@@ -204,7 +204,7 @@ export function extractionPrompt(
       : 'Each entry must use the properties "value", "sourceId", and "evidence". "sourceId" is the exact source id; "evidence" is an exact supporting quote from that source. Example shape: {"needed_by":{"value":"2026-10-02","sourceId":"message:123","evidence":"by October 2, 2026"}}. For synthesis or conflicts, use "citations": [{"sourceId":"message:123","quote":"exact supporting passage"}]. Example values are format examples, never facts.',
     "A later statement overrides an earlier fact only when it explicitly corrects that fact. For unresolved contradictions return conflict: true and cite the conflicting passages; do not choose a value.",
     'Include a "justification" for each supported value: one or two short sentences explaining why the cited facts support this field, at most 1000 characters. Explain the conclusion, not your internal deliberation. Do not just repeat the value or copy the whole source. Use short, relevant quotes for citations.',
-    "Use null when the sources do not support a value. Return no prose.",
+    "Use null when a value is missing, ambiguous, or unsupported by the supplied sources. Never invent facts, assume standard terms, or use outside knowledge to fill gaps. Silence is not evidence of permission, prohibition, zero, or false. Boolean false requires explicit support just as true does. These rules apply to every field. Return no prose.",
     "Only the supplied passages were considered. Sources can be omitted or truncated; never claim complete analysis of every attachment or document.",
     "",
     "Fields:",

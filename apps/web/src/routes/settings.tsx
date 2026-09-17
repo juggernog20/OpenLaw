@@ -435,7 +435,7 @@ export function SettingsLayout() {
         <PageSubBar title={<FormattedMessage id="settings.title" defaultMessage="Settings" />} />
       }
     >
-      <div className="flex min-h-0 w-full flex-1 flex-col @3xl/page:flex-row">
+      <div className="flex w-full flex-1 flex-col @3xl/page:flex-row">
         <SettingsRail
           isAdministrator={user.role === "administrator"}
           canViewPortal={isMemberPlus(user.role)}
