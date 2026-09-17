@@ -11,6 +11,8 @@
  * cluster.
  */
 
+import { useState } from "react";
+import { useOrganizationBranding } from "../../lib/organization-branding";
 import { HelpLink } from "../documentation/help-link";
 import { Scale } from "lucide-react";
 import { FormattedMessage } from "react-intl";
@@ -25,6 +27,10 @@ export function AppHeader({
   onSignOut,
 }: Readonly<{ user: ShellUser; onSignOut: () => void }>) {
   const location = useLocation();
+  const branding = useOrganizationBranding();
+  const [failedLogo, setFailedLogo] = useState<string | null>(null);
+  const logo = branding?.logo && branding.logo !== failedLogo ? branding.logo : null;
+  const organizationName = branding?.name.trim();
   // A Counterparty result can move between two `/search` answers
   // without replacing the route component. Key the header there so its
   // query mirrors the URL-backed answer instead of keeping the old one.
@@ -41,7 +47,16 @@ export function AppHeader({
           className="flex size-8 items-center justify-center rounded-card bg-(--chrome-brand-chip) text-(--chrome-brand-fg)"
           aria-hidden="true"
         >
-          <Scale size={20} />
+          {logo ? (
+            <img
+              src={logo}
+              alt=""
+              className="size-8 rounded-card object-contain"
+              onError={() => setFailedLogo(logo)}
+            />
+          ) : (
+            <Scale size={20} />
+          )}
         </span>
         <span className="flex items-center gap-4 text-md">
           <span className="font-semibold">
@@ -51,8 +66,13 @@ export function AppHeader({
           <span aria-hidden="true" className="hidden text-subtle md:inline">
             /
           </span>
-          <span className="hidden font-semibold md:inline">
-            <FormattedMessage id="shell.workspace" defaultMessage="workspace" />
+          <span
+            className="hidden max-w-40 truncate font-semibold md:inline xl:max-w-64"
+            title={organizationName}
+          >
+            {organizationName || (
+              <FormattedMessage id="shell.workspace" defaultMessage="workspace" />
+            )}
           </span>
         </span>
       </div>
