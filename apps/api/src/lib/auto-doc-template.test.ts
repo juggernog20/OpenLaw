@@ -44,3 +44,14 @@ describe("Auto-Doc detection", () => {
     expect(() => detectAutoDocTemplate(Buffer.from("not a Word file"))).toThrow();
   });
 });
+
+it.each(["bold", "underline", "italic"])("recognizes the %s text-style flag", (style) => {
+  const parsed = scanTemplateText(`{{client_name|${style}}}`);
+  expect(parsed.tokens).toEqual([
+    expect.objectContaining({ kind: "placeholder", name: "client_name", directive: style }),
+  ]);
+});
+it("continues to refuse unknown or combined formatting instructions", () => {
+  expect(() => scanTemplateText("{{name|strikethrough}}")).toThrow();
+  expect(() => scanTemplateText("{{name|bold|italic}}")).toThrow();
+});

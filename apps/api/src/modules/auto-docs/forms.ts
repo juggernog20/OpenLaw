@@ -140,8 +140,8 @@ export async function validateMaps(db: Executor, definition: AutoDocFormDefiniti
 
 /**
  * The form field types a format directive can print, matching the fill's
- * value resolver, with the type a fresh detection mints first. `upper`
- * prints any answer, so it asks for nothing.
+ * value resolver, with the type a fresh detection mints first. Text styles and `upper` accept
+ * any answer type.
  */
 function directiveNeeds(
   directive: string,

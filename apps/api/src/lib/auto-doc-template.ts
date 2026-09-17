@@ -7,6 +7,11 @@ import { xmlPart, zipEntries } from "./docx-package.js";
 /** Bounded at 120 characters, the length the form editor saves, so detection
  * never mints a field name the editor cannot write back. */
 export const AUTO_DOC_SLUG = /^[a-z][a-z0-9_]{0,119}$/;
+export const AUTO_DOC_TEXT_STYLES = ["bold", "underline", "italic"] as const;
+export type AutoDocTextStyle = (typeof AUTO_DOC_TEXT_STYLES)[number];
+export function isAutoDocTextStyle(value: string | undefined): value is AutoDocTextStyle {
+  return AUTO_DOC_TEXT_STYLES.some((style) => style === value);
+}
 export interface TemplateToken {
   kind: "placeholder" | "block_open" | "block_close";
   name: string;
@@ -43,12 +48,13 @@ export function parseAutoDocPlaceholder(content: string): { name: string; direct
   if (
     extra.length ||
     (directive !== undefined &&
+      !isAutoDocTextStyle(directive) &&
       !/^(?:upper|date:(?:YYYY-MM-DD|DD\/MM\/YYYY|MMMM D, YYYY)|currency:[A-Z]{3})$/.test(
         directive,
       ))
   )
     throw new TemplateDetectionError(
-      "Use upper, a supported date format, or currency with a three-letter code",
+      "Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code",
       `{{${content}}}`,
     );
   if (directive?.startsWith("currency:")) {
