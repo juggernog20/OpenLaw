@@ -596,7 +596,10 @@ export function narrateNotification(
   if (!arm) {
     return {
       icon: Activity,
-      sentence: intl.formatMessage(UNKNOWN, { contract: record, event: identifierLabel(item.eventType) }),
+      sentence: intl.formatMessage(UNKNOWN, {
+        contract: record,
+        event: identifierLabel(item.eventType),
+      }),
       href,
     };
   }
