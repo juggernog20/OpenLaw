@@ -222,7 +222,7 @@ export function PortalRequestFormPage() {
       marks.add("description");
     }
 
-    if (!departmentId) {
+    if (departments.length > 0 && !departmentId) {
       missing.push(intl.formatMessage({ id: "records.department", defaultMessage: "Department" }));
       marks.add("department");
     }
@@ -268,7 +268,6 @@ export function PortalRequestFormPage() {
       );
       return;
     }
-    if (!departmentId) return;
     setUnanswered(new Set());
 
     setBusy(true);
@@ -408,7 +407,7 @@ export function PortalRequestFormPage() {
 
                 <Field
                   htmlFor="request-department"
-                  required
+                  required={departments.length > 0}
                   unanswered={unanswered.has("department")}
                   label={intl.formatMessage({
                     id: "records.department",
@@ -417,7 +416,7 @@ export function PortalRequestFormPage() {
                 >
                   <DepartmentPicker
                     id="request-department"
-                    required
+                    required={departments.length > 0}
                     invalid={unanswered.has("department")}
                     value={departmentId}
                     options={departments}
@@ -425,8 +424,16 @@ export function PortalRequestFormPage() {
                       setDepartmentId(value);
                       clearMark("department");
                     }}
-                    disabled={busy}
+                    disabled={busy || departments.length === 0}
                   />
+                  {departments.length === 0 && (
+                    <p className="text-sm text-muted">
+                      <FormattedMessage
+                        id="portal.form.noDepartments"
+                        defaultMessage="No Departments are configured. You can submit without one; an Administrator can add Departments in Settings."
+                      />
+                    </p>
+                  )}
                 </Field>
                 <Field
                   htmlFor="request-urgency"

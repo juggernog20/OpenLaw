@@ -17,7 +17,7 @@ Send Legal a Request with the details and attachments they need to review it.
 6. Keep the confirmation open until the attachments finish uploading. Note the Request's **R-** reference and check whether any file failed.
 7. Select **Open request** to check the saved answers and attachments.
 
-For example, a fictional **Docs Contract review** Request could use the title **Review the Northstar evaluation terms**, an explanation of the proposed evaluation, **High** urgency, and **Procurement** as the Department. Department identifies the business team responsible for this work. Choose it from the shared list. Legal cannot change it on the Request; conversion carries it to the new record, where it can be changed. These are example values, not required choices.
+For example, a fictional **Docs Contract review** Request could use the title **Review the Northstar evaluation terms**, an explanation of the proposed evaluation, **High** urgency, and **Procurement** as the Department. Department identifies the business team responsible for this work. Choose it from the shared list. If no live Departments are configured, the form explains that you can submit without one; an Administrator can add Departments in Settings. Legal cannot change it on the Request; conversion carries it to the new record, where it can be changed. These are example values, not required choices.
 
 ## Check the result
 
@@ -27,7 +27,7 @@ Use [Follow a Request and reply to Legal](follow-request.md) to read progress, a
 
 ## If it does not work
 
-If required answers are missing, complete the marked questions. A question without an asterisk can stay blank; Legal completes any value its own record needs later. Ask Legal if you cannot answer a required question, or if **Department** offers no Department to choose. You cannot change submitted answers in the Portal; send a correction in the existing Request's conversation.
+If required answers are missing, complete the marked questions. A question without an asterisk can stay blank; Legal completes any value its own record needs later. Ask Legal if you cannot answer a required question. You cannot change submitted answers in the Portal; send a correction in the existing Request's conversation.
 
 The confirmation appears as soon as the Request exists, before every attachment has finished. An attachment failure does not undo the Request. Check the named failure and quote the existing R- reference when contacting Legal; submitting the whole form again would create another Request. Open that Request and attach the missing file to a reply. Check any file-size error against the limit shown by your instance.
 

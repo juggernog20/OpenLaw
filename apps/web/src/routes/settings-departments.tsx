@@ -3,7 +3,7 @@
 /** SET-010 Department settings on the shared taxonomy pane, with references retained on archive. */
 
 import { redirect, useLoaderData } from "react-router";
-import { defineMessages } from "react-intl";
+import { defineMessages, FormattedMessage } from "react-intl";
 import { TaxonomyTypesPane, type TaxonomyPaneApi } from "../components/taxonomy-types-pane";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
@@ -107,6 +107,14 @@ export function SettingsDepartmentsPage() {
       initialRows={departments}
       tabs={null}
       archiveKeepsReferences
+      emptyNotice={
+        <p role="status" className="mb-4 text-sm text-muted">
+          <FormattedMessage
+            id="settings.departments.missing"
+            defaultMessage="No live Departments are configured. Add one so Business Users can identify their Department on Requests and in Portal setup."
+          />
+        </p>
+      }
       api={PANE_API}
       messages={MESSAGES}
     />

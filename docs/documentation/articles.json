@@ -166,7 +166,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.home", "portal.form"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "follow-request",

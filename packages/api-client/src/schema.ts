@@ -20411,7 +20411,7 @@ export interface operations {
       content: {
         "application/json": {
           requestTypeId: string;
-          departmentId: string;
+          departmentId?: string | null;
           title: string;
           description: string;
           /** @enum {string} */

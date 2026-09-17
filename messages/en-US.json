@@ -6953,6 +6953,9 @@
   "portal.form.missingRequired": {
     "defaultMessage": "Fill {fields} first — {count, plural, one {the form requires it} other {the form requires them}}."
   },
+  "portal.form.noDepartments": {
+    "defaultMessage": "No Departments are configured. You can submit without one; an Administrator can add Departments in Settings."
+  },
   "portal.form.numberInvalid": {
     "defaultMessage": "{fieldName}: enter this as a number."
   },
@@ -8479,6 +8482,9 @@
   },
   "settings.departments.inUse": {
     "defaultMessage": "{count, plural, one {# reference} other {# references}}"
+  },
+  "settings.departments.missing": {
+    "defaultMessage": "No live Departments are configured. Add one so Business Users can identify their Department on Requests and in Portal setup."
   },
   "settings.departments.noCandidates": {
     "defaultMessage": "Departments keep existing references when archived."

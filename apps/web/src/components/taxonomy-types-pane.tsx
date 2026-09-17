@@ -298,6 +298,7 @@ function ArchiveTypeDialog<Row extends TaxonomyPaneRow>({
 export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>({
   initialRows,
   archiveKeepsReferences = false,
+  emptyNotice,
   tabs,
   editor,
   protectedRow,
@@ -307,6 +308,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
 }: Readonly<{
   initialRows: Row[];
   archiveKeepsReferences?: boolean;
+  emptyNotice?: ReactNode;
   /** The module's section head (title + tab strip). */
   tabs: ReactNode;
   /** Each row's editor screen and label; omit for modules without one. */
@@ -455,6 +457,8 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   return (
     <>
       <PageTitle title={intl.formatMessage(messages.pageTitle)} />
+      {live.length === 0 && emptyNotice}
+
       <div className="flex w-full max-w-(--width-settings-card) flex-col gap-4">
         {tabs}
         <ListEditor

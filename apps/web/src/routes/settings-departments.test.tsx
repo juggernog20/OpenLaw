@@ -54,9 +54,13 @@ it("archives an in-use Department without reassignment and restores it", async (
   ).toBeInTheDocument();
   await user.click(within(dialog).getByRole("button", { name: "Archive Department" }));
   await waitFor(() => expect(writes).toEqual(["archive"]));
+  expect(await screen.findByText(/No live Departments are configured/)).toBeVisible();
   await user.click(screen.getByRole("switch", { name: /archived/i }));
   await user.click(await screen.findByRole("button", { name: "Restore Sales" }));
   await waitFor(() => expect(writes).toEqual(["archive", "restore"]));
+  await waitFor(() =>
+    expect(screen.queryByText(/No live Departments are configured/)).not.toBeInTheDocument(),
+  );
 });
 
 it("edits a person's Department through Users and keeps an archived current name visible", async () => {

@@ -37358,8 +37358,15 @@
                     "type": "string"
                   },
                   "departmentId": {
-                    "type": "string",
-                    "minLength": 1
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "title": {
                     "type": "string"
@@ -37404,7 +37411,7 @@
                     }
                   }
                 },
-                "required": ["requestTypeId", "departmentId", "title", "description", "urgency"],
+                "required": ["requestTypeId", "title", "description", "urgency"],
                 "additionalProperties": false
               }
             }

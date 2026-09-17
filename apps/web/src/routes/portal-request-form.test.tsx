@@ -72,6 +72,7 @@ interface Submissions {
 function portalForm(
   state: {
     fields?: FormField[];
+    departments?: { id: string; displayName: string }[];
     entities?: { id: string; name: string }[];
     intakeLinks?: { id: string; label: string; url: string; displayOrder: number }[];
     submit?: (call: StubCall) => Response;
@@ -108,7 +109,7 @@ function portalForm(
         },
         fields: state.fields ?? [COUNTERPARTY, PAPER_SIDE],
         intakeLinks: state.intakeLinks ?? [],
-        departments: [{ id: "dept-finance", displayName: "Finance" }],
+        departments: state.departments ?? [{ id: "dept-finance", displayName: "Finance" }],
       });
     }
     if (call.url.pathname === "/api/v1/requests" && call.method === "POST") {
@@ -527,4 +528,17 @@ describe("Portal-listed Entity picker", () => {
     expect(screen.getByLabelText(/^Title/)).toHaveValue("MSA renewal with Orion Cloud");
     expect(submissions.bodies).toHaveLength(1);
   });
+});
+
+it("submits without a Department when none exist and explains the empty list", async () => {
+  const submissions: Submissions = { bodies: [], uploads: [] };
+  stubApi({ signedIn: REQUESTER, extra: portalForm({ fields: [], departments: [] }, submissions) });
+  renderAt("/portal/new/contract_review");
+  const user = userEvent.setup();
+  await user.type(await screen.findByLabelText(/^Title/), "Review the proposal");
+  await user.type(screen.getByLabelText(/^Description/), "Please review the attached terms.");
+  expect(screen.getByText(/No Departments are configured/)).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Submit request" }));
+  expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+  expect(submissions.bodies[0]).toMatchObject({ departmentId: null });
 });

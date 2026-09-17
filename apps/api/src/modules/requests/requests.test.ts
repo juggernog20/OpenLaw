@@ -19,7 +19,7 @@ import { requestDepartment } from "../../testing/request-department.js";
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, eq, requestTypeFields, requests, users } from "@openlaw/db";
+import { activityLog, and, departments, eq, requestTypeFields, requests, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -895,4 +895,20 @@ it("requires a Department and rejects changes after submission", async () => {
     payload: { departmentId: null },
   });
   expect(changed.statusCode).toBe(404);
+});
+
+it("accepts a Request without a Department when no live Departments exist", async () => {
+  const live = await harness.db.select().from(departments);
+  await harness.db.update(departments).set({ archivedAt: new Date() });
+  try {
+    const created = await submit(completeBody({ departmentId: null }));
+    expect(created.statusCode, created.body).toBe(201);
+    expect(created.json().request.departmentId).toBeNull();
+  } finally {
+    for (const row of live)
+      await harness.db
+        .update(departments)
+        .set({ archivedAt: row.archivedAt })
+        .where(eq(departments.id, row.id));
+  }
 });

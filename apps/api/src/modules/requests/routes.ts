@@ -106,6 +106,7 @@ import { uuidv7 } from "uuidv7";
 import {
   and,
   count,
+  departments,
   contracts,
   matters,
   ne,
@@ -236,7 +237,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["requests"],
         body: z.strictObject({
           requestTypeId: z.string(),
-          departmentId: z.string().min(1),
+          departmentId: z.string().min(1).nullable().optional(),
           title: z.string(),
           description: z.string(),
           /** DES-018's four severity levels and nothing else. */
@@ -303,7 +304,15 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             })),
         ]);
 
-        const department = await lockedDepartment(tx, body.departmentId);
+        const department = body.departmentId ? await lockedDepartment(tx, body.departmentId) : null;
+        if (!department) {
+          const [available] = await tx
+            .select({ id: departments.id })
+            .from(departments)
+            .where(isNull(departments.archivedAt))
+            .limit(1);
+          if (available) throw httpError(400, "Choose a Department.");
+        }
         const [row] = await tx
           .insert(requests)
           .values({
@@ -312,7 +321,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             // is no body field to forge and no route to create one on
             // somebody else's behalf.
             requesterId: request.user.id,
-            departmentId: department.id,
+            departmentId: department?.id ?? null,
             title,
             description,
             urgency: body.urgency,
