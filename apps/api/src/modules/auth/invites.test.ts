@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, sql, users, verifications } from "@openlaw/db";
+import { accounts, activityLog, asc, eq, sql, users, verifications } from "@openlaw/db";
 import {
+  linkFrom,
   signIn,
   signInCookies,
   startHarness,
@@ -397,4 +398,59 @@ describe("the DD-017 audit trail (#65)", () => {
       payload: { email: "ash@example.com", role: "legal_team_member" },
     });
   });
+});
+
+it("activates magic-link-only staff and refuses every invite mutation after sign-out", async () => {
+  const invitee = {
+    email: "magic-staff@example.com",
+    displayName: "Magic Staff",
+    role: "legal_team_member",
+  };
+  const invited = await invite(adminCookies, invitee);
+  expect(invited.statusCode, invited.body).toBe(201);
+  const id = invited.json().user.id as string;
+  const enabled = await harness.app.inject({
+    method: "PATCH",
+    url: "/api/v1/auth/policy/legal",
+    cookies: adminCookies,
+    payload: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+  });
+  expect(enabled.statusCode, enabled.body).toBe(200);
+  const issued = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/auth/magic-link",
+    payload: { email: invitee.email, group: "legal" },
+  });
+  expect(issued.statusCode, issued.body).toBe(202);
+  const link = new URL(linkFrom(harness.mailer.messagesTo(invitee.email).at(-1)!.text));
+  const redeemed = await harness.app.inject({ method: "GET", url: link.pathname + link.search });
+  expect(redeemed.statusCode, redeemed.body).toBe(302);
+  expect(redeemed.headers.location).not.toContain("error");
+  expect(await harness.db.select().from(accounts).where(eq(accounts.userId, id))).toEqual([]);
+  const cookies = Object.fromEntries(redeemed.cookies.map((cookie) => [cookie.name, cookie.value]));
+  const signedOut = await harness.app.inject({
+    method: "POST",
+    url: "/api/auth/sign-out",
+    cookies,
+    payload: {},
+  });
+  expect(signedOut.statusCode, signedOut.body).toBe(200);
+  const listed = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/users",
+    cookies: adminCookies,
+  });
+  expect(listed.json().users).toContainEqual(
+    expect.objectContaining({ id, status: "active", lastActiveAt: expect.any(String) }),
+  );
+  expect((await invite(adminCookies, invitee)).statusCode).toBe(409);
+  for (const method of ["POST", "DELETE"] as const) {
+    const response = await harness.app.inject({
+      method,
+      url: `/api/v1/auth/invites/${id}${method === "POST" ? "/resend" : ""}`,
+      cookies: adminCookies,
+    });
+    expect(response.statusCode, response.body).toBe(409);
+  }
+  expect(await harness.db.select().from(users).where(eq(users.id, id))).toHaveLength(1);
 });

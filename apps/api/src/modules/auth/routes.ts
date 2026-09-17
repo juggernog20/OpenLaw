@@ -447,23 +447,20 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       const email = request.body.email.toLowerCase();
 
       const existing = await app.db
-        .select(userColumns)
+        .select({ ...userColumns, lastActiveAt: users.lastActiveAt })
         .from(users)
         .where(eq(users.email, email))
         .limit(1);
 
       if (existing.length > 0) {
         const user = existing[0]!;
-        // Any account row means they activated — a credential from the
-        // set-password flow, or an SSO subject from signing in through
-        // the IdP. There is nothing to re-send and the invite must not
-        // touch the account.
+        // A sign-in stamp also covers magic links, which create no account row.
         const activated = await app.db
           .select({ id: accounts.id })
           .from(accounts)
           .where(eq(accounts.userId, user.id))
           .limit(1);
-        if (activated.length > 0) {
+        if (user.lastActiveAt || activated.length > 0) {
           throw httpError(409, "This user has already activated their account.");
         }
         // Re-sending never changes the account. A different role here is a
@@ -516,13 +513,12 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * Loads the user and proves it is a pending invite: a staff role and
-   * no account row yet. Everything else answers 409 — resending to or
-   * revoking an activated user (or a Business User, who was never
-   * invited) is user management, not invite management.
+   * no sign-in stamp or account row yet. Resending to or revoking an
+   * activated user answers 409. Business Users were never invited.
    */
   async function pendingInvite(userId: string) {
     const [user] = await app.db
-      .select(userColumns)
+      .select({ ...userColumns, lastActiveAt: users.lastActiveAt })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
@@ -532,7 +528,11 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       .from(accounts)
       .where(eq(accounts.userId, user.id))
       .limit(1);
-    if (activated.length > 0 || !(INVITABLE_ROLES as readonly string[]).includes(user.role)) {
+    if (
+      user.lastActiveAt ||
+      activated.length > 0 ||
+      !(INVITABLE_ROLES as readonly string[]).includes(user.role)
+    ) {
       throw httpError(409, "This user is not a pending invite.");
     }
     return user;
@@ -589,7 +589,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // said no.
       await app.db.transaction(async (tx) => {
         const [user] = await tx
-          .select(userColumns)
+          .select({ ...userColumns, lastActiveAt: users.lastActiveAt })
           .from(users)
           .where(eq(users.id, request.params.userId))
           .limit(1)
@@ -600,7 +600,11 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(accounts)
           .where(eq(accounts.userId, user.id))
           .limit(1);
-        if (activated.length > 0 || !(INVITABLE_ROLES as readonly string[]).includes(user.role)) {
+        if (
+          user.lastActiveAt ||
+          activated.length > 0 ||
+          !(INVITABLE_ROLES as readonly string[]).includes(user.role)
+        ) {
           throw httpError(409, "This user is not a pending invite.");
         }
         // The set-password tokens go with the row: better-auth keys a

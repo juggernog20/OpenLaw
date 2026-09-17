@@ -64,15 +64,14 @@ interface UserRecord {
   departmentId: string | null;
 }
 
-/**
- * "Invited" is reserved for staff without an account row; activation
- * writes one (credential or SSO subject). Business Users also lack
- * account rows (magic-link JIT provisioning never creates one), but they
- * were never invited: they exist because they signed in.
- */
+/** Setting a password or signing in by any method activates an invite. */
 function statusOf(row: UserRecord, activated: boolean) {
   if (row.archivedAt) return "archived" as const;
-  if (!activated && (INVITABLE_ROLES as readonly string[]).includes(row.role)) {
+  if (
+    !row.lastActiveAt &&
+    !activated &&
+    (INVITABLE_ROLES as readonly string[]).includes(row.role)
+  ) {
     return "invited" as const;
   }
   return "active" as const;

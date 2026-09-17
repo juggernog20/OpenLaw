@@ -583,25 +583,12 @@ export function createAuth(
                 code: "USER_ARCHIVED",
               });
             }
-          },
-          // The durable "last active" stamp behind the Users list
-          // (SET-005). Written on session create and refresh rather than
-          // computed from live session rows, which sign-out deletes —
-          // "signed out an hour ago" must not read as "never signed in".
-          // Granularity: every sign-in, plus one refresh per updateAge.
-          // Best-effort by design: the stamp is display data, so a
-          // failed write must never reject the sign-in it rode on.
-          after: async (session) => {
-            try {
-              await db
-                .update(users)
-                .set({ lastActiveAt: new Date() })
-                .where(eq(users.id, session.userId));
-            } catch (error) {
-              // Losing one stamp is invisible; failing a sign-in is not.
-              // Logged so a persistent failure is not equally invisible.
-              logger.warn({ err: error, userId: session.userId }, "last-active stamp failed");
-            }
+            // Persist activation before a session can be issued. Invite revocation
+            // locks this user row, so it cannot delete someone who has signed in.
+            await db
+              .update(users)
+              .set({ lastActiveAt: new Date() })
+              .where(eq(users.id, session.userId));
           },
         },
         update: {
