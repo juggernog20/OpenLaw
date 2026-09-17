@@ -21,11 +21,9 @@
  * a step lighter than DES-009's confidentiality banner, so the badge on
  * top of it can keep the banner's own pair and still stand out.
  *
- * The composer is a three-segment tier control, preset to Working Team
- * on a record page (DD-016), and the audience each segment means is
- * named under it — before posting, never after. A Contributor's
- * composer has no Legal Only segment at all; the seam refuses the tier
- * regardless, so the absence is a courtesy and not the enforcement.
+ * Contract and Matter composers start on Full Thread and offer Legal
+ * Only as the other audience. Working Team is not offered. Business
+ * Users post through the Portal. The audience is named before posting.
  *
  * Typing `@` opens the mention typeahead (M9/3, CMT-007). It offers the
  * people a comment on this record can reach, and picking one writes

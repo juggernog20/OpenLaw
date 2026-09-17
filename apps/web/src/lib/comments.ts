@@ -331,14 +331,8 @@ export function composerTiers(role: Role, entityType?: CommentEntityType): reado
 }
 
 /**
- * What a record page's composer opens on (DD-016): the working group,
- * so the common case needs no decision. The portal's request thread
- * posts Full Thread and offers nothing else, so it reads no default
- * from here.
- *
- * It is the record's convention and not a tier anybody may post at: a
- * caller seeds from it only when `composerTiers` puts the poster in that
- * room, and falls back to their widest room when it does not.
+ * Fallback for composers outside Contracts and Matters, which start on
+ * Full Thread. Callers use this tier only when their audience offers it.
  */
 export const RECORD_DEFAULT_TIER: CommentTier = "working_team";
 

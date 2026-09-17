@@ -126,8 +126,8 @@ export function KeyDatesCard({
   noticePeriodDays,
   onDeadlines,
 }: Readonly<{
-  /** The CTR-009 union as the seam answered it — ordered, counted, and
-   * with the next deadline already marked. */
+  /** The CTR-009 union in deadline order. The table uses that order
+   * to indicate the next deadline (DES-042), without a separate marker. */
   deadlines: readonly ContractDeadline[];
   conversionReview?: ReactNode;
   reviewControl?: (row: ContractDeadline) => ReactNode;
