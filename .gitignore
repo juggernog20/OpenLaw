@@ -30,3 +30,6 @@ playwright-report/
 
 # Generated standalone documentation exports.
 .documentation-output/
+
+# Local generated assets and image-generation prompts.
+/output/
