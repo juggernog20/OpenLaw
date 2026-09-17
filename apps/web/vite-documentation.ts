@@ -26,7 +26,10 @@ export function documentation(): Plugin {
   let failure: Error | undefined;
   function compile() {
     try {
-      compilation = compileWorkspace();
+      compilation = compileWorkspace({ development: true });
+      for (const warning of compilation.bundle.warnings) {
+        console.warn(`[documentation] ${warning}`);
+      }
       files = undefined;
       failure = undefined;
     } catch (error) {

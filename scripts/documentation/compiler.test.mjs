@@ -478,6 +478,48 @@ test("verification timestamps reject impossible calendar dates", (t) => {
   }
 });
 
+test("development builds warn about stale application review without claiming verification", (t) => {
+  const f = fixture(t);
+  const build = { commit, dirty: true, applicationSha256: "d".repeat(64) };
+  const { bundle, files } = f.compile({ development: true, build });
+  assert.equal(bundle.validationPending, true);
+  assert.equal(bundle.report.verified, 0);
+  assert.equal(bundle.report.coverageVerified, 0);
+  assert.ok(bundle.articles.every((a) => a.unverified));
+  assert.ok(bundle.warnings.some((warning) => /compatibility/.test(warning)));
+  assert.match(files.get("submit.html"), /Validation in progress/);
+  assert.throws(() => f.compile({ build }), /compatibility/);
+  assert.throws(
+    () => f.compile({ development: true, complete: true, build: { ...build, dirty: false } }),
+    /compatibility/,
+  );
+  f.json("edition.json", { ...f.edition, channel: "release" });
+  assert.throws(
+    () => f.compile({ development: true, build: { ...build, dirty: false } }),
+    /compatibility/,
+  );
+});
+
+test("development builds retain changed guides with pending review and still reject unsafe source", (t) => {
+  const f = fixture(t);
+  writeFileSync(join(f.contentRoot, "submit.md"), `${f.sources.submit}\nChanged instructions.\n`);
+  const { bundle } = f.compile({ development: true });
+  assert.equal(bundle.report.verified, 1);
+  assert.equal(bundle.articles.find((a) => a.id === "submit").unverified, true);
+  assert.equal(bundle.articles.find((a) => a.id === "recover").unverified, false);
+  assert.ok(bundle.warnings.some((warning) => /hash mismatch/.test(warning)));
+  assert.throws(() => f.compile(), /hash mismatch/);
+  f.articles[0].status = "review";
+  f.json("articles.json", {
+    schemaVersion: 1,
+    sections: [{ id: "start", title: "Start here" }],
+    articles: f.articles,
+  });
+  assert.equal(f.compile({ development: true }).bundle.articles.length, 2);
+  writeFileSync(join(f.contentRoot, "submit.md"), `${f.sources.submit}\n<script>alert(1)</script>`);
+  assert.throws(() => f.compile({ development: true }), /HTML/);
+});
+
 test("historical walkthroughs require a current, hash-bound compatibility review", (t) => {
   const f = fixture(t);
   const e = f.evidence("submit");

@@ -97,6 +97,7 @@ export function compileWorkspace({
   preview = process.env.OPENLAW_DOCS_PREVIEW === "true",
   fixture = process.env.OPENLAW_DOCS_FIXTURE === "true",
   complete = false,
+  development = false,
 } = {}) {
   if (fixture && !preview)
     throw new Error("Validation fixtures require explicit documentation preview.");
@@ -109,6 +110,7 @@ export function compileWorkspace({
     build: buildIdentity(),
     preview,
     complete,
+    development,
   });
 }
 

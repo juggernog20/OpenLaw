@@ -20,5 +20,6 @@ export function compileWorkspace(options?: {
   preview?: boolean;
   fixture?: boolean;
   complete?: boolean;
+  development?: boolean;
 }): Compilation;
 export function exportFiles(result: Compilation): Map<string, string | Uint8Array>;

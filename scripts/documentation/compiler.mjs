@@ -419,6 +419,7 @@ export function compileDocumentation({
   build,
   preview = false,
   complete = false,
+  development = false,
 }) {
   const catalog = json(metadataRoot, "articles.json"),
     edition = json(metadataRoot, "edition.json");
@@ -467,6 +468,7 @@ export function compileDocumentation({
   );
   requireThat(build.commit === null || SHA.test(build.commit), "invalid distribution commit");
   requireThat(HASH.test(build.applicationSha256), "application digest required");
+  const developmentReview = development && edition.channel === "development" && !complete;
   const warnings = [],
     assetFiles = new Map(),
     parsed = new Map();
@@ -474,18 +476,38 @@ export function compileDocumentation({
   const eligible = catalog.articles.filter(
     (a) =>
       ["verified", "published"].includes(a.status) ||
-      ((preview || publication.has(a.id)) && ["draft", "review"].includes(a.status)),
+      ((preview || developmentReview || publication.has(a.id)) &&
+        ["draft", "review"].includes(a.status)),
   );
-  const verified = eligible.filter((a) => ["verified", "published"].includes(a.status));
-  if (verified.length) verifyApplicationCompatibility(edition, build);
+  const recordedVerified = eligible.filter((a) => ["verified", "published"].includes(a.status));
+  let applicationCompatible = true;
+  if (recordedVerified.length) {
+    try {
+      verifyApplicationCompatibility(edition, build);
+    } catch (error) {
+      if (!developmentReview) throw error;
+      applicationCompatible = false;
+      warnings.push(error.message);
+    }
+  }
+  const verified = [];
   const parser = new Marked({ gfm: true });
   for (const a of eligible) {
     const bytes = readOwned(contentRoot, `${a.id}.md`),
       source = bytes.toString("utf8");
-    const unverified = !["verified", "published"].includes(a.status);
-    if (!preview && publication.has(a.id))
+    let unverified = !["verified", "published"].includes(a.status) || !applicationCompatible;
+    if (!preview && !developmentReview && publication.has(a.id))
       requireThat(sha256(bytes) === publication.get(a.id), `publication source changed: ${a.id}`);
-    if (!unverified) verifyArticleEvidence(a, bytes, metadataRoot, edition, scenarios);
+    if (!unverified) {
+      try {
+        verifyArticleEvidence(a, bytes, metadataRoot, edition, scenarios);
+        verified.push(a);
+      } catch (error) {
+        if (!developmentReview) throw error;
+        unverified = true;
+        warnings.push(error.message);
+      }
+    }
     const tokens = parser.lexer(source),
       outline = [],
       assets = [];
@@ -675,7 +697,13 @@ export function compileDocumentation({
         warnings.length === 0),
     "complete suite still has unverified articles or coverage",
   );
-  const validationPending = !preview && publication.size > 0;
+  const pendingDevelopmentReview = developmentReview && articles.some((a) => a.unverified);
+  if (pendingDevelopmentReview) {
+    warnings.push(
+      "Documentation review is pending. Development builds include these guides with validation badges; publication and release checks remain strict.",
+    );
+  }
+  const validationPending = !preview && (publication.size > 0 || pendingDevelopmentReview);
   const contentDigest = sha256(
     JSON.stringify({
       articles,

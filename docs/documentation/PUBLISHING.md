@@ -163,7 +163,7 @@ walkthroughs on builds containing those changes. Unchanged procedures can retain
 their original observations. The edition-wide compatibility check still binds the
 target to the distribution's actual application bytes.
 
-By default, the normal reader includes only `verified` and `published` articles whose
+Strict publication includes only `verified` and `published` articles whose
 evidence matches their bytes. TECH-027 amends this rule to permit explicit
 development publication before verification. `edition.publication` records the
 owner's approval, source commit, reason, and each approved draft/review article's
@@ -175,6 +175,8 @@ edition and never supplies verification evidence. See
 `review` articles and must identify them as unverified. A source-less `scoped` or
 `ready` catalog entry never becomes a placeholder article. An empty early build
 shows an honest availability state, not fabricated content.
+
+Ordinary Vite development and build commands use the TECH-026/027 addendum of 2026-09-17 for `development` editions: authored guides remain available while stale compatibility or article evidence produces warnings. Such guides carry validation-in-progress article badges and do not count as verified. This does not mutate source evidence or edition review records. Invalid source, links, assets and catalog structure still fail. `docs:check`, `docs:export`, `docs:complete`, and release editions always retain the strict publication checks described above.
 
 The builder supports ordinary incremental checks and a separate complete-suite
 publication check. Incremental builds can succeed while writing is in progress;

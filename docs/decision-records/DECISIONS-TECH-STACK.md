@@ -1352,6 +1352,14 @@ Retain the prior edition declaration in
 `docs/documentation/batches/app-publication/previous-edition.json`. Maintenance must
 update the approval record when a guide changes or completes verification.
 
+### TECH-026/027 addendum: development builds warn while publication stays strict (2026-09-17)
+
+The product owner approved separating routine development builds from documentation publication review. Ordinary Vite development and build commands for a `development` edition include authored guides and warn when application compatibility or article evidence is missing or stale. Affected guides carry validation-in-progress article badges and receive no verification credit. Original evidence, dates and hashes are retained; building the app does not update them.
+
+`docs:check`, `docs:complete`, and `docs:export` remain strict publication commands. A `release` edition always enforces compatibility and article evidence, even when requested through the development build integration. Complete-suite publication retains its clean-build, coverage and final-destination evidence requirements. Source validation, sanitization, links, assets and catalog structure remain build errors in development too.
+
+This supersedes the ordinary development build restrictions above, including the requirement for a hash-bound publication approval to make a draft or review article available while developing. TECH-027's explicit publication records remain applicable to strict development-edition publication. It does not grant release approval or classify stale guides as verified.
+
 ## TECH-028: The Auto-Doc fill engine runs in the API process; the sidecar renders the PDF
 
 - **Status:** Accepted, confirmed by the M35/7 spec and implementation

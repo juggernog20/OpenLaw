@@ -66,6 +66,12 @@ failed attempt. A blocked group stays in the denominator. A release exception ne
 Blair's explicit decision, reason, owner and future target; it does not turn an
 unverified group into a pass or make `docs:complete` succeed.
 
+## Ordinary development versus publication
+
+The product-owner decision recorded in the TECH-026/027 addendum of 2026-09-17 makes documentation review advisory for ordinary Vite development and build commands when the edition channel is `development`. Missing or stale application compatibility and article evidence produce build warnings; affected articles remain available with validation-in-progress badges and receive no verification credit. This also makes authored `draft` and `review` guides available during development. Source validation and rendering checks still fail on invalid content.
+
+Run documentation review once for the candidate being published, updating affected procedures and retaining unaffected evidence with an actual compatibility review. `pnpm docs:check`, `pnpm docs:complete`, `pnpm docs:export`, and every `release` edition still enforce the publication requirements. A successful development build does not satisfy those gates and never rewrites historical evidence.
+
 ## Review coverage locally
 
 From the repository root, with the workspace dependencies installed:
