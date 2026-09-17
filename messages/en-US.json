@@ -3815,6 +3815,9 @@
   "documents.actionsForVersion": {
     "defaultMessage": "Actions for version {number} of {title}"
   },
+  "documents.amendmentNotLoaded": {
+    "defaultMessage": "The primary Document is outside this list. Open its folder or load more Documents, then choose Add version on the primary Document and select Amendment."
+  },
   "documents.archivedPill": {
     "defaultMessage": "Archived"
   },

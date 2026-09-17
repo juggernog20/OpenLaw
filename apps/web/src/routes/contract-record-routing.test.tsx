@@ -442,3 +442,20 @@ describe("the child and successor vehicles (CTR-007 §3, §4)", () => {
     ).not.toBeChecked();
   });
 });
+
+it("explains how to file an amendment when the primary Document is outside the loaded list", async () => {
+  const base = recordApi();
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/contracts/42/documents"
+        ? json(200, { documents: [], nextCursor: "more" })
+        : base.handler(call),
+  });
+  renderAt("/contracts/42");
+  const dialog = await openRenew();
+  await userEvent.click(dialog.getByRole("radio", { name: /Paper as amendment/ }));
+  await userEvent.click(dialog.getByRole("button", { name: "File the amendment" }));
+  expect(await screen.findByText(/The primary Document is outside this list/)).toBeVisible();
+  expect(screen.queryByRole("heading", { name: "Add version" })).not.toBeInTheDocument();
+});

@@ -616,24 +616,22 @@ export function DocumentsCard({
     if (appended) landing.current?.focus();
   }, [appended]);
 
-  /**
-   * A renewal routed here to be papered as an amendment (M16/5,
-   * CTR-007's second vehicle): open the composer on the record's
-   * instrument, seeded with the `amendment` kind.
-   *
-   * The record names which document that is; this section finds it in
-   * the paper it is holding. A record whose instrument is filed below
-   * the fold answers the request anyway rather than leaving it pending,
-   * because a request that outlived its page would open a composer the
-   * next time somebody walked into this section.
-   */
-  // Seeded null, not with the prop: the card can mount with the request
-  // already set, and that first render has to open the composer too.
+  // A renewal opens the primary Document's composer, or explains how to reach it.
   const [amendmentTaken, setAmendmentTaken] = useState<string | null>(null);
   if (amendmentTaken !== amending) {
     setAmendmentTaken(amending);
     const primary = amending === null ? undefined : documents.find((row) => row.id === amending);
     if (primary) setComposer({ document: primary, kind: "amendment" });
+    else if (amending !== null) {
+      setStatus("error");
+      setDetail(
+        intl.formatMessage({
+          id: "documents.amendmentNotLoaded",
+          defaultMessage:
+            "The primary Document is outside this list. Open its folder or load more Documents, then choose Add version on the primary Document and select Amendment.",
+        }),
+      );
+    }
   }
   useEffect(() => {
     if (amending !== null) onAmendmentOpened();
