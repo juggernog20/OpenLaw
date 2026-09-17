@@ -249,13 +249,13 @@ test.describe.serial("M19 demo path", () => {
       // column, so routing is auditable without opening an editor
       // (story 16).
       await expect(
-        cell(requestTypeRow(page, "NDA request"), "Target", "Contract · NDA"),
+        cell(requestTypeRow(page, "NDA request"), "Default destination", "Contract · NDA"),
       ).toBeVisible();
       await expect(
-        cell(requestTypeRow(page, "Contract review"), "Target", "Contract"),
+        cell(requestTypeRow(page, "Contract review"), "Default destination", "Contract"),
       ).toBeVisible();
       await expect(
-        cell(requestTypeRow(page, "Legal question"), "Target", "No target"),
+        cell(requestTypeRow(page, "Legal question"), "Default destination", "Decide during triage"),
       ).toBeVisible();
 
       // Adds a request type: the inline draft row is the form
@@ -274,7 +274,7 @@ test.describe.serial("M19 demo path", () => {
       // A brand-new type has no target and no fields yet — the row says
       // so on both new columns.
       const row = requestTypeRow(page, typeName);
-      await expect(cell(row, "Target", "No target")).toBeVisible();
+      await expect(cell(row, "Default destination", "Decide during triage")).toBeVisible();
       await expect(cell(row, "Form fields", "0 fields")).toBeVisible();
 
       // Its pencil opens the type's own editor screen (DES-022), where
@@ -345,9 +345,9 @@ test.describe.serial("M19 demo path", () => {
         attachedList.getByRole("checkbox", { name: `${FIRST_FIELD} required` }),
       ).toBeChecked();
 
-      // The server retains its scope guard for existing integrations.
+      // A Matter destination would strand the attached Contract fields.
       const refused = await page.request.patch(`/api/v1/request-types/${typeId}`, {
-        data: { targetModule: null, targetTypeId: null },
+        data: { targetModule: "matter", targetTypeId: null },
       });
       expect(refused.status(), await refused.text()).toBe(409);
       const retained = (await listRequestTypes(page.request)).find((type) => type.id === typeId);
@@ -395,7 +395,7 @@ test.describe.serial("M19 demo path", () => {
       await tabs.getByRole("link", { name: "Request types" }).click();
       await expect(page).toHaveURL(/\/settings\/intake\/request-types$/);
       const reloadedRow = requestTypeRow(page, typeName);
-      await expect(cell(reloadedRow, "Target", "Contract · NDA")).toBeVisible();
+      await expect(cell(reloadedRow, "Default destination", "Contract · NDA")).toBeVisible();
       // Two catalog fields — the four basics are on every form and are
       // never counted here.
       await expect(cell(reloadedRow, "Form fields", "2 fields")).toBeVisible();
