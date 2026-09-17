@@ -53411,6 +53411,17 @@
                     "signingConfigured": {
                       "type": "boolean"
                     },
+                    "updateMode": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": ["polling", "webhook"]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "primaryDocument": {
                       "anyOf": [
                         {
@@ -53467,7 +53478,7 @@
                       ]
                     }
                   },
-                  "required": ["envelopes", "signingConfigured", "primaryDocument"],
+                  "required": ["envelopes", "signingConfigured", "updateMode", "primaryDocument"],
                   "additionalProperties": false
                 }
               }
@@ -53693,6 +53704,17 @@
                     "signingConfigured": {
                       "type": "boolean"
                     },
+                    "updateMode": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": ["polling", "webhook"]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "primaryDocument": {
                       "anyOf": [
                         {
@@ -53749,7 +53771,7 @@
                       ]
                     }
                   },
-                  "required": ["envelopes", "signingConfigured", "primaryDocument"],
+                  "required": ["envelopes", "signingConfigured", "updateMode", "primaryDocument"],
                   "additionalProperties": false
                 }
               }
@@ -54005,6 +54027,17 @@
                     "signingConfigured": {
                       "type": "boolean"
                     },
+                    "updateMode": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": ["polling", "webhook"]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "primaryDocument": {
                       "anyOf": [
                         {
@@ -54061,7 +54094,7 @@
                       ]
                     }
                   },
-                  "required": ["envelopes", "signingConfigured", "primaryDocument"],
+                  "required": ["envelopes", "signingConfigured", "updateMode", "primaryDocument"],
                   "additionalProperties": false
                 }
               }

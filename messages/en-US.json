@@ -10380,7 +10380,7 @@
     "defaultMessage": "The envelope could not be sent. Try again."
   },
   "signing.sendNote": {
-    "defaultMessage": "When everyone signs, the executed file lands on this contract and the stage advances to Active."
+    "defaultMessage": "When everyone signs, the executed file lands on this Contract. The Contract advances to Active only if it is still in the Signature Stage."
   },
   "signing.sendTitle": {
     "defaultMessage": "Send for signature"
@@ -10413,7 +10413,7 @@
     "defaultMessage": "Voided"
   },
   "signing.statusArrives": {
-    "defaultMessage": "Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active."
+    "defaultMessage": "{mode, select, polling {Signed, declined, and voided status is checked by polling, about every 15–20 minutes.} webhook {Signed, declined, and voided status arrives by webhook.} other {Automatic status updates are unavailable while the connector is disabled.}} The executed file is filed automatically. The Contract advances to Active only if it is still in the Signature Stage."
   },
   "signing.subject": {
     "defaultMessage": "Subject"

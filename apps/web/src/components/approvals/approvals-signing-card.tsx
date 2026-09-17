@@ -402,6 +402,7 @@ export function ApprovalsSigningCard({
     onSigning({
       envelopes: outcome.envelopes,
       signingConfigured: outcome.signingConfigured,
+      updateMode: outcome.updateMode,
       primaryDocument: outcome.primaryDocument,
     });
     setStatus("saved");
@@ -584,16 +585,12 @@ export function ApprovalsSigningCard({
               </tbody>
             </table>
           </div>
-          {/* The C20 mock's webhook note, drawn now that the behaviour
-              it describes exists (DES-036 clause 9, DES-037). Only
-              while an envelope is out: it answers "do I have to come
-              back and update this by hand", which is a question only a
-              live row raises. */}
           {live !== null && (
             <p className="px-4 pb-3 text-xs text-muted">
               <FormattedMessage
                 id="signing.statusArrives"
-                defaultMessage="Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active."
+                defaultMessage="{mode, select, polling {Signed, declined, and voided status is checked by polling, about every 15–20 minutes.} webhook {Signed, declined, and voided status arrives by webhook.} other {Automatic status updates are unavailable while the connector is disabled.}} The executed file is filed automatically. The Contract advances to Active only if it is still in the Signature Stage."
+                values={{ mode: signing.updateMode ?? "disabled" }}
               />
             </p>
           )}
@@ -1850,7 +1847,7 @@ function SendEnvelopeDialog({
         <p className="mt-2 text-sm text-muted">
           <FormattedMessage
             id="signing.sendNote"
-            defaultMessage="When everyone signs, the executed file lands on this contract and the stage advances to Active."
+            defaultMessage="When everyone signs, the executed file lands on this Contract. The Contract advances to Active only if it is still in the Signature Stage."
           />
         </p>
         <form

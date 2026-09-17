@@ -290,6 +290,7 @@ async function signingState(jar: Record<string, string>, number: number) {
   return res.json() as {
     envelopes: EnvelopeRow[];
     signingConfigured: boolean;
+    updateMode: "polling" | "webhook" | null;
     primaryDocument: SendableDocument | null;
   };
 }
@@ -345,7 +346,14 @@ describe("sending the primary document for signature", () => {
   it("says the install has a connector, and holds no envelope yet", async () => {
     const state = await signingState(as(MEMBER), contract.number);
     expect(state.signingConfigured).toBe(true);
+    expect(state.updateMode).toBe("webhook");
     expect(state.envelopes).toEqual([]);
+    await harness.db.update(signingConnectors).set({ updateMode: "polling" });
+    try {
+      expect((await signingState(as(MEMBER), contract.number)).updateMode).toBe("polling");
+    } finally {
+      await harness.db.update(signingConnectors).set({ updateMode: "webhook" });
+    }
   });
 
   it("sends the chosen round, records the envelope, and narrates it", async () => {

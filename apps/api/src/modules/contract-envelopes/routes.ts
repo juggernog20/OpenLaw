@@ -106,6 +106,7 @@ import {
   contractEnvelopes,
   contractEnvelopeSigners,
   contracts,
+  signingConnectors,
   desc,
   documents,
   documentVersions,
@@ -113,6 +114,7 @@ import {
   ENVELOPE_STATUSES,
   EXECUTED_FETCH_STATES,
   inArray,
+  isNull,
   users,
   type EnvelopeStatus,
   type Executor,
@@ -271,6 +273,7 @@ const EnvelopesEnvelope = z.object({
    * (CTR-013). False is the zero-config manual hand-off, and it is not
    * an error. */
   signingConfigured: z.boolean(),
+  updateMode: z.enum(["polling", "webhook"]).nullable(),
   /** The primary document this viewer may send, or NULL when the record
    * has none — or when DD-014 walls the one it has off from them. */
   primaryDocument: SendableDocumentSchema.nullable(),
@@ -501,6 +504,15 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     return row ?? null;
   }
 
+  async function signingUpdateMode(db: Executor = app.db) {
+    const [connector] = await db
+      .select({ mode: signingConnectors.updateMode })
+      .from(signingConnectors)
+      .where(and(eq(signingConnectors.provider, "docusign"), isNull(signingConnectors.disabledAt)))
+      .limit(1);
+    return connector?.mode ?? null;
+  }
+
   /** The record's whole signing state, as every route here answers it.
    * The connector is known to be resolvable by the time a write answers,
    * which is why that fact is passed in rather than asked again. */
@@ -513,7 +525,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       envelopesOf(app.db, contract.id),
       sendableDocument(app.db, user, contract.primaryDocumentId),
     ]);
-    return { envelopes, signingConfigured, primaryDocument };
+    return { envelopes, signingConfigured, primaryDocument, updateMode: await signingUpdateMode() };
   }
 
   /** The typed refusal a second send answers with (TECH-020). One
@@ -733,7 +745,12 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           return null;
         }),
       ]);
-      return { envelopes, signingConfigured: signing !== null, primaryDocument };
+      return {
+        envelopes,
+        signingConfigured: signing !== null,
+        primaryDocument,
+        updateMode: await signingUpdateMode(),
+      };
     },
   );
 
@@ -939,6 +956,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           return {
             envelopes: await envelopesOf(tx, locked.id),
             signingConfigured: true,
+            updateMode: await signingUpdateMode(tx),
             primaryDocument,
           };
         });

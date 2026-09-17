@@ -172,7 +172,7 @@ function envelopeRow(overrides: Record<string, unknown> = {}) {
  * exists (DES-039). */
 const WEBHOOK_NOTE =
   "Signed, declined, and voided status arrives by webhook. " +
-  "The executed file auto-files and the stage advances to Active.";
+  "The executed file is filed automatically. The Contract advances to Active only if it is still in the Signature Stage.";
 
 /** The executed copy one signed round filed back onto the chain. */
 const EXECUTED_COPY = {
@@ -191,6 +191,7 @@ function recordApi(
   initial: {
     envelopes?: Record<string, unknown>[];
     signingConfigured?: boolean;
+    updateMode?: "polling" | "webhook";
     primaryDocument?: typeof PRIMARY | null;
   } = {},
   row: Record<string, unknown> = contractRow(),
@@ -198,6 +199,7 @@ function recordApi(
   let state = {
     envelopes: initial.envelopes ?? [],
     signingConfigured: initial.signingConfigured ?? true,
+    updateMode: initial.updateMode ?? "webhook",
     primaryDocument: initial.primaryDocument === undefined ? PRIMARY : initial.primaryDocument,
   };
   let reads = 0;
@@ -615,8 +617,8 @@ describe("sending for signature", () => {
     const dialog = await screen.findByRole("dialog");
     expect(
       within(dialog).getByText(
-        "When everyone signs, the executed file lands on this contract and " +
-          "the stage advances to Active.",
+        "When everyone signs, the executed file lands on this Contract. " +
+          "The Contract advances to Active only if it is still in the Signature Stage.",
       ),
     ).toBeInTheDocument();
   });
@@ -887,4 +889,14 @@ describe("when the void control is absent", () => {
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
   });
+});
+
+it("describes polling updates and the conditional Signature Stage transition", async () => {
+  const api = recordApi({ envelopes: [envelopeRow()], updateMode: "polling" });
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/contracts/42/approvals");
+  expect(
+    await screen.findByText(/status is checked by polling, about every 15–20 minutes/),
+  ).toHaveTextContent("only if it is still in the Signature Stage");
+  expect(screen.queryByText(WEBHOOK_NOTE)).not.toBeInTheDocument();
 });

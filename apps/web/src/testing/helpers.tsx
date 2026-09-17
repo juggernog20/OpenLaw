@@ -508,7 +508,12 @@ export function stubApi(state: ApiState) {
     // envelope, and therefore no send control anywhere on the record.
     // Only the suites about signing supply one.
     if (/^\/api\/v1\/contracts\/\d+\/envelopes$/.test(call.url.pathname) && call.method === "GET") {
-      return json(200, { envelopes: [], signingConfigured: false, primaryDocument: null });
+      return json(200, {
+        envelopes: [],
+        signingConfigured: false,
+        updateMode: null,
+        primaryDocument: null,
+      });
     }
     // And every date on it (M16/3, CTR-009). Empty by default for the
     // roster's reason: a record with no key dates and no term dates is

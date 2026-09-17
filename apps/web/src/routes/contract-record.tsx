@@ -806,6 +806,7 @@ function ContractRecord() {
           setSigning({
             envelopes: outcome.envelopes,
             signingConfigured: outcome.signingConfigured,
+            updateMode: outcome.updateMode,
             primaryDocument: outcome.primaryDocument,
           });
         }

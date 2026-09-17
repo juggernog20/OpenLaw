@@ -43,11 +43,7 @@ export interface EnvelopeSigner {
 }
 
 /** The record's whole signing state, as both calls answer it. */
-export type SigningState = {
-  envelopes: ContractEnvelope[];
-  signingConfigured: boolean;
-  primaryDocument: SendableDocument | null;
-};
+export type SigningState = ListResponse;
 
 /**
  * What a read or a write over the record's signing state answers: the

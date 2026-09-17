@@ -25506,6 +25506,7 @@ export interface operations {
               } | null;
             }[];
             signingConfigured: boolean;
+            updateMode: ("polling" | "webhook") | null;
             primaryDocument: {
               id: string;
               title: string;
@@ -25592,6 +25593,7 @@ export interface operations {
               } | null;
             }[];
             signingConfigured: boolean;
+            updateMode: ("polling" | "webhook") | null;
             primaryDocument: {
               id: string;
               title: string;
@@ -25698,6 +25700,7 @@ export interface operations {
               } | null;
             }[];
             signingConfigured: boolean;
+            updateMode: ("polling" | "webhook") | null;
             primaryDocument: {
               id: string;
               title: string;
