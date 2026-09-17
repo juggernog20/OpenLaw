@@ -567,3 +567,84 @@ describe("the activity an apply keeps", () => {
     expect(await requestEntriesOn(contract.id)).toEqual([]);
   });
 });
+
+describe("type defaults and organization override permissions", () => {
+  const policy = (allowLegalApproverGroupOverride: boolean, jar = as(ADMIN)) =>
+    harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/org/approval-policy",
+      cookies: jar,
+      payload: { allowLegalApproverGroupOverride },
+    });
+  const setDefault = (typeId: string, groupId: string | null, jar = as(ADMIN)) =>
+    harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/contract-types/${typeId}/approval-default`,
+      cookies: jar,
+      payload: { groupId },
+    });
+
+  it("defaults to legal-team overrides, snapshots new contracts, and enforces administrator-only overrides", async () => {
+    const initial = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/org/approval-policy",
+      cookies: as(ADMIN),
+    });
+    expect(initial.json()).toEqual({ allowLegalApproverGroupOverride: true });
+    const typeId = await ndaTypeId();
+    const first = await newGroup("Default legal review", [userIds.get(FIRST.email)!]);
+    const second = await newGroup("Alternative legal review", [userIds.get(SECOND.email)!]);
+    const old = await newContract("Before default assigned");
+    try {
+      expect((await setDefault(typeId, first)).statusCode).toBe(200);
+      const contract = await newContract("Inherits approval default");
+      const read = () =>
+        harness.app.inject({
+          method: "GET",
+          url: `/api/v1/contracts/${contract.number}/approvals`,
+          cookies: as(MEMBER),
+        });
+      expect((await read()).json()).toMatchObject({
+        approvals: [],
+        defaultGroupId: first,
+        canOverrideDefaultGroup: true,
+      });
+      expect((await setDefault(typeId, second)).statusCode).toBe(200);
+      expect((await read()).json().defaultGroupId).toBe(first);
+      expect((await applyGroup(as(MEMBER), contract.number, second)).statusCode).toBe(201);
+      expect((await policy(false)).statusCode).toBe(200);
+      expect((await read()).json().canOverrideDefaultGroup).toBe(false);
+      expect((await applyGroup(as(MEMBER), contract.number, second)).statusCode).toBe(403);
+      expect((await applyGroup(as(MEMBER), contract.number, first)).statusCode).toBe(201);
+      const another = await newContract("Admin can override");
+      expect((await applyGroup(as(ADMIN), another.number, first)).statusCode).toBe(201);
+      expect((await applyGroup(as(MEMBER), old.number, second)).statusCode).toBe(201);
+      expect((await roster(contract.number)).length).toBe(2);
+      expect((await policy(true, as(MEMBER))).statusCode).toBe(403);
+      expect((await setDefault(typeId, null, as(MEMBER))).statusCode).toBe(403);
+      expect((await setDefault(typeId, "missing-group")).statusCode).toBe(400);
+    } finally {
+      await setDefault(typeId, null);
+      await policy(true);
+    }
+  });
+
+  it("keeps an archived default visible and refuses silently replacing it for legal team members", async () => {
+    const typeId = await ndaTypeId();
+    const group = await newGroup("Archived type default", [userIds.get(FIRST.email)!]);
+    const other = await newGroup("Replacement type default", [userIds.get(SECOND.email)!]);
+    try {
+      await setDefault(typeId, group);
+      const contract = await newContract("Default archived after creation");
+      await archiveGroup(group);
+      await policy(false);
+      expect((await applyGroup(as(MEMBER), contract.number, group)).statusCode).toBe(409);
+      expect((await applyGroup(as(MEMBER), contract.number, other)).statusCode).toBe(403);
+      expect((await applyGroup(as(ADMIN), contract.number, other)).statusCode).toBe(201);
+      expect((await setDefault(typeId, group)).statusCode).toBe(400);
+    } finally {
+      await setDefault(typeId, null);
+      await policy(true);
+    }
+  });
+});

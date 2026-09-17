@@ -732,7 +732,7 @@ Route: `/settings/matters/types/:typeId`
 - [ ] Use All types and section tabs to leave the editor.
 - [ ] Edit Display name and Description; commit on blur and cancel an unfinished edit with Escape.
 - [ ] Inspect the count of records using this type; internal identifiers are not shown.
-- [ ] Open Attach field, choose an eligible module/global field, and attach it.
+- [ ] Open Attach field, choose an eligible field from this area, and attach it.
 - [ ] Toggle Required on an attached field and inspect save feedback.
 - [ ] Reorder attached fields by dragging and keyboard handles.
 - [ ] Detach a field and confirm its existing values/catalog definition remain available where applicable.
@@ -755,14 +755,14 @@ Route: `/settings/matters/statuses`
 Route: `/settings/matters/fields`
 
 - [ ] Page review complete
-- [ ] Add a field with name, description, data type, module/global scope, and Business/Legal tag.
+- [ ] Add a field with name, description, data type, and Business/Legal tag.
 - [ ] For Single select or Multi select, enter one option per line in the intended display order.
 - [ ] Set an AI extraction prompt where the field supports Contract analysis, or leave it empty.
 - [ ] Cancel field creation; separately save and correct missing/invalid values.
 - [ ] Rename a field inline and cancel an unfinished rename.
-- [ ] Edit name, description, scope, tag, options, and eligible AI prompt; inspect the immutable data type.
+- [ ] Edit name, description, tag, options, and eligible AI prompt; inspect the immutable data type.
 - [ ] Archive a field and inspect the explanation about retaining stored values.
-- [ ] Check a Global field from another module's Fields page after changing it.
+- [ ] Confirm fields from other areas are absent and there is no Scope selector.
 
 #### Templates
 
@@ -817,7 +817,7 @@ Route: `/settings/contracts/types/:typeId`
 - [ ] Use All types and section tabs to leave the editor.
 - [ ] Edit Display name and Description; commit on blur and cancel an unfinished edit with Escape.
 - [ ] Inspect the count of records using this type; internal identifiers are not shown.
-- [ ] Open Attach field, choose an eligible module/global field, and attach it.
+- [ ] Open Attach field, choose an eligible field from this area, and attach it.
 - [ ] Toggle Required on an attached field and inspect save feedback.
 - [ ] Reorder attached fields by dragging and keyboard handles.
 - [ ] Detach a field and confirm its existing values/catalog definition remain available where applicable.
@@ -840,14 +840,14 @@ Route: `/settings/contracts/statuses`
 Route: `/settings/contracts/fields`
 
 - [ ] Page review complete
-- [ ] Add a field with name, description, data type, module/global scope, and Business/Legal tag.
+- [ ] Add a field with name, description, data type, and Business/Legal tag.
 - [ ] For Single select or Multi select, enter one option per line in the intended display order.
 - [ ] Set an AI extraction prompt where the field supports Contract analysis, or leave it empty.
 - [ ] Cancel field creation; separately save and correct missing/invalid values.
 - [ ] Rename a field inline and cancel an unfinished rename.
-- [ ] Edit name, description, scope, tag, options, and eligible AI prompt; inspect the immutable data type.
+- [ ] Edit name, description, tag, options, and eligible AI prompt; inspect the immutable data type.
 - [ ] Archive a field and inspect the explanation about retaining stored values.
-- [ ] Check a Global field from another module's Fields page after changing it.
+- [ ] Confirm fields from other areas are absent and there is no Scope selector.
 
 #### Approver groups
 
@@ -929,7 +929,7 @@ Route: `/settings/entities/types/:typeId`
 - [ ] Use All types and section tabs to leave the editor.
 - [ ] Edit Display name and Description; commit on blur and cancel an unfinished edit with Escape.
 - [ ] Inspect the count of records using this type; internal identifiers are not shown.
-- [ ] Open Attach field, choose an eligible module/global field, and attach it.
+- [ ] Open Attach field, choose an eligible field from this area, and attach it.
 - [ ] Toggle Required on an attached field and inspect save feedback.
 - [ ] Reorder attached fields by dragging and keyboard handles.
 - [ ] Detach a field and confirm its existing values/catalog definition remain available where applicable.
@@ -951,14 +951,14 @@ Route: `/settings/entities/officer-roles`
 Route: `/settings/entities/fields`
 
 - [ ] Page review complete
-- [ ] Add a field with name, description, data type, module/global scope, and Business/Legal tag.
+- [ ] Add a field with name, description, data type, and Business/Legal tag.
 - [ ] For Single select or Multi select, enter one option per line in the intended display order.
 - [ ] Set an AI extraction prompt where the field supports Contract analysis, or leave it empty.
 - [ ] Cancel field creation; separately save and correct missing/invalid values.
 - [ ] Rename a field inline and cancel an unfinished rename.
-- [ ] Edit name, description, scope, tag, options, and eligible AI prompt; inspect the immutable data type.
+- [ ] Edit name, description, tag, options, and eligible AI prompt; inspect the immutable data type.
 - [ ] Archive a field and inspect the explanation about retaining stored values.
-- [ ] Check a Global field from another module's Fields page after changing it.
+- [ ] Confirm fields from other areas are absent and there is no Scope selector.
 
 ### Organization — Knowledge
 

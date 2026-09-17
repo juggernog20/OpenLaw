@@ -229,6 +229,7 @@ export const contractKeyDatesRoutes: FastifyPluginAsyncZod = async (app) => {
           noticePeriodDays: contracts.noticePeriodDays,
           aiUnverified: contracts.aiUnverified,
           contractTypeId: contracts.contractTypeId,
+          defaultApproverGroupId: contracts.defaultApproverGroupId,
         },
       })
       .from(contractKeyDates)

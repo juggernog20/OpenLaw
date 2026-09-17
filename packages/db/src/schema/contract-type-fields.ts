@@ -5,7 +5,7 @@
  * MTR-011's `matter_type_fields` — the shared columns live in
  * `typeFieldColumns`): which catalog fields appear on which contract
  * types, in what order, and whether each is required there. Only
- * `contract` and `global` scoped fields attach here
+ * Contract fields attach here
  * (application-enforced). Detaching deletes the join row only; the
  * catalog definition and stored values are untouched (MTR-014) — the
  * values are keyed by slug in `contracts.custom_fields`, so

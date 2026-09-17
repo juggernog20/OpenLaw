@@ -5,7 +5,7 @@
  * CTR-016's `contract_type_fields` — the shared columns live in
  * `typeFieldColumns`): which catalog fields appear on which matter
  * types, in what order, and whether each is required there. M22 opened
- * the `matter` field scope, so matter-scoped and global fields attach
+ * the `matter` field scope, so matter-scoped fields attach
  * here while other module scopes are refused. Detaching deletes the join
  * row only; the catalog definition and stored values are untouched
  * (MTR-014). Matter writes hard-enforce `is_required`.

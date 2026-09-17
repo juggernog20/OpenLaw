@@ -106,6 +106,7 @@ import {
   type ReachedContract,
 } from "../../lib/contract-access.js";
 import type { NotifyingTransaction } from "../../lib/notifications/notifier.js";
+import { getOrgSettings } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021), which is the roster read floor
@@ -458,13 +459,25 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           "freezes a record, it does not hide it",
         tags: ["approvals"],
         params: NumberParams,
-        response: { 200: ApprovalsEnvelope, default: problemResponse },
+        response: {
+          200: ApprovalsEnvelope.extend({
+            defaultGroupId: z.string().nullable(),
+            canOverrideDefaultGroup: z.boolean(),
+          }),
+          default: problemResponse,
+        },
       },
     },
     async (request) => {
       const contract = await reachedContract(app.db, request.user, request.params.number);
       if (!contract) throw httpError(404, NO_CONTRACT);
-      return await rosterOf(app.db, contract.id);
+      const settings = await getOrgSettings(app.db);
+      return {
+        ...(await rosterOf(app.db, contract.id)),
+        defaultGroupId: contract.defaultApproverGroupId,
+        canOverrideDefaultGroup:
+          request.user.role === "administrator" || settings.allowLegalApproverGroupOverride,
+      };
     },
   );
 
@@ -592,6 +605,18 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           lock: true,
         });
         assertOpen(contract);
+        const settings = await getOrgSettings(tx);
+        if (
+          contract.defaultApproverGroupId &&
+          request.body.groupId !== contract.defaultApproverGroupId &&
+          request.user.role !== "administrator" &&
+          !settings.allowLegalApproverGroupOverride
+        ) {
+          throw httpError(
+            403,
+            "Only an administrator can override this contract's default approver group.",
+          );
+        }
 
         const [group] = await tx
           .select({

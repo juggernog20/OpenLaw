@@ -801,12 +801,11 @@ export const CUSTOM_FIELDS = [
   },
   {
     displayName: "Region",
-    moduleScope: "global",
+    moduleScope: "entity",
     fieldType: "single_select",
     fieldTag: "business",
     options: ["EMEA", "Americas", "APAC"],
     attach: {
-      matter: ["commercial", "corporate"],
       entity: ["corporation", "llc"],
     },
   },
@@ -816,7 +815,7 @@ export const CUSTOM_FIELDS = [
 export const REQUEST_FIELDS = [
   {
     displayName: "Counterparty name",
-    moduleScope: "global",
+    moduleScope: "contract",
     fieldType: "text",
     fieldTag: "business",
     attach: { request: ["nda_request", "contract_review", "vendor_onboarding"] },
@@ -824,28 +823,28 @@ export const REQUEST_FIELDS = [
   },
   {
     displayName: "Needed by",
-    moduleScope: "global",
+    moduleScope: "contract",
     fieldType: "date",
     fieldTag: "business",
     attach: { request: ["nda_request", "contract_review", "vendor_onboarding"] },
   },
   {
     displayName: "Deal value (USD)",
-    moduleScope: "global",
+    moduleScope: "contract",
     fieldType: "number",
     fieldTag: "business",
     attach: { request: ["contract_review", "vendor_onboarding"] },
   },
   {
     displayName: "Will they see personal data?",
-    moduleScope: "global",
+    moduleScope: "contract",
     fieldType: "boolean",
     fieldTag: "legal",
     attach: { request: ["vendor_onboarding"] },
   },
   {
     displayName: "Country",
-    moduleScope: "global",
+    moduleScope: "matter",
     fieldType: "single_select",
     fieldTag: "business",
     options: [

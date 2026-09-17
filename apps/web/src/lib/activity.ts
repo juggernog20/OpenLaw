@@ -2874,25 +2874,22 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       member: named(intl, payload, "memberName"),
     }),
   },
-  // The catalog's two scope moves keep their own verbs, because the
-  // scope is what decides which modules can attach the field.
+  // Read-only narration for scope changes recorded before fields became module-owned.
   "field.promoted": {
     icon: Tags,
     message: defineMessage({
       id: "activity.field.promoted",
-      defaultMessage: "{actor} widened the field {name} to every module",
+      defaultMessage: "{actor} updated the field {name}",
     }),
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
-    changes: (intl, payload, context) => directChange(intl, payload, "moduleScope", context),
   },
   "field.narrowed": {
     icon: Tags,
     message: defineMessage({
       id: "activity.field.narrowed",
-      defaultMessage: "{actor} narrowed the field {name} to one module",
+      defaultMessage: "{actor} updated the field {name}",
     }),
     values: (intl, payload) => ({ name: thingName(intl, payload) }),
-    changes: (intl, payload, context) => directChange(intl, payload, "moduleScope", context),
   },
 
   // ---- Fields attached to a type ----

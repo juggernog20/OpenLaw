@@ -3,7 +3,7 @@
 /**
  * The contract type editor (#84) at the HTTP seam: the single-type read
  * behind the editor, the description edit, and the CTR-016 attachment
- * rules. Attach and detach accept contract-scoped and global fields and
+ * rules. Attach and detach accept contract-scoped fields and
  * refuse other scopes. Order and the required flag live on the
  * attachment, per type. Detach never touches the catalog definition.
  * Every route sits behind SET-002's one role gate, and every attachment
@@ -235,11 +235,11 @@ describe("the description edit (the editor's left card)", () => {
 });
 
 describe("attach and detach (CTR-016 scopes)", () => {
-  it("attaches a contract-scoped and a global field, in attachment order", async () => {
+  it("attaches a contract-scoped and a contract field, in attachment order", async () => {
     const nda = await typeBySlug("nda");
     const governingLaw = await fieldIdBySlug("governing_law");
 
-    // A global field, created through the catalog route like an
+    // A contract field, created through the catalog route like an
     // Administrator would.
     const created = await harness.app.inject({
       method: "POST",
@@ -247,7 +247,7 @@ describe("attach and detach (CTR-016 scopes)", () => {
       cookies: adminCookies,
       payload: {
         displayName: "Department",
-        moduleScope: "global",
+        moduleScope: "contract",
         fieldType: "single_select",
         fieldTag: "business",
         options: ["Legal", "Sales"],
@@ -272,7 +272,7 @@ describe("attach and detach (CTR-016 scopes)", () => {
     expect(second.statusCode, second.body).toBe(201);
     expect(second.json().attachedField).toMatchObject({
       slug: "department",
-      moduleScope: "global",
+      moduleScope: "contract",
       displayOrder: 2,
       isRequired: true,
     });
@@ -299,7 +299,7 @@ describe("attach and detach (CTR-016 scopes)", () => {
       .returning();
     const res = await attach(nda.id, { fieldId: matterField!.id });
     expect(res.statusCode).toBe(400);
-    expect(res.json().detail).toContain("contract-scoped and global fields");
+    expect(res.json().detail).toContain("contract-scoped fields");
     expect(await listAttached(nda.id)).not.toContainEqual(
       expect.objectContaining({ slug: "practice_area" }),
     );

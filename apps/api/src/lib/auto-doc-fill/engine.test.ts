@@ -203,7 +203,10 @@ it("fills the downloadable agreement and its optional clause after removing the 
     { slug: "start_date", directive: "date:DD/MM/YYYY" },
     { slug: "provider_name", directive: "upper" },
     { slug: "client_name", directive: "upper" },
+    { slug: "services", directive: "italic" },
     { slug: "fee", directive: "currency:USD" },
+    { slug: "provider_name", directive: "bold" },
+    { slug: "client_name", directive: "underline" },
   ]);
   const definition = form("start_date", "provider_name", "client_name", "services", "fee");
   definition.fields[0]!.fieldType = "date";
@@ -258,4 +261,70 @@ it("fills the downloadable agreement and its optional clause after removing the 
     expect(result).toContain("Changes");
     expect(result).not.toContain("{{");
   }
+});
+
+it.each([
+  ["bold", "b", "1"],
+  ["italic", "i", "1"],
+  ["underline", "u", "single"],
+])(
+  "applies %s only to the answer, preserving surrounding runs and XML escaping",
+  async (style, property, expected) => {
+    const zip = new PizZip(await fixture("plain"));
+    zip.file(
+      "word/document.xml",
+      `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:rPr><w:b w:val="0"/><w:i w:val="0"/><w:u w:val="none"/><w:color w:val="336699"/></w:rPr><w:t>Before {{name|${style}}} after {{other}}.</w:t></w:r></w:p></w:body></w:document>`,
+    );
+    const output = await engine.fill({
+      template: zip.generate({ type: "nodebuffer" }),
+      definition: form("name", "other"),
+      answers: { name: "A & <B>\nSecond line", other: "plain" },
+    });
+    expect(text(output)).toContain("Before A & <B>\nSecond line after plain.");
+    const { DOMParser } = await import("@xmldom/xmldom");
+    const xml = new PizZip(output).file("word/document.xml")!.asText();
+    const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    const runs = Array.from(
+      new DOMParser().parseFromString(xml, "application/xml").getElementsByTagNameNS(ns, "r"),
+    );
+    expect(runs[0]!.textContent).toBe("Before ");
+    expect(runs.at(-1)!.textContent).toBe(" after plain.");
+    const prop = (index: number) =>
+      runs[index]!.getElementsByTagNameNS(ns, property!)[0]!.getAttributeNS(ns, "val");
+    expect(prop(0)).toBe(style === "underline" ? "none" : "0");
+    for (let index = 1; index < runs.length - 1; index++) expect(prop(index)).toBe(expected);
+    expect(prop(runs.length - 1)).toBe(style === "underline" ? "none" : "0");
+    expect(runs[1]!.getElementsByTagNameNS(ns, "color")[0]!.getAttributeNS(ns, "val")).toBe(
+      "336699",
+    );
+    expect(xml).not.toContain("OPENLAW_STYLE_");
+  },
+);
+
+it("styles split markers and headers, and leaves no style markers when a block is omitted", async () => {
+  const zip = new PizZip(await fixture("parts"));
+  const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  zip.file(
+    "word/document.xml",
+    `<w:document xmlns:w="${ns}"><w:body><w:p><w:r><w:t>Before {{na</w:t></w:r><w:r><w:t>me|bold}} after.</w:t></w:r></w:p><w:p><w:r><w:t>{{#block extra}}Optional {{name|italic}}{{/block}}</w:t></w:r></w:p></w:body></w:document>`,
+  );
+  zip.file(
+    "word/header1.xml",
+    `<w:hdr xmlns:w="${ns}"><w:p><w:r><w:t>Header {{name|underline}}.</w:t></w:r></w:p></w:hdr>`,
+  );
+  const definition = form("name", "include");
+  definition.clauseRules = [
+    { blockName: "extra", fieldSlug: "include", operator: "equals", value: "yes" },
+  ];
+  const output = await engine.fill({
+    template: zip.generate({ type: "nodebuffer" }),
+    definition,
+    answers: { name: "Acme", include: "no" },
+  });
+  expect(text(output)).toContain("Before Acme after.");
+  expect(text(output)).not.toContain("Optional");
+  const result = new PizZip(output);
+  expect(result.file("word/document.xml")!.asText()).toContain('<w:b w:val="1"');
+  expect(result.file("word/header1.xml")!.asText()).toContain('<w:u w:val="single"');
+  expect(result.file("word/header1.xml")!.asText()).not.toContain("OPENLAW_STYLE_");
 });

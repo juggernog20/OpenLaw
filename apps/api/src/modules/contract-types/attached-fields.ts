@@ -4,7 +4,7 @@
  * The contract type editor's attachment routes (CTR-016, #84): the
  * shared per-type field attachment machinery (`typeFieldRoutes`,
  * extracted with #85) mounted on `contract_type_fields` with the
- * CTR-016 scope rule — contract-scoped and global fields only; other
+ * CTR-016 scope rule — contract-scoped fields only; other
  * modules' scopes are refused. The rule is one line for every contract
  * type, so the mount states it as a constant. See the factory for the
  * behavior set.
@@ -22,12 +22,12 @@ export const attachedFieldsRoutes = typeFieldRoutes({
   idInfix: "ContractType",
   noun: "contract type",
   scopeRule: {
-    scopes: ["contract", "global"],
+    scopes: ["contract"],
     excludedSlugs: CONTRACT_OVERVIEW_FIELD_SLUGS,
     refusal:
-      "Only contract-scoped and global fields attach to contract types. Department and Region are built-in Overview attributes.",
+      "Only contract-scoped fields attach to contract types. Department and Region are built-in Overview attributes.",
   },
-  scopeSummary: "contract-scoped and global fields only (CTR-016)",
+  scopeSummary: "contract-scoped fields only (CTR-016)",
   actionPrefix: "contract_type_field",
   // No `requiredMilestone`: the contract record enforces the flag from
   // #112, at creation and at re-type (CTR-016/MTR-014).

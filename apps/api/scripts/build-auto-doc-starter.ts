@@ -43,6 +43,9 @@ const body = [
     "Guide",
   ),
   `<w:tbl><w:tblPr><w:tblW w:w="9638" w:type="dxa"/><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid><w:gridCol w:w="5500"/><w:gridCol w:w="4138"/></w:tblGrid>${[
+    formatRow("{{client_name|bold}}", "Makes the name bold"),
+    formatRow("{{client_name|underline}}", "Underlines the name"),
+    formatRow("{{client_name|italic}}", "Makes the name italic"),
     formatRow("{{client_name|upper}}", "Acme Ltd → ACME LTD"),
     formatRow("{{start_date|date:DD/MM/YYYY}}", "1 October 2026 → 01/10/2026"),
     formatRow("{{start_date|date:YYYY-MM-DD}}", "1 October 2026 → 2026-10-01"),
@@ -76,7 +79,9 @@ const body = [
     "This Services Agreement takes effect on {{start_date|date:DD/MM/YYYY}} between {{provider_name|upper}} (the “Provider”) and {{client_name|upper}} (the “Client”).",
   ),
   paragraph("Services", "Heading2"),
-  paragraph("The Provider shall perform the following services for the Client: {{services}}"),
+  paragraph(
+    "The Provider shall perform the following services for the Client: {{services|italic}}",
+  ),
   paragraph("Fees and payment", "Heading2"),
   paragraph(
     "The Client shall pay a total fee of {{fee|currency:USD}}. Payment is due within 30 days after receipt of the Provider’s invoice.",
@@ -96,7 +101,7 @@ const body = [
     "Any change to the services, fees or timing must be agreed in writing by both parties.",
   ),
   paragraph("Agreed by the parties", "Heading2"),
-  `<w:tbl><w:tblPr><w:tblW w:w="9638" w:type="dxa"/><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid><w:gridCol w:w="4819"/><w:gridCol w:w="4819"/></w:tblGrid><w:tr>${signature("{{provider_name}}")}${signature("{{client_name}}")}</w:tr></w:tbl>`,
+  `<w:tbl><w:tblPr><w:tblW w:w="9638" w:type="dxa"/><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid><w:gridCol w:w="4819"/><w:gridCol w:w="4819"/></w:tblGrid><w:tr>${signature("{{provider_name|bold}}")}${signature("{{client_name|underline}}")}</w:tr></w:tbl>`,
 ].join("");
 const zip = new PizZip();
 const files: Record<string, string> = {

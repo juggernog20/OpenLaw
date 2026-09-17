@@ -93,6 +93,7 @@ export interface ReachedContract {
   /** CTR-008's source flags for the term-derived dates. */
   aiUnverified: AiUnverifiedMap | null;
   contractTypeId: string;
+  defaultApproverGroupId: string | null;
 }
 
 /** The witness a {@link LockedContract} carries. It is `declare`d and
@@ -142,6 +143,7 @@ export async function reachedContract(
       noticePeriodDays: contracts.noticePeriodDays,
       aiUnverified: contracts.aiUnverified,
       contractTypeId: contracts.contractTypeId,
+      defaultApproverGroupId: contracts.defaultApproverGroupId,
     })
     .from(contracts)
     .where(and(eq(contracts.number, number), contractTeamScope(db, user)))

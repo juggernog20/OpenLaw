@@ -108,7 +108,7 @@ beforeAll(async () => {
   );
 
   // The form "Contract review" collects: one required contract-scoped
-  // field, one optional global one, and one select — enough to exercise
+  // field, one optional contract one, and one select — enough to exercise
   // the required rule, the scope rule, and coercion in one form.
   fieldIds = new Map();
   for (const field of [
@@ -118,7 +118,12 @@ beforeAll(async () => {
       fieldType: "text",
       required: true,
     },
-    { displayName: "Deal desk region", moduleScope: "global", fieldType: "text", required: false },
+    {
+      displayName: "Deal desk region",
+      moduleScope: "contract",
+      fieldType: "text",
+      required: false,
+    },
     {
       displayName: "Paper side",
       moduleScope: "contract",
@@ -319,13 +324,13 @@ describe("the attached fields the type collects", () => {
     // meets that state rather than preventing it — the field renders,
     // its required flag still applies, and its value is collected.
     const typeId = typeIds.get("contract_review")!;
-    const scoped = ["Counterparty name", "Paper side"] as const;
+    const scoped = ["Counterparty name", "Paper side", "Deal desk region"] as const;
     // Inside the try from the first mutation on: an assertion that
     // fails half way through the setup must still put the shared seed
     // type back, or every suite after it inherits a matter-targeting
     // "Contract review".
     try {
-      // Archive the two contract-scoped fields so the strand check does
+      // Archive the contract-scoped fields so the strand check does
       // not see them, re-point, then restore: the sequence the addendum
       // records.
       for (const name of scoped) {
@@ -766,7 +771,7 @@ describe("the two field types that name a row", () => {
         cookies: adminCookies,
         payload: {
           displayName: field.displayName,
-          moduleScope: "global",
+          moduleScope: "contract",
           fieldType: field.fieldType,
           fieldTag: "legal",
         },

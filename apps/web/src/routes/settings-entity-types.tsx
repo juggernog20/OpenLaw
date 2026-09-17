@@ -6,7 +6,7 @@
  * and the API adapter over the entity-types routes; the behavior lives
  * in the shared component, which is the point: the Entities pane is
  * configuration, not a copy of the Matters one. M27 opens the shared
- * type editor so Entity-scoped and global Fields attach per type. The
+ * type editor so Entity-scoped Fields attach per type. The
  * loader is the client half of SET-002's gate; the API's 403 is the
  * real refusal.
  */

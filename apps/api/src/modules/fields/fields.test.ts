@@ -4,7 +4,7 @@
  * The Fields catalog (#83): the shared CTR-016 custom-field catalog
  * behind the third list-editor pane — create across all nine field
  * types, rename and describe, the options list on select types, the
- * contract-scope-only AI prompt, promotion to global, narrowing back
+ * contract-scope-only AI prompt, fixed module scope
  * while nothing cross-module attaches, archive and restore with stored
  * values retained by rule (MTR-014). Slug and field type are immutable
  * after creation, refused loudly rather than silently stripped. Behind
@@ -114,7 +114,6 @@ describe("the SET-002 gate", () => {
         },
       },
       { method: "PATCH", url: "/api/v1/fields/some-id", payload: { displayName: "Sneaky" } },
-      { method: "PUT", url: "/api/v1/fields/some-id/scope", payload: { moduleScope: "global" } },
       { method: "POST", url: "/api/v1/fields/some-id/archive" },
       { method: "POST", url: "/api/v1/fields/some-id/restore" },
     ] as const;
@@ -180,7 +179,7 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
     for (const fieldType of ["single_select", "multi_select"]) {
       const row = await createdField({
         displayName: `Choice ${fieldType}`,
-        moduleScope: "global",
+        moduleScope: "matter",
         fieldType,
         fieldTag: "business",
         options: ["Beta", "Alpha", "Gamma"],
@@ -217,7 +216,7 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
     expect(duplicated.statusCode, duplicated.body).toBe(400);
   });
 
-  it("offers contract, matter, entity, and global scopes", async () => {
+  it("offers only contract, matter and entity scopes", async () => {
     for (const moduleScope of ["matter", "entity"]) {
       const res = await createField({
         displayName: `${moduleScope} field`,
@@ -248,14 +247,14 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
     expect(prompted.aiPrompt).toBe("Extract the thing.");
     expect(prompted.description).toBe("Extracted by analysis.");
 
-    const globalPrompted = await createField({
-      displayName: "Global prompted",
-      moduleScope: "global",
+    const matterPrompted = await createField({
+      displayName: "Matter prompted",
+      moduleScope: "matter",
       fieldType: "text",
       fieldTag: "legal",
       aiPrompt: "Extract the thing.",
     });
-    expect(globalPrompted.statusCode, globalPrompted.body).toBe(400);
+    expect(matterPrompted.statusCode, matterPrompted.body).toBe(400);
   });
 
   it("derives unique immutable slugs, suffixing collisions", async () => {
@@ -354,7 +353,7 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
     for (const body of [
       { fieldType: "text" },
       { slug: "renamed_slug" },
-      { moduleScope: "global" },
+      { moduleScope: "matter" },
     ]) {
       const res = await patchField(row.id, { displayName: "Still fine", ...body });
       expect(res.statusCode, JSON.stringify(body)).toBe(400);
@@ -388,72 +387,15 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
     expect(refused.statusCode, refused.body).toBe(400);
   });
 
-  it("refuses a prompt on a global field, even by edit", async () => {
+  it("refuses a prompt on a matter field, even by edit", async () => {
     const row = await createdField({
-      displayName: "Global no prompt",
-      moduleScope: "global",
+      displayName: "Matter no prompt",
+      moduleScope: "matter",
       fieldType: "text",
       fieldTag: "business",
     });
     const res = await patchField(row.id, { aiPrompt: "Sneaky." });
     expect(res.statusCode, res.body).toBe(400);
-  });
-});
-
-describe("scope moves (CTR-016: promote freely, narrow only while unattached)", () => {
-  const setScope = async (id: string, moduleScope: string) =>
-    harness.app.inject({
-      method: "PUT",
-      url: `/api/v1/fields/${id}/scope`,
-      cookies: adminCookies,
-      payload: { moduleScope },
-    });
-
-  it("promotes a contract field to global, keeping its prompt", async () => {
-    const row = await createdField({
-      displayName: "Promotable",
-      moduleScope: "contract",
-      fieldType: "text",
-      fieldTag: "business",
-      aiPrompt: "Extract before promotion.",
-    });
-    const res = await setScope(row.id, "global");
-    expect(res.statusCode, res.body).toBe(200);
-    const promoted = (res.json() as { field: FieldRow }).field;
-    expect(promoted.moduleScope).toBe("global");
-    // Promotion is safe for values (keyed by slug) and keeps the prompt.
-    expect(promoted.aiPrompt).toBe("Extract before promotion.");
-
-    const entries = await activityEntries(["field.promoted"]);
-    expect(entries.at(-1)!.payload).toMatchObject({ slug: "promotable", from: "contract" });
-  });
-
-  it("narrows a global field back while no other module attaches it", async () => {
-    const row = await createdField({
-      displayName: "Narrowable",
-      moduleScope: "global",
-      fieldType: "text",
-      fieldTag: "business",
-    });
-    const res = await setScope(row.id, "contract");
-    expect(res.statusCode, res.body).toBe(200);
-    expect((res.json() as { field: FieldRow }).field.moduleScope).toBe("contract");
-
-    const entries = await activityEntries(["field.narrowed"]);
-    expect(entries.at(-1)!.payload).toMatchObject({ slug: "narrowable", to: "contract" });
-  });
-
-  it("treats a same-scope move as a no-op with no audit entry", async () => {
-    const row = await createdField({
-      displayName: "Stay put",
-      moduleScope: "contract",
-      fieldType: "text",
-      fieldTag: "business",
-    });
-    const before = (await activityEntries(["field.promoted", "field.narrowed"])).length;
-    const res = await setScope(row.id, "contract");
-    expect(res.statusCode, res.body).toBe(200);
-    expect((await activityEntries(["field.promoted", "field.narrowed"])).length).toBe(before);
   });
 });
 
@@ -605,23 +547,34 @@ describe("the armed attachment seams (#84)", () => {
       inUseCount: 1,
     });
   });
+});
 
-  it("still narrows global → contract while contract types attach the field — the guard counts other modules only", async () => {
-    const row = await createdField({
-      displayName: "Narrow while attached",
-      moduleScope: "global",
-      fieldType: "text",
-      fieldTag: "legal",
-    });
-    await attachTo(await typeIdBySlug("nda"), row.id);
-
-    const res = await harness.app.inject({
-      method: "PUT",
-      url: `/api/v1/fields/${row.id}/scope`,
-      cookies: adminCookies,
-      payload: { moduleScope: "contract" },
-    });
-    expect(res.statusCode, res.body).toBe(200);
-    expect(res.json().field.moduleScope).toBe("contract");
+it("rejects the removed scope and refuses changing a field's module", async () => {
+  const invalid = await createField({
+    displayName: "Removed scope",
+    moduleScope: "global",
+    fieldType: "text",
+    fieldTag: "business",
   });
+  expect(invalid.statusCode).toBe(400);
+  const row = await createdField({
+    displayName: "Fixed area",
+    moduleScope: "contract",
+    fieldType: "text",
+    fieldTag: "business",
+  });
+  const patched = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/fields/${row.id}`,
+    cookies: adminCookies,
+    payload: { moduleScope: "matter" },
+  });
+  expect(patched.statusCode).toBe(400);
+  const moved = await harness.app.inject({
+    method: "PUT",
+    url: `/api/v1/fields/${row.id}/scope`,
+    cookies: adminCookies,
+    payload: { moduleScope: "matter" },
+  });
+  expect(moved.statusCode).toBe(404);
 });

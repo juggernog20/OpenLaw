@@ -1429,7 +1429,7 @@ DES-020's consequences clause: a taxonomy surface that genuinely can't fit the w
 
 The ListEditor component (extracted at this pane, the rule-of-three moment) is the one implementation of DES-020, and these are its sanctioned extension points:
 
-**Table variant.** A pane whose rows carry several data dimensions renders them as fixed-width cells after a flexible name cell, under a column-header strip (11px semibold `text-secondary`, `border-default` rule) sitting above the row list. Cells carrying plain values render 12px `text-secondary` text; enum-like standing (the scope) renders as a pill. Each cell text carries an sr-only column prefix ("Type:", "Scope:", "Tag:") — the #82 stage-badge rule generalized: a field named like a cell value stays unambiguous to a reader.
+**Table variant.** A pane whose rows carry several data dimensions renders them as fixed-width cells after a flexible name cell, under a column-header strip (11px semibold `text-secondary`, `border-default` rule) sitting above the row list. Cells carrying plain values render 12px `text-secondary` text; enum-like standing may render as a pill. Each cell text carries an sr-only column prefix ("Type:", "Tag:") — the #82 stage-badge rule generalized: a field named like a cell value stays unambiguous to a reader.
 
 **Unordered lists.** A catalog with no display order renders no grip and no reorder affordance; rows keep creation order. The grip column collapses; the name cell starts at the card padding.
 
@@ -1439,13 +1439,13 @@ The ListEditor component (extracted at this pane, the rule-of-three moment) is t
 
 ### Recorded normalization points (ST11 deviations accepted)
 
-1. The scope pill maps to the paired status families: `status-neutral` for module scopes, `status-info` for `global` (the frame's `#EFF1F3/#57606A` and `#DDF4FF/#0969DA` are those tokens' Light values).
+1. Field scope pills and the Scope column were removed on 2026-09-17 with the CTR-016 revision. Each Fields page contains definitions from its own area.
 2. The AI-prompt sparkle renders the Lucide `sparkles` glyph at 16px in `status-info-fg` where the frame draws 14px — DES-008's size ramp floors at 16. Fields without a prompt draw an em dash with an sr-only "No AI prompt".
 3. ST11 draws no edit affordance; the trailing pencil button is this record's addition — the seeded prompts and the options lists are editable (CTR-008/CTR-016), and ~~the list row deliberately never grows a second line (DES-020)~~ _(the second-line clause is amended by DES-020's M19/4 amendment: a pane that declares columns may draw the row's description under its name. The fields catalog declares columns and no caption, so this pane is unchanged.)_
 
 ### Rationale
 
-The alternative was forcing the catalog into the plain anatomy (losing the type/scope/tag columns that make the catalog scannable) or a bespoke pane outside the pattern (a fourth implementation to keep aligned by eye). Extending the one component keeps DES-020's guarantees — row height, rename, archive treatment, protection semantics — while the extension points absorb the real variation.
+The alternative was forcing the catalog into the plain anatomy (losing the type/tag columns that make the catalog scannable) or a bespoke pane outside the pattern (a fourth implementation to keep aligned by eye). Extending the one component keeps DES-020's guarantees — row height, rename, archive treatment, protection semantics — while the extension points absorb the real variation.
 
 ### Consequences
 
@@ -1470,7 +1470,7 @@ A type editor is its own routed URL under its list pane (`…/types/:id`), keepi
 
 **The identity card** (fixed 560px): a DES-004 settings card titled with the display name. Display name and description are DES-017 commit-on-confirm inputs — blur/Enter commits, Escape reverts, micro-states beside the field. The slug renders as a read-only input in `text-secondary` with an 11px caption stating why it never changes. A 12px usage caption ("N [records] use this type.") closes the card.
 
-**The attachment card** (flexible): a flush DES-004 card in the DES-021 table variant — an 11px semibold column-header strip ("Field", "Required"), then DES-020's 44px rows: the reorder grip (per-type order is real order — CTR-016), the field's display name (13px medium) with its type as an inline 12px `text-secondary` caption, the scope riding the caption only when it is `global` ("Single select · global"), a 16px checkbox in the Required column, and a 16px `x` detach button in the trailing column. Detach runs no guard modal: the removal semantics are detach-and-retain (values keyed by slug survive, MTR-014), which the help caption below the card states — "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
+**The attachment card** (flexible): a flush DES-004 card in the DES-021 table variant — an 11px semibold column-header strip ("Field", "Required"), then DES-020's 44px rows: the reorder grip (per-type order is real order — CTR-016), the field's display name (13px medium) with its type as an inline 12px `text-secondary` caption, a 16px checkbox in the Required column, and a 16px `x` detach button in the trailing column. Detach runs no guard modal: the removal semantics are detach-and-retain (values keyed by slug survive, MTR-014), which the help caption below the card states — "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
 
 **The required checkbox** is the CTA-filled 16px box the frame draws (checked: `cta` fill, white check; unchecked: `bg-raised`, default border), a Radix checkbox with its hit area expanded to DES-011's 24px floor without growing the drawn box.
 

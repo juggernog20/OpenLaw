@@ -54,7 +54,7 @@ interface StubField {
   id: string;
   slug: string;
   displayName: string;
-  moduleScope: "contract" | "matter" | "global";
+  moduleScope: "contract" | "matter" | "contract";
   fieldType: "text" | "number";
 }
 
@@ -77,7 +77,7 @@ const CATALOG: StubField[] = [
     id: "f-dept",
     slug: "department",
     displayName: "Department",
-    moduleScope: "global",
+    moduleScope: "contract",
     fieldType: "text",
   },
   // Contract-scoped and unattached, so the menu's scope is provable in
@@ -156,7 +156,7 @@ const ATTACHED_WITH_REFERENCE = [
     slug: "business_owner",
     displayName: "Business owner",
     fieldType: "user",
-    moduleScope: "global",
+    moduleScope: "contract",
     displayOrder: 2,
     isRequired: false,
   },
@@ -367,7 +367,7 @@ describe("the form definition (ST14's right card)", () => {
     await screen.findByText("Form fields");
     await user.click(screen.getByRole("button", { name: "Attach field" }));
     const menu = await screen.findByRole("menu");
-    // Contract target: contract-scoped and global. Counterparty name is
+    // Contract target: contract-scoped. Counterparty name is
     // already attached, so what is left is one of each.
     expect(within(menu).getAllByRole("menuitem")).toHaveLength(2);
     expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();

@@ -51,7 +51,7 @@ const DEPARTMENT = {
   slug: "department",
   displayName: "Department",
   fieldType: "single_select",
-  moduleScope: "global",
+  moduleScope: "contract",
   displayOrder: 2,
   isRequired: false,
 };
@@ -76,7 +76,7 @@ const CATALOG = [
     slug: "department",
     displayName: "Department",
     description: null,
-    moduleScope: "global",
+    moduleScope: "contract",
     fieldType: "single_select",
     options: ["Legal", "Sales"],
     fieldTag: "business",
@@ -234,7 +234,7 @@ describe("the identity card (ST16 left)", () => {
 });
 
 describe("the attached-fields card (ST16 right)", () => {
-  it("lists attachments in order, typed, with global marked and required state drawn", async () => {
+  it("lists attachments in order, typed, with required state drawn", async () => {
     stubApi({ signedIn: ADMIN, extra: editorApi(newCalls()) });
     renderAt("/settings/contracts/types/t1");
 
@@ -244,7 +244,7 @@ describe("the attached-fields card (ST16 right)", () => {
     expect(within(rows[0]!).getByText("Governing law")).toBeInTheDocument();
     expect(within(rows[0]!).getByText("Text")).toBeInTheDocument();
     expect(within(rows[1]!).getByText("Department")).toBeInTheDocument();
-    expect(within(rows[1]!).getByText("Single select · global")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Single select")).toBeInTheDocument();
 
     expect(screen.getByRole("checkbox", { name: "Governing law required" })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Department required" })).not.toBeChecked();

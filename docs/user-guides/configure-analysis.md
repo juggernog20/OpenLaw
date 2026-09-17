@@ -54,7 +54,7 @@ Prompt changes affect subsequent Analysis runs. They do not rewrite earlier resu
 3. Attach the active Field to the Contract Type used by your test Contract.
 4. Run Analysis on that Contract and check the Field's result and its saved value.
 
-Only active Contract-scoped Fields attached to that Contract Type and carrying an AI prompt are included. A Global Field can be attached to a Contract Type, but is not an Analysis target in this build. Removing a Field's prompt stops including it in future runs; it does not erase an existing value.
+Only active Contract-scoped Fields attached to that Contract Type and carrying an AI prompt are included. Removing a Field's prompt stops including it in future runs; it does not erase an existing value.
 
 ## Understand the data sent
 

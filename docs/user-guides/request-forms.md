@@ -6,7 +6,7 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 
 - Sign in as an Administrator.
 - Have live destination types and the Fields you want to collect. A Field must be attached to the destination Contract or Matter type if its answer should carry into that record. See [Configure types, Statuses, and Fields](types-statuses-fields.md).
-- This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and a Global **Deal value** Field. Use the names configured in your instance.
+- This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and a Contract **Deal value** Field. Use the names configured in your instance.
 
 ## Create the request type
 
@@ -44,7 +44,7 @@ Check the Portal's request-type card for this duration as general guidance befor
 
 Plan the form around its fixed basics: **Title**, **Description**, **Attachments**, **Department**, and **Urgency**. Title, Description, Department, and Urgency are required; attachments are optional. Department uses the shared list managed under **Settings → Organization → Departments** and carries into the converted record without a Field attachment. These basics cannot be removed or reordered here.
 
-The default destination decides which Fields **Attach field** offers. A Contract target offers Contract-scoped and Global Fields. A Matter target offers Matter-scoped and Global Fields. **Decide during triage** without a destination module offers Contract, Matter, and Global Fields, so you can build the questionnaire before deciding where requests will be converted. A User Field cannot be required on a Portal form, because the Portal does not offer people for the Requester to choose. An Entity Field can be required; the Portal offers only Portal-listed Entities for it. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
+The default destination decides which Fields **Attach field** offers. A Contract target offers Contract Fields. A Matter target offers Matter Fields. **Decide during triage** without a destination module offers Contract and Matter Fields, so you can build the questionnaire before deciding where requests will be converted. A User Field cannot be required on a Portal form, because the Portal does not offer people for the Requester to choose. An Entity Field can be required; the Portal offers only Portal-listed Entities for it. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
 
 ## Offer guidance before submission
 

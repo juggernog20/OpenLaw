@@ -125,7 +125,7 @@ beforeAll(async () => {
       cookies: adminCookies,
       payload: {
         displayName: field.displayName,
-        moduleScope: "global",
+        moduleScope: "contract",
         fieldType: field.fieldType,
         fieldTag: "legal",
       },

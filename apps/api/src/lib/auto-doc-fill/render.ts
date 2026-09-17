@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** TECH-028: convert scanned markers to sections without rewriting Word XML. */
+import { randomUUID } from "node:crypto";
+import { applyTextStyles } from "./text-style.js";
 import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
-import { scanTemplateText, templateTextParts } from "../auto-doc-template.js";
+import {
+  isAutoDocTextStyle,
+  type AutoDocTextStyle,
+  scanTemplateText,
+  templateTextParts,
+} from "../auto-doc-template.js";
 import { AutoDocFillError, type AutoDocFillInput } from "./engine.js";
 import { zipEntries } from "../docx-package.js";
 import { evaluateCondition, resolveAutoDocValue } from "./values.js";
@@ -30,6 +37,8 @@ export function renderAutoDoc(input: AutoDocFillInput): Buffer {
     ]),
   );
   const values = new Map<string, string | boolean>();
+  const stylePrefix = `OPENLAW_STYLE_${randomUUID().replaceAll("-", "")}_`;
+  const textStyles = new Map<string, AutoDocTextStyle>();
   let next = 0;
   const sections = new Map<string, string>();
   const module = {
@@ -61,7 +70,13 @@ export function renderAutoDoc(input: AutoDocFillInput): Buffer {
           if (!token) throw new AutoDocFillError("The Word marker scan and renderer do not agree.");
           if (token.kind === "placeholder") {
             replacement = `value_${next++}`;
-            values.set(replacement, resolveAutoDocValue(token, input));
+            let value = resolveAutoDocValue(token, input);
+            if (isAutoDocTextStyle(token.directive)) {
+              const id = String(next);
+              textStyles.set(id, token.directive);
+              value = `${stylePrefix}S${id}__${value}${stylePrefix}E${id}__`;
+            }
+            values.set(replacement, value);
           } else {
             let key = sections.get(token.name);
             if (!key) {
@@ -105,5 +120,11 @@ export function renderAutoDoc(input: AutoDocFillInput): Buffer {
     parser: (tag) => ({ get: () => values.get(tag) ?? "" }),
   });
   doc.render({});
-  return doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
+  const filled = doc.getZip();
+  if (textStyles.size)
+    for (const name of scans.keys()) {
+      const part = filled.file(name);
+      if (part) filled.file(name, applyTextStyles(part.asText(), stylePrefix, textStyles));
+    }
+  return filled.generate({ type: "nodebuffer", compression: "DEFLATE" });
 }

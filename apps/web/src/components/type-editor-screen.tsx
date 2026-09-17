@@ -193,7 +193,6 @@ export interface TypeEditorAttachmentsMessages {
   empty: MessageDescriptor;
   reorder: MessageDescriptor;
   moved: MessageDescriptor;
-  globalCaption: MessageDescriptor;
   help?: MessageDescriptor;
 }
 
@@ -281,13 +280,9 @@ function AttachedFieldsCard({
 }: Readonly<TypeEditorAttachments & { typeId: string }>) {
   const intl = useIntl();
 
-  /** The ST16 field caption: the type, with the scope riding along only
-   * when it is global — "Single select · global". */
-  function fieldCaption(row: { fieldType: EditorFieldType; moduleScope: string }) {
-    const label = typeLabel(intl, row.fieldType);
-    return row.moduleScope === "global"
-      ? intl.formatMessage(messages.globalCaption, { type: label })
-      : label;
+  /** Display the field type beside its name. */
+  function fieldCaption(row: { fieldType: EditorFieldType }) {
+    return typeLabel(intl, row.fieldType);
   }
 
   const [rows, setRows] = useState<AttachedFieldRow[]>(initialAttached);
@@ -429,7 +424,7 @@ function AttachedFieldsCard({
   }
 
   return (
-    <div className="flex min-w-80 flex-1 flex-col gap-2">
+    <div className="flex min-w-0 flex-[1_1_20rem] flex-col gap-2">
       <SettingsCard
         title={<FormattedMessage {...messages.attachedFields} />}
         flush
@@ -865,58 +860,60 @@ export function TypeEditorScreen({
           <FormattedMessage {...messages.allTypes} />
         </Link>
         <div className="flex flex-wrap items-start gap-4">
-          <SettingsCard title={saved.displayName} className="w-140 shrink-0 grow-0">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="type-display-name">
-                <FormattedMessage {...messages.displayName} />
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="type-display-name"
-                  className="w-80"
-                  value={nameDraft}
-                  onChange={(event) => setNameDraft(event.target.value)}
-                  onBlur={commitName}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") commitName();
-                    if (event.key === "Escape") setNameDraft(saved.displayName);
-                  }}
-                />
-                <StatusNote status={typeStatus.name} detail={typeError.name} />
+          <div className="flex min-w-0 max-w-full flex-[0_1_35rem] flex-col gap-4">
+            <SettingsCard title={saved.displayName}>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="type-display-name">
+                  <FormattedMessage {...messages.displayName} />
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="type-display-name"
+                    className="w-80 min-w-0 max-w-full"
+                    value={nameDraft}
+                    onChange={(event) => setNameDraft(event.target.value)}
+                    onBlur={commitName}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") commitName();
+                      if (event.key === "Escape") setNameDraft(saved.displayName);
+                    }}
+                  />
+                  <StatusNote status={typeStatus.name} detail={typeError.name} />
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="type-description">
-                <FormattedMessage {...messages.description} />
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="type-description"
-                  className="w-full"
-                  value={descriptionDraft}
-                  onChange={(event) => setDescriptionDraft(event.target.value)}
-                  onBlur={commitDescription}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") commitDescription();
-                    if (event.key === "Escape") setDescriptionDraft(saved.description ?? "");
-                  }}
-                />
-                <StatusNote status={typeStatus.description} detail={typeError.description} />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="type-description">
+                  <FormattedMessage {...messages.description} />
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="type-description"
+                    className="w-full"
+                    value={descriptionDraft}
+                    onChange={(event) => setDescriptionDraft(event.target.value)}
+                    onBlur={commitDescription}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") commitDescription();
+                      if (event.key === "Escape") setDescriptionDraft(saved.description ?? "");
+                    }}
+                  />
+                  <StatusNote status={typeStatus.description} detail={typeError.description} />
+                </div>
               </div>
-            </div>
 
-            {identityExtra}
+              {identityExtra}
 
-            {inUse && (
-              <p className="text-sm text-muted">
-                <FormattedMessage {...inUse} values={{ count: saved.inUseCount }} />
-              </p>
-            )}
-          </SettingsCard>
+              {inUse && (
+                <p className="text-sm text-muted">
+                  <FormattedMessage {...inUse} values={{ count: saved.inUseCount }} />
+                </p>
+              )}
+            </SettingsCard>
+            {extraCards}
+          </div>
 
           {attachments && <AttachedFieldsCard typeId={saved.id} {...attachments} />}
-          {extraCards}
         </div>
       </div>
     </>

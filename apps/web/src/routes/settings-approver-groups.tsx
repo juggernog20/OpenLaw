@@ -34,6 +34,7 @@ import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
 import { MEMBER_PLUS_ROLES } from "../lib/roles";
 import { requireUser } from "../lib/session";
+import { ApprovalOverridePolicy } from "../components/approval-default-settings";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
@@ -587,6 +588,7 @@ export function SettingsApproverGroupsPage() {
       />
       <div className="flex w-full max-w-(--width-settings-card) flex-col gap-4">
         <ContractsSettingsTabs />
+        <ApprovalOverridePolicy />
         <ListEditor
           rows={live}
           archivedRows={archived}

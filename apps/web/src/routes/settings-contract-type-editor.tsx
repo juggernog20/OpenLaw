@@ -16,6 +16,7 @@ import { isFieldRow } from "../lib/field-catalog";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+import { ContractTypeApprovalDefault } from "../components/approval-default-settings";
 import { ContractTypePeople } from "../components/contract-type-people";
 import { TypeEditorScreen, type TypeEditorApi } from "../components/type-editor-screen";
 
@@ -86,10 +87,6 @@ const MESSAGES = defineMessages({
     id: "settings.contractTypeEditor.moved",
     defaultMessage: "{name} moved to position {position} of {total}.",
   },
-  globalCaption: {
-    id: "settings.contractTypeEditor.globalCaption",
-    defaultMessage: "{type} · global",
-  },
   help: {
     id: "settings.contractTypeEditor.help",
     defaultMessage:
@@ -157,12 +154,18 @@ export function SettingsContractTypeEditorPage() {
       api={EDITOR_API}
       messages={MESSAGES}
       extraCards={
-        <ContractTypePeople
-          typeId={contractType.id}
-          initialPeople={people}
-          users={users}
-          archived={contractType.archivedAt !== null}
-        />
+        <>
+          <ContractTypePeople
+            typeId={contractType.id}
+            initialPeople={people}
+            users={users}
+            archived={contractType.archivedAt !== null}
+          />
+          <ContractTypeApprovalDefault
+            typeId={contractType.id}
+            archived={contractType.archivedAt !== null}
+          />
+        </>
       }
       attachments={{
         createFieldModule: "contract",

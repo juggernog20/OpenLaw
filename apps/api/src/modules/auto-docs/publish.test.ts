@@ -75,10 +75,10 @@ async function call(id: string, action = "", payload?: Record<string, unknown>, 
     ...(payload === undefined ? {} : { payload }),
   });
 }
-async function upload(id: string, fixture: string) {
-  const bytes = await readFile(
-    new URL(`../../testing/fixtures/auto-docs/${fixture}.docx`, import.meta.url),
-  );
+async function upload(id: string, fixture: string, supplied?: Buffer) {
+  const bytes =
+    supplied ??
+    (await readFile(new URL(`../../testing/fixtures/auto-docs/${fixture}.docx`, import.meta.url)));
   return h.app.inject({
     method: "POST",
     url: `/api/v1/auto-docs/${id}/template`,
@@ -93,7 +93,7 @@ async function upload(id: string, fixture: string) {
     ]),
   });
 }
-async function create(name = "Publish NDA", fixture = "blocks") {
+async function create(name = "Publish NDA", fixture = "blocks", supplied?: Buffer) {
   const made = await h.app.inject({
     method: "POST",
     url: "/api/v1/auto-docs",
@@ -102,7 +102,7 @@ async function create(name = "Publish NDA", fixture = "blocks") {
   });
   expect(made.statusCode, made.body).toBe(201);
   const id = made.json().autoDoc.id;
-  const uploaded = await upload(id, fixture);
+  const uploaded = await upload(id, fixture, supplied);
   expect(uploaded.statusCode, uploaded.body).toBe(201);
   return uploaded.json();
 }
@@ -511,4 +511,32 @@ it("types a directive's detected field and refuses a pair whose field cannot pri
   expect(refused.json().detail).toContain(
     'Set "amount" to a currency or number field for Placeholder "{{amount|currency:USD}}"',
   );
+});
+
+it("uploads and publishes bold, underline and italic markers with any answer type", async () => {
+  const { default: PizZip } = await import("pizzip");
+  const zip = new PizZip(
+    await readFile(new URL("../../testing/fixtures/auto-docs/plain.docx", import.meta.url)),
+  );
+  zip.file(
+    "word/document.xml",
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>{{name|bold}} {{date|underline}} {{amount|italic}}</w:t></w:r></w:p></w:body></w:document>',
+  );
+  const initial = await create("Styled agreement", "plain", zip.generate({ type: "nodebuffer" }));
+  expect(
+    initial.formVersion.definition.fields.map((entry: { fieldType: string }) => entry.fieldType),
+  ).toEqual(["text", "text", "text"]);
+  const retyped = await call(initial.autoDoc.id, "form-versions", {
+    fields: [
+      field("name", { fieldType: "boolean" }),
+      field("date", { fieldType: "date" }),
+      field("amount", { fieldType: "number" }),
+    ],
+  });
+  expect(retyped.statusCode, retyped.body).toBe(201);
+  const published = await call(initial.autoDoc.id, "publish", {
+    ...pair(initial),
+    formVersionId: retyped.json().formVersion.id,
+  });
+  expect(published.statusCode, published.body).toBe(200);
 });

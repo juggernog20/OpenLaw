@@ -40,6 +40,9 @@ export const orgSettings = pgTable(
   "org_settings",
   {
     id: uuidPk(),
+    allowLegalApproverGroupOverride: boolean("allow_legal_approver_group_override")
+      .notNull()
+      .default(true),
     authMode: text("auth_mode", { enum: AUTH_MODES }).notNull().default("built_in"),
     authenticationPolicy: jsonb("authentication_policy").$type<AuthenticationPolicy>(),
     requireTwoFactor: boolean("require_two_factor").notNull().default(false),

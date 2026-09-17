@@ -6,7 +6,7 @@
  * vocabulary and the API adapter over the matter-types attachment
  * routes; the DES-022 behavior lives in the shared component, which is
  * the point: the matter editor is configuration, not a copy of the
- * contract one. The Attach menu offers matter-scoped and global fields.
+ * contract one. The Attach menu offers matter-scoped fields.
  * The loader is the client half of SET-002's gate; the API's
  * 403 is the real refusal.
  */
@@ -34,9 +34,7 @@ export async function settingsMatterTypeEditorLoader({ params }: LoaderFunctionA
   return {
     matterType: typeRes.data.matterType,
     attachedFields: attachedRes.data.attachedFields,
-    catalog: catalogRes.data.fields.filter(
-      (field) => field.moduleScope === "matter" || field.moduleScope === "global",
-    ),
+    catalog: catalogRes.data.fields.filter((field) => field.moduleScope === "matter"),
   };
 }
 
@@ -83,10 +81,6 @@ const MESSAGES = defineMessages({
   moved: {
     id: "settings.matterTypeEditor.moved",
     defaultMessage: "{name} moved to position {position} of {total}.",
-  },
-  globalCaption: {
-    id: "settings.matterTypeEditor.globalCaption",
-    defaultMessage: "{type} · global",
   },
   help: {
     id: "settings.matterTypeEditor.help",

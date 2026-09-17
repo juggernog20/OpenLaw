@@ -8,9 +8,9 @@
  * collects, in what order, and whether each is required on that form.
  *
  * What may attach follows the type's target, not this table: a
- * contract-targeting type takes contract-scoped and global fields, a
- * matter-targeting type takes matter-scoped and global fields, and a
- * type with no target takes global fields only. The rule is
+ * contract-targeting type takes contract-scoped fields, a
+ * matter-targeting type takes matter-scoped fields, and a
+ * type with no target takes Contract and Matter fields. The rule is
  * application-enforced, as CTR-016's is, because it reads a column on
  * the owning row rather than a constant.
  *

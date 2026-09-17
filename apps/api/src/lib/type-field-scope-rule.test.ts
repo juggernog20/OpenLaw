@@ -34,15 +34,15 @@ import {
 import { typeFieldRoutes } from "./type-field-routes.js";
 
 /** The refusal each arm of the probe rule speaks in its own words. */
-const TARGETED_REFUSAL = "A targeted probe type takes contract-scoped and global fields only.";
-const UNTARGETED_REFUSAL = "A probe type with no target takes global fields only.";
+const TARGETED_REFUSAL = "A targeted probe type takes contract-scoped fields only.";
+const UNTARGETED_REFUSAL = "A probe type with no target takes matter fields only.";
 
 /**
  * The factory with a rule read off the type row.
  *
  * A row flagged `is_system_default` stands for a targeted request type
- * and takes contract-scoped and global fields; every other row stands
- * for an untargeted one and takes global fields only. Each arm carries
+ * and takes contract-scoped fields; every other row stands
+ * for an untargeted one and takes matter fields only. Each arm carries
  * its own refusal line, so a refusal names the rule that refused rather
  * than one line for the whole mount.
  */
@@ -55,8 +55,8 @@ const probeAttachedFieldsRoutes = typeFieldRoutes({
   noun: "probe type",
   scopeRule: (row) =>
     row.isSystemDefault
-      ? { scopes: ["contract", "global"], refusal: TARGETED_REFUSAL }
-      : { scopes: ["global"], refusal: UNTARGETED_REFUSAL },
+      ? { scopes: ["contract"], refusal: TARGETED_REFUSAL }
+      : { scopes: ["matter"], refusal: UNTARGETED_REFUSAL },
   scopeSummary: "the scopes the type's own rule allows (#352)",
   actionPrefix: "matter_type_field",
   requiredMilestone: "probe milestone",
@@ -108,7 +108,7 @@ const setTargeted = async (typeId: string, targeted: boolean) => {
 };
 
 /** Defines a catalog field through the Fields pane's own create route. */
-const createField = async (displayName: string, moduleScope: "contract" | "entity" | "global") => {
+const createField = async (displayName: string, moduleScope: "contract" | "entity" | "matter") => {
   const res = await app.inject({
     method: "POST",
     url: "/api/v1/fields",
@@ -218,13 +218,9 @@ describe("the OpenAPI document", () => {
 
   it("leaves a constant mount's summary as it has always been", async () => {
     expect(await attachSummary("contract-types")).toContain(
-      "contract-scoped and global fields only (CTR-016)",
+      "contract-scoped fields only (CTR-016)",
     );
-    expect(await attachSummary("matter-types")).toContain(
-      "matter-scoped and global fields (MTR-011)",
-    );
-    expect(await attachSummary("entity-types")).toContain(
-      "entity-scoped and global fields (ENT-001)",
-    );
+    expect(await attachSummary("matter-types")).toContain("matter-scoped fields (MTR-011)");
+    expect(await attachSummary("entity-types")).toContain("entity-scoped fields (ENT-001)");
   });
 });

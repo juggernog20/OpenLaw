@@ -89,10 +89,6 @@ const MESSAGES = defineMessages({
     id: "settings.requestTypeEditor.moved",
     defaultMessage: "{name} moved to position {position} of {total}.",
   },
-  globalCaption: {
-    id: "settings.requestTypeEditor.globalCaption",
-    defaultMessage: "{type} · global",
-  },
 });
 
 /** Person Fields stay optional because Portal forms have no staff directory picker (INT-002). */
@@ -216,8 +212,8 @@ const EDITOR_API: TypeEditorApi = {
  * turn away.
  */
 function attachableScopes(module: TargetModule | null): readonly string[] {
-  if (module === null) return ["contract", "matter", "global"];
-  return [module, "global"];
+  if (module === null) return ["contract", "matter"];
+  return [module];
 }
 
 type Destination = { targetModule: TargetModule | null; targetTypeId: string | null };

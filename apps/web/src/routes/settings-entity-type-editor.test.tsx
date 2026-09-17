@@ -42,7 +42,7 @@ const FIELDS = [
     slug: "department",
     displayName: "Department",
     description: null,
-    moduleScope: "global",
+    moduleScope: "entity",
     fieldType: "text",
     options: null,
     fieldTag: "business",
@@ -91,7 +91,7 @@ function editorApi(call: StubCall): Response | undefined {
 }
 
 describe("the Entity type editor", () => {
-  it("loads the shared screen and offers only unattached Entity/global Fields", async () => {
+  it("loads the shared screen and offers only unattached Entity Fields", async () => {
     stubApi({ signedIn: ADMIN, extra: editorApi });
     renderAt("/settings/entities/types/t1");
     expect(await screen.findByRole("textbox", { name: "Display name" })).toHaveValue("Corporation");
@@ -103,7 +103,7 @@ describe("the Entity type editor", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Attach field" }));
     const menu = await screen.findByRole("menu");
-    // Department is unattached and global, so it is the one offer. LEI is
+    // Department is unattached and in this module, so it is the one offer. LEI is
     // already attached; Term belongs to Contracts.
     expect(within(menu).getByText("Department")).toBeInTheDocument();
     expect(within(menu).queryByText("LEI")).not.toBeInTheDocument();

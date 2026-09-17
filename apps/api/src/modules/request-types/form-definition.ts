@@ -13,8 +13,8 @@
  *
  * The rule is CTR-016's scope rule applied one level out: a request
  * type does not have a scope of its own, so it borrows the scope of the
- * module its target names. Target Contract takes `contract` and
- * `global`; target Matter takes `matter` and `global`. A form whose
+ * module its target names. Target Contract takes `contract`;
+ * target Matter takes `matter`. A form whose
  * destination is decided during triage may collect fields from either module.
  */
 
@@ -38,22 +38,20 @@ export function formFieldScopeRule(targetModule: TargetModule | null): TypeField
   switch (targetModule) {
     case "contract":
       return {
-        scopes: ["contract", "global"],
+        scopes: ["contract"],
         refusal:
-          "This request type targets Contract, so its form takes " +
-          "contract-scoped and global fields only.",
+          "This request type targets Contract, so its form takes " + "contract-scoped fields only.",
       };
     case "matter":
       return {
-        scopes: ["matter", "global"],
+        scopes: ["matter"],
         refusal:
-          "This request type targets Matter, so its form takes " +
-          "matter-scoped and global fields only.",
+          "This request type targets Matter, so its form takes " + "matter-scoped fields only.",
       };
     default:
       return {
-        scopes: ["contract", "matter", "global"],
-        refusal: "Request forms take contract-scoped, matter-scoped, and global fields only.",
+        scopes: ["contract", "matter"],
+        refusal: "Request forms take contract-scoped and matter-scoped fields only.",
       };
   }
 }

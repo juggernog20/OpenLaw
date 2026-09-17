@@ -131,7 +131,7 @@ export interface TypeFieldRoutesConfig<TRow extends TaxonomyRow = TaxonomyRow> {
    */
   scopeRule: TypeFieldScopeRule | ((type: TRow) => TypeFieldScopeRule);
   /** The attach summary's scope fragment, e.g. `contract-scoped and
-   * global fields only (CTR-016)`. It is the mount's static
+   * Contract and Matter fields (CTR-016)`. It is the mount's static
    * description: a rule that is a function of the row has no one line
    * the OpenAPI document could state, so the mount says what its rule
    * reads instead. */
