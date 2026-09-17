@@ -352,7 +352,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // honest rendering for one this build no longer writes.
       defaultMessage:
         "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} " +
-        "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} " +
+        "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +
         "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
@@ -1552,6 +1552,14 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} changed the status",
     }),
     changes: (intl, payload, context) => directChange(intl, payload, "status", context),
+  },
+  "request.type_reassigned": {
+    icon: ArrowRightLeft,
+    message: defineMessage({
+      id: "activity.request.typeReassigned",
+      defaultMessage: "{actor} reassigned this request's type",
+    }),
+    changes: (intl, payload, context) => directChange(intl, payload, "requestType", context),
   },
   "matter.type_reassigned": {
     icon: ArrowRightLeft,

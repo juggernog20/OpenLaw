@@ -55,6 +55,7 @@ import {
 } from "@openlaw/db";
 import type { ChangedFields } from "@openlaw/shared";
 import { httpError } from "../../lib/problem.js";
+import { requestTypeUsage } from "../requests/type-usage.js";
 import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
 import {
   formFieldCounts,
@@ -104,7 +105,7 @@ export const requestTypesRoutes = taxonomyRoutes({
   noun: "request type",
   decision: "INT-002",
   actionPrefix: "request_type",
-  recordsMilestone: "M20",
+  usage: requestTypeUsage,
   recordNoun: { singular: "request", plural: "requests" },
   extras: {
     rowSchema: {

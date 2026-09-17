@@ -35,6 +35,7 @@ import {
   inArray,
   matterTypes,
   requestTypes,
+  requests,
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
@@ -902,4 +903,47 @@ describe("the three-state target at the database (INT-002)", () => {
 
     await harness.db.delete(requestTypes).where(eq(requestTypes.id, target!.id));
   });
+});
+
+it("counts used Request types and requires reassignment before archiving", async () => {
+  const makeType = async (displayName: string) => {
+    const response = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/request-types",
+      cookies: adminCookies,
+      payload: { displayName },
+    });
+    expect(response.statusCode, response.body).toBe(201);
+    return response.json().requestType.id as string;
+  };
+  const from = await makeType("Used request type");
+  const to = await makeType("Replacement request type");
+  const [requester] = await harness.db.select().from(users).where(eq(users.email, MEMBER.email));
+  const [request] = await harness.db
+    .insert(requests)
+    .values({
+      requestTypeId: from,
+      requesterId: requester!.id,
+      title: "Retain this request",
+      description: "Original submission",
+      urgency: "medium",
+    })
+    .returning();
+  expect((await listTypes()).find((row) => row.id === from)?.inUseCount).toBe(1);
+  const archive = (payload: object) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/request-types/${from}/archive`,
+      cookies: adminCookies,
+      payload,
+    });
+  expect((await archive({})).statusCode).toBe(409);
+  expect((await archive({ reassignToId: to })).statusCode).toBe(200);
+  const [moved] = await harness.db.select().from(requests).where(eq(requests.id, request!.id));
+  expect(moved).toMatchObject({
+    requestTypeId: to,
+    title: "Retain this request",
+    description: "Original submission",
+  });
+  expect((await listTypes()).find((row) => row.id === to)?.inUseCount).toBe(1);
 });

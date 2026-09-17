@@ -17,7 +17,7 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 
 Every submission creates a Request first. Legal chooses whether to convert it to a Contract or Matter, or resolve it in the thread. The **Target** column on the list shows each request type's routing default: a Contract or Matter type, a module alone, or **No target**. That default guides conversion and which Fields the form can attach. The form editor has no control to set or change it. A request type that you add here shows **No target**, so Legal chooses the Contract or Matter type at conversion.
 
-The **Display name** can change. Rename or reorder request types from the list. Archiving a request type takes it out of the Portal's choices and closes its form. In this version the archive dialog reports no usage and offers no replacement, even when Requests still name the type. Those Requests keep that type and stay readable, so check what is still open before you archive. Use **Show archived**, then **Restore**, to offer the type again.
+The **Display name** can change. Rename or reorder request types from the list. Archiving a request type takes it out of the Portal's choices and closes its form. The archive dialog shows how many Requests use the type. If it is used, choose a live replacement before archiving; those Requests move to the replacement. Check the replacement’s Fields and routing first. Use **Show archived**, then **Restore**, to offer the type again.
 
 ## Publish an estimated turnaround
 

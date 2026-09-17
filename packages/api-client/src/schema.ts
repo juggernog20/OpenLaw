@@ -2793,7 +2793,7 @@ export interface paths {
     get: operations["getRequestType"];
     put?: never;
     post?: never;
-    /** Hard-delete a request type (INT-002); once requests exist (M20) an in-use type will refuse */
+    /** Hard-delete a request type (INT-002); a type still used by requests refuses */
     delete: operations["deleteRequestType"];
     options?: never;
     head?: never;
@@ -2827,7 +2827,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Archive a request type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted */
+    /** Archive a request type (SET-003 guarded): a type still used by requests requires a reassignment target, which takes them; nothing is deleted */
     post: operations["archiveRequestType"];
     delete?: never;
     options?: never;

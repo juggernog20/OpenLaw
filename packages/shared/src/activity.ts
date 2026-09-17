@@ -228,6 +228,7 @@ type MatterStatusPayloads = {
  * lives on the Request itself, where a correction can still reach it.
  */
 type RequestPayloads = {
+  "request.type_reassigned": { number: number; title: string; from: string; to: string };
   "request.created": {
     number: number;
     requestType: string;

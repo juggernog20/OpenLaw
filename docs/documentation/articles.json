@@ -582,7 +582,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.intake"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "reminders-and-audit",

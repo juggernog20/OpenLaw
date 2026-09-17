@@ -815,6 +815,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "comment.redacted": { commentId: "cmt_1" },
 
   // Request record
+  "request.type_reassigned": { number: 42, title: "Review", from: "Advice", to: "Review" },
   "request.created": {
     number: 42,
     requestType: "Contract review",

@@ -441,3 +441,19 @@ describe("the section URL", () => {
     expect(router.state.location.pathname).toBe("/settings/intake/request-types");
   });
 });
+
+it("requires a reassignment for a Request type used by Requests", async () => {
+  const calls = newCalls();
+  const rows = seededTypes().map((row) => (row.id === "r2" ? { ...row, inUseCount: 3 } : row));
+  stubApi({ signedIn: ADMIN, extra: typesApi(calls, rows) });
+  renderAt("/settings/intake/request-types");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Archive Contract review" }));
+  const dialog = await screen.findByRole("dialog", { name: "Archive Contract review" });
+  expect(dialog).toHaveTextContent("3 requests");
+  const replacement = within(dialog).getByRole("combobox", { name: "Reassign 3 requests to" });
+  expect(replacement).toBeEnabled();
+  await user.selectOptions(replacement, "r1");
+  await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
+  await waitFor(() => expect(calls.archives).toEqual([{ id: "r2", body: { reassignToId: "r1" } }]));
+});

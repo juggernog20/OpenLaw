@@ -30103,7 +30103,7 @@
       },
       "delete": {
         "operationId": "deleteRequestType",
-        "summary": "Hard-delete a request type (INT-002); once requests exist (M20) an in-use type will refuse",
+        "summary": "Hard-delete a request type (INT-002); a type still used by requests refuses",
         "tags": ["request-types"],
         "parameters": [
           {
@@ -30279,7 +30279,7 @@
     "/api/v1/request-types/{id}/archive": {
       "post": {
         "operationId": "archiveRequestType",
-        "summary": "Archive a request type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted",
+        "summary": "Archive a request type (SET-003 guarded): a type still used by requests requires a reassignment target, which takes them; nothing is deleted",
         "tags": ["request-types"],
         "requestBody": {
           "required": true,
