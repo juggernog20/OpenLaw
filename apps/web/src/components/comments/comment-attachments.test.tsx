@@ -88,6 +88,11 @@ it.each(["matter", "contract"] as const)(
       }),
     );
     const filing = await screen.findByRole("dialog", { name: "File attachment" });
+    expect(
+      within(filing).getByRole("switch", {
+        name: `Confidential — restrict to the ${entityType} team`,
+      }),
+    ).toBeInTheDocument();
     expect(within(filing).getByLabelText("Document name")).toHaveValue("advice.pdf");
     if (entityType === "matter")
       expect(within(filing).queryByLabelText("Kind")).not.toBeInTheDocument();

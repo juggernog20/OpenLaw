@@ -39,7 +39,7 @@ A Legal Team Member or Administrator can file an unfiled attachment from a reach
 
 1. Find the attachment in its comment and select **File to Contract** or **File to Matter**. You can also select the attachment name to open its preview, then select the same action there.
 2. In **File attachment**, choose **Destination**: **New Document**, or **New Version on an existing Document**.
-3. Enter **Document name** for a new Document, or choose the existing **Document** and optionally enter a **Note** for a new Version. On a Contract, select **Kind**. For a new Document, review **Confidential — restrict to the contract team**; a Legal Only attachment starts with that switch turned on. The switch shows this label on a Matter too; there it restricts the Document to the Matter team.
+3. Enter **Document name** for a new Document, or choose the existing **Document** and optionally enter a **Note** for a new Version. On a Contract, select **Kind**. For a new Document, review **Confidential — restrict to the contract team**; a Legal Only attachment starts with that switch turned on. On a Matter, the switch names the Matter team.
 4. Select **File** and check the **Filed to** result and the destination Version.
 
 The comment and its attachment retain their conversation audience; filing also creates managed paper governed by the owning record and Document access. Check [roles and access](roles-and-access.md) before filing paper for a different audience. Business Users can supply permitted comment attachments but do not get the filing action.

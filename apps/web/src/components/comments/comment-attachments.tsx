@@ -424,6 +424,7 @@ function FilingDialog({
                 />
               </div>
               <ConfidentialToggle
+                record={showKind ? "contract" : "matter"}
                 id="comment-filing-confidential"
                 confidential={isConfidential}
                 disabled={busy}
