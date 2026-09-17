@@ -4443,7 +4443,7 @@
     "defaultMessage": "Confidential Entity"
   },
   "entities.chart.description": {
-    "defaultMessage": "Majority Holdings form the solid tree. Secondary Holdings use dashed lines."
+    "defaultMessage": "The largest Holding for each Entity forms the solid tree. Other Holdings use dashed lines."
   },
   "entities.chart.export.actualSizePreview": {
     "defaultMessage": "Preview at actual size"

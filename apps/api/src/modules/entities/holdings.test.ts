@@ -422,3 +422,20 @@ describe("GET /entities/chart", () => {
     );
   });
 });
+
+it("uses the largest Holding as the primary owner even below fifty percent", async () => {
+  const largest = await newEntity("Minority largest owner");
+  const other = await newEntity("Minority other owner");
+  const child = await newEntity("Minority owned Entity");
+  expect((await createHolding(largest.id, "owned", child.id, 30)).statusCode).toBe(201);
+  expect((await createHolding(other.id, "owned", child.id, 20)).statusCode).toBe(201);
+  const response = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/entities/chart",
+    cookies: memberCookies,
+  });
+  expect(response.statusCode, response.body).toBe(200);
+  expect(response.json().nodes).toContainEqual(
+    expect.objectContaining({ id: child.id, primaryOwnerId: largest.id }),
+  );
+});

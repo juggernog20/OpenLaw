@@ -254,7 +254,7 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
             {intl.formatMessage({
               id: "entities.chart.description",
               defaultMessage:
-                "Majority Holdings form the solid tree. Secondary Holdings use dashed lines.",
+                "The largest Holding for each Entity forms the solid tree. Other Holdings use dashed lines.",
             })}
           </desc>
           <g transform={`translate(${view.x} ${view.y}) scale(${view.scale})`}>
