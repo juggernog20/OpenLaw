@@ -488,7 +488,7 @@ describe("welcome wizard organization step (#697)", () => {
 });
 
 describe("welcome wizard email step (#37)", () => {
-  it("shows an env-pinned relay read-only, naming the variables to change", async () => {
+  it("shows an env-pinned relay read-only without the obsolete settings note", async () => {
     stubApi({
       signedIn: ADMIN,
       onboarding: { completed: false },
@@ -502,7 +502,7 @@ describe("welcome wizard email step (#37)", () => {
     expect(
       screen.getByText(/Outbound email is set by the deployment environment/),
     ).toBeInTheDocument();
-    expect(screen.getByText(/SMTP_URL and SMTP_FROM/)).toBeInTheDocument();
+    expect(screen.queryByText(/Settings saved here would never apply/)).not.toBeInTheDocument();
     // Read-only: no form, no save, and nothing to test from here.
     expect(screen.queryByLabelText("SMTP server")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send test email" })).not.toBeInTheDocument();

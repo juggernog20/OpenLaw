@@ -4,6 +4,27 @@ import { useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { field } from "../lib/forms";
+
+/** Shared by first-run setup and the administrator's email settings. */
+export function readSmtpSettings(form: FormData) {
+  const value = (name: string) => field(form, name);
+  return {
+    host: value("smtpHost"),
+    port: Number(value("smtpPort")),
+    security: value("smtpSecurity") as "starttls" | "tls" | "none",
+    authentication:
+      value("smtpAuthentication") === "none"
+        ? { type: "none" as const }
+        : {
+            type: "password" as const,
+            username: value("smtpUsername"),
+            password: value("smtpPassword"),
+          },
+    senderName: value("smtpSenderName"),
+    senderEmail: value("smtpSenderEmail"),
+  };
+}
 
 const ports = { starttls: "587", tls: "465", none: "25" } as const;
 const selectClassName =

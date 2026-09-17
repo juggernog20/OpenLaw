@@ -145,7 +145,6 @@ describe("the settings destination (#62)", () => {
       "aria-current",
       "page",
     );
-    // Users sits between General and the Security group (#65).
     expect(within(rail).getByRole("link", { name: "Users" })).toBeVisible();
 
     // The card header, as distinct from the rail's group label.
@@ -157,13 +156,13 @@ describe("the settings destination (#62)", () => {
     expect(screen.getByLabelText("Default timezone")).toHaveValue("UTC");
   });
 
-  it("collapses the Security group until it is opened by hand (#64)", async () => {
+  it("collapses the Advanced group until it is opened by hand", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: captureGeneralPatches([]) });
     renderAt("/settings/general");
 
     const rail = await screen.findByRole("navigation", { name: "Settings sections" });
-    const disclosure = within(rail).getByRole("button", { name: "Security" });
+    const disclosure = within(rail).getByRole("button", { name: "Advanced" });
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
     expect(within(rail).queryByRole("link", { name: "Authentication" })).not.toBeInTheDocument();
 
@@ -299,14 +298,15 @@ describe("the setup checklist (#701)", () => {
     for (const [name, path] of [
       ["Organization", "/settings/general"],
       ["Business-user portal", "/settings/authentication"],
+      ["Email", "/settings/email"],
       ["Invite your team", "/settings/users"],
       ["E-signature", "/settings/integrations/e-signature"],
       ["AI analysis", "/settings/ai-analysis"],
     ]) {
       expect(within(list).getByRole("link", { name })).toHaveAttribute("href", path);
     }
-    expect(within(list).getAllByRole("link")).toHaveLength(5);
-    for (const name of ["Email", "Review seeded types"]) {
+    expect(within(list).getAllByRole("link")).toHaveLength(6);
+    for (const name of ["Review seeded types"]) {
       expect(within(list).getByText(name)).toBeVisible();
       expect(within(list).queryByRole("link", { name })).not.toBeInTheDocument();
     }

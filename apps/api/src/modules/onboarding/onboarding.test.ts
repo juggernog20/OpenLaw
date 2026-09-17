@@ -154,9 +154,7 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
       // The allowlist and the magic-link toggle are two of the
       // Authentication pane's controls, not a pane of their own.
       portal: "/settings/authentication",
-      // No Settings pane edits an SMTP relay: the environment or the
-      // wizard's own step sets it (TECH-011).
-      email: null,
+      email: "/settings/email",
       invites: "/settings/users",
       "e-signature": "/settings/integrations/e-signature",
       "ai-analysis": "/settings/ai-analysis",

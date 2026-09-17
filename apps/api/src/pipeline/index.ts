@@ -117,3 +117,8 @@ export {
   MIN_NATIVE_TEXT_CHARACTERS,
   recordTextOwed,
 } from "./text-extraction.js";
+
+export {
+  resolveAdvancedSettings,
+  startRuntimeHeartbeat,
+} from "../modules/advanced-settings/config.js";

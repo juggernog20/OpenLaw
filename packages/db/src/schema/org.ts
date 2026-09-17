@@ -114,6 +114,8 @@ export const orgSettings = pgTable(
     smtpUrl: encryptedText("smtp_url"),
     /** From-address paired with smtpUrl — the SMTP_FROM shape. */
     smtpFrom: text("smtp_from"),
+    /** Startup settings, including write-only object-store credentials. */
+    advancedSettings: encryptedText("advanced_settings"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // $onUpdate keeps the audit trail honest for writers that forget to
     // set it — application code owns every write here, unlike the

@@ -6,6 +6,12 @@
  * factory production uses. Tests assert only at the HTTP seam.
  */
 
+import {
+  effectiveEnvironment,
+  emptySettings,
+  type AdvancedRuntime,
+} from "../modules/advanced-settings/config.js";
+
 import { mkdtemp, rm } from "node:fs/promises";
 import {
   createFakeAutoDocFillEngine,
@@ -315,6 +321,7 @@ function capturingLogger(lines: JobLogLine[]): PipelineLogger {
 
 /** What a suite may vary about the app the harness builds. */
 export interface HarnessOptions {
+  advancedRuntime?: AdvancedRuntime;
   /** Keep the real queue but omit consumers when a test controls worker execution. */
   runPipelineWorkers?: boolean;
   /**
@@ -481,6 +488,10 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     const app = await buildApp({
       db,
       config: TEST_AUTH_CONFIG,
+      advancedRuntime: options.advancedRuntime ?? {
+        baseline: { STORAGE_PATH: storageRoot },
+        active: effectiveEnvironment({ STORAGE_PATH: storageRoot }, emptySettings()),
+      },
       resolveMailer,
       storage,
       docEngine,

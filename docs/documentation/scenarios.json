@@ -1443,7 +1443,7 @@
       "status": "pass",
       "acceptance": {
         "task": "DOC-025",
-        "basis": "Independent agent browser walkthrough of the complete 57-article edition (content digest 09293453…, distribution 366a78a8, app 432dba3a) by DOC-029's publication reviewer, for every required role and method. Agent check, not human approval.",
+        "basis": "Independent agent browser walkthrough of the complete 57-article edition (content digest 09293453\u2026, distribution 366a78a8, app 432dba3a) by DOC-029's publication reviewer, for every required role and method. Agent check, not human approval.",
         "evidence": ["docs/documentation/evidence/publication.json"]
       }
     },
@@ -1469,7 +1469,7 @@
       "status": "pass",
       "acceptance": {
         "task": "DOC-025",
-        "basis": "Independent agent browser walkthrough of the complete 57-article edition (content digest 09293453…, distribution 366a78a8, app 432dba3a) by DOC-029's publication reviewer, for every required role and method. Agent check, not human approval.",
+        "basis": "Independent agent browser walkthrough of the complete 57-article edition (content digest 09293453\u2026, distribution 366a78a8, app 432dba3a) by DOC-029's publication reviewer, for every required role and method. Agent check, not human approval.",
         "evidence": ["docs/documentation/evidence/publication.json"]
       }
     },
@@ -1493,6 +1493,28 @@
       ],
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass"
+    },
+    {
+      "id": "V-C45-advanced-settings",
+      "coverage": ["C45"],
+      "articles": ["deployment-configuration"],
+      "roles": ["administrator"],
+      "environment": "disposable",
+      "prerequisites": [
+        "Administrator account on a disposable deployment with API, worker, local storage and a test object store."
+      ],
+      "actions": [
+        "Save an internal instance address, upload limit and document-service client settings in Advanced; restart API and worker and verify the resulting behavior.",
+        "Test and select an object store, then verify old documents remain readable. Inspect redaction, write-only credentials and configuration sources."
+      ],
+      "expectedResults": [
+        "Saved settings apply after both services restart; pending or mismatched configuration is visible in System status. No credentials are exposed."
+      ],
+      "negativeChecks": [
+        "A non-administrator cannot read or change Advanced configuration. Invalid values and stale edits are refused. Existing storage locations cannot be replaced."
+      ],
+      "requiredMethods": ["browser-walkthrough", "container-operation"],
+      "status": "pending"
     }
   ]
 }

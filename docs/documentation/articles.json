@@ -517,7 +517,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["setup", "welcome"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "organisation-and-users",
@@ -543,7 +543,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.authentication", "settings.email"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "types-statuses-fields",
@@ -643,11 +643,11 @@
       "kind": "reference",
       "coverage": ["C45"],
       "ownerTask": "DOC-023",
-      "audiences": ["operator"],
-      "destinations": ["formal"],
+      "audiences": ["administrator", "operator"],
+      "destinations": ["staff-help", "formal"],
       "priority": "P0",
-      "contexts": [],
-      "status": "verified"
+      "contexts": ["settings.advanced"],
+      "status": "review"
     },
     {
       "id": "upgrade",

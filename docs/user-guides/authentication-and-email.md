@@ -1,6 +1,6 @@
 # Configure sign-in, portal access, and email
 
-Use **Settings → Security → Authentication** as an Administrator to choose how Administrators, Legal Team Members, and Business Users sign in. An operator manages deployment settings and identity-provider configuration; operator is a responsibility, not an OpenLaw account role.
+Use **Settings → Advanced → Authentication** as an Administrator to choose how Administrators, Legal Team Members, and Business Users sign in. An operator manages deployment settings and identity-provider configuration; operator is a responsibility, not an OpenLaw account role.
 
 ## Choose sign-in methods for each group
 
@@ -48,11 +48,11 @@ During [first-run setup](first-run.md), the **Outbound email** step shows the ac
 7. If delivery fails, use **Replace relay**. The form opens empty, so enter all the connection, authentication, and sender details again. Save, and send another test. **Keep current relay** closes the form without a change. Check relay connectivity and its authentication and sender restrictions with your operator.
 8. **Clear relay** removes the saved relay and stops email delivery when there is no environment override. Save a valid replacement before depending on invitations, magic links, or password reset emails.
 
-The wizard cannot finish until email is configured. The **Outbound email** step has no **Set up later**, and **Continue** stays unavailable until email is configured. **Skip optional steps** on the Welcome step opens **Outbound email** while email is not configured. A configured relay does not prove delivery, so complete these checks before you continue. The completed welcome wizard cannot be reopened in this version, and there is no separate email Settings page. After completion, use the operator-managed deployment configuration to change or recover email delivery.
+The wizard cannot finish until email is configured. The **Outbound email** step has no **Set up later**, and **Continue** stays unavailable until email is configured. **Skip optional steps** on the Welcome step opens **Outbound email** while email is not configured. A configured relay does not prove delivery, so complete these checks before you continue. After setup, open **Settings → Advanced → Outbound email** to configure or replace an app-managed relay and send a test email. **Replace relay** opens the same connection and sender form; enter all details again because saved credentials are never returned. **Cancel** keeps the current relay. Successful changes apply to the next email without restarting the app.
 
 ## Understand deployment precedence
 
-When the deployment sets **SMTP_URL**, the wizard's relay settings are read-only: that environment value takes precedence over the stored relay. **SMTP_FROM** must also be set. An environment relay without a From address prevents delivery even if a complete relay was previously saved in the app.
+When the deployment sets **SMTP_URL**, the relay settings in both the wizard and Settings are read-only: that environment value takes precedence over the stored relay. **SMTP_FROM** must also be set. An environment relay without a From address prevents delivery even if a complete relay was previously saved in the app.
 
 The operator must apply the intended `SMTP_URL`, `SMTP_FROM`, and public `BASE_URL` consistently to the app and worker, then recreate the affected services and verify delivery. Follow [deployment configuration](deployment-configuration.md), including secret handling. To return to a stored relay, remove the environment override and restart with the updated configuration; verify which source is active before relying on it.
 
