@@ -504,7 +504,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["knowledge.publishing"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "first-run",

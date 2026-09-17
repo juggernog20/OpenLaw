@@ -623,3 +623,55 @@ describe("a Knowledge record", () => {
     await waitFor(() => expect(writes).toContainEqual({ audience: "legal_only" }));
   });
 });
+
+it("refreshes replacement choices when the Archive dialog reopens", async () => {
+  const base = recordApi([]);
+  let reads = 0;
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/knowledge" && call.method === "GET") {
+        reads += 1;
+        return json(200, {
+          knowledgeItems:
+            reads === 1 ? [item({ id: "replacement", title: "Available replacement" })] : [],
+          nextCursor: null,
+        });
+      }
+      return base(call);
+    },
+  });
+  renderAt("/knowledge/knowledge-1");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Knowledge Item actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Archive" }));
+  expect(await screen.findByRole("option", { name: "Available replacement" })).toBeInTheDocument();
+  await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("button", { name: "Knowledge Item actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Archive" }));
+  await waitFor(() => expect(reads).toBe(2));
+  await waitFor(() => expect(screen.getByLabelText("Replaced by")).toBeEnabled());
+  expect(screen.queryByRole("option", { name: "Available replacement" })).not.toBeInTheDocument();
+});
+
+it("explains an unavailable replacement inside the Archive dialog", async () => {
+  const base = recordApi([]);
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/knowledge/knowledge-1/archive" && call.method === "POST"
+        ? problem(400, "The replacement must be a live Knowledge Item.")
+        : base(call),
+  });
+  renderAt("/knowledge/knowledge-1");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Knowledge Item actions" }));
+  await user.click(screen.getByRole("menuitem", { name: "Archive" }));
+  const dialog = await screen.findByRole("dialog", { name: "Archive Knowledge Item" });
+  await within(dialog).findByRole("option", { name: "Second-page playbook" });
+  await user.selectOptions(within(dialog).getByLabelText("Replaced by"), "knowledge-2");
+  await user.click(within(dialog).getByRole("button", { name: "Archive" }));
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+    "The replacement must be a live Knowledge Item.",
+  );
+});

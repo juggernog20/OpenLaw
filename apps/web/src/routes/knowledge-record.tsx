@@ -156,7 +156,7 @@ function KnowledgeRecord() {
   const [preview, setPreview] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string>();
-  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiveOpen, setArchiveVisible] = useState(false);
   const [replacementId, setReplacementId] = useState("");
   const [replacementItems, setReplacementItems] = useState<Array<{
     id: string;
@@ -175,12 +175,19 @@ function KnowledgeRecord() {
   const textarea = useRef<HTMLTextAreaElement>(null);
   const commits = useFieldCommit<FieldKey>();
   const history = useActivityApplet({ entityType: "knowledge_item", entityId: saved.id });
-  // The replaced-by picker walks the whole library, so it reads when
-  // the Archive dialog first opens rather than on every record load,
-  // and a failure stays inside the dialog. Closing and reopening
-  // retries a failed read.
+  function setArchiveOpen(open: boolean) {
+    setArchiveVisible(open);
+    if (open) {
+      setReplacementItems(null);
+      setReplacementId("");
+      setReplacementsFailed(false);
+      setActionError(undefined);
+    }
+  }
+
+  // Refresh choices whenever the dialog opens; another user may have archived one.
   useEffect(() => {
-    if (!archiveOpen || replacementItems !== null) return;
+    if (!archiveOpen) return;
     let cancelled = false;
     void readReplacementItems().then((rows) => {
       if (cancelled) return;
@@ -194,7 +201,7 @@ function KnowledgeRecord() {
     return () => {
       cancelled = true;
     };
-  }, [archiveOpen, replacementItems, saved.id]);
+  }, [archiveOpen, saved.id]);
   const recordFacts = useMemo(
     () => ({
       record: { kind: "knowledge_item" as const, id: saved.id, number: 0 },
@@ -272,10 +279,11 @@ function KnowledgeRecord() {
     setActionBusy(false);
     if (!response.data) {
       setActionError(
-        intl.formatMessage({
-          id: "knowledge.action.failed",
-          defaultMessage: "The Knowledge Item could not be changed.",
-        }),
+        response.error?.detail ??
+          intl.formatMessage({
+            id: "knowledge.action.failed",
+            defaultMessage: "The Knowledge Item could not be changed.",
+          }),
       );
       return;
     }
@@ -345,7 +353,7 @@ function KnowledgeRecord() {
             <div className="ml-auto flex items-center gap-2">
               <StatusNote
                 status={actionBusy ? "saving" : actionError ? "error" : "idle"}
-                detail={actionError}
+                detail={archiveOpen ? undefined : actionError}
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -765,6 +773,11 @@ function KnowledgeRecord() {
                 </p>
               ) : null}
             </div>
+            {actionError && (
+              <p role="alert" className="text-sm text-status-danger-fg">
+                {actionError}
+              </p>
+            )}
             <div className="flex justify-end gap-2">
               <Button variant="secondary" onClick={() => setArchiveOpen(false)}>
                 <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
