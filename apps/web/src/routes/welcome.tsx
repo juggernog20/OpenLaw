@@ -53,7 +53,7 @@ import { AuthenticationOptionsFields } from "../components/authentication-option
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
 import { TimezonePicker } from "../components/timezone-picker";
-import { SmtpSettingsFields } from "../components/smtp-settings-fields";
+import { SmtpSettingsFields, readSmtpSettings } from "../components/smtp-settings-fields";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -706,21 +706,7 @@ export function WelcomePage() {
     setEmailNotice(null);
     try {
       const result = await api.PUT("/api/v1/email-settings", {
-        body: {
-          host: field(form, "smtpHost"),
-          port: Number(field(form, "smtpPort")),
-          security: field(form, "smtpSecurity") as "starttls" | "tls" | "none",
-          authentication:
-            field(form, "smtpAuthentication") === "none"
-              ? { type: "none" }
-              : {
-                  type: "password",
-                  username: field(form, "smtpUsername"),
-                  password: field(form, "smtpPassword"),
-                },
-          senderName: field(form, "smtpSenderName"),
-          senderEmail: field(form, "smtpSenderEmail"),
-        },
+        body: readSmtpSettings(form),
       });
       const { data } = result;
       if (data) {
@@ -1433,12 +1419,6 @@ export function WelcomePage() {
                             />
                           </Alert>
                         )}
-                        <p className="text-md text-muted">
-                          <FormattedMessage
-                            id="welcome.email.env.hint"
-                            defaultMessage="Settings saved here would never apply — the environment always wins. To change the relay, change SMTP_URL and SMTP_FROM in the deployment environment (see the deployment guide)."
-                          />
-                        </p>
                       </>
                     )}
 

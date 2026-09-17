@@ -1403,6 +1403,9 @@
   "autoDocs.downloadPdf": {
     "defaultMessage": "Download PDF"
   },
+  "autoDocs.downloadStarter": {
+    "defaultMessage": "Download starter template (.docx)"
+  },
   "autoDocs.downloadWord": {
     "defaultMessage": "Download Word"
   },
@@ -7697,6 +7700,165 @@
   "search.seeAll": {
     "defaultMessage": "See all results"
   },
+  "settings.advanced.accessKey": {
+    "defaultMessage": "S3 access key ID"
+  },
+  "settings.advanced.account": {
+    "defaultMessage": "Azure storage account"
+  },
+  "settings.advanced.accountKey": {
+    "defaultMessage": "Azure account key"
+  },
+  "settings.advanced.active": {
+    "defaultMessage": "Active: {value}"
+  },
+  "settings.advanced.activeEngine": {
+    "defaultMessage": "Document service: {address}"
+  },
+  "settings.advanced.activeStorage": {
+    "defaultMessage": "Active storage: {driver}"
+  },
+  "settings.advanced.azureEndpoint": {
+    "defaultMessage": "Azure endpoint (optional for Azure)"
+  },
+  "settings.advanced.baseUrl": {
+    "defaultMessage": "Application address"
+  },
+  "settings.advanced.bucket": {
+    "defaultMessage": "S3 bucket"
+  },
+  "settings.advanced.compareTimeout": {
+    "defaultMessage": "Comparison timeout (milliseconds)"
+  },
+  "settings.advanced.configuration": {
+    "defaultMessage": "Configuration"
+  },
+  "settings.advanced.container": {
+    "defaultMessage": "Azure container"
+  },
+  "settings.advanced.current": {
+    "defaultMessage": "Current"
+  },
+  "settings.advanced.database": {
+    "defaultMessage": "Database: available"
+  },
+  "settings.advanced.driver": {
+    "defaultMessage": "Store new documents in"
+  },
+  "settings.advanced.engineUrl": {
+    "defaultMessage": "Document service address"
+  },
+  "settings.advanced.health": {
+    "defaultMessage": "Status"
+  },
+  "settings.advanced.heartbeat": {
+    "defaultMessage": "Last seen"
+  },
+  "settings.advanced.identity": {
+    "defaultMessage": "Leave credentials blank to use the deployment's workload identity or credential chain."
+  },
+  "settings.advanced.instance": {
+    "defaultMessage": "Instance address"
+  },
+  "settings.advanced.instanceHelp": {
+    "defaultMessage": "The address people use to reach OpenLaw, including from email links. An internal hostname accessible over your LAN or VPN works without public internet access. Configure DNS, HTTPS and your identity provider's callback address to match."
+  },
+  "settings.advanced.localPath": {
+    "defaultMessage": "Local storage path"
+  },
+  "settings.advanced.missing": {
+    "defaultMessage": "An API or worker heartbeat is missing. Check that both services are running."
+  },
+  "settings.advanced.networkError": {
+    "defaultMessage": "The server could not be reached. Try again."
+  },
+  "settings.advanced.offline": {
+    "defaultMessage": "No recent heartbeat"
+  },
+  "settings.advanced.online": {
+    "defaultMessage": "Running"
+  },
+  "settings.advanced.pathStyle": {
+    "defaultMessage": "S3 path-style addressing"
+  },
+  "settings.advanced.pending": {
+    "defaultMessage": "Saved changes are waiting for a restart. The active values below are still in use by this API. Check System status after restarting the API and worker."
+  },
+  "settings.advanced.probes": {
+    "defaultMessage": "Use Test connection in Document storage or Document processing to check service access. Process status is based on heartbeats received within the last minute."
+  },
+  "settings.advanced.process": {
+    "defaultMessage": "Process"
+  },
+  "settings.advanced.processing": {
+    "defaultMessage": "Document processing"
+  },
+  "settings.advanced.processingHelp": {
+    "defaultMessage": "Connect to the document service used for conversion, OCR and comparisons. The address must be reachable from both the API and worker. These timeouts control the clients; configure the document service's own limits separately."
+  },
+  "settings.advanced.readOnly": {
+    "defaultMessage": "Read only"
+  },
+  "settings.advanced.refresh": {
+    "defaultMessage": "Refresh"
+  },
+  "settings.advanced.region": {
+    "defaultMessage": "S3 region"
+  },
+  "settings.advanced.restart": {
+    "defaultMessage": "Restart required"
+  },
+  "settings.advanced.restartHelp": {
+    "defaultMessage": "Changes take effect after both the API and worker restart. Values saved here override deployment defaults."
+  },
+  "settings.advanced.s3Endpoint": {
+    "defaultMessage": "S3 endpoint (optional for AWS)"
+  },
+  "settings.advanced.saved": {
+    "defaultMessage": "Settings saved. Restart the API and worker to apply changes."
+  },
+  "settings.advanced.secretKept": {
+    "defaultMessage": "Credential configured. Leave blank to keep it."
+  },
+  "settings.advanced.secretKey": {
+    "defaultMessage": "S3 secret access key"
+  },
+  "settings.advanced.sourceApp": {
+    "defaultMessage": "Saved in OpenLaw"
+  },
+  "settings.advanced.sourceDefault": {
+    "defaultMessage": "Default"
+  },
+  "settings.advanced.sourceDeployment": {
+    "defaultMessage": "Deployment configuration"
+  },
+  "settings.advanced.status": {
+    "defaultMessage": "System status"
+  },
+  "settings.advanced.storage": {
+    "defaultMessage": "Document storage"
+  },
+  "settings.advanced.storageHelp": {
+    "defaultMessage": "Choose where new documents are stored. Existing documents stay in their original location. Previously configured locations remain available for reads and require a migration to change. Local paths and volume mounts are managed by the deployment."
+  },
+  "settings.advanced.test": {
+    "defaultMessage": "Test connection"
+  },
+  "settings.advanced.testPassed": {
+    "defaultMessage": "Connection test passed."
+  },
+  "settings.advanced.timeout": {
+    "defaultMessage": "Processing timeout (milliseconds)"
+  },
+  "settings.advanced.uploadLimit": {
+    "defaultMessage": "Maximum file size (MiB)"
+  },
+  "settings.advanced.uploads": {
+    "defaultMessage": "File uploads"
+  },
+  "settings.advanced.uploadsHelp": {
+    "defaultMessage": "The maximum size of an individual uploaded file. Your reverse proxy may enforce a lower limit."
+  },
   "settings.aiAnalysis.apiKey": {
     "defaultMessage": "API key"
   },
@@ -8639,6 +8801,15 @@
   "settings.eSignature.webhookUrl.hint": {
     "defaultMessage": "Paste this into a DocuSign Connect configuration so envelope status reaches this install."
   },
+  "settings.email.environment": {
+    "defaultMessage": "Managed by your deployment configuration. Contact your system administrator to change the relay."
+  },
+  "settings.email.networkError": {
+    "defaultMessage": "The server could not be reached. Try again."
+  },
+  "settings.email.sender": {
+    "defaultMessage": "Sender: {from}"
+  },
   "settings.entities.tab.fields": {
     "defaultMessage": "Fields"
   },
@@ -8906,14 +9077,14 @@
   "settings.general.uploadLogo": {
     "defaultMessage": "Upload a logo"
   },
+  "settings.group.advanced": {
+    "defaultMessage": "Advanced"
+  },
   "settings.group.organization": {
     "defaultMessage": "Organization"
   },
   "settings.group.personal": {
     "defaultMessage": "Personal"
-  },
-  "settings.group.security": {
-    "defaultMessage": "Security"
   },
   "settings.intake.tab.links": {
     "defaultMessage": "Deflection links"
@@ -10089,13 +10260,13 @@
     "defaultMessage": "Restore {name}"
   },
   "settings.requestTypes.targetColumn": {
-    "defaultMessage": "Target"
+    "defaultMessage": "Default destination"
   },
   "settings.requestTypes.targetModule": {
-    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {No target}}"
+    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {Decide during triage}}"
   },
   "settings.requestTypes.targetPrefix": {
-    "defaultMessage": "Target:"
+    "defaultMessage": "Default destination:"
   },
   "settings.requestTypes.targetType": {
     "defaultMessage": "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}"
@@ -10129,6 +10300,9 @@
   },
   "settings.section.departments": {
     "defaultMessage": "Departments"
+  },
+  "settings.section.email": {
+    "defaultMessage": "Outbound email"
   },
   "settings.section.entities": {
     "defaultMessage": "Entities"
@@ -10198,6 +10372,15 @@
   },
   "settings.typeEditor.createdNotAttached": {
     "defaultMessage": "{name} was created but could not be attached. Select it from Attach field to try again. {detail}"
+  },
+  "settings.typeEditor.noMatchingFields": {
+    "defaultMessage": "No matching fields."
+  },
+  "settings.typeEditor.searchFields": {
+    "defaultMessage": "Search fields…"
+  },
+  "settings.typeEditor.searchFieldsLabel": {
+    "defaultMessage": "Search fields"
   },
   "settings.users.action.archive": {
     "defaultMessage": "Archive"
@@ -10771,9 +10954,6 @@
   },
   "welcome.email.env": {
     "defaultMessage": "Outbound email is set by the deployment environment. Mail is sent from {from}."
-  },
-  "welcome.email.env.hint": {
-    "defaultMessage": "Settings saved here would never apply — the environment always wins. To change the relay, change SMTP_URL and SMTP_FROM in the deployment environment (see the deployment guide)."
   },
   "welcome.email.env.incomplete": {
     "defaultMessage": "The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment."

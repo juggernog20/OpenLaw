@@ -131,6 +131,29 @@ The setup checklist reports current configuration, not a stored history of skip 
 
 Email must be configured before first-run setup can finish. The resolved mailer can use deployment-provided SMTP or a relay saved in the wizard. Email cannot be skipped; skipping optional steps opens Email when it is missing. The completion API rejects unconfigured instances, and an Administrator opening an app route returns to setup until email is configured. Existing completed installations do not reopen the wizard. This supersedes the earlier statements that every step is skippable. Business Users retain the existing magic-link and SSO sign-in model.
 
+### Addendum (2026-09-17): Start blank on the Review step
+
+The Review step shows the seeded lists and the reminder offsets and asks for one acknowledgement. Some organizations arrive with a settled vocabulary or a bulk import and do not want the starter catalog at all. Blair asked for a Start blank choice on this step, with a recommendation to keep the seeds.
+
+**The step keeps its table and gains a recommendation and a Start blank action.** The copy above the table reads, in substance: "We recommend that you start with the small set of work types, statuses, and fields that came with this setup. If you would rather start completely fresh, choose Start blank. This removes every seeded row that OpenLaw does not need to run." Start blank opens a confirmation dialog that names each list and the number of rows it will remove. On confirm, one call, `POST /api/v1/onboarding/start-blank`, runs in a single transaction. The step then re-reads the counts so the Administrator sees the emptied lists, and Finish works as before.
+
+**Two tiers of seed row.** The skeleton stays because code or a structural rule depends on it. The catalog goes because it is only vocabulary.
+
+- The skeleton is the `other` row on matter types, contract types, entity types, and officer roles; the matter statuses `open` and `closed`; the contract statuses `draft`, `active`, and `expired`; the three default Fields, governing law, jurisdiction, and our position; and the reminder offsets.
+- The catalog is every other row with `is_system_default = true` in matter types, contract types, entity types, officer roles, knowledge types, request types, matter statuses, and contract statuses, together with the per-type Field attachments of the removed rows.
+
+Start blank hard-deletes the catalog rows. It does not archive them. At first run nothing references them, so the SET-003 guard has nothing to protect, and archived seed rows would clutter every Settings pane for the life of the instance.
+
+**Fields gain `is_system_default`.** The taxonomy tables carry the column through the shared helper; `fields` does not. The migration adds it, sets it true on the three default Fields, and leaves user-created Fields false. Start blank keeps default Fields by that flag, so a later seed migration that adds a Field is covered without a code change. The Fields panes show the same lock the taxonomy panes show.
+
+**Preconditions.** The call answers 409 when onboarding is already complete, when any list already holds a user-created row, or when any removable row is in use. The dialog reports which list blocks it. This keeps a demo seed, or an Administrator who created records before finishing the wizard, from losing data.
+
+**Bookkeeping.** Start blank records `onboarding_reviewed_types_at`, so the setup checklist's Review row is done and never nags. It writes one activity-log row per emptied list, `settings.catalog_cleared` with the list name and the removed count, so the audit trail explains why Settings looks bare. Existing installations never see the action because onboarding is complete.
+
+**Consequences.** After Start blank the review, approval, and signature stages of contract statuses hold no live row, and the open category of matter statuses holds only `open`. SET-003's one-per-stage minimum guards the archive of an existing row; it is not a runtime need. Code selects a contract status by slug only for `draft`, `active`, and `expired`, and by stage only for `ended`, and both survive. This empty-stage state is accepted for a fresh start. The Administrator adds their own statuses in Settings. The checklist label Review seeded types stands; the wizard copy under `welcome.review.*` changes.
+
+**Alternatives considered.** A per-list keep-or-clear control on the same step (richer; deferred until someone asks for it, one action is what was requested). Moving the starter seed out of migrations into an onboarding action (declined; the migrations-only rule stands and migrate-then-clear reaches the same end state). Archive instead of delete (declined; clutter). Wiping the reminder offsets (declined; they are a global setting, not vocabulary).
+
 ## SET-005 — User management: the Users pane, role edits, guarded user archive, session revocation
 
 - **Status** — Accepted
@@ -245,7 +268,7 @@ Every Portal route checks the current user's completion state before its page lo
 | SET-001 | IA: one /settings destination with Personal + Organization rails           | Accepted                                                                           |
 | SET-002 | Permissions: Admin-only Organization settings; no delegation in v1         | Accepted; the Business User floor over the whole tree added by the M20/10 addendum |
 | SET-003 | Apply semantics: immediate on save; guarded archive with reassignment      | Accepted                                                                           |
-| SET-004 | First-run onboarding wizard + seeded defaults                              | Accepted                                                                           |
+| SET-004 | First-run onboarding wizard + seeded defaults                              | Accepted; Start blank on the Review step per the 2026-09-17 addendum               |
 | SET-005 | User management: Users pane, role edits, guarded archive, revocation       | Accepted                                                                           |
 | SET-006 | Personal profile scope; email change deferred                              | Accepted                                                                           |
 | SET-007 | E-signature lives in Organization → Integrations, not in Contracts         | Accepted; the AI-pane sentence superseded by SET-008                               |

@@ -3072,6 +3072,350 @@
         }
       }
     },
+    "/api/v1/advanced-settings/{section}": {
+      "get": {
+        "operationId": "getAdvancedSettings",
+        "tags": ["advanced-settings"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["instance", "uploads", "storage", "processing"]
+            },
+            "in": "path",
+            "name": "section",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "string"
+                    },
+                    "restartRequired": {
+                      "type": "boolean"
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "activeValue": {
+                            "type": "string"
+                          },
+                          "secret": {
+                            "type": "boolean"
+                          },
+                          "configured": {
+                            "type": "boolean"
+                          },
+                          "source": {
+                            "type": "string",
+                            "enum": ["app", "deployment", "default"]
+                          },
+                          "locked": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "key",
+                          "value",
+                          "activeValue",
+                          "secret",
+                          "configured",
+                          "source",
+                          "locked"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["version", "restartRequired", "fields"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveAdvancedSettings",
+        "tags": ["advanced-settings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string"
+                  },
+                  "values": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "maxLength": 8192
+                    }
+                  }
+                },
+                "required": ["version", "values"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["instance", "uploads", "storage", "processing"]
+            },
+            "in": "path",
+            "name": "section",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "string"
+                    },
+                    "restartRequired": {
+                      "type": "boolean"
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "activeValue": {
+                            "type": "string"
+                          },
+                          "secret": {
+                            "type": "boolean"
+                          },
+                          "configured": {
+                            "type": "boolean"
+                          },
+                          "source": {
+                            "type": "string",
+                            "enum": ["app", "deployment", "default"]
+                          },
+                          "locked": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "key",
+                          "value",
+                          "activeValue",
+                          "secret",
+                          "configured",
+                          "source",
+                          "locked"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["version", "restartRequired", "fields"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/advanced-settings/{section}/test": {
+      "post": {
+        "operationId": "testAdvancedSettings",
+        "tags": ["advanced-settings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string"
+                  },
+                  "values": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "maxLength": 8192
+                    }
+                  }
+                },
+                "required": ["version", "values"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["instance", "uploads", "storage", "processing"]
+            },
+            "in": "path",
+            "name": "section",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [true]
+                    }
+                  },
+                  "required": ["ok"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system-status": {
+      "get": {
+        "operationId": "getSystemStatus",
+        "tags": ["advanced-settings"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "database": {
+                      "type": "string",
+                      "enum": ["available"]
+                    },
+                    "storageDriver": {
+                      "type": "string"
+                    },
+                    "documentEngine": {
+                      "type": "string"
+                    },
+                    "processes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "role": {
+                            "type": "string"
+                          },
+                          "startedAt": {
+                            "type": "string"
+                          },
+                          "heartbeatAt": {
+                            "type": "string"
+                          },
+                          "online": {
+                            "type": "boolean"
+                          },
+                          "current": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["role", "startedAt", "heartbeatAt", "online", "current"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["database", "storageDriver", "documentEngine", "processes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/email-settings": {
       "get": {
         "operationId": "getEmailSettings",

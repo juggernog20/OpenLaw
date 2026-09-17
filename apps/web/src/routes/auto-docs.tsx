@@ -2,6 +2,7 @@
 
 /** ADO-001: the flat Auto-Docs destination belongs to Member+. */
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
+import { Download } from "lucide-react";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
@@ -165,7 +166,20 @@ export function AutoDocsPage() {
     <AppShell user={user} onSignOut={() => void signOut()}>
       <PageTitle title={title} />
       <div className="w-full space-y-6">
-        <h1 className="text-xl font-semibold">{title}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold">{title}</h1>
+          <a
+            href="/downloads/openlaw-auto-doc-starter.docx"
+            download="OpenLaw-Auto-Doc-Starter.docx"
+            className="inline-flex items-center gap-1.5 text-sm text-link hover:underline"
+          >
+            <Download size={16} aria-hidden="true" />
+            <FormattedMessage
+              id="autoDocs.downloadStarter"
+              defaultMessage="Download starter template (.docx)"
+            />
+          </a>
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex min-w-0 flex-1 basis-80 flex-wrap items-center gap-3">
             <Form method="get" className="flex min-w-0 max-w-full items-end gap-2">

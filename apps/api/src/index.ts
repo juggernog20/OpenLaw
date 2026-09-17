@@ -6,6 +6,11 @@
  * builds the app (see app.ts), and listens.
  */
 
+import {
+  resolveAdvancedSettings,
+  startRuntimeHeartbeat,
+} from "./modules/advanced-settings/config.js";
+
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -107,6 +112,9 @@ if (Object.keys(rewrap.unreadable).length > 0) {
   );
 }
 
+const advancedRuntime = await resolveAdvancedSettings(db, process.env);
+const runtimeEnv = advancedRuntime.active;
+
 // TECH-011: SMTP is the universal default, carried by env vars or saved
 // through the SET-004 wizard's email step (#37). Environment wins: with
 // SMTP_URL set the instance is env-pinned and database values are ignored
@@ -127,7 +135,7 @@ const resolveMailer = createMailerResolver(db, {
 // to a local disk nobody would think to look at.
 const storage = (function readStorage() {
   try {
-    return createStorageFromEnv(process.env);
+    return createStorageFromEnv(runtimeEnv);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);
@@ -142,7 +150,7 @@ const storage = (function readStorage() {
 // somewhere specific must not quietly call somewhere else.
 const docEngine = (function readDocEngine() {
   try {
-    return createDocEngineFromEnv(process.env);
+    return createDocEngineFromEnv(runtimeEnv);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);
@@ -186,7 +194,7 @@ const resolveAiProvider = createAiResolver(db);
 // root's reason: startup reads the environment, and no module does. An
 // unreadable value falls back to the default rather than refusing to
 // boot (see maxUploadBytes).
-const uploadCeiling = maxUploadBytes(process.env.MAX_UPLOAD_MB);
+const uploadCeiling = maxUploadBytes(runtimeEnv.MAX_UPLOAD_MB);
 
 // BASE_URL anchors emailed links (set-password, magic links) and origin
 // checks. The localhost default exists for development; a production
@@ -211,9 +219,9 @@ if (morningRoundTrigger) {
   );
 }
 
-if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
+if (runtimeEnv.BASE_URL === "http://localhost:3000" && process.env.NODE_ENV === "production") {
   console.warn(
-    "BASE_URL is not set; emailed links and OIDC callbacks will point at http://localhost:3000.",
+    "The instance address is http://localhost:3000; emailed links and OIDC callbacks will point there.",
   );
 }
 
@@ -248,13 +256,14 @@ const app = await buildApp(
       secret: requireEnv("AUTH_SECRET"),
       // `||`, not `??`: under Compose the variable always exists (empty
       // when unset in .env), and empty means "not configured".
-      baseUrl: process.env.BASE_URL || "http://localhost:3000",
+      baseUrl: runtimeEnv.BASE_URL || "http://localhost:3000",
       // Set by the dev overlay only (TECH-018): the E2E suite would trip
       // sign-in rate limits that exist to slow humans down. The image
       // always runs NODE_ENV=production — fidelity is the point — so the
       // env var is the only signal; the warning below is the guard rail.
       disableRateLimit: process.env.AUTH_RATE_LIMIT === "off",
     },
+    advancedRuntime,
     resolveMailer,
     storage,
     docEngine,
@@ -295,6 +304,8 @@ const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
 
 try {
+  const stopHeartbeat = await startRuntimeHeartbeat(db, "api", runtimeEnv);
+  app.addHook("onClose", stopHeartbeat);
   await app.listen({ port, host });
 } catch (err) {
   app.log.error(err);

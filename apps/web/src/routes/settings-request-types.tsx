@@ -145,11 +145,15 @@ const COLUMNS: Record<
   MessageDescriptor
 > = defineMessages({
   nameColumn: { id: "settings.requestTypes.nameColumn", defaultMessage: "Request type" },
-  targetColumn: { id: "settings.requestTypes.targetColumn", defaultMessage: "Target" },
-  targetPrefix: { id: "settings.requestTypes.targetPrefix", defaultMessage: "Target:" },
+  targetColumn: { id: "settings.requestTypes.targetColumn", defaultMessage: "Default destination" },
+  targetPrefix: {
+    id: "settings.requestTypes.targetPrefix",
+    defaultMessage: "Default destination:",
+  },
   targetModule: {
     id: "settings.requestTypes.targetModule",
-    defaultMessage: "{module, select, matter {Matter} contract {Contract} other {No target}}",
+    defaultMessage:
+      "{module, select, matter {Matter} contract {Contract} other {Decide during triage}}",
   },
   targetType: {
     id: "settings.requestTypes.targetType",

@@ -46,17 +46,13 @@ type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
  * and the magic-link toggle are two of that pane's controls, not a pane
  * of their own.
  *
- * **Email has no address**, and that is the honest answer rather than a
- * gap in this table. An SMTP relay is set by the deployment environment
- * or in the wizard's own email step (TECH-011, SET-004's #37 addendum).
- * No Settings pane edits one, and pointing at a neighbouring pane would
- * send an Administrator somewhere that cannot finish the job.
+ * Email links to the administrator relay settings after setup.
  */
 const SETTINGS_PATHS: Record<OnboardingStep, string | null> = {
   organization: "/settings/general",
   authentication: "/settings/authentication",
   portal: "/settings/authentication",
-  email: null,
+  email: "/settings/email",
   invites: "/settings/users",
   "e-signature": "/settings/integrations/e-signature",
   "ai-analysis": "/settings/ai-analysis",

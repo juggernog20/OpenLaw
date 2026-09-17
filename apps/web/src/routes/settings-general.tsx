@@ -14,6 +14,8 @@
  * route the wizard reads. It renders nothing once every step is done.
  */
 
+import { ORGANIZATION_BRANDING_CHANGED } from "../lib/organization-branding";
+
 import { useRef, useState } from "react";
 import { Link, redirect, useLoaderData, useRevalidator } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
@@ -169,6 +171,8 @@ async function patchGeneral(body: {
   defaultTimezone?: string;
 }): Promise<ProblemResult<General>> {
   const result = await api.PATCH("/api/v1/org/general", { body }).catch(() => undefined);
+  if (result?.data?.general && ("name" in body || "logo" in body))
+    window.dispatchEvent(new Event(ORGANIZATION_BRANDING_CHANGED));
   return { data: result?.data?.general, ...(await problem(result)) };
 }
 

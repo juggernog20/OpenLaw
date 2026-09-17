@@ -173,3 +173,89 @@ it("refuses an expanded package above 32 MiB before rendering", async () => {
     }),
   ).rejects.toThrow("expanded Word template exceeds 32 MiB");
 });
+
+it("fills the downloadable agreement and its optional clause after removing the instructions page", async () => {
+  const { detectAutoDocTemplate } = await import("../auto-doc-template.js");
+  const template = await readFile(
+    new URL("../../../../web/public/downloads/openlaw-auto-doc-starter.docx", import.meta.url),
+  );
+  const packageWithInstructions = new PizZip(template);
+  const document = packageWithInstructions.file("word/document.xml")!.asText();
+  const pageBreak = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  expect(document.split(pageBreak)).toHaveLength(2);
+  expect(document.split(pageBreak)[0]).toContain("{{start_date|date:MMMM D, YYYY}}");
+  // Follow the download's instructions: delete page one and its page break in Word.
+  packageWithInstructions.file(
+    "word/document.xml",
+    document.replace(/(<w:body>)[\s\S]*?<w:p><w:r><w:br w:type="page"\/><\/w:r><\/w:p>/, "$1"),
+  );
+  const agreement = packageWithInstructions.generate({ type: "nodebuffer" });
+  const detected = detectAutoDocTemplate(agreement);
+  expect(detected.blocks).toEqual(["confidentiality"]);
+  expect([...new Set(detected.placeholders)]).toEqual([
+    "start_date",
+    "provider_name",
+    "client_name",
+    "services",
+    "fee",
+  ]);
+  expect(detected.directives).toEqual([
+    { slug: "start_date", directive: "date:DD/MM/YYYY" },
+    { slug: "provider_name", directive: "upper" },
+    { slug: "client_name", directive: "upper" },
+    { slug: "fee", directive: "currency:USD" },
+  ]);
+  const definition = form("start_date", "provider_name", "client_name", "services", "fee");
+  definition.fields[0]!.fieldType = "date";
+  definition.fields[4]!.fieldType = "currency";
+  const output = await engine.fill({
+    template: agreement,
+    definition,
+    answers: {
+      start_date: "2026-10-01",
+      provider_name: "Acme Advisory Ltd",
+      client_name: "Wentworth Family Office",
+      services: "Review and report on the Client’s supplier contracts.",
+      fee: 2500,
+    },
+  });
+  const filled = text(output);
+  expect(filled).toContain("01/10/2026");
+  expect(filled).toContain("ACME ADVISORY LTD");
+  expect(filled).toContain("WENTWORTH FAMILY OFFICE");
+  expect(filled.split("Fees and payment")[1]).toContain("$2,500.00");
+  expect(filled).toContain("Review and report on the Client’s supplier contracts.");
+  expect(filled).toContain("For Acme Advisory Ltd");
+  expect(filled).toContain("For Wentworth Family Office");
+  expect(filled).not.toContain("{{");
+  expect(filled).toContain("Confidentiality");
+  definition.fields.push({
+    ...definition.fields[0]!,
+    slug: "include_confidentiality",
+    label: "Include confidentiality",
+    fieldType: "boolean",
+    placeholder: false,
+    displayOrder: 5,
+  });
+  definition.clauseRules = [
+    {
+      blockName: "confidentiality",
+      fieldSlug: "include_confidentiality",
+      operator: "equals",
+      value: true,
+    },
+  ];
+  for (const include of [true, false]) {
+    const result = text(
+      await engine.fill({
+        template: agreement,
+        definition,
+        answers: { include_confidentiality: include },
+      }),
+    );
+    expect(result.includes("Confidentiality")).toBe(include);
+    expect(result.includes("non-public information")).toBe(include);
+    expect(result).toContain("Changes");
+    expect(result).not.toContain("{{");
+  }
+});

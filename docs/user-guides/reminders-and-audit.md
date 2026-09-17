@@ -24,7 +24,7 @@ Changing the schedule does not recall delivered reminders or guarantee catch-up 
 
 ## Find a change in the Audit log
 
-1. In **Settings**, open **Security**, then **Audit log**.
+1. In **Settings**, open **Advanced**, then **Audit log**.
 2. Use **Person** to select the actor, **Action** for the event, and **Record** for the record kind. These filters combine.
 3. Use **From** and **To** to narrow the date range, and **Search** to narrow the available audit text. The date bounds use your browser's local calendar days.
 4. Read the event, record, audience, and time. Where shown, inspect the before-and-after values.

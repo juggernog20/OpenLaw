@@ -36,6 +36,8 @@
  * yet finds no work and waits, which is the right answer.
  */
 
+import { resolveAdvancedSettings, startRuntimeHeartbeat } from "@openlaw/api/pipeline";
+
 import { createDb, readSecretKeys, useSecretKeys } from "@openlaw/db";
 import {
   createConsoleLogger,
@@ -90,14 +92,16 @@ const databaseUrl = requireEnv("DATABASE_URL");
 useSecretKeys(orExit(() => readSecretKeys(process.env)));
 
 const db = createDb(databaseUrl);
-const storage = orExit(() => createStorageFromEnv(process.env));
-const docEngine = orExit(() => createDocEngineFromEnv(process.env));
+const advancedRuntime = await resolveAdvancedSettings(db, process.env);
+const runtimeEnv = advancedRuntime.active;
+const storage = orExit(() => createStorageFromEnv(runtimeEnv));
+const docEngine = orExit(() => createDocEngineFromEnv(runtimeEnv));
 // The same ceiling the API enforces on an upload, read from the same
 // variable. The executed copy arrives from a third party rather than
 // from a person, and a file the API would have refused at the door must
 // not reach the store through the back one. An unreadable value falls
 // back to the default here exactly as it does there.
-const uploadCeiling = maxUploadBytes(process.env.MAX_UPLOAD_MB);
+const uploadCeiling = maxUploadBytes(runtimeEnv.MAX_UPLOAD_MB);
 // The signing connector is org data, not deployment environment
 // (CTR-013), so there are no credentials to read from `process.env`: an
 // install with no connector row resolves to nothing, and an
@@ -139,16 +143,16 @@ const resolveMailer = createMailerResolver(db, {
 // the record it is about (NOT-005). The same variable and the same
 // fallback the API reads, because a worker that linked somewhere else
 // would send mail nobody could act on.
-const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+const baseUrl = runtimeEnv.BASE_URL || "http://localhost:3000";
 
 // The API warns about this too, and until M18 that was enough: the app
 // was the only process that sent mail. It is not any more — every
 // notification email and every morning digest is rendered here — so an
 // operator who set BASE_URL on the app alone would get briefings whose
 // every link points at localhost, with nothing anywhere saying why.
-if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
+if (runtimeEnv.BASE_URL === "http://localhost:3000" && process.env.NODE_ENV === "production") {
   console.warn(
-    "BASE_URL is not set; links in notification emails and the morning digest will point at http://localhost:3000.",
+    "The instance address is http://localhost:3000; links in notification emails and the morning digest will point there.",
   );
 }
 
@@ -171,6 +175,7 @@ const pipeline = await startPipeline({
   process.exit(1);
 });
 
+const stopHeartbeat = await startRuntimeHeartbeat(db, "worker", runtimeEnv);
 log.info({}, "OpenLaw worker started");
 
 /** How long a shutdown waits for the sweep to notice it was stopped. */
@@ -256,6 +261,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
         // the event loop alive, so a worker that skipped this would
         // hang until the grace period kills it — and the exit code the
         // failure just set would be lost with it.
+        await stopHeartbeat().catch(() => {});
         await db.$client.end().catch((error: unknown) => {
           log.error({ reason: reasonOf(error) }, "the worker did not close its database pool");
           process.exitCode = 1;

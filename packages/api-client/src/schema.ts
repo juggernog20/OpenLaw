@@ -549,6 +549,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/advanced-settings/{section}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAdvancedSettings"];
+    put: operations["saveAdvancedSettings"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/advanced-settings/{section}/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["testAdvancedSettings"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/system-status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getSystemStatus"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/email-settings": {
     parameters: {
       query?: never;
@@ -8480,6 +8528,187 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getAdvancedSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        section: "instance" | "uploads" | "storage" | "processing";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            version: string;
+            restartRequired: boolean;
+            fields: {
+              key: string;
+              value: string;
+              activeValue: string;
+              secret: boolean;
+              configured: boolean;
+              /** @enum {string} */
+              source: "app" | "deployment" | "default";
+              locked: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  saveAdvancedSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        section: "instance" | "uploads" | "storage" | "processing";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          version: string;
+          values: {
+            [key: string]: string;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            version: string;
+            restartRequired: boolean;
+            fields: {
+              key: string;
+              value: string;
+              activeValue: string;
+              secret: boolean;
+              configured: boolean;
+              /** @enum {string} */
+              source: "app" | "deployment" | "default";
+              locked: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  testAdvancedSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        section: "instance" | "uploads" | "storage" | "processing";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          version: string;
+          values: {
+            [key: string]: string;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {boolean} */
+            ok: true;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getSystemStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {string} */
+            database: "available";
+            storageDriver: string;
+            documentEngine: string;
+            processes: {
+              role: string;
+              startedAt: string;
+              heartbeatAt: string;
+              online: boolean;
+              current: boolean;
+            }[];
+          };
+        };
       };
       /** @description Problem details (RFC 9457) */
       default: {

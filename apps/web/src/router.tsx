@@ -10,7 +10,15 @@
  * comment there for why the screen must remount when its record does.
  */
 
+import {
+  SettingsAdvancedPage,
+  settingsAdvancedLoader,
+  SettingsSystemStatusPage,
+  settingsSystemStatusLoader,
+} from "./routes/settings-advanced";
+
 import { SettingsAutoDocsPage, settingsAutoDocsLoader } from "./routes/settings-auto-docs";
+import { SettingsEmailPage, settingsEmailLoader } from "./routes/settings-email";
 import {
   PortalAutoDocsPage,
   portalAutoDocsLoader,
@@ -461,6 +469,32 @@ export const routes: RouteObject[] = [
         path: "departments",
         loader: settingsDepartmentsLoader,
         element: <SettingsDepartmentsPage />,
+      },
+      { path: "email", loader: settingsEmailLoader, element: <SettingsEmailPage /> },
+      {
+        path: "instance",
+        loader: settingsAdvancedLoader("instance"),
+        element: <SettingsAdvancedPage section="instance" />,
+      },
+      {
+        path: "uploads",
+        loader: settingsAdvancedLoader("uploads"),
+        element: <SettingsAdvancedPage section="uploads" />,
+      },
+      {
+        path: "storage",
+        loader: settingsAdvancedLoader("storage"),
+        element: <SettingsAdvancedPage section="storage" />,
+      },
+      {
+        path: "document-processing",
+        loader: settingsAdvancedLoader("processing"),
+        element: <SettingsAdvancedPage section="processing" />,
+      },
+      {
+        path: "system-status",
+        loader: settingsSystemStatusLoader,
+        element: <SettingsSystemStatusPage />,
       },
       {
         path: "authentication",
