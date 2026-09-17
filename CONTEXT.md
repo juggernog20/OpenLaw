@@ -288,8 +288,16 @@ The one-time setup of a fresh instance. `/auth/setup` creates the first Administ
 _Avoid_: resettable setup, recurring onboarding
 
 **Onboarding wizard**:
-The first Administrator's guided configuration at `/welcome`. Its nine steps include the welcome splash, organization identity, authentication, the Business-user portal allowlist, outbound email, team invites, E-signature, AI analysis, and Review of the seeded lists. Each step is skippable. The two connectors have separate steps because SET-008 gives each its own Settings destination. Finish on Review records the seeded-list acknowledgement before completing onboarding [SET-004].
+The first Administrator's guided configuration at `/welcome`. Its nine steps include the welcome splash, organization identity, authentication, the Business-user portal allowlist, outbound email, team invites, E-signature, AI analysis, and Review of the seeded lists. Each step is skippable. The two connectors have separate steps because SET-008 gives each its own Settings destination. Finish on Review records the seeded-list acknowledgement before completing onboarding. Review also recommends keeping the seeds and offers Start blank [SET-004].
 _Avoid_: installation wizard, integrations step
+
+**Start blank**:
+The Review step's action that removes the seeded catalog so an organization begins with its own vocabulary. It hard-deletes every seed row that is only vocabulary: the non-protected matter types, contract types, entity types, officer roles, knowledge types, request types, and statuses. It keeps the rows the application needs, the `other` type rows and the protected statuses, and it keeps the default Fields and the reminder offsets. It is refused once onboarding is complete, once a user-created row exists, or once a removable row is in use. It records the Review acknowledgement and one activity-log row per emptied list [SET-004].
+_Avoid_: reset, factory reset, wipe the instance, archive the seeds
+
+**Default Field**:
+A Field that a migration seeded, marked `is_system_default`. Today these are governing law, jurisdiction, and our position, the CTR-008 core Fields with shipped AI prompts. Start blank keeps them [SET-004, CTR-016].
+_Avoid_: system field, built-in field, protected field
 
 **Setup checklist**:
 The Administrator-only card above Organization in Settings → Organization → General. It lists currently unfinished onboarding steps and disappears when none remain. Each row links to its Settings pane, except Email, which has no pane and is plain text, and Review seeded types, which has a Mark as reviewed action. Completion follows current configuration, so a later removal can bring a row back without reopening the wizard. The card calls the wizard's Your organization step Organization and its Outbound email step Email to fit the Settings context. It expands Review to Review seeded types because the card has no surrounding wizard to explain what to review. All other step labels match [SET-004].
