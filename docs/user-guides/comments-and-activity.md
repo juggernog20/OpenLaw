@@ -27,7 +27,7 @@ Comments form one chronological conversation. Use **Show older** when earlier co
 
 ## Choose an audience in the Inbox
 
-On a Request, choose **Legal only** for internal legal discussion or **Shared with requester** for a reply visible to Legal and the requester. New comments default to **Legal only**. Older **Working team** comments remain readable by Legal and are not shared with Business Users.
+On a Request, choose **Legal Only** for internal legal discussion or **Shared with requester** for a reply visible to Legal and the requester. New comments default to **Legal Only**. Older **Working team** comments remain readable by Legal and are not shared with Business Users.
 
 ## Mention a person
 

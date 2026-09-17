@@ -667,13 +667,13 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
 
     const thread = await screen.findByRole("list", { name: "Comments" });
     const rows = within(thread).getAllByRole("listitem");
-    expect(within(rows[0]!).getByText("Legal only")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("Legal Only")).toBeInTheDocument();
     expect(within(rows[1]!).getByText("Working team")).toBeInTheDocument();
     expect(within(rows[2]!).getByText("Shared with requester")).toBeInTheDocument();
     expect(within(rows[2]!).getByText("Tom Iwu")).toBeInTheDocument();
   });
 
-  it("defaults to Legal only and posts to either of the two audiences", async () => {
+  it("defaults to Legal Only and posts to either of the two audiences", async () => {
     const user = userEvent.setup();
     const comments = commentsApi();
     stubApi({ signedIn: MEMBER, extra: pageApi(detailApi(detail()), comments) });
@@ -686,13 +686,13 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
         .getAllByRole("radio")
         .map((segment) => segment.getAttribute("value")),
     ).toEqual(["legal_only", "full_thread"]);
-    expect(within(panel).getByRole("radio", { name: "Legal only" })).toBeChecked();
+    expect(within(panel).getByRole("radio", { name: "Legal Only" })).toBeChecked();
     expect(within(panel).queryByRole("radio", { name: "Working team" })).not.toBeInTheDocument();
 
     // Legal Only triage chatter and Full Thread requester-facing
     // replies, in one conversation.
     for (const [segment, tier, body] of [
-      ["Legal only", "legal_only", "Cap looks standard."],
+      ["Legal Only", "legal_only", "Cap looks standard."],
       ["Shared with requester", "full_thread", "Can you send the 2025 copy?"],
     ] as const) {
       await user.click(within(panel).getByRole("radio", { name: segment }));

@@ -140,7 +140,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["comments", "activity"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "notifications",
@@ -205,7 +205,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["inbox"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "convert-request",
@@ -309,7 +309,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.tasks", "contracts.dates"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "contract-relations-and-ending",
@@ -374,7 +374,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["matters.tasks", "matters.dates", "matters.relations"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "contributor-guide",

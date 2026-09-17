@@ -244,7 +244,7 @@ const REQUESTER_TIERS: readonly CommentTier[] = ["full_thread"];
  */
 const TIER_COPY: Record<CommentTier, { label: MessageDescriptor; audience: MessageDescriptor }> = {
   legal_only: {
-    label: defineMessage({ id: "comments.tier.legalOnly", defaultMessage: "Legal only" }),
+    label: defineMessage({ id: "comments.tier.legalOnly", defaultMessage: "Legal Only" }),
     audience: defineMessage({
       id: "comments.audience.legalOnly",
       defaultMessage: "Visible to Administrators and Legal Team Members.",

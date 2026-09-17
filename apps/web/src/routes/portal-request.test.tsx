@@ -784,7 +784,7 @@ describe("the conversation", () => {
     // so there is nothing here to pick between (DD-016).
     expect(within(card).queryByRole("radio")).not.toBeInTheDocument();
     expect(within(card).queryByText("Shared with requester")).not.toBeInTheDocument();
-    expect(within(card).queryByText("Legal only")).not.toBeInTheDocument();
+    expect(within(card).queryByText("Legal Only")).not.toBeInTheDocument();
     expect(within(card).queryByText("Working team")).not.toBeInTheDocument();
   });
 

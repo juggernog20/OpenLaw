@@ -13,7 +13,7 @@ Sign in as a Legal Team Member or Administrator. Business Users [follow their ow
 3. Select **Assign** on the list row or Request page.
 4. In **Search people**, find an active Legal Team Member or Administrator. Choose the person under **Triage assignee**, then select **Save assignment**.
 5. Check the saved assignee. Select their avatar or assignment control to reassign, or choose **Unassigned** and save to clear it. **Cancel** leaves the saved assignment unchanged.
-6. If you need clarification, open **Comments**, choose **Shared with requester**, enter your message, and select **Comment**. The audience starts on **Legal only**, which the Requester cannot read. See [Choose who can read a comment](comments-and-activity.md) for audiences, mentions, and attached paper.
+6. If you need clarification, open **Comments**, choose **Shared with requester**, enter your message, and select **Comment**. The audience starts on **Legal Only**, which the Requester cannot read. See [Choose who can read a comment](comments-and-activity.md) for audiences, mentions, and attached paper.
 
 Assignment records responsibility without reserving the Request. Another Legal Team Member or Administrator can still decide it. Assignment and replies leave it undecided, and the person assigned during triage does not automatically become the Contract Legal Owner or Matter Manager. The Requester sees the saved triage assignee as **Owner** in the Portal. When you clear the assignment, the Portal shows **Not assigned yet**.
 
@@ -44,7 +44,7 @@ If someone decides the Request while your dialog is open, the dialog states thei
 
 If an assignment cannot be saved, check the error and reopen the Request to confirm the saved assignee. If a person is missing or no longer available, choose an active Legal Team Member or Administrator, or clear the assignment. Use **Retry** if the people list could not load.
 
-Before replying, check the audience. Business Users cannot read **Legal only** or older **Working team** messages. Use **Shared with requester** for information the Requester needs.
+Before replying, check the audience. Business Users cannot read **Legal Only** or older **Working team** messages. Use **Shared with requester** for information the Requester needs.
 
 ## Related guides
 
