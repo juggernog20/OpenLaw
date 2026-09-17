@@ -160,14 +160,20 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
       .getByRole("combobox", { name: "Map to", exact: true })
       .selectOption("attribute:primary_counterparty_name");
     await expect(
-      fields.getByText("counterparty_name · Text · Primary Counterparty name", { exact: true }),
+      fields
+        .getByRole("listitem")
+        .filter({ has: page.getByRole("button", { name: "Edit Counterparty name", exact: true }) })
+        .getByText("Text · Primary Counterparty name", { exact: true }),
     ).toBeVisible();
     async function addField(slug: string, label: string, fieldType: string) {
       await fields.getByRole("button", { name: "Add field", exact: true }).click();
       const fresh = page.getByRole("region", { name: "New field", exact: true });
       await fresh.getByLabel("Template placeholder", { exact: true }).fill(slug);
       await fresh.getByLabel("Template placeholder", { exact: true }).press("Enter");
-      await expect(fields.getByText("Text", { exact: true }).last()).toBeVisible();
+      await expect(fresh.getByLabel("Template placeholder", { exact: true })).toHaveAttribute(
+        "id",
+        `auto-doc-field-${slug}-slug`,
+      );
       await fresh.getByLabel("Label", { exact: true }).fill(label);
       await fresh.getByLabel("Label", { exact: true }).press("Enter");
       const field = page.getByRole("region", { name: label, exact: true });
@@ -181,20 +187,31 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     const jurisdiction = await addField("jurisdiction", "Jurisdiction", "single_select");
     await jurisdiction.getByLabel("Options", { exact: true }).fill("United States\nUnited Kingdom");
     await jurisdiction.getByLabel("Options", { exact: true }).blur();
-    await expect(fields.getByText("jurisdiction · Single select", { exact: true })).toBeVisible();
+    await expect(
+      fields
+        .getByRole("listitem")
+        .filter({ has: page.getByRole("button", { name: "Edit Jurisdiction", exact: true }) })
+        .getByText("Single select", { exact: true }),
+    ).toBeVisible();
     const signingEntity = await addField("signing_entity", "Signing Entity", "entity");
     await signingEntity
       .getByRole("combobox", { name: "Map to", exact: true })
       .selectOption("attribute:entity_id");
     await expect(
-      fields.getByText("signing_entity · Entity · Our Entity", { exact: true }),
+      fields
+        .getByRole("listitem")
+        .filter({ has: page.getByRole("button", { name: "Edit Signing Entity", exact: true }) })
+        .getByText("Entity · Our Entity", { exact: true }),
     ).toBeVisible();
     const owningDepartment = await addField("owning_department", "Owning department", "text");
     await owningDepartment
       .getByRole("combobox", { name: "Map to", exact: true })
       .selectOption("attribute:owning_department_id");
     await expect(
-      fields.getByText("owning_department · Text · Owning department", { exact: true }),
+      fields
+        .getByRole("listitem")
+        .filter({ has: page.getByRole("button", { name: "Edit Owning department", exact: true }) })
+        .getByText("Text · Owning department", { exact: true }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Edit the rule for arbitration", exact: true }).click();
     const clause = page.getByRole("region", { name: "arbitration", exact: true });

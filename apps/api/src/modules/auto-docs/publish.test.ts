@@ -278,7 +278,9 @@ it("names missing Placeholders, Blocks, fields, and options together when publis
   expect(stale.statusCode).toBe(201);
   const gap = await call(fresh.autoDoc.id, "publish", pair(stale.json()));
   expect(gap.statusCode).toBe(409);
-  expect(gap.json().detail).toContain("jurisdiction");
+  expect(gap.json().detail).toContain(
+    'Clause rule "arbitration" refers to a field that is no longer available.',
+  );
 });
 
 it("compares any two immutable forms by structure and refuses a form from another Auto-Doc", async () => {

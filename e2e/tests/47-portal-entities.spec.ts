@@ -99,9 +99,21 @@ test("an Administrator lists an Entity and a Business User picks it on a require
   } finally {
     await colleague?.context.close();
     await ensureMemberInert(page.request, email);
+    if (typeId) {
+      const listed = await page.request.get("/api/v1/request-types");
+      expect(listed.status(), await listed.text()).toBe(200);
+      const { requestTypes } = z
+        .object({ requestTypes: z.array(z.object({ id: z.string() })) })
+        .parse(await listed.json());
+      const replacement = requestTypes.find((type) => type.id !== typeId);
+      expect(replacement).toBeDefined();
+      const archived = await page.request.post(`/api/v1/request-types/${typeId}/archive`, {
+        data: { reassignToId: replacement!.id },
+      });
+      expect(archived.status(), await archived.text()).toBe(200);
+    }
     for (const path of [
       ...entityIds.map((id) => `/api/v1/entities/${id}/archive`),
-      ...(typeId ? [`/api/v1/request-types/${typeId}/archive`] : []),
       ...(fieldId ? [`/api/v1/fields/${fieldId}/archive`] : []),
     ]) {
       const archived = await page.request.post(path, { data: {} });
