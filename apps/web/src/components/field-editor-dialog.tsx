@@ -10,12 +10,10 @@ import {
   TAGS,
   fieldRow,
   typeLabel,
-  scopeLabel,
   tagLabel,
   type FieldType,
   type Tag,
   type ModuleScope,
-  type Scope,
   type FieldRow,
 } from "../lib/field-catalog";
 import { AutoResizeTextarea } from "./auto-resize-textarea";
@@ -39,19 +37,17 @@ interface EditorDraft {
   name: string;
   description: string;
   fieldType: FieldType | "";
-  scope: Scope;
   tag: Tag;
   optionsText: string;
   aiPrompt: string;
 }
 
-function draftOf(target: FieldRow | null, module: ModuleScope): EditorDraft {
+function draftOf(target: FieldRow | null): EditorDraft {
   if (!target) {
     return {
       name: "",
       description: "",
       fieldType: "",
-      scope: module,
       tag: "business",
       optionsText: "",
       aiPrompt: "",
@@ -61,7 +57,6 @@ function draftOf(target: FieldRow | null, module: ModuleScope): EditorDraft {
     name: target.displayName,
     description: target.description ?? "",
     fieldType: target.fieldType,
-    scope: target.moduleScope,
     tag: target.fieldTag,
     optionsText: (target.options ?? []).join("\n"),
     aiPrompt: target.aiPrompt ?? "",
@@ -88,20 +83,19 @@ export function FieldEditorDialog({
   target: FieldRow | null;
   module: ModuleScope;
   onOpenChange: (open: boolean) => void;
-  /** An edited row, after each successful step (scope, then the rest). */
+  /** The saved field after a successful edit. */
   onRowChanged: (row: FieldRow) => void;
   onCreated: (row: FieldRow) => void | Promise<void>;
   onCloseAutoFocus?: ComponentProps<typeof DialogContent>["onCloseAutoFocus"];
 }>) {
   const intl = useIntl();
-  const [draft, setDraft] = useState<EditorDraft>(() => draftOf(target, module));
+  const [draft, setDraft] = useState<EditorDraft>(() => draftOf(target));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scopes: Scope[] = [module, "global"];
 
   const isSelect = draft.fieldType !== "" && SELECT_TYPES.has(draft.fieldType);
   // The prompt rides on contract-scoped fields only (CTR-008/CTR-016).
-  const promptable = draft.scope === "contract";
+  const promptable = module === "contract";
 
   const set = <K extends keyof EditorDraft>(key: K, value: EditorDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
@@ -118,7 +112,7 @@ export function FieldEditorDialog({
         body: {
           displayName: draft.name.trim(),
           description: draft.description.trim() || undefined,
-          moduleScope: draft.scope,
+          moduleScope: module,
           fieldType: draft.fieldType as FieldType,
           fieldTag: draft.tag,
           options: isSelect ? options : undefined,
@@ -142,48 +136,24 @@ export function FieldEditorDialog({
   }
 
   async function edit(existing: FieldRow) {
-    let latest = existing;
-    // Scope first: the prompt rules follow the scope the field ends on.
-    if (draft.scope !== existing.moduleScope) {
-      const result = await api
-        .PUT("/api/v1/fields/{id}/scope", {
-          params: { path: { id: existing.id } },
-          body: { moduleScope: draft.scope },
-        })
-        .catch(() => undefined);
-      const { data } = result ?? {};
-      if (!data) {
-        refuse(
-          (await readProblem(result)).detail ??
-            intl.formatMessage({
-              id: "settings.contractFields.editError",
-              defaultMessage: "The field could not be saved.",
-            }),
-        );
-        return false;
-      }
-      latest = fieldRow(data.field, module);
-      onRowChanged(latest);
-    }
-
     const body: Record<string, unknown> = {};
     const name = draft.name.trim();
-    if (name !== latest.displayName) body.displayName = name;
+    if (name !== existing.displayName) body.displayName = name;
     const description = draft.description.trim();
-    if (description !== (latest.description ?? "")) body.description = description || null;
-    if (draft.tag !== latest.fieldTag) body.fieldTag = draft.tag;
+    if (description !== (existing.description ?? "")) body.description = description || null;
+    if (draft.tag !== existing.fieldTag) body.fieldTag = draft.tag;
     if (isSelect) {
       const options = parseOptions(draft.optionsText);
-      if (options.join("\n") !== (latest.options ?? []).join("\n")) body.options = options;
+      if (options.join("\n") !== (existing.options ?? []).join("\n")) body.options = options;
     }
     if (promptable) {
       const aiPrompt = draft.aiPrompt.trim();
-      if (aiPrompt !== (latest.aiPrompt ?? "")) body.aiPrompt = aiPrompt || null;
+      if (aiPrompt !== (existing.aiPrompt ?? "")) body.aiPrompt = aiPrompt || null;
     }
     if (Object.keys(body).length === 0) return true;
 
     const result = await api
-      .PATCH("/api/v1/fields/{id}", { params: { path: { id: latest.id } }, body })
+      .PATCH("/api/v1/fields/{id}", { params: { path: { id: existing.id } }, body })
       .catch(() => undefined);
     const { data } = result ?? {};
     if (!data) {
@@ -343,23 +313,6 @@ export function FieldEditorDialog({
                   </p>
                 </>
               )}
-            </div>
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="field-scope">
-                <FormattedMessage id="settings.contractFields.scopeColumn" defaultMessage="Scope" />
-              </Label>
-              <select
-                id="field-scope"
-                value={draft.scope}
-                className={CONTROL_CLASS}
-                onChange={(event) => set("scope", event.target.value as Scope)}
-              >
-                {scopes.map((scope) => (
-                  <option key={scope} value={scope}>
-                    {scopeLabel(intl, scope)}
-                  </option>
-                ))}
-              </select>
             </div>
             <div className="flex flex-1 flex-col gap-1.5">
               <Label htmlFor="field-tag">

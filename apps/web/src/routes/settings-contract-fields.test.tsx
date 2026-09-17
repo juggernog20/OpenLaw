@@ -2,7 +2,7 @@
 
 /**
  * Contracts · Fields (#83) at the route seam: the DES-021 table variant
- * of the list-editor — column header, no reorder, the scope pill, the
+ * of the list-editor — column header, no reorder, the
  * prompt sparkle — with create and edit through the field-editor dialog
  * (type immutable after creation, options on select types, the prompt
  * on contract scope only) and the guard that archives without ever
@@ -13,7 +13,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -73,13 +73,12 @@ function seededFields(archivedSlugs: string[] = []): StubFieldRow[] {
 interface FieldCalls {
   creates: unknown[];
   patches: { id: string; body: unknown }[];
-  scopes: { id: string; body: unknown }[];
   archives: string[];
   restores: string[];
 }
 
 function newCalls(): FieldCalls {
-  return { creates: [], patches: [], scopes: [], archives: [], restores: [] };
+  return { creates: [], patches: [], archives: [], restores: [] };
 }
 
 /** Serves the seeded catalog and captures the pane's writes — the pane
@@ -114,12 +113,6 @@ function fieldsApi(calls: FieldCalls, rows = seededFields()) {
     if (patch && call.method === "PATCH") {
       calls.patches.push({ id: patch[1]!, body: call.body });
       return json(200, { field: { ...byId(patch[1]!), ...(call.body as object) } });
-    }
-    const scope = /^\/api\/v1\/fields\/([^/]+)\/scope$/.exec(path);
-    if (scope && call.method === "PUT") {
-      calls.scopes.push({ id: scope[1]!, body: call.body });
-      const body = call.body as { moduleScope: string };
-      return json(200, { field: { ...byId(scope[1]!), moduleScope: body.moduleScope } });
     }
     const archive = /^\/api\/v1\/fields\/([^/]+)\/archive$/.exec(path);
     if (archive && call.method === "POST") {
@@ -169,7 +162,7 @@ describe("the Contracts section tabs", () => {
 });
 
 describe("the seeded catalog (CTR-008 core fields)", () => {
-  it("renders the three seeds with type, scope, tag, and the prompt sparkle", async () => {
+  it("renders the three seeds with type, tag, and the prompt sparkle", async () => {
     stubApi({ signedIn: ADMIN, extra: fieldsApi(newCalls()) });
     renderAt("/settings/contracts/fields");
     await screen.findByText("Governing law");
@@ -180,7 +173,7 @@ describe("the seeded catalog (CTR-008 core fields)", () => {
 
     const first = items[0]!;
     expect(within(first).getByText(fullText("Type: Text"))).toBeInTheDocument();
-    expect(within(first).getByText(fullText("Scope: Contract"))).toBeInTheDocument();
+    expect(screen.queryByText("Scope")).not.toBeInTheDocument();
     expect(within(first).getByText(fullText("Tag: Legal"))).toBeInTheDocument();
     // Every seed carries a default prompt, marked by the sparkle.
     expect(
@@ -188,7 +181,6 @@ describe("the seeded catalog (CTR-008 core fields)", () => {
     ).toBeInTheDocument();
 
     expect(screen.getByText("3 fields")).toBeInTheDocument();
-    expect(screen.getByText("Contract and global fields")).toBeInTheDocument();
     // The catalog is unordered: no reorder grips (DES-021).
     expect(screen.queryByRole("button", { name: /^Reorder/ })).not.toBeInTheDocument();
   });
@@ -225,7 +217,7 @@ describe("in-place rename (DES-017)", () => {
 });
 
 describe("create (the field-editor dialog)", () => {
-  it("creates a select field with options, scope, tag, and no prompt on global", async () => {
+  it("creates a select field in its area with options and a tag", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
     renderAt("/settings/contracts/fields");
@@ -241,16 +233,15 @@ describe("create (the field-editor dialog)", () => {
     // Picking a select type reveals the options editor.
     const options = within(dialog).getByRole("textbox", { name: "Options" });
     await user.type(options, "Legal{Enter}Procurement");
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: "Scope" }), "global");
-    // A global field takes no prompt: the prompt editor leaves.
-    expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("textbox", { name: "AI prompt" })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("combobox", { name: "Scope" })).not.toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Add field" }));
     await waitFor(() =>
       expect(calls.creates).toEqual([
         {
           displayName: "Department",
-          moduleScope: "global",
+          moduleScope: "contract",
           fieldType: "single_select",
           fieldTag: "business",
           options: ["Legal", "Procurement"],
@@ -314,8 +305,8 @@ describe("create (the field-editor dialog)", () => {
   });
 });
 
-describe("edit (type immutable; scope promotes; prompt edits)", () => {
-  it("locks the type, promotes the scope, and patches the prompt", async () => {
+describe("edit (type immutable; prompt edits)", () => {
+  it("locks the type and patches the prompt", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
     renderAt("/settings/contracts/fields");
@@ -333,63 +324,14 @@ describe("edit (type immutable; scope promotes; prompt edits)", () => {
     expect(prompt).toHaveValue("Find the governing law.");
     await user.clear(prompt);
     await user.type(prompt, "Extract the governing law clause.");
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: "Scope" }), "global");
-    // Promoting hides the prompt editor — prompts live on contract scope.
-    expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: "Scope" }), "contract");
+    expect(within(dialog).getByRole("textbox", { name: "AI prompt" })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("combobox", { name: "Scope" })).not.toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
     await waitFor(() =>
       expect(calls.patches).toEqual([
         { id: "f1", body: { aiPrompt: "Extract the governing law clause." } },
       ]),
-    );
-    expect(calls.scopes).toEqual([]);
-  });
-
-  it("promotes to global through the scope route", async () => {
-    const calls = newCalls();
-    stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
-    renderAt("/settings/contracts/fields");
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Edit Jurisdiction" }));
-    const dialog = await screen.findByRole("dialog", { name: "Edit Jurisdiction" });
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: "Scope" }), "global");
-    await user.click(within(dialog).getByRole("button", { name: "Save" }));
-    await waitFor(() =>
-      expect(calls.scopes).toEqual([{ id: "f2", body: { moduleScope: "global" } }]),
-    );
-    // The list reflects the promotion.
-    const row = screen.getByRole("button", { name: "Rename Jurisdiction" }).closest("li")!;
-    expect(within(row).getByText(fullText("Scope: Global"))).toBeInTheDocument();
-  });
-
-  it("surfaces the server's narrowing refusal in the dialog", async () => {
-    const calls = newCalls();
-    const rows = seededFields();
-    const globalRow = { ...rows[1]!, moduleScope: "contract" };
-    stubApi({
-      signedIn: ADMIN,
-      extra: (call) => {
-        if (/\/scope$/.exec(call.url.pathname) && call.method === "PUT") {
-          return problem(
-            409,
-            "Jurisdiction is attached outside the contract module — detach it there first.",
-          );
-        }
-        return fieldsApi(calls, [rows[0]!, { ...globalRow, moduleScope: "global" }, rows[2]!])(
-          call,
-        );
-      },
-    });
-    renderAt("/settings/contracts/fields");
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Edit Jurisdiction" }));
-    const dialog = await screen.findByRole("dialog", { name: "Edit Jurisdiction" });
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: "Scope" }), "contract");
-    await user.click(within(dialog).getByRole("button", { name: "Save" }));
-    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-      "Jurisdiction is attached outside the contract module — detach it there first.",
     );
   });
 });

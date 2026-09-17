@@ -193,7 +193,6 @@ export interface TypeEditorAttachmentsMessages {
   empty: MessageDescriptor;
   reorder: MessageDescriptor;
   moved: MessageDescriptor;
-  globalCaption: MessageDescriptor;
   help?: MessageDescriptor;
 }
 
@@ -281,13 +280,9 @@ function AttachedFieldsCard({
 }: Readonly<TypeEditorAttachments & { typeId: string }>) {
   const intl = useIntl();
 
-  /** The ST16 field caption: the type, with the scope riding along only
-   * when it is global — "Single select · global". */
-  function fieldCaption(row: { fieldType: EditorFieldType; moduleScope: string }) {
-    const label = typeLabel(intl, row.fieldType);
-    return row.moduleScope === "global"
-      ? intl.formatMessage(messages.globalCaption, { type: label })
-      : label;
+  /** Display the field type beside its name. */
+  function fieldCaption(row: { fieldType: EditorFieldType }) {
+    return typeLabel(intl, row.fieldType);
   }
 
   const [rows, setRows] = useState<AttachedFieldRow[]>(initialAttached);

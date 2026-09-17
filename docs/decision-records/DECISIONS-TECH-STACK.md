@@ -1140,7 +1140,7 @@ It needed five. This decision records the real count and says when the count sto
 
 Officer roles is the **fifth `taxonomyRoutes` mount** (after Contract, Matter, Entity, and Request types), supplied entirely as configuration. Its usage adapter counts and reassigns the same full set of `entity_officers` rows, including resigned officers, while `protectedSlug: "other"` carries the fallback lock.
 
-Entity type Fields is the **third record-type `typeFieldRoutes` mount**, after Contract and Matter type Fields. Request-type form attachment also uses the factory, so it is the fourth configured mount in total; “third” here names the record-type sequence from TECH-023's original context. The Entity mount adds no hook: it supplies the constant `entity|global` scope rule and the `entity_type_fields` table.
+Entity type Fields is the **third record-type `typeFieldRoutes` mount**, after Contract and Matter type Fields. Request-type form attachment also uses the factory, so it is the fourth configured mount in total; “third” here names the record-type sequence from TECH-023's original context. The Entity mount adds no hook: it supplies the constant `entity` scope rule and the `entity_type_fields` table.
 
 ### M28 built addendum (2026-08-30, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — sixth taxonomy
 

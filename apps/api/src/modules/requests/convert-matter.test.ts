@@ -82,13 +82,13 @@ beforeAll(async () => {
   ordinaryMatterTypeId = await createMatterType("Conversion dispute");
   requiredMatterTypeId = await createMatterType("Conversion investigation");
 
-  const carry = await createField("Opposing party", "global", "text");
+  const carry = await createField("Opposing party", "matter", "text");
   carrySlug = carry.slug;
-  const stays = await createField("Deal desk only", "global", "text");
+  const stays = await createField("Deal desk only", "matter", "text");
   staysSlug = stays.slug;
   const required = await createField("Forum", "matter", "text");
   requiredSlug = required.slug;
-  const owner = await createField("Business owner", "global", "user");
+  const owner = await createField("Business owner", "matter", "user");
   ownerSlug = owner.slug;
 
   boundRequestTypeId = await createRequestType("Dispute intake", {

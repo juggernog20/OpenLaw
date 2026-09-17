@@ -86,10 +86,6 @@ const MESSAGES = defineMessages({
     id: "settings.contractTypeEditor.moved",
     defaultMessage: "{name} moved to position {position} of {total}.",
   },
-  globalCaption: {
-    id: "settings.contractTypeEditor.globalCaption",
-    defaultMessage: "{type} · global",
-  },
   help: {
     id: "settings.contractTypeEditor.help",
     defaultMessage:

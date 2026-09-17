@@ -2,7 +2,7 @@
 
 /**
  * Contracts · Fields (#83), the shared CTR-016 field catalog. It serves
- * contract, matter, Entity, and global fields, one module scope per
+ * contract, matter and Entity fields, one module scope per
  * page, per the ST11 frame of settings.pen: the
  * ListEditor in its DES-021 table variant — column header, no reorder
  * (the catalog is unordered; per-type attachment orders rendering), the
@@ -22,7 +22,6 @@ import {
   type ModuleScope,
   fieldRow,
   typeLabel,
-  scopeLabel,
   tagLabel,
   type FieldRow,
 } from "../lib/field-catalog";
@@ -251,26 +250,7 @@ function SettingsFieldsPage({
     }
   }
 
-  /** The ST11 scope pill: neutral for module scopes, info for global.
-   * The sr-only prefix keeps a field named Contract unambiguous. */
-  function scopePill(row: FieldRow) {
-    return (
-      <span
-        className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${
-          row.moduleScope === "global"
-            ? "bg-status-info-bg text-status-info-fg"
-            : "bg-status-neutral-bg text-status-neutral-fg"
-        }`}
-      >
-        <span className="sr-only">
-          <FormattedMessage id="settings.contractFields.scopePrefix" defaultMessage="Scope:" />{" "}
-        </span>
-        {scopeLabel(intl, row.moduleScope)}
-      </span>
-    );
-  }
-
-  /** The ST11 table cells after the name: type, scope, tag, sparkle. */
+  /** The table cells after the name: type, tag, and extraction prompt. */
   function rowDetails(row: FieldRow) {
     return (
       <>
@@ -280,7 +260,6 @@ function SettingsFieldsPage({
           </span>
           {typeLabel(intl, row.fieldType)}
         </span>
-        <span className="w-24 shrink-0">{scopePill(row)}</span>
         <span className="w-20 shrink-0 text-sm whitespace-nowrap text-muted">
           <span className="sr-only">
             <FormattedMessage id="settings.contractFields.tagPrefix" defaultMessage="Tag:" />{" "}
@@ -342,13 +321,6 @@ function SettingsFieldsPage({
               <FormattedMessage id="settings.fields.custom" defaultMessage="Custom Fields" />
             )
           }
-          headerCaption={
-            <FormattedMessage
-              id="settings.contractFields.scopeCaption"
-              defaultMessage="{module, select, contract {Contract} matter {Matter} entity {Entity} other {Module}} and global fields"
-              values={{ module }}
-            />
-          }
           count={
             <FormattedMessage
               id="settings.contractFields.count"
@@ -371,12 +343,6 @@ function SettingsFieldsPage({
                 </span>
                 <span className="w-24 shrink-0">
                   <FormattedMessage id="settings.contractFields.typeColumn" defaultMessage="Type" />
-                </span>
-                <span className="w-24 shrink-0">
-                  <FormattedMessage
-                    id="settings.contractFields.scopeColumn"
-                    defaultMessage="Scope"
-                  />
                 </span>
                 <span className="w-20 shrink-0">
                   <FormattedMessage id="settings.contractFields.tagColumn" defaultMessage="Tag" />

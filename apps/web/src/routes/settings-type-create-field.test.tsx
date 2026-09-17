@@ -85,7 +85,7 @@ describe.each(["contract", "matter"] as const)("create a field from a %s type", 
 
   async function fill(user: ReturnType<typeof userEvent.setup>) {
     const dialog = await open(user);
-    expect(dialog.getByRole("combobox", { name: "Scope" })).toHaveValue(module);
+    expect(dialog.queryByRole("combobox", { name: "Scope" })).not.toBeInTheDocument();
     await user.type(dialog.getByRole("textbox", { name: "Name" }), "Review notes");
     await user.type(
       dialog.getByRole("textbox", { name: "Description" }),

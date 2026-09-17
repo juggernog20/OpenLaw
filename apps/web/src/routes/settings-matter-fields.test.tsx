@@ -25,7 +25,7 @@ const baseField = {
 };
 
 describe("the Matters Fields pane", () => {
-  it("shows matter and global fields, excludes contract fields, and creates at matter scope", async () => {
+  it("shows matter fields, excludes contract fields, and creates at matter scope", async () => {
     const creates: unknown[] = [];
     const fields = [
       {
@@ -35,7 +35,7 @@ describe("the Matters Fields pane", () => {
         displayName: "Department",
         moduleScope: "matter",
       },
-      { ...baseField, id: "f2", slug: "region", displayName: "Region", moduleScope: "global" },
+      { ...baseField, id: "f2", slug: "region", displayName: "Region", moduleScope: "matter" },
       { ...baseField, id: "f3", slug: "term", displayName: "Term", moduleScope: "contract" },
     ];
     const api = (call: StubCall): Response | undefined => {
@@ -65,7 +65,6 @@ describe("the Matters Fields pane", () => {
 
     expect(screen.getByRole("button", { name: "Rename Region" })).toBeInTheDocument();
     expect(screen.queryByText("Term")).not.toBeInTheDocument();
-    expect(screen.getByText("Matter and global fields")).toBeInTheDocument();
     const tabs = screen.getByRole("navigation", { name: "Matters panes" });
     expect(within(tabs).getByRole("link", { name: "Fields" })).toHaveAttribute(
       "aria-current",
@@ -75,7 +74,7 @@ describe("the Matters Fields pane", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Add field" }));
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
-    expect(within(dialog).getByRole("combobox", { name: "Scope" })).toHaveValue("matter");
+    expect(within(dialog).queryByRole("combobox", { name: "Scope" })).not.toBeInTheDocument();
     expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Business unit");
     await user.selectOptions(within(dialog).getByRole("combobox", { name: "Type" }), "text");

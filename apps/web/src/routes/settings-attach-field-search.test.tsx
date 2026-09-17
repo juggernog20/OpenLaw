@@ -18,7 +18,7 @@ describe.each([
       id: `f${i}`,
       slug: `field_${i}`,
       displayName,
-      moduleScope: "global",
+      moduleScope: module === "request" ? "contract" : module,
       fieldType: "text",
       description: null,
       options: null,
@@ -79,9 +79,9 @@ describe.each([
     const search = within(menu).getByRole("textbox", { name: "Search fields" });
     await waitFor(() => expect(search).toHaveFocus());
     expect([...menu.querySelectorAll("[data-field-option]")].map((e) => e.textContent)).toEqual([
-      "Alpha notesText · global",
-      "beta notesText · global",
-      "Zebra notesText · global",
+      "Alpha notesText",
+      "beta notesText",
+      "Zebra notesText",
     ]);
     await user.type(search, "BETA NOTES");
     expect(search).toHaveFocus();

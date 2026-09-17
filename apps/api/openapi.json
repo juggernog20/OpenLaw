@@ -17555,7 +17555,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["contract", "global"]
+                            "enum": ["contract"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -17599,7 +17599,7 @@
       },
       "post": {
         "operationId": "attachContractTypeField",
-        "summary": "Attach a catalog field to a contract type: contract-scoped and global fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise",
+        "summary": "Attach a catalog field to a contract type: contract-scoped fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise",
         "tags": ["contract-types"],
         "requestBody": {
           "required": true,
@@ -17667,7 +17667,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "global"]
+                          "enum": ["contract"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -17785,7 +17785,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "global"]
+                          "enum": ["contract"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -17939,7 +17939,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["contract", "global"]
+                            "enum": ["contract"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -20168,7 +20168,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "global"]
+                            "enum": ["matter"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -20212,7 +20212,7 @@
       },
       "post": {
         "operationId": "attachMatterTypeField",
-        "summary": "Attach a catalog field to a matter type: matter-scoped and global fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise",
+        "summary": "Attach a catalog field to a matter type: matter-scoped fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise",
         "tags": ["matter-types"],
         "requestBody": {
           "required": true,
@@ -20280,7 +20280,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "global"]
+                          "enum": ["matter"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -20398,7 +20398,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "global"]
+                          "enum": ["matter"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -20552,7 +20552,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "global"]
+                            "enum": ["matter"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -30951,7 +30951,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "contract", "entity", "global"]
+                            "enum": ["matter", "contract", "entity"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -31063,7 +31063,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["matter", "contract", "entity"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -31181,7 +31181,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["matter", "contract", "entity"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -31335,7 +31335,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "contract", "entity", "global"]
+                            "enum": ["matter", "contract", "entity"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -71034,7 +71034,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["entity", "global"]
+                            "enum": ["entity"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -71078,7 +71078,7 @@
       },
       "post": {
         "operationId": "attachEntityTypeField",
-        "summary": "Attach a catalog field to a entity type: entity-scoped and global fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise",
+        "summary": "Attach a catalog field to a entity type: entity-scoped fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise",
         "tags": ["entity-types"],
         "requestBody": {
           "required": true,
@@ -71146,7 +71146,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["entity", "global"]
+                          "enum": ["entity"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -71264,7 +71264,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["entity", "global"]
+                          "enum": ["entity"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -71418,7 +71418,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["entity", "global"]
+                            "enum": ["entity"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -82603,7 +82603,7 @@
     "/api/v1/fields": {
       "get": {
         "operationId": "listFields",
-        "summary": "The shared field catalog (CTR-016) scoped to contract, matter, entity, and global fields, in creation order; archived rows only with includeArchived=true",
+        "summary": "The shared field catalog (CTR-016) scoped to contract, matter, and entity fields, in creation order; archived rows only with includeArchived=true",
         "tags": ["fields"],
         "parameters": [
           {
@@ -82643,7 +82643,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["contract", "matter", "entity", "global"]
+                            "enum": ["contract", "matter", "entity"]
                           },
                           "fieldType": {
                             "type": "string",
@@ -82755,7 +82755,7 @@
                   },
                   "moduleScope": {
                     "type": "string",
-                    "enum": ["contract", "matter", "entity", "global"]
+                    "enum": ["contract", "matter", "entity"]
                   },
                   "fieldType": {
                     "type": "string",
@@ -82821,7 +82821,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "entity", "global"]
+                          "enum": ["contract", "matter", "entity"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -83005,154 +83005,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "entity", "global"]
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "options": {
-                          "anyOf": [
-                            {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "fieldTag": {
-                          "type": "string",
-                          "enum": ["business", "legal"]
-                        },
-                        "aiPrompt": {
-                          "type": ["string", "null"]
-                        },
-                        "archivedAt": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date-time",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "inUseCount": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "slug",
-                        "displayName",
-                        "description",
-                        "moduleScope",
-                        "fieldType",
-                        "options",
-                        "fieldTag",
-                        "aiPrompt",
-                        "archivedAt",
-                        "inUseCount"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["field"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/fields/{id}/scope": {
-      "put": {
-        "operationId": "setFieldScope",
-        "summary": "Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); any move into a module is refused while another module attaches the field",
-        "tags": ["fields"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "moduleScope": {
-                    "type": "string",
-                    "enum": ["contract", "matter", "entity", "global"]
-                  }
-                },
-                "required": ["moduleScope"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "field": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "description": {
-                          "type": ["string", "null"]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["contract", "matter", "entity", "global"]
+                          "enum": ["contract", "matter", "entity"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -83282,7 +83135,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "entity", "global"]
+                          "enum": ["contract", "matter", "entity"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -83412,7 +83265,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["contract", "matter", "entity", "global"]
+                          "enum": ["contract", "matter", "entity"]
                         },
                         "fieldType": {
                           "type": "string",

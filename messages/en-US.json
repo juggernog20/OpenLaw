@@ -390,10 +390,10 @@
     "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
   },
   "activity.field.narrowed": {
-    "defaultMessage": "{actor} narrowed the field {name} to one module"
+    "defaultMessage": "{actor} updated the field {name}"
   },
   "activity.field.promoted": {
-    "defaultMessage": "{actor} widened the field {name} to every module"
+    "defaultMessage": "{actor} updated the field {name}"
   },
   "activity.folder.created": {
     "defaultMessage": "{atRoot, select, true {{actor} made the {name} folder} other {{actor} made the {name} folder in {parent}}}"
@@ -8324,18 +8324,6 @@
   "settings.contractFields.restore": {
     "defaultMessage": "Restore {name}"
   },
-  "settings.contractFields.scopeCaption": {
-    "defaultMessage": "{module, select, contract {Contract} matter {Matter} entity {Entity} other {Module}} and global fields"
-  },
-  "settings.contractFields.scopeColumn": {
-    "defaultMessage": "Scope"
-  },
-  "settings.contractFields.scopeLabel": {
-    "defaultMessage": "{scope, select, contract {Contract} matter {Matter} entity {Entity} global {Global} other {Unknown}}"
-  },
-  "settings.contractFields.scopePrefix": {
-    "defaultMessage": "Scope:"
-  },
   "settings.contractFields.tagColumn": {
     "defaultMessage": "Tag"
   },
@@ -8470,9 +8458,6 @@
   },
   "settings.contractTypeEditor.fieldColumn": {
     "defaultMessage": "Field"
-  },
-  "settings.contractTypeEditor.globalCaption": {
-    "defaultMessage": "{type} · global"
   },
   "settings.contractTypeEditor.help": {
     "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
@@ -8857,9 +8842,6 @@
   },
   "settings.entityTypeEditor.fieldColumn": {
     "defaultMessage": "Field"
-  },
-  "settings.entityTypeEditor.globalCaption": {
-    "defaultMessage": "{type} · global"
   },
   "settings.entityTypeEditor.help": {
     "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
@@ -9629,9 +9611,6 @@
   "settings.matterTypeEditor.fieldColumn": {
     "defaultMessage": "Field"
   },
-  "settings.matterTypeEditor.globalCaption": {
-    "defaultMessage": "{type} · global"
-  },
   "settings.matterTypeEditor.help": {
     "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
   },
@@ -10159,9 +10138,6 @@
   },
   "settings.requestTypeEditor.formFields": {
     "defaultMessage": "Form fields"
-  },
-  "settings.requestTypeEditor.globalCaption": {
-    "defaultMessage": "{type} · global"
   },
   "settings.requestTypeEditor.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."

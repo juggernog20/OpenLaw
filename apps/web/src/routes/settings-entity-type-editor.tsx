@@ -2,7 +2,7 @@
 
 /**
  * The Entity type editor configures the shared TypeEditorScreen. Its
- * attachment catalog contains Entity-scoped and global Fields only.
+ * attachment catalog contains Entity-scoped Fields only.
  */
 
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -28,9 +28,7 @@ export async function settingsEntityTypeEditorLoader({ params }: LoaderFunctionA
   return {
     entityType: typeRes.data.entityType,
     attachedFields: attachedRes.data.attachedFields,
-    catalog: catalogRes.data.fields.filter(
-      (field) => field.moduleScope === "entity" || field.moduleScope === "global",
-    ),
+    catalog: catalogRes.data.fields.filter((field) => field.moduleScope === "entity"),
   };
 }
 
@@ -73,10 +71,6 @@ const MESSAGES = defineMessages({
   moved: {
     id: "settings.entityTypeEditor.moved",
     defaultMessage: "{name} moved to position {position} of {total}.",
-  },
-  globalCaption: {
-    id: "settings.entityTypeEditor.globalCaption",
-    defaultMessage: "{type} · global",
   },
   help: {
     id: "settings.entityTypeEditor.help",

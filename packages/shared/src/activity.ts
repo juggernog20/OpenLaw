@@ -327,6 +327,7 @@ type FieldCatalogPayloads = {
     fieldTag: string;
   };
   "field.updated": { slug: string; changed: ChangedFields };
+  /** Legacy audit events; no current route changes a field's module. */
   "field.promoted": { slug: string; from: string; to: string };
   "field.narrowed": { slug: string; from: string; to: string };
   "field.archived": {

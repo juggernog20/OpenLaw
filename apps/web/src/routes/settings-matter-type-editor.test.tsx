@@ -4,7 +4,7 @@
  * The matter type editor (#85) at the route seam: the shared
  * TypeEditorScreen on the matter mount — the identity card and the
  * attachment card against the matter routes, with the MTR-011 scope
- * rule shaping the Attach menu: matter-scoped and global fields. The
+ * rule shaping the Attach menu: matter-scoped fields. The
  * machinery itself is covered by the Contracts reference suite and at
  * the HTTP seam in apps/api — these tests pin the wiring: the matter
  * URL, the matter endpoints, the catalog filter, and the matter copy.
@@ -39,12 +39,12 @@ const DEPARTMENT = {
   slug: "department",
   displayName: "Department",
   fieldType: "single_select",
-  moduleScope: "global",
+  moduleScope: "matter",
   displayOrder: 1,
   isRequired: false,
 };
 
-/** The live catalog: one attached global field, one attachable matter
+/** The live catalog: one attached matter field, one attachable matter
  * field, and one contract-scoped field the menu must never offer. */
 const CATALOG = [
   {
@@ -78,7 +78,7 @@ const CATALOG = [
     slug: "budget_owner",
     displayName: "Budget owner",
     description: null,
-    moduleScope: "global",
+    moduleScope: "matter",
     fieldType: "user",
     options: null,
     fieldTag: "business",
@@ -185,7 +185,7 @@ describe("the editor screen on the matter mount", () => {
 });
 
 describe("the MTR-011 scope rule in the Attach menu", () => {
-  it("offers unattached matter/global fields — contract-scoped fields never show", async () => {
+  it("offers unattached matter fields — contract-scoped fields never show", async () => {
     stubApi({ signedIn: ADMIN, extra: editorApi(newCalls()) });
     renderAt("/settings/matters/types/t1");
     const user = userEvent.setup();

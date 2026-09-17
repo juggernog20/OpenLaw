@@ -53,7 +53,7 @@ beforeAll(async () => {
 
 afterAll(async () => harness.stop());
 
-async function createField(displayName: string, moduleScope: "entity" | "global" | "contract") {
+async function createField(displayName: string, moduleScope: "entity" | "contract") {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",
@@ -80,7 +80,7 @@ async function listAttached(cookies = adminCookies): Promise<AttachedField[]> {
 }
 
 describe("the Entity Field catalog scope", () => {
-  it("opens entity to list, create, and scope writes", async () => {
+  it("opens entity to list and create", async () => {
     const field = await createField("Entity reporting code", "entity");
     const listed = await harness.app.inject({
       method: "GET",
@@ -91,16 +91,6 @@ describe("the Entity Field catalog scope", () => {
     expect(listed.json().fields).toContainEqual(
       expect.objectContaining({ id: field.id, moduleScope: "entity" }),
     );
-
-    const global = await createField("Entity global candidate", "global");
-    const narrowed = await harness.app.inject({
-      method: "PUT",
-      url: `/api/v1/fields/${global.id}/scope`,
-      cookies: adminCookies,
-      payload: { moduleScope: "entity" },
-    });
-    expect(narrowed.statusCode, narrowed.body).toBe(200);
-    expect(narrowed.json().field.moduleScope).toBe("entity");
   });
 });
 
@@ -119,12 +109,12 @@ describe("the entity_type_fields route mount", () => {
     expect(anonymous.statusCode).toBe(401);
   });
 
-  it("admits entity and global Fields, refuses another module, and refuses duplicates", async () => {
+  it("admits entity and entity Fields, refuses another module, and refuses duplicates", async () => {
     const entityField = await createField("Entity registration class", "entity");
-    const globalField = await createField("Group reference", "global");
+    const secondField = await createField("Group reference", "entity");
     const contractField = await createField("Contract-only reference", "contract");
 
-    for (const field of [entityField, globalField]) {
+    for (const field of [entityField, secondField]) {
       const attached = await harness.app.inject({
         method: "POST",
         url: `/api/v1/entity-types/${entityTypeId}/fields`,
@@ -142,7 +132,7 @@ describe("the entity_type_fields route mount", () => {
       payload: { fieldId: contractField.id },
     });
     expect(wrongScope.statusCode, wrongScope.body).toBe(400);
-    expect(wrongScope.json().detail).toContain("entity-scoped and global");
+    expect(wrongScope.json().detail).toContain("entity-scoped");
 
     const duplicate = await harness.app.inject({
       method: "POST",
@@ -206,13 +196,13 @@ describe("the entity_type_fields route mount", () => {
     ).toHaveLength(1);
   });
 
-  it("counts the Entity attachment in the catalog narrowing guard", async () => {
-    const globalField = await createField("Entity narrowing guard", "global");
+  it("counts the Entity attachment in the catalog usage count", async () => {
+    const secondField = await createField("Entity narrowing guard", "entity");
     const attached = await harness.app.inject({
       method: "POST",
       url: `/api/v1/entity-types/${entityTypeId}/fields`,
       cookies: adminCookies,
-      payload: { fieldId: globalField.id },
+      payload: { fieldId: secondField.id },
     });
     expect(attached.statusCode, attached.body).toBe(201);
 
@@ -222,16 +212,8 @@ describe("the entity_type_fields route mount", () => {
       cookies: adminCookies,
     });
     expect(
-      list.json().fields.find((row: { id: string }) => row.id === globalField.id).inUseCount,
+      list.json().fields.find((row: { id: string }) => row.id === secondField.id).inUseCount,
     ).toBe(1);
-
-    const narrowed = await harness.app.inject({
-      method: "PUT",
-      url: `/api/v1/fields/${globalField.id}/scope`,
-      cookies: adminCookies,
-      payload: { moduleScope: "contract" },
-    });
-    expect(narrowed.statusCode, narrowed.body).toBe(409);
   });
 });
 

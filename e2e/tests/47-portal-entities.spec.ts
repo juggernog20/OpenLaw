@@ -64,7 +64,7 @@ test("an Administrator lists an Entity and a Business User picks it on a require
     const field = await page.request.post("/api/v1/fields", {
       data: {
         displayName: `Signing Entity ${suffix}`,
-        moduleScope: "global",
+        moduleScope: "contract",
         fieldType: "entity",
         fieldTag: "business",
       },

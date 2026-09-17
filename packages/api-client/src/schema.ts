@@ -1907,7 +1907,7 @@ export interface paths {
     /** One contract type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listContractTypeFields"];
     put?: never;
-    /** Attach a catalog field to a contract type: contract-scoped and global fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    /** Attach a catalog field to a contract type: contract-scoped fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise */
     post: operations["attachContractTypeField"];
     delete?: never;
     options?: never;
@@ -2207,7 +2207,7 @@ export interface paths {
     /** One matter type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listMatterTypeFields"];
     put?: never;
-    /** Attach a catalog field to a matter type: matter-scoped and global fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    /** Attach a catalog field to a matter type: matter-scoped fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
     post: operations["attachMatterTypeField"];
     delete?: never;
     options?: never;
@@ -5697,7 +5697,7 @@ export interface paths {
     /** One entity type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listEntityTypeFields"];
     put?: never;
-    /** Attach a catalog field to a entity type: entity-scoped and global fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    /** Attach a catalog field to a entity type: entity-scoped fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise */
     post: operations["attachEntityTypeField"];
     delete?: never;
     options?: never;
@@ -6565,7 +6565,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The shared field catalog (CTR-016) scoped to contract, matter, entity, and global fields, in creation order; archived rows only with includeArchived=true */
+    /** The shared field catalog (CTR-016) scoped to contract, matter, and entity fields, in creation order; archived rows only with includeArchived=true */
     get: operations["listFields"];
     put?: never;
     /** Define a field: the slug derives from the name and the field type is picked here, once — both are immutable after creation. Select types take their options list; an AI prompt rides on contract-scoped fields only (CTR-008) */
@@ -6591,23 +6591,6 @@ export interface paths {
     head?: never;
     /** Rename, describe, retag, or edit a field's options and AI prompt; the slug and the field type never change, and the scope moves through its own route — a body carrying any of them is refused, not silently stripped */
     patch: operations["updateField"];
-    trace?: never;
-  };
-  "/api/v1/fields/{id}/scope": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); any move into a module is refused while another module attaches the field */
-    put: operations["setFieldScope"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
     trace?: never;
   };
   "/api/v1/fields/{id}/archive": {
@@ -12936,7 +12919,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -12996,7 +12979,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -13086,7 +13069,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -13145,7 +13128,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "contract" | "global";
+              moduleScope: "contract";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -14172,7 +14155,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "global";
+              moduleScope: "matter";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -14232,7 +14215,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "global";
+              moduleScope: "matter";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -14322,7 +14305,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "global";
+              moduleScope: "matter";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -14381,7 +14364,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "global";
+              moduleScope: "matter";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -17903,7 +17886,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "matter" | "contract" | "entity";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -17963,7 +17946,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "matter" | "contract" | "entity";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -18053,7 +18036,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "matter" | "contract" | "entity";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -18112,7 +18095,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "matter" | "contract" | "entity";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -32059,7 +32042,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "entity" | "global";
+              moduleScope: "entity";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -32119,7 +32102,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "entity" | "global";
+              moduleScope: "entity";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -32209,7 +32192,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "entity" | "global";
+              moduleScope: "entity";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -32268,7 +32251,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "entity" | "global";
+              moduleScope: "entity";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -36411,7 +36394,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "entity" | "global";
+              moduleScope: "contract" | "matter" | "entity";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -36458,7 +36441,7 @@ export interface operations {
           displayName: string;
           description?: string;
           /** @enum {string} */
-          moduleScope: "contract" | "matter" | "entity" | "global";
+          moduleScope: "contract" | "matter" | "entity";
           /** @enum {string} */
           fieldType:
             | "text"
@@ -36492,7 +36475,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "entity" | "global";
+              moduleScope: "contract" | "matter" | "entity";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -36561,72 +36544,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "entity" | "global";
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
-              aiPrompt: string | null;
-              archivedAt: string | null;
-              inUseCount: number;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setFieldScope: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          moduleScope: "contract" | "matter" | "entity" | "global";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            field: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              moduleScope: "contract" | "matter" | "entity" | "global";
+              moduleScope: "contract" | "matter" | "entity";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -36684,7 +36602,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "entity" | "global";
+              moduleScope: "contract" | "matter" | "entity";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -36742,7 +36660,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "contract" | "matter" | "entity" | "global";
+              moduleScope: "contract" | "matter" | "entity";
               /** @enum {string} */
               fieldType:
                 | "text"

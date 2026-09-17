@@ -1,22 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The matter type editor (#85) at the HTTP seam: the single-type read
- * behind the editor, and the MTR-011 attachment machinery on the
- * matter mount — attach for Matter and global fields after M22 opened
- * the scope, with Contract- and Entity-scoped fields refused,
- * per-type reordering, the per-attachment required flag, and detach
- * never touching the catalog definition — behind SET-002's one role
- * gate, with every attachment mutation appending to the activity log
- * (DD-017) under the `matter_type_field` namespace. Also the #85 half
- * of the CTR-016 narrowing guard: a matter attachment now blocks
- * narrowing a global field to `contract`, and joins the catalog's
- * in-use counts. Asserted at the HTTP seam plus direct activity_log
- * reads — the log has no read routes until M9.
- */
+/** Matter field attachment: scope isolation, requiredness, ordering, retention and audit. */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, fields, inArray, matterTypeFields, users } from "@openlaw/db";
+import { activityLog, asc, eq, fields, inArray, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -102,7 +89,7 @@ const attach = async (typeId: string, payload: Record<string, unknown>) => {
 };
 
 /** Defines a catalog field through the Fields pane's own create route. */
-const createField = async (displayName: string, moduleScope: "contract" | "matter" | "global") => {
+const createField = async (displayName: string, moduleScope: "contract" | "matter") => {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",
@@ -161,20 +148,20 @@ describe("the SET-002 role gate", () => {
 });
 
 describe("the MTR-011 scope rule", () => {
-  it("attaches a global field, appended to the per-type order", async () => {
+  it("attaches a matter field, appended to the per-type order", async () => {
     const employment = await typeBySlug("employment");
-    const budget = await createField("Budget owner", "global");
+    const budget = await createField("Budget owner", "matter");
     const res = await attach(employment.id, { fieldId: budget.id });
     expect(res.statusCode, res.body).toBe(201);
     expect(res.json().attachedField).toMatchObject({
       fieldId: budget.id,
       slug: budget.slug,
-      moduleScope: "global",
+      moduleScope: "matter",
       displayOrder: 1,
       isRequired: false,
     });
 
-    const second = await createField("Business unit", "global");
+    const second = await createField("Business unit", "matter");
     const next = await attach(employment.id, { fieldId: second.id, isRequired: true });
     expect(next.statusCode, next.body).toBe(201);
     expect(next.json().attachedField).toMatchObject({ displayOrder: 2, isRequired: true });
@@ -228,7 +215,7 @@ describe("the MTR-011 scope rule", () => {
 
   it("refuses an archived field as 409 — restore it first", async () => {
     const employment = await typeBySlug("employment");
-    const dormant = await createField("Dormant", "global");
+    const dormant = await createField("Dormant", "matter");
     const archived = await harness.app.inject({
       method: "POST",
       url: `/api/v1/fields/${dormant.id}/archive`,
@@ -307,77 +294,6 @@ describe("PUT /matter-types/:id/fields/order (reorder)", () => {
   });
 });
 
-describe("the CTR-016 narrowing guard counts matter attachments (#85)", () => {
-  it("refuses narrowing an attached global field to contract as 409, then allows it after detach", async () => {
-    const litigation = await typeBySlug("litigation");
-    const outside = await createField("Outside counsel", "global");
-    const attached = await attach(litigation.id, { fieldId: outside.id });
-    expect(attached.statusCode, attached.body).toBe(201);
-
-    // The matter attachment counts into the catalog's in-use number.
-    expect((await fieldById(outside.id))!.inUseCount).toBe(1);
-
-    const narrowed = await harness.app.inject({
-      method: "PUT",
-      url: `/api/v1/fields/${outside.id}/scope`,
-      cookies: adminCookies,
-      payload: { moduleScope: "contract" },
-    });
-    expect(narrowed.statusCode, narrowed.body).toBe(409);
-
-    const detached = await harness.app.inject({
-      method: "DELETE",
-      url: `/api/v1/matter-types/${litigation.id}/fields/${outside.id}`,
-      cookies: adminCookies,
-    });
-    expect(detached.statusCode, detached.body).toBe(204);
-
-    const retry = await harness.app.inject({
-      method: "PUT",
-      url: `/api/v1/fields/${outside.id}/scope`,
-      cookies: adminCookies,
-      payload: { moduleScope: "contract" },
-    });
-    expect(retry.statusCode, retry.body).toBe(200);
-  });
-
-  it("refuses moving an attached matter-scoped field to contract as 409", async () => {
-    const litigation = await typeBySlug("litigation");
-    // M22 opened Matter scope. Plant both rows directly here because this
-    // test isolates the narrowing guard from catalog-route setup.
-    const [planted] = await harness.db
-      .insert(fields)
-      .values({
-        slug: "court_docket",
-        displayName: "Court docket",
-        moduleScope: "matter",
-        fieldType: "text",
-        fieldTag: "legal",
-      })
-      .returning();
-    await harness.db
-      .insert(matterTypeFields)
-      .values({ typeId: litigation.id, fieldId: planted!.id, displayOrder: 99 });
-
-    const moved = await harness.app.inject({
-      method: "PUT",
-      url: `/api/v1/fields/${planted!.id}/scope`,
-      cookies: adminCookies,
-      payload: { moduleScope: "contract" },
-    });
-    expect(moved.statusCode, moved.body).toBe(409);
-
-    await harness.db.delete(matterTypeFields).where(eq(matterTypeFields.fieldId, planted!.id));
-    const retry = await harness.app.inject({
-      method: "PUT",
-      url: `/api/v1/fields/${planted!.id}/scope`,
-      cookies: adminCookies,
-      payload: { moduleScope: "contract" },
-    });
-    expect(retry.statusCode, retry.body).toBe(200);
-  });
-});
-
 describe("DELETE /matter-types/:id/fields/:fieldId (detach)", () => {
   it("removes the attachment only — the catalog definition stays (MTR-014)", async () => {
     const employment = await typeBySlug("employment");
@@ -436,8 +352,8 @@ describe("the DD-017 audit trail", () => {
     expect(created.statusCode, created.body).toBe(201);
     const probe = created.json().matterType as TypeRow;
 
-    const first = await createField("Audit probe one", "global");
-    const second = await createField("Audit probe two", "global");
+    const first = await createField("Audit probe one", "matter");
+    const second = await createField("Audit probe two", "matter");
 
     expect((await attach(probe.id, { fieldId: first.id })).statusCode).toBe(201);
     expect((await attach(probe.id, { fieldId: second.id })).statusCode).toBe(201);
