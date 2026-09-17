@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Intake form identity, target turnaround, and attached fields. */
+/** Intake form identity, default destination, turnaround, and attached fields. */
 
 import { useRef, useState } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -27,19 +27,24 @@ export async function settingsRequestTypeEditorLoader({ params }: LoaderFunction
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
-  const [typeRes, attachedRes, catalogRes] = await Promise.all([
+  const [typeRes, attachedRes, catalogRes, matterRes, contractRes] = await Promise.all([
     api.GET("/api/v1/request-types/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/request-types/{id}/fields", { params: { path: { id } } }),
     api.GET("/api/v1/fields", {}),
+    api.GET("/api/v1/matter-types", { params: { query: { includeArchived: "true" } } }),
+    api.GET("/api/v1/contract-types", { params: { query: { includeArchived: "true" } } }),
   ]);
   if (!typeRes.data || !attachedRes.data) {
     throw new Error("The request type could not be read.");
   }
   if (!catalogRes.data) throw new Error("The field catalog could not be read.");
+  if (!matterRes.data || !contractRes.data) throw new Error("The destination types could not be read.");
   return {
     requestType: typeRes.data.requestType,
     attachedFields: attachedRes.data.attachedFields,
     catalog: catalogRes.data.fields,
+    matterTypes: matterRes.data.matterTypes,
+    contractTypes: contractRes.data.contractTypes,
   };
 }
 
@@ -214,6 +219,76 @@ function attachableScopes(module: TargetModule | null): readonly string[] {
   return [module, "global"];
 }
 
+type Destination = { targetModule: TargetModule | null; targetTypeId: string | null };
+type DestinationType = { id: string; displayName: string; archivedAt: string | null };
+
+function DestinationControl({ typeId, value, onSaved, matterTypes, contractTypes }: Readonly<{
+  typeId: string;
+  value: Destination;
+  onSaved: (value: Destination) => void;
+  matterTypes: DestinationType[];
+  contractTypes: DestinationType[];
+}>) {
+  const intl = useIntl();
+  const pending = useRef(false);
+  const [status, setStatus] = useState<FieldStatus>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const types = value.targetModule === "contract" ? contractTypes : matterTypes;
+  const selected = types.find((type) => type.id === value.targetTypeId);
+  async function save(next: Destination) {
+    if (pending.current || (next.targetModule === value.targetModule && next.targetTypeId === value.targetTypeId)) return;
+    pending.current = true;
+    setStatus("saving");
+    setError(null);
+    const result = await api.PATCH("/api/v1/request-types/{id}", {
+      params: { path: { id: typeId } }, body: next,
+    }).catch(() => undefined);
+    if (result?.data) {
+      onSaved(result.data.requestType);
+      setStatus("saved");
+    } else {
+      setError((await problem(result)).detail ?? null);
+      setStatus("error");
+    }
+    pending.current = false;
+  }
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="request-type-destination">
+          <FormattedMessage id="settings.requestTypeEditor.destination" defaultMessage="Default destination" />
+        </Label>
+        <select id="request-type-destination" className={CONTROL_CLASS}
+          value={value.targetModule ?? ""} aria-disabled={status === "saving"}
+          aria-describedby="request-type-destination-help"
+          onChange={(event) => void save({ targetModule: (event.target.value || null) as TargetModule | null, targetTypeId: null })}>
+          <option value="">{intl.formatMessage({ id: "settings.requestTypeEditor.decideLater", defaultMessage: "Decide during triage" })}</option>
+          <option value="contract">{intl.formatMessage({ id: "settings.requestTypeEditor.destinationContract", defaultMessage: "Contract" })}</option>
+          <option value="matter">{intl.formatMessage({ id: "settings.requestTypeEditor.destinationMatter", defaultMessage: "Matter" })}</option>
+        </select>
+        <p id="request-type-destination-help" className="text-xs text-muted">
+          <FormattedMessage id="settings.requestTypeEditor.destinationHelp" defaultMessage="Suggests where Legal converts this request. Legal can choose a different destination during triage." />
+        </p>
+      </div>
+      {value.targetModule && <div className="flex flex-col gap-1.5">
+        <Label htmlFor="request-type-destination-type">
+          <FormattedMessage id="settings.requestTypeEditor.destinationType" defaultMessage="{module, select, contract {Default contract type} other {Default matter type}}" values={{ module: value.targetModule }} />
+        </Label>
+        <select id="request-type-destination-type" className={CONTROL_CLASS}
+          value={value.targetTypeId ?? ""} aria-disabled={status === "saving"}
+          onChange={(event) => void save({ targetModule: value.targetModule, targetTypeId: event.target.value || null })}>
+          <option value="">{intl.formatMessage({ id: "settings.requestTypeEditor.decideLater", defaultMessage: "Decide during triage" })}</option>
+          {value.targetTypeId && (!selected || selected.archivedAt) && <option value={value.targetTypeId} disabled>
+            {intl.formatMessage({ id: "settings.requestTypeEditor.unavailableDestination", defaultMessage: "{name} (unavailable)" }, { name: selected?.displayName ?? intl.formatMessage({ id: "settings.requestTypeEditor.previousDestination", defaultMessage: "Previous selection" }) })}
+          </option>}
+          {types.filter((type) => !type.archivedAt).map((type) => <option key={type.id} value={type.id}>{type.displayName}</option>)}
+        </select>
+      </div>}
+      <StatusNote status={status} detail={error} />
+    </div>
+  );
+}
+
 /** INT-003 publishes a business-day suggestion, never a change to existing estimates. */
 function TurnaroundControl({
   typeId,
@@ -323,9 +398,13 @@ function TurnaroundControl({
 }
 
 export function SettingsRequestTypeEditorPage() {
-  const { requestType, attachedFields, catalog } =
+  const { requestType, attachedFields, catalog, matterTypes, contractTypes } =
     useLoaderData<typeof settingsRequestTypeEditorLoader>();
-  const scopes = attachableScopes(requestType.targetModule ?? null);
+  const [destination, setDestination] = useState<Destination>({
+    targetModule: requestType.targetModule ?? null,
+    targetTypeId: requestType.targetTypeId ?? null,
+  });
+  const scopes = attachableScopes(destination.targetModule);
   const identity: EditorTypeRow = requestType;
   return (
     <TypeEditorScreen
@@ -335,11 +414,15 @@ export function SettingsRequestTypeEditorPage() {
       api={EDITOR_API}
       messages={MESSAGES}
       identityExtra={
+        <>
+        <DestinationControl typeId={requestType.id} value={destination} onSaved={setDestination}
+          matterTypes={matterTypes} contractTypes={contractTypes} />
         <TurnaroundControl
           key={requestType.id}
           typeId={requestType.id}
           initial={requestType.turnaroundDays ?? null}
         />
+        </>
       }
       attachments={{
         initialAttached: attachedFields,

@@ -600,17 +600,31 @@ function AttachedFieldsCard({
                   disabled trigger drops it to the body after the
                   last attach (DES-011). The empty state renders
                   inside the menu instead. */}
-              <Button ref={attachTrigger} variant="secondary" size="sm" disabled={attachStatus === "saving"}>
+              <Button
+                ref={attachTrigger}
+                variant="secondary"
+                size="sm"
+                disabled={attachStatus === "saving"}
+              >
                 <Plus size={16} aria-hidden="true" />
                 <FormattedMessage {...messages.attach} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-(--radix-dropdown-menu-content-available-height) overflow-y-auto" onCloseAutoFocus={(event) => { if (addingField) event.preventDefault(); }}>
+            <DropdownMenuContent
+              align="start"
+              className="max-h-(--radix-dropdown-menu-content-available-height) overflow-y-auto"
+              onCloseAutoFocus={(event) => {
+                if (addingField) event.preventDefault();
+              }}
+            >
               {createFieldModule && (
                 <>
                   <DropdownMenuItem onSelect={() => setAddingField(true)}>
                     <Plus size={16} aria-hidden="true" />
-                    <FormattedMessage id="settings.typeEditor.addNewField" defaultMessage="Add new field" />
+                    <FormattedMessage
+                      id="settings.typeEditor.addNewField"
+                      defaultMessage="Add new field"
+                    />
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -649,10 +663,16 @@ function AttachedFieldsCard({
           onCreated={async (field) => {
             setCreatedFields((current) => [...current, field]);
             if (!(await attach(field))) {
-              setAttachError((detail) => intl.formatMessage({
-                id: "settings.typeEditor.createdNotAttached",
-                defaultMessage: "{name} was created but could not be attached. Select it from Attach field to try again. {detail}",
-              }, { name: field.displayName, detail: detail ?? "" }));
+              setAttachError((detail) =>
+                intl.formatMessage(
+                  {
+                    id: "settings.typeEditor.createdNotAttached",
+                    defaultMessage:
+                      "{name} was created but could not be attached. Select it from Attach field to try again. {detail}",
+                  },
+                  { name: field.displayName, detail: detail ?? "" },
+                ),
+              );
             }
           }}
         />

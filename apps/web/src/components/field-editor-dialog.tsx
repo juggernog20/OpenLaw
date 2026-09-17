@@ -4,7 +4,20 @@ import { useState, type ComponentProps } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
-import { FIELD_TYPES, SELECT_TYPES, TAGS, fieldRow, typeLabel, scopeLabel, tagLabel, type FieldType, type Tag, type ModuleScope, type Scope, type FieldRow } from "../lib/field-catalog";
+import {
+  FIELD_TYPES,
+  SELECT_TYPES,
+  TAGS,
+  fieldRow,
+  typeLabel,
+  scopeLabel,
+  tagLabel,
+  type FieldType,
+  type Tag,
+  type ModuleScope,
+  type Scope,
+  type FieldRow,
+} from "../lib/field-catalog";
 import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
@@ -234,7 +247,12 @@ export function FieldEditorDialog({
   }
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!busy) onOpenChange(open); }}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!busy) onOpenChange(open);
+      }}
+    >
       <DialogContent aria-describedby={undefined} onCloseAutoFocus={onCloseAutoFocus}>
         <DialogTitle>
           {target === null ? (
@@ -411,7 +429,12 @@ export function FieldEditorDialog({
             </p>
           )}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" disabled={busy} onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={busy}
+              onClick={() => onOpenChange(false)}
+            >
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
             <Button type="submit" disabled={busy}>
@@ -430,4 +453,3 @@ export function FieldEditorDialog({
     </Dialog>
   );
 }
-

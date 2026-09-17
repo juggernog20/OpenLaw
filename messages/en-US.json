@@ -10037,9 +10037,6 @@
   "settings.requestTypes.fieldsPrefix": {
     "defaultMessage": "Form fields:"
   },
-  "settings.requestTypes.help": {
-    "defaultMessage": "Every form collects title, description, Department, attachments, and urgency. Attached catalog fields carry their values into the converted matter or contract."
-  },
   "settings.requestTypes.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
   },
@@ -10171,6 +10168,12 @@
   },
   "settings.title": {
     "defaultMessage": "Settings"
+  },
+  "settings.typeEditor.addNewField": {
+    "defaultMessage": "Add new field"
+  },
+  "settings.typeEditor.createdNotAttached": {
+    "defaultMessage": "{name} was created but could not be attached. Select it from Attach field to try again. {detail}"
   },
   "settings.users.action.archive": {
     "defaultMessage": "Archive"

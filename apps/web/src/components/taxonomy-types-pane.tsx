@@ -76,7 +76,7 @@ export interface TaxonomyPaneMessages {
   count: MessageDescriptor;
   add: MessageDescriptor;
   addName: MessageDescriptor;
-  help: MessageDescriptor;
+  help?: MessageDescriptor;
   renameLabel: MessageDescriptor;
   /** The right-aligned usage caption ("3 matters"). A mount whose
    * records do not exist yet, and which therefore has nothing but a
@@ -473,7 +473,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
             setAddStatus("idle");
             setAddError(undefined);
           }}
-          help={<FormattedMessage {...messages.help} />}
+          help={messages.help ? <FormattedMessage {...messages.help} /> : undefined}
           rowStatus={rowStatus}
           rowError={rowError}
           renameLabel={(row) => intl.formatMessage(messages.renameLabel, { name: row.displayName })}

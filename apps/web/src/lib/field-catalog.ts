@@ -18,7 +18,7 @@ export function isFieldRow(field: ApiField, module: ModuleScope): field is Field
   );
 }
 
-/** The nine CTR-016 field types, immutable after creation. */
+/** Custom field types are immutable after creation. */
 export const FIELD_TYPES = [
   "text",
   "long_text",
@@ -79,4 +79,3 @@ export function tagLabel(intl: IntlShape, tag: Tag): string {
     { tag },
   );
 }
-

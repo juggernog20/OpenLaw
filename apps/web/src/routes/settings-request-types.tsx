@@ -86,12 +86,6 @@ const MESSAGES = defineMessages({
   },
   add: { id: "settings.requestTypes.add", defaultMessage: "Add request type" },
   addName: { id: "settings.requestTypes.addName", defaultMessage: "New request type name" },
-  help: {
-    id: "settings.requestTypes.help",
-    defaultMessage:
-      "Every form collects title, description, Department, attachments, and urgency. Attached " +
-      "catalog fields carry their values into the converted matter or contract.",
-  },
   renameLabel: { id: "settings.requestTypes.renameLabel", defaultMessage: "Rename {name}" },
   archive: { id: "settings.requestTypes.archive", defaultMessage: "Archive {name}" },
   restore: { id: "settings.requestTypes.restore", defaultMessage: "Restore {name}" },

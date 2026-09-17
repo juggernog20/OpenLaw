@@ -34,6 +34,7 @@ import {
   ChevronRight,
   FilePen,
   FileText,
+  Globe,
   Inbox,
   KeyRound,
   LibraryBig,
@@ -153,7 +154,7 @@ const ORGANIZATION_GROUP: SettingsGroup = {
     {
       id: "regions",
       path: "/settings/regions",
-      icon: Network,
+      icon: Globe,
       label: defineMessage({ id: "settings.section.regions", defaultMessage: "Regions" }),
     },
     {

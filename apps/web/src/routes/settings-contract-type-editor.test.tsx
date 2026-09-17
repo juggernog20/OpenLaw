@@ -302,7 +302,32 @@ describe("the attached-fields card (ST16 right)", () => {
 
   it("attaches from the menu, which offers only unattached catalog fields", async () => {
     const calls = newCalls();
-    stubApi({ signedIn: ADMIN, extra: editorApi(calls) });
+    const base = editorApi(calls);
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.method === "GET" && call.url.pathname === "/api/v1/fields"
+          ? json(200, {
+              fields: [
+                ...CATALOG,
+                {
+                  ...CATALOG[0],
+                  id: "matter-only",
+                  slug: "legal_budget",
+                  displayName: "Legal budget",
+                  moduleScope: "matter",
+                },
+                {
+                  ...CATALOG[0],
+                  id: "entity-only",
+                  slug: "registration_number",
+                  displayName: "Registration number",
+                  moduleScope: "entity",
+                },
+              ],
+            })
+          : base(call),
+    });
     renderAt("/settings/contracts/types/t1");
     const user = userEvent.setup();
 
@@ -310,6 +335,8 @@ describe("the attached-fields card (ST16 right)", () => {
     const menu = await screen.findByRole("menu");
     expect(within(menu).queryByText("Governing law")).not.toBeInTheDocument();
     expect(within(menu).queryByText("Department")).not.toBeInTheDocument();
+    expect(within(menu).queryByText("Legal budget")).not.toBeInTheDocument();
+    expect(within(menu).queryByText("Registration number")).not.toBeInTheDocument();
 
     await user.click(within(menu).getByText("Our position"));
     await waitFor(() => expect(calls.attaches).toEqual([{ fieldId: "f3" }]));
