@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { CurrencySelect } from "../currency-select";
 import { useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -55,6 +57,7 @@ export function ShareCapitalCard({
   const [refusals, setRefusals] = useState<Partial<Record<CapitalKey, string>>>({});
   const inFlight = useRef(new Set<CapitalKey>());
   const currency = entity.parValueCurrency ?? "";
+  const [pendingCurrency, setPendingCurrency] = useState<string | null>(null);
 
   function refuse(key: CapitalKey, detail?: string) {
     setRefusals((current) => ({ ...current, [key]: detail }));
@@ -116,10 +119,13 @@ export function ShareCapitalCard({
     }
   }
 
-  async function changeCurrency(code: string) {
+  async function changeCurrency(code: string, confirmed = false) {
     if (code === currency || inFlight.current.has("parValue")) return;
-    // Retain the displayed amount when changing currencies. Legacy values without a
-    // currency keep their stored minor units until a currency is first assigned.
+    if (!currency && entity.parValue !== null && !confirmed) {
+      setPendingCurrency(code);
+      return;
+    }
+    // Legacy minor units acquire a meaning only after explicit confirmation.
     const amount = currency ? parse("parValue", code) : entity.parValue;
     if (amount === undefined) return;
     refuse("parValue");
@@ -128,6 +134,7 @@ export function ShareCapitalCard({
         ...current,
         parValue: amount === null ? "" : String(toMajorUnits(amount, code)),
       }));
+      setPendingCurrency(null);
     }
   }
 
@@ -167,6 +174,14 @@ export function ShareCapitalCard({
                 detail={refusals[key] ?? error[key]}
               />
             </div>
+            {key === "parValue" && !currency && entity.parValue !== null && (
+              <p className="text-sm text-muted">
+                <FormattedMessage
+                  id="entities.record.shareCapital.legacy"
+                  defaultMessage="Stored minor units; the original currency is unknown. Choose a currency and confirm the amount before editing."
+                />
+              </p>
+            )}
           </div>
         ))}
         <div className="flex min-w-0 flex-col gap-1.5">
@@ -185,6 +200,43 @@ export function ShareCapitalCard({
           />
         </div>
       </div>
+      {pendingCurrency && (
+        <Dialog open onOpenChange={(open) => !open && setPendingCurrency(null)}>
+          <DialogContent aria-describedby="legacy-par-value-help">
+            <DialogTitle>
+              <FormattedMessage
+                id="entities.record.shareCapital.confirmCurrency"
+                defaultMessage="Confirm par value currency"
+              />
+            </DialogTitle>
+            <p id="legacy-par-value-help" className="my-4 text-sm">
+              <FormattedMessage
+                id="entities.record.shareCapital.confirmLegacy"
+                defaultMessage="The stored value is {stored} minor units with no recorded currency. Using {currency} makes the par value {amount} {currency}. Confirm only if this is the intended amount."
+                values={{
+                  stored: entity.parValue,
+                  currency: pendingCurrency,
+                  amount: toMajorUnits(entity.parValue!, pendingCurrency),
+                }}
+              />
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setPendingCurrency(null)}>
+                <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+              </Button>
+              <Button
+                disabled={status.parValue === "saving"}
+                onClick={() => void changeCurrency(pendingCurrency, true)}
+              >
+                <FormattedMessage
+                  id="entities.record.shareCapital.confirmAmount"
+                  defaultMessage="Confirm amount and currency"
+                />
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </section>
   );
 }
@@ -196,7 +248,7 @@ function capitalDrafts(entity: EntityRow): Record<CapitalKey, string> {
     parValue:
       entity.parValue !== null && entity.parValueCurrency
         ? String(toMajorUnits(entity.parValue, entity.parValueCurrency))
-        : "",
+        : String(entity.parValue ?? ""),
   };
 }
 

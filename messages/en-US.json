@@ -5084,6 +5084,15 @@
   "entities.record.shareCapital.authorized": {
     "defaultMessage": "Authorized shares"
   },
+  "entities.record.shareCapital.confirmAmount": {
+    "defaultMessage": "Confirm amount and currency"
+  },
+  "entities.record.shareCapital.confirmCurrency": {
+    "defaultMessage": "Confirm par value currency"
+  },
+  "entities.record.shareCapital.confirmLegacy": {
+    "defaultMessage": "The stored value is {stored} minor units with no recorded currency. Using {currency} makes the par value {amount} {currency}. Confirm only if this is the intended amount."
+  },
   "entities.record.shareCapital.currency": {
     "defaultMessage": "Currency"
   },
@@ -5095,6 +5104,9 @@
   },
   "entities.record.shareCapital.issued": {
     "defaultMessage": "Issued shares"
+  },
+  "entities.record.shareCapital.legacy": {
+    "defaultMessage": "Stored minor units; the original currency is unknown. Choose a currency and confirm the amount before editing."
   },
   "entities.record.shareCapital.parValue": {
     "defaultMessage": "Par value"

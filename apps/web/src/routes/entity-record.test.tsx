@@ -290,16 +290,30 @@ describe("the /entities/:entityId record page", () => {
     expect(amount).toHaveValue("1,000");
   });
 
-  it("assigns a currency to legacy par values without guessing or changing their stored units", async () => {
+  it("shows legacy par values and requires confirmation before assigning their currency", async () => {
     const api = recordApi(entityRow({ parValue: 100 }));
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/entities/e1");
     const user = userEvent.setup();
     const amount = await screen.findByRole("textbox", { name: "Par value" });
     expect(amount).toBeDisabled();
+    expect(amount).toHaveValue("100");
     const currency = screen.getByRole("combobox", { name: "Currency" });
     await within(currency).findByRole("option", { name: /USD/ });
     await user.selectOptions(currency, "USD");
+    expect(api.patches).toEqual([]);
+    const confirmation = await screen.findByRole("dialog", { name: "Confirm par value currency" });
+    expect(confirmation).toHaveTextContent("Using USD makes the par value 1 USD");
+    await user.click(within(confirmation).getByRole("button", { name: "Cancel" }));
+    expect(currency).toHaveValue("");
+    expect(api.patches).toEqual([]);
+    await user.selectOptions(currency, "JPY");
+    expect(await screen.findByRole("dialog")).toHaveTextContent(
+      "Using JPY makes the par value 100 JPY",
+    );
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await user.selectOptions(currency, "USD");
+    await user.click(screen.getByRole("button", { name: "Confirm amount and currency" }));
     await waitFor(() => expect(amount).toHaveValue("1"));
     expect(api.patches).toContainEqual({ parValue: 100, parValueCurrency: "USD" });
     expect(amount).toBeEnabled();
