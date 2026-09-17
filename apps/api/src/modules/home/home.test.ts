@@ -1484,3 +1484,49 @@ describe("GET /api/v1/home", () => {
     expect(mattersIn(empty)).toBeUndefined();
   });
 });
+
+it("uses Grants for Administrators assigned to Confidential Entity Obligations", async () => {
+  const [type] = await harness.db.select().from(entityTypes).limit(1);
+  const [entity] = await harness.db
+    .insert(entities)
+    .values({ legalName: "Grant-dependent fallback", entityTypeId: type!.id, isConfidential: true })
+    .returning();
+  await harness.db
+    .update(users)
+    .set({ role: "administrator" })
+    .where(eq(users.id, idOf(OTHER)));
+  await harness.db.insert(entityGrants).values({ entityId: entity!.id, userId: idOf(ADMIN) });
+  const [obligation] = await harness.db
+    .insert(entityObligations)
+    .values({
+      entityId: entity!.id,
+      label: "Grant-dependent obligation",
+      assigneeId: idOf(OTHER),
+      nextDueOn: "2026-09-17",
+    })
+    .returning();
+  try {
+    expect(obligationsIn(await home(ADMIN))?.rows).toContainEqual(
+      expect.objectContaining({ id: obligation!.id }),
+    );
+    expect(obligationsIn(await home(OTHER))?.rows ?? []).not.toContainEqual(
+      expect.objectContaining({ id: obligation!.id }),
+    );
+    await harness.db.insert(entityGrants).values({ entityId: entity!.id, userId: idOf(OTHER) });
+    expect(obligationsIn(await home(ADMIN))?.rows ?? []).not.toContainEqual(
+      expect.objectContaining({ id: obligation!.id }),
+    );
+    expect(obligationsIn(await home(OTHER))?.rows).toContainEqual(
+      expect.objectContaining({ id: obligation!.id }),
+    );
+  } finally {
+    await harness.db
+      .update(users)
+      .set({ role: "legal_team_member" })
+      .where(eq(users.id, idOf(OTHER)));
+    await harness.db
+      .update(entities)
+      .set({ archivedAt: new Date() })
+      .where(eq(entities.id, entity!.id));
+  }
+});

@@ -63,13 +63,10 @@ export async function readObligationsHomeSection(
     where ${users.id} = ${entityObligations.assigneeId}
       and ${users.archivedAt} is null
       and (
-        ${users.role} = 'administrator'
-        or (
-          ${users.role} = 'legal_team_member'
-          and (
-            ${entities.isConfidential} = false
-            or ${entityGrants.userId} is not null
-          )
+        ${users.role} in ('administrator', 'legal_team_member')
+        and (
+          ${entities.isConfidential} = false
+          or ${entityGrants.userId} is not null
         )
       )
   )`;
