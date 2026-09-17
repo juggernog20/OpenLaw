@@ -376,3 +376,24 @@ describe("progression groups", () => {
     expect(refused.statusCode).toBe(400);
   });
 });
+
+it("refuses the Closed progression group for an Open-Category Status on both writes", async () => {
+  const created = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/matter-statuses",
+    cookies: adminCookies,
+    payload: { displayName: "Invalid closed group", category: "open", progressionGroup: "closed" },
+  });
+  expect(created.statusCode, created.body).toBe(400);
+  expect(created.headers["content-type"]).toContain("application/problem+json");
+  const open = await bySlug("open");
+  const changed = await harness.app.inject({
+    method: "PUT",
+    url: `/api/v1/matter-statuses/${open.id}/progression-group`,
+    cookies: adminCookies,
+    payload: { progressionGroup: "closed" },
+  });
+  expect(changed.statusCode, changed.body).toBe(400);
+  expect(changed.headers["content-type"]).toContain("application/problem+json");
+  expect(await bySlug("open")).toMatchObject({ category: "open", progressionGroup: "open" });
+});
