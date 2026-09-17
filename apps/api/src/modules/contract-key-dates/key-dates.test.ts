@@ -331,7 +331,7 @@ describe("key dates on a contract (CTR-009)", () => {
     expect(payload.changed.reminderOffsetDays).toEqual({ from: [60, 30], to: [30] });
   });
 
-  it("offers no Business User as a reminder recipient, and refuses one that is sent", async () => {
+  it("offers a Business User on the team as a reminder recipient", async () => {
     const contract = await newContract("Key dates watcher recipients");
     const joined = await harness.app.inject({
       method: "POST",
@@ -348,16 +348,14 @@ describe("key dates on a contract (CTR-009)", () => {
     });
     expect(options.statusCode, options.body).toBe(200);
     const offered = options.json().recipients as { id: string }[];
-    expect(offered.map((person) => person.id)).not.toContain(watcherId);
+    expect(offered.map((person) => person.id)).toContain(watcherId);
 
-    // An explicit selection never falls back to the usual audience, so a
-    // Key date addressed to a Business User alone would remind nobody.
-    const refused = await addRaw(contract.number, {
+    const created = await addRaw(contract.number, {
       date: "2027-08-01",
       label: "Watcher only",
       reminderRecipientIds: [watcherId],
     });
-    expect(refused.statusCode, refused.body).toBe(400);
+    expect(created.statusCode, created.body).toBe(201);
   });
 
   it("clears a note back to nothing recorded", async () => {

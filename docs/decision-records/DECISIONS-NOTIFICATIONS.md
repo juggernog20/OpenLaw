@@ -314,6 +314,14 @@ Delivery rechecks active accounts, current team membership, DD-014 access and no
 
 The Add and Edit Key date dialogs show the global lead times and the combined schedule, allow additional lead times to be added or removed, and explain the recipient selection. No assignee, record access, Task reminder behavior or deadline calculation changes. Per-date reminders continue to use the separate Key date identity established by #760.
 
+### NOT-004 addendum: owners, members and an empty recipient selection (2026-09-17, [#900](https://github.com/juggernog20/OpenLaw/issues/900))
+
+The product owner confirmed that a Key date's default audience is the Contract Legal Owner or Matter Manager, the Business Owner, and everyone added to that record's team. An empty recipient list uses this default; a nonempty list replaces it with the selected owners or members. The Add and Edit dialogs offer **Use the usual audience** whenever a selection exists. Clearing all checkboxes has the same effect.
+
+This supersedes the preceding addendum's exclusion of Business Users from Key-date reminders. Active Business Owners and Business User members can receive them through the Portal bell and a daily date-summary email. Their **Dates approaching** switches in Portal notification settings control both channels. Portal emails contain only Key-date reminders and link to Portal records and settings. They do not include staff Home sections, Contract term-date reminders, Entity Obligations or Knowledge publications. Existing staff briefing preferences remain unchanged.
+
+Current record access, active-account status and personal preferences still apply. A nonempty saved selection whose members have all become ineligible remains empty at delivery; it does not silently widen to the default audience. The person editing the Key date must clear that selection to restore the default. No new record access is granted by selecting a reminder recipient.
+
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 
 - **Status** — Accepted

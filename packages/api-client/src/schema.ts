@@ -6707,7 +6707,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** What the signed-in person gets from each event group and email-only briefing section. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which event groups a surface draws is the surface's business — the staff pane draws four and the Portal pane draws Request updates, mentions, and record activity. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
+    /** What the signed-in person gets from each event group and email-only briefing section. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, whether or not anything in it has ever fired: an opinion can be held about a group before its first event exists. Which event groups a surface draws is the surface's business — the staff pane draws four and the Portal pane draws Request updates, mentions, record activity, and Key-date reminders. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
     get: operations["getMyNotificationPreferences"];
     put?: never;
     post?: never;

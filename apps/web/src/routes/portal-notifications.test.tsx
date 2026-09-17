@@ -332,7 +332,7 @@ describe("the portal notification settings (NOT-001)", () => {
     );
   });
 
-  it("draws Request updates, assignments, and record activity with their saved defaults", async () => {
+  it("draws Request updates, assignments, record activity and Key-date reminders", async () => {
     stubApi({ signedIn: REQUESTER, extra: capturePreferenceWrites([]) });
     renderAt("/portal/settings");
 
@@ -348,8 +348,9 @@ describe("the portal notification settings (NOT-001)", () => {
     // Request receipts and direct assignments both default to email.
     expect(screen.getByRole("switch", { name: "Request updates In-app" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "Request updates Email" })).toBeChecked();
-    // Each of the three Portal groups has two channel switches.
-    expect(screen.getAllByRole("switch")).toHaveLength(6);
+    expect(screen.getByRole("switch", { name: "Dates approaching In-app" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Dates approaching Email" })).toBeChecked();
+    expect(screen.getAllByRole("switch")).toHaveLength(8);
   });
 
   it("omits staff-only event groups", async () => {
@@ -357,7 +358,7 @@ describe("the portal notification settings (NOT-001)", () => {
     renderAt("/portal/settings");
 
     await screen.findByRole("heading", { name: "How we tell you about your work" });
-    for (const label of ["Dates approaching", "New requests"]) {
+    for (const label of ["Knowledge items", "New requests"]) {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }
   });

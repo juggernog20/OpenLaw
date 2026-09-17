@@ -153,7 +153,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["notifications"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "submit-request",

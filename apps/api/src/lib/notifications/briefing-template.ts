@@ -72,6 +72,7 @@ export interface KnowledgeBriefingItem {
 /** Every section the round has assembled for one reader. */
 export interface BriefingMail {
   recipientName: string;
+  surface?: "staff" | "portal";
   approvals: ApprovalsHomeSection | null;
   tasks: TasksHomeSection | null;
   rows: readonly DigestRow[];
@@ -153,9 +154,12 @@ function digestLine(row: DigestRow): string {
   return `${whenIs(row.daysAway)} (${on})${verification} — ${kind}: ${reference}`;
 }
 
-function digestLink(row: DigestRow, baseUrl: string): string {
+function digestLink(row: DigestRow, baseUrl: string, surface: "staff" | "portal"): string {
   if (row.entityType === "entity") {
     return `${origin(baseUrl)}/entities/${row.recordId}/obligations`;
+  }
+  if (surface === "portal") {
+    return `${origin(baseUrl)}/portal/${row.entityType}s/${row.recordNumber}`;
   }
   // The Key dates section is the address (DES-049 clause 9) — landing a
   // reader on the overview and making them find the date they were just
@@ -307,6 +311,7 @@ export function renderBriefingMail(
   to: string,
   baseUrl: string,
 ): MailMessage | null {
+  const surface = briefing.surface ?? "staff";
   const rows = sortedDates(briefing.rows);
   const knowledgeItems = sortedKnowledge(briefing.knowledgeItems);
   const approvals = briefing.approvals?.rows ?? [];
@@ -357,7 +362,7 @@ export function renderBriefingMail(
     ...dateSections(rows).flatMap((section) => [
       section.heading,
       "",
-      ...section.rows.flatMap((row) => [digestLine(row), digestLink(row, baseUrl), ""]),
+      ...section.rows.flatMap((row) => [digestLine(row), digestLink(row, baseUrl, surface), ""]),
     ]),
   ];
   if (knowledgeItems.length > 0) {
@@ -384,7 +389,7 @@ export function renderBriefingMail(
       (section) =>
         `<h2>${section.heading}</h2><ul>${section.rows
           .map((row) => {
-            const link = escapeHtml(digestLink(row, baseUrl));
+            const link = escapeHtml(digestLink(row, baseUrl, surface));
             return `<li>${escapeHtml(digestLine(row))}<br><a href="${link}">${link}</a></li>`;
           })
           .join("")}</ul>`,
@@ -406,7 +411,7 @@ export function renderBriefingMail(
     (row) => intakeLink(row, baseUrl),
     intakeMore,
   );
-  const settingsLink = `${origin(baseUrl)}/settings/notifications`;
+  const settingsLink = `${origin(baseUrl)}${surface === "portal" ? "/portal/settings" : "/settings/notifications"}`;
 
   return {
     to,

@@ -5658,7 +5658,7 @@
     "defaultMessage": "Loading reminder ladder and team…"
   },
   "keyDates.reminders.recipientHelp": {
-    "defaultMessage": "With no selection, reminders go to the Legal Owner or Matter Manager and record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
+    "defaultMessage": "With no selection, reminders go to the Legal Owner or Matter Manager, the Business Owner, and everyone on the record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
   },
   "keyDates.reminders.remove": {
     "defaultMessage": "Remove {offset}"
@@ -7282,6 +7282,9 @@
   },
   "portal.settings.assignments.detail": {
     "defaultMessage": "Contract team additions and comments that mention you on your Contracts and Matters."
+  },
+  "portal.settings.dates.detail": {
+    "defaultMessage": "Key-date reminders on your Contracts and Matters. Email arrives in one daily summary."
   },
   "portal.settings.heading": {
     "defaultMessage": "How we tell you about your work"

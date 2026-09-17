@@ -5,10 +5,12 @@ import { z } from "zod";
 import {
   and,
   contractKeyDates,
+  contracts,
+  eq,
   matterKeyDates,
+  matters,
   inArray,
   isNull,
-  ne,
   users,
   type Executor,
 } from "@openlaw/db";
@@ -39,29 +41,32 @@ export function ownReminderRecipients(stored: unknown): string[] {
     : [];
 }
 
+/** Key dates concern both record owners and every explicit team member. */
+export async function keyDateAudienceIds(db: Executor, kind: "contract" | "matter", id: string) {
+  const audience =
+    kind === "contract" ? await contractRecordAudience(db, id) : await matterRecordAudience(db, id);
+  if (!audience) return [];
+  const table = kind === "contract" ? contracts : matters;
+  const [record] = await db
+    .select({ businessOwnerId: table.businessOwnerId })
+    .from(table)
+    .where(eq(table.id, id));
+  return [
+    ...new Set([...audience.userIds, ...(record?.businessOwnerId ? [record.businessOwnerId] : [])]),
+  ];
+}
+
 export async function keyDateReminderOptions(
   db: Executor,
   kind: "contract" | "matter",
   id: string,
 ) {
-  const audience =
-    kind === "contract" ? await contractRecordAudience(db, id) : await matterRecordAudience(db, id);
-  const recipients = audience?.userIds.length
+  const audience = await keyDateAudienceIds(db, kind, id);
+  const recipients = audience.length
     ? await db
         .select({ id: users.id, displayName: users.displayName })
         .from(users)
-        .where(
-          and(
-            inArray(users.id, [...audience.userIds]),
-            isNull(users.archivedAt),
-            // A Business User may hold a team row, and the
-            // morning round serves nobody with that role. Offering one
-            // here would let a person pick the one audience the system
-            // can never remind. An explicit selection does not fall
-            // back, so that Key date would go quiet for good.
-            ne(users.role, "business_user"),
-          ),
-        )
+        .where(and(inArray(users.id, audience), isNull(users.archivedAt)))
         .orderBy(users.displayName, users.id)
     : [];
   return { globalOffsetDays: await reminderOffsets(db), recipients };
@@ -78,11 +83,7 @@ export async function validateKeyDateRecipients(
   const options = await keyDateReminderOptions(db, kind, id);
   const allowed = new Set(options.recipients.map((person) => person.id));
   if (selected.some((person) => !allowed.has(person))) {
-    throw httpError(
-      400,
-      "Choose reminder recipients from the record's current team. " +
-        "Business Users receive no reminders and cannot be chosen.",
-    );
+    throw httpError(400, "Choose reminder recipients from the record's current owners and team.");
   }
 }
 
@@ -163,11 +164,7 @@ export async function currentKeyDateRecipients(
   const audiences = new Map<string, readonly string[]>();
   for (const row of found) {
     if (audiences.has(recordKey(row))) continue;
-    const audience =
-      row.kind === "contract"
-        ? await contractRecordAudience(db, row.recordId)
-        : await matterRecordAudience(db, row.recordId);
-    audiences.set(recordKey(row), audience?.userIds ?? []);
+    audiences.set(recordKey(row), await keyDateAudienceIds(db, row.kind, row.recordId));
   }
 
   for (const row of found) {

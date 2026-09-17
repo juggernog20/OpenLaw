@@ -200,6 +200,29 @@ describe("the Matter record's Key dates section", () => {
     expect(api.writes[1]!.body).toHaveProperty("reminderRecipientIds", [MEMBER.id]);
   });
 
+  it.each(["reset", "clear"])("restores the default audience with %s", async (action) => {
+    const api = recordApi([
+      deadline({ label: "Custom audience", reminderRecipientIds: [MEMBER.id] }),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/matters/12/key-dates");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Actions for Custom audience" }));
+    await user.click(screen.getByRole("menuitem", { name: /Edit date/i }));
+    const person = await screen.findByRole("checkbox", { name: MEMBER.displayName });
+    expect(person).toBeChecked();
+    if (action === "reset")
+      await user.click(screen.getByRole("button", { name: "Use the usual audience" }));
+    else await user.click(person);
+    expect(person).not.toBeChecked();
+    expect(
+      screen.queryByRole("button", { name: "Use the usual audience" }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.body).toHaveProperty("reminderRecipientIds", []);
+  });
+
   it("adds a lead time and selects recipients, then restores both in Edit", async () => {
     const api = recordApi([]);
     stubApi({ signedIn: MEMBER, extra: api.handler });

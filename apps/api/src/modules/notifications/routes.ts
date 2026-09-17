@@ -514,7 +514,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           "opinion can be held about a group before its first event " +
           "exists. Which event groups a surface draws " +
           "is the surface's business — the staff pane draws four and " +
-          "the Portal pane draws Request updates, mentions, and record activity. There is no " +
+          "the Portal pane draws Request updates, mentions, record activity, and Key-date reminders. There is no " +
           "user parameter — a preference is one person's, and the " +
           "signed-in person is the whole scope",
         tags: ["notifications"],

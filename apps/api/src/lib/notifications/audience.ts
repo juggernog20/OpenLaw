@@ -679,6 +679,7 @@ function requestDestinationScope(
 
 /** Shared record events delivered to Business Users through the Portal. */
 export const PORTAL_SHARED_EVENTS: readonly NotificationEventType[] = [
+  "date.key_date_approaching",
   "contract.team_added",
   "contract.status_changed",
   "document.added",

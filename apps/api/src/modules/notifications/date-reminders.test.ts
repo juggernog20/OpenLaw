@@ -94,6 +94,19 @@ const EAST = {
   password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
 } as const;
 const EAST_ZONE = "Asia/Dubai";
+const BUSINESS_OWNER = {
+  email: "dates-business-owner@example.com",
+  displayName: "Business Owner",
+  password: "correct-horse-battery", // NOSONAR — disposable fixture
+} as const;
+const BUSINESS_MEMBER = {
+  email: "dates-business-member@example.com",
+  displayName: "Business Member",
+  password: "correct-horse-battery", // NOSONAR — disposable fixture
+} as const;
+
+const isBusiness = (fixture: { email: string }) =>
+  fixture.email === BUSINESS_OWNER.email || fixture.email === BUSINESS_MEMBER.email;
 
 let harness: TestHarness;
 const cookies = new Map<string, Record<string, string>>();
@@ -140,12 +153,12 @@ beforeAll(async () => {
   userIds.set(ADMIN.email, admin!.id);
   cookies.set(ADMIN.email, await signInCookies(harness.app, ADMIN.email, ADMIN.password));
 
-  for (const fixture of [OWNER, OUTSIDER, EAST] as const) {
+  for (const fixture of [OWNER, OUTSIDER, EAST, BUSINESS_OWNER, BUSINESS_MEMBER] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db
       .update(users)
       .set({
-        role: "legal_team_member",
+        role: isBusiness(fixture) ? "business_user" : "legal_team_member",
         // The profile zone (SET-006). Only the eastern fixture sets one;
         // the rest are the NULL that reads as UTC.
         timezone: fixture === EAST ? EAST_ZONE : null,
@@ -317,7 +330,7 @@ const wallOff = (contractId: string) =>
 async function bell(fixture: { email: string }): Promise<BellItem[]> {
   const res = await harness.app.inject({
     method: "GET",
-    url: "/api/v1/notifications",
+    url: isBusiness(fixture) ? "/api/v1/portal/notifications" : "/api/v1/notifications",
     cookies: as(fixture),
   });
   expect(res.statusCode, res.body).toBe(200);
@@ -1238,5 +1251,171 @@ describe.each([
     const after = await rowsFor(OUTSIDER);
     expect(after.find((row) => row.id === pending.id)!.emailSkippedAt).not.toBeNull();
     expect(after.find((row) => row.id === sent.id)!.emailedAt).toEqual(sent.emailedAt);
+  });
+});
+
+describe.each([
+  { kind: "contracts", patchPath: "key-dates", today: "2028-05-03", create: newContract },
+  { kind: "matters", patchPath: "matter-key-dates", today: "2028-06-03", create: newMatter },
+])("owner and member reminders on $kind", ({ kind, patchPath, today, create }) => {
+  it("restores both owners and the entire team when the recipient selection is cleared", async () => {
+    await harness.db.update(orgSettings).set({ reminderOffsetDays: [7, 1, 0] });
+    const record = await create("Default audience includes Business Users");
+    const assigned = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/${kind}/${record.number}`,
+      cookies: as(OWNER),
+      payload: { managerId: idOf(ADMIN), businessOwnerId: idOf(BUSINESS_OWNER) },
+    });
+    expect(assigned.statusCode, assigned.body).toBe(200);
+    for (const person of [EAST, BUSINESS_MEMBER]) {
+      const joined = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/${kind}/${record.number}/team`,
+        cookies: as(OWNER),
+        payload: { userId: idOf(person) },
+      });
+      expect(joined.statusCode, joined.body).toBe(201);
+    }
+    const audience = [ADMIN, OWNER, EAST, BUSINESS_OWNER, BUSINESS_MEMBER];
+    const options = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/${kind}/${record.number}/key-date-reminder-options`,
+      cookies: as(OWNER),
+    });
+    expect(options.statusCode, options.body).toBe(200);
+    expect(
+      options
+        .json()
+        .recipients.map((person: { id: string }) => person.id)
+        .sort(),
+    ).toEqual(audience.map(idOf).sort());
+    const created = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/${kind}/${record.number}/key-dates`,
+      cookies: as(OWNER),
+      payload: { date: plusDays(today, 7), label: "Owners and members", reminderRecipientIds: [] },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const dateId = created
+      .json()
+      .deadlines.find((row: { label: string }) => row.label === "Owners and members").keyDateId;
+    const edit = async (payload: Record<string, unknown>) => {
+      const response = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/${patchPath}/${dateId}`,
+        cookies: as(OWNER),
+        payload,
+      });
+      expect(response.statusCode, response.body).toBe(200);
+    };
+    const reminders = async (person: { email: string }) =>
+      (await bellFor(person, record)).filter(
+        (row) => row.eventType === "date.key_date_approaching",
+      );
+    await round(at(today, 8));
+    for (const person of audience) expect(await reminders(person), person.email).toHaveLength(1);
+    expect(await reminders(OUTSIDER)).toHaveLength(0);
+    for (const person of [BUSINESS_OWNER, BUSINESS_MEMBER]) {
+      const mail = harness.mailer
+        .messagesTo(person.email)
+        .find(
+          (message) =>
+            message.text.includes("Owners and members") &&
+            message.text.includes(`http://localhost/portal/${kind}/${record.number}`),
+        )!;
+      expect(mail).toBeDefined();
+      expect(mail.text).toContain(`http://localhost/portal/${kind}/${record.number}`);
+      expect(mail.html).toContain(`http://localhost/portal/${kind}/${record.number}`);
+      expect(mail.text).toContain("http://localhost/portal/settings");
+      expect(mail.text).not.toContain("/key-dates");
+      expect((await rowsFor(person)).some((row) => row.eventType === "briefing.ready")).toBe(false);
+    }
+    await edit({ date: plusDays(today, 1), reminderRecipientIds: [idOf(BUSINESS_MEMBER)] });
+    await round(at(plusDays(today, 1), 8));
+    expect(await reminders(BUSINESS_MEMBER)).toHaveLength(2);
+    for (const person of [ADMIN, OWNER, EAST, BUSINESS_OWNER])
+      expect(await reminders(person)).toHaveLength(1);
+    await edit({ date: plusDays(today, 2), reminderRecipientIds: [] });
+    await round(at(plusDays(today, 2), 8));
+    expect(await reminders(BUSINESS_MEMBER)).toHaveLength(3);
+    for (const person of [ADMIN, OWNER, EAST, BUSINESS_OWNER])
+      expect(await reminders(person)).toHaveLength(2);
+
+    for (const [person, channel] of [
+      [BUSINESS_OWNER, "email"],
+      [BUSINESS_MEMBER, "in_app"],
+    ] as const) {
+      const preference = await harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/me/notification-preferences",
+        cookies: as(person),
+        payload: { eventGroup: "dates_approaching", channel, enabled: false },
+      });
+      expect(preference.statusCode, preference.body).toBe(200);
+    }
+    const mailCount = harness.mailer.messagesTo(BUSINESS_OWNER.email).length;
+    await edit({ date: plusDays(today, 3) });
+    await round(at(plusDays(today, 3), 8));
+    expect(await reminders(BUSINESS_OWNER)).toHaveLength(3);
+    expect(await reminders(BUSINESS_MEMBER)).toHaveLength(3);
+    expect(harness.mailer.messagesTo(BUSINESS_OWNER.email)).toHaveLength(mailCount);
+    for (const [person, channel] of [
+      [BUSINESS_OWNER, "email"],
+      [BUSINESS_MEMBER, "in_app"],
+    ] as const) {
+      await harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/me/notification-preferences",
+        cookies: as(person),
+        payload: { eventGroup: "dates_approaching", channel, enabled: true },
+      });
+    }
+  });
+
+  it("drops pending Portal reminders after team membership is removed", async () => {
+    const day = plusDays(today, 10);
+    const record = await create("Portal reminder access recheck");
+    const joined = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/${kind}/${record.number}/team`,
+      cookies: as(OWNER),
+      payload: { userId: idOf(BUSINESS_MEMBER) },
+    });
+    expect(joined.statusCode, joined.body).toBe(201);
+    const add = async (label: string) => {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/${kind}/${record.number}/key-dates`,
+        cookies: as(OWNER),
+        payload: { label, date: plusDays(day, 7), reminderRecipientIds: [idOf(BUSINESS_MEMBER)] },
+      });
+      expect(response.statusCode, response.body).toBe(201);
+    };
+    await add("Delivered Portal reminder");
+    await round(at(day, 8));
+    await add("Pending Portal reminder");
+    await round(at(day, 9));
+    const pending = (await rowsFor(BUSINESS_MEMBER)).find(
+      (row) => row.payload.label === "Pending Portal reminder",
+    )!;
+    expect(pending.emailOwed).toBe(true);
+    expect(pending.emailedAt).toBeNull();
+    const removed = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/${kind}/${record.number}/team/${idOf(BUSINESS_MEMBER)}`,
+      cookies: as(OWNER),
+    });
+    expect(removed.statusCode, removed.body).toBe(200);
+    await round(at(plusDays(day, 1), 8));
+    expect(await bellFor(BUSINESS_MEMBER, record)).toHaveLength(0);
+    expect(
+      harness.mailer
+        .messagesTo(BUSINESS_MEMBER.email)
+        .some((message) => message.text.includes("Pending Portal reminder")),
+    ).toBe(false);
+    expect(
+      (await rowsFor(BUSINESS_MEMBER)).find((row) => row.id === pending.id)!.emailSkippedAt,
+    ).not.toBeNull();
   });
 });

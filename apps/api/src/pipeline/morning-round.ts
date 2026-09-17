@@ -92,6 +92,7 @@ import { civilDate, civilInstant, daysBetween } from "../lib/contract-term.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import {
   currentKeyDateRecipients,
+  keyDateAudienceIds,
   ownReminderRecipients,
   pendingKeyDateKey,
   selectedKeyDateRecipients,
@@ -391,11 +392,8 @@ export async function runMorningRound(
  * a given record may actually be mentioned to is the seam's question,
  * asked per record with the wall — this one is only about time.
  *
- * Archived people are out: somebody who has left is reached by nothing
- * (SET-005). Business users are out because group 3 is a full-platform
- * group (NOT-001) — their surface is the portal's own (M20), and
- * scanning them here would be a briefing query per portal account per
- * hour for a person who holds no contracts.
+ * Archived people are out (SET-005). Business Users receive only their
+ * Contract and Matter Key-date reminders through the Portal.
  */
 async function whoseMorningItIs(deps: MorningRoundDeps, now: Date): Promise<Served[]> {
   const people = await deps.db
@@ -407,7 +405,7 @@ async function whoseMorningItIs(deps: MorningRoundDeps, now: Date): Promise<Serv
       timezone: users.timezone,
     })
     .from(users)
-    .where(and(isNull(users.archivedAt), ne(users.role, "business_user")))
+    .where(isNull(users.archivedAt))
     .orderBy(asc(users.id));
   return people.flatMap((person) => {
     const moment = localMoment(now, person.timezone);
@@ -489,10 +487,15 @@ async function raiseReminders(
     // A record that went while the round was running is about nobody.
     if (!audience) continue;
     const defaultUserIds = audience.userIds.filter((userId) => inCohort.has(userId));
+    const keyDateUserIds = dates.some((date) => date.eventType === "date.key_date_approaching")
+      ? (await keyDateAudienceIds(deps.db, first.entityType, first.entityId)).filter((id) =>
+          inCohort.has(id),
+        )
+      : [];
     // Only a Contract can widen past this audience, through the ADO-006
     // fallback below. Everything else with nobody in the cohort writes no
     // row, so it never needs the transaction.
-    if (defaultUserIds.length === 0 && first.entityType !== CONTRACT_ENTITY) continue;
+    if (keyDateUserIds.length === 0 && first.entityType !== CONTRACT_ENTITY) continue;
 
     try {
       written += await deps.notifier.notifying(async (tx) => {
@@ -520,7 +523,7 @@ async function raiseReminders(
           // Explicit selections narrow the current team; a removed person is never re-added.
           const userIds =
             date.eventType === "date.key_date_approaching"
-              ? selectedKeyDateRecipients(defaultUserIds, selected)
+              ? selectedKeyDateRecipients(keyDateUserIds, selected)
               : termUserIds;
           if (userIds.length === 0) continue;
           if (date.entityType === MATTER_ENTITY) {
@@ -904,6 +907,7 @@ async function sendBriefing(
   person: Served,
   now: Date,
 ): Promise<BriefingOutcome> {
+  const portal = person.role === "business_user";
   const owed = await deps.db
     .select({
       id: notifications.id,
@@ -922,6 +926,7 @@ async function sendBriefing(
     .where(
       and(
         eq(notifications.userId, person.id),
+        portal ? eq(notifications.eventType, "date.key_date_approaching") : undefined,
         // A group-3 row and nothing else: the reminder identity is what
         // a date reminder has and no other event does.
         isNotNull(notifications.reminderDate),
@@ -932,6 +937,7 @@ async function sendBriefing(
     )
     .orderBy(asc(notifications.reminderDate), asc(notifications.id))
     .limit(DIGEST_ROW_LIMIT);
+  if (portal && owed.length === 0) return NOTHING;
   const previous = await previousBriefingAt(deps, person.id);
   if (previous && localMoment(previous, person.timezone).date === person.today) {
     // Their briefing has gone today. These rows are not lost — they stay
@@ -940,12 +946,15 @@ async function sendBriefing(
   }
   const homeUser: AuthenticatedUser = { ...person, theme: "light" };
   const [knowledge, sectionChoices, approvalsFound, tasksFound, intakeFound] = await Promise.all([
-    briefingKnowledge(deps, person, previous, now),
+    portal ? [] : briefingKnowledge(deps, person, previous, now),
     briefingChoices(deps.db, [person.id]).then((choices) => choices.get(person.id)!),
-    readApprovalsHomeSection(deps.db, homeUser),
-    readTasksHomeSection(deps.db, homeUser, person.today),
-    readInboxHomeSection(deps.db, homeUser),
+    portal ? null : readApprovalsHomeSection(deps.db, homeUser),
+    portal ? null : readTasksHomeSection(deps.db, homeUser, person.today),
+    portal ? null : readInboxHomeSection(deps.db, homeUser),
   ]);
+  const portalDateChoice = portal
+    ? (await channelChoices(deps.db, [person.id], "dates_approaching")).get(person.id)!
+    : null;
   if (
     owed.length === 0 &&
     knowledge.length === 0 &&
@@ -1032,8 +1041,9 @@ async function sendBriefing(
       continue;
     }
     hasDateContent = true;
-    const enabled =
-      line.entityType === ENTITY_ENTITY
+    const enabled = portalDateChoice
+      ? portalDateChoice.inApp && portalDateChoice.email
+      : line.entityType === ENTITY_ENTITY
         ? sectionChoices["briefing.obligations"]
         : sectionChoices["briefing.dates"];
     if (enabled) {
@@ -1049,7 +1059,7 @@ async function sendBriefing(
   const intake = sectionChoices["briefing.intake"] ? intakeFound : null;
   const hasHomeContent =
     approvalsFound !== null || tasksFound !== null || intakeFound !== null || hasDateContent;
-  if (hasHomeContent) await ensureBriefingReady(deps, person, now);
+  if (hasHomeContent && !portal) await ensureBriefingReady(deps, person, now);
 
   if (
     approvals === null &&
@@ -1086,6 +1096,7 @@ async function sendBriefing(
   const message = renderBriefingMail(
     {
       recipientName: person.displayName,
+      surface: portal ? "portal" : "staff",
       approvals,
       tasks,
       rows,
