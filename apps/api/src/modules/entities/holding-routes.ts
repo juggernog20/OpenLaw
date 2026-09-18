@@ -24,6 +24,7 @@ import { ENTITY_HOLDING_CYCLE_PROBLEM_TYPE } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { ownershipPath } from "../../lib/ownership-path.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -245,34 +246,6 @@ async function writtenHolding(tx: Transaction, ownerId: string, ownedId: string)
   const holding = await holdingByPair(tx, ownerId, ownedId);
   if (!holding) throw new Error("The written Holding could not be read.");
   return { holding: toHolding(holding), warnings: await warningsFor(tx, [ownedId]) };
-}
-
-/** Finds an existing path from `start` to `target`, following ownership downwards. */
-function ownershipPath(
-  rows: readonly { ownerEntityId: string; ownedEntityId: string }[],
-  start: string,
-  target: string,
-): string[] | null {
-  const children = new Map<string, string[]>();
-  for (const row of rows) {
-    const held = children.get(row.ownerEntityId) ?? [];
-    held.push(row.ownedEntityId);
-    children.set(row.ownerEntityId, held);
-  }
-  const queue: string[][] = [[start]];
-  const seen = new Set([start]);
-  while (queue.length > 0) {
-    const path = queue.shift()!;
-    const last = path.at(-1)!;
-    if (last === target) return path;
-    for (const child of children.get(last) ?? []) {
-      if (!seen.has(child)) {
-        seen.add(child);
-        queue.push([...path, child]);
-      }
-    }
-  }
-  return null;
 }
 
 /** The loop may pass through an Entity the writer cannot reach. That

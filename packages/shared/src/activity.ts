@@ -547,6 +547,47 @@ type EntityPayloads = {
     ownedName: string;
     ownershipPercent: number;
   };
+  /** ENT-011: one share class write on one Entity. */
+  "entity_share_class.created": { legalName: string; className: string };
+  "entity_share_class.updated": { legalName: string; className: string; changed: ChangedFields };
+  "entity_share_class.archived": { legalName: string; className: string };
+  /**
+   * ENT-011: one register entry write. `fromName` and `toName` are the
+   * holder names as written, or null for the company's own side
+   * (allotments come from nobody; buybacks and cancellations go to
+   * nobody). `entryNo` is the per-Entity number the register shows.
+   */
+  "entity_share_entry.created": {
+    legalName: string;
+    entryNo: number;
+    kind: string;
+    className: string;
+    quantity: number;
+    fromName: string | null;
+    toName: string | null;
+    effectiveOn: string;
+  };
+  "entity_share_entry.updated": {
+    legalName: string;
+    entryNo: number;
+    kind: string;
+    className: string;
+    quantity: number;
+    fromName: string | null;
+    toName: string | null;
+    effectiveOn: string;
+    changed: ChangedFields;
+  };
+  "entity_share_entry.deleted": {
+    legalName: string;
+    entryNo: number;
+    kind: string;
+    className: string;
+    quantity: number;
+    fromName: string | null;
+    toName: string | null;
+    effectiveOn: string;
+  };
   "entity_obligation.created": {
     legalName: string;
     obligationId: string;

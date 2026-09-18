@@ -47,6 +47,7 @@ import * as entityHoldingsSchema from "./schema/entity-holdings.js";
 import * as entityObligationsSchema from "./schema/entity-obligations.js";
 import * as entityOfficersSchema from "./schema/entity-officers.js";
 import * as entityRegistrationsSchema from "./schema/entity-registrations.js";
+import * as entityShareRegisterSchema from "./schema/entity-share-register.js";
 import * as entityTypeFieldsSchema from "./schema/entity-type-fields.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
 import * as fieldsSchema from "./schema/fields.js";
@@ -107,6 +108,7 @@ export * from "./schema/entities.js";
 export * from "./schema/entity-grants.js";
 export * from "./schema/entity-holdings.js";
 export * from "./schema/individual-holdings.js";
+export * from "./schema/entity-share-register.js";
 export * from "./schema/entity-obligations.js";
 export * from "./schema/entity-officers.js";
 export * from "./schema/entity-registrations.js";
@@ -175,6 +177,7 @@ export const schema = {
   ...entityObligationsSchema,
   ...entityOfficersSchema,
   ...entityRegistrationsSchema,
+  ...entityShareRegisterSchema,
   ...entityTypeFieldsSchema,
   ...entityTypesSchema,
   ...fieldsSchema,
@@ -326,6 +329,11 @@ export const ADVISORY_LOCK = {
   /** Held while a Request queue change counts and publishes the new
    * shared Inbox total in its writing transaction (INT-006). */
   inboxTotal: 4101008,
+  /** Held across an ENT-011 share-register write: the replay that
+   * validates the write, and the Holdings projection that follows it,
+   * read the whole register and the whole ownership graph. Taken as
+   * `pg_advisory_xact_lock` inside the writing transaction. */
+  entityShareRegister: 4101009,
 } as const;
 
 /**

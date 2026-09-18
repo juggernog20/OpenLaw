@@ -371,6 +371,27 @@
   "activity.entityRegistration.updated": {
     "defaultMessage": "{actor} changed the {jurisdiction} registration on {name}"
   },
+  "activity.entityShareClass.archived": {
+    "defaultMessage": "{actor} archived the {className} share class of {name}"
+  },
+  "activity.entityShareClass.created": {
+    "defaultMessage": "{actor} added the {className} share class to {name}"
+  },
+  "activity.entityShareClass.updated": {
+    "defaultMessage": "{actor} changed the {className} share class of {name}"
+  },
+  "activity.entityShareEntry.company": {
+    "defaultMessage": "the company"
+  },
+  "activity.entityShareEntry.created": {
+    "defaultMessage": "{actor} recorded entry {entryNo} on the {name} register: {kind} of {quantity} {className} shares from {from} to {to}"
+  },
+  "activity.entityShareEntry.deleted": {
+    "defaultMessage": "{actor} removed entry {entryNo} from the {name} register: {kind} of {quantity} {className} shares"
+  },
+  "activity.entityShareEntry.updated": {
+    "defaultMessage": "{actor} changed entry {entryNo} on the {name} register"
+  },
   "activity.envelope.declined": {
     "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
   },
