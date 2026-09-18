@@ -3,7 +3,6 @@
 /** ADO-004 and ADO-007: accept one live pair, then fill and store a Generation's own output. */
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
-import { buffer } from "node:stream/consumers";
 import {
   AUTO_DOC_GENERATION_STATES,
   AUTO_DOC_FORMATS,
@@ -18,10 +17,12 @@ import {
   users,
   entities,
   and,
+  count,
   eq,
   desc,
   asc,
   isNull,
+  sql,
   type Executor,
   type Transaction,
 } from "@openlaw/db";
@@ -32,10 +33,16 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { AUTO_DOC_SLUG } from "../../lib/auto-doc-template.js";
 import { AutoDocFillError } from "../../lib/auto-doc-fill/engine.js";
+import { BlobTooLargeError, readBoundedBlob } from "../../lib/bounded-blob.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import { HttpError, httpError, problemResponse } from "../../lib/problem.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
-import { attachmentDisposition, withStoredBlobs } from "../../lib/uploads.js";
+import {
+  attachmentDisposition,
+  DEFAULT_MAX_UPLOAD_MB,
+  MEGABYTE,
+  withStoredBlobs,
+} from "../../lib/uploads.js";
 import { validateGenerationAnswers } from "./answers.js";
 import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import type { AppDeps } from "../../app.js";
@@ -50,6 +57,8 @@ import {
 } from "../../lib/document-versions.js";
 import { GenerationFilingInput } from "./filing-schema.js";
 import { filingFormat, reachedFilingDestination, fulfilRequestedFiling } from "./filings.js";
+import { screenTemplatePackage } from "./forms.js";
+import { generationReachScope } from "./generation-access.js";
 import { AutoDocFieldRow } from "./routes.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -134,6 +143,14 @@ export async function livePair(tx: Transaction, id: string, submitted?: z.infer<
   return { autoDoc, file, form, pair: { documentVersionId: file.id, formVersionId: form.id } };
 }
 
+/**
+ * How many Generations one person may have in flight. A pending
+ * Generation is a worker thread, a stored blob, a PDF conversion and an
+ * email still to come, so the bound is what keeps one account from
+ * queueing the whole pipeline. Ready and failed Generations do not count.
+ */
+export const MAX_PENDING_GENERATIONS_PER_PERSON = 5;
+
 export function generationQuery(db: Executor, user: AuthenticatedUser) {
   return db
     .select({
@@ -187,13 +204,20 @@ export async function readGeneration(
   generationId: string,
 ) {
   const [row] = await generationQuery(db, user).where(
-    and(eq(autoDocGenerations.id, generationId), eq(autoDocGenerations.autoDocId, id)),
+    and(
+      eq(autoDocGenerations.id, generationId),
+      eq(autoDocGenerations.autoDocId, id),
+      generationReachScope(db, user),
+    ),
   );
   if (!row) throw httpError(404, "No Generation exists with this id on this Auto-Doc.");
   return row;
 }
 
-type GenerationDeps = Pick<AppDeps, "db" | "storage" | "fillEngine" | "jobs" | "notifier">;
+type GenerationDeps = Pick<
+  AppDeps,
+  "db" | "storage" | "fillEngine" | "jobs" | "notifier" | "maxUploadBytes"
+>;
 async function fillGeneration(
   app: GenerationDeps,
   log: FastifyBaseLogger,
@@ -209,7 +233,20 @@ async function fillGeneration(
   let stage: "fill" | "contract" = "fill";
   let primary: AppendedVersion | undefined;
   try {
-    const template = await buffer(await app.storage.get(sourceRef));
+    // The stored template is read under the upload ceiling and screened
+    // again here, so a file stored before the screen existed is refused too.
+    let template: Buffer;
+    try {
+      template = await readBoundedBlob(
+        await app.storage.get(sourceRef),
+        app.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE,
+      );
+    } catch (error) {
+      if (error instanceof BlobTooLargeError)
+        throw new AutoDocFillError("The Word template exceeds the upload limit.");
+      throw error;
+    }
+    screenTemplatePackage(template);
     const output = await app.fillEngine.fill({
       template,
       definition,
@@ -314,6 +351,20 @@ export async function generateAutoDoc(
 ) {
   const accepted = await app.db.transaction(async (tx) => {
     await authorise?.(tx);
+    // One person's submissions run one at a time through this lock, so a
+    // burst cannot read the same count and all pass the cap.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${user.id}))`);
+    const [inFlight] = await tx
+      .select({ pending: count() })
+      .from(autoDocGenerations)
+      .where(
+        and(eq(autoDocGenerations.generatedBy, user.id), eq(autoDocGenerations.state, "pending")),
+      );
+    if ((inFlight?.pending ?? 0) >= MAX_PENDING_GENERATIONS_PER_PERSON)
+      throw httpError(
+        429,
+        `You have ${MAX_PENDING_GENERATIONS_PER_PERSON} Generations still in progress. Wait for them to finish before starting another.`,
+      );
     const live = await livePair(tx, id, submission);
     const definition = generationDefinition(live.autoDoc, live.form.definition);
     const raw = { ...submission.answers };
@@ -504,6 +555,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
             and(
               eq(autoDocGenerations.id, request.params.generationId),
               eq(autoDocGenerations.autoDocId, request.params.id),
+              generationReachScope(tx, request.user),
             ),
           )
           .for("update");
@@ -627,7 +679,12 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         generations: (
           await generationQuery(app.db, request.user)
-            .where(eq(autoDocGenerations.autoDocId, request.params.id))
+            .where(
+              and(
+                eq(autoDocGenerations.autoDocId, request.params.id),
+                generationReachScope(app.db, request.user),
+              ),
+            )
             .orderBy(desc(autoDocGenerations.createdAt), desc(autoDocGenerations.id))
         ).map(toGeneration),
       };

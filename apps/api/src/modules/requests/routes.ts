@@ -111,6 +111,7 @@ import type { FastifyRequest } from "fastify";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { z } from "zod";
 import { uuidv7 } from "uuidv7";
+import { PassThrough } from "node:stream";
 import {
   and,
   count,
@@ -120,7 +121,9 @@ import {
   ne,
   desc,
   eq,
+  gte,
   isNull,
+  sql,
   REQUEST_STATUSES,
   requestAttachments,
   requestTypeFields,
@@ -141,6 +144,7 @@ import {
   refuseOversize,
   uploadFilename,
   withStoredBlob,
+  MEGABYTE,
 } from "../../lib/uploads.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
@@ -263,6 +267,14 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       // (NOT-001), so a submission that rolls back leaves no receipt for
       // an ask nobody made — and the email leaves only after it commits.
       const created = await app.notifier.notifying(async (tx) => {
+        // One person's submissions run one at a time through this lock,
+        // so a burst cannot read the same count and all pass the quota.
+        await lockPerson(tx, request.user.id);
+        if ((await recentRequestCount(tx, request.user.id)) >= MAX_REQUESTS_PER_HOUR)
+          throw httpError(
+            429,
+            `You have submitted ${MAX_REQUESTS_PER_HOUR} Requests in the last hour. Wait before submitting another.`,
+          );
         // Locked for the reason the contract create locks its type: an
         // unlocked read lets a concurrent archive commit between the
         // check and the insert, and the Request is then born on a form
@@ -657,6 +669,9 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       // asked again below, under the row lock the insert runs in.
       const seen = await reachedRequest(app.db, request.user.id, request.params.number);
       await refuseDispositioned(app.db, request.user, seen);
+      // Asked before a single byte is read too: a person already at the
+      // hourly byte quota is told so without uploading anything first.
+      await refuseAttachmentQuota(app.db, request.user.id, 0);
 
       // Minted here, because the storage key is built from it and the
       // blob is written before the row exists (DOC-012). The key is
@@ -680,6 +695,11 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             lock: true,
           });
           await refuseDispositioned(tx, request.user, held);
+          // The quota is per person across every Request, so the person is
+          // locked rather than the Request: two uploads on two Requests
+          // cannot both read the same total and pass.
+          await lockPerson(tx, request.user.id);
+          await refuseAttachmentQuota(tx, request.user.id, file.byteSize);
           const [existing] = await tx
             .select({ attachments: count() })
             .from(requestAttachments)
@@ -697,6 +717,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
               requestId: held.id,
               fileRef: file.fileRef,
               filename: file.filename,
+              byteSize: file.byteSize,
               uploadedBy: request.user.id,
             })
             .returning();
@@ -829,7 +850,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
   async function receiveAttachment(
     request: FastifyRequest,
     key: string,
-  ): Promise<{ filename: string; fileRef: string }> {
+  ): Promise<{ filename: string; fileRef: string; byteSize: number }> {
     const part = await request.file().catch((error: unknown) => {
       throw asUploadRefusal(error, app.maxUploadBytes);
     });
@@ -837,11 +858,18 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     const filename = uploadFilename(part.filename);
 
     let fileRef: string;
+    let byteSize = 0;
     try {
-      // The parser's own stream, straight to the driver: nothing here
-      // reads the bytes on the way past, so there is nothing to wrap
-      // them in.
-      fileRef = await app.storage.put(key, part.file);
+      // The parser's stream goes to the driver through one counter, so
+      // the hourly byte quota can be kept from the database (M12).
+      const counting = new PassThrough({
+        transform(chunk: Buffer, _encoding, callback) {
+          byteSize += chunk.length;
+          callback(null, chunk);
+        },
+      });
+      part.file.on("error", (error) => counting.destroy(error));
+      fileRef = await app.storage.put(key, part.file.pipe(counting));
     } catch (error) {
       throw asUploadRefusal(error, app.maxUploadBytes);
     }
@@ -857,9 +885,63 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       });
       throw refuseOversize(app.maxUploadBytes);
     }
-    return { filename, fileRef };
+    return { filename, fileRef, byteSize };
+  }
+
+  /** Serialises one person's Request writes for the length of the transaction. */
+  async function lockPerson(tx: Transaction, userId: string) {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`);
+  }
+
+  /** Refuses with 429 when `incoming` more bytes would pass the hourly attachment quota. */
+  async function refuseAttachmentQuota(db: Executor, userId: string, incoming: number) {
+    const used = await recentAttachmentBytes(db, userId);
+    if (
+      used + incoming > MAX_REQUEST_ATTACHMENT_BYTES_PER_HOUR ||
+      used >= MAX_REQUEST_ATTACHMENT_BYTES_PER_HOUR
+    )
+      throw httpError(
+        429,
+        `Your attachments in the last hour have reached the ${Math.round(MAX_REQUEST_ATTACHMENT_BYTES_PER_HOUR / MEGABYTE)} MB limit. Wait before attaching more.`,
+      );
   }
 };
+
+/**
+ * The per-person quotas on the Portal's write paths (M12). Each Request
+ * fans out to every Member and each attachment is disk, and the proxy
+ * cannot key a limit on the account, so the API keeps these from the
+ * database. Both count a sliding hour.
+ */
+const MAX_REQUESTS_PER_HOUR = 20;
+const MAX_REQUEST_ATTACHMENT_BYTES_PER_HOUR = 256 * MEGABYTE;
+const QUOTA_WINDOW_MS = 60 * 60_000;
+function quotaWindowStart(): Date {
+  return new Date(Date.now() - QUOTA_WINDOW_MS);
+}
+
+/** How many Requests this person submitted in the last hour. */
+async function recentRequestCount(db: Executor, userId: string): Promise<number> {
+  const [row] = await db
+    .select({ total: count() })
+    .from(requests)
+    .where(and(eq(requests.requesterId, userId), gte(requests.createdAt, quotaWindowStart())));
+  return row?.total ?? 0;
+}
+
+/** How many attachment bytes this person uploaded in the last hour. */
+async function recentAttachmentBytes(db: Executor, userId: string): Promise<number> {
+  const [row] = await db
+    .select({ total: sql<string>`coalesce(sum(${requestAttachments.byteSize}), 0)` })
+    .from(requestAttachments)
+    .where(
+      and(
+        eq(requestAttachments.uploadedBy, userId),
+        gte(requestAttachments.createdAt, quotaWindowStart()),
+      ),
+    );
+  return Number(row?.total ?? 0);
+}
 
 /**
  * How many files one ask may carry.

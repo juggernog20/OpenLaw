@@ -511,3 +511,56 @@ describe("the upload ceiling", () => {
     expect(await storedBlobCount()).toBe(before);
   });
 });
+
+describe("the per-person attachment byte quota", () => {
+  const FILLER_REF = "local:request-attachments/quota-filler";
+  const QUOTA = 256 * 1024 * 1024;
+
+  it("refuses an upload that would pass the hour's byte quota and keeps no blob", async () => {
+    const number = await submitted();
+    const [row] = await harness.db
+      .select({ id: requests.id })
+      .from(requests)
+      .where(eq(requests.number, number));
+    await harness.db.insert(requestAttachments).values({
+      requestId: row!.id,
+      fileRef: FILLER_REF,
+      filename: "filler.pdf",
+      byteSize: QUOTA - 5,
+      uploadedBy: requesterId,
+    });
+    const before = await storedBlobCount();
+
+    // Five bytes still fit, so the refusal comes from the count under the
+    // lock, after the bytes were stored; the blob must be taken away.
+    const refused = await attach(number, { content: Buffer.from("eleven bytes") });
+    expect(refused.statusCode, refused.body).toBe(429);
+    expect(refused.json().detail).toContain("256 MB limit");
+    expect(await storedBlobCount()).toBe(before);
+
+    // At the quota, the refusal comes before a byte is read.
+    await harness.db
+      .update(requestAttachments)
+      .set({ byteSize: QUOTA })
+      .where(eq(requestAttachments.fileRef, FILLER_REF));
+    expect((await attach(number)).statusCode).toBe(429);
+    expect(await storedBlobCount()).toBe(before);
+
+    // Another person is not affected.
+    const theirs = await submitted(otherCookies);
+    expect((await attach(theirs, { cookies: otherCookies })).statusCode).toBe(201);
+
+    // Once the filler leaves the window the upload lands with its size recorded.
+    await harness.db
+      .update(requestAttachments)
+      .set({ createdAt: new Date(Date.now() - 2 * 60 * 60_000) })
+      .where(eq(requestAttachments.fileRef, FILLER_REF));
+    const admitted = await attach(number, { content: Buffer.from("twelve bytes") });
+    expect(admitted.statusCode, admitted.body).toBe(201);
+    const [stored] = await harness.db
+      .select({ byteSize: requestAttachments.byteSize })
+      .from(requestAttachments)
+      .where(eq(requestAttachments.id, admitted.json().attachment.id));
+    expect(stored!.byteSize).toBe(12);
+  });
+});

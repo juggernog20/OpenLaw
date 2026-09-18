@@ -41,6 +41,7 @@ import { lockPortalPerson, readPortalAutoDoc } from "./portal-policy.js";
 import { prepareContractDestination } from "./contract-destination.js";
 import { createGeneratedContract } from "./create-contract.js";
 import { addGeneratedDocument } from "./filed-document.js";
+import { generationReachScope } from "./generation-access.js";
 
 type FilingDeps = Pick<AppDeps, "db" | "storage" | "notifier" | "jobs">;
 export function filingFormat(formats: AutoDocGeneration["formats"], format?: "docx" | "pdf") {
@@ -65,7 +66,7 @@ export async function filingSource(
       and(
         eq(autoDocGenerations.id, generationId),
         eq(autoDocGenerations.autoDocId, autoDocId),
-        portal ? eq(autoDocGenerations.generatedBy, user.id) : undefined,
+        portal ? eq(autoDocGenerations.generatedBy, user.id) : generationReachScope(db, user),
       ),
     );
   if (!generation) throw httpError(404, "This Generation is not available to you.");

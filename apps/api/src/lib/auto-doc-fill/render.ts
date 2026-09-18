@@ -11,8 +11,8 @@ import {
   scanTemplateText,
   templateTextParts,
 } from "../auto-doc-template.js";
-import { AutoDocFillError, type AutoDocFillInput } from "./engine.js";
-import { zipEntries } from "../docx-package.js";
+import { AutoDocFillError, MAX_EXPANDED_TEMPLATE_BYTES, type AutoDocFillInput } from "./engine.js";
+import { verifyZipPackage } from "../docx-package.js";
 import { evaluateCondition, resolveAutoDocValue } from "./values.js";
 
 interface LexedPart {
@@ -22,14 +22,14 @@ interface LexedPart {
 }
 
 export function renderAutoDoc(input: AutoDocFillInput): Buffer {
-  if (
-    [...zipEntries(input.template).values()].reduce(
-      (total, entry) => total + entry.uncompressedSize,
-      0,
-    ) >
-    32 * 1024 * 1024
-  )
-    throw new AutoDocFillError("The expanded Word template exceeds 32 MiB.");
+  // Declared sizes are not trusted; every entry is inflated under the ceiling first.
+  try {
+    verifyZipPackage(input.template, MAX_EXPANDED_TEMPLATE_BYTES);
+  } catch (error) {
+    throw new AutoDocFillError(
+      error instanceof Error ? error.message : "The Word template could not be read.",
+    );
+  }
   const scans = new Map(
     templateTextParts(input.template).map((part) => [
       part.name,

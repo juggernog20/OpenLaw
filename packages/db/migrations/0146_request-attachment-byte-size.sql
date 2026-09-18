@@ -1,0 +1,1 @@
+ALTER TABLE "request_attachments" ADD COLUMN "byte_size" bigint DEFAULT 0 NOT NULL;

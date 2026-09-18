@@ -8,6 +8,7 @@ import PizZip from "pizzip";
 import { templateTextParts } from "../auto-doc-template.js";
 import { createAutoDocFillEngine } from "./real.js";
 import { evaluateCondition } from "./values.js";
+import { buildWordPackage, forgeDeclaredSize } from "../../testing/word-package.js";
 
 const fixture = (name: string) =>
   readFile(new URL(`../../testing/fixtures/auto-docs/${name}.docx`, import.meta.url));
@@ -327,4 +328,31 @@ it("styles split markers and headers, and leaves no style markers when a block i
   expect(result.file("word/document.xml")!.asText()).toContain('<w:b w:val="1"');
   expect(result.file("word/header1.xml")!.asText()).toContain('<w:u w:val="single"');
   expect(result.file("word/header1.xml")!.asText()).not.toContain("OPENLAW_STYLE_");
+});
+
+it("runs fills past the concurrency bound once earlier ones finish", async () => {
+  const bounded = createAutoDocFillEngine({ maxConcurrentFills: 1 });
+  const template = await fixture("plain");
+  const outputs = await Promise.all(
+    [1, 2, 3].map((n) =>
+      bounded.fill({
+        template,
+        definition: form("counterparty_name", "signing_date"),
+        answers: { counterparty_name: `Acme ${n}`, signing_date: "2026-09-13" },
+      }),
+    ),
+  );
+  outputs.forEach((output, index) => expect(text(output)).toContain(`Acme ${index + 1}`));
+});
+
+it("refuses a template whose entries inflate past the ceiling whatever the directory claims", async () => {
+  const honest = buildWordPackage({ "word/media/pad.bin": Buffer.alloc(33 * 1024 * 1024) });
+  const bomb = forgeDeclaredSize(honest, "word/media/pad.bin", 16);
+  await expect(
+    engine.fill({
+      template: bomb,
+      definition: form("counterparty_name"),
+      answers: { counterparty_name: "Acme" },
+    }),
+  ).rejects.toThrow(/inflates past/);
 });

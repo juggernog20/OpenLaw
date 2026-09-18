@@ -2,7 +2,6 @@
 
 /** ADO-007: a Generation is a derivation input, followed by one recorded email outcome. */
 import { Readable } from "node:stream";
-import { buffer } from "node:stream/consumers";
 import { uuidv7 } from "uuidv7";
 import {
   autoDocGenerations,
@@ -19,7 +18,9 @@ import {
   asc,
 } from "@openlaw/db";
 import { fulfilRequestedFiling } from "../modules/auto-docs/filings.js";
+import { BlobTooLargeError, boundedBlobStream, readBoundedBlob } from "../lib/bounded-blob.js";
 import { createNotifier } from "../lib/notifications/notifier.js";
+import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "../lib/uploads.js";
 import { renderGenerationMail } from "../lib/notifications/generation-template.js";
 import type { MailerResolver, MailMessage } from "../lib/mailer.js";
 import { isTerminalFailure, reasonOf, withBlob, type DerivationDeps } from "./derivations.js";
@@ -29,6 +30,9 @@ export interface GenerationDeliveryDeps extends DerivationDeps {
   resolveMailer: MailerResolver;
   baseUrl: string;
   jobs?: JobQueue;
+  /** The ceiling every stored Generation file is read under. A blob past
+   * it is not converted and not attached. Unset, the upload default applies. */
+  maxUploadBytes?: number;
 }
 export interface GenerationDeliveryAttempt {
   generationId: string;
@@ -58,13 +62,14 @@ export async function handleGenerationDelivery(
   );
   const [generation] = await deps.db.select().from(autoDocGenerations).where(current);
   if (!generation || generation.state === "failed" || !generation.docxFileRef) return;
+  const ceiling = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   let stage: "pdf" | "email" = "pdf";
   try {
     if (generation.formats !== "docx" && !generation.pdfFileRef) {
       let fileRef: string | undefined;
       try {
         await withBlob(deps, generation.docxFileRef, async (word) => {
-          const pdf = await deps.docEngine.convertToPdf(word, "docx");
+          const pdf = await deps.docEngine.convertToPdf(boundedBlobStream(word, ceiling), "docx");
           try {
             await deps.db.transaction(async (tx) => {
               const [held] = await tx
@@ -154,13 +159,17 @@ export async function handleGenerationDelivery(
         attachments.push({
           filename: `${autoDoc!.name}.docx`,
           contentType: MIME,
-          content: await withBlob(deps, ready.docxFileRef!, buffer),
+          content: await withBlob(deps, ready.docxFileRef!, (blob) =>
+            readBoundedBlob(blob, ceiling),
+          ),
         });
       if (ready.formats !== "docx")
         attachments.push({
           filename: `${autoDoc!.name}.pdf`,
           contentType: "application/pdf",
-          content: await withBlob(deps, ready.pdfFileRef!, buffer),
+          content: await withBlob(deps, ready.pdfFileRef!, (blob) =>
+            readBoundedBlob(blob, ceiling),
+          ),
         });
       await mailer.send(
         renderGenerationMail({
@@ -185,8 +194,10 @@ export async function handleGenerationDelivery(
       typeof error === "object" && error !== null && "responseCode" in error
         ? error.responseCode
         : undefined;
+    // A stored file over the ceiling does not shrink on retry.
     const terminal =
       isTerminalFailure(error) ||
+      error instanceof BlobTooLargeError ||
       (stage === "email" && typeof smtpCode === "number" && smtpCode >= 500 && smtpCode < 600);
     if (terminal || job.retryCount >= job.retryLimit) {
       const failure =
