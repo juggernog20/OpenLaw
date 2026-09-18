@@ -244,11 +244,12 @@ describe("OpenAI-compatible preset authentication", () => {
     expect(server.requests.at(-1)!.body).toHaveProperty("max_completion_tokens");
   });
 
-  it("keeps the provider's reason for a wrong endpoint", async () => {
+  it("keeps the provider's reason for a wrong endpoint in the log summary, not the message", async () => {
     await expect(provider({ baseUrl: `${server.baseUrl}/wrong` }).probe()).rejects.toEqual(
       expect.objectContaining({
         name: "AiConfigError",
-        message: "No model endpoint exists here.",
+        message: "The provider refused the request with HTTP 404.",
+        upstream: { status: 404, summary: "No model endpoint exists here." },
       }),
     );
   });
@@ -314,7 +315,8 @@ describe("OpenAI reasoning-model request fields", () => {
       });
       await expect(provider.probe()).rejects.toMatchObject({
         name: "AiConfigError",
-        message: expect.stringContaining("response_format"),
+        message: "The provider refused the request with HTTP 400.",
+        upstream: { status: 400, summary: expect.stringContaining("response_format") },
       });
       expect(strict.requests).toHaveLength(1);
     } finally {

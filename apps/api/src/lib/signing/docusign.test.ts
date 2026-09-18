@@ -22,12 +22,14 @@ import { describeSigningContract } from "../../testing/signing-contract.js";
 import {
   SigningConfigError,
   SigningRefusedError,
+  SigningTimeoutError,
   SigningUnavailableError,
   WebhookSignatureError,
 } from "./provider.js";
 import {
   buildEnvelopeDefinition,
   buildJwtAssertion,
+  checkedBaseUri,
   createDocuSignProvider,
   mapEnvelopeStatus,
   parseConnectDelivery,
@@ -270,6 +272,35 @@ describe("the Connect delivery body", () => {
   });
 });
 
+describe("the discovered base_uri", () => {
+  const TRUSTED = ["http://127.0.0.1:4000"];
+
+  it("accepts DocuSign's own hosts over https and answers the origin", () => {
+    expect(checkedBaseUri("https://demo.docusign.net", TRUSTED)).toBe("https://demo.docusign.net");
+    expect(checkedBaseUri("https://na3.docusign.net/", TRUSTED)).toBe("https://na3.docusign.net");
+    expect(checkedBaseUri("https://eu.docusign.com/restapi", TRUSTED)).toBe(
+      "https://eu.docusign.com",
+    );
+  });
+
+  it("accepts a configured host origin, which is how the stub is reached", () => {
+    expect(checkedBaseUri("http://127.0.0.1:4000", TRUSTED)).toBe("http://127.0.0.1:4000");
+  });
+
+  it("refuses every other host, a look-alike, plain http, and embedded credentials", () => {
+    for (const baseUri of [
+      "https://sink.attacker.example",
+      "https://docusign.net.attacker.example",
+      "https://notdocusign.net",
+      "http://demo.docusign.net",
+      "https://user:pass@demo.docusign.net", // secretlint-disable-line -- fictional credential-in-URL refusal check
+      "not a url",
+    ]) {
+      expect(() => checkedBaseUri(baseUri, TRUSTED), baseUri).toThrow(SigningConfigError);
+    }
+  });
+});
+
 describe("the envelope payload", () => {
   const definition = buildEnvelopeDefinition(
     {
@@ -331,6 +362,16 @@ interface Stub {
   close: () => Promise<void>;
 }
 
+/** Ways a test can make the stub misbehave. */
+interface StubOptions {
+  /** What userinfo names as the account's base_uri. Default: the stub itself. */
+  baseUri?: string;
+  /** Answer the token exchange with a redirect to this path. */
+  redirectTokenTo?: string;
+  /** Send the executed copy's headers and one chunk, then never finish. */
+  stallExecutedCopy?: boolean;
+}
+
 async function readBody(request: IncomingMessage): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of request) chunks.push(Buffer.from(chunk as Buffer));
@@ -348,9 +389,10 @@ function sendJson(response: ServerResponse, status: number, body: unknown): void
  * driver can run the shared contract; it is not a claim about DocuSign's
  * behaviour beyond those shapes.
  */
-async function startStub(): Promise<Stub> {
+async function startStub(options: StubOptions = {}): Promise<Stub> {
   const envelopes = new Map<string, StubEnvelope>();
   let minted = 0;
+  const stalled: ServerResponse[] = [];
   const server: Server = createServer((request, response) => {
     // A throw inside the handler, such as a body that will not parse or
     // an assertion that will not decode, must become an answer. An
@@ -360,6 +402,11 @@ async function startStub(): Promise<Stub> {
       const path = url.pathname;
 
       if (path === "/oauth/token" && request.method === "POST") {
+        if (options.redirectTokenTo) {
+          response.writeHead(307, { location: options.redirectTokenTo });
+          response.end();
+          return;
+        }
         const body = new URLSearchParams((await readBody(request)).toString("utf8"));
         const assertion = body.get("assertion") ?? "";
         const { payload } = decodeAssertion(assertion);
@@ -389,7 +436,9 @@ async function startStub(): Promise<Stub> {
             {
               account_id: ACCOUNT_ID,
               account_name: "Acme Inc",
-              base_uri: `http://127.0.0.1:${String((server.address() as AddressInfo).port)}`,
+              base_uri:
+                options.baseUri ??
+                `http://127.0.0.1:${String((server.address() as AddressInfo).port)}`,
               is_default: true,
             },
           ],
@@ -427,6 +476,11 @@ async function startStub(): Promise<Stub> {
             return;
           }
           response.writeHead(200, { "content-type": "application/pdf" });
+          if (options.stallExecutedCopy) {
+            response.write(Buffer.from("%PDF-1.7\n", "utf8"));
+            stalled.push(response);
+            return;
+          }
           response.end(Buffer.from("%PDF-1.7\n% stub executed copy\n%%EOF\n", "utf8"));
           return;
         }
@@ -462,7 +516,11 @@ async function startStub(): Promise<Stub> {
   return {
     origin: `http://127.0.0.1:${String(port)}`,
     envelopes,
-    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+    close: () => {
+      for (const response of stalled) response.destroy();
+      server.closeAllConnections();
+      return new Promise<void>((resolve) => server.close(() => resolve()));
+    },
   };
 }
 
@@ -569,6 +627,116 @@ describe("the DocuSign driver's own answers", () => {
       expect(() => provider.verifyWebhook(body, { "x-docusign-signature-1": bad })).toThrow(
         WebhookSignatureError,
       );
+    } finally {
+      await stub.close();
+    }
+  });
+
+  it("refuses a discovered base_uri outside DocuSign's own hosts", async () => {
+    // The userinfo answer names where the bearer token and every
+    // document go next. A stub that names another host is a connector
+    // that would send them there.
+    const stub = await startStub({ baseUri: "https://sink.attacker.example" });
+    try {
+      const provider = createDocuSignProvider(
+        {
+          environment: "demo",
+          integrationKey: INTEGRATION_KEY,
+          apiUserId: API_USER_ID,
+          privateKey: KEYS.privateKey,
+          webhookSecret: WEBHOOK_SECRET,
+        },
+        { hosts: { auth: stub.origin, api: stub.origin } },
+      );
+      await expect(provider.testConnection()).rejects.toThrow(
+        "DocuSign named an account base URI outside its own hosts.",
+      );
+      await expect(provider.testConnection()).rejects.toBeInstanceOf(SigningConfigError);
+    } finally {
+      await stub.close();
+    }
+  });
+
+  it("does not follow a redirect with the grant assertion", async () => {
+    const stub = await startStub({ redirectTokenTo: "/oauth/token-sink" });
+    try {
+      const provider = createDocuSignProvider(
+        {
+          environment: "demo",
+          integrationKey: INTEGRATION_KEY,
+          apiUserId: API_USER_ID,
+          privateKey: KEYS.privateKey,
+          webhookSecret: WEBHOOK_SECRET,
+        },
+        { hosts: { auth: stub.origin, api: stub.origin } },
+      );
+      await expect(provider.testConnection()).rejects.toBeInstanceOf(SigningUnavailableError);
+    } finally {
+      await stub.close();
+    }
+  });
+
+  it("refuses an executed copy larger than the document ceiling", async () => {
+    const stub = await startStub();
+    try {
+      const provider = createDocuSignProvider(
+        {
+          environment: "demo",
+          integrationKey: INTEGRATION_KEY,
+          apiUserId: API_USER_ID,
+          privateKey: KEYS.privateKey,
+          webhookSecret: WEBHOOK_SECRET,
+        },
+        { hosts: { auth: stub.origin, api: stub.origin }, maxDocumentBytes: 8 },
+      );
+      const { providerEnvelopeId } = await provider.sendEnvelope({
+        document: Readable.from([Buffer.from("%PDF-1.7\n")]),
+        fileName: "agreement.pdf",
+        subject: "Please sign",
+        signers: [{ name: "Dana Signer", email: "dana@counterparty.example" }],
+      });
+      const envelope = stub.envelopes.get(providerEnvelopeId)!;
+      envelope.status = "completed";
+      const stream = await provider.fetchExecutedDocument(providerEnvelopeId);
+      const read = (async () => {
+        for await (const chunk of stream) void chunk;
+      })();
+      await expect(read).rejects.toBeInstanceOf(SigningRefusedError);
+      await expect(read).rejects.toThrow("larger than 8 bytes");
+    } finally {
+      await stub.close();
+    }
+  });
+
+  it("times out an executed copy whose socket stops sending mid-stream", async () => {
+    const stub = await startStub({ stallExecutedCopy: true });
+    try {
+      const provider = createDocuSignProvider(
+        {
+          environment: "demo",
+          integrationKey: INTEGRATION_KEY,
+          apiUserId: API_USER_ID,
+          privateKey: KEYS.privateKey,
+          webhookSecret: WEBHOOK_SECRET,
+        },
+        { hosts: { auth: stub.origin, api: stub.origin }, timeoutMs: 300 },
+      );
+      const { providerEnvelopeId } = await provider.sendEnvelope({
+        document: Readable.from([Buffer.from("%PDF-1.7\n")]),
+        fileName: "agreement.pdf",
+        subject: "Please sign",
+        signers: [{ name: "Dana Signer", email: "dana@counterparty.example" }],
+      });
+      stub.envelopes.get(providerEnvelopeId)!.status = "completed";
+      const stream = await provider.fetchExecutedDocument(providerEnvelopeId);
+      const chunks: Buffer[] = [];
+      const read = (async () => {
+        for await (const chunk of stream) chunks.push(chunk as Buffer);
+      })();
+      await expect(read).rejects.toBeInstanceOf(SigningTimeoutError);
+      // The first chunk arrived before the stall. The deadline kept
+      // running after it, which is the whole point.
+      expect(Buffer.concat(chunks).toString("utf8")).toBe("%PDF-1.7\n");
     } finally {
       await stub.close();
     }

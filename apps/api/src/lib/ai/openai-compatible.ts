@@ -48,7 +48,8 @@ export function createOpenAiCompatibleProvider(config: AiProviderConfig): AiProv
 
   function relearn(error: unknown): boolean {
     if (!(error instanceof AiConfigError)) return false;
-    const field = UNSUPPORTED_FIELD.exec(error.message)?.[1]?.toLowerCase();
+    // The refusal text lives on the log-only summary. The message is generic.
+    const field = UNSUPPORTED_FIELD.exec(error.upstream?.summary ?? "")?.[1]?.toLowerCase();
     if (field === "max_tokens" && wire.tokenField === "max_tokens") {
       wire.tokenField = "max_completion_tokens";
       return true;

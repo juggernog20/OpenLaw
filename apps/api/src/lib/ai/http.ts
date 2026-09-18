@@ -68,19 +68,41 @@ function nestedReason(value: unknown): string | null {
   return null;
 }
 
-/** Reads the provider's own reason without copying an HTML error page into Settings. */
-async function refusalReason(response: Response): Promise<string> {
+/** The longest summary a log line carries. */
+const MAX_SUMMARY_CHARS = 200;
+/** Header values at least this long are treated as credentials and redacted. */
+const MIN_SECRET_CHARS = 8;
+
+/**
+ * Reads a short, redacted cut of the provider's refusal body for the
+ * log. It never reaches a person: a provider can quote back the key it
+ * was handed, and an HTML error page says nothing useful in Settings.
+ * The body is read up to a small cap, then the provider's own reason
+ * is picked out of JSON when it is JSON, header values are blanked,
+ * and the rest is cut to one line.
+ */
+async function refusalSummary(
+  response: Response,
+  headers: Readonly<Record<string, string>>,
+): Promise<string> {
   const reply = await readUpTo(response, MAX_REFUSAL_BYTES);
-  if (!reply || reply.truncated) return response.statusText || `HTTP ${response.status}`;
+  if (!reply || reply.truncated) return response.statusText || "";
   const raw = reply.raw;
+  let text = raw;
   try {
-    const reason = nestedReason(JSON.parse(raw));
-    if (reason) return reason;
+    text = nestedReason(JSON.parse(raw)) ?? raw;
   } catch {
-    // A short plain-text refusal is still the provider's useful reason.
+    // A plain-text refusal is summarised as it is.
   }
-  const plain = raw.replace(/\s+/g, " ").trim();
-  return plain || response.statusText || `HTTP ${response.status}`;
+  // Each token of a header value, so `Bearer <key>` blanks the key on its own.
+  for (const value of Object.values(headers)) {
+    for (const token of value.split(/\s+/)) {
+      if (token.length < MIN_SECRET_CHARS) continue;
+      text = text.split(token).join("[redacted]");
+    }
+  }
+  const plain = text.replace(/\s+/g, " ").trim().slice(0, MAX_SUMMARY_CHARS);
+  return plain || response.statusText || "";
 }
 
 /** Reads at most `maxBytes` of the body, or says that it is longer and
@@ -121,7 +143,19 @@ function transportReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** One bounded JSON request with the error split later worker jobs need. */
+/**
+ * One bounded JSON request with the error split later worker jobs need.
+ *
+ * The request never follows a redirect. A redirect is the endpoint
+ * choosing where the API key goes next, and `redirect: "error"` makes
+ * that a transport failure instead. The whole call, headers and body,
+ * runs under one deadline, and the body is read up to a fixed byte
+ * ceiling, so a slow or endless reply is a timeout or a reply error
+ * rather than memory.
+ *
+ * A refusal answers with the status code only. The provider's own body
+ * goes on the error as `upstream.summary` for the log and nowhere else.
+ */
 export async function postJson(
   url: URL,
   headers: Readonly<Record<string, string>>,
@@ -136,6 +170,7 @@ export async function postJson(
       headers: { "content-type": "application/json", ...headers },
       body: JSON.stringify(body),
       signal,
+      redirect: "error",
     });
   } catch (error) {
     if (isTimedOut(signal, error)) {
@@ -146,9 +181,9 @@ export async function postJson(
     });
   }
   if (!response.ok) {
-    let reason: string;
+    let summary: string;
     try {
-      reason = await refusalReason(response);
+      summary = await refusalSummary(response, headers);
     } catch (error) {
       if (isTimedOut(signal, error)) {
         throw new AiTimeoutError("The provider did not answer in time.", { cause: error });
@@ -158,11 +193,12 @@ export async function postJson(
         { cause: error },
       );
     }
-    const message = reason || `The provider refused the request with HTTP ${response.status}.`;
+    const message = `The provider refused the request with HTTP ${String(response.status)}.`;
+    const upstream = { status: response.status, summary };
     if (response.status === 429 || response.status >= 500) {
-      throw new AiUnavailableError(message);
+      throw new AiUnavailableError(message, { upstream });
     }
-    throw new AiConfigError(message);
+    throw new AiConfigError(message, { upstream });
   }
   let reply: { raw: string; truncated: boolean } | null;
   try {
