@@ -166,11 +166,16 @@ export function ShareRegisterTab({
   );
   const declaredHoldings = {
     ...holdings,
+    // Rows the register projected are the register's; only hand-typed
+    // owners it does not name are "declared". Individuals are matched by
+    // the projection's holder id, never by name, so a manual individual
+    // row stays listed even when a holder shares the name.
     owners: holdings.owners.filter(
       (row) =>
-        row.owner.restricted ||
-        row.owner.kind === "individual" ||
-        !registeredEntityIds.has(row.owner.id),
+        row.source !== "register" &&
+        (row.owner.restricted ||
+          row.owner.kind === "individual" ||
+          !registeredEntityIds.has(row.owner.id)),
     ),
   };
 

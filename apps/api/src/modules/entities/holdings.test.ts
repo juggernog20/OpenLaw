@@ -416,8 +416,18 @@ describe("GET /entities/chart", () => {
     );
     expect(chart.edges).toEqual(
       expect.arrayContaining([
-        { ownerEntityId: high.id, ownedEntityId: majorityChild.id, ownershipPercent: 70 },
-        { ownerEntityId: low.id, ownedEntityId: majorityChild.id, ownershipPercent: 30 },
+        {
+          ownerEntityId: high.id,
+          ownedEntityId: majorityChild.id,
+          ownershipPercent: 70,
+          source: "manual",
+        },
+        {
+          ownerEntityId: low.id,
+          ownedEntityId: majorityChild.id,
+          ownershipPercent: 30,
+          source: "manual",
+        },
       ]),
     );
   });
@@ -477,6 +487,7 @@ it("records individual owners, includes them in totals and the chart, and suppor
     ownerEntityId: owner.id,
     ownedEntityId: company.id,
     ownershipPercent: 50,
+    source: "manual",
   });
   const url = `/api/v1/entities/${company.id}/holdings/${encodeURIComponent(owner.id)}`;
   const update = await harness.app.inject({

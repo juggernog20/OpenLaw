@@ -33884,6 +33884,8 @@ export interface operations {
               ownerEntityId: string;
               ownedEntityId: string;
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
             }[];
           };
         };
@@ -33945,6 +33947,8 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -33978,6 +33982,8 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -34066,6 +34072,8 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -34175,6 +34183,8 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */

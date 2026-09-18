@@ -32,6 +32,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { CurrencySchema } from "../../lib/currencies.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { projectRegisterHoldings } from "../../lib/holdings-projection.js";
 import { ownershipPath } from "../../lib/ownership-path.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import {
@@ -506,51 +507,6 @@ async function assertSoundRegister(tx: Transaction, entityId: string) {
   if (state.violation) throw httpError(409, state.violation.detail);
 }
 
-/**
- * The ownership edges the registers add: every Entity holder with shares
- * today, on every register. A holder row alone is not an edge, because a
- * holder that sold out, or whose entries were removed, no longer owns.
- */
-async function registerEdges(tx: Transaction) {
-  const holders = await tx
-    .select({
-      id: entityShareholders.id,
-      entityId: entityShareholders.entityId,
-      holderEntityId: entityShareholders.holderEntityId,
-    })
-    .from(entityShareholders)
-    .where(eq(entityShareholders.kind, "entity"));
-  if (holders.length === 0) return [];
-  const issuerIds = [...new Set(holders.map((holder) => holder.entityId))];
-  const entryRows = await tx
-    .select()
-    .from(entityShareEntries)
-    .where(inArray(entityShareEntries.entityId, issuerIds));
-  const today = todayIsoDate();
-  const edges: { ownerEntityId: string; ownedEntityId: string }[] = [];
-  for (const issuerId of issuerIds) {
-    const state = replayRegister(
-      {
-        classes: [],
-        entries: entryRows.filter((row) => row.entityId === issuerId).map(toReplayEntry),
-        certificates: [],
-      },
-      today,
-    );
-    const held = new Map<string, number>();
-    for (const row of state.balances) {
-      held.set(row.holderId, (held.get(row.holderId) ?? 0) + row.balance);
-    }
-    for (const holder of holders) {
-      if (holder.entityId !== issuerId || !holder.holderEntityId) continue;
-      if ((held.get(holder.id) ?? 0) > 0) {
-        edges.push({ ownerEntityId: holder.holderEntityId, ownedEntityId: issuerId });
-      }
-    }
-  }
-  return edges;
-}
-
 /** Drops the issuer's holder rows no entry or certificate names any more. */
 async function pruneHolders(tx: Transaction, entityId: string) {
   await tx.execute(sql`
@@ -570,7 +526,8 @@ async function pruneHolders(tx: Transaction, entityId: string) {
 }
 
 /**
- * A holder Entity owning the issuer is an ownership edge. The issuer
+ * A holder Entity owning the issuer is an ownership edge, and the
+ * projection has already written it to `entity_holdings` when this runs. The issuer
  * owning that holder, through Holdings or through other registers, would
  * close a loop. The loop may pass through an Entity the writer cannot
  * reach; that link still names it only as Restricted Entity (ENT-004).
@@ -587,8 +544,7 @@ async function assertNoRegisterCycle(
       ownedEntityId: entityHoldings.ownedEntityId,
     })
     .from(entityHoldings);
-  const rows = [...holdings, ...(await registerEdges(tx))];
-  const path = ownershipPath(rows, issuerId, holderEntityId);
+  const path = ownershipPath(holdings, issuerId, holderEntityId);
   if (!path) return;
   const loopIds = [holderEntityId, ...path];
   const names = await tx
@@ -600,6 +556,22 @@ async function assertNoRegisterCycle(
   throw httpError(409, `This entry would create an ownership loop: ${loop}.`, {
     type: ENTITY_HOLDING_CYCLE_PROBLEM_TYPE,
   });
+}
+
+/**
+ * Every Entity owner the projection wrote for this issuer, checked for a
+ * loop. An update or delete can restore an earlier holder, not only add
+ * the entry's own `to`, so the check covers them all; runs inside the
+ * write's transaction so a loop rolls the projection back with it.
+ */
+async function assertProjectionAcyclic(tx: Transaction, user: User, issuerId: string) {
+  const owners = await tx
+    .select({ ownerEntityId: entityHoldings.ownerEntityId })
+    .from(entityHoldings)
+    .where(and(eq(entityHoldings.ownedEntityId, issuerId), eq(entityHoldings.source, "register")));
+  for (const owner of owners) {
+    await assertNoRegisterCycle(tx, user, owner.ownerEntityId, issuerId);
+  }
 }
 
 async function resolveHolder(
@@ -976,6 +948,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const written = await app.db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
@@ -1026,6 +999,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) =>
       app.db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
@@ -1093,6 +1067,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       await app.db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
@@ -1136,6 +1111,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const written = await app.db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
@@ -1148,9 +1124,8 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
           .returning({ id: entityShareEntries.id });
         await writeCertificates(tx, entity.id, inserted!.id, request.body, resolved);
         await assertSoundRegister(tx, entity.id);
-        if (resolved.to?.kind === "entity" && resolved.to.holderEntityId) {
-          await assertNoRegisterCycle(tx, request.user, resolved.to.holderEntityId, entity.id);
-        }
+        await projectRegisterHoldings(tx, request.user.id, entity);
+        await assertProjectionAcyclic(tx, request.user, entity.id);
         await recordEntryActivity(tx, "entity_share_entry.created", {
           actorId: request.user.id,
           issuer: entity,
@@ -1179,6 +1154,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) =>
       app.db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
@@ -1203,9 +1179,8 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await writeCertificates(tx, entity.id, current.id, request.body, resolved);
         await pruneHolders(tx, entity.id);
         await assertSoundRegister(tx, entity.id);
-        if (resolved.to?.kind === "entity" && resolved.to.holderEntityId) {
-          await assertNoRegisterCycle(tx, request.user, resolved.to.holderEntityId, entity.id);
-        }
+        await projectRegisterHoldings(tx, request.user.id, entity);
+        await assertProjectionAcyclic(tx, request.user, entity.id);
         const holders = await readHolders(tx, entity.id);
         const nameOf = (holderId: string | null) => {
           const holder = holderId ? holders.find((row) => row.id === holderId) : undefined;
@@ -1269,6 +1244,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       await app.db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
@@ -1287,8 +1263,10 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         const classes = await readClasses(tx, entity.id);
         await detachCertificates(tx, current.id);
         await tx.delete(entityShareEntries).where(eq(entityShareEntries.id, current.id));
-        await pruneHolders(tx, entity.id);
         await assertSoundRegister(tx, entity.id);
+        await projectRegisterHoldings(tx, request.user.id, entity);
+        await assertProjectionAcyclic(tx, request.user, entity.id);
+        await pruneHolders(tx, entity.id);
         await recordEntryActivity(tx, "entity_share_entry.deleted", {
           actorId: request.user.id,
           issuer: entity,

@@ -280,6 +280,10 @@ function HoldingRow({
 }>) {
   const intl = useIntl();
   const [draft, setDraft] = useState(String(row.ownershipPercent));
+  // ENT-011: a row the share register projected is read here and
+  // changed there; the link leads to the register that produced it.
+  const derived = row.source === "register";
+  const locked = frozen || derived;
   if (related.restricted) {
     return (
       <RestrictedRecordCell
@@ -306,6 +310,7 @@ function HoldingRow({
           {related.legalName}
         </Link>
       )}
+      {derived ? <DerivedPill owned={row.owned} /> : null}
       <div className="flex items-center gap-1">
         <Input
           className="w-24"
@@ -313,7 +318,7 @@ function HoldingRow({
           min={0}
           max={100}
           step="0.01"
-          disabled={frozen}
+          disabled={locked}
           aria-label={intl.formatMessage(
             {
               id: "entities.ownership.rowPercent",
@@ -335,7 +340,7 @@ function HoldingRow({
       <Button
         variant="ghost"
         size="icon"
-        disabled={frozen}
+        disabled={locked}
         aria-label={intl.formatMessage(
           { id: "entities.ownership.remove", defaultMessage: "Remove {name}" },
           { name: related.legalName },
@@ -345,6 +350,29 @@ function HoldingRow({
         <Trash2 size={16} aria-hidden="true" />
       </Button>
     </li>
+  );
+}
+
+/** ENT-011: the row was projected from the owned Entity's register; the pill leads there. */
+function DerivedPill({ owned }: Readonly<{ owned: EntityHolding["owned"] }>) {
+  const intl = useIntl();
+  const className =
+    "rounded-pill bg-status-info-bg px-2 py-0.5 text-xs font-medium text-status-info-fg";
+  const title = intl.formatMessage({
+    id: "entities.ownership.fromRegisterHint",
+    defaultMessage: "Derived from the share register. Record an entry there to change it.",
+  });
+  const label = (
+    <FormattedMessage id="entities.ownership.fromRegister" defaultMessage="From register" />
+  );
+  return owned.restricted ? (
+    <span className={className} title={title}>
+      {label}
+    </span>
+  ) : (
+    <Link to={`/entities/${owned.id}/ownership`} className={className} title={title}>
+      {label}
+    </Link>
   );
 }
 
