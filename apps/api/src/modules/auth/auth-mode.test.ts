@@ -312,7 +312,10 @@ describe("archived users are refused at session creation", () => {
     await archive(email, true);
     try {
       const redeemed = await issueFor();
-      expect(redeemed.statusCode, redeemed.body).toBe(403);
+      expect(redeemed.statusCode, redeemed.body).toBe(302);
+      expect(new URL(redeemed.headers.location!).searchParams.get("error")).toBe(
+        "failed_to_create_session",
+      );
       expect(hasSessionCookie(redeemed), "archived user must not get a session").toBe(false);
     } finally {
       await archive(email, false);

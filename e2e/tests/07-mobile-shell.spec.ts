@@ -8,7 +8,19 @@
  */
 
 import { test, expect, type Page } from "@playwright/test";
+import { z } from "zod";
 import { ADMIN, ensureAdminExists, signInAs } from "./helpers.js";
+
+async function workspaceName(page: Page): Promise<string> {
+  const response = await page.request.get("/api/v1/org/branding");
+  expect(response.status(), await response.text()).toBe(200);
+  return (
+    z
+      .object({ name: z.string() })
+      .parse(await response.json())
+      .name.trim() || "workspace"
+  );
+}
 
 /** True when the page cannot be scrolled sideways. */
 async function hasNoHorizontalOverflow(page: Page): Promise<boolean> {
@@ -31,7 +43,9 @@ test.describe("mobile shell below 768px", () => {
     await expect(hamburger).toBeVisible();
 
     // The workspace crumb yields to search; the search box survives.
-    await expect(page.getByRole("banner").getByText("workspace")).toBeHidden();
+    await expect(
+      page.getByRole("banner").getByText(await workspaceName(page), { exact: true }),
+    ).toBeHidden();
     await expect(page.getByRole("combobox", { name: "Search" })).toBeVisible();
 
     expect(await hasNoHorizontalOverflow(page)).toBe(true);
@@ -93,6 +107,8 @@ test.describe("desktop chrome at 768px and above", () => {
 
     await expect(page.getByRole("navigation")).toBeVisible();
     await expect(page.getByRole("button", { name: "Open navigation" })).toBeHidden();
-    await expect(page.getByRole("banner").getByText("workspace")).toBeVisible();
+    await expect(
+      page.getByRole("banner").getByText(await workspaceName(page), { exact: true }),
+    ).toBeVisible();
   });
 });

@@ -33,8 +33,18 @@ test("Legal configures a cover note and receives matching Word and PDF downloads
   await upload.getByRole("button", { name: "Upload", exact: true }).click();
   await upload.getByRole("button", { name: "Close", exact: true }).click();
   const fields = page.getByRole("region", { name: "Fields", exact: true });
-  await expect(fields.getByText("signing_date · Date", { exact: true })).toBeVisible();
-  await expect(fields.getByText("amount · Currency", { exact: true })).toBeVisible();
+  await expect(
+    fields
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("button", { name: "Edit Signing date", exact: true }) })
+      .getByText("Date", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    fields
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("button", { name: "Edit Amount", exact: true }) })
+      .getByText("Currency", { exact: true }),
+  ).toBeVisible();
 
   // Settings live on their own cards now, and each control commits on
   // its own (DES-087): there is no Save button to press.
