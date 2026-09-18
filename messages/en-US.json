@@ -4379,12 +4379,6 @@
   "entities.calendar.add": {
     "defaultMessage": "Add obligation"
   },
-  "entities.calendar.allEntities": {
-    "defaultMessage": "All Entities"
-  },
-  "entities.calendar.apply": {
-    "defaultMessage": "Apply"
-  },
   "entities.calendar.assignee": {
     "defaultMessage": "Assignee"
   },
@@ -4393,6 +4387,9 @@
   },
   "entities.calendar.display": {
     "defaultMessage": "Calendar display"
+  },
+  "entities.calendar.due": {
+    "defaultMessage": "Due date"
   },
   "entities.calendar.dueDate": {
     "defaultMessage": "Due date"
@@ -4409,17 +4406,11 @@
   "entities.calendar.every": {
     "defaultMessage": "Every {months, plural, one {month} other {# months}}"
   },
-  "entities.calendar.everyone": {
-    "defaultMessage": "Everyone"
-  },
   "entities.calendar.filed": {
     "defaultMessage": "Filed"
   },
-  "entities.calendar.from": {
-    "defaultMessage": "From"
-  },
   "entities.calendar.includeCompleted": {
-    "defaultMessage": "Include completed"
+    "defaultMessage": "Show completed"
   },
   "entities.calendar.listView": {
     "defaultMessage": "Due-date list"
@@ -4450,9 +4441,6 @@
   },
   "entities.calendar.title": {
     "defaultMessage": "Compliance calendar"
-  },
-  "entities.calendar.to": {
-    "defaultMessage": "To"
   },
   "entities.calendar.today": {
     "defaultMessage": "Today"
@@ -4766,47 +4754,11 @@
   "entities.list.error": {
     "defaultMessage": "The registry could not be read. Try again."
   },
-  "entities.list.filter.active": {
-    "defaultMessage": "Active filters"
-  },
-  "entities.list.filter.chip": {
-    "defaultMessage": "{name}: {value}"
-  },
-  "entities.list.filter.clear": {
-    "defaultMessage": "Clear all"
-  },
-  "entities.list.filter.clear.label": {
-    "defaultMessage": "Clear all filters"
-  },
   "entities.list.filter.jurisdiction": {
     "defaultMessage": "Jurisdiction"
   },
-  "entities.list.filter.jurisdiction.all": {
-    "defaultMessage": "All jurisdictions"
-  },
   "entities.list.filter.majorityOwner": {
     "defaultMessage": "Majority owner"
-  },
-  "entities.list.filter.majorityOwner.all": {
-    "defaultMessage": "All majority owners"
-  },
-  "entities.list.filter.matchedNone": {
-    "defaultMessage": "The active filters matched no Entities."
-  },
-  "entities.list.filter.remove": {
-    "defaultMessage": "Remove {name} filter"
-  },
-  "entities.list.filter.status": {
-    "defaultMessage": "Status"
-  },
-  "entities.list.filter.status.all": {
-    "defaultMessage": "All statuses"
-  },
-  "entities.list.filter.type": {
-    "defaultMessage": "Type"
-  },
-  "entities.list.filter.type.all": {
-    "defaultMessage": "All types"
   },
   "entities.list.filteredEmpty.body": {
     "defaultMessage": "Clear filters to return to the whole registry."
