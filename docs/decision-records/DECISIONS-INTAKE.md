@@ -825,6 +825,16 @@ Unchanged intake values remain human-provided: they do not acquire AI styling or
 
 One provider call is bounded at five minutes, not two. A 50,000-character Request with a justification per field is a 13k-token prompt with up to 8,192 output tokens; one such answer took 113 seconds on a fast model and the same call on a slower model was cut off at the old two-minute bound, failed, and had to be retried from the start. The lease renewal and the client's progress rule already cover a wait of that length. While it waits, the Conversion draft dialog says what the provider is reading, that a long attachment can take a few minutes, and how long it has been working, so a two-minute wait reads as a wait and not as a hang.
 
+### INT-008 addendum (2026-09-19) — preparation continues in the background and the bell says when it is done
+
+A Conversion draft was already durable and worker-run, and reopening the Convert dialog already found the same draft again. What the dialog did not say was that leaving was safe, and nothing told the person when the draft they left was ready. Both are fixed here.
+
+The waiting dialog states that closing it keeps preparation running and that a notification follows. Its dismiss control reads **Close** rather than Cancel while the draft is pending, because nothing is cancelled. Every way of leaving while a draft is pending, whether Close, Esc, the overlay, or another page, asks the API to tell the actor when that draft finishes. Continuing manually asks for nothing: it is a choice, not a wait. The same rule covers a re-targeted preparation inside the dialog. A conversion that lands clears the ask, and the notice is skipped for a Request that is no longer open, so a draft that failed only because its Request was decided is not reported.
+
+The ask is a flag on the draft. Reopening the dialog while the draft is still pending clears it, because the person is watching again; leaving once more sets it again. A retry resets it with the rest of the draft. The worker settles the draft and raises the notice in one transaction, and the leave route raises it itself when the draft had already finished in the moment between the close and the call. A once-only claim on the draft keeps the two from both writing.
+
+The notice is the `request.conversion_draft_finished` event in group 4 of the catalog (NOT-002 addendum of the same date): bell on, email opt-in, addressed to the draft's actor alone. Its bell item and its email link to the Request in the Inbox with `?convert=matter` or `?convert=contract`, which reopens the Convert dialog for that module. The initial, type-less draft answers at once; a draft prepared for a Type the person picked inside the dialog answers as soon as they pick that Type again.
+
 ## INT-009 — Requests use Title throughout the app and store
 
 - **Status** — Accepted

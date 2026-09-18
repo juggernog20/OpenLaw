@@ -801,6 +801,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
                 resolveAiProvider: handlers.resolveAiProvider,
                 storage: handlers.storage,
                 docEngine: handlers.docEngine,
+                notifier,
                 log,
               },
               job.data.draftId,

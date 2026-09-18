@@ -10,6 +10,7 @@ import {
   matters,
   matterTypes,
   matterTypeFields,
+  notifications,
   requestTypes,
   requests,
 } from "@openlaw/db";
@@ -187,6 +188,7 @@ it("prepares actual current messages, binds quotes and provenance, and preserves
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     id,
@@ -274,6 +276,7 @@ it("rejects stale sources and forged acceptance, while edited values remain huma
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     id,
@@ -331,6 +334,7 @@ it("flags unresolved contradictions and rejects a quote assigned to the wrong so
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     id,
@@ -373,6 +377,7 @@ it("blocks narrowing a cited source until its unverified derivative is reviewed"
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     made.json().draft.id,
@@ -432,6 +437,7 @@ it("checks disablement again at execution without calling AI", async () => {
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     made.json().draft.id,
@@ -538,6 +544,7 @@ it("leaves an active lease to its owner and resolves connector disablement live"
     db: harness.db,
     storage: harness.storage,
     docEngine: harness.docEngine,
+    notifier: harness.notifier,
     resolveAiProvider: async () => {
       resolutions += 1;
       markEntered();
@@ -670,6 +677,7 @@ it("reads all eligible paper once, preserves named evidence, and maps promotion 
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     id,
@@ -846,6 +854,7 @@ it("reuses cached attachment reads when preparation retries a provider failure",
     db: harness.db,
     storage: harness.storage,
     docEngine: harness.docEngine,
+    notifier: harness.notifier,
     resolveAiProvider: harness.resolveAiProvider,
   };
   const extraction = vi.spyOn(harness.docEngine, "extractPdfText");
@@ -938,6 +947,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     id,
@@ -1060,6 +1070,7 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     id,
@@ -1229,6 +1240,7 @@ it("rejects Contract claims from another module or Type, and late results after 
     db: harness.db,
     storage: harness.storage,
     docEngine: harness.docEngine,
+    notifier: harness.notifier,
     resolveAiProvider: harness.resolveAiProvider,
   };
   const matter = await make("matter", typeId);
@@ -1298,6 +1310,7 @@ it("does not turn unchanged Request answers into AI-generated suggestions", asyn
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
+      notifier: harness.notifier,
       resolveAiProvider: harness.resolveAiProvider,
     },
     made.json().draft.id,
@@ -1360,4 +1373,96 @@ it("reads saved Title evidence from before the Request field rename", async () =
     proposal,
   );
   expect(changed.available).toBe(false);
+});
+
+it("tells the actor a draft they left finishes, once, and stays silent while they watch", async () => {
+  answers.title = {
+    value: "Response preparation",
+    sourceId: "request:description",
+    evidence: "Respond by October 1",
+  };
+  const deps = {
+    db: harness.db,
+    storage: harness.storage,
+    docEngine: harness.docEngine,
+    notifier: harness.notifier,
+    resolveAiProvider: harness.resolveAiProvider,
+  };
+  const bell = async () =>
+    harness.db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.eventType, "request.conversion_draft_finished"));
+  const notice = (number: number, id: string, cookies = cast.memberCookies) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${number}/conversion-drafts/${id}/notice`,
+      cookies,
+    });
+
+  // Watched to the end: no item.
+  const watched = await ask();
+  const watchedId = (await prepare(watched.number)).json().draft.id;
+  await handleConversionDraft(deps, watchedId);
+  expect(await bell()).toHaveLength(0);
+
+  // Left while pending: one item for the actor, none for anybody else.
+  const left = await ask();
+  const leftId = (await prepare(left.number)).json().draft.id;
+  expect((await notice(left.number, leftId, cast.otherMemberCookies)).statusCode).toBe(404);
+  expect((await notice(left.number, leftId)).statusCode).toBe(200);
+  await handleConversionDraft(deps, leftId);
+  const items = await bell();
+  expect(items).toHaveLength(1);
+  expect(items[0]!.userId).toBe(cast.memberId);
+  expect(items[0]!.entityId).toBe(left.id);
+  expect(items[0]!.emailOwed).toBe(false);
+  expect(items[0]!.payload).toMatchObject({
+    requestNumber: left.number,
+    requestTitle: "Original ask",
+    draftId: leftId,
+    targetModule: "matter",
+    outcome: "ready",
+  });
+  // The item reaches the staff bell, addressed to the Convert dialog.
+  const feed = await harness.app.inject({
+    url: "/api/v1/notifications",
+    cookies: cast.memberCookies,
+  });
+  expect(feed.statusCode, feed.body).toBe(200);
+  expect(feed.json().notifications.some((item: { id: string }) => item.id === items[0]!.id)).toBe(
+    true,
+  );
+
+  // Left after it had already finished: the route writes the item, and a
+  // second leave does not write another.
+  const late = await ask();
+  const lateId = (await prepare(late.number)).json().draft.id;
+  await handleConversionDraft(deps, lateId);
+  expect((await notice(late.number, lateId)).statusCode).toBe(200);
+  expect((await notice(late.number, lateId)).statusCode).toBe(200);
+  expect((await bell()).filter((item) => item.entityId === late.id)).toHaveLength(1);
+
+  // Came back before it finished: reopening clears the ask.
+  const back = await ask();
+  const backId = (await prepare(back.number)).json().draft.id;
+  expect((await notice(back.number, backId)).statusCode).toBe(200);
+  expect((await prepare(back.number)).json().draft.id).toBe(backId);
+  await handleConversionDraft(deps, backId);
+  expect((await bell()).filter((item) => item.entityId === back.id)).toHaveLength(0);
+
+  // A failure is told too, so the person can retry or continue manually.
+  const failed = await ask();
+  const failedId = (await prepare(failed.number)).json().draft.id;
+  expect((await notice(failed.number, failedId)).statusCode).toBe(200);
+  await harness.db.update(aiConnector).set({ disabledAt: new Date() });
+  await handleConversionDraft(deps, failedId);
+  const [failedDraft] = await harness.db
+    .select()
+    .from(conversionDrafts)
+    .where(eq(conversionDrafts.id, failedId));
+  expect(failedDraft!.state).toBe("failed");
+  expect((await bell()).find((item) => item.entityId === failed.id)?.payload).toMatchObject({
+    outcome: "failed",
+  });
 });

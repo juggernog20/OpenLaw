@@ -149,6 +149,10 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
   // because they have two audiences, two defaults, and two bells.
   "request.submitted": "new_requests",
   "request.assigned": "assigned_to_you",
+  // A Conversion draft finishing is Inbox work the reader asked for, and
+  // the dialog is usually still open when it lands: the bell is enough
+  // and the email stays opt-in, which is group 4's shape.
+  "request.conversion_draft_finished": "new_requests",
   // Group 5 — the portal audience's own events. The decline is here
   // rather than beside the status change it also is, because INT-006
   // makes "no" arrive with a why and a reason is a different message.

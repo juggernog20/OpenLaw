@@ -1,0 +1,2 @@
+ALTER TABLE "conversion_drafts" ADD COLUMN "notify_when_finished" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "conversion_drafts" ADD COLUMN "notified_at" timestamp with time zone;

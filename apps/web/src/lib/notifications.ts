@@ -66,11 +66,12 @@ import {
   Inbox,
   MessageSquare,
   PenLine,
+  Sparkles,
   SquareCheck,
   Stamp,
+  type LucideIcon,
   Upload,
   UserPlus,
-  type LucideIcon,
 } from "lucide-react";
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
@@ -358,6 +359,19 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} assigned you to triage {request}",
     }),
   },
+  // The Conversion draft the reader asked for and stopped watching has
+  // finished (INT-008). It reopens the Convert dialog for the module they
+  // were converting to, which `hrefFor` appends as a query.
+  "request.conversion_draft_finished": {
+    icon: Sparkles,
+    staffSide: true,
+    message: defineMessage({
+      id: "notifications.request.conversionDraftFinished",
+      defaultMessage:
+        "{outcome, select, ready {The Conversion draft for {request} is ready to review} " +
+        "other {The Conversion draft for {request} could not finish}}",
+    }),
+  },
   "request.submitted": {
     icon: Inbox,
     staffSide: true,
@@ -544,7 +558,14 @@ function hrefFor(item: BellItem, arm: Arm | undefined, surface: "staff" | "porta
   if (item.entityType === "request") {
     const number = wholeNumber(item.payload, "requestNumber");
     if (number === null) return null;
-    return arm?.staffSide ? `/inbox/${number}` : `/portal/requests/${number}`;
+    if (!arm?.staffSide) return `/portal/requests/${number}`;
+    const module = text(item.payload, "targetModule");
+    if (
+      item.eventType === "request.conversion_draft_finished" &&
+      (module === "matter" || module === "contract")
+    )
+      return `/inbox/${number}?convert=${module}`;
+    return `/inbox/${number}`;
   }
   if (item.entityType === "matter") {
     const number = wholeNumber(item.payload, "matterNumber");
@@ -633,6 +654,7 @@ export function narrateNotification(
       hasActor: actor ? "yes" : "no",
       status: status ?? "",
       hasStatus: status ? "yes" : "no",
+      outcome: text(item.payload, "outcome") ?? "",
     }),
     href,
   };

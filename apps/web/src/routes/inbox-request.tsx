@@ -87,6 +87,7 @@ import {
   Link,
   useLoaderData,
   useRevalidator,
+  useSearchParams,
   type LoaderFunctionArgs,
 } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -226,7 +227,27 @@ export function InboxRequestPage() {
    * until the seam answers. One piece of state rather than one flag per
    * dialog, because a Request has one fate and two open dialogs would be
    * two answers to it. */
-  const [disposing, setDisposing] = useState<"contract" | "matter" | "resolve" | null>(null);
+  const [chosen, setChosen] = useState<"contract" | "matter" | "resolve" | null>(null);
+  /** `?convert=matter|contract` opens the Convert dialog too: it is where
+   * the bell sends somebody whose Conversion draft finished after they
+   * closed it (INT-008). The address is the state while it is there, and
+   * closing the dialog drops it so a reload does not reopen it. */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedConversion = searchParams.get("convert");
+  const linked =
+    isOpenRequestStatus(request.status) &&
+    (requestedConversion === "matter" || requestedConversion === "contract")
+      ? requestedConversion
+      : null;
+  const disposing = chosen ?? linked;
+  function closeDisposition() {
+    setChosen(null);
+    if (searchParams.has("convert")) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("convert");
+      setSearchParams(next, { replace: true });
+    }
+  }
   /** Whether a disposition is out. Every dialog holds its own submit
    * inert while it is, and the sub-bar's actions with it, so one press
    * is one disposition. */
@@ -270,7 +291,7 @@ export function InboxRequestPage() {
       // already says what the other triager decided by the time it is
       // closed (INT-007).
       if (result.ok || result.alreadyDecided) void revalidator.revalidate();
-      if (result.ok && closeOnSuccess) setDisposing(null);
+      if (result.ok && closeOnSuccess) setChosen(null);
       return result;
     } finally {
       setBusy(false);
@@ -327,14 +348,14 @@ export function InboxRequestPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => setDisposing("contract")}>
+                <DropdownMenuItem onSelect={() => setChosen("contract")}>
                   <FilePen size={16} aria-hidden="true" />
                   <FormattedMessage
                     id="inbox.request.convertContract"
                     defaultMessage="Convert to contract"
                   />
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setDisposing("matter")}>
+                <DropdownMenuItem onSelect={() => setChosen("matter")}>
                   <BriefcaseBusiness size={16} aria-hidden="true" />
                   <FormattedMessage
                     id="inbox.request.convertMatter"
@@ -342,7 +363,7 @@ export function InboxRequestPage() {
                   />
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setDisposing("resolve")}>
+                <DropdownMenuItem onSelect={() => setChosen("resolve")}>
                   <Check size={16} aria-hidden="true" />
                   <FormattedMessage
                     id="inbox.request.resolveWithoutConverting"
@@ -376,7 +397,7 @@ export function InboxRequestPage() {
             label: entity.legalName,
           }))}
           busy={busy}
-          onClose={() => setDisposing(null)}
+          onClose={closeDisposition}
           onConvert={(input) => dispose(() => convertRequest(request.number, input), false)}
         />
       )}
@@ -384,7 +405,7 @@ export function InboxRequestPage() {
         <ResolveDialog
           reference={reference}
           busy={busy}
-          onClose={() => setDisposing(null)}
+          onClose={closeDisposition}
           onResolve={(reply) => dispose(() => resolveRequest(request.number, reply))}
         />
       )}

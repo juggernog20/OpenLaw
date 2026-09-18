@@ -1866,6 +1866,50 @@ describe("Matter Conversion drafts", () => {
     },
   );
 
+  it("asks to be told when a draft it stopped watching finishes", async () => {
+    // Closing the waiting dialog is not a cancel: the worker carries on,
+    // and the one thing the close changes is who hears about the finish
+    // (INT-008). Continuing manually is a choice, so it asks nothing.
+    const user = userEvent.setup();
+    const base = preparedApi(true);
+    const notices: string[] = [];
+    open({
+      ...base,
+      handler: (call: StubCall) => {
+        if (call.url.pathname.endsWith("/notice") && call.method === "POST") {
+          notices.push(call.url.pathname);
+          return json(200, { ok: true });
+        }
+        return base.handler(call);
+      },
+    });
+    await openDisposition(user, "Convert to matter");
+    expect(await screen.findByText("Getting matter ready…")).toBeVisible();
+    expect(
+      screen.getByText(/You can close this and keep working\. Preparation continues/),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() =>
+      expect(notices).toEqual(["/api/v1/requests/45/conversion-drafts/draft-1/notice"]),
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await openDisposition(user, "Convert to matter");
+    expect(await screen.findByText("Getting matter ready…")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Continue manually" }));
+    expect(screen.getByLabelText("Title", { exact: false })).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(notices).toHaveLength(1);
+  });
+
+  it("opens the Convert dialog from the bell's convert link", async () => {
+    const api = preparedApi(true);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/inbox/45?convert=matter");
+    expect(await screen.findByText("Getting matter ready…")).toBeVisible();
+  });
+
   it("keeps manual continuation usable while preparation waits", async () => {
     const user = userEvent.setup();
     const api = preparedApi(true);

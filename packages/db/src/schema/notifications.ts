@@ -149,6 +149,9 @@ export const NOTIFICATION_EVENT_TYPES = [
    */
   "request.submitted",
   "request.assigned",
+  /** A Conversion draft the actor left running has finished, ready or
+   * failed (INT-008). Told only to the person who asked for it. */
+  "request.conversion_draft_finished",
   // Group 5 — the portal audience's own events (INT-001/003/006).
   /** A Request was submitted — the Requester's receipt (INT-001). */
   "request.created",

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Prepares the editable conversion dialog before creation (INT-008). */
-import { useEffect, useState, type ComponentProps } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { LoaderCircle } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
@@ -10,6 +10,23 @@ import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 export type ConversionDraft =
   paths["/api/v1/requests/{number}/conversion-drafts/{draftId}"]["get"]["responses"]["200"]["content"]["application/json"]["draft"];
+
+/**
+ * Tells the API the actor has stopped watching a pending draft, so its
+ * finish reaches the bell (INT-008). Fired as the dialog unmounts, which
+ * is every way of leaving: Close, Esc, the overlay, or another page.
+ * `keepalive` lets it outlive a tab that is closing. The answer is not
+ * awaited: nothing on this side depends on it, and preparation carries
+ * on in the worker either way.
+ */
+export function noticeWhenFinished(number: number, draftId: string) {
+  void api
+    .POST("/api/v1/requests/{number}/conversion-drafts/{draftId}/notice", {
+      params: { path: { number, draftId } },
+      keepalive: true,
+    })
+    .catch(() => {});
+}
 export function PreparedConvertDialog({
   enabled,
   ...props
@@ -27,6 +44,16 @@ export function PreparedConvertDialog({
     (props.initialTargetModule === "matter" ? props.matterTypes : props.contractTypes).length > 0 &&
     !manual;
   const number = props.request.number;
+  /** The draft still being waited on, if any. Set while a read answers
+   * `pending`, cleared once it settles or the person continues manually,
+   * and read once, on unmount, to ask for the finished notice. */
+  const pendingDraft = useRef<string | null>(null);
+  useEffect(
+    () => () => {
+      if (pendingDraft.current) noticeWhenFinished(number, pendingDraft.current);
+    },
+    [number],
+  );
   useEffect(() => {
     if (!preparing) return;
     const controller = new AbortController();
@@ -43,15 +70,18 @@ export function PreparedConvertDialog({
       if (controller.signal.aborted) return true;
       if (!next || next.state === "failed") {
         clearTimeout(deadlineTimer);
+        pendingDraft.current = null;
         setFailure(next?.failure ?? null);
         setFailed(true);
         return true;
       }
       if (next.state === "ready") {
         clearTimeout(deadlineTimer);
+        pendingDraft.current = null;
         setDraft(next);
         return true;
       }
+      pendingDraft.current = next.id;
       if (next.progressAt && next.progressAt !== progressAt) {
         progressAt = next.progressAt;
         clearTimeout(deadlineTimer);
@@ -146,23 +176,46 @@ export function PreparedConvertDialog({
           )}
         </p>
         {!failed && (
-          <p className="mb-4 text-sm text-muted">
-            <FormattedMessage
-              id="conversion.preparingHint"
-              defaultMessage="The provider reads the Request and its attachments. A long attachment can take a few minutes."
-            />{" "}
-            <FormattedMessage
-              id="conversion.preparingElapsed"
-              defaultMessage="Working for {duration}."
-              values={{ duration }}
-            />
-          </p>
+          <>
+            <p className="mb-4 text-sm text-muted">
+              <FormattedMessage
+                id="conversion.preparingHint"
+                defaultMessage="The provider reads the Request and its attachments. A long attachment can take a few minutes."
+              />{" "}
+              <FormattedMessage
+                id="conversion.preparingElapsed"
+                defaultMessage="Working for {duration}."
+                values={{ duration }}
+              />
+            </p>
+            {/* Leaving is safe, and the dialog says so: preparation runs
+                in the worker, and closing this only changes who is told
+                when it finishes (INT-008). */}
+            <p className="mb-4 text-sm text-muted">
+              <FormattedMessage
+                id="conversion.preparingLeave"
+                defaultMessage="You can close this and keep working. Preparation continues, and a notification tells you when the draft is ready."
+              />
+            </p>
+          </>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={props.onClose}>
-            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            {failed ? (
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            ) : (
+              <FormattedMessage id="action.close" defaultMessage="Close" />
+            )}
           </Button>
-          <Button type="button" variant="secondary" onClick={() => setManual(true)}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              // Their choice, not a wait: nothing to be told about.
+              pendingDraft.current = null;
+              setManual(true);
+            }}
+          >
             <FormattedMessage id="conversion.manual" defaultMessage="Continue manually" />
           </Button>
           {failed && (
