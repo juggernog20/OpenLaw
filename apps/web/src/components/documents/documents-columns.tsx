@@ -78,7 +78,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
     clip: true,
     sortKey: "kind",
     render: (row, intl) =>
-      row.owner.kind === "matter" ? (
+      row.owner.kind === "matter" || row.owner.kind === "entity" ? (
         <span className="text-muted">—</span>
       ) : (
         <span

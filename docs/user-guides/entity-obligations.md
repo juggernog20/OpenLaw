@@ -1,6 +1,6 @@
 # Track and file Entity obligations
 
-Record an Entity's due dates and confirm filings. A recurring Obligation advances only when someone selects **Mark filed**; opening a calendar or receiving a reminder never advances it.
+Record an Entity's due dates and confirm filings. A recurring Obligation advances only when someone selects **Mark complete**; opening a calendar or receiving a reminder never advances it.
 
 ## Before you start
 
@@ -14,7 +14,9 @@ An Obligation belongs to an Entity and may link to one of its Registrations, an 
 2. Enter **Label** and **Due date**. For a recurring item, enter a whole number in **Repeat every (months)**. Leave it blank for a one-off.
 3. Optionally choose **Registration**, **Assignee**, and **Matter**, and enter a **Note**. A Registration must belong to this Entity. Choose a live Legal Team Member or Administrator as assignee, and a live Matter you can reach.
 4. Select **Add obligation**. Check the row's due date, recurrence, and links.
-5. To correct an open Obligation, edit its row and move focus away from text, date, or recurrence inputs. A changed selection saves immediately. Check the result before leaving.
+5. To correct an open Obligation, open the menu beside **Mark complete** and choose **Edit**. Make your changes, then select **Save changes**, or **Cancel** to discard them.
+
+Drag a column heading’s edge to resize it. You can also focus the edge and use the left and right arrow keys. The completion button and row menu stay at the right of the table. Column widths are remembered for your account in this browser across Entity obligation tables.
 
 Recurrence accepts 1 to 1,200 months. A blank recurrence makes the item one-off. Linking a Matter records existing work; adding an Obligation does not create a Matter. Removing a linked Registration leaves the Obligation in place with no Registration link.
 
@@ -31,16 +33,16 @@ Approaching-date reminders and the daily briefing also depend on organization sc
 
 ## Mark a filing and check the next cycle
 
-1. On the Entity's **Obligations** tab, use **Mark \<Obligation label\> filed** beside the Obligation.
-2. In **Mark filed**, check the explanation and **Filed on** date. It starts with your current local date; change it to the actual filing date if needed.
-3. Select **Mark filed**. For a recurring Obligation, check the new due date. Open **History** to read the filing entry and its recorded cycle.
+1. On the Entity's **Obligations** tab, use **Mark complete** beside the Obligation.
+2. In **Mark complete**, check the explanation and **Completed on** date. It starts with your current local date; change it to the actual filing date if needed.
+3. Select **Mark complete**. For a recurring Obligation, check the new due date. Open **History** to read the filing entry and its recorded cycle.
 
 A recurring Obligation advances from its held due date by the recurrence at least once, then repeats that advance until the next due date is after the filing date. For example, an annual Obligation due September 30, 2025 and filed October 5, 2026 advances to September 30, 2027. One late filing does not invent separate filings for missed cycles.
 
-A one-off keeps its due date and shows **Filed**. It no longer appears among open Obligations and cannot be filed again. Use **Include completed** in the calendar to find it. Its row becomes read-only; check the date before confirming.
+A one-off keeps its due date and shows **Completed**. It no longer appears among open Obligations and cannot be filed again. Use **Include completed** in the calendar to find it. Its row becomes read-only; check the date before confirming.
 
 ## Recover from a mistake or refusal
 
 Read the message and correct invalid dates or recurrence values before retrying. If the Entity was archived or your Grant was removed, restore the Entity or ask a person with a Grant on that Entity to review access. Another person's filing can make a one-off unavailable for filing; reload to see the saved result.
 
-**Delete \<Obligation label\>** removes the Obligation and its future schedule. It does not file the Obligation or undo a recorded filing. Do not delete an item merely to clear an overdue result. For an incorrect recurring next date, correct the open row and retain the History of what was recorded.
+**Delete** in the row menu removes the Obligation and its future schedule. It does not file the Obligation or undo a recorded filing. Do not delete an item merely to clear an overdue result. For an incorrect recurring next date, correct the open row and retain the History of what was recorded.

@@ -6755,7 +6755,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. A cursor whose row has since been archived, deleted, or walled off ends the page set with an empty answer. Document hits identify the owning record and matched version */
+    /** Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. A cursor whose row has since been archived, deleted, or walled off ends the page set with an empty answer. Document hits identify the owning record and latest version; only the latest version is searched */
     get: operations["search"];
     put?: never;
     post?: never;
@@ -28632,7 +28632,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -28833,7 +28833,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -29038,7 +29038,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -29243,7 +29243,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -29357,7 +29357,7 @@ export interface operations {
            */
           file: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -38016,6 +38016,7 @@ export interface operations {
                   ownerKind: "contract" | "matter" | "entity" | "knowledge_item" | "auto_doc";
                   ownerId: string;
                   ownerNumber: number | null;
+                  ownerTitle: string;
                   versionId: string;
                   versionNumber: number;
                   snippet: string;

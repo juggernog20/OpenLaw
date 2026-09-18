@@ -10,7 +10,7 @@ Find records and words inside Documents that you can reach. Administrators and L
 4. On the results page, select a kind such as **Contract** or **Document** to narrow the answer.
 5. Select **Show more** if another page is available.
 
-A Document result names its owning record and the matching Version. Open that result to read the matching Version. For a PDF text match, the reader opens its find control with your search text. The match can be in the Document even when its owning record's title does not contain those words.
+Each Document appears once in search, using only its latest Version. The result shows the Document name and its owning record. Open the result to read the latest Version; earlier Versions remain available from the record's Documents tab. For a PDF text match, the reader opens its find control with your search text. The match can be in the Document even when its owning record's title does not contain those words.
 
 Search covers reachable Contracts, Matters, Documents, Entities, Counterparties, Requests, and Knowledge Items. Role and record access still apply. Confidential work outside your access does not appear. Help search is separate and searches product guides.
 

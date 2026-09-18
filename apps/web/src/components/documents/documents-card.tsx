@@ -1407,7 +1407,7 @@ export function DocumentsCard({
     selected,
     onSelect: selectDocument,
     documentDrag,
-    showKind: record.entityType !== "matter",
+    showKind: record.entityType !== "matter" && record.entityType !== "entity",
     designations: supportsDesignations(record.entityType),
     executedDesignations: record.entityType === "contract",
     folders: record.entityType !== "knowledge_item",
@@ -1641,7 +1641,7 @@ export function DocumentsCard({
                     <FormattedMessage id="documents.column.name" defaultMessage="Name" />
                   </span>
                 </th>
-                {record.entityType !== "matter" && (
+                {record.entityType !== "matter" && record.entityType !== "entity" && (
                   <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
                     <FormattedMessage id="documents.column.kind" defaultMessage="Kind" />
                   </th>
@@ -1886,7 +1886,7 @@ export function DocumentsCard({
  * versions, and is erased exactly as an unfiled one, and two copies of
  * this markup would be two places for that to stop being true. `depth`
  * is the only difference between the two — 18px a level, drawn as a
- * spacer at the head of the Name cell.
+ * inset at the head of the Name cell.
  */
 function DocumentRows({
   documents,
@@ -1946,47 +1946,12 @@ function DocumentRows({
                     />
                   )}
 
-                  {depth > 0 && (
-                    <span
-                      aria-hidden="true"
-                      className="shrink-0"
-                      style={{ width: depth * FOLDER_INDENT }}
-                    />
-                  )}
-                  {chain.superseded.length > 0 ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-expanded={isOpen}
-                      onClick={() => rows.onToggle(document.id)}
-                      aria-label={rows.intl.formatMessage(
-                        {
-                          id: "documents.chain.toggle",
-                          defaultMessage:
-                            "{open, select, true {Hide} other {Show}} the " +
-                            "{count, plural, one {# earlier version} " +
-                            "other {# earlier versions}} of {title}",
-                        },
-                        {
-                          open: isOpen,
-                          count: chain.superseded.length,
-                          title: document.title,
-                        },
-                      )}
-                    >
-                      {isOpen ? (
-                        <ChevronDown size={16} aria-hidden="true" />
-                      ) : (
-                        <ChevronRight size={16} aria-hidden="true" />
-                      )}
-                    </Button>
-                  ) : (
-                    // The column keeps its width whether a
-                    // document has history or not, so the names
-                    // stay on one line down the section.
-                    <span className="size-6" aria-hidden="true" />
-                  )}
-                  <FileText size={16} aria-hidden="true" className="mt-1 shrink-0 text-muted" />
+                  <FileText
+                    size={16}
+                    aria-hidden="true"
+                    className="mt-1 shrink-0 text-muted"
+                    style={{ marginInlineStart: depth * FOLDER_INDENT }}
+                  />
                   <span className="flex min-w-0 flex-col">
                     {/* The name line takes the toggle's own height, so
                         the name and its marks sit on the same band as
@@ -2008,6 +1973,34 @@ function DocumentRows({
                         onRead={rows.onRead}
                         className="min-w-0 flex-1 truncate text-base font-medium"
                       />
+                      {chain.superseded.length > 0 ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-expanded={isOpen}
+                          onClick={() => rows.onToggle(document.id)}
+                          aria-label={rows.intl.formatMessage(
+                            {
+                              id: "documents.chain.toggle",
+                              defaultMessage:
+                                "{open, select, true {Hide} other {Show}} the " +
+                                "{count, plural, one {# earlier version} " +
+                                "other {# earlier versions}} of {title}",
+                            },
+                            {
+                              open: isOpen,
+                              count: chain.superseded.length,
+                              title: document.title,
+                            },
+                          )}
+                        >
+                          {isOpen ? (
+                            <ChevronDown size={16} aria-hidden="true" />
+                          ) : (
+                            <ChevronRight size={16} aria-hidden="true" />
+                          )}
+                        </Button>
+                      ) : null}
                       {/* DES-009 Tier 1, beside a document's name
                           rather than a record's: this file is
                           narrowed to the contract's named team
@@ -2134,14 +2127,12 @@ function DocumentRows({
                     {/* Indented under the document it belongs to:
                         a superseded round is part of one chain,
                         not a document of its own. */}
-                    <span className="flex items-start gap-1 ps-7">
-                      {depth > 0 && (
-                        <span
-                          aria-hidden="true"
-                          className="shrink-0"
-                          style={{ width: depth * FOLDER_INDENT }}
-                        />
-                      )}
+                    <span
+                      className="flex items-start gap-1"
+                      style={{
+                        paddingInlineStart: depth * FOLDER_INDENT + (rows.frozen ? 18 : 28),
+                      }}
+                    >
                       <FileText size={16} aria-hidden="true" className="mt-1 shrink-0 text-muted" />
                       <span className="flex min-w-0 flex-col">
                         <OpenVersion
@@ -2321,20 +2312,10 @@ function FolderRows({
                 }}
               >
                 <td className="px-4 py-2.5">
-                  <span className="flex items-center gap-1">
-                    {!rows.frozen && <span className="me-2 size-4 shrink-0" aria-hidden="true" />}
-
-                    {/* 18px a level, drawn as a spacer at the head of the
-                        cell rather than as padding on the row: one rule
-                        for both row kinds, and nothing positioned by
-                        eye. */}
-                    {depth > 0 && (
-                      <span
-                        aria-hidden="true"
-                        className="shrink-0"
-                        style={{ width: depth * FOLDER_INDENT }}
-                      />
-                    )}
+                  <span
+                    className="flex items-center gap-1"
+                    style={{ paddingInlineStart: depth * FOLDER_INDENT }}
+                  >
                     {expandable ? (
                       <Button
                         variant="ghost"
@@ -3737,7 +3718,9 @@ function UploadDialog({
   const intl = useIntl();
   const [file, setFile] = useState<File | null>(null);
   const [kind, setKind] = useState<HandSetDocumentVersionKind>(
-    record.entityType === "matter" ? "general" : (seedKind ?? "draft_ours"),
+    record.entityType === "matter" || record.entityType === "entity"
+      ? "general"
+      : (seedKind ?? "draft_ours"),
   );
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -3920,7 +3903,7 @@ function UploadDialog({
               </span>
             </span>
           </div>
-          {record.entityType !== "matter" && (
+          {record.entityType !== "matter" && record.entityType !== "entity" && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="document-kind">
                 <FormattedMessage id="documents.composer.kind" defaultMessage="Kind" />

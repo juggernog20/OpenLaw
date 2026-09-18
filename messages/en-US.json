@@ -2240,6 +2240,12 @@
   "common.close": {
     "defaultMessage": "Close"
   },
+  "common.delete": {
+    "defaultMessage": "Delete"
+  },
+  "common.edit": {
+    "defaultMessage": "Edit"
+  },
   "common.no": {
     "defaultMessage": "No"
   },
@@ -2251,6 +2257,9 @@
   },
   "common.save": {
     "defaultMessage": "Save"
+  },
+  "common.saveChanges": {
+    "defaultMessage": "Save changes"
   },
   "common.search": {
     "defaultMessage": "Search"
@@ -4961,8 +4970,23 @@
   "entities.record.obligations.column": {
     "defaultMessage": "Obligation"
   },
+  "entities.record.obligations.completeOneOff": {
+    "defaultMessage": "This marks the one-off obligation as complete."
+  },
+  "entities.record.obligations.completeRecurring": {
+    "defaultMessage": "Completing this occurrence moves the due date forward by {months, plural, one {# month} other {# months}} until it is after the completion date. The recurring obligation stays open."
+  },
+  "entities.record.obligations.completedOn": {
+    "defaultMessage": "Completed {date}"
+  },
+  "entities.record.obligations.completedOnField": {
+    "defaultMessage": "Completed on"
+  },
   "entities.record.obligations.dueDate": {
     "defaultMessage": "Due date"
+  },
+  "entities.record.obligations.edit": {
+    "defaultMessage": "Edit obligation"
   },
   "entities.record.obligations.empty": {
     "defaultMessage": "No obligations for this Entity."
@@ -4984,6 +5008,9 @@
   },
   "entities.record.obligations.label": {
     "defaultMessage": "Label"
+  },
+  "entities.record.obligations.markComplete": {
+    "defaultMessage": "Mark complete"
   },
   "entities.record.obligations.markFiled": {
     "defaultMessage": "Mark filed"
@@ -5014,6 +5041,12 @@
   },
   "entities.record.obligations.repeat": {
     "defaultMessage": "Repeat every (months)"
+  },
+  "entities.record.obligations.restrictedMatter": {
+    "defaultMessage": "Restricted matter"
+  },
+  "entities.record.obligations.rowActions": {
+    "defaultMessage": "Actions for {label}"
   },
   "entities.record.obligations.rowField": {
     "defaultMessage": "{label} {field}"

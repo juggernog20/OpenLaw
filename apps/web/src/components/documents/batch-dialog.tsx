@@ -245,7 +245,7 @@ export function BatchDialog({
   });
   const [rows, setRows] = useState<BatchRow[]>(() => batchOf(files));
   const [kind, setKind] = useState<HandSetDocumentVersionKind>(
-    record.entityType === "matter" ? "general" : "draft_ours",
+    record.entityType === "matter" || record.entityType === "entity" ? "general" : "draft_ours",
   );
   /** Whether Import has been pressed. Before it, nothing has been sent
    * and Cancel creates nothing. */
@@ -559,7 +559,7 @@ export function BatchDialog({
               </li>
             )}
           </ul>
-          {!started && record.entityType !== "matter" && (
+          {!started && record.entityType !== "matter" && record.entityType !== "entity" && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="batch-kind">
                 <FormattedMessage id="documents.batch.kind" defaultMessage="Version kind" />

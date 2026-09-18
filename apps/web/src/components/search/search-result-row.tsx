@@ -45,8 +45,6 @@ const MESSAGES: Record<
   | "counterparty"
   | "request"
   | "knowledge_item"
-  | "version"
-  | "ownedBy"
   | "draftKnowledge",
   MessageDescriptor
 > = defineMessages({
@@ -57,8 +55,6 @@ const MESSAGES: Record<
   counterparty: { id: "search.kind.counterparty", defaultMessage: "Counterparty" },
   request: { id: "search.kind.request", defaultMessage: "Request" },
   knowledge_item: { id: "search.kind.knowledge", defaultMessage: "Knowledge Item" },
-  version: { id: "search.result.version", defaultMessage: "v{number}" },
-  ownedBy: { id: "search.result.ownedBy", defaultMessage: "Owned by" },
   draftKnowledge: {
     id: "search.result.knowledgeDraft",
     defaultMessage: "Draft · Knowledge Item",
@@ -94,7 +90,7 @@ function reference(intl: IntlShape, result: SearchResult): string {
         ? searchKindLabel(intl, result.kind)
         : requestReference(intl, result.number);
     case "document":
-      return intl.formatMessage(MESSAGES.version, { number: result.versionNumber });
+      return "";
     case "entity":
     case "counterparty":
       return searchKindLabel(intl, result.kind);
@@ -224,36 +220,50 @@ function HighlightedSnippet({ value }: Readonly<{ value: string }>) {
   return <>{rendered}</>;
 }
 
-function RowBody({ result }: Readonly<{ result: SearchResult }>) {
+function RowBody({
+  result,
+  compact = false,
+}: Readonly<{ result: SearchResult; compact?: boolean }>) {
   const intl = useIntl();
   const Icon = KIND_ICON[result.kind];
   return (
     <>
-      <span className="flex size-7.5 shrink-0 items-center justify-center rounded-card bg-control text-muted">
+      <span
+        className={cn(
+          "flex shrink-0 items-center justify-center text-muted",
+          compact ? "size-5" : "size-7.5 rounded-card bg-control",
+        )}
+      >
         <Icon size={16} aria-hidden="true" />
       </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 items-center gap-2">
-          <span className="w-24 shrink-0 text-xs font-semibold text-muted">
-            {reference(intl, result)}
-          </span>
+          {result.kind !== "document" && (
+            <span className="shrink-0 text-xs text-muted">{reference(intl, result)}</span>
+          )}
           <span className="truncate text-sm font-medium text-primary">{result.title}</span>
           {result.isConfidential && <ConfidentialMarker />}
         </span>
         {result.kind === "document" && (
           <>
-            <span className="flex items-center gap-1.5 text-xs text-muted">
-              <span>{intl.formatMessage(MESSAGES.ownedBy)}</span>
-              <OwnerIcon owner={result.ownerKind} />
-              <span className="font-medium text-link">{ownerReference(intl, result)}</span>
+            <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
+              <span className="shrink-0">
+                <OwnerIcon owner={result.ownerKind} />
+              </span>
+              <span className="truncate">
+                {result.ownerNumber !== null && `${ownerReference(intl, result)} · `}
+                {result.ownerTitle}
+              </span>
             </span>
-            <span className="truncate text-xs text-muted">
-              <HighlightedSnippet value={result.snippet} />
-            </span>
+            {!compact && (
+              <span className="truncate text-xs text-muted">
+                <HighlightedSnippet value={result.snippet} />
+              </span>
+            )}
           </>
         )}
       </span>
-      <ArrowUpRight size={16} aria-hidden="true" className="shrink-0 text-muted" />
+      {!compact && <ArrowUpRight size={16} aria-hidden="true" className="shrink-0 text-muted" />}
     </>
   );
 }
@@ -283,7 +293,7 @@ export function SearchResultRow({
         aria-selected={option.active}
         className={cn(
           ROW_CLASS,
-          "cursor-default",
+          "min-h-10 gap-2 border-b-0 cursor-default",
           option.active ? "bg-status-info-bg" : "bg-raised",
         )}
         onPointerDown={(event: PointerEvent) => {
@@ -292,7 +302,7 @@ export function SearchResultRow({
         }}
         onMouseMove={option.onPoint}
       >
-        <RowBody result={result} />
+        <RowBody result={result} compact />
       </div>
     );
   }

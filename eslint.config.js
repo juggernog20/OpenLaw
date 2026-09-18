@@ -138,6 +138,7 @@ export default tseslint.config(
       "apps/web/src/components/ui/dialog.tsx",
       "apps/web/src/components/shell/**",
       "apps/web/src/components/portal/portal-shell.tsx",
+      "apps/web/src/components/portal/portal-brand.tsx",
     ],
     rules: {
       "no-restricted-syntax": [

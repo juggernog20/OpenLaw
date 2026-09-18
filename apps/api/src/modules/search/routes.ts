@@ -88,6 +88,7 @@ const SearchRowSchema = z.discriminatedUnion("kind", [
     ownerKind: z.enum(DOCUMENT_OWNER_KINDS),
     ownerId: z.string(),
     ownerNumber: z.number().int().positive().nullable(),
+    ownerTitle: z.string(),
     versionId: z.string(),
     versionNumber: z.number().int().positive(),
     snippet: z.string(),
@@ -105,6 +106,7 @@ interface SearchDbRow extends Record<string, unknown> {
   owner_kind: DocumentOwner | null;
   owner_id: string | null;
   owner_number: number | null;
+  owner_title: string | null;
   version_id: string | null;
   version_number: number | null;
   snippet: string | null;
@@ -185,7 +187,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     contract_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
         case when exact_number
@@ -218,7 +220,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     matter_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
         case when exact_number
@@ -240,6 +242,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         ${documentOwnerCase((owner) => owner.kindSql)} as owner_kind,
         ${documentOwnerCase((owner) => sql<string>`${owner.recordId}`)} as owner_id,
         ${documentOwnerCase((owner) => sql<number>`${owner.number}`)} as owner_number,
+        ${documentOwnerCase((owner) => sql<string>`${owner.title}`)} as owner_title,
         ${documentVersions.id} as version_id,
         ${documentVersions.versionNumber} as version_number,
         null::text as state,
@@ -258,6 +261,11 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         ${documentVersionText.searchVector} as extracted_vector
       from ${documents}
       inner join ${documentVersions} on ${documentVersions.documentId} = ${documents.id}
+        and ${documentVersions.versionNumber} = (
+          select max(current_version.version_number)
+          from ${documentVersions} current_version
+          where current_version.document_id = ${documents.id}
+        )
       left join ${documentVersionText} on ${documentVersionText.versionId} = ${documentVersions.id}
       left join ${contracts} on ${contracts.id} = ${documents.contractId}
       left join ${matters} on ${matters.id} = ${documents.matterId}
@@ -269,7 +277,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     document_version_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        owner_kind, owner_id, owner_number, version_id, version_number,
+        owner_kind, owner_id, owner_number, owner_title, version_id, version_number,
         document_title, document_description, original_filename,
         email_subject, extracted_text, extracted_vector, state,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
@@ -277,19 +285,10 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       cross join search_query
       where document @@ search_query.value
     ),
-    document_winners as (
-      select distinct on (id)
-        kind, id, number, title, is_confidential, kind_order,
-        owner_kind, owner_id, owner_number, version_id, version_number,
-        document_title, document_description, original_filename,
-        email_subject, extracted_text, extracted_vector, state, rank
-      from document_version_hits
-      order by id, version_number desc
-    ),
     document_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        owner_kind, owner_id, owner_number, version_id, version_number,
+        owner_kind, owner_id, owner_number, owner_title, version_id, version_number,
         ts_headline(
           'english',
           case
@@ -310,7 +309,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
           'StartSel=<mark>, StopSel=</mark>, MaxWords=24, MinWords=8, ShortWord=2'
         ) as snippet,
         state, rank
-      from document_winners
+      from document_version_hits
       cross join search_query
     ),
     entity_candidates as (
@@ -330,7 +329,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     entity_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
@@ -353,7 +352,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     counterparty_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
@@ -381,7 +380,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     request_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
         case when exact_number
@@ -411,7 +410,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
     knowledge_item_hits as (
       select
         kind, id, number, title, is_confidential, kind_order,
-        null::text as owner_kind, null::text as owner_id, null::integer as owner_number,
+        null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, state,
         ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
@@ -447,6 +446,7 @@ function toSearchRow(row: SearchDbRow): z.infer<typeof SearchRowSchema> {
   if (
     row.owner_kind === null ||
     row.owner_id === null ||
+    row.owner_title === null ||
     row.version_id === null ||
     row.version_number === null ||
     row.snippet === null
@@ -477,6 +477,7 @@ function toSearchRow(row: SearchDbRow): z.infer<typeof SearchRowSchema> {
     ownerKind,
     ownerId: row.owner_id,
     ownerNumber: row.owner_number,
+    ownerTitle: row.owner_title,
     versionId: row.version_id,
     versionNumber: row.version_number,
     snippet: row.snippet,
@@ -493,7 +494,7 @@ async function groupedSearch(db: Db, ctes: SQL): Promise<SearchDbRow[]> {
       from all_hits
     )
     select kind, id, number, title, is_confidential, rank, kind_order,
-      owner_kind, owner_id, owner_number, version_id, version_number, snippet, state
+      owner_kind, owner_id, owner_number, owner_title, version_id, version_number, snippet, state
     from ranked_hits
     where kind_position <= ${GROUPED_LIMIT}
     order by kind_order, rank desc, id desc
@@ -530,7 +531,7 @@ async function flatSearch(
       limit 1
     )
     select kind, id, number, title, is_confidential, rank, kind_order,
-      owner_kind, owner_id, owner_number, version_id, version_number, snippet, state
+      owner_kind, owner_id, owner_number, owner_title, version_id, version_number, snippet, state
     from all_hits
     where ${kindScope} and ${cursorScope}
     order by rank desc, id desc
@@ -553,7 +554,7 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
           "of them selects the flat results-page order, which defaults to 25 " +
           "and pages by rank and id. A cursor whose row has since been archived, deleted, " +
           "or walled off ends the page set with an empty answer. Document hits identify " +
-          "the owning record and matched version",
+          "the owning record and latest version; only the latest version is searched",
         tags: ["search"],
         querystring: QuerySchema,
         response: {

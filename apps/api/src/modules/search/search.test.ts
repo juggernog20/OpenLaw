@@ -52,6 +52,7 @@ interface SearchRow {
   rank: number;
   ownerKind?: "contract" | "matter";
   ownerNumber?: number;
+  ownerTitle?: string;
   versionId?: string;
   versionNumber?: number;
   snippet?: string;
@@ -558,6 +559,7 @@ describe("Document search", () => {
         id: document.id,
         ownerKind: "contract",
         ownerNumber: contractNumber,
+        ownerTitle: "Aurora Licensing Contract",
         versionId: version.id,
         versionNumber: version.versionNumber,
       });
@@ -643,7 +645,7 @@ describe("Document search", () => {
     );
   });
 
-  it("rolls version hits up to one Document, preferring the latest matching version", async () => {
+  it("searches only the latest version and returns one result per Document", async () => {
     const firstBytes = Buffer.from("%PDF-1.7\nfirst search version");
     const secondBytes = Buffer.from("%PDF-1.7\nsecond search version");
     const first = await uploadDocument({
@@ -677,12 +679,11 @@ describe("Document search", () => {
         versionNumber: 2,
       }),
     ]);
-    expect(await oneKind("oldversiononlyneedle", "document")).toEqual([
-      expect.objectContaining({
-        id: first.id,
-        versionId: firstVersion.id,
-        versionNumber: 1,
-      }),
+    expect(await oneKind("oldversiononlyneedle", "document")).toEqual([]);
+    const grouped = await search("q=sharedversionneedle");
+    expect(grouped.results.filter((row) => row.kind === "document")).toEqual([
+      expect.objectContaining({ id: first.id, versionId: secondVersion.id }),
     ]);
+    expect((await search("q=oldversiononlyneedle")).results).toEqual([]);
   });
 });

@@ -60506,7 +60506,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -61083,7 +61083,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -61670,7 +61670,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -62257,7 +62257,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -62553,7 +62553,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter documents. Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -86992,7 +86992,7 @@
     "/api/v1/search": {
       "get": {
         "operationId": "search",
-        "summary": "Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. A cursor whose row has since been archived, deleted, or walled off ends the page set with an empty answer. Document hits identify the owning record and matched version",
+        "summary": "Ranked full-text search across Contracts, Matters, Documents, Entities, Counterparties, and Requests (M25). Omit limit, kind, and cursor for the header's grouped answer of ten per kind. Supplying any of them selects the flat results-page order, which defaults to 25 and pages by rank and id. A cursor whose row has since been archived, deleted, or walled off ends the page set with an empty answer. Document hits identify the owning record and latest version; only the latest version is searched",
         "tags": ["search"],
         "parameters": [
           {
@@ -87196,6 +87196,9 @@
                                   }
                                 ]
                               },
+                              "ownerTitle": {
+                                "type": "string"
+                              },
                               "versionId": {
                                 "type": "string"
                               },
@@ -87218,6 +87221,7 @@
                               "ownerKind",
                               "ownerId",
                               "ownerNumber",
+                              "ownerTitle",
                               "versionId",
                               "versionNumber",
                               "snippet"

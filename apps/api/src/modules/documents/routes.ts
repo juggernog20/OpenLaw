@@ -843,8 +843,8 @@ const UPLOAD_FIELDS = {
     type: "string",
     enum: [...HAND_SET_DOCUMENT_VERSION_KINDS],
     description:
-      "What this version is in the negotiation (CTR-014), or `general` for Matter documents. " +
-      "Matter uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.",
+      "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. " +
+      "Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.",
   },
   note: {
     type: "string",
@@ -2318,7 +2318,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       assertOpenEntity(await reachedEntity(app.db, request.user, request.params.id));
       const documentId = uuidv7();
       const versionId = uuidv7();
-      const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
+      const file = await receiveUpload(
+        request,
+        versionStorageKey(documentId, versionId),
+        true,
+        "general",
+      );
       const created = await withStoredFile(request, file, () =>
         app.db.transaction(async (tx) => {
           const locked = await reachedEntity(tx, request.user, request.params.id, { lock: true });
@@ -2502,7 +2507,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         request,
         versionStorageKey(documentId, versionId),
         false,
-        reached.owner.kind === "matter" || reached.owner.kind === "auto_doc"
+        reached.owner.kind === "matter" ||
+          reached.owner.kind === "entity" ||
+          reached.owner.kind === "auto_doc"
           ? "general"
           : "draft_ours",
       );

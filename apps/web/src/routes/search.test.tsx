@@ -48,6 +48,7 @@ const DOCUMENT = {
   rank: 6,
   ownerKind: "contract",
   ownerNumber: 58,
+  ownerTitle: "Orion Cloud master services agreement",
   versionId: "version-4",
   versionNumber: 4,
   snippet: "…either party may <mark>terminate for convenience</mark> on sixty days' notice…",
@@ -68,6 +69,7 @@ const KNOWLEDGE_DOCUMENT = {
   id: "knowledge-document-7",
   ownerKind: "knowledge_item",
   ownerId: "knowledge-7",
+  ownerTitle: "Acquisition template",
   ownerNumber: null,
 } as const;
 
@@ -152,7 +154,10 @@ describe("the header search box", () => {
     expect(within(listbox).getByText("Matter")).toBeVisible();
     expect(within(listbox).getByText("Document")).toBeVisible();
     expect(within(listbox).getByText("CONFI")).toBeVisible();
-    expect(within(listbox).getByText("terminate for convenience").tagName).toBe("MARK");
+    const documentOption = within(listbox).getByRole("option", { name: /counter_redline/i });
+    expect(documentOption).toHaveTextContent("C-58 · Orion Cloud master services agreement");
+    expect(within(documentOption).queryByText("v4")).not.toBeInTheDocument();
+    expect(within(listbox).queryByText("terminate for convenience")).not.toBeInTheDocument();
 
     await user.keyboard("{ArrowDown}{Enter}");
     await waitFor(() => expect(router.state.location.pathname).toBe("/matters/51"));
@@ -170,7 +175,7 @@ describe("the header search box", () => {
     expect(
       await screen.findByRole("option", { name: /Draft.*Acquisition template/i }),
     ).toBeVisible();
-    expect(screen.getByRole("option", { name: /v4.*counter_redline/i })).toBeVisible();
+    expect(screen.getByRole("option", { name: /counter_redline/i })).toBeVisible();
     expect(searchResultPath(KNOWLEDGE, "indemnity")).toBe("/knowledge/knowledge-7");
     expect(searchResultPath(KNOWLEDGE_DOCUMENT, "indemnity")).toBe(
       "/knowledge/knowledge-7?doc=knowledge-document-7&version=version-4&find=indemnity",
@@ -320,12 +325,14 @@ describe("the results page", () => {
       "aria-current",
       "page",
     );
-    const documentRow = await screen.findByRole("link", { name: /v4.*counter_redline/i });
+    const documentRow = await screen.findByRole("link", { name: /counter_redline/i });
     expect(documentRow).toHaveAttribute(
       "href",
       "/contracts/58/documents?doc=document-7&version=version-4&find=termination",
     );
-    expect(screen.getByText("C-58")).toBeVisible();
+    expect(documentRow).toHaveTextContent("C-58 · Orion Cloud master services agreement");
+    expect(within(documentRow).queryByText("v4")).not.toBeInTheDocument();
+    expect(screen.getByText("terminate for convenience").tagName).toBe("MARK");
     expect(reads[0]?.get("limit")).toBe("25");
     expect(reads[0]?.get("kind")).toBe("document");
 

@@ -16,7 +16,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { MyRequestRow } from "../lib/requests";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -286,6 +286,30 @@ describe("view as business user", () => {
 });
 
 describe("the portal chrome", () => {
+  it("uses organization branding and falls back gracefully when the logo fails", async () => {
+    const logo = "data:image/png;base64,dGVzdA==";
+    stubApi({
+      signedIn: REQUESTER,
+      orgGeneral: {
+        name: "Wentworth Family Office",
+        logo,
+        defaultLocale: "en-US",
+        defaultTimezone: "UTC",
+      },
+    });
+    renderAt("/portal");
+    const header = await screen.findByRole("banner");
+    expect(await within(header).findByText("Wentworth Family Office")).toBeInTheDocument();
+    expect(within(header).getByText("openlaw")).toBeInTheDocument();
+    const home = within(header).getByRole("link", { name: "Legal portal" });
+    const image = home.querySelector("img")!;
+    expect(image).toHaveAttribute("src", logo);
+    fireEvent.error(image);
+    expect(home.querySelector("img")).toBeNull();
+    expect(home.querySelector(".lucide-scale")).not.toBeNull();
+    expect(within(header).getByText("Wentworth Family Office")).toBeInTheDocument();
+  });
+
   it("carries the signed-in identity and the way out", async () => {
     stubApi({ signedIn: REQUESTER });
     renderAt("/portal");

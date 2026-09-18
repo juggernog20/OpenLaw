@@ -4,7 +4,7 @@
 
 import { HelpLink } from "../documentation/help-link";
 import { type ReactNode } from "react";
-import { Scale, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { type Theme } from "../../lib/theme";
@@ -12,6 +12,7 @@ import { isMemberPlus, type Role } from "../../lib/roles";
 import { useRetainedLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { Avatar } from "../avatar";
 import { PortalThemeMenu } from "./portal-theme-menu";
+import { PortalBrand } from "./portal-brand";
 import { PortalNav } from "./portal-nav";
 import { NotificationBell } from "../notification-bell";
 import { SkipLink } from "../skip-link";
@@ -74,23 +75,7 @@ export function PortalShell({
           })}
           className="flex min-w-0 items-center gap-3 rounded-button focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         >
-          {/* The staff header's mark (DES-008's scale glyph), on the
-              portal's own light strip: the same product, a different
-              door. */}
-          <span
-            aria-hidden="true"
-            className="flex size-8 shrink-0 items-center justify-center rounded-card bg-inverted text-on-inverted"
-          >
-            <Scale size={20} />
-          </span>
-          <span className="hidden min-w-0 flex-col sm:flex">
-            <span className="truncate text-base leading-tight font-semibold text-primary">
-              <FormattedMessage id="portal.brand" defaultMessage="OpenLaw" />
-            </span>
-            <span className="truncate text-sm leading-tight text-muted">
-              <FormattedMessage id="portal.name" defaultMessage="Legal portal" />
-            </span>
-          </span>
+          <PortalBrand />
         </Link>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <HelpLink surface="portal" audience="business_user" />

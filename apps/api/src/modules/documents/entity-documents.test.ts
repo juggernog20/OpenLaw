@@ -70,6 +70,7 @@ describe("Entity-owned Documents", () => {
     expect(created.statusCode, created.body).toBe(201);
     const document = created.json().document as { id: string; versions: unknown[] };
     expect(document.versions).toHaveLength(1);
+    expect(document.versions[0]).toMatchObject({ kind: "general" });
 
     const version = await harness.app.inject({
       method: "POST",
@@ -79,6 +80,9 @@ describe("Entity-owned Documents", () => {
     });
     expect(version.statusCode, version.body).toBe(201);
     expect(version.json().document.versions).toHaveLength(2);
+    expect(
+      version.json().document.versions.every((row: { kind: string }) => row.kind === "general"),
+    ).toBe(true);
 
     const folders = await harness.app.inject({
       method: "GET",

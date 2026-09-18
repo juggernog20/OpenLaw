@@ -120,24 +120,30 @@ export function HomePage() {
         <HomeWelcomeCard role={user.role} />
       ) : (
         <div className="grid grid-cols-1 gap-4 @4xl/page:grid-cols-2">
-          {sections.map((section) => {
-            switch (section.type) {
-              case "approvals":
-                return <HomeApprovalsCard key={section.type} section={section} />;
-              case "tasks":
-                return <HomeTasksCard key={section.type} section={section} />;
-              case "dates":
-                return <HomeDatesCard key={section.type} section={section} />;
-              case "obligations":
-                return <HomeObligationsCard key={section.type} section={section} />;
-              case "inbox":
-                return <HomeInboxCard key={section.type} section={section} />;
-              case "contracts":
-                return <HomeContractsCard key={section.type} section={section} />;
-              case "matters":
-                return <HomeMattersCard key={section.type} section={section} />;
-            }
-          })}
+          {[...sections]
+            .sort((a, b) => {
+              const position = (type: string) =>
+                type === "inbox" ? -2 : type === "obligations" ? -1 : 0;
+              return position(a.type) - position(b.type);
+            })
+            .map((section) => {
+              switch (section.type) {
+                case "approvals":
+                  return <HomeApprovalsCard key={section.type} section={section} />;
+                case "tasks":
+                  return <HomeTasksCard key={section.type} section={section} />;
+                case "dates":
+                  return <HomeDatesCard key={section.type} section={section} />;
+                case "obligations":
+                  return <HomeObligationsCard key={section.type} section={section} />;
+                case "inbox":
+                  return <HomeInboxCard key={section.type} section={section} />;
+                case "contracts":
+                  return <HomeContractsCard key={section.type} section={section} />;
+                case "matters":
+                  return <HomeMattersCard key={section.type} section={section} />;
+              }
+            })}
         </div>
       )}
     </AppShell>

@@ -5,7 +5,8 @@
 import { useEffect, useRef, useState } from "react";
 import { redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
-import { Camera, Scale } from "lucide-react";
+import { PortalBrand } from "../components/portal/portal-brand";
+import { Camera } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { AVATAR_BYTE_LIMIT, AVATAR_TYPES } from "../lib/avatar";
@@ -214,14 +215,7 @@ export function PortalOnboardingPage() {
       <SkipLink />
       <PageTitle title={intl.formatMessage(COPY.title)} />
       <header className="flex h-(--height-header) items-center justify-between gap-4 border-b border-border-default bg-raised px-page-x">
-        <span className="flex min-w-0 items-center gap-3">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-card bg-inverted text-on-inverted">
-            <Scale size={20} aria-hidden="true" />
-          </span>
-          <span className="text-base font-semibold">
-            <FormattedMessage id="portal.brand" defaultMessage="OpenLaw" />
-          </span>
-        </span>
+        <PortalBrand />
         <Button variant="ghost" onClick={() => void signOut()}>
           <FormattedMessage id="auth.signOut" defaultMessage="Sign out" />
         </Button>

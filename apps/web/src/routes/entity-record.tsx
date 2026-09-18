@@ -783,6 +783,7 @@ function EntityRecord() {
               />
             ) : loaded.tab === "obligations" ? (
               <ObligationsPanel
+                userId={loaded.user.id}
                 entityId={saved.id}
                 initial={loaded.obligations}
                 registrations={loaded.registrations}
