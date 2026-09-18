@@ -182,6 +182,10 @@ test(
     }
     copyFileSync(helper, path.join(root, "scripts/dev-processes.mjs"));
     copyFileSync(new URL("./dev-hot.sh", import.meta.url), path.join(root, "scripts/dev-hot.sh"));
+    copyFileSync(
+      new URL("./dev-smtp.mjs", import.meta.url),
+      path.join(root, "scripts/dev-smtp.mjs"),
+    );
     writeFileSync(path.join(root, ".env"), "");
     const watcher = 'console.log("READY " + process.pid); setInterval(() => {}, 1000);';
     writeFileSync(path.join(root, "scripts/seed/index.mjs"), watcher);
