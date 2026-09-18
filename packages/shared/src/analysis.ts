@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Per-call ceilings; the provider's model may impose a lower maximum. */
+export const AI_OUTPUT_TOKEN_DEFAULT = 32_768;
+export const AI_OUTPUT_TOKEN_WARNING = 32_768;
+export const AI_OUTPUT_TOKEN_MIN = 1_024;
+export const AI_OUTPUT_TOKEN_MAX = 262_144;
+
 /** CTR-008's shared target vocabulary, answer provenance, and source-text budget. */
 import type {
   ConversionAttachmentRead,

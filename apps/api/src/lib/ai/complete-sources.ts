@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Read every source section, then reconcile supported findings using original citation identities. */
 import { checkedCitations } from "../conversion-draft.js";
-import { EXTRACTION_BOUND } from "./http.js";
+import { extractionTimeBudget } from "./structured-extraction.js";
 import {
   AiResponseError,
   AiTimeoutError,
@@ -50,7 +50,7 @@ async function extract(
       // and this is only the backstop for an adapter that never settles.
       timer = setTimeout(
         () => reject(new AiTimeoutError("The provider did not answer in time.")),
-        EXTRACTION_BOUND.timeoutMs + 5_000,
+        extractionTimeBudget(targets, sources) + 5_000,
       );
     }),
   ]).finally(() => clearTimeout(timer));

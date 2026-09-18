@@ -139,6 +139,7 @@ export function ConvertDialog({
   const pendingRead = useRef<AbortController | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [preparationFailed, setPreparationFailed] = useState(false);
+  const [preparationFailure, setPreparationFailure] = useState<string | null>(null);
   useEffect(() => () => pendingRead.current?.abort(), []);
   const [human, setHuman] = useState<Set<string>>(new Set());
   const [dropped, setDropped] = useState(false);
@@ -273,6 +274,7 @@ export function ConvertDialog({
     pendingRead.current?.abort();
     setPreparing(false);
     setPreparationFailed(false);
+    setPreparationFailure(null);
     for (const slug of Object.keys(suggestions)) {
       if (human.has(slug)) {
         // A confirmed Field has no text edit in drafts yet, but is human-reviewed.
@@ -357,6 +359,7 @@ export function ConvertDialog({
         next = read.data.draft;
       }
       if (controller.signal.aborted) return;
+      if (next.state === "failed") setPreparationFailure(next.failure);
       if (next.state !== "ready" || next.targetModule !== module || next.targetTypeId !== typeId)
         throw new Error("unavailable");
       setInitialDraft(next);
@@ -720,10 +723,12 @@ export function ConvertDialog({
                       values={{ module: targetModule }}
                     />
                   ) : (
-                    <FormattedMessage
-                      id="conversion.failed"
-                      defaultMessage="Preparation could not finish. Retry or continue manually."
-                    />
+                    (preparationFailure ?? (
+                      <FormattedMessage
+                        id="conversion.failed"
+                        defaultMessage="Preparation could not finish. Retry or continue manually."
+                      />
+                    ))
                   )}
                 </p>
                 {preparationFailed && (

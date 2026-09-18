@@ -748,7 +748,7 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
 
   it("leaves the status untouched when a reply is posted (INT-007)", async () => {
     const user = userEvent.setup();
-    const request = detailApi(detail());
+    const request = detailApi(detail({ request: { status: "read" } }));
     const comments = commentsApi();
     const seen: string[] = [];
     stubApi({
@@ -773,7 +773,7 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
 
     expect(seen).toEqual([]);
     const subbar = screen.getByRole("heading", { level: 1 }).closest("section")!;
-    expect(within(subbar).getByText("New")).toBeInTheDocument();
+    expect(within(subbar).getByText("Read")).toBeInTheDocument();
   });
 });
 
@@ -817,4 +817,25 @@ describe("the trail from the queue", () => {
     expect(await screen.findByRole("region", { name: "Form responses" })).toBeInTheDocument();
     expect(request.asked).toEqual(["/api/v1/requests/45"]);
   });
+});
+
+it("marks the mounted full record read and keeps triage available", async () => {
+  const body = detail();
+  let receipts = 0;
+  const detailStub = detailApi(body);
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/requests/45/read" && call.method === "POST") {
+        receipts++;
+        body.request.status = "read";
+        return json(200, { request: body.request });
+      }
+      return detailStub.handler(call);
+    },
+  });
+  renderAt("/inbox/45");
+  await waitFor(() => expect(receipts).toBe(1));
+  expect(await screen.findByText("Read")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Triage" })).toBeVisible();
 });

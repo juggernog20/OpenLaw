@@ -5,7 +5,7 @@ import {
   ADVISORY_LOCK,
   and,
   count,
-  eq,
+  inArray,
   isNull,
   requests,
   sql,
@@ -25,6 +25,6 @@ export async function publishInboxTotal(tx: Transaction): Promise<void> {
   const [queue] = await tx
     .select({ total: count() })
     .from(requests)
-    .where(and(isNull(requests.archivedAt), eq(requests.status, "new")));
+    .where(and(isNull(requests.archivedAt), inArray(requests.status, ["new", "read"])));
   await publishLiveEvent(tx, { kind: "inbox", total: queue!.total });
 }

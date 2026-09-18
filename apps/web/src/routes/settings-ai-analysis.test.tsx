@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { paths } from "@openlaw/api-client";
 import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
@@ -134,6 +134,7 @@ function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse
     baseUrl: "https://api.openai.com/v1",
     hasApiKey: true,
     model: "gpt-saved",
+    maxOutputTokens: 32768,
     disabledAt: null,
     updatedAt: "2026-09-02T12:00:00.000Z",
     ...overrides,
@@ -180,6 +181,7 @@ function connectorApi(
           protocol: body.protocol ?? option.protocol,
           baseUrl: body.baseUrl ?? option.baseUrl,
           model: body.model,
+          maxOutputTokens: body.maxOutputTokens ?? stored.maxOutputTokens,
           hasApiKey: stored.hasApiKey || body.apiKey !== undefined,
           enabled: stored.enabled,
           disabledAt: stored.disabledAt,
@@ -275,7 +277,7 @@ describe("the AI analysis connector pane (#662)", () => {
     await user.type(screen.getByLabelText("Model"), "gpt-updated");
     await user.click(screen.getByRole("button", { name: "Save connector" }));
     await waitFor(() => expect(saves).toHaveLength(1));
-    expect(saves[0]).toEqual({ preset: "openai", model: "gpt-updated" });
+    expect(saves[0]).toEqual({ preset: "openai", model: "gpt-updated", maxOutputTokens: 32768 });
   });
 
   it("prints a successful connection test in place", async () => {
@@ -434,7 +436,9 @@ describe("the provider model selector", () => {
     expect(await screen.findByText(/selected model was not returned/)).toBeVisible();
     expect(screen.getByLabelText("Model")).toHaveValue("vendor/legal");
     await user.click(screen.getByRole("button", { name: "Save connector" }));
-    await waitFor(() => expect(saves).toEqual([{ preset: "openai", model: "vendor/legal" }]));
+    await waitFor(() =>
+      expect(saves).toEqual([{ preset: "openai", model: "vendor/legal", maxOutputTokens: 32768 }]),
+    );
   });
 
   it("loads unsaved credentials before a connector exists and keeps manual fallback after failure", async () => {
@@ -517,6 +521,7 @@ describe("the provider model selector", () => {
           protocol: "openai_chat_completions",
           baseUrl: "https://private.test/v1",
           model: "private-model",
+          maxOutputTokens: 32768,
           apiKey: "private-test-key",
         },
       ]),
@@ -642,4 +647,28 @@ it("persists post-conversion filling independently of both preparation switches"
   expect(
     screen.getByRole("switch", { name: "Prepare Matter conversions with AI" }),
   ).not.toBeChecked();
+});
+
+it("loads and saves the output limit and warns below the guidance threshold", async () => {
+  const user = userEvent.setup();
+  const saves: unknown[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    extra: connectorApi({ connector: connector({ maxOutputTokens: 65536 }) }, saves),
+  });
+  renderAt("/settings/ai-analysis");
+  await openProvider(user);
+  const slider = screen.getByRole("slider", { name: "Output token limit per API call" });
+  expect(slider).toHaveValue("65536");
+  fireEvent.change(slider, { target: { value: "8192" } });
+  expect(screen.getByLabelText("Exact output token limit")).toHaveValue(8192);
+  expect(screen.getByText(/Below 32,768 tokens/)).toBeVisible();
+  fireEvent.change(screen.getByLabelText("Exact output token limit"), {
+    target: { value: "65536" },
+  });
+  expect(slider).toHaveValue("65536");
+  expect(screen.queryByText(/Below 32,768 tokens/)).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Save connector" }));
+  await waitFor(() => expect(saves).toHaveLength(1));
+  expect(saves[0]).toMatchObject({ maxOutputTokens: 65536 });
 });

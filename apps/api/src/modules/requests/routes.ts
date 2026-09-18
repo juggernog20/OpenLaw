@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { isOpenRequestStatus } from "@openlaw/shared";
 import {
   IntakeCounterpartiesInput,
   resolveIntakeCounterparties,
@@ -640,7 +641,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: {
           201: z.object({ attachment: RequestAttachmentSchema }),
           409: problemTypeResponse(
-            "A Request that is no longer new takes paper on its thread, not as another " +
+            "A triaged Request takes paper on its thread, not as another " +
               "Request attachment (INT-002, CMT-011). The named refusal carries " +
               "`request`, the R-### whose portal detail owns that thread; `outcome`, " +
               "the disposition already recorded; and `convertedRecord`, the record " +
@@ -820,7 +821,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
     user: AuthenticatedUser,
     held: Awaited<ReturnType<typeof reachedRequest>>,
   ): Promise<void> {
-    if (held.status === "new") return;
+    if (isOpenRequestStatus(held.status)) return;
     const convertedRecords = await selectConvertedRecords(db, user, [held.id]);
     throw httpError(
       409,

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Durable Request conversion preparation with leased work and current-source checks (INT-008). */
+import { isOpenRequestStatus } from "@openlaw/shared";
 import { and, conversionDrafts, eq, isNull, lt, or, sql, users, type Db } from "@openlaw/db";
 import type { ConversionSuggestion } from "@openlaw/shared";
 import {
@@ -13,6 +14,7 @@ import type { StorageAdapter } from "../lib/storage/adapter.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
 import { extractCompleteSources } from "../lib/ai/complete-sources.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
+import { aiPreparationFailure, AiProviderError, AiResponseError } from "../lib/ai/provider.js";
 import type { PipelineLogger } from "./logger.js";
 import type { JobQueue } from "./jobs.js";
 
@@ -77,7 +79,7 @@ export async function handleConversionDraft(
       false,
       draft.targetModule,
     );
-    if (context.row.status !== "new" || context.snapshot !== draft.snapshot)
+    if (!isOpenRequestStatus(context.row.status) || context.snapshot !== draft.snapshot)
       throw new Error("changed");
     const attachmentReads = draft.attachmentReads.length
       ? draft.attachmentReads
@@ -122,7 +124,7 @@ export async function handleConversionDraft(
     const [currentActor] = await deps.db.select().from(users).where(eq(users.id, draft.actorId));
     if (
       current.snapshot !== draft.snapshot ||
-      current.row.status !== "new" ||
+      !isOpenRequestStatus(current.row.status) ||
       !currentActor ||
       currentActor.archivedAt ||
       !["administrator", "legal_team_member"].includes(currentActor.role) ||
@@ -150,14 +152,23 @@ export async function handleConversionDraft(
       );
   } catch (error) {
     deps.log?.warn(
-      { draftId: id, stage, errorClass: error instanceof Error ? error.name : "unknown" },
+      {
+        draftId: id,
+        stage,
+        errorClass: error instanceof Error ? error.name : "unknown",
+        ...(error instanceof AiResponseError ? { reason: error.reason, issues: error.issues } : {}),
+        ...(error instanceof AiProviderError ? { progress: error.progress } : {}),
+        ...(error instanceof AiProviderError && error.upstream
+          ? { status: error.upstream.status }
+          : {}),
+      },
       "Request conversion preparation failed",
     );
     await deps.db
       .update(conversionDrafts)
       .set({
         state: "failed",
-        failure: "Preparation could not finish. Retry or continue manually.",
+        failure: aiPreparationFailure(error),
         suggestions: {},
         conflicts: {},
         finishedAt: new Date(),

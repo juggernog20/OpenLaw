@@ -138,6 +138,7 @@ export async function keyDatesExtractionTarget(
   const context = await analysisKeyDateContext(db, contract);
   return {
     slug: KEY_DATES_TARGET,
+    type: "key_dates",
     prompt: [
       `Extract up to ${MAX_EXTRACTED_KEY_DATES} distinct, actionable Contract milestones from DOCUMENT sources only: price reviews, delivery or payment milestones, option exercise deadlines, warranty or insurance expiries, and similar named events.`,
       'Return value as an array of {kind:"milestone", date:"YYYY-MM-DD", label:"short event name", note:null, sourceId:"exact document source id", evidence:"exact passage supporting BOTH the event and its date"}. Each item needs its own quote. Include outer citations covering the item quotes. Return [] when none are supported.',

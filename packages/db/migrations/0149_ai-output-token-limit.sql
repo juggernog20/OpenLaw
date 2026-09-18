@@ -1,0 +1,2 @@
+ALTER TABLE "ai_connector" ADD COLUMN "max_output_tokens" integer DEFAULT 32768 NOT NULL;--> statement-breakpoint
+ALTER TABLE "ai_connector" ADD CONSTRAINT "ai_connector_output_tokens_check" CHECK ("ai_connector"."max_output_tokens" between 1024 and 262144);

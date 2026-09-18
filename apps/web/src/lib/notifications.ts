@@ -563,7 +563,7 @@ function hrefFor(item: BellItem, arm: Arm | undefined, surface: "staff" | "porta
 
 /** Every status a Request can hold: `new`, then one of the three
  * outcomes (INT-007). */
-const REQUEST_STATUSES: readonly RequestStatus[] = ["new", ...REQUEST_OUTCOMES];
+const REQUEST_STATUSES: readonly RequestStatus[] = ["new", "read", ...REQUEST_OUTCOMES];
 
 function isRequestStatus(value: string): value is RequestStatus {
   return (REQUEST_STATUSES as readonly string[]).includes(value);

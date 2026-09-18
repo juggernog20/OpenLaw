@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { AI_OUTPUT_TOKEN_DEFAULT } from "@openlaw/shared";
+
 import {
   AI_UNSUPPORTED_FIELDS,
   AiConfigError,
@@ -34,13 +36,10 @@ export const PROBE_BOUND: AiCallBound = { maxTokens: 1024, timeoutMs: 30_000 };
  * An extraction returns one value and one quote per field, after any
  * thinking, and may wait on a local model working through a long contract.
  */
-// Five minutes, not two: a 50,000-character Request with a justification
-// per field is a 13k-token prompt and up to 8,192 output tokens, and one
-// such answer took 113 seconds on a fast model and over 120 on a slow one.
-// The worker renews the draft's lease every 30 seconds while it waits, so
-// the client keeps waiting too; a call that has run past this bound is a
-// stall, not a slow answer.
-export const EXTRACTION_BOUND: AiCallBound = { maxTokens: 8192, timeoutMs: 300_000 };
+export const EXTRACTION_BOUND: AiCallBound = {
+  maxTokens: AI_OUTPUT_TOKEN_DEFAULT,
+  timeoutMs: 300_000,
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -86,7 +85,19 @@ const UNSUPPORTED_FIELD = /unsupported (?:parameter|value)[^']*'([a-z_]+)'/i;
 /** Names the refused request field when it is one an adapter can drop. */
 function unsupportedFieldIn(text: string): AiUnsupportedField | undefined {
   const field = UNSUPPORTED_FIELD.exec(text)?.[1]?.toLowerCase();
-  return AI_UNSUPPORTED_FIELDS.find((known) => known === field);
+  const exact = AI_UNSUPPORTED_FIELDS.find((known) => known === field);
+  if (exact) return exact;
+  // Match an explicit capability refusal, never a malformed schema or an unrelated 4xx.
+  if (/invalid schema|schema[^.]*?(?:missing|required)/i.test(text)) return undefined;
+  for (const candidate of ["response_format", "output_config", "responseJsonSchema"] as const) {
+    const name = candidate === "responseJsonSchema" ? "response_?json_?schema" : candidate;
+    const escaped = new RegExp(
+      `(?:${name}[^.\n]{0,100}(?:not supported|unsupported|not available)|(?:unknown|unrecognized|unsupported|unexpected) (?:field|parameter|name|argument)[^a-z_]{0,10}${name})`,
+      "i",
+    );
+    if (escaped.test(text)) return candidate;
+  }
+  return undefined;
 }
 
 /** The provider's refusal body, read once and split for its two readers. */
@@ -278,11 +289,7 @@ export function extractionPrompt(
   ].join("\n");
 }
 
-/** Finds a JSON object in plain, fenced, or lightly narrated model output. */
-export function parseExtractionReply(
-  reply: string,
-  targets: readonly AiExtractionTarget[],
-): AiExtraction[] {
+export function extractionObject(reply: string): Record<string, unknown> {
   const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(reply)?.[1];
   const candidate = fenced ?? reply.slice(reply.indexOf("{"), reply.lastIndexOf("}") + 1);
   let parsed: unknown;
@@ -296,6 +303,15 @@ export function parseExtractionReply(
   if (!isRecord(parsed)) {
     throw new AiResponseError("The provider reply was not an object keyed by field slug.");
   }
+  return parsed;
+}
+
+/** Finds a JSON object in plain, fenced, or lightly narrated model output. */
+export function parseExtractionReply(
+  reply: string,
+  targets: readonly AiExtractionTarget[],
+): AiExtraction[] {
+  const parsed = extractionObject(reply);
   const answers: AiExtraction[] = [];
   for (const target of targets) {
     if (!(target.slug in parsed)) continue;
@@ -357,6 +373,7 @@ export function stringAt(value: unknown, path: readonly (string | number)[]): st
 }
 
 export function requireReply(value: string): string {
-  if (!value.trim()) throw new AiResponseError("The provider returned no text reply.");
+  if (!value.trim())
+    throw new AiResponseError("The provider returned no text reply.", { reason: "empty_response" });
   return value;
 }

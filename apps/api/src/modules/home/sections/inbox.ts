@@ -7,6 +7,7 @@ import {
   asc,
   desc,
   eq,
+  inArray,
   isNull,
   requestTypes,
   requests,
@@ -61,7 +62,7 @@ export async function readInboxHomeSection(
     .from(requests)
     .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
     .innerJoin(users, eq(requests.requesterId, users.id))
-    .where(and(isNull(requests.archivedAt), eq(requests.status, "new")))
+    .where(and(isNull(requests.archivedAt), inArray(requests.status, ["new", "read"])))
     .orderBy(desc(urgencyRank), asc(requests.createdAt), asc(requests.number))
     .limit(HOME_SECTION_LIMIT);
 

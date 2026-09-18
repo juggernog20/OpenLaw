@@ -2,6 +2,7 @@
 
 /** INT-007 assigns an undecided Request and records its activity and notification together. */
 
+import { isOpenRequestStatus } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { and, asc, eq, inArray, isNull, requests, users } from "@openlaw/db";
@@ -64,7 +65,7 @@ export const requestAssignmentRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(and(eq(requests.number, request.params.number), isNull(requests.archivedAt)))
           .for("update");
         if (!held) throw httpError(404, NO_REQUEST);
-        if (held.status !== "new")
+        if (!isOpenRequestStatus(held.status))
           throw httpError(
             409,
             "This request has already been triaged. Its assignment cannot be changed.",

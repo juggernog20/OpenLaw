@@ -4623,6 +4623,11 @@
                         "model": {
                           "type": ["string", "null"]
                         },
+                        "maxOutputTokens": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "disabledAt": {
                           "anyOf": [
                             {
@@ -4659,6 +4664,7 @@
                         "baseUrl",
                         "hasApiKey",
                         "model",
+                        "maxOutputTokens",
                         "disabledAt",
                         "updatedAt"
                       ],
@@ -4771,6 +4777,11 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 300
+                  },
+                  "maxOutputTokens": {
+                    "type": "integer",
+                    "minimum": 1024,
+                    "maximum": 262144
                   }
                 },
                 "required": ["preset", "model"]
@@ -4843,6 +4854,11 @@
                         "model": {
                           "type": ["string", "null"]
                         },
+                        "maxOutputTokens": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "disabledAt": {
                           "anyOf": [
                             {
@@ -4879,6 +4895,7 @@
                         "baseUrl",
                         "hasApiKey",
                         "model",
+                        "maxOutputTokens",
                         "disabledAt",
                         "updatedAt"
                       ],
@@ -5021,6 +5038,11 @@
                         "model": {
                           "type": ["string", "null"]
                         },
+                        "maxOutputTokens": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "disabledAt": {
                           "anyOf": [
                             {
@@ -5057,6 +5079,7 @@
                         "baseUrl",
                         "hasApiKey",
                         "model",
+                        "maxOutputTokens",
                         "disabledAt",
                         "updatedAt"
                       ],
@@ -5223,6 +5246,11 @@
                         "model": {
                           "type": ["string", "null"]
                         },
+                        "maxOutputTokens": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "disabledAt": {
                           "anyOf": [
                             {
@@ -5259,6 +5287,7 @@
                         "baseUrl",
                         "hasApiKey",
                         "model",
+                        "maxOutputTokens",
                         "disabledAt",
                         "updatedAt"
                       ],
@@ -5529,6 +5558,11 @@
                         "model": {
                           "type": ["string", "null"]
                         },
+                        "maxOutputTokens": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "disabledAt": {
                           "anyOf": [
                             {
@@ -5565,6 +5599,7 @@
                         "baseUrl",
                         "hasApiKey",
                         "model",
+                        "maxOutputTokens",
                         "disabledAt",
                         "updatedAt"
                       ],
@@ -5709,6 +5744,11 @@
                         "model": {
                           "type": ["string", "null"]
                         },
+                        "maxOutputTokens": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "disabledAt": {
                           "anyOf": [
                             {
@@ -5745,6 +5785,7 @@
                         "baseUrl",
                         "hasApiKey",
                         "model",
+                        "maxOutputTokens",
                         "disabledAt",
                         "updatedAt"
                       ],
@@ -38823,7 +38864,7 @@
       },
       "get": {
         "operationId": "listInbox",
-        "summary": "The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused",
+        "summary": "The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` and `read` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused",
         "tags": ["requests"],
         "parameters": [
           {
@@ -38955,7 +38996,7 @@
                           },
                           "status": {
                             "type": "string",
-                            "enum": ["new", "converted", "resolved", "declined"]
+                            "enum": ["new", "read", "converted", "resolved", "declined"]
                           },
                           "title": {
                             "type": "string"
@@ -39191,7 +39232,7 @@
                           },
                           "status": {
                             "type": "string",
-                            "enum": ["new", "converted", "resolved", "declined"]
+                            "enum": ["new", "read", "converted", "resolved", "declined"]
                           },
                           "title": {
                             "type": "string"
@@ -39303,7 +39344,7 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["new", "converted", "resolved", "declined"]
+                          "enum": ["new", "read", "converted", "resolved", "declined"]
                         },
                         "title": {
                           "type": "string"
@@ -39637,7 +39678,7 @@
             }
           },
           "409": {
-            "description": "A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedRecord`, the record a conversion made when the caller may reach it (DD-014), else `null`.",
+            "description": "A triaged Request takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedRecord`, the record a conversion made when the caller may reach it (DD-014), else `null`.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -39759,7 +39800,7 @@
                   },
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
-                  "description": "A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedRecord`, the record a conversion made when the caller may reach it (DD-014), else `null`."
+                  "description": "A triaged Request takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedRecord`, the record a conversion made when the caller may reach it (DD-014), else `null`."
                 }
               }
             }
@@ -39943,7 +39984,7 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["new", "converted", "resolved", "declined"]
+                          "enum": ["new", "read", "converted", "resolved", "declined"]
                         },
                         "title": {
                           "type": "string"
@@ -40627,6 +40668,272 @@
         }
       }
     },
+    "/api/v1/requests/{number}/read": {
+      "post": {
+        "operationId": "markRequestRead",
+        "summary": "Mark a new request read after a legal user opens the full record",
+        "tags": ["requests"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["new", "read", "converted", "resolved", "declined"]
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "departmentId": {
+                          "type": ["string", "null"]
+                        },
+                        "department": {
+                          "type": ["string", "null"]
+                        },
+                        "urgency": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "declinedReason": {
+                          "type": ["string", "null"]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "requestType": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "targetModule": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": ["matter", "contract"]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "targetTypeId": {
+                              "type": ["string", "null"]
+                            },
+                            "targetTypeName": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "displayName",
+                            "targetModule",
+                            "targetTypeId",
+                            "targetTypeName"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "requester": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["id", "displayName", "email", "image"],
+                          "additionalProperties": false
+                        },
+                        "assignee": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": ["id", "displayName", "image"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "convertedContract": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "number": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": ["number"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "convertedRecord": {
+                          "anyOf": [
+                            {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "module": {
+                                      "type": "string",
+                                      "enum": ["contract"]
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
+                                  },
+                                  "required": ["module", "number"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "module": {
+                                      "type": "string",
+                                      "enum": ["matter"]
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    }
+                                  },
+                                  "required": ["module", "number"],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "status",
+                        "title",
+                        "description",
+                        "urgency",
+                        "customFields",
+                        "declinedReason",
+                        "createdAt",
+                        "requestType",
+                        "requester",
+                        "assignee",
+                        "convertedContract",
+                        "convertedRecord"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["request"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/requests/{number}": {
       "get": {
         "operationId": "readRequest",
@@ -40665,7 +40972,7 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["new", "converted", "resolved", "declined"]
+                          "enum": ["new", "read", "converted", "resolved", "declined"]
                         },
                         "title": {
                           "type": "string"
@@ -41191,7 +41498,7 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["new", "converted", "resolved", "declined"]
+                          "enum": ["new", "read", "converted", "resolved", "declined"]
                         },
                         "title": {
                           "type": "string"
@@ -41595,7 +41902,7 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["new", "converted", "resolved", "declined"]
+                          "enum": ["new", "read", "converted", "resolved", "declined"]
                         },
                         "title": {
                           "type": "string"
@@ -43126,7 +43433,7 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": ["new", "converted", "resolved", "declined"]
+                          "enum": ["new", "read", "converted", "resolved", "declined"]
                         },
                         "title": {
                           "type": "string"

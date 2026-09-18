@@ -5,12 +5,14 @@
  * plus the error taxonomy used by the live resolver and later pipeline work.
  */
 
-import type { AiPreset, AiProtocol } from "@openlaw/db";
+import type { AiPreset, AiProtocol, FieldType } from "@openlaw/db";
 
 /** One field the provider should extract from the contract text. */
 export interface AiExtractionTarget {
   slug: string;
   prompt: string;
+  type?: FieldType | "term_type" | "integer" | "value" | "counterparty" | "key_dates";
+  options?: readonly string[] | null;
 }
 
 export interface AiSource {
@@ -37,6 +39,7 @@ export interface AiExtraction {
 
 /** The stored connector values needed to build one protocol adapter. */
 export interface AiProviderConfig {
+  maxOutputTokens?: number;
   preset: AiPreset;
   protocol: AiProtocol;
   baseUrl: string;
@@ -45,7 +48,13 @@ export interface AiProviderConfig {
 }
 
 /** The request fields an adapter knows how to drop when a model refuses them. */
-export const AI_UNSUPPORTED_FIELDS = ["max_tokens", "temperature"] as const;
+export const AI_UNSUPPORTED_FIELDS = [
+  "max_tokens",
+  "temperature",
+  "response_format",
+  "output_config",
+  "responseJsonSchema",
+] as const;
 export type AiUnsupportedField = (typeof AI_UNSUPPORTED_FIELDS)[number];
 
 /**
@@ -72,6 +81,7 @@ export interface AiErrorOptions {
 export class AiProviderError extends Error {
   /** Set when the provider answered with a refusal body. Never shown to a person. */
   readonly upstream?: AiUpstreamRefusal;
+  progress?: { completedBatches: number; totalBatches: number };
 
   constructor(message: string, options?: AiErrorOptions) {
     super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
@@ -88,10 +98,24 @@ export class AiConfigError extends AiProviderError {
 }
 
 /** The provider answered, but not with a usable model reply. */
+export type AiResponseFailure =
+  "invalid_response" | "invalid_shape" | "output_limit" | "refused" | "empty_response";
+
 export class AiResponseError extends AiProviderError {
-  constructor(message: string, options?: AiErrorOptions) {
+  readonly reason: AiResponseFailure;
+  readonly issues?: readonly { field: string; rule: string }[];
+
+  constructor(
+    message: string,
+    options?: AiErrorOptions & {
+      reason?: AiResponseFailure;
+      issues?: readonly { field: string; rule: string }[];
+    },
+  ) {
     super(message, options);
     this.name = "AiResponseError";
+    this.reason = options?.reason ?? "invalid_response";
+    this.issues = options?.issues;
   }
 }
 
@@ -114,6 +138,24 @@ export class AiTimeoutError extends AiProviderError {
 /** Credential and reply faults do not improve when a worker retries them. */
 export function isTerminalAiError(error: unknown): boolean {
   return error instanceof AiConfigError || error instanceof AiResponseError;
+}
+
+/** Fixed application copy only: provider bodies and source text never enter a saved failure. */
+export function aiPreparationFailure(error: unknown): string {
+  if (error instanceof AiResponseError) {
+    if (error.reason === "output_limit")
+      return "The AI response reached the configured output token limit. Increase it in AI analysis settings, then retry, or continue manually.";
+    if (error.reason === "refused")
+      return "The AI provider declined to analyze these sources. Continue manually or review your provider settings.";
+    return "The AI provider returned a response that did not match the required format. Retry or continue manually.";
+  }
+  if (error instanceof AiTimeoutError)
+    return "The AI provider did not finish in time. Retry or continue manually.";
+  if (error instanceof AiUnavailableError)
+    return "The AI provider is unavailable or busy. Retry later or continue manually.";
+  if (error instanceof AiConfigError)
+    return "The AI provider rejected the configuration. Check the provider, model, and credentials in AI analysis settings.";
+  return "Preparation could not finish. Retry or continue manually.";
 }
 
 /** The one seam all three TECH-012 protocol adapters implement. */

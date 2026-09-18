@@ -20,7 +20,7 @@
  * Shared with requester; older Working team comments remain readable. Posting
  * one changes no status — the clarifying back-and-forth while a Request
  * is `new` is the point (INT-007), and the only thing on this page that
- * writes to the Request is its disposition.
+ * writes to the Request besides the read receipt is its disposition.
  *
  * **The values are labelled by the form that collected them** and
  * resolved the way the portal detail resolves them (the INT-001 M20/10
@@ -79,8 +79,9 @@
  * on the contract land in the same thread.
  */
 
+import { isOpenRequestStatus } from "@openlaw/shared";
 import { formatShortDate } from "../lib/format";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   redirect,
   Link,
@@ -202,6 +203,23 @@ export function InboxRequestPage() {
   } = useLoaderData<typeof inboxRequestLoader>();
   const intl = useIntl();
   const revalidator = useRevalidator();
+  const { revalidate } = revalidator;
+  useEffect(() => {
+    if (request.status !== "new") return;
+    let active = true;
+    void api
+      .POST("/api/v1/requests/{number}/read", { params: { path: { number: request.number } } })
+      .then((result) => {
+        if (active && result.data && result.data.request.status !== "new") void revalidate();
+      })
+      .catch(() => {
+        /* A failed read receipt must not prevent triage. */
+      });
+    return () => {
+      active = false;
+    };
+  }, [request.number, request.status, revalidate]);
+
   const reference = requestReference(intl, request.number);
   /** Which disposition dialog is open, if any. Opening one is not an
    * act: INT-007 has no claim step, so nothing about the Request changes
@@ -300,7 +318,7 @@ export function InboxRequestPage() {
               void revalidator.revalidate();
             }}
           />
-          {request.status === "new" && (
+          {isOpenRequestStatus(request.status) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button disabled={busy} className="shrink-0">
@@ -388,7 +406,7 @@ export function InboxRequestPage() {
             <div
               className={cn(
                 "grid grid-cols-1 gap-4",
-                request.status !== "new" && "@4xl/body:grid-cols-[minmax(0,1fr)_20rem]",
+                !isOpenRequestStatus(request.status) && "@4xl/body:grid-cols-[minmax(0,1fr)_20rem]",
               )}
             >
               <div className="flex min-w-0 flex-col gap-4">
@@ -436,7 +454,7 @@ export function InboxRequestPage() {
                   </Card>
                 )}
               </div>
-              {request.status !== "new" && (
+              {!isOpenRequestStatus(request.status) && (
                 <div className="flex min-w-0 flex-col gap-4">
                   <Card
                     id="outcome"

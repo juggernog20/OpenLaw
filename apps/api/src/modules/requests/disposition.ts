@@ -78,6 +78,7 @@ export const NumberParams = z.object({ number: z.coerce.number().int().positive(
  */
 export interface HeldRequest {
   id: string;
+  status: RequestStatus;
   /** INT-002's global reference, for the payload a narration writes. */
   number: number;
 }
@@ -232,7 +233,7 @@ async function lockUndecided(
       },
     });
   }
-  return { id: row.id, number: row.number };
+  return { id: row.id, number: row.number, status: row.status };
 }
 
 /** The recorded decision, or null while the Request is still undecided.
@@ -242,6 +243,7 @@ async function lockUndecided(
 function outcomeOf(status: RequestStatus): RequestOutcome | null {
   switch (status) {
     case "new":
+    case "read":
       return null;
     case "converted":
     case "resolved":

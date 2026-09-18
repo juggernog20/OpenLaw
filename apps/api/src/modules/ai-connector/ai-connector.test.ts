@@ -2,6 +2,8 @@
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { activityLog, aiConnector, aiFieldPrompts, asc, inArray, sql, type Db } from "@openlaw/db";
+import { createAiResolver } from "../../lib/ai/resolver.js";
+import { createFakeAiProvider } from "../../lib/ai/fake.js";
 import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 import { FAKE_VALID_AI_KEY } from "../../lib/ai/fake.js";
 import {
@@ -548,5 +550,39 @@ describe("model discovery", () => {
     expect(response.statusCode).toBe(502);
     expect(response.json().detail).toContain("HTTP 401");
     expect(response.body).not.toContain(FAKE_VALID_AI_KEY);
+  });
+});
+
+describe("output token limits", () => {
+  it("persists the limit, retains it when omitted, and refreshes the live driver", async () => {
+    const saved = await save({ preset: "ollama", model: "local", maxOutputTokens: 65536 });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect(saved.json().connector.maxOutputTokens).toBe(65536);
+    const build = vi.fn(createFakeAiProvider);
+    const resolve = createAiResolver(harness.db, build);
+    await resolve();
+    expect(build.mock.calls[0]?.[0]).toMatchObject({ maxOutputTokens: 65536 });
+    await save({ preset: "ollama", model: "local", maxOutputTokens: 131072 });
+    await resolve();
+    expect(build.mock.calls.at(-1)?.[0]).toMatchObject({ maxOutputTokens: 131072 });
+    const retained = await save({ preset: "ollama", model: "local" });
+    expect(retained.json().connector.maxOutputTokens).toBe(131072);
+    const read = await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies });
+    expect(read.json().connector.maxOutputTokens).toBe(131072);
+    const entries = await auditRows(harness.db);
+    expect(
+      entries.some(
+        (entry) => entry.payload.field === "maxOutputTokens" && entry.payload.new === 131072,
+      ),
+    ).toBe(true);
+  });
+
+  it("defaults to 32768 and rejects invalid limits", async () => {
+    const saved = await save({ preset: "ollama", model: "local" });
+    expect(saved.json().connector.maxOutputTokens).toBe(32768);
+    for (const maxOutputTokens of [0, 1023, 262145, 8192.5, "65536"]) {
+      const response = await save({ preset: "ollama", model: "local", maxOutputTokens });
+      expect(response.statusCode, response.body).toBe(400);
+    }
   });
 });

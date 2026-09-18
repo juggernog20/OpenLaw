@@ -1,0 +1,2 @@
+ALTER TABLE "requests" DROP CONSTRAINT "requests_status_check";--> statement-breakpoint
+ALTER TABLE "requests" ADD CONSTRAINT "requests_status_check" CHECK ("requests"."status" in ('new', 'read', 'converted', 'resolved', 'declined'));

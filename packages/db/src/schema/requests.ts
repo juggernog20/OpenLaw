@@ -57,7 +57,7 @@ import { requestTypes } from "./request-types.js";
  * down. Code branches on every arm — the portal list badges it, the
  * Inbox filters on it — so it is a fixed enum, not a configurable list.
  */
-export const REQUEST_STATUSES = ["new", "converted", "resolved", "declined"] as const;
+export const REQUEST_STATUSES = ["new", "read", "converted", "resolved", "declined"] as const;
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
 export const requests = pgTable(
@@ -166,7 +166,7 @@ export const requests = pgTable(
     // surface can render and no filter can find.
     check(
       "requests_status_check",
-      sql`${table.status} in ('new', 'converted', 'resolved', 'declined')`,
+      sql`${table.status} in ('new', 'read', 'converted', 'resolved', 'declined')`,
     ),
     check("requests_urgency_check", sql`${table.urgency} in ('low', 'medium', 'high', 'critical')`),
   ],

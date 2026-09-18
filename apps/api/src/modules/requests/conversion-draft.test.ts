@@ -18,6 +18,7 @@ import type { AiExtraction } from "../../lib/ai/provider.js";
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
 import { dispositionScaffold, type DispositionScaffold } from "../../testing/disposition.js";
 import { handleConversionDraft } from "../../pipeline/conversion-draft.js";
+import { conversionContext } from "../../lib/conversion-draft.js";
 
 let harness: TestHarness;
 let cast: DispositionScaffold;
@@ -81,6 +82,40 @@ async function prepare(number: number, cookies = cast.memberCookies) {
     payload: { targetModule: "matter", targetTypeId: typeId },
   });
 }
+
+it("includes field AI prompts and types in preparation and invalidates drafts after prompt edits", async () => {
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "preparation_consent",
+      displayName: "Consent",
+      fieldType: "boolean",
+      moduleScope: "matter",
+      fieldTag: "legal",
+      description: "Whether consent is required.",
+      aiPrompt: "Only consider the express assignment provision.",
+    })
+    .returning();
+  await harness.db
+    .insert(matterTypeFields)
+    .values({ typeId, fieldId: field!.id, displayOrder: 100, isRequired: false });
+  const row = await ask();
+  const before = await conversionContext(harness.db, row.id, typeId, false, "matter");
+  expect(before.targets).toContainEqual(
+    expect.objectContaining({
+      slug: "field:preparation_consent",
+      type: "boolean",
+      prompt: expect.stringContaining(field!.aiPrompt!),
+    }),
+  );
+  expect(before.fields.find((entry) => entry.fieldId === field!.id)).not.toHaveProperty("aiPrompt");
+  await harness.db
+    .update(fields)
+    .set({ aiPrompt: "Check the subcontracting provision instead." })
+    .where(eq(fields.id, field!.id));
+  const after = await conversionContext(harness.db, row.id, typeId, false, "matter");
+  expect(after.snapshot).not.toBe(before.snapshot);
+});
 it("keeps the workflow off by default and refuses unauthorized setting writes", async () => {
   await harness.db.update(aiConnector).set({ matterPreparation: false });
   const row = await ask();
@@ -109,6 +144,7 @@ it("keeps the workflow off by default and refuses unauthorized setting writes", 
 });
 it("prepares actual current messages, binds quotes and provenance, and preserves the original Request", async () => {
   const row = await ask();
+  await harness.db.update(requests).set({ status: "read" }).where(eq(requests.id, row.id));
   const [message] = await harness.db
     .insert(comments)
     .values({
@@ -821,6 +857,7 @@ it("reuses cached attachment reads when preparation retries a provider failure",
       .from(conversionDrafts)
       .where(eq(conversionDrafts.id, id));
     expect(failed!.state).toBe("failed");
+    expect(failed!.failure).toContain("unavailable or busy");
     expect(failed!.attachmentReads).toMatchObject([{ status: "readable" }]);
     expect(extraction).toHaveBeenCalledOnce();
     provider.outage(false);

@@ -8,7 +8,7 @@ Sign in as a Legal Team Member or Administrator. Business Users [follow their ow
 
 ## Review and assign a Request
 
-1. Open **Inbox**. The **Requests** tab opens first. Its built-in view starts with **Status: New**, ordered by urgency and then age. Check your filters if a saved view opens instead.
+1. Open **Inbox**. The **Requests** tab opens first. Its built-in view starts with **Status: New, Read**, ordered by urgency and then age. Check your filters if a saved view opens instead.
 2. Open the Request and read **Description**, **Form responses**, **Attachments**, and **Converts to**. Check the Requester, **Department** and Urgency. Select an attachment's filename to open the document viewer. PDFs and images display directly; Word and PowerPoint files are prepared for reading. Use **Download** to save the original file, including when a preview is unavailable.
 3. Select **Assign** on the list row or Request page.
 4. In **Search people**, find an active Legal Team Member or Administrator. Choose the person under **Triage assignee**, then select **Save assignment**.
@@ -52,3 +52,9 @@ Before replying, check the audience. Business Users cannot read **Legal Only** o
 - [Follow a Request and reply to Legal](follow-request.md).
 - [Configure request types and forms](request-forms.md).
 - [Manage notifications and reminders](notifications.md).
+
+## New and Read requests
+
+A request starts as **New**. When an Administrator or Legal Team Member opens its full record from the Inbox, it becomes **Read** for the whole legal team. Browsing the Inbox, previewing an attachment, or viewing the request in the Business Portal does not mark it Read.
+
+New and Read requests both remain in the default Inbox and can be assigned, prepared with AI, converted, or resolved. Use the Status filter to see only New or only Read requests. Reading a request does not assign it or send a status email. The Business Portal shows Read once Legal has opened the record. Converted, resolved, and declined statuses are preserved when the record is reopened.

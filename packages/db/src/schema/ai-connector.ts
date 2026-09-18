@@ -9,7 +9,15 @@
  */
 
 import { sql } from "drizzle-orm";
-import { boolean, check, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
 
@@ -37,6 +45,7 @@ export const aiConnector = pgTable(
     /** Write-only through the API and sealed under TECH-022. Ollama may leave it NULL. */
     apiKey: encryptedText("api_key"),
     model: text("model").notNull(),
+    maxOutputTokens: integer("max_output_tokens").notNull().default(32768),
     contractConversionAnalysis: boolean("contract_conversion_analysis").notNull().default(false),
     contractPreparation: boolean("contract_preparation").notNull().default(false),
     matterPreparation: boolean("matter_preparation").notNull().default(false),
@@ -48,6 +57,10 @@ export const aiConnector = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    check(
+      "ai_connector_output_tokens_check",
+      sql`${table.maxOutputTokens} between 1024 and 262144`,
+    ),
     uniqueIndex("ai_connector_singleton").on(sql`(true)`),
     check(
       "ai_connector_preset_check",

@@ -150,7 +150,7 @@ describe("AI provider HTTP bounds", () => {
     });
   });
 
-  it("leaves the refused field unset when it is not one an adapter can drop", async () => {
+  it("recognizes an unsupported output format for adapter fallback", async () => {
     vi.stubGlobal(
       "fetch",
       vi
@@ -169,6 +169,7 @@ describe("AI provider HTTP bounds", () => {
         upstream: {
           status: 400,
           summary: "Unsupported value: 'response_format' is not supported.",
+          unsupportedField: "response_format",
         },
       }),
     );

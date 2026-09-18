@@ -255,25 +255,44 @@ export async function conversionContext(
   const attached: Awaited<ReturnType<typeof selectAttachedFields>>[] = [];
   for (const type of asked) attached.push(await selectAttachedFields(db, typeFields, type.id));
   const fields = [...new Map(attached.flat().map((field) => [field.slug, field])).values()];
+  const fieldPrompts = fields.length
+    ? await db
+        .select({ id: catalogFields.id, prompt: catalogFields.aiPrompt })
+        .from(catalogFields)
+        .where(
+          inArray(
+            catalogFields.id,
+            fields.map((field) => field.fieldId),
+          ),
+        )
+    : [];
+  const promptById = new Map(fieldPrompts.map((field) => [field.id, field.prompt]));
   const allTargets: AiExtractionTarget[] = [
     {
       slug: "title",
+      type: "text",
       prompt: `Propose a concise opening ${moduleLabel} title, at most 200 characters.`,
     },
     {
       slug: `${targetModule}_type`,
+      type: "single_select",
+      options: asked.map((type) => type.id),
       prompt: `Choose an eligible ${moduleLabel} Type id only when supported: ${JSON.stringify(asked)}.`,
     },
     {
       slug: "description",
+      type: "long_text",
       prompt: `Synthesize a useful ${moduleLabel} Overview description from the supported facts, at most 10000 characters. Cite all supporting passages. No legal risk assessment.`,
     },
     {
       slug: "priority",
+      type: "single_select",
+      options: ["low", "medium", "high", "critical"],
       prompt: "Propose priority: low, medium, high, critical. Request urgency is the default.",
     },
     {
       slug: "needed_by",
+      type: "date",
       prompt:
         "Extract the explicitly stated Needed by date as YYYY-MM-DD. Do not guess missing date parts.",
     },
@@ -281,6 +300,7 @@ export async function conversionContext(
       ? [
           {
             slug: "counterparty",
+            type: "counterparty" as const,
             prompt: `Extract the explicitly named Counterparty legal name, at most ${MAX_COUNTERPARTY_NAME_LENGTH} characters. Never invent a name.`,
           },
         ]
@@ -289,7 +309,9 @@ export async function conversionContext(
       .filter((f) => f.fieldType !== "user" && f.fieldType !== "entity")
       .map((f) => ({
         slug: `field:${f.slug}`,
-        prompt: `${f.displayName}: ${f.fieldType}. ${f.options ? `Allowed options: ${JSON.stringify(f.options)}.` : ""} ${f.description ?? ""}`,
+        type: f.fieldType,
+        options: f.options,
+        prompt: `${f.displayName}: ${f.fieldType}. ${f.options ? `Allowed options: ${JSON.stringify(f.options)}.` : ""} ${f.description ?? ""} ${promptById.get(f.fieldId) ?? ""}`,
       })),
   ];
   let promptCharacters = 0;
@@ -323,6 +345,7 @@ export async function conversionContext(
       // order as the Types above. Re-attaching a Field the proposal
       // could use makes the draft stale.
       attached,
+      targets,
     ]),
   };
 }

@@ -17,6 +17,7 @@ export function PreparedConvertDialog({
   const [manual, setManual] = useState(false);
   const [draft, setDraft] = useState<ConversionDraft | null>(null);
   const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [started, setStarted] = useState(() => Date.now());
   const [now, setNow] = useState(started);
@@ -42,6 +43,7 @@ export function PreparedConvertDialog({
       if (controller.signal.aborted) return true;
       if (!next || next.state === "failed") {
         clearTimeout(deadlineTimer);
+        setFailure(next?.failure ?? null);
         setFailed(true);
         return true;
       }
@@ -126,10 +128,12 @@ export function PreparedConvertDialog({
         </DialogTitle>
         <p role="status" className="my-4 flex items-center gap-2">
           {failed ? (
-            <FormattedMessage
-              id="conversion.failed"
-              defaultMessage="Preparation could not finish. Retry or continue manually."
-            />
+            (failure ?? (
+              <FormattedMessage
+                id="conversion.failed"
+                defaultMessage="Preparation could not finish. Retry or continue manually."
+              />
+            ))
           ) : (
             <>
               <LoaderCircle className="animate-spin" aria-hidden="true" size={16} />
@@ -168,6 +172,7 @@ export function PreparedConvertDialog({
                 setStarted(Date.now());
                 setNow(Date.now());
                 setFailed(false);
+                setFailure(null);
                 setAttempt((n) => n + 1);
               }}
             >
