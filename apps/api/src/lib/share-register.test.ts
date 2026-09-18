@@ -240,6 +240,23 @@ describe("the share register replay", () => {
     expect(overCertified.violation?.detail).toMatch(/more shares than they hold/);
   });
 
+  it("refuses a total past the safe-integer range instead of rounding it", () => {
+    const huge = Number.MAX_SAFE_INTEGER;
+    const state = replayRegister(
+      {
+        classes: CLASSES,
+        entries: [
+          entry({ kind: "allotment", quantity: huge, toHolderId: "a", entryNo: 1 }),
+          entry({ kind: "allotment", quantity: 2, toHolderId: "a", entryNo: 2 }),
+        ],
+        certificates: [],
+      },
+      END_OF_TIME,
+    );
+    expect(state.violation?.entryNo).toBe(2);
+    expect(state.violation?.detail).toMatch(/largest count/);
+  });
+
   it("warns, and does not refuse, when allotments pass the authorized count", () => {
     const state = replayRegister(
       {

@@ -461,6 +461,45 @@ describe("the share register", () => {
     expect(loop.json().detail).toContain("Loop Child Ltd");
   });
 
+  it("forgets a holder whose entries are gone, so a later reverse holding is not a loop", async () => {
+    const a = await newEntity("Edge A Ltd");
+    const h = await newEntity("Edge H Ltd");
+    const aClass = await newClass(a.id, { name: "Ordinary" });
+    const hClass = await newClass(h.id, { name: "Ordinary" });
+    const first = await entry(a.id, {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId: aClass.id,
+      quantity: 10,
+      to: { kind: "entity", entityId: h.id },
+    });
+    expect(first.statusCode, first.body).toBe(201);
+    // H owns A, so A holding H would loop.
+    const loop = await entry(h.id, {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId: hClass.id,
+      quantity: 10,
+      to: { kind: "entity", entityId: a.id },
+    });
+    expect(loop.statusCode, loop.body).toBe(409);
+    const removed = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/entities/${a.id}/share-entries/${first.json().entries[0].id}`,
+      cookies: memberCookies,
+    });
+    expect(removed.statusCode, removed.body).toBe(204);
+    expect((await register(a.id)).json().holders).toEqual([]);
+    const fine = await entry(h.id, {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId: hClass.id,
+      quantity: 10,
+      to: { kind: "entity", entityId: a.id },
+    });
+    expect(fine.statusCode, fine.body).toBe(201);
+  });
+
   it("shows a walled holder Entity as Restricted, and keeps entries editable and removable", async () => {
     const issuer = await newEntity("Register Ltd");
     const walled = await newEntity("Secret Investor Ltd", { isConfidential: true });
