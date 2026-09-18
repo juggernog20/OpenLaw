@@ -54,7 +54,9 @@ function formatMonth(intl: IntlShape, iso: string) {
   });
 }
 
-const percent = (value: number) => `${value.toFixed(1)}%`;
+/** DES-006: percentages through Intl, one fraction digit. */
+const percent = (intl: IntlShape, value: number) =>
+  intl.formatNumber(value / 100, { style: "percent", maximumFractionDigits: 1 });
 
 export function ShareRegisterTab({
   entity,
@@ -157,6 +159,20 @@ export function ShareRegisterTab({
     },
   ];
   const shown = filterEntries(register.entries, filters);
+  // A hand-typed owner the register now names would list twice. Match
+  // Entity owners by id only: two individuals sharing a name are not one person.
+  const registeredEntityIds = new Set(
+    knownHolders(register).flatMap((holder) => (holder.entityId ? [holder.entityId] : [])),
+  );
+  const declaredHoldings = {
+    ...holdings,
+    owners: holdings.owners.filter(
+      (row) =>
+        row.owner.restricted ||
+        row.owner.kind === "individual" ||
+        !registeredEntityIds.has(row.owner.id),
+    ),
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -229,7 +245,7 @@ export function ShareRegisterTab({
                   disabled={frozen || live.length === 0}
                   onClick={() => setEntryDialog({})}
                 >
-                  <Plus size={14} aria-hidden="true" />
+                  <Plus size={16} aria-hidden="true" />
                   <FormattedMessage
                     id="entities.register.entry.title"
                     defaultMessage="Record entry"
@@ -273,7 +289,7 @@ export function ShareRegisterTab({
       <OwnershipCard
         entity={entity}
         candidates={candidates}
-        initial={holdings}
+        initial={declaredHoldings}
         frozen={frozen}
         showOwners={false}
         showOwned
@@ -473,7 +489,7 @@ function ExportLink({
       download
       className="inline-flex h-7 items-center gap-1.5 rounded-button border border-border-default bg-raised px-2.5 text-sm hover:bg-control"
     >
-      <Download size={14} aria-hidden="true" />
+      <Download size={16} aria-hidden="true" />
       {children}
     </a>
   );
@@ -560,7 +576,7 @@ function HolderCell({ row }: Readonly<{ row: RegisterRow }>) {
       <span
         aria-hidden="true"
         className={cn(
-          "grid size-7 shrink-0 place-items-center text-[10px] font-semibold",
+          "grid size-7 shrink-0 place-items-center text-xs font-semibold",
           row.holder.kind === "entity"
             ? "rounded-button bg-badge-count-bg text-badge-count-fg"
             : "rounded-avatar bg-avatar-bg text-avatar-fg",
@@ -727,10 +743,10 @@ function RegisterOfMembers({
                         {intl.formatNumber(row.balance)}
                       </td>
                       <td className="px-3 py-2 text-end tabular-nums">
-                        {percent(row.percentOfClass)}
+                        {percent(intl, row.percentOfClass)}
                       </td>
                       <td className="px-3 py-2 text-end tabular-nums">
-                        {percent(row.percentOfVotes)}
+                        {percent(intl, row.percentOfVotes)}
                       </td>
                       <td className="px-3 py-2 font-mono text-xs">
                         {row.certificates.join(", ") || "—"}
@@ -762,7 +778,10 @@ function RegisterOfMembers({
                         {intl.formatNumber(treasury.balance)}
                       </td>
                       <td className="px-3 py-2 text-end tabular-nums">
-                        {percent(total.issued > 0 ? (treasury.balance / total.issued) * 100 : 0)}
+                        {percent(
+                          intl,
+                          total.issued > 0 ? (treasury.balance / total.issued) * 100 : 0,
+                        )}
                       </td>
                       <td className="px-3 py-2 text-end text-muted">—</td>
                       <td className="px-3 py-2 text-muted">—</td>
@@ -781,9 +800,9 @@ function RegisterOfMembers({
                     <td className="px-3 py-2 text-end tabular-nums">
                       {intl.formatNumber(total.issued)}
                     </td>
-                    <td className="px-3 py-2 text-end tabular-nums">100%</td>
+                    <td className="px-3 py-2 text-end tabular-nums">{percent(intl, 100)}</td>
                     <td className="px-3 py-2 text-end tabular-nums">
-                      {percent(total.percentOfVotes)}
+                      {percent(intl, total.percentOfVotes)}
                     </td>
                     <td
                       className="px-3 py-2 text-xs font-normal text-muted"
@@ -791,31 +810,25 @@ function RegisterOfMembers({
                     >
                       <FormattedMessage
                         id="entities.register.members.classSummary"
-                        defaultMessage="{outstanding} outstanding · {treasury} in treasury{par}"
+                        defaultMessage="{outstanding} outstanding · {treasury} in treasury{hasPar, select, yes { · par {par}} other {}}{hasRights, select, yes { · {rights}} other {}}"
                         values={{
                           outstanding: intl.formatNumber(total.outstanding),
                           treasury: intl.formatNumber(total.treasury),
+                          hasPar:
+                            shareClass.parValue !== null && shareClass.parValueCurrency
+                              ? "yes"
+                              : "no",
                           par:
                             shareClass.parValue !== null && shareClass.parValueCurrency
-                              ? ` · ${intl.formatMessage(
-                                  {
-                                    id: "entities.register.members.par",
-                                    defaultMessage: "par {value}",
-                                  },
-                                  {
-                                    value: intl.formatNumber(
-                                      toMajorUnits(
-                                        shareClass.parValue,
-                                        shareClass.parValueCurrency,
-                                      ),
-                                      { style: "currency", currency: shareClass.parValueCurrency },
-                                    ),
-                                  },
-                                )}`
+                              ? intl.formatNumber(
+                                  toMajorUnits(shareClass.parValue, shareClass.parValueCurrency),
+                                  { style: "currency", currency: shareClass.parValueCurrency },
+                                )
                               : "",
+                          hasRights: shareClass.rights ? "yes" : "no",
+                          rights: shareClass.rights ?? "",
                         }}
                       />
-                      {shareClass.rights ? ` · ${shareClass.rights}` : null}
                     </td>
                   </tr>
                 </tbody>

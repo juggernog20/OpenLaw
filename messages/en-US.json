@@ -5339,6 +5339,9 @@
   "entities.register.entry.kind": {
     "defaultMessage": "Entry"
   },
+  "entities.register.entry.liveReadError": {
+    "defaultMessage": "Today's certificates could not be read. Close and try again."
+  },
   "entities.register.entry.nameRequired": {
     "defaultMessage": "Enter the individual's name."
   },
@@ -5433,7 +5436,7 @@
     "defaultMessage": "Change to today"
   },
   "entities.register.members.classSummary": {
-    "defaultMessage": "{outstanding} outstanding · {treasury} in treasury{par}"
+    "defaultMessage": "{outstanding} outstanding · {treasury} in treasury{hasPar, select, yes { · par {par}} other {}}{hasRights, select, yes { · {rights}} other {}}"
   },
   "entities.register.members.export": {
     "defaultMessage": "Export register"
@@ -5443,9 +5446,6 @@
   },
   "entities.register.members.ofClass": {
     "defaultMessage": "% of class"
-  },
-  "entities.register.members.par": {
-    "defaultMessage": "par {value}"
   },
   "entities.register.members.since": {
     "defaultMessage": "Member since"

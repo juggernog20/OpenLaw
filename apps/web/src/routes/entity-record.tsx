@@ -70,7 +70,10 @@ type EntityTab = "overview" | (typeof RECORD_TABS)[number];
 /** The ENT-011 as-of date: `?asOf=YYYY-MM-DD`, or nothing for today. */
 function registerQuery(request: Request): { asOf?: string } {
   const asOf = new URL(request.url).searchParams.get("asOf") ?? "";
-  return /^\d{4}-\d{2}-\d{2}$/.test(asOf) && !Number.isNaN(Date.parse(asOf)) ? { asOf } : {};
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) return {};
+  // A calendar date that exists: "2019-02-31" parses, then reads back as March.
+  const date = new Date(`${asOf}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === asOf ? { asOf } : {};
 }
 
 export async function entityRecordLoader({ params, request }: LoaderFunctionArgs) {
