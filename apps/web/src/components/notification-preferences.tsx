@@ -509,34 +509,6 @@ export function NotificationSwitchGrid({
           </div>
         );
       })}
-
-      <p className="border-t border-border-default px-4 py-3 text-sm text-muted">
-        <FormattedMessage
-          id="settings.notifications.caption"
-          defaultMessage="Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
-        />
-        {/* The two-switch sentence is false for an email-only group —
-            there are no bell items to keep coming — so the caption says
-            so whenever one is drawn. */}
-        {emailOnlyGroups.length > 0 ? (
-          <>
-            {" "}
-            <FormattedMessage
-              id="settings.notifications.captionEmailOnly"
-              defaultMessage="A group with no in-app switch reaches you by email only; its one switch is the whole choice."
-            />
-          </>
-        ) : null}
-        {inAppOnlyGroups.length > 0 ? (
-          <>
-            {" "}
-            <FormattedMessage
-              id="settings.notifications.captionInAppOnly"
-              defaultMessage="Approaching-date emails are set in the Briefing group below."
-            />
-          </>
-        ) : null}
-      </p>
     </div>
   );
 }

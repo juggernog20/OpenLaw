@@ -476,14 +476,16 @@ test.describe.serial("M21 demo path", () => {
       expect((await created).status(), await (await created).text()).toBe(201);
       expect((await uploaded).status(), await (await uploaded).text()).toBe(201);
 
-      // The reference is read off the screen, so what the rest of this
-      // journey follows is what the requester was told (INT-002).
-      const confirmation = portal.getByRole("heading", { name: /^Request R-\d+ is with Legal$/ });
-      await expect(confirmation).toBeVisible();
-      const confirmed = /R-(\d+)/.exec((await confirmation.textContent()) ?? "");
-      expect(confirmed, "the confirmation heading carries no R-### reference").not.toBeNull();
-      const reference = confirmed![0];
+      await expect(
+        portal.getByRole("heading", { name: "Thanks! Your request has been submitted to legal." }),
+      ).toBeVisible();
+      const requestLink = await portal
+        .getByRole("link", { name: "Open request", exact: true })
+        .getAttribute("href");
+      const confirmed = /\/portal\/requests\/(\d+)$/.exec(requestLink ?? "");
+      expect(confirmed, "the confirmation links to the submitted request").not.toBeNull();
       const number = Number(confirmed![1]);
+      const reference = `R-${String(number)}`;
       await expect(portal.getByText("Attaching your files…")).toBeHidden();
       await expect(portal.getByRole("alert")).toHaveCount(0);
 

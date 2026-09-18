@@ -5,7 +5,6 @@
  * archived destination leaves only the read-only original submission. */
 
 import { RequestOwner } from "../components/portal/request-owner";
-import { HelpLink } from "../components/documentation/help-link";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { CircleCheck, CircleX, FileText, Info, PackageCheck } from "lucide-react";
@@ -111,7 +110,6 @@ export function PortalRequestPage() {
           />
         </p>
       </div>
-      <HelpLink surface="portal" contextual />
       <div className="flex flex-col gap-section-gap">
         <div className="flex min-w-0 flex-col gap-4">
           {recordArchived ? (
@@ -123,7 +121,7 @@ export function PortalRequestPage() {
             </p>
           ) : (
             <>
-              <RequestOwner request={request} />
+              <RequestOwner request={request} profile />
               <StatusBanner status={request.status} declinedReason={request.declinedReason} />
             </>
           )}

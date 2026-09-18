@@ -73,11 +73,13 @@ import {
   IntakeCounterpartiesInput,
   type IntakeCounterpartySelection,
 } from "../components/intake/counterparties-input";
+import { FileTypeIcon } from "../components/documents/file-type-icon";
+import { formatFileSize } from "../lib/format";
 import { HelpLink } from "../components/documentation/help-link";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
-import { CircleCheck, FileText, Mail, TriangleAlert, Upload, X } from "lucide-react";
+import { CircleCheck, Mail, TriangleAlert, Upload, X } from "lucide-react";
 import { resolveIntakeFieldOrder } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
@@ -658,11 +660,52 @@ function AttachmentsField({
             event.target.value = "";
           }}
         />
-        <Upload aria-hidden="true" className="size-5 shrink-0 text-muted" />
+        {files.length > 0 && (
+          <ul className="grid w-full grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-3 pb-3">
+            {files.map((file, index) => (
+              <li
+                key={`${String(index)}-${file.name}`}
+                className="relative flex aspect-square min-w-0 flex-col items-center justify-between gap-1 rounded-card border border-border-default bg-raised p-2.5 shadow-sm"
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-1 end-1 size-6 rounded-full bg-raised"
+                  title={intl.formatMessage(REMOVE_ATTACHMENT, { filename: file.name })}
+                  onClick={() => {
+                    setOverflowed(false);
+                    onFiles(files.filter((_ignored, at) => at !== index));
+                  }}
+                >
+                  <X aria-hidden="true" className="size-3.5" />
+                  <span className="sr-only">
+                    <FormattedMessage {...REMOVE_ATTACHMENT} values={{ filename: file.name }} />
+                  </span>
+                </Button>
+                <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+                  <FileTypeIcon filename={file.name} />
+                </div>
+                <div className="flex w-full min-w-0 shrink-0 flex-col gap-1 text-center">
+                  <span
+                    title={file.name}
+                    className="line-clamp-2 break-words text-sm font-medium leading-4 text-primary"
+                  >
+                    {file.name}
+                  </span>
+                  <span className="text-xs text-muted">
+                    {formatFileSize(file.size, { locale: intl.locale })}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {files.length === 0 && <Upload aria-hidden="true" className="size-5 shrink-0 text-muted" />}
         <p className="max-w-prose text-center text-sm text-muted">
           <FormattedMessage
             id="portal.form.attachmentsHint"
-            defaultMessage="Drop files here — the redline, the prior agreement, the term sheet. Up to {max} files."
+            defaultMessage="Drop up to {max} files related to your request here."
             values={{ max: MAX_REQUEST_ATTACHMENTS }}
           />
         </p>
@@ -678,37 +721,6 @@ function AttachmentsField({
             values={{ max: MAX_REQUEST_ATTACHMENTS }}
           />
         </p>
-      )}
-      {files.length > 0 && (
-        <ul className="flex flex-col gap-1.5">
-          {files.map((file, index) => (
-            <li
-              // Two files may carry one name — a requester can pick the
-              // same paper from two folders — so the position in the
-              // list is what identifies a row here.
-              key={`${String(index)}-${file.name}`}
-              className="flex items-center gap-2 rounded-button border border-border-default bg-raised ps-2.5 pe-1.5 py-1.5 text-sm"
-            >
-              <FileText aria-hidden="true" className="size-4 shrink-0 text-muted" />
-              <span className="min-w-0 flex-1 truncate">{file.name}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                title={intl.formatMessage(REMOVE_ATTACHMENT, { filename: file.name })}
-                onClick={() => {
-                  setOverflowed(false);
-                  onFiles(files.filter((_ignored, at) => at !== index));
-                }}
-              >
-                <X aria-hidden="true" className="size-4 shrink-0" />
-                <span className="sr-only">
-                  <FormattedMessage {...REMOVE_ATTACHMENT} values={{ filename: file.name }} />
-                </span>
-              </Button>
-            </li>
-          ))}
-        </ul>
       )}
     </div>
   );
@@ -814,15 +826,13 @@ function Confirmation({ number, uploading, unattached, threadNumber }: Readonly<
         <h2 ref={heading} tabIndex={-1} className="rounded-chip text-lg font-semibold">
           <FormattedMessage
             id="portal.form.confirmationHeading"
-            defaultMessage="Request {reference} is with Legal"
-            values={{ reference: requestReference(intl, number) }}
+            defaultMessage="Thanks! Your request has been submitted to legal."
           />
         </h2>
         <p className="max-w-prose text-md text-muted">
           <FormattedMessage
             id="portal.form.confirmationBody"
-            defaultMessage="Quote {reference} when you talk to Legal about it. You'll get updates by email and here in the portal."
-            values={{ reference: requestReference(intl, number) }}
+            defaultMessage="You can track your open requests through this portal"
           />
         </p>
       </div>
