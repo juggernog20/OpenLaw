@@ -151,7 +151,7 @@ export function OwnershipCard({
           title={<FormattedMessage id="entities.ownership.owners" defaultMessage="Owners" />}
           empty={intl.formatMessage({
             id: "entities.ownership.noOwners",
-            defaultMessage: "No Entity owns this Entity.",
+            defaultMessage: "No owners recorded.",
           })}
           rows={holdings.owners}
           entityId={entity.id}
@@ -262,12 +262,21 @@ function HoldingRow({
   }
   return (
     <li className="flex items-center gap-3 px-4 py-3">
-      <Link
-        to={`/entities/${related.id}`}
-        className="min-w-0 flex-1 truncate font-medium text-link"
-      >
-        {related.legalName}
-      </Link>
+      {related.kind === "individual" ? (
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium">{related.legalName}</p>
+          <p className="text-xs text-muted">
+            <FormattedMessage id="entities.ownership.individual" defaultMessage="Individual" />
+          </p>
+        </div>
+      ) : (
+        <Link
+          to={`/entities/${related.id}`}
+          className="min-w-0 flex-1 truncate font-medium text-link"
+        >
+          {related.legalName}
+        </Link>
+      )}
       <div className="flex items-center gap-1">
         <Input
           className="w-24"
@@ -323,6 +332,9 @@ function AddHoldingDialog({
 }>) {
   const intl = useIntl();
   const listboxId = useId();
+  const [ownerType, setOwnerType] = useState<"entity" | "individual">("entity");
+  const [individualName, setIndividualName] = useState("");
+  const [busy, setBusy] = useState(false);
   const [direction, setDirection] = useState<"owner" | "owned">("owner");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<EntityRow | null>(null);
@@ -335,7 +347,8 @@ function AddHoldingDialog({
   );
 
   async function submit() {
-    if (!selected) {
+    if (busy) return;
+    if (ownerType === "entity" && !selected) {
       setError(
         intl.formatMessage({
           id: "entities.ownership.pickEntity",
@@ -344,13 +357,28 @@ function AddHoldingDialog({
       );
       return;
     }
+    if (ownerType === "individual" && !individualName.trim()) {
+      setError(
+        intl.formatMessage({
+          id: "entities.ownership.nameRequired",
+          defaultMessage: "Enter the individual's name.",
+        }),
+      );
+      return;
+    }
+    setError(null);
+    setBusy(true);
     const ownershipPercent = Number(percent);
     const result = await api
       .POST("/api/v1/entities/{id}/holdings", {
         params: { path: { id: entityId } },
-        body: { direction, relatedEntityId: selected.id, ownershipPercent },
+        body:
+          ownerType === "individual"
+            ? { direction: "owner", individualName: individualName.trim(), ownershipPercent }
+            : { direction, relatedEntityId: selected!.id, ownershipPercent },
       })
       .catch(() => undefined);
+    setBusy(false);
     if (!result?.data) {
       setError(
         (await problem(result)).detail ??
@@ -371,7 +399,12 @@ function AddHoldingDialog({
   }
 
   return (
-    <Dialog open onOpenChange={onOpenChange}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!busy) onOpenChange(open);
+      }}
+    >
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>
           <FormattedMessage id="entities.ownership.dialogTitle" defaultMessage="Add Holding" />
@@ -383,134 +416,185 @@ function AddHoldingDialog({
             void submit();
           }}
         >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="holding-direction">
-              <FormattedMessage
-                id="entities.ownership.relationship"
-                defaultMessage="Relationship"
-              />
-            </Label>
-            <select
-              id="holding-direction"
-              className={CONTROL_CLASS}
-              value={direction}
-              onChange={(event) => setDirection(event.target.value as "owner" | "owned")}
-            >
-              <option value="owner">
-                {intl.formatMessage({
-                  id: "entities.ownership.directionOwner",
-                  defaultMessage: "Owns this Entity",
-                })}
-              </option>
-              <option value="owned">
-                {intl.formatMessage({
-                  id: "entities.ownership.directionOwned",
-                  defaultMessage: "This Entity owns",
-                })}
-              </option>
-            </select>
-          </div>
-          <div className="relative flex flex-col gap-1.5">
-            <Label htmlFor="holding-entity">
-              <FormattedMessage id="entities.ownership.entityLabel" defaultMessage="Entity" />
-            </Label>
-            <Input
-              id="holding-entity"
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded={open}
-              aria-controls={listboxId}
-              aria-activedescendant={
-                open && matches[activeIndex] ? `${listboxId}-${matches[activeIndex].id}` : undefined
-              }
-              autoComplete="off"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setSelected(null);
-                setActiveIndex(0);
-                setOpen(true);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "ArrowDown") {
-                  event.preventDefault();
-                  setOpen(true);
-                  setActiveIndex((current) => (current + 1) % Math.max(matches.length, 1));
-                }
-                if (event.key === "ArrowUp") {
-                  event.preventDefault();
-                  setOpen(true);
-                  setActiveIndex(
-                    (current) =>
-                      (current - 1 + Math.max(matches.length, 1)) % Math.max(matches.length, 1),
-                  );
-                }
-                if (event.key === "Enter" && open && matches[activeIndex]) {
-                  event.preventDefault();
-                  choose(matches[activeIndex]);
-                }
-                if (event.key === "Escape") {
-                  event.stopPropagation();
-                  setOpen(false);
-                }
-              }}
-            />
-            {open ? (
-              <ul
-                id={listboxId}
-                role="listbox"
-                aria-label={intl.formatMessage({
-                  id: "entities.ownership.matches",
-                  defaultMessage: "Entity matches",
-                })}
-                className="absolute top-full z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-card border border-border-default bg-overlay p-1 shadow-lg"
-              >
-                {matches.map((candidate, index) => (
-                  <li
-                    id={`${listboxId}-${candidate.id}`}
-                    key={candidate.id}
-                    role="option"
-                    aria-selected={selected?.id === candidate.id}
-                    className={`cursor-pointer rounded-button px-3 py-2 text-sm ${index === activeIndex ? "bg-selected" : ""}`}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => choose(candidate)}
+          <fieldset disabled={busy} className="flex flex-col gap-4">
+            <fieldset className="flex gap-4">
+              <legend className="mb-2 text-sm font-medium">
+                <FormattedMessage id="entities.ownership.ownerType" defaultMessage="Owner type" />
+              </legend>
+              {(["entity", "individual"] as const).map((value) => (
+                <label key={value} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="holding-owner-type"
+                    value={value}
+                    checked={ownerType === value}
+                    onChange={() => {
+                      setOwnerType(value);
+                      setError(null);
+                      setOpen(false);
+                      if (value === "individual") setDirection("owner");
+                    }}
+                  />
+                  {value === "entity" ? (
+                    <FormattedMessage id="entities.ownership.entityLabel" defaultMessage="Entity" />
+                  ) : (
+                    <FormattedMessage
+                      id="entities.ownership.individual"
+                      defaultMessage="Individual"
+                    />
+                  )}
+                </label>
+              ))}
+            </fieldset>
+            {ownerType === "entity" && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="holding-direction">
+                    <FormattedMessage
+                      id="entities.ownership.relationship"
+                      defaultMessage="Relationship"
+                    />
+                  </Label>
+                  <select
+                    id="holding-direction"
+                    className={CONTROL_CLASS}
+                    value={direction}
+                    onChange={(event) => setDirection(event.target.value as "owner" | "owned")}
                   >
-                    {candidate.legalName}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="holding-percent">
-              <FormattedMessage
-                id="entities.ownership.percentLabel"
-                defaultMessage="Ownership percent"
+                    <option value="owner">
+                      {intl.formatMessage({
+                        id: "entities.ownership.directionOwner",
+                        defaultMessage: "Owns this Entity",
+                      })}
+                    </option>
+                    <option value="owned">
+                      {intl.formatMessage({
+                        id: "entities.ownership.directionOwned",
+                        defaultMessage: "This Entity owns",
+                      })}
+                    </option>
+                  </select>
+                </div>
+                <div className="relative flex flex-col gap-1.5">
+                  <Label htmlFor="holding-entity">
+                    <FormattedMessage id="entities.ownership.entityLabel" defaultMessage="Entity" />
+                  </Label>
+                  <Input
+                    id="holding-entity"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded={open}
+                    aria-controls={listboxId}
+                    aria-activedescendant={
+                      open && matches[activeIndex]
+                        ? `${listboxId}-${matches[activeIndex].id}`
+                        : undefined
+                    }
+                    autoComplete="off"
+                    value={query}
+                    onChange={(event) => {
+                      setQuery(event.target.value);
+                      setSelected(null);
+                      setActiveIndex(0);
+                      setOpen(true);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "ArrowDown") {
+                        event.preventDefault();
+                        setOpen(true);
+                        setActiveIndex((current) => (current + 1) % Math.max(matches.length, 1));
+                      }
+                      if (event.key === "ArrowUp") {
+                        event.preventDefault();
+                        setOpen(true);
+                        setActiveIndex(
+                          (current) =>
+                            (current - 1 + Math.max(matches.length, 1)) %
+                            Math.max(matches.length, 1),
+                        );
+                      }
+                      if (event.key === "Enter" && open && matches[activeIndex]) {
+                        event.preventDefault();
+                        choose(matches[activeIndex]);
+                      }
+                      if (event.key === "Escape") {
+                        event.stopPropagation();
+                        setOpen(false);
+                      }
+                    }}
+                  />
+                  {open ? (
+                    <ul
+                      id={listboxId}
+                      role="listbox"
+                      aria-label={intl.formatMessage({
+                        id: "entities.ownership.matches",
+                        defaultMessage: "Entity matches",
+                      })}
+                      className="absolute top-full z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-card border border-border-default bg-overlay p-1 shadow-lg"
+                    >
+                      {matches.map((candidate, index) => (
+                        <li
+                          id={`${listboxId}-${candidate.id}`}
+                          key={candidate.id}
+                          role="option"
+                          aria-selected={selected?.id === candidate.id}
+                          className={`cursor-pointer rounded-button px-3 py-2 text-sm ${index === activeIndex ? "bg-selected" : ""}`}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => choose(candidate)}
+                        >
+                          {candidate.legalName}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </>
+            )}
+            {ownerType === "individual" && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="holding-individual-name">
+                  <FormattedMessage id="entities.ownership.fullName" defaultMessage="Full name" />
+                </Label>
+                <Input
+                  id="holding-individual-name"
+                  value={individualName}
+                  maxLength={200}
+                  onChange={(event) => setIndividualName(event.target.value)}
+                />
+              </div>
+            )}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="holding-percent">
+                <FormattedMessage
+                  id="entities.ownership.percentLabel"
+                  defaultMessage="Ownership percent"
+                />
+              </Label>
+              <Input
+                id="holding-percent"
+                type="number"
+                min={0}
+                max={100}
+                step="0.01"
+                value={percent}
+                onChange={(event) => setPercent(event.target.value)}
               />
-            </Label>
-            <Input
-              id="holding-percent"
-              type="number"
-              min={0}
-              max={100}
-              step="0.01"
-              value={percent}
-              onChange={(event) => setPercent(event.target.value)}
-            />
-          </div>
-          {error ? (
-            <p role="alert" className="text-sm text-status-danger-fg">
-              {error}
-            </p>
-          ) : null}
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-              <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
-            </Button>
-            <Button type="submit">
-              <FormattedMessage id="common.add" defaultMessage="Add" />
-            </Button>
-          </div>
+            </div>
+            {error ? (
+              <p role="alert" className="text-sm text-status-danger-fg">
+                {error}
+              </p>
+            ) : null}
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
+              </Button>
+              <Button type="submit">
+                <FormattedMessage id="common.add" defaultMessage="Add" />
+              </Button>
+            </div>
+          </fieldset>
         </form>
       </DialogContent>
     </Dialog>

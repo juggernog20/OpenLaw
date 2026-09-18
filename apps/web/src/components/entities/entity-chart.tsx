@@ -338,7 +338,11 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                   </>
                 ) : (
                   <Link
-                    to={`/entities/${node.id}`}
+                    to={
+                      node.kind === "individual"
+                        ? `/entities/${chart.edges.find((edge) => edge.ownerEntityId === node.id)?.ownedEntityId}/ownership`
+                        : `/entities/${node.id}`
+                    }
                     aria-current={selectedId === node.id ? "true" : undefined}
                     onClick={(event) => {
                       if (
@@ -355,7 +359,11 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                     onDoubleClick={(event) => {
                       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                       event.preventDefault();
-                      void navigate(`/entities/${node.id}`);
+                      void navigate(
+                        node.kind === "individual"
+                          ? `/entities/${chart.edges.find((edge) => edge.ownerEntityId === node.id)?.ownedEntityId}/ownership`
+                          : `/entities/${node.id}`,
+                      );
                     }}
                     onKeyDown={(event) => {
                       if (event.key !== " ") return;
@@ -414,15 +422,17 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                           {node.legalName}
                         </p>
                         <p className="truncate text-xs text-muted">{node.type}</p>
-                        <p className="truncate text-xs text-muted">
-                          {node.jurisdiction ??
-                            intl.formatMessage({
-                              id: "entities.chart.noJurisdiction",
-                              defaultMessage: "No jurisdiction",
-                            })}
-                        </p>
+                        {node.kind !== "individual" && (
+                          <p className="truncate text-xs text-muted">
+                            {node.jurisdiction ??
+                              intl.formatMessage({
+                                id: "entities.chart.noJurisdiction",
+                                defaultMessage: "No jurisdiction",
+                              })}
+                          </p>
+                        )}
                         <p className="mt-auto text-xs font-medium text-primary">
-                          {statusLabel(intl, node.status)}
+                          {node.status && statusLabel(intl, node.status)}
                         </p>
                       </div>
                     </foreignObject>

@@ -403,12 +403,16 @@ function EntityRecord() {
                 <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
                 {majorityOwner && !majorityOwner.restricted ? (
                   <>
-                    <Link
-                      to={`/entities/${majorityOwner.id}`}
-                      className="truncate text-link hover:underline"
-                    >
-                      {majorityOwner.legalName}
-                    </Link>
+                    {majorityOwner.kind === "individual" ? (
+                      <span className="truncate text-muted">{majorityOwner.legalName}</span>
+                    ) : (
+                      <Link
+                        to={`/entities/${majorityOwner.id}`}
+                        className="truncate text-link hover:underline"
+                      >
+                        {majorityOwner.legalName}
+                      </Link>
+                    )}
                     <ChevronRight size={16} aria-hidden="true" className="text-subtle" />
                   </>
                 ) : null}

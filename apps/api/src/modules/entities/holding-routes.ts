@@ -10,6 +10,7 @@ import {
   asc,
   entities,
   entityHoldings,
+  individualHoldings,
   entityTypes,
   ENTITY_STATUSES,
   eq,
@@ -31,7 +32,12 @@ const RelatedParams = IdParams.extend({ relatedEntityId: z.string().min(1).max(6
 const PercentSchema = z.number().min(0).max(100);
 
 const HoldingEntitySchema = z.discriminatedUnion("restricted", [
-  z.object({ restricted: z.literal(false), id: z.string(), legalName: z.string() }),
+  z.object({
+    restricted: z.literal(false),
+    id: z.string(),
+    legalName: z.string(),
+    kind: z.literal("individual").optional(),
+  }),
   z.object({ restricted: z.literal(true) }),
 ]);
 const HoldingSchema = z.object({
@@ -64,7 +70,8 @@ const ChartNodeSchema = z.discriminatedUnion("restricted", [
     legalName: z.string(),
     type: z.string(),
     jurisdiction: z.string().nullable(),
-    status: z.enum(ENTITY_STATUSES),
+    status: z.enum(ENTITY_STATUSES).nullable(),
+    kind: z.literal("individual").optional(),
     primaryOwnerId: z.string().nullable(),
   }),
   z.object({
@@ -124,24 +131,81 @@ async function reachableIds(db: Executor, user: Parameters<typeof entityReachSco
 
 async function warningsFor(db: Executor, ownedIds: readonly string[]) {
   if (ownedIds.length === 0) return [];
-  const rows = await db
+  const ids = [...new Set(ownedIds)];
+  const companyTotals = await db
     .select({
-      ownedEntityId: entityHoldings.ownedEntityId,
-      legalName: entities.legalName,
-      totalPercent: sql<string>`sum(${entityHoldings.ownershipPercent})`,
+      id: entityHoldings.ownedEntityId,
+      total: sql<string>`sum(${entityHoldings.ownershipPercent})`,
     })
     .from(entityHoldings)
-    .innerJoin(entities, eq(entityHoldings.ownedEntityId, entities.id))
-    .where(inArray(entityHoldings.ownedEntityId, [...new Set(ownedIds)]))
-    .groupBy(entityHoldings.ownedEntityId, entities.legalName)
-    .having(sql`sum(${entityHoldings.ownershipPercent}) > 100`)
-    .orderBy(asc(sql`lower(${entities.legalName})`), asc(entityHoldings.ownedEntityId));
-  return rows.map((row) => ({
-    code: "ownership-over-100" as const,
-    ownedEntityId: row.ownedEntityId,
-    legalName: row.legalName,
-    totalPercent: Number(row.totalPercent),
-  }));
+    .where(inArray(entityHoldings.ownedEntityId, ids))
+    .groupBy(entityHoldings.ownedEntityId);
+  const individualTotals = await db
+    .select({
+      id: individualHoldings.ownedEntityId,
+      total: sql<string>`sum(${individualHoldings.ownershipPercent})`,
+    })
+    .from(individualHoldings)
+    .where(inArray(individualHoldings.ownedEntityId, ids))
+    .groupBy(individualHoldings.ownedEntityId);
+  const totals = new Map<string, number>();
+  for (const row of [...companyTotals, ...individualTotals])
+    totals.set(row.id, (totals.get(row.id) ?? 0) + Math.round(Number(row.total) * 100));
+  const names = await db
+    .select({ id: entities.id, legalName: entities.legalName })
+    .from(entities)
+    .where(inArray(entities.id, ids))
+    .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.id));
+  return names
+    .filter((row) => (totals.get(row.id) ?? 0) > 10000)
+    .map((row) => ({
+      code: "ownership-over-100" as const,
+      ownedEntityId: row.id,
+      legalName: row.legalName,
+      totalPercent: totals.get(row.id)! / 100,
+    }));
+}
+
+const INDIVIDUAL_PREFIX = "individual:";
+const IndividualNameSchema = z.string().trim().min(1).max(200);
+function individualProjection(db: Executor) {
+  return db
+    .select({
+      id: individualHoldings.id,
+      name: individualHoldings.name,
+      ownedId: entities.id,
+      ownedName: entities.legalName,
+      ownershipPercent: individualHoldings.ownershipPercent,
+      createdAt: individualHoldings.createdAt,
+      updatedAt: individualHoldings.updatedAt,
+    })
+    .from(individualHoldings)
+    .innerJoin(entities, eq(individualHoldings.ownedEntityId, entities.id));
+}
+type IndividualProjection = Awaited<ReturnType<typeof individualProjection>>[number];
+function toIndividualHolding(row: IndividualProjection) {
+  return {
+    owner: {
+      restricted: false as const,
+      id: INDIVIDUAL_PREFIX + row.id,
+      legalName: row.name,
+      kind: "individual" as const,
+    },
+    owned: { restricted: false as const, id: row.ownedId, legalName: row.ownedName },
+    ownershipPercent: Number(row.ownershipPercent),
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+async function individualBeside(db: Executor, ownedId: string, relatedId: string) {
+  const [row] = await individualProjection(db).where(
+    and(
+      eq(individualHoldings.ownedEntityId, ownedId),
+      eq(individualHoldings.id, relatedId.slice(INDIVIDUAL_PREFIX.length)),
+    ),
+  );
+  if (!row) throw httpError(404, "This individual Holding could not be found.");
+  return row;
 }
 
 async function holdingByPair(db: Executor, ownerId: string, ownedId: string) {
@@ -251,6 +315,7 @@ async function recordHoldingActivity(
     {
       actorId: string;
       ownerId: string;
+      ownerIndividual?: boolean;
       ownerName: string;
       ownedId: string;
       ownedName: string;
@@ -264,6 +329,7 @@ async function recordHoldingActivity(
     [input.ownerId, input.ownerName],
     [input.ownedId, input.ownedName],
   ] as const) {
+    if (input.ownerIndividual && entityId === input.ownerId) continue;
     const common = {
       entityType: "entity" as const,
       entityId,
@@ -326,6 +392,29 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.id));
       const visible = await reachableIds(app.db, request.user);
       const allHoldings = await holdingProjection(app.db);
+      const individuals = await individualProjection(app.db).where(
+        entityReachScope(app.db, request.user),
+      );
+      const individualNodes = individuals.map((row) => ({
+        id: INDIVIDUAL_PREFIX + row.id,
+        legalName: row.name,
+        type: "Individual",
+        kind: "individual" as const,
+        jurisdiction: null,
+        status: null,
+      }));
+      for (const row of individuals) visible.add(INDIVIDUAL_PREFIX + row.id);
+      allHoldings.push(
+        ...individuals.map((row) => ({
+          ownerId: INDIVIDUAL_PREFIX + row.id,
+          ownerName: row.name,
+          ownedId: row.ownedId,
+          ownedName: row.ownedName,
+          ownershipPercent: row.ownershipPercent,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+        })),
+      );
       const included = new Set(visible);
       for (const row of allHoldings) {
         if (visible.has(row.ownerId) || visible.has(row.ownedId)) {
@@ -333,7 +422,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
           included.add(row.ownedId);
         }
       }
-      const nodes = allNodes.filter((node) => included.has(node.id));
+      const nodes = [...allNodes, ...individualNodes].filter((node) => included.has(node.id));
       // An edge is drawn only when the viewer reaches one of its ends. A
       // link between two walled Entities is topology the viewer may not
       // learn, even when each end touches something they can see.
@@ -399,6 +488,9 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
           eq(entityHoldings.ownedEntityId, entity.id),
         ),
       );
+      const individualOwners = await individualProjection(app.db).where(
+        eq(individualHoldings.ownedEntityId, entity.id),
+      );
       const owners = rows
         .filter((row) => row.ownedId === entity.id)
         .sort((a, b) => a.ownerName.localeCompare(b.ownerName))
@@ -408,7 +500,11 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         .sort((a, b) => a.ownedName.localeCompare(b.ownedName))
         .map((row) => toHolding(row, visible));
       return {
-        owners,
+        owners: [...owners, ...individualOwners.map(toIndividualHolding)].sort((a, b) =>
+          (a.owner.restricted ? "" : a.owner.legalName).localeCompare(
+            b.owner.restricted ? "" : b.owner.legalName,
+          ),
+        ),
         owned,
         warnings: await warningsFor(app.db, [
           entity.id,
@@ -426,11 +522,18 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "createEntityHolding",
         tags: ["entities"],
         params: IdParams,
-        body: z.strictObject({
-          direction: z.enum(["owner", "owned"]),
-          relatedEntityId: z.string().min(1).max(64),
-          ownershipPercent: PercentSchema,
-        }),
+        body: z.union([
+          z.strictObject({
+            direction: z.enum(["owner", "owned"]),
+            relatedEntityId: z.string().min(1).max(64),
+            ownershipPercent: PercentSchema,
+          }),
+          z.strictObject({
+            direction: z.literal("owner"),
+            individualName: IndividualNameSchema,
+            ownershipPercent: PercentSchema,
+          }),
+        ]),
         response: { 201: HoldingWriteEnvelope, default: problemResponse },
       },
     },
@@ -439,6 +542,32 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityHoldings})`);
         const anchor = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!anchor) throw httpError(404, NO_ENTITY);
+        assertEditable(anchor);
+        if ("individualName" in request.body) {
+          const [created] = await tx
+            .insert(individualHoldings)
+            .values({
+              ownedEntityId: anchor.id,
+              name: request.body.individualName,
+              ownershipPercent: String(request.body.ownershipPercent),
+            })
+            .returning();
+          const row = await individualBeside(tx, anchor.id, INDIVIDUAL_PREFIX + created!.id);
+          await recordHoldingActivity(tx, {
+            action: "entity_holding.created",
+            actorId: request.user.id,
+            ownerId: INDIVIDUAL_PREFIX + row.id,
+            ownerIndividual: true,
+            ownerName: row.name,
+            ownedId: anchor.id,
+            ownedName: anchor.legalName,
+            ownershipPercent: Number(row.ownershipPercent),
+          });
+          return {
+            holding: toIndividualHolding(row),
+            warnings: await warningsFor(tx, [anchor.id]),
+          };
+        }
         const related = await reachedEntity(tx, request.user, request.body.relatedEntityId, {
           lock: true,
         });
@@ -492,6 +621,36 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         const anchor = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!anchor) throw httpError(404, NO_ENTITY);
         assertEditable(anchor);
+        if (request.params.relatedEntityId.startsWith(INDIVIDUAL_PREFIX)) {
+          const row = await individualBeside(tx, anchor.id, request.params.relatedEntityId);
+          const from = Number(row.ownershipPercent);
+          if (from !== request.body.ownershipPercent) {
+            await tx
+              .update(individualHoldings)
+              .set({
+                ownershipPercent: String(request.body.ownershipPercent),
+                updatedAt: new Date(),
+              })
+              .where(eq(individualHoldings.id, row.id));
+            await recordHoldingActivity(tx, {
+              action: "entity_holding.updated",
+              actorId: request.user.id,
+              ownerId: INDIVIDUAL_PREFIX + row.id,
+              ownerIndividual: true,
+              ownerName: row.name,
+              ownedId: anchor.id,
+              ownedName: anchor.legalName,
+              from,
+              to: request.body.ownershipPercent,
+            });
+          }
+          return {
+            holding: toIndividualHolding(
+              await individualBeside(tx, anchor.id, request.params.relatedEntityId),
+            ),
+            warnings: await warningsFor(tx, [anchor.id]),
+          };
+        }
         const row = await holdingBeside(tx, anchor.id, request.params.relatedEntityId);
         if (!row) throw httpError(404, "No Holding exists between these Entities.");
         const related = await reachedEntity(tx, request.user, request.params.relatedEntityId, {
@@ -543,6 +702,21 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         const anchor = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!anchor) throw httpError(404, NO_ENTITY);
         assertEditable(anchor);
+        if (request.params.relatedEntityId.startsWith(INDIVIDUAL_PREFIX)) {
+          const row = await individualBeside(tx, anchor.id, request.params.relatedEntityId);
+          await tx.delete(individualHoldings).where(eq(individualHoldings.id, row.id));
+          await recordHoldingActivity(tx, {
+            action: "entity_holding.deleted",
+            actorId: request.user.id,
+            ownerId: INDIVIDUAL_PREFIX + row.id,
+            ownerIndividual: true,
+            ownerName: row.name,
+            ownedId: anchor.id,
+            ownedName: anchor.legalName,
+            ownershipPercent: Number(row.ownershipPercent),
+          });
+          return;
+        }
         const row = await holdingBeside(tx, anchor.id, request.params.relatedEntityId);
         if (!row) throw httpError(404, "No Holding exists between these Entities.");
         const related = await reachedEntity(tx, request.user, request.params.relatedEntityId, {

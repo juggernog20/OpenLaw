@@ -227,6 +227,27 @@ export function createChartExportModel({
   let nodeHeight = 90;
   for (const node of chart.nodes) {
     if (node.restricted) continue;
+    if (node.kind === "individual") {
+      const lines = wrapExportText(node.legalName, textWidth, 14, true, measure).map((text) => ({
+        text,
+        size: 14,
+        bold: true,
+      }));
+      lines.push({
+        text: intl.formatMessage({
+          id: "entities.ownership.individual",
+          defaultMessage: "Individual",
+        }),
+        size: 11,
+        bold: false,
+      });
+      cardLines.set(node.id, lines);
+      nodeHeight = Math.max(
+        nodeHeight,
+        2 * inset + lines.reduce((height, line) => height + line.size * 1.5, 0),
+      );
+      continue;
+    }
     const record = records.get(node.id);
     // Never fall back to a stale name after a failed permission-checked record read.
     if (!record) throw new Error("Entity details are unavailable.");

@@ -74781,8 +74781,19 @@
                                 "type": ["string", "null"]
                               },
                               "status": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": ["active", "dormant", "dissolved", "divested"]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "kind": {
                                 "type": "string",
-                                "enum": ["active", "dormant", "dissolved", "divested"]
+                                "enum": ["individual"]
                               },
                               "primaryOwnerId": {
                                 "type": ["string", "null"]
@@ -74901,6 +74912,10 @@
                                   },
                                   "legalName": {
                                     "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["individual"]
                                   }
                                 },
                                 "required": ["restricted", "id", "legalName"],
@@ -74933,6 +74948,10 @@
                                   },
                                   "legalName": {
                                     "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["individual"]
                                   }
                                 },
                                 "required": ["restricted", "id", "legalName"],
@@ -74994,6 +75013,10 @@
                                   },
                                   "legalName": {
                                     "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["individual"]
                                   }
                                 },
                                 "required": ["restricted", "id", "legalName"],
@@ -75026,6 +75049,10 @@
                                   },
                                   "legalName": {
                                     "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["individual"]
                                   }
                                 },
                                 "required": ["restricted", "id", "legalName"],
@@ -75118,25 +75145,50 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "direction": {
-                    "type": "string",
-                    "enum": ["owner", "owned"]
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "direction": {
+                        "type": "string",
+                        "enum": ["owner", "owned"]
+                      },
+                      "relatedEntityId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "ownershipPercent": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      }
+                    },
+                    "required": ["direction", "relatedEntityId", "ownershipPercent"],
+                    "additionalProperties": false
                   },
-                  "relatedEntityId": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 64
-                  },
-                  "ownershipPercent": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 100
+                  {
+                    "type": "object",
+                    "properties": {
+                      "direction": {
+                        "type": "string",
+                        "enum": ["owner"]
+                      },
+                      "individualName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "ownershipPercent": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      }
+                    },
+                    "required": ["direction", "individualName", "ownershipPercent"],
+                    "additionalProperties": false
                   }
-                },
-                "required": ["direction", "relatedEntityId", "ownershipPercent"],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -75178,6 +75230,10 @@
                                 },
                                 "legalName": {
                                   "type": "string"
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": ["individual"]
                                 }
                               },
                               "required": ["restricted", "id", "legalName"],
@@ -75210,6 +75266,10 @@
                                 },
                                 "legalName": {
                                   "type": "string"
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": ["individual"]
                                 }
                               },
                               "required": ["restricted", "id", "legalName"],
@@ -75358,6 +75418,10 @@
                                 },
                                 "legalName": {
                                   "type": "string"
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": ["individual"]
                                 }
                               },
                               "required": ["restricted", "id", "legalName"],
@@ -75390,6 +75454,10 @@
                                 },
                                 "legalName": {
                                   "type": "string"
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": ["individual"]
                                 }
                               },
                               "required": ["restricted", "id", "legalName"],

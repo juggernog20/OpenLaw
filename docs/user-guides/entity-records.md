@@ -28,10 +28,11 @@ The Entity's **Formation jurisdiction** remains separate. A Registration describ
 ## Add or correct a Holding
 
 1. Open the Entity's **Ownership** tab and select **Add Holding**.
-2. Choose **Relationship**: **Owns this Entity** when the selected Entity is the owner, or **This Entity owns** when it is the owned Entity.
+2. Keep **Owner type** set to **Entity**, then choose **Relationship**: **Owns this Entity** when the selected Entity is the owner, or **This Entity owns** when it is the owned Entity.
 3. Find and select the other **Entity**, enter **Ownership percent**, and select **Add**.
-4. Check **Owners** and **Owned Entities** on the two records. Correct a percentage in its row and move focus away to save.
-5. Use **Remove name** to remove the Holding. Neither Entity is deleted.
+4. To record a person who owns this Entity, choose **Individual** instead, enter their **Full name** and **Ownership percent**, and select **Add**. No Entity record or OpenLaw account is required. Names are recorded on each Holding; matching names are not automatically treated as the same person.
+5. Check **Owners** (and **Owned Entities** for company holdings). Correct a percentage in its row and move focus away to save.
+6. Use **Remove name** to remove the Holding. Neither Entity is deleted. To correct an individual name, remove that Holding and add it again with the correct name.
 
 Each Holding accepts a percentage from 0 to 100. A total over 100% across owners produces a warning but still saves; check and correct the recorded percentages. An Entity cannot own itself, duplicate the same directional Holding, or create an ownership loop. Holdings do not grant access or make one Entity a child record. Use the [ownership chart](entity-structure-and-access.md#read-the-ownership-chart) to read the structure.
 

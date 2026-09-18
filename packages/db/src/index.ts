@@ -42,6 +42,7 @@ import * as documentTextSchema from "./schema/document-text.js";
 import * as documentsSchema from "./schema/documents.js";
 import * as entitiesSchema from "./schema/entities.js";
 import * as entityGrantsSchema from "./schema/entity-grants.js";
+import * as individualHoldingsSchema from "./schema/individual-holdings.js";
 import * as entityHoldingsSchema from "./schema/entity-holdings.js";
 import * as entityObligationsSchema from "./schema/entity-obligations.js";
 import * as entityOfficersSchema from "./schema/entity-officers.js";
@@ -105,6 +106,7 @@ export * from "./schema/documents.js";
 export * from "./schema/entities.js";
 export * from "./schema/entity-grants.js";
 export * from "./schema/entity-holdings.js";
+export * from "./schema/individual-holdings.js";
 export * from "./schema/entity-obligations.js";
 export * from "./schema/entity-officers.js";
 export * from "./schema/entity-registrations.js";
@@ -169,6 +171,7 @@ export const schema = {
   ...entitiesSchema,
   ...entityGrantsSchema,
   ...entityHoldingsSchema,
+  ...individualHoldingsSchema,
   ...entityObligationsSchema,
   ...entityOfficersSchema,
   ...entityRegistrationsSchema,

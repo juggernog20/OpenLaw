@@ -30,7 +30,7 @@ export async function readExportRecords(
   chart: EntityChart,
   signal: AbortSignal,
 ): Promise<ExportRecords> {
-  const pending = chart.nodes.filter((node) => !node.restricted);
+  const pending = chart.nodes.filter((node) => !node.restricted && node.kind !== "individual");
   const records = new Map<string, ExportRecord>();
   let next = 0;
   await Promise.all(

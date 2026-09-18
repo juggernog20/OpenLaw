@@ -284,3 +284,32 @@ describe("custom chart exports", () => {
     expect(text).not.toMatch(/private-reference|user-1|SHOULD-NOT-EXPORT/);
   });
 });
+
+it("exports individual owner names without fetching a fictitious Entity record", () => {
+  const data: EntityChart = {
+    nodes: [
+      {
+        ...node("individual:alex"),
+        kind: "individual",
+        legalName: "Alex Morgan",
+        type: "Individual",
+        status: null,
+        jurisdiction: null,
+      },
+      node("company", "individual:alex"),
+    ],
+    edges: [{ ownerEntityId: "individual:alex", ownedEntityId: "company", ownershipPercent: 100 }],
+  };
+  const model = createChartExportModel({
+    chart: data,
+    records: new Map([["company", record("company")]]),
+    fields: [],
+    title: "Ownership",
+    percentages: true,
+    intl,
+    measure,
+  });
+  expect(model.texts.map((line) => line.text)).toContain("Alex Morgan");
+  expect(model.texts.map((line) => line.text)).toContain("Individual");
+  expect(model.edges).toHaveLength(1);
+});

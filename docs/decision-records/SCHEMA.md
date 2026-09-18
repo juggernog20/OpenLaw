@@ -1449,3 +1449,7 @@ Conversion drafts enforce their `pending | ready | failed` states and `matter | 
 ### 2026-09-17 — Intake counterparty lookup (0144)
 
 `requests.intake_counterparties` preserves selected registry IDs and display-name snapshots, or proposed names, in selection order. The existing Request answer map retains display text for request history. Submission resolves selected IDs against live counterparties. Conversion links those exact IDs and resolves proposed names transactionally; older text-only submissions retain their name-based conversion. The authenticated Portal lookup exposes only live names, IDs and jurisdictions, and only for a live form with the Counterparties question attached. It grants no Contract or contact-detail access.
+
+### `individual_holdings`
+
+Migration 0146 adds individual owners alongside `entity_holdings`: UUIDv7 `id`, `owned_entity_id` FK, `name` (1–200 trimmed characters), `ownership_percent` (numeric 5,2; 0–100), and timestamps. Individuals are recorded per Holding; names are not unique and do not identify app users or registry Entities. The owned Entity's access and archival rules govern reads and writes. Holdings routes use `individual:<id>` to distinguish individual owners, while chart nodes mark them with `kind: individual`. The existing graph advisory lock also serializes individual writes, combined percentage totals, and transactional Activity entries.

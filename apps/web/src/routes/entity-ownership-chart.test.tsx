@@ -357,3 +357,92 @@ function node(row: ReturnType<typeof entity>) {
     status: row.status,
   };
 }
+
+it("adds an individual by name without requiring an Entity lookup and edits their percentage", async () => {
+  const writes: StubCall[] = [];
+  const person = {
+    ...holding("parent", "current", 25),
+    owner: {
+      restricted: false,
+      kind: "individual",
+      id: "individual:person",
+      legalName: "Alex Morgan",
+    },
+  };
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      const base = recordReads(call);
+      if (base) return base;
+      if (call.url.pathname === "/api/v1/entities/current/holdings") {
+        if (call.method === "GET") return json(200, { owners: [], owned: [], warnings: [] });
+        writes.push(call);
+        return json(201, { holding: person, warnings: [] });
+      }
+      if (
+        decodeURIComponent(call.url.pathname) ===
+        "/api/v1/entities/current/holdings/individual:person"
+      ) {
+        writes.push(call);
+        return json(200, { holding: { ...person, ownershipPercent: 30 }, warnings: [] });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/entities/current/ownership");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Add Holding" }));
+  const dialog = await screen.findByRole("dialog", { name: "Add Holding" });
+  expect(within(dialog).getByRole("combobox", { name: "Entity" })).toBeVisible();
+  await user.click(within(dialog).getByRole("radio", { name: "Individual" }));
+  expect(within(dialog).queryByRole("combobox", { name: "Entity" })).not.toBeInTheDocument();
+  expect(within(dialog).queryByLabelText("Relationship")).not.toBeInTheDocument();
+  await user.type(within(dialog).getByLabelText("Full name"), "Alex Morgan");
+  const percent = within(dialog).getByLabelText("Ownership percent");
+  await user.clear(percent);
+  await user.type(percent, "25");
+  await user.click(within(dialog).getByRole("button", { name: "Add" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(writes[0]?.body).toEqual({
+    direction: "owner",
+    individualName: "Alex Morgan",
+    ownershipPercent: 25,
+  });
+  expect(screen.getByText("Alex Morgan")).toBeVisible();
+  expect(screen.queryByRole("link", { name: "Alex Morgan" })).not.toBeInTheDocument();
+  const savedPercent = screen.getByRole("spinbutton", { name: "Alex Morgan ownership percent" });
+  await user.clear(savedPercent);
+  await user.type(savedPercent, "30");
+  await user.tab();
+  await waitFor(() => expect(writes[1]?.body).toEqual({ ownershipPercent: 30 }));
+});
+
+it("labels an individual in the chart and opens their Holding instead of a nonexistent Entity", async () => {
+  const chart = {
+    nodes: [
+      {
+        ...node(rows.parent),
+        id: "individual:alex",
+        kind: "individual",
+        legalName: "Alex Morgan",
+        type: "Individual",
+        status: null,
+        jurisdiction: null,
+        primaryOwnerId: null,
+      },
+      { ...node(rows.current), primaryOwnerId: "individual:alex" },
+    ],
+    edges: [{ ownerEntityId: "individual:alex", ownedEntityId: "current", ownershipPercent: 100 }],
+  };
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/entities/chart" ? json(200, chart) : recordReads(call),
+  });
+  renderAt("/entities?view=chart");
+  expect(await screen.findByRole("link", { name: "Open Alex Morgan" })).toHaveAttribute(
+    "href",
+    "/entities/current/ownership",
+  );
+  expect(screen.getByText("Individual")).toBeVisible();
+});
