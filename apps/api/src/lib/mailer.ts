@@ -121,6 +121,20 @@ export interface SmtpEnv {
 }
 
 /**
+ * The env-pinned half of resolution, or null when the environment sets
+ * no relay URL. A present URL pins the instance even without a from
+ * address; it then cannot send, and says so on every send (#889).
+ * Configuration cannot change under a running process, so the fixed
+ * mailer is built once.
+ */
+export function envPinnedMailer(env: SmtpEnv): ResolvedMailer | null {
+  if (!env.url) return null;
+  return env.from
+    ? { source: "env", from: env.from, mailer: createSmtpMailer(env.url, env.from) }
+    : { source: "env", from: null, mailer: createUnconfiguredMailer() };
+}
+
+/**
  * Env-else-database resolution, environment first as a safety property,
  * not a convenience: the dev/E2E overlay pins Mailpit via env, and a
  * database-saved real relay must never beat it — or test traffic reaches
@@ -131,15 +145,8 @@ export interface SmtpEnv {
  * never apply.
  */
 export function createMailerResolver(db: Db, env: SmtpEnv): MailerResolver {
-  if (env.url) {
-    // Env-pinned: configuration cannot change under a running process,
-    // so the fixed mailer is built once and injected through the same
-    // composition point the database path resolves through.
-    const resolved: ResolvedMailer = env.from
-      ? { source: "env", from: env.from, mailer: createSmtpMailer(env.url, env.from) }
-      : { source: "env", from: null, mailer: createUnconfiguredMailer() };
-    return () => Promise.resolve(resolved);
-  }
+  const pinned = envPinnedMailer(env);
+  if (pinned) return () => Promise.resolve(pinned);
   const unset: ResolvedMailer = { source: "unset", from: null, mailer: createUnconfiguredMailer() };
   return async () => {
     const settings = await getOrgSettings(db);

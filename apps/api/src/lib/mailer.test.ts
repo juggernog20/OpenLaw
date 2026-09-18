@@ -6,8 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { Db } from "@openlaw/db";
-import { createMailerResolver, createSmtpMailer } from "./mailer.js";
+import { createSmtpMailer, envPinnedMailer } from "./mailer.js";
 
 describe("a malformed relay URL", () => {
   const url = "smtp://relay:hunter2-not-for-logs@mail.example.com:587 with a space";
@@ -39,14 +38,16 @@ describe("a malformed relay URL", () => {
 
 describe("SMTP_URL set with SMTP_FROM unset (#889)", () => {
   it("pins the instance to the environment and resolves the unconfigured mailer", async () => {
-    // The database is never read on the env-pinned path, so no
-    // connection is needed to prove it.
-    const resolve = createMailerResolver({} as Db, { url: "smtp://relay.example:587" });
-    const resolved = await resolve();
+    const resolved = envPinnedMailer({ url: "smtp://relay.example:587" });
     expect(resolved).toMatchObject({ source: "env", from: null });
+    if (!resolved) throw new Error("expected the environment to pin the mailer");
     expect(resolved.mailer.configured).toBe(false);
     await expect(
       resolved.mailer.send({ to: "a@example.com", subject: "x", text: "x" }),
     ).rejects.toThrow(/SMTP is not configured/);
+  });
+
+  it("leaves resolution to the database when the environment sets no URL", () => {
+    expect(envPinnedMailer({ from: "OpenLaw <openlaw@example.com>" })).toBeNull();
   });
 });

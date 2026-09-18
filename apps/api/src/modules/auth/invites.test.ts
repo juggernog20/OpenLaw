@@ -487,7 +487,7 @@ describe("invites while the instance cannot send email (#889)", () => {
   const REFUSAL = {
     status: 409,
     type: "/problems/email-setup-required",
-    detail: expect.stringContaining("cannot send email"),
+    detail: expect.stringMatching(/cannot send email\. Set SMTP_URL and SMTP_FROM together/),
   };
 
   it("refuses a new invite and creates no Invited row", async () => {

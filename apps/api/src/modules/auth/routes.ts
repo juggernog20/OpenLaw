@@ -1237,14 +1237,18 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
    * branch on the one problem type.
    */
   async function requireInviteMailer(): Promise<void> {
-    if ((await app.resolveMailer()).mailer.configured) return;
-    throw httpError(
-      409,
-      "The invite was not sent: this instance cannot send email. " +
-        "Set up outbound email in Settings → Advanced → Outbound email, " +
-        "or set SMTP_URL and SMTP_FROM in the environment.",
-      { type: "/problems/email-setup-required" },
-    );
+    const { source, mailer } = await app.resolveMailer();
+    if (mailer.configured) return;
+    // An environment-pinned relay ignores Settings (TECH-011), so the
+    // remedy names the environment; only an unset instance can be
+    // repaired from the Outbound email pane.
+    const remedy =
+      source === "env"
+        ? "Set SMTP_URL and SMTP_FROM together in the environment."
+        : "Set up outbound email in Settings → Advanced → Outbound email.";
+    throw httpError(409, `The invite was not sent: this instance cannot send email. ${remedy}`, {
+      type: "/problems/email-setup-required",
+    });
   }
 
   /** Issues a set-password token and emails it (reset-password flow). */

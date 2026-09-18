@@ -274,8 +274,7 @@ describe("the Users pane (#65)", () => {
     const happy = usersApi(newCalls());
     const detail =
       "The invite was not sent: this instance cannot send email. " +
-      "Set up outbound email in Settings → Advanced → Outbound email, " +
-      "or set SMTP_URL and SMTP_FROM in the environment.";
+      "Set up outbound email in Settings → Advanced → Outbound email.";
     stubApi({
       signedIn: ADMIN,
       extra: (call) => {
