@@ -3,7 +3,20 @@
 /** DES-085: available Auto-Docs, acknowledgement, form, and retained Generation confirmation. */
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
+import {
+  Link,
+  redirect,
+  useLoaderData,
+  useNavigate,
+  useSearchParams,
+  type LoaderFunctionArgs,
+} from "react-router";
+import { ArrowLeft, ArrowRight, FileText, Files, Search, CircleAlert } from "lucide-react";
+import { ManagedTable } from "../components/table/managed-table";
+import { builtInLayout, type TableCatalogue } from "../lib/list-views";
+import { Input } from "../components/ui/input";
+import { SettingsCard } from "../components/settings-card";
+import { GenerationStatusPill } from "../components/auto-docs/generations";
 import type { paths } from "@openlaw/api-client";
 import {
   previousAnswerText,
@@ -24,13 +37,12 @@ import {
   GenerationContract,
   GenerationDownload,
   GenerationEmail,
-  GenerationState,
   generationWaiting,
 } from "../components/auto-docs/generations";
 
 type FormReply =
   paths["/api/v1/portal/auto-docs/{id}/generate"]["get"]["responses"][200]["content"]["application/json"];
-const CARD = "space-y-4 rounded-card border border-border-default bg-raised p-6";
+const CARD = "space-y-4 rounded-card border border-border-default bg-raised p-5";
 
 export async function portalAutoDocsLoader({ request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
@@ -42,18 +54,173 @@ export async function portalAutoDocsLoader({ request }: LoaderFunctionArgs) {
   if (!list.data || !history.data) throw new Error("Your Auto-Docs could not be read.");
   return { user, autoDocs: list.data.autoDocs, history: history.data };
 }
+type AvailableAutoDoc =
+  paths["/api/v1/portal/auto-docs"]["get"]["responses"][200]["content"]["application/json"]["autoDocs"][number];
+type OwnedGeneration =
+  paths["/api/v1/portal/auto-doc-generations"]["get"]["responses"][200]["content"]["application/json"]["generations"][number];
+const libraryColumns: TableCatalogue<AvailableAutoDoc> = {
+  flexColumnKey: "description",
+  defaultColumnKeys: ["name", "description", "formats", "generate"],
+  columns: [
+    {
+      key: "name",
+      header: <FormattedMessage id="portal.autoDocs.template" defaultMessage="Template" />,
+      label: (intl) =>
+        intl.formatMessage({ id: "portal.autoDocs.template", defaultMessage: "Template" }),
+      defaultWidth: 280,
+      minWidth: 200,
+      render: (row) => (
+        <span className="flex items-center gap-2.5">
+          <FileText size={16} className="shrink-0 text-muted" aria-hidden="true" />
+          <span className="font-medium">{row.name}</span>
+        </span>
+      ),
+    },
+    {
+      key: "description",
+      header: <FormattedMessage id="portal.autoDocs.description" defaultMessage="Description" />,
+      label: (intl) =>
+        intl.formatMessage({ id: "portal.autoDocs.description", defaultMessage: "Description" }),
+      defaultWidth: 420,
+      minWidth: 220,
+      render: (row) => (
+        <span className="text-muted">
+          {row.availability.ready ? (
+            row.description || "—"
+          ) : (
+            <span className="inline-flex items-center gap-2 text-status-warning-fg">
+              <CircleAlert size={14} className="shrink-0" aria-hidden="true" />
+              {row.availability.message}
+            </span>
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "formats",
+      header: <FormattedMessage id="portal.autoDocs.format" defaultMessage="Format" />,
+      label: (intl) =>
+        intl.formatMessage({ id: "portal.autoDocs.format", defaultMessage: "Format" }),
+      defaultWidth: 140,
+      minWidth: 100,
+      render: (row) => (
+        <span className="text-sm text-muted">
+          {row.formats === "both" ? "Word · PDF" : row.formats === "pdf" ? "PDF" : "Word"}
+        </span>
+      ),
+    },
+    {
+      key: "generate",
+      header: (
+        <span className="sr-only">
+          <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
+        </span>
+      ),
+      label: (intl) => intl.formatMessage({ id: "autoDocs.generate", defaultMessage: "Generate" }),
+      defaultWidth: 150,
+      minWidth: 140,
+      align: "end",
+      render: (row, intl) =>
+        row.availability.ready ? (
+          <Button asChild size="sm" variant="secondary">
+            <Link
+              aria-label={intl.formatMessage(
+                { id: "autoDocs.generateNamed", defaultMessage: "Generate {name}" },
+                { name: row.name },
+              )}
+              to={`/portal/auto-docs/${row.id}/generate`}
+            >
+              <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </Button>
+        ) : (
+          <span className="text-xs text-muted">
+            <FormattedMessage id="portal.autoDocs.unavailable" defaultMessage="Unavailable" />
+          </span>
+        ),
+    },
+  ],
+};
+const historyColumns: TableCatalogue<OwnedGeneration> = {
+  flexColumnKey: "name",
+  defaultColumnKeys: ["name", "createdAt", "state", "downloads"],
+  columns: [
+    {
+      key: "name",
+      header: <FormattedMessage id="portal.autoDocs.document" defaultMessage="Document" />,
+      label: (intl) =>
+        intl.formatMessage({ id: "portal.autoDocs.document", defaultMessage: "Document" }),
+      defaultWidth: 360,
+      minWidth: 240,
+      render: (row) => (
+        <Link
+          className="flex items-center gap-2.5 font-medium text-link"
+          to={`/portal/auto-docs/${row.autoDocId}/generations/${row.id}`}
+        >
+          <FileText size={16} className="shrink-0 text-muted" aria-hidden="true" />
+          {row.autoDocName}
+        </Link>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: <FormattedMessage id="portal.autoDocs.created" defaultMessage="Created" />,
+      label: (intl) =>
+        intl.formatMessage({ id: "portal.autoDocs.created", defaultMessage: "Created" }),
+      defaultWidth: 240,
+      minWidth: 190,
+      render: (row) => (
+        <time className="text-muted" dateTime={row.createdAt}>
+          {formatLongDateTime(row.createdAt)}
+        </time>
+      ),
+    },
+    {
+      key: "state",
+      header: <FormattedMessage id="portal.autoDocs.status" defaultMessage="Status" />,
+      label: (intl) =>
+        intl.formatMessage({ id: "portal.autoDocs.status", defaultMessage: "Status" }),
+      defaultWidth: 120,
+      minWidth: 100,
+      render: (row) => <GenerationStatusPill state={row.state} />,
+    },
+    {
+      key: "downloads",
+      header: <FormattedMessage id="portal.autoDocs.downloads" defaultMessage="Downloads" />,
+      label: (intl) =>
+        intl.formatMessage({ id: "portal.autoDocs.downloads", defaultMessage: "Downloads" }),
+      defaultWidth: 240,
+      minWidth: 220,
+      render: (row) => <GenerationDownload generation={row} portal />,
+    },
+  ],
+};
+
 export function PortalAutoDocsPage() {
   const { user, autoDocs, history } = useLoaderData<typeof portalAutoDocsLoader>();
   const [generations, setGenerations] = useState(history.generations);
   const [cursor, setCursor] = useState(history.nextCursor);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const [params, setParams] = useSearchParams();
+  const view = params.get("view") === "history" ? "history" : "library";
+  const query = params.get("q") ?? "";
+  const [libraryLayout, setLibraryLayout] = useState(() => builtInLayout(libraryColumns));
+  const [historyLayout, setHistoryLayout] = useState(() => builtInLayout(historyColumns));
   const intl = useIntl();
   const signOut = useSignOut("/portal/login");
   const title = intl.formatMessage({
     id: "portal.navigation.autoDocs",
     defaultMessage: "Auto-Docs",
   });
+  const library = autoDocs
+    .filter((row) =>
+      `${row.name} ${row.description ?? ""}`
+        .toLocaleLowerCase(intl.locale)
+        .includes(query.toLocaleLowerCase(intl.locale)),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name, intl.locale));
   async function more() {
     if (!cursor || busy) return;
     setBusy(true);
@@ -80,91 +247,164 @@ export function PortalAutoDocsPage() {
       );
   }
   return (
-    <PortalShell user={user} onSignOut={() => void signOut()}>
+    <PortalShell wide user={user} onSignOut={() => void signOut()}>
       <PageTitle title={title} />
-      <div className="mx-auto w-full max-w-3xl space-y-6">
-        <h1 className="text-xl font-semibold">{title}</h1>
-        <p className="text-muted">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold">{title}</h1>
+        <p className="text-base text-muted">
           <FormattedMessage
-            id="portal.autoDocs.intro"
-            defaultMessage="Generate documents using the words approved by Legal."
+            id="portal.autoDocs.libraryIntro"
+            defaultMessage="Create documents from Legal's approved templates, then find and download your finished documents here."
           />
         </p>
-        <section aria-labelledby="available-auto-docs" className="space-y-3">
-          <h2 id="available-auto-docs" className="text-lg font-semibold">
-            <FormattedMessage id="portal.autoDocs.available" defaultMessage="Available Auto-Docs" />
-          </h2>
-          {!autoDocs.length && (
-            <p className="text-muted">
-              <FormattedMessage
-                id="portal.autoDocs.empty"
-                defaultMessage="No Auto-Docs are available to you yet."
-              />
-            </p>
-          )}
-          {autoDocs.map((row) => (
-            <article key={row.id} className={CARD}>
-              <h3 className="font-semibold">{row.name}</h3>
-              {row.description && (
-                <p className="whitespace-pre-wrap text-muted">{row.description}</p>
-              )}
-              {row.availability.ready ? (
-                <Link
-                  className="text-link hover:underline"
-                  to={`/portal/auto-docs/${row.id}/generate`}
-                >
-                  <FormattedMessage
-                    id="autoDocs.generateNamed"
-                    defaultMessage="Generate {name}"
-                    values={{ name: row.name }}
-                  />
-                </Link>
-              ) : (
-                <p>{row.availability.message}</p>
-              )}
-            </article>
-          ))}
-        </section>
-        <section aria-labelledby="your-generations" className="space-y-3">
-          <h2 id="your-generations" className="text-lg font-semibold">
-            <FormattedMessage id="portal.autoDocs.history" defaultMessage="Your Generations" />
-          </h2>
-          {!generations.length && (
-            <p className="text-muted">
-              <FormattedMessage
-                id="portal.autoDocs.historyEmpty"
-                defaultMessage="Your generated documents will appear here."
-              />
-            </p>
-          )}
-          <ul className="divide-y divide-border-default">
-            {generations.map((row) => (
-              <li key={row.id} className="py-3">
-                <Link
-                  className="text-link hover:underline"
-                  to={`/portal/auto-docs/${row.autoDocId}/generations/${row.id}`}
-                >
-                  {row.autoDocName} ·{" "}
-                  <time dateTime={row.createdAt}>{formatLongDateTime(row.createdAt)}</time>
-                </Link>
-                <p className="text-sm text-muted">
-                  <GenerationState state={row.state} />
-                </p>
-              </li>
-            ))}
-          </ul>
-          {error && (
-            <p role="alert" className="text-status-danger-fg">
-              {error}
-            </p>
-          )}
-          {cursor && (
-            <Button variant="secondary" disabled={busy} onClick={() => void more()}>
-              <FormattedMessage id="common.showMore" defaultMessage="Show more" />
-            </Button>
-          )}
-        </section>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <nav
+          aria-label={title}
+          className="flex gap-1 rounded-button border border-border-default bg-control p-1"
+        >
+          <Link
+            className={`flex items-center gap-2 rounded-button px-3 py-1.5 text-sm font-medium ${view === "library" ? "bg-raised text-primary shadow-sm" : "text-muted hover:text-primary"}`}
+            aria-current={view === "library" ? "page" : undefined}
+            to="/portal/auto-docs"
+          >
+            <Files size={14} aria-hidden="true" />
+            <FormattedMessage id="portal.autoDocs.library" defaultMessage="Template library" />
+            <span className="text-xs text-muted">{autoDocs.length}</span>
+          </Link>
+          <Link
+            className={`flex items-center gap-2 rounded-button px-3 py-1.5 text-sm font-medium ${view === "history" ? "bg-raised text-primary shadow-sm" : "text-muted hover:text-primary"}`}
+            aria-current={view === "history" ? "page" : undefined}
+            to="/portal/auto-docs?view=history"
+          >
+            <FileText size={14} aria-hidden="true" />
+            <FormattedMessage id="portal.autoDocs.yourDocuments" defaultMessage="Your documents" />
+          </Link>
+        </nav>
+        {view === "library" && (
+          <form
+            role="search"
+            className="flex w-full items-center gap-2 @sm/page:w-auto"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const value = String(new FormData(event.currentTarget).get("q") ?? "").trim();
+              setParams(value ? { q: value } : {});
+            }}
+          >
+            <div className="relative min-w-0 flex-1">
+              <Search
+                size={16}
+                className="absolute start-2.5 top-1/2 -translate-y-1/2 text-muted"
+                aria-hidden="true"
+              />
+              <Input
+                key={query}
+                name="q"
+                type="search"
+                defaultValue={query}
+                className="w-full ps-8 @sm/page:w-72"
+                aria-label={intl.formatMessage({
+                  id: "portal.autoDocs.searchTemplates",
+                  defaultMessage: "Search templates",
+                })}
+                placeholder={intl.formatMessage({
+                  id: "portal.autoDocs.searchTemplates",
+                  defaultMessage: "Search templates",
+                })}
+              />
+            </div>
+            <Button type="submit" variant="secondary">
+              <FormattedMessage id="common.search" defaultMessage="Search" />
+            </Button>
+          </form>
+        )}
+      </div>
+      {view === "library" ? (
+        library.length ? (
+          <ManagedTable
+            catalogue={libraryColumns}
+            layout={libraryLayout}
+            onLayoutChange={setLibraryLayout}
+            rows={library}
+            rowKey={(row) => row.id}
+          />
+        ) : (
+          <div className="flex flex-col items-center gap-3 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
+            <Files size={32} strokeWidth={1.5} className="text-muted" aria-hidden="true" />
+            <h2 className="text-lg font-semibold">
+              {query ? (
+                <FormattedMessage
+                  id="portal.autoDocs.noMatches"
+                  defaultMessage="No matching templates"
+                />
+              ) : (
+                <FormattedMessage
+                  id="portal.autoDocs.emptyTitle"
+                  defaultMessage="Your template library is on its way"
+                />
+              )}
+            </h2>
+            <p className="max-w-sm text-base text-muted">
+              {query ? (
+                <FormattedMessage
+                  id="portal.autoDocs.trySearch"
+                  defaultMessage="Try a different template name or description."
+                />
+              ) : (
+                <FormattedMessage
+                  id="portal.autoDocs.empty"
+                  defaultMessage="No Auto-Docs are available to you yet."
+                />
+              )}
+            </p>
+          </div>
+        )
+      ) : generations.length ? (
+        <ManagedTable
+          catalogue={historyColumns}
+          layout={historyLayout}
+          onLayoutChange={setHistoryLayout}
+          rows={generations}
+          rowKey={(row) => row.id}
+          foot={
+            cursor ? (
+              <Button variant="secondary" disabled={busy} onClick={() => void more()}>
+                <FormattedMessage id="common.showMore" defaultMessage="Show more" />
+              </Button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <div className="flex flex-col items-center gap-3 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
+          <FileText size={32} strokeWidth={1.5} className="text-muted" aria-hidden="true" />
+          <h2 className="text-lg font-semibold">
+            <FormattedMessage
+              id="portal.autoDocs.noDocuments"
+              defaultMessage="No documents generated yet"
+            />
+          </h2>
+          <p className="max-w-sm text-base text-muted">
+            <FormattedMessage
+              id="portal.autoDocs.historyEmpty"
+              defaultMessage="Your generated documents will appear here."
+            />
+          </p>
+          <Button asChild variant="secondary">
+            <Link to="/portal/auto-docs">
+              <FormattedMessage
+                id="portal.autoDocs.browseTemplates"
+                defaultMessage="Browse templates"
+              />
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </Button>
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-status-danger-fg">
+          {error}
+        </p>
+      )}
     </PortalShell>
   );
 }
@@ -328,7 +568,11 @@ function PortalAutoDocForm({
     <PortalShell user={loaded.user} onSignOut={() => void signOut()}>
       <PageTitle title={title} />
       <div className="mx-auto w-full max-w-2xl space-y-6">
-        <Link className="text-link hover:underline" to="/portal/auto-docs">
+        <Link
+          className="flex w-fit items-center gap-1.5 text-sm font-medium text-muted hover:text-primary"
+          to="/portal/auto-docs"
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
           <FormattedMessage id="portal.autoDocs.back" defaultMessage="Back to Auto-Docs" />
         </Link>
         <h1 ref={heading} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
@@ -409,9 +653,12 @@ function PortalAutoDocForm({
                 </div>
               ))}
             </fieldset>
-            <Button type="submit" disabled={busy}>
-              <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
-            </Button>
+            <div className="flex justify-end border-t border-border-default pt-4">
+              <Button type="submit" disabled={busy}>
+                <FormattedMessage id="autoDocs.generate" defaultMessage="Generate" />
+                <ArrowRight size={14} aria-hidden="true" />
+              </Button>
+            </div>
           </form>
         )}
         {!!previousAnswers.length && (
@@ -523,10 +770,14 @@ function PortalGeneration({
     <PortalShell user={loaded.user} onSignOut={() => void signOut()}>
       <PageTitle title={title} />
       <div className="mx-auto w-full max-w-2xl space-y-6">
-        <Link className="text-link hover:underline" to="/portal/auto-docs">
+        <Link
+          className="flex w-fit items-center gap-1.5 text-sm font-medium text-muted hover:text-primary"
+          to="/portal/auto-docs"
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
           <FormattedMessage id="portal.autoDocs.back" defaultMessage="Back to Auto-Docs" />
         </Link>
-        <h1 className="text-xl font-semibold">{title}</h1>
+        <h1 className="text-2xl font-semibold">{title}</h1>
         {error && (
           <div className="space-y-3">
             <p role="alert" className="text-status-danger-fg">
@@ -538,10 +789,16 @@ function PortalGeneration({
           </div>
         )}
         {data && (
-          <section className={CARD}>
-            <h2 className="text-lg font-semibold">{data.generation.autoDocName}</h2>
+          <SettingsCard
+            title={
+              <span className="flex items-center gap-2">
+                <FileText size={16} aria-hidden="true" />
+                {data.generation.autoDocName}
+              </span>
+            }
+          >
             <p role="status">
-              <GenerationState state={data.generation.state} />
+              <GenerationStatusPill state={data.generation.state} />
             </p>
             {data.generation.failure && (
               <p role="alert" className="text-status-danger-fg">
@@ -560,7 +817,7 @@ function PortalGeneration({
                 <FormattedMessage id="autoDocs.generateAgain" defaultMessage="Generate again" />
               </Link>
             )}
-          </section>
+          </SettingsCard>
         )}
       </div>
     </PortalShell>

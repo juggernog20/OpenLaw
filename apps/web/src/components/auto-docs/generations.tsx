@@ -25,6 +25,15 @@ export function GenerationState({ state }: { state: AutoDocGeneration["state"] }
     />
   );
 }
+export function GenerationStatusPill({ state }: { state: AutoDocGeneration["state"] }) {
+  return (
+    <span
+      className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${STATE_PILL[state]}`}
+    >
+      <GenerationState state={state} />
+    </span>
+  );
+}
 export function GenerationPair({ generation }: { generation: AutoDocGeneration }) {
   return (
     <FormattedMessage

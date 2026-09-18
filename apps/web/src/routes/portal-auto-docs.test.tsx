@@ -109,9 +109,10 @@ it("lists the available Auto-Docs and appends owned Generation history", async (
     "href",
     "/portal/auto-docs/nda/generate",
   );
-  await userEvent.click(screen.getByRole("button", { name: "Show more" }));
+  await userEvent.click(screen.getByRole("link", { name: "Your documents" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Show more" }));
   await screen.findByRole("link", { name: /Earlier NDA/ });
-  expect(screen.getByRole("link", { name: /Approved NDA.*14/ })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Approved NDA" })).toBeInTheDocument();
 });
 
 it("acknowledges the displayed text before exposing the Entity form and submits the acknowledgement with the pair", async () => {
@@ -352,4 +353,44 @@ it("drops an answer absent from the saved Form instead of guessing its previous 
   renderAt("/portal/auto-docs/nda/generate?from=gen1");
   expect(await screen.findByRole("textbox", { name: "Counterparty" })).toHaveValue("");
   expect(screen.getByText("Unrecorded type")).toBeInTheDocument();
+});
+
+it("searches the template library and keeps unavailable templates out of generation actions", async () => {
+  stubApi({
+    signedIn: person,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/portal/auto-docs")
+        return json(200, {
+          autoDocs: [
+            { ...autoDoc, availability },
+            {
+              ...autoDoc,
+              id: "services",
+              name: "Services agreement",
+              description: "Engage a supplier.",
+              availability: { ready: false, message: "Legal is updating this template." },
+            },
+          ],
+        });
+      if (call.url.pathname === "/api/v1/portal/auto-doc-generations")
+        return json(200, { generations: [], nextCursor: null });
+      return undefined;
+    },
+  });
+  const user = userEvent.setup();
+  renderAt("/portal/auto-docs");
+  await screen.findByRole("heading", { name: "Auto-Docs", level: 1 });
+  expect(
+    screen.queryByRole("link", { name: "Generate Services agreement" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText("Legal is updating this template.")).toBeVisible();
+  await user.type(screen.getByRole("searchbox", { name: "Search templates" }), "supplier{Enter}");
+  await waitFor(() =>
+    expect(screen.queryByRole("link", { name: "Generate Approved NDA" })).not.toBeInTheDocument(),
+  );
+  expect(screen.getByText("Services agreement")).toBeVisible();
+  await user.click(screen.getByRole("link", { name: "Your documents" }));
+  await screen.findByRole("heading", { name: "No documents generated yet" });
+  await user.click(screen.getByRole("link", { name: "Browse templates" }));
+  expect(await screen.findByRole("link", { name: "Generate Approved NDA" })).toBeVisible();
 });
