@@ -7,9 +7,8 @@ import {
   CreateAttachments,
   useCreateAttachments,
 } from "../components/documents/create-attachments";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Form,
   Link,
   redirect,
   useLoaderData,
@@ -65,9 +64,12 @@ import { EntityChart } from "../components/entities/entity-chart";
 import {
   ENTITIES_CATALOGUE as CATALOGUE,
   entityListFilters,
-  type EntityListFilters,
 } from "../components/entities/entities-columns";
-import { EntityListFilterBar } from "../components/entities/entity-list-filter-bar";
+import {
+  useCalendarFilterDefinitions,
+  useEntityFilterDefinitions,
+} from "../components/entities/entity-filter-definitions";
+import { RecordFilterBar } from "../components/table/record-filter-bar";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { PageTitle } from "../components/page-title";
 import { ColumnMenu } from "../components/table/column-menu";
@@ -332,6 +334,11 @@ function EntitiesPageState() {
     : builtInLayout(CATALOGUE);
   const modified = !sameLayout(layout, storedLayout);
   const filters = entityListFilters(layout.filters);
+  const listDefinitions = useEntityFilterDefinitions({
+    types: entityTypes,
+    jurisdictions: loaded.listOptions?.jurisdictions ?? [],
+    majorityOwners: loaded.listOptions?.majorityOwners ?? [],
+  });
   const narrowed = Boolean(appliedSearch) || Object.values(filters).some(Boolean);
   const hasArchivedRow = rows.some((row) => row.archivedAt !== null);
 
@@ -430,10 +437,6 @@ function EntitiesPageState() {
     setAppended(null);
     setPageError(false);
     mirrorSearch(navigate, querySearch(next, appliedSearch));
-  }
-
-  function setFilter<K extends keyof EntityListFilters>(key: K, value: EntityListFilters[K]) {
-    void commit({ ...layout, filters: { ...layout.filters, [key]: value } });
   }
 
   function clearFilters() {
@@ -613,15 +616,12 @@ function EntitiesPageState() {
                 )}
               </div>
               {view === "list" && loaded.listOptions ? (
-                <EntityListFilterBar
-                  filters={filters}
-                  types={entityTypes}
-                  options={loaded.listOptions}
+                <RecordFilterBar
+                  definitions={listDefinitions}
+                  values={layout.filters}
                   busy={busy}
-                  empty={rows.length === 0}
                   error={listError}
-                  onFilter={setFilter}
-                  onClear={clearFilters}
+                  onChange={(next) => void commit({ ...layout, filters: next })}
                 />
               ) : null}
             </div>
@@ -768,6 +768,20 @@ function ComplianceCalendar({
   initialMonth: string | null;
 }>) {
   const intl = useIntl();
+  const navigate = useNavigate();
+  const definitions = useCalendarFilterDefinitions({
+    entities: entities
+      .filter((row) => row.archivedAt === null)
+      .map((row) => ({ id: row.id, displayName: row.legalName })),
+    users,
+  });
+  const values: Record<string, boolean | string> = {
+    ...(filters.entity ? { entity: filters.entity } : {}),
+    ...(filters.assignee ? { assignee: filters.assignee } : {}),
+    ...(filters.from ? { dueFrom: filters.from } : {}),
+    ...(filters.to ? { dueTo: filters.to } : {}),
+    ...(filters.includeCompleted ? { includeCompleted: true } : {}),
+  };
   const filtered = Boolean(
     filters.q ||
     filters.entity ||
@@ -815,78 +829,30 @@ function ComplianceCalendar({
         <h2 className="text-lg font-semibold">
           <FormattedMessage id="entities.calendar.title" defaultMessage="Compliance calendar" />
         </h2>
-        <Form
-          method="get"
-          className="mt-3 grid grid-cols-1 gap-3 @xl/page:grid-cols-[1fr_1fr_10rem_10rem_auto_auto]"
-        >
-          {filters.q ? <input type="hidden" name="q" value={filters.q} /> : null}
-          {initialView === "month" ? <input type="hidden" name="calendar" value="month" /> : null}
-          <CalendarSelect
-            id="calendar-entity"
-            label={intl.formatMessage({ id: "entities.calendar.entity", defaultMessage: "Entity" })}
-            name="entity"
-            defaultValue={filters.entity}
-          >
-            <option value="">
-              {intl.formatMessage({
-                id: "entities.calendar.allEntities",
-                defaultMessage: "All Entities",
-              })}
-            </option>
-            {entities
-              .filter((row) => row.archivedAt === null)
-              .map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.legalName}
-                </option>
-              ))}
-          </CalendarSelect>
-          <CalendarSelect
-            id="calendar-assignee"
-            label={intl.formatMessage({
-              id: "entities.calendar.assignee",
-              defaultMessage: "Assignee",
-            })}
-            name="assignee"
-            defaultValue={filters.assignee}
-          >
-            <option value="">
-              {intl.formatMessage({ id: "entities.calendar.everyone", defaultMessage: "Everyone" })}
-            </option>
-            {users.map((row) => (
-              <option key={row.id} value={row.id}>
-                {row.displayName}
-              </option>
-            ))}
-          </CalendarSelect>
-          <FieldLabel
-            id="calendar-from"
-            label={intl.formatMessage({ id: "entities.calendar.from", defaultMessage: "From" })}
-          >
-            <Input id="calendar-from" name="from" type="date" defaultValue={filters.from} />
-          </FieldLabel>
-          <FieldLabel
-            id="calendar-to"
-            label={intl.formatMessage({ id: "entities.calendar.to", defaultMessage: "To" })}
-          >
-            <Input id="calendar-to" name="to" type="date" defaultValue={filters.to} />
-          </FieldLabel>
-          <label className="flex items-center gap-2 self-end pb-2 text-sm">
-            <input
-              type="checkbox"
-              name="includeCompleted"
-              value="true"
-              defaultChecked={filters.includeCompleted === "true"}
-            />
-            <FormattedMessage
-              id="entities.calendar.includeCompleted"
-              defaultMessage="Include completed"
-            />
-          </label>
-          <Button type="submit" variant="secondary" className="self-end">
-            <FormattedMessage id="entities.calendar.apply" defaultMessage="Apply" />
-          </Button>
-        </Form>
+        <div className="mt-3">
+          <RecordFilterBar
+            definitions={definitions}
+            values={values}
+            busy={false}
+            error={null}
+            onChange={(next) => {
+              const params = new URLSearchParams();
+              if (filters.q) params.set("q", filters.q);
+              if (initialView === "month") params.set("calendar", "month");
+              for (const [key, target] of [
+                ["entity", "entity"],
+                ["assignee", "assignee"],
+                ["dueFrom", "from"],
+                ["dueTo", "to"],
+              ] as const) {
+                const value = next[key];
+                if (typeof value === "string" && value) params.set(target, value);
+              }
+              if (next.includeCompleted === true) params.set("includeCompleted", "true");
+              void navigate(params.size > 0 ? `/entities?${params.toString()}` : "/entities");
+            }}
+          />
+        </div>
       </section>
       {rows.length === 0 ? (
         <CalendarEmpty
@@ -898,41 +864,6 @@ function ComplianceCalendar({
       ) : (
         <CalendarList rows={rows} />
       )}
-    </div>
-  );
-}
-
-function CalendarSelect({
-  id,
-  label,
-  name,
-  defaultValue,
-  children,
-}: Readonly<{
-  id: string;
-  label: string;
-  name: string;
-  defaultValue?: string;
-  children: ReactNode;
-}>) {
-  return (
-    <FieldLabel id={id} label={label}>
-      <select id={id} name={name} defaultValue={defaultValue ?? ""} className={CONTROL_CLASS}>
-        {children}
-      </select>
-    </FieldLabel>
-  );
-}
-
-function FieldLabel({
-  id,
-  label,
-  children,
-}: Readonly<{ id: string; label: string; children: ReactNode }>) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
     </div>
   );
 }
