@@ -32,6 +32,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { CurrencySchema } from "../../lib/currencies.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { csvRow } from "../../lib/csv.js";
 import { projectRegisterHoldings } from "../../lib/holdings-projection.js";
 import { ownershipPath } from "../../lib/ownership-path.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -914,7 +915,143 @@ async function assertClassNameFree(
   }
 }
 
+function csvHolder(ref: { restricted: boolean; name?: string } | null) {
+  return ref === null ? "" : ref.restricted ? "Restricted Entity" : (ref.name ?? "");
+}
+
+/** A filename the browser keeps: the legal name minus what a filesystem refuses. */
+function fileStem(legalName: string) {
+  return (
+    legalName
+      .replace(/[\\/:*?"<>|]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() || "entity"
+  );
+}
+
 export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.get(
+    "/entities/:id/share-register/export",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "exportEntityShareRegister",
+        tags: ["entities"],
+        params: IdParams,
+        querystring: z.object({
+          asOf: z.iso.date().optional(),
+          kind: z.enum(["members", "entries"]).default("members"),
+        }),
+        produces: ["text/csv"],
+        // No 200 schema on purpose, as the audit log's export: this answers
+        // `text/csv` with a Content-Disposition filename, and a response
+        // schema would put the JSON serializer in front of it. Refusals
+        // still answer a Problem body.
+        response: { default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const entity = await reachedEntity(app.db, request.user, request.params.id);
+      if (!entity) throw httpError(404, NO_ENTITY);
+      const register = await readRegister(
+        app.db,
+        request.user,
+        entity,
+        request.query.asOf ?? todayIsoDate(),
+      );
+      const className = new Map(register.classes.map((row) => [row.id, row.name]));
+      const rows: (string | number | null)[][] =
+        request.query.kind === "members"
+          ? [
+              [
+                "Holder",
+                "Holder kind",
+                "Jurisdiction",
+                "Class",
+                "Shares",
+                "% of class",
+                "% voting",
+                "Certificates",
+                "Member since",
+              ],
+              ...register.holders.map((row) => [
+                csvHolder(row.holder),
+                row.holder.restricted ? "" : row.holder.kind,
+                row.holder.restricted ? "" : (row.holder.jurisdiction ?? ""),
+                className.get(row.shareClassId) ?? "",
+                row.balance,
+                row.percentOfClass,
+                row.percentOfVotes,
+                row.certificates.join(" "),
+                row.memberSince,
+              ]),
+              ...register.treasury.map((row) => [
+                "Treasury",
+                "treasury",
+                "",
+                className.get(row.shareClassId) ?? "",
+                row.balance,
+                null,
+                null,
+                "",
+                null,
+              ]),
+            ]
+          : [
+              [
+                "No.",
+                "Date",
+                "Entry",
+                "From",
+                "To",
+                "Class",
+                "To class",
+                "Shares",
+                "Price per share",
+                "Currency",
+                "Consideration",
+                "Distinctive numbers",
+                "Certificates issued",
+                "Certificates cancelled",
+                "Resolution",
+                "Note",
+              ],
+              ...register.entries.map((row) => [
+                row.entryNo,
+                row.effectiveOn,
+                row.kind,
+                csvHolder(row.from),
+                csvHolder(row.kind === "conversion" ? row.from : row.to),
+                className.get(row.shareClassId) ?? "",
+                row.toShareClassId ? (className.get(row.toShareClassId) ?? "") : "",
+                row.quantity,
+                row.pricePerShare,
+                row.priceCurrency,
+                row.consideration,
+                row.distinctiveNumbers,
+                row.certificatesIssued.map((certificate) => certificate.number).join(" "),
+                row.certificatesCancelled.join(" "),
+                row.resolutionRef,
+                row.note,
+              ]),
+            ];
+      const stem = fileStem(entity.legalName);
+      const filename =
+        request.query.kind === "members"
+          ? `${stem} register of members ${register.asOf}.csv`
+          : `${stem} register of entries.csv`;
+      return (
+        reply
+          .header("content-type", "text/csv; charset=utf-8")
+          .header("content-disposition", `attachment; filename="${filename.replace(/"/g, "")}"`)
+          // The only declared response is the Problem default, so the reply's
+          // payload type is Problem. The CSV sits outside it on purpose, as
+          // the audit log's does; the cast says so.
+          .send(("\uFEFF" + rows.map(csvRow).join("")) as never)
+      );
+    },
+  );
+
   app.get(
     "/entities/:id/share-register",
     {

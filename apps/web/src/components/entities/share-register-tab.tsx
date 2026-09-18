@@ -6,10 +6,10 @@
  * allotments and transfers, then the Entities this one owns. Holders are
  * never added here; they come from entries.
  */
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useRevalidator, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
 import type { EntityHoldings, EntityRow } from "../../lib/entities";
 import { toMajorUnits } from "../../lib/format";
@@ -74,6 +74,7 @@ export function ShareRegisterTab({
   const intl = useIntl();
   const [params, setParams] = useSearchParams();
   const { revalidate } = useRevalidator();
+  const entriesHeading = useId();
   const [classesOpen, setClassesOpen] = useState(false);
   const [entryDialog, setEntryDialog] = useState<{ entry?: RegisterEntry } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -181,8 +182,9 @@ export function ShareRegisterTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <RegisterAsOf register={register} onChange={setAsOf} />
-      <ReconciliationNote register={register} />
+      {/* An empty register has no dates to scrub and nothing to reconcile. */}
+      {empty ? null : <RegisterAsOf register={register} onChange={setAsOf} />}
+      {empty ? null : <ReconciliationNote register={register} />}
       {register.warnings.map((warning) => (
         <p
           key={warning.shareClassId}
@@ -227,30 +229,39 @@ export function ShareRegisterTab({
       ) : (
         <>
           <RegisterOfMembers
+            entityId={entity.id}
             register={register}
             historic={historic}
             frozen={frozen}
             onClasses={() => setClassesOpen(true)}
           />
-          <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+          <section
+            className="overflow-hidden rounded-card border border-border-default bg-raised"
+            aria-labelledby={entriesHeading}
+          >
             <header className="flex h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4">
-              <h2 className="text-base font-semibold">
+              <h2 id={entriesHeading} className="text-base font-semibold">
                 <FormattedMessage
                   id="entities.register.entries.title"
                   defaultMessage="Register of allotments and transfers"
                 />
               </h2>
-              <Button
-                size="sm"
-                disabled={frozen || live.length === 0}
-                onClick={() => setEntryDialog({})}
-              >
-                <Plus size={16} aria-hidden="true" />
-                <FormattedMessage
-                  id="entities.register.entry.title"
-                  defaultMessage="Record entry"
-                />
-              </Button>
+              <div className="flex items-center gap-2">
+                <ExportLink entityId={entity.id} kind="entries">
+                  <FormattedMessage id="entities.register.export" defaultMessage="Export" />
+                </ExportLink>
+                <Button
+                  size="sm"
+                  disabled={frozen || live.length === 0}
+                  onClick={() => setEntryDialog({})}
+                >
+                  <Plus size={16} aria-hidden="true" />
+                  <FormattedMessage
+                    id="entities.register.entry.title"
+                    defaultMessage="Record entry"
+                  />
+                </Button>
+              </div>
             </header>
             <div className="flex flex-wrap items-center gap-3 border-b border-border-default px-4 py-2.5">
               <RecordFilterBar
@@ -339,6 +350,7 @@ function RegisterAsOf({
   onChange,
 }: Readonly<{ register: ShareRegister; onChange: (next: string | null) => void }>) {
   const intl = useIntl();
+  const asOfHeading = useId();
   const ticks = [...new Set([...register.dates, register.today])].sort();
   const earlier = ticks.filter((date) => date < register.asOf);
   const later = ticks.filter((date) => date > register.asOf);
@@ -357,9 +369,12 @@ function RegisterAsOf({
     }
   }
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+      aria-labelledby={asOfHeading}
+    >
       <header className="flex h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">
+        <h2 id={asOfHeading} className="text-base font-semibold">
           <FormattedMessage id="entities.register.asOf" defaultMessage="Register as of" />
         </h2>
         <div className="flex items-center gap-2">
@@ -465,6 +480,32 @@ function RegisterAsOf({
         </div>
       </div>
     </section>
+  );
+}
+
+/** A same-origin download of the CSV the API renders; the browser keeps the API's filename. */
+function ExportLink({
+  entityId,
+  kind,
+  asOf,
+  children,
+}: Readonly<{
+  entityId: string;
+  kind: "members" | "entries";
+  asOf?: string;
+  children: ReactNode;
+}>) {
+  const params = new URLSearchParams({ kind });
+  if (asOf) params.set("asOf", asOf);
+  return (
+    <a
+      href={`/api/v1/entities/${entityId}/share-register/export?${params.toString()}`}
+      download
+      className="inline-flex h-7 items-center gap-1.5 rounded-button border border-border-default bg-raised px-2.5 text-sm hover:bg-control"
+    >
+      <Download size={16} aria-hidden="true" />
+      {children}
+    </a>
   );
 }
 
@@ -581,25 +622,31 @@ function HolderCell({ row }: Readonly<{ row: RegisterRow }>) {
 }
 
 function RegisterOfMembers({
+  entityId,
   register,
   historic,
   frozen,
   onClasses,
 }: Readonly<{
+  entityId: string;
   register: ShareRegister;
   historic: boolean;
   frozen: boolean;
   onClasses: () => void;
 }>) {
   const intl = useIntl();
+  const membersHeading = useId();
   const holders = new Set(
     register.holders.map((row) => (row.holder.restricted ? `r:${row.holder.id}` : row.holder.id)),
   );
   const applied = register.entries.filter((entry) => entry.applied).length;
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+      aria-labelledby={membersHeading}
+    >
       <header className="flex h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">
+        <h2 id={membersHeading} className="text-base font-semibold">
           {historic ? (
             <FormattedMessage
               id="entities.register.members.titleAt"
@@ -625,6 +672,12 @@ function RegisterOfMembers({
               }}
             />
           </span>
+          <ExportLink entityId={entityId} kind="members" asOf={register.asOf}>
+            <FormattedMessage
+              id="entities.register.members.export"
+              defaultMessage="Export register"
+            />
+          </ExportLink>
           <Button variant="secondary" size="sm" disabled={frozen} onClick={onClasses}>
             <FormattedMessage id="entities.register.classes.title" defaultMessage="Share classes" />
           </Button>

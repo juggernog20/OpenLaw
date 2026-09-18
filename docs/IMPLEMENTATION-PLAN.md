@@ -699,15 +699,16 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - _Decisions:_ DD-022, DD-027, ADO-001 to ADO-011, CTR-025, CTR-026, NOT-009, SET-010, SET-011,
     ENT-010, TECH-028
 
-- [ ] **M36 — Share register and cap table**
+- [x] **M36 — Share register and cap table**
       _Demo:_ Open a subsidiary, record the Series A allotment, scrub the register back to last year end,
       and see who held what on that date. The Entities list filters through the same bar as Matters.
-      _Spec:_ [#930](https://github.com/juggernog20/OpenLaw/issues/930), tasks #931–#935.
-  - [ ] Entities list and compliance calendar filters on the shared DES-046 filter bar
-  - [ ] Share classes, holders, entries and certificates; the as-of register read with replay validation
-  - [ ] The Ownership tab as a share register with the date scrubber and the DES-046 entries filter
-  - [ ] Holdings projected from the register, read-only where derived
-  - [ ] CSV exports, the browser journey, plan and record addenda
+      _Built:_ [#930](https://github.com/juggernog20/OpenLaw/issues/930), tasks #931–#935. The journey is
+      [`58-m36-share-register.spec.ts`](../e2e/tests/58-m36-share-register.spec.ts).
+  - [x] Entities list and compliance calendar filters on the shared DES-046 filter bar
+  - [x] Share classes, holders, entries and certificates; the as-of register read with replay validation
+  - [x] The Ownership tab as a share register with the date scrubber and the DES-046 entries filter
+  - [x] Holdings projected from the register, read-only where derived
+  - [x] CSV exports, the browser journey, plan and record addenda
   - _Decisions:_ ENT-011, DES-088, DES-046 addendum, ENT-001 and ENT-003 amendments
 
 - [ ] **M34 — Release**

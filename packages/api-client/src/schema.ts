@@ -6116,6 +6116,22 @@ export interface paths {
     patch: operations["updateEntityHolding"];
     trace?: never;
   };
+  "/api/v1/entities/{id}/share-register/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["exportEntityShareRegister"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entities/{id}/share-register": {
     parameters: {
       query?: never;
@@ -34200,6 +34216,31 @@ export interface operations {
           };
         };
       };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  exportEntityShareRegister: {
+    parameters: {
+      query?: {
+        asOf?: string;
+        kind?: "members" | "entries";
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {
