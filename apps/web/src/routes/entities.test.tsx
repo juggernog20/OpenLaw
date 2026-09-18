@@ -71,6 +71,16 @@ function registryApi(entities: unknown[], onCreate?: (call: StubCall) => Respons
   };
 }
 
+/** DES-046: Show archived is a flag in the shared filter menu. */
+async function showArchived(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: /^Filter/ }));
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+      name: "Show archived",
+    }),
+  );
+}
+
 describe("the /entities destination", () => {
   it("shows a Legal Team Member the registry in the API's order, with the nav item", async () => {
     stubApi({
@@ -262,7 +272,7 @@ describe("the /entities destination", () => {
     expect(within(table).queryByText("Mistake Ltd")).not.toBeInTheDocument();
 
     // The toggle reveals it, marked as archived, with restore on offer.
-    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    await showArchived(user);
     expect(await screen.findByText("Mistake Ltd")).toBeInTheDocument();
     expect(screen.getByText("Archived")).toBeInTheDocument();
 
@@ -272,8 +282,8 @@ describe("the /entities destination", () => {
     expect(screen.getByText("Mistake Ltd")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Restore Mistake Ltd" })).not.toBeInTheDocument();
 
-    // Toggling back off keeps the restored entity in the working list.
-    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    // Removing the chip keeps the restored entity in the working list.
+    await user.click(screen.getByRole("button", { name: "Remove Show archived filter" }));
     await waitFor(
       () => expect(screen.getAllByRole("row")).toHaveLength(3), // header + two live rows
     );
@@ -304,7 +314,7 @@ describe("the /entities destination", () => {
     renderAt("/entities?view=list");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    await showArchived(user);
     await user.click(await screen.findByRole("button", { name: "Restore Mistake Ltd" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("This entity is not archived.");
@@ -330,11 +340,13 @@ describe("the /entities destination", () => {
     renderAt("/entities?view=list");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    await showArchived(user);
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The registry could not be read. Try again.",
     );
-    expect(screen.getByRole("switch", { name: "Show archived" })).not.toBeChecked();
+    expect(
+      screen.queryByRole("button", { name: "Remove Show archived filter" }),
+    ).not.toBeInTheDocument();
   });
 
   it("sends an unauthenticated visitor to login", async () => {

@@ -6150,6 +6150,102 @@ export interface paths {
     patch: operations["updateEntityHolding"];
     trace?: never;
   };
+  "/api/v1/entities/{id}/share-register/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["exportEntityShareRegister"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/share-register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEntityShareRegister"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/share-classes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createEntityShareClass"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/share-classes/{classId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["archiveEntityShareClass"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityShareClass"];
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/share-entries": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createEntityShareEntry"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/share-entries/{entryId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityShareEntry"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityShareEntry"];
+    trace?: never;
+  };
   "/api/v1/entities/{id}/officers": {
     parameters: {
       query?: never;
@@ -33994,6 +34090,8 @@ export interface operations {
               ownerEntityId: string;
               ownedEntityId: string;
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
             }[];
           };
         };
@@ -34055,6 +34153,8 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -34088,6 +34188,8 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -34176,6 +34278,8 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -34285,6 +34389,8 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
+              /** @enum {string} */
+              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -34296,6 +34402,1075 @@ export interface operations {
               ownedEntityId: string;
               legalName: string;
               totalPercent: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  exportEntityShareRegister: {
+    parameters: {
+      query?: {
+        asOf?: string;
+        kind?: "members" | "entries";
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getEntityShareRegister: {
+    parameters: {
+      query?: {
+        asOf?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            classes: {
+              id: string;
+              name: string;
+              authorized: number | null;
+              parValue: number | null;
+              parValueCurrency: string | null;
+              votesPerShare: number;
+              rights: string | null;
+              position: number;
+              archivedAt: string | null;
+              entryCount: number;
+            }[];
+            holders: {
+              holder:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual";
+                    name: string;
+                    entityId: string | null;
+                    jurisdiction: string | null;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  };
+              shareClassId: string;
+              balance: number;
+              percentOfClass: number;
+              percentOfVotes: number;
+              certificates: string[];
+              memberSince: string | null;
+              balanceToday: number;
+            }[];
+            treasury: {
+              shareClassId: string;
+              balance: number;
+            }[];
+            totals: {
+              shareClassId: string;
+              issued: number;
+              treasury: number;
+              outstanding: number;
+              votes: number;
+              percentOfVotes: number;
+            }[];
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind: "allotment" | "transfer" | "buyback" | "cancellation" | "conversion";
+              /** Format: date */
+              effectiveOn: string;
+              shareClassId: string;
+              toShareClassId: string | null;
+              quantity: number;
+              from:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              to:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              pricePerShare: number | null;
+              priceCurrency: string | null;
+              consideration: string | null;
+              distinctiveNumbers: string | null;
+              resolutionRef: string | null;
+              note: string | null;
+              certificatesIssued: {
+                number: string;
+                holderId: string;
+                shareClassId: string;
+                quantity: number;
+                distinctiveNumbers: string | null;
+              }[];
+              certificatesCancelled: string[];
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            dates: string[];
+            reconciliation: {
+              declaredIssued: number | null;
+              registerIssued: number;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "authorized-exceeded";
+              shareClassId: string;
+              className: string;
+              issued: number;
+              authorized: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityShareClass: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name: string;
+          authorized?: number | null;
+          parValue?: number | null;
+          parValueCurrency?: string | null;
+          votesPerShare?: number;
+          rights?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            classes: {
+              id: string;
+              name: string;
+              authorized: number | null;
+              parValue: number | null;
+              parValueCurrency: string | null;
+              votesPerShare: number;
+              rights: string | null;
+              position: number;
+              archivedAt: string | null;
+              entryCount: number;
+            }[];
+            holders: {
+              holder:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual";
+                    name: string;
+                    entityId: string | null;
+                    jurisdiction: string | null;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  };
+              shareClassId: string;
+              balance: number;
+              percentOfClass: number;
+              percentOfVotes: number;
+              certificates: string[];
+              memberSince: string | null;
+              balanceToday: number;
+            }[];
+            treasury: {
+              shareClassId: string;
+              balance: number;
+            }[];
+            totals: {
+              shareClassId: string;
+              issued: number;
+              treasury: number;
+              outstanding: number;
+              votes: number;
+              percentOfVotes: number;
+            }[];
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind: "allotment" | "transfer" | "buyback" | "cancellation" | "conversion";
+              /** Format: date */
+              effectiveOn: string;
+              shareClassId: string;
+              toShareClassId: string | null;
+              quantity: number;
+              from:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              to:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              pricePerShare: number | null;
+              priceCurrency: string | null;
+              consideration: string | null;
+              distinctiveNumbers: string | null;
+              resolutionRef: string | null;
+              note: string | null;
+              certificatesIssued: {
+                number: string;
+                holderId: string;
+                shareClassId: string;
+                quantity: number;
+                distinctiveNumbers: string | null;
+              }[];
+              certificatesCancelled: string[];
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            dates: string[];
+            reconciliation: {
+              declaredIssued: number | null;
+              registerIssued: number;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "authorized-exceeded";
+              shareClassId: string;
+              className: string;
+              issued: number;
+              authorized: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveEntityShareClass: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        classId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityShareClass: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        classId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          authorized?: number | null;
+          parValue?: number | null;
+          parValueCurrency?: string | null;
+          votesPerShare?: number;
+          rights?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            classes: {
+              id: string;
+              name: string;
+              authorized: number | null;
+              parValue: number | null;
+              parValueCurrency: string | null;
+              votesPerShare: number;
+              rights: string | null;
+              position: number;
+              archivedAt: string | null;
+              entryCount: number;
+            }[];
+            holders: {
+              holder:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual";
+                    name: string;
+                    entityId: string | null;
+                    jurisdiction: string | null;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  };
+              shareClassId: string;
+              balance: number;
+              percentOfClass: number;
+              percentOfVotes: number;
+              certificates: string[];
+              memberSince: string | null;
+              balanceToday: number;
+            }[];
+            treasury: {
+              shareClassId: string;
+              balance: number;
+            }[];
+            totals: {
+              shareClassId: string;
+              issued: number;
+              treasury: number;
+              outstanding: number;
+              votes: number;
+              percentOfVotes: number;
+            }[];
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind: "allotment" | "transfer" | "buyback" | "cancellation" | "conversion";
+              /** Format: date */
+              effectiveOn: string;
+              shareClassId: string;
+              toShareClassId: string | null;
+              quantity: number;
+              from:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              to:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              pricePerShare: number | null;
+              priceCurrency: string | null;
+              consideration: string | null;
+              distinctiveNumbers: string | null;
+              resolutionRef: string | null;
+              note: string | null;
+              certificatesIssued: {
+                number: string;
+                holderId: string;
+                shareClassId: string;
+                quantity: number;
+                distinctiveNumbers: string | null;
+              }[];
+              certificatesCancelled: string[];
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            dates: string[];
+            reconciliation: {
+              declaredIssued: number | null;
+              registerIssued: number;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "authorized-exceeded";
+              shareClassId: string;
+              className: string;
+              issued: number;
+              authorized: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityShareEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind: "allotment" | "transfer" | "buyback" | "cancellation" | "conversion";
+          /** Format: date */
+          effectiveOn: string;
+          shareClassId: string;
+          toShareClassId?: string | null;
+          quantity: number;
+          from?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "holder";
+                    holderId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          to?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "holder";
+                    holderId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          pricePerShare?: number | null;
+          priceCurrency?: string | null;
+          consideration?: string | null;
+          distinctiveNumbers?: string | null;
+          resolutionRef?: string | null;
+          note?: string | null;
+          certificatesCancelled?: string[];
+          certificatesIssued?: {
+            number: string;
+            /** @enum {string} */
+            holder: "from" | "to";
+            quantity: number;
+            distinctiveNumbers?: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            classes: {
+              id: string;
+              name: string;
+              authorized: number | null;
+              parValue: number | null;
+              parValueCurrency: string | null;
+              votesPerShare: number;
+              rights: string | null;
+              position: number;
+              archivedAt: string | null;
+              entryCount: number;
+            }[];
+            holders: {
+              holder:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual";
+                    name: string;
+                    entityId: string | null;
+                    jurisdiction: string | null;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  };
+              shareClassId: string;
+              balance: number;
+              percentOfClass: number;
+              percentOfVotes: number;
+              certificates: string[];
+              memberSince: string | null;
+              balanceToday: number;
+            }[];
+            treasury: {
+              shareClassId: string;
+              balance: number;
+            }[];
+            totals: {
+              shareClassId: string;
+              issued: number;
+              treasury: number;
+              outstanding: number;
+              votes: number;
+              percentOfVotes: number;
+            }[];
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind: "allotment" | "transfer" | "buyback" | "cancellation" | "conversion";
+              /** Format: date */
+              effectiveOn: string;
+              shareClassId: string;
+              toShareClassId: string | null;
+              quantity: number;
+              from:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              to:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              pricePerShare: number | null;
+              priceCurrency: string | null;
+              consideration: string | null;
+              distinctiveNumbers: string | null;
+              resolutionRef: string | null;
+              note: string | null;
+              certificatesIssued: {
+                number: string;
+                holderId: string;
+                shareClassId: string;
+                quantity: number;
+                distinctiveNumbers: string | null;
+              }[];
+              certificatesCancelled: string[];
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            dates: string[];
+            reconciliation: {
+              declaredIssued: number | null;
+              registerIssued: number;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "authorized-exceeded";
+              shareClassId: string;
+              className: string;
+              issued: number;
+              authorized: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityShareEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        entryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityShareEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        entryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind: "allotment" | "transfer" | "buyback" | "cancellation" | "conversion";
+          /** Format: date */
+          effectiveOn: string;
+          shareClassId: string;
+          toShareClassId?: string | null;
+          quantity: number;
+          from?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "holder";
+                    holderId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          to?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "holder";
+                    holderId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          pricePerShare?: number | null;
+          priceCurrency?: string | null;
+          consideration?: string | null;
+          distinctiveNumbers?: string | null;
+          resolutionRef?: string | null;
+          note?: string | null;
+          certificatesCancelled?: string[];
+          certificatesIssued?: {
+            number: string;
+            /** @enum {string} */
+            holder: "from" | "to";
+            quantity: number;
+            distinctiveNumbers?: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            classes: {
+              id: string;
+              name: string;
+              authorized: number | null;
+              parValue: number | null;
+              parValueCurrency: string | null;
+              votesPerShare: number;
+              rights: string | null;
+              position: number;
+              archivedAt: string | null;
+              entryCount: number;
+            }[];
+            holders: {
+              holder:
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual";
+                    name: string;
+                    entityId: string | null;
+                    jurisdiction: string | null;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  };
+              shareClassId: string;
+              balance: number;
+              percentOfClass: number;
+              percentOfVotes: number;
+              certificates: string[];
+              memberSince: string | null;
+              balanceToday: number;
+            }[];
+            treasury: {
+              shareClassId: string;
+              balance: number;
+            }[];
+            totals: {
+              shareClassId: string;
+              issued: number;
+              treasury: number;
+              outstanding: number;
+              votes: number;
+              percentOfVotes: number;
+            }[];
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind: "allotment" | "transfer" | "buyback" | "cancellation" | "conversion";
+              /** Format: date */
+              effectiveOn: string;
+              shareClassId: string;
+              toShareClassId: string | null;
+              quantity: number;
+              from:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              to:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual";
+                        name: string;
+                        entityId: string | null;
+                        jurisdiction: string | null;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                  )
+                | null;
+              pricePerShare: number | null;
+              priceCurrency: string | null;
+              consideration: string | null;
+              distinctiveNumbers: string | null;
+              resolutionRef: string | null;
+              note: string | null;
+              certificatesIssued: {
+                number: string;
+                holderId: string;
+                shareClassId: string;
+                quantity: number;
+                distinctiveNumbers: string | null;
+              }[];
+              certificatesCancelled: string[];
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            dates: string[];
+            reconciliation: {
+              declaredIssued: number | null;
+              registerIssued: number;
+            };
+            warnings: {
+              /** @enum {string} */
+              code: "authorized-exceeded";
+              shareClassId: string;
+              className: string;
+              issued: number;
+              authorized: number;
             }[];
           };
         };

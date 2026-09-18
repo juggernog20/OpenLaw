@@ -25,11 +25,20 @@ export function OwnershipCard({
   candidates,
   initial,
   frozen,
+  showOwners = true,
+  showOwned = true,
+  ownersTitle,
+  ownedTitle,
 }: Readonly<{
   entity: EntityRow;
   candidates: EntityRow[];
   initial: EntityHoldings;
   frozen: boolean;
+  /** ENT-011: the register replaces the owners side; only declared owners outside it still list here. */
+  showOwners?: boolean;
+  showOwned?: boolean;
+  ownersTitle?: ReactNode;
+  ownedTitle?: ReactNode;
 }>) {
   const intl = useIntl();
   const [holdings, setHoldings] = useState(initial);
@@ -146,38 +155,58 @@ export function OwnershipCard({
           {error}
         </p>
       ) : null}
-      <div className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-2">
-        <HoldingList
-          title={<FormattedMessage id="entities.ownership.owners" defaultMessage="Owners" />}
-          empty={intl.formatMessage({
-            id: "entities.ownership.noOwners",
-            defaultMessage: "No owners recorded.",
-          })}
-          rows={holdings.owners}
-          entityId={entity.id}
-          frozen={frozen}
-          onUpdate={update}
-          onRemove={remove}
-        />
-        <HoldingList
-          title={<FormattedMessage id="entities.ownership.owned" defaultMessage="Owned Entities" />}
-          empty={intl.formatMessage({
-            id: "entities.ownership.noneOwned",
-            defaultMessage: "This Entity owns no other Entities.",
-          })}
-          rows={holdings.owned}
-          entityId={entity.id}
-          frozen={frozen}
-          onUpdate={update}
-          onRemove={remove}
-        />
+      <div
+        className={
+          (showOwners || holdings.owners.length > 0) && showOwned
+            ? "grid grid-cols-1 gap-4 @2xl/page:grid-cols-2"
+            : "grid grid-cols-1 gap-4"
+        }
+      >
+        {showOwners || holdings.owners.length > 0 ? (
+          <HoldingList
+            title={
+              ownersTitle ?? (
+                <FormattedMessage id="entities.ownership.owners" defaultMessage="Owners" />
+              )
+            }
+            empty={intl.formatMessage({
+              id: "entities.ownership.noOwners",
+              defaultMessage: "No owners recorded.",
+            })}
+            rows={holdings.owners}
+            entityId={entity.id}
+            frozen={frozen}
+            onUpdate={update}
+            onRemove={remove}
+          />
+        ) : null}
+        {showOwned ? (
+          <HoldingList
+            title={
+              ownedTitle ?? (
+                <FormattedMessage id="entities.ownership.owned" defaultMessage="Owned Entities" />
+              )
+            }
+            empty={intl.formatMessage({
+              id: "entities.ownership.noneOwned",
+              defaultMessage: "This Entity owns no other Entities.",
+            })}
+            rows={holdings.owned}
+            entityId={entity.id}
+            frozen={frozen}
+            onUpdate={update}
+            onRemove={remove}
+          />
+        ) : null}
       </div>
-      <div>
-        <Button disabled={frozen} onClick={() => setDialogOpen(true)}>
-          <Plus size={16} aria-hidden="true" />
-          <FormattedMessage id="entities.ownership.addHolding" defaultMessage="Add Holding" />
-        </Button>
-      </div>
+      {showOwned ? (
+        <div>
+          <Button variant="secondary" disabled={frozen} onClick={() => setDialogOpen(true)}>
+            <Plus size={16} aria-hidden="true" />
+            <FormattedMessage id="entities.ownership.addHolding" defaultMessage="Add Holding" />
+          </Button>
+        </div>
+      ) : null}
       {dialogOpen ? (
         <AddHoldingDialog
           entityId={entity.id}
@@ -207,10 +236,16 @@ function HoldingList({
   onUpdate: (row: EntityHolding, percent: number) => Promise<void>;
   onRemove: (row: EntityHolding) => Promise<void>;
 }>) {
+  const headingId = useId();
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      aria-labelledby={headingId}
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+    >
       <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 id={headingId} className="text-base font-semibold">
+          {title}
+        </h2>
       </header>
       {rows.length === 0 ? (
         <p className="p-4 text-sm text-muted">{empty}</p>
@@ -251,6 +286,10 @@ function HoldingRow({
 }>) {
   const intl = useIntl();
   const [draft, setDraft] = useState(String(row.ownershipPercent));
+  // ENT-011: a row the share register projected is read here and
+  // changed there; the link leads to the register that produced it.
+  const derived = row.source === "register";
+  const locked = frozen || derived;
   if (related.restricted) {
     return (
       <RestrictedRecordCell
@@ -277,6 +316,7 @@ function HoldingRow({
           {related.legalName}
         </Link>
       )}
+      {derived ? <DerivedPill owned={row.owned} /> : null}
       <div className="flex items-center gap-1">
         <Input
           className="w-24"
@@ -284,7 +324,7 @@ function HoldingRow({
           min={0}
           max={100}
           step="0.01"
-          disabled={frozen}
+          disabled={locked}
           aria-label={intl.formatMessage(
             {
               id: "entities.ownership.rowPercent",
@@ -306,7 +346,7 @@ function HoldingRow({
       <Button
         variant="ghost"
         size="icon"
-        disabled={frozen}
+        disabled={locked}
         aria-label={intl.formatMessage(
           { id: "entities.ownership.remove", defaultMessage: "Remove {name}" },
           { name: related.legalName },
@@ -316,6 +356,29 @@ function HoldingRow({
         <Trash2 size={16} aria-hidden="true" />
       </Button>
     </li>
+  );
+}
+
+/** ENT-011: the row was projected from the owned Entity's register; the pill leads there. */
+function DerivedPill({ owned }: Readonly<{ owned: EntityHolding["owned"] }>) {
+  const intl = useIntl();
+  const className =
+    "rounded-pill bg-status-info-bg px-2 py-0.5 text-xs font-medium text-status-info-fg";
+  const title = intl.formatMessage({
+    id: "entities.ownership.fromRegisterHint",
+    defaultMessage: "Derived from the share register. Record an entry there to change it.",
+  });
+  const label = (
+    <FormattedMessage id="entities.ownership.fromRegister" defaultMessage="From register" />
+  );
+  return owned.restricted ? (
+    <span className={className} title={title}>
+      {label}
+    </span>
+  ) : (
+    <Link to={`/entities/${owned.id}/ownership`} className={className} title={title}>
+      {label}
+    </Link>
   );
 }
 

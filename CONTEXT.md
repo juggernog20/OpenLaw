@@ -106,6 +106,22 @@ _Avoid_: company, organisation, party, counterparty, subsidiary
 A directional ownership fact between two Entities, recording the percentage one Entity owns of the other. Holdings form the ownership graph; they do not make either Entity a child record [ENT-003].
 _Avoid_: parent link, ownership relation, shareholding record
 
+**Share class**:
+One class of shares an Entity may issue, with its authorized count, par value, votes per share and a rights summary. Every register entry names one [ENT-011].
+_Avoid_: stock class, security, series
+
+**Register entry**:
+One dated movement of shares on an Entity's share register: an allotment, transfer, buyback, cancellation or conversion, with its quantity, holders, consideration, certificates and resolution reference. The Register of members is a replay of entries to a date; holders are never added by hand [ENT-011].
+_Avoid_: transaction, issuance, share movement, ledger line
+
+**Holder**:
+A party on an Entity's share register: an Entity from the registry or a named individual. A Holder exists because a Register entry names it [ENT-011].
+_Avoid_: shareholder record, member, investor, owner
+
+**Certificate**:
+A numbered share certificate for one Holder and Share class, with its quantity and distinctive numbers, issued by one Register entry and cancelled by at most one [ENT-011].
+_Avoid_: share cert, stock certificate
+
 **Registration**:
 One jurisdiction where an Entity is registered or qualified to do business, with its own registration number, registered agent, and active, lapsed, or withdrawn status. Formation jurisdiction stays on the Entity [ENT-002].
 _Avoid_: formation, licence, incorporation

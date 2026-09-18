@@ -92,6 +92,16 @@ function calendarApi(rows: unknown[] = obligations, queries: URLSearchParams[] =
   };
 }
 
+/** Opens the DES-046 bar, picks one single-choice value, and applies it. */
+async function pick(user: ReturnType<typeof userEvent.setup>, property: string, choice: string) {
+  await user.click(screen.getByRole("button", { name: /^Filter/ }));
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", { name: property }),
+  );
+  await user.click(screen.getByRole("radio", { name: choice }));
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+}
+
 describe("the Entities compliance calendar", () => {
   it("searches entity names, retains the query in view switches, and clears it", async () => {
     const other = {
@@ -136,11 +146,15 @@ describe("the Entities compliance calendar", () => {
 
     expect(await screen.findByRole("heading", { name: "Compliance calendar" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Calendar" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByLabelText("Entity")).toBeInTheDocument();
-    expect(screen.getByLabelText("Assignee")).toBeInTheDocument();
-    expect(screen.getByLabelText("From")).toBeInTheDocument();
-    expect(screen.getByLabelText("To")).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: "Include completed" })).toBeInTheDocument();
+    // DES-046: the calendar filters through the shared bar.
+    expect(screen.getByRole("button", { name: /^Filter/ })).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    const menu = screen.getByRole("dialog", { name: "Filter" });
+    for (const property of ["Entity", "Assignee", "Due date", "Show completed"]) {
+      expect(within(menu).getByRole("button", { name: property })).toBeInTheDocument();
+    }
+    await user.keyboard("{Escape}");
     const rows = screen.getAllByRole("row").slice(1);
     expect(within(rows[0]!).getByText("Overdue annual return")).toHaveClass(
       "text-status-severe-fg",
@@ -158,12 +172,26 @@ describe("the Entities compliance calendar", () => {
     expect(queries[0]?.get("includeCompleted")).toBeNull();
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByLabelText("Entity"), "e1");
-    await user.selectOptions(screen.getByLabelText("Assignee"), "u2");
+    await pick(user, "Entity", "Aldgate UK Ltd");
+    await screen.findByRole("button", { name: "Entity: Aldgate UK Ltd" });
+    await pick(user, "Assignee", "Yusuf Haddad");
+    await screen.findByRole("button", { name: "Assignee: Yusuf Haddad" });
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Due date",
+      }),
+    );
     await user.type(screen.getByLabelText("From"), "2026-09-01");
     await user.type(screen.getByLabelText("To"), "2026-09-30");
-    await user.click(screen.getByLabelText("Include completed"));
     await user.click(screen.getByRole("button", { name: "Apply" }));
+    await screen.findByRole("button", { name: /^Due date: / });
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Show completed",
+      }),
+    );
 
     await waitFor(() => expect(queries.at(-1)?.get("includeCompleted")).toBe("true"));
     const last = queries.at(-1)!;
@@ -200,9 +228,15 @@ describe("the Entities compliance calendar", () => {
       const { router } = renderAt("/entities");
       await screen.findByRole("heading", { name: "Compliance calendar" });
       const user = userEvent.setup();
-      if (filter === "entity") await user.selectOptions(screen.getByLabelText("Entity"), "e1");
-      else await user.click(screen.getByLabelText("Include completed"));
-      await user.click(screen.getByRole("button", { name: "Apply" }));
+      if (filter === "entity") await pick(user, "Entity", "Aldgate UK Ltd");
+      else {
+        await user.click(screen.getByRole("button", { name: /^Filter/ }));
+        await user.click(
+          within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+            name: "Show completed",
+          }),
+        );
+      }
 
       await waitFor(() => {
         expect(router.state.location.search).not.toBe("");
@@ -236,6 +270,25 @@ describe("the Entities compliance calendar", () => {
     expect(await screen.findByRole("heading", { name: "October 2026" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Previous month" }));
     expect(await screen.findByRole("heading", { name: "September 2026" })).toBeInTheDocument();
+  });
+
+  it("keeps the month a link opened when a filter changes", async () => {
+    const queries: URLSearchParams[] = [];
+    stubApi({ signedIn: MEMBER, extra: calendarApi(obligations, queries) });
+    const { router } = renderAt("/entities?calendar=month&month=2026-07");
+    expect(await screen.findByRole("heading", { name: "July 2026" })).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Show completed",
+      }),
+    );
+    await waitFor(() => expect(queries.at(-1)?.get("includeCompleted")).toBe("true"));
+    const search = new URLSearchParams(router.state.location.search);
+    expect(search.get("month")).toBe("2026-07");
+    expect(search.get("calendar")).toBe("month");
+    expect(await screen.findByRole("heading", { name: "July 2026" })).toBeInTheDocument();
   });
 
   it("distinguishes a blank calendar from filters that match nothing", async () => {

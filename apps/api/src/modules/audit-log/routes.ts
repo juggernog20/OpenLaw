@@ -79,6 +79,7 @@ import type { AuthenticatedUser } from "../../auth/user.js";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { problemResponse } from "../../lib/problem.js";
+import { csvRow } from "../../lib/csv.js";
 
 /** SET-002: every Organization surface is Administrator-only, and this
  * is the one that reads every other one's entries. */
@@ -518,27 +519,6 @@ const CSV_COLUMNS = [
   "actor_email",
   "payload",
 ] as const;
-
-/**
- * One CSV field, quoted per RFC 4180 and defused for a spreadsheet.
- *
- * Everything is quoted, and an embedded quote is doubled. A value
- * opening with `=`, `+`, `-`, `@`, a tab, or a carriage return is
- * prefixed with an apostrophe: this file is handed to an auditor who
- * opens it in a spreadsheet, and a display name of `=1+1` is a formula
- * there. The apostrophe is visible in the cell text, which is the honest
- * trade — an audit export must not execute, and it must not silently
- * drop what it could not carry.
- */
-function csvField(value: unknown): string {
-  const text = value === null || value === undefined ? "" : String(value);
-  const defused = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
-  return `"${defused.replaceAll('"', '""')}"`;
-}
-
-function csvRow(values: readonly unknown[]): string {
-  return `${values.map(csvField).join(",")}\r\n`;
-}
 
 export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(

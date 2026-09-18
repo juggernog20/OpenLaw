@@ -43,6 +43,7 @@ describe("entity structure highlighting", () => {
       ownerEntityId: ownerEntityId!,
       ownedEntityId: ownedEntityId!,
       ownershipPercent: 100,
+      source: "manual" as const,
     }));
     const nodes = [
       ...new Set(edges.flatMap((edge) => [edge.ownerEntityId, edge.ownedEntityId])),

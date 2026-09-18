@@ -1058,6 +1058,13 @@
       "when": 1789747981408,
       "tag": "0150_request-read-status",
       "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1789752600893,
+      "tag": "0151_share-register",
+      "breakpoints": true
     }
   ]
 }

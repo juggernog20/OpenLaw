@@ -36,9 +36,14 @@ const chart: EntityChart = {
     { id: "restricted-acme", restricted: true, primaryOwnerId: "match" },
   ],
   edges: [
-    { ownerEntityId: "parent", ownedEntityId: "match", ownershipPercent: 100 },
-    { ownerEntityId: "parent", ownedEntityId: "sibling", ownershipPercent: 100 },
-    { ownerEntityId: "match", ownedEntityId: "restricted-acme", ownershipPercent: 100 },
+    { ownerEntityId: "parent", ownedEntityId: "match", ownershipPercent: 100, source: "manual" },
+    { ownerEntityId: "parent", ownedEntityId: "sibling", ownershipPercent: 100, source: "manual" },
+    {
+      ownerEntityId: "match",
+      ownedEntityId: "restricted-acme",
+      ownershipPercent: 100,
+      source: "manual",
+    },
   ],
 };
 

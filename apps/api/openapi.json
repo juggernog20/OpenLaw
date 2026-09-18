@@ -75306,9 +75306,18 @@
                           },
                           "ownershipPercent": {
                             "type": "number"
+                          },
+                          "source": {
+                            "type": "string",
+                            "enum": ["manual", "register"]
                           }
                         },
-                        "required": ["ownerEntityId", "ownedEntityId", "ownershipPercent"],
+                        "required": [
+                          "ownerEntityId",
+                          "ownedEntityId",
+                          "ownershipPercent",
+                          "source"
+                        ],
                         "additionalProperties": false
                       }
                     }
@@ -75436,6 +75445,10 @@
                           "ownershipPercent": {
                             "type": "number"
                           },
+                          "source": {
+                            "type": "string",
+                            "enum": ["manual", "register"]
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -75451,6 +75464,7 @@
                           "owner",
                           "owned",
                           "ownershipPercent",
+                          "source",
                           "createdAt",
                           "updatedAt"
                         ],
@@ -75537,6 +75551,10 @@
                           "ownershipPercent": {
                             "type": "number"
                           },
+                          "source": {
+                            "type": "string",
+                            "enum": ["manual", "register"]
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -75552,6 +75570,7 @@
                           "owner",
                           "owned",
                           "ownershipPercent",
+                          "source",
                           "createdAt",
                           "updatedAt"
                         ],
@@ -75754,6 +75773,10 @@
                         "ownershipPercent": {
                           "type": "number"
                         },
+                        "source": {
+                          "type": "string",
+                          "enum": ["manual", "register"]
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -75765,7 +75788,14 @@
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
-                      "required": ["owner", "owned", "ownershipPercent", "createdAt", "updatedAt"],
+                      "required": [
+                        "owner",
+                        "owned",
+                        "ownershipPercent",
+                        "source",
+                        "createdAt",
+                        "updatedAt"
+                      ],
                       "additionalProperties": false
                     },
                     "warnings": {
@@ -75942,6 +75972,10 @@
                         "ownershipPercent": {
                           "type": "number"
                         },
+                        "source": {
+                          "type": "string",
+                          "enum": ["manual", "register"]
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time",
@@ -75953,7 +75987,14 @@
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                         }
                       },
-                      "required": ["owner", "owned", "ownershipPercent", "createdAt", "updatedAt"],
+                      "required": [
+                        "owner",
+                        "owned",
+                        "ownershipPercent",
+                        "source",
+                        "createdAt",
+                        "updatedAt"
+                      ],
                       "additionalProperties": false
                     },
                     "warnings": {
@@ -76020,6 +76061,4015 @@
             },
             "in": "path",
             "name": "relatedEntityId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{id}/share-register/export": {
+      "get": {
+        "operationId": "exportEntityShareRegister",
+        "tags": ["entities"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "asOf",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": "members",
+              "type": "string",
+              "enum": ["members", "entries"]
+            },
+            "in": "query",
+            "name": "kind",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{id}/share-register": {
+      "get": {
+        "operationId": "getEntityShareRegister",
+        "tags": ["entities"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "asOf",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asOf": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "today": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "classes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "authorized": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValue": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValueCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "votesPerShare": {
+                            "type": "number"
+                          },
+                          "rights": {
+                            "type": ["string", "null"]
+                          },
+                          "position": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "entryCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "authorized",
+                          "parValue",
+                          "parValueCurrency",
+                          "votesPerShare",
+                          "rights",
+                          "position",
+                          "archivedAt",
+                          "entryCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "holders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "holder": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["entity", "individual"]
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "jurisdiction": {
+                                    "type": ["string", "null"]
+                                  }
+                                },
+                                "required": [
+                                  "restricted",
+                                  "id",
+                                  "kind",
+                                  "name",
+                                  "entityId",
+                                  "jurisdiction"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "percentOfClass": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          },
+                          "certificates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "memberSince": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "balanceToday": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "holder",
+                          "shareClassId",
+                          "balance",
+                          "percentOfClass",
+                          "percentOfVotes",
+                          "certificates",
+                          "memberSince",
+                          "balanceToday"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "treasury": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["shareClassId", "balance"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "totals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "treasury": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "outstanding": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "votes": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "shareClassId",
+                          "issued",
+                          "treasury",
+                          "outstanding",
+                          "votes",
+                          "percentOfVotes"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "entryNo": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "allotment",
+                              "transfer",
+                              "buyback",
+                              "cancellation",
+                              "conversion"
+                            ]
+                          },
+                          "effectiveOn": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "toShareClassId": {
+                            "type": ["string", "null"]
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "from": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "pricePerShare": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "consideration": {
+                            "type": ["string", "null"]
+                          },
+                          "distinctiveNumbers": {
+                            "type": ["string", "null"]
+                          },
+                          "resolutionRef": {
+                            "type": ["string", "null"]
+                          },
+                          "note": {
+                            "type": ["string", "null"]
+                          },
+                          "certificatesIssued": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "number": {
+                                  "type": "string"
+                                },
+                                "holderId": {
+                                  "type": "string"
+                                },
+                                "shareClassId": {
+                                  "type": "string"
+                                },
+                                "quantity": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "distinctiveNumbers": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": [
+                                "number",
+                                "holderId",
+                                "shareClassId",
+                                "quantity",
+                                "distinctiveNumbers"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "certificatesCancelled": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "applied": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "entryNo",
+                          "kind",
+                          "effectiveOn",
+                          "shareClassId",
+                          "toShareClassId",
+                          "quantity",
+                          "from",
+                          "to",
+                          "pricePerShare",
+                          "priceCurrency",
+                          "consideration",
+                          "distinctiveNumbers",
+                          "resolutionRef",
+                          "note",
+                          "certificatesIssued",
+                          "certificatesCancelled",
+                          "applied",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "dates": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      }
+                    },
+                    "reconciliation": {
+                      "type": "object",
+                      "properties": {
+                        "declaredIssued": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "registerIssued": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": ["declaredIssued", "registerIssued"],
+                      "additionalProperties": false
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "enum": ["authorized-exceeded"]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "className": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "authorized": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["code", "shareClassId", "className", "issued", "authorized"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "asOf",
+                    "today",
+                    "classes",
+                    "holders",
+                    "treasury",
+                    "totals",
+                    "entries",
+                    "dates",
+                    "reconciliation",
+                    "warnings"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{id}/share-classes": {
+      "post": {
+        "operationId": "createEntityShareClass",
+        "tags": ["entities"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "authorized": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 1000000000000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "parValue": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "parValueCurrency": {
+                    "type": ["string", "null"]
+                  },
+                  "votesPerShare": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000000
+                  },
+                  "rights": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["name"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asOf": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "today": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "classes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "authorized": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValue": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValueCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "votesPerShare": {
+                            "type": "number"
+                          },
+                          "rights": {
+                            "type": ["string", "null"]
+                          },
+                          "position": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "entryCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "authorized",
+                          "parValue",
+                          "parValueCurrency",
+                          "votesPerShare",
+                          "rights",
+                          "position",
+                          "archivedAt",
+                          "entryCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "holders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "holder": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["entity", "individual"]
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "jurisdiction": {
+                                    "type": ["string", "null"]
+                                  }
+                                },
+                                "required": [
+                                  "restricted",
+                                  "id",
+                                  "kind",
+                                  "name",
+                                  "entityId",
+                                  "jurisdiction"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "percentOfClass": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          },
+                          "certificates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "memberSince": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "balanceToday": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "holder",
+                          "shareClassId",
+                          "balance",
+                          "percentOfClass",
+                          "percentOfVotes",
+                          "certificates",
+                          "memberSince",
+                          "balanceToday"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "treasury": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["shareClassId", "balance"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "totals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "treasury": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "outstanding": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "votes": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "shareClassId",
+                          "issued",
+                          "treasury",
+                          "outstanding",
+                          "votes",
+                          "percentOfVotes"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "entryNo": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "allotment",
+                              "transfer",
+                              "buyback",
+                              "cancellation",
+                              "conversion"
+                            ]
+                          },
+                          "effectiveOn": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "toShareClassId": {
+                            "type": ["string", "null"]
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "from": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "pricePerShare": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "consideration": {
+                            "type": ["string", "null"]
+                          },
+                          "distinctiveNumbers": {
+                            "type": ["string", "null"]
+                          },
+                          "resolutionRef": {
+                            "type": ["string", "null"]
+                          },
+                          "note": {
+                            "type": ["string", "null"]
+                          },
+                          "certificatesIssued": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "number": {
+                                  "type": "string"
+                                },
+                                "holderId": {
+                                  "type": "string"
+                                },
+                                "shareClassId": {
+                                  "type": "string"
+                                },
+                                "quantity": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "distinctiveNumbers": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": [
+                                "number",
+                                "holderId",
+                                "shareClassId",
+                                "quantity",
+                                "distinctiveNumbers"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "certificatesCancelled": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "applied": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "entryNo",
+                          "kind",
+                          "effectiveOn",
+                          "shareClassId",
+                          "toShareClassId",
+                          "quantity",
+                          "from",
+                          "to",
+                          "pricePerShare",
+                          "priceCurrency",
+                          "consideration",
+                          "distinctiveNumbers",
+                          "resolutionRef",
+                          "note",
+                          "certificatesIssued",
+                          "certificatesCancelled",
+                          "applied",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "dates": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      }
+                    },
+                    "reconciliation": {
+                      "type": "object",
+                      "properties": {
+                        "declaredIssued": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "registerIssued": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": ["declaredIssued", "registerIssued"],
+                      "additionalProperties": false
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "enum": ["authorized-exceeded"]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "className": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "authorized": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["code", "shareClassId", "className", "issued", "authorized"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "asOf",
+                    "today",
+                    "classes",
+                    "holders",
+                    "treasury",
+                    "totals",
+                    "entries",
+                    "dates",
+                    "reconciliation",
+                    "warnings"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{id}/share-classes/{classId}": {
+      "patch": {
+        "operationId": "updateEntityShareClass",
+        "tags": ["entities"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "authorized": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 1000000000000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "parValue": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "parValueCurrency": {
+                    "type": ["string", "null"]
+                  },
+                  "votesPerShare": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000000
+                  },
+                  "rights": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "classId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asOf": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "today": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "classes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "authorized": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValue": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValueCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "votesPerShare": {
+                            "type": "number"
+                          },
+                          "rights": {
+                            "type": ["string", "null"]
+                          },
+                          "position": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "entryCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "authorized",
+                          "parValue",
+                          "parValueCurrency",
+                          "votesPerShare",
+                          "rights",
+                          "position",
+                          "archivedAt",
+                          "entryCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "holders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "holder": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["entity", "individual"]
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "jurisdiction": {
+                                    "type": ["string", "null"]
+                                  }
+                                },
+                                "required": [
+                                  "restricted",
+                                  "id",
+                                  "kind",
+                                  "name",
+                                  "entityId",
+                                  "jurisdiction"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "percentOfClass": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          },
+                          "certificates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "memberSince": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "balanceToday": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "holder",
+                          "shareClassId",
+                          "balance",
+                          "percentOfClass",
+                          "percentOfVotes",
+                          "certificates",
+                          "memberSince",
+                          "balanceToday"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "treasury": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["shareClassId", "balance"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "totals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "treasury": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "outstanding": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "votes": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "shareClassId",
+                          "issued",
+                          "treasury",
+                          "outstanding",
+                          "votes",
+                          "percentOfVotes"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "entryNo": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "allotment",
+                              "transfer",
+                              "buyback",
+                              "cancellation",
+                              "conversion"
+                            ]
+                          },
+                          "effectiveOn": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "toShareClassId": {
+                            "type": ["string", "null"]
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "from": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "pricePerShare": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "consideration": {
+                            "type": ["string", "null"]
+                          },
+                          "distinctiveNumbers": {
+                            "type": ["string", "null"]
+                          },
+                          "resolutionRef": {
+                            "type": ["string", "null"]
+                          },
+                          "note": {
+                            "type": ["string", "null"]
+                          },
+                          "certificatesIssued": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "number": {
+                                  "type": "string"
+                                },
+                                "holderId": {
+                                  "type": "string"
+                                },
+                                "shareClassId": {
+                                  "type": "string"
+                                },
+                                "quantity": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "distinctiveNumbers": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": [
+                                "number",
+                                "holderId",
+                                "shareClassId",
+                                "quantity",
+                                "distinctiveNumbers"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "certificatesCancelled": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "applied": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "entryNo",
+                          "kind",
+                          "effectiveOn",
+                          "shareClassId",
+                          "toShareClassId",
+                          "quantity",
+                          "from",
+                          "to",
+                          "pricePerShare",
+                          "priceCurrency",
+                          "consideration",
+                          "distinctiveNumbers",
+                          "resolutionRef",
+                          "note",
+                          "certificatesIssued",
+                          "certificatesCancelled",
+                          "applied",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "dates": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      }
+                    },
+                    "reconciliation": {
+                      "type": "object",
+                      "properties": {
+                        "declaredIssued": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "registerIssued": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": ["declaredIssued", "registerIssued"],
+                      "additionalProperties": false
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "enum": ["authorized-exceeded"]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "className": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "authorized": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["code", "shareClassId", "className", "issued", "authorized"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "asOf",
+                    "today",
+                    "classes",
+                    "holders",
+                    "treasury",
+                    "totals",
+                    "entries",
+                    "dates",
+                    "reconciliation",
+                    "warnings"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "archiveEntityShareClass",
+        "tags": ["entities"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "classId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{id}/share-entries": {
+      "post": {
+        "operationId": "createEntityShareEntry",
+        "tags": ["entities"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": ["allotment", "transfer", "buyback", "cancellation", "conversion"]
+                  },
+                  "effectiveOn": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "shareClassId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "toShareClassId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000000000
+                  },
+                  "from": {
+                    "anyOf": [
+                      {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["holder"]
+                              },
+                              "holderId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "holderId"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["entity"]
+                              },
+                              "entityId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "entityId"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["individual"]
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            },
+                            "required": ["kind", "name"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "to": {
+                    "anyOf": [
+                      {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["holder"]
+                              },
+                              "holderId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "holderId"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["entity"]
+                              },
+                              "entityId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "entityId"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["individual"]
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            },
+                            "required": ["kind", "name"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "pricePerShare": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "priceCurrency": {
+                    "type": ["string", "null"]
+                  },
+                  "consideration": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "distinctiveNumbers": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resolutionRef": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "certificatesCancelled": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 50
+                    }
+                  },
+                  "certificatesIssued": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "number": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 50
+                        },
+                        "holder": {
+                          "type": "string",
+                          "enum": ["from", "to"]
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 1000000000000
+                        },
+                        "distinctiveNumbers": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 200
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": ["number", "holder", "quantity"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["kind", "effectiveOn", "shareClassId", "quantity"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asOf": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "today": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "classes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "authorized": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValue": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValueCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "votesPerShare": {
+                            "type": "number"
+                          },
+                          "rights": {
+                            "type": ["string", "null"]
+                          },
+                          "position": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "entryCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "authorized",
+                          "parValue",
+                          "parValueCurrency",
+                          "votesPerShare",
+                          "rights",
+                          "position",
+                          "archivedAt",
+                          "entryCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "holders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "holder": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["entity", "individual"]
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "jurisdiction": {
+                                    "type": ["string", "null"]
+                                  }
+                                },
+                                "required": [
+                                  "restricted",
+                                  "id",
+                                  "kind",
+                                  "name",
+                                  "entityId",
+                                  "jurisdiction"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "percentOfClass": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          },
+                          "certificates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "memberSince": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "balanceToday": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "holder",
+                          "shareClassId",
+                          "balance",
+                          "percentOfClass",
+                          "percentOfVotes",
+                          "certificates",
+                          "memberSince",
+                          "balanceToday"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "treasury": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["shareClassId", "balance"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "totals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "treasury": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "outstanding": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "votes": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "shareClassId",
+                          "issued",
+                          "treasury",
+                          "outstanding",
+                          "votes",
+                          "percentOfVotes"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "entryNo": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "allotment",
+                              "transfer",
+                              "buyback",
+                              "cancellation",
+                              "conversion"
+                            ]
+                          },
+                          "effectiveOn": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "toShareClassId": {
+                            "type": ["string", "null"]
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "from": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "pricePerShare": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "consideration": {
+                            "type": ["string", "null"]
+                          },
+                          "distinctiveNumbers": {
+                            "type": ["string", "null"]
+                          },
+                          "resolutionRef": {
+                            "type": ["string", "null"]
+                          },
+                          "note": {
+                            "type": ["string", "null"]
+                          },
+                          "certificatesIssued": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "number": {
+                                  "type": "string"
+                                },
+                                "holderId": {
+                                  "type": "string"
+                                },
+                                "shareClassId": {
+                                  "type": "string"
+                                },
+                                "quantity": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "distinctiveNumbers": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": [
+                                "number",
+                                "holderId",
+                                "shareClassId",
+                                "quantity",
+                                "distinctiveNumbers"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "certificatesCancelled": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "applied": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "entryNo",
+                          "kind",
+                          "effectiveOn",
+                          "shareClassId",
+                          "toShareClassId",
+                          "quantity",
+                          "from",
+                          "to",
+                          "pricePerShare",
+                          "priceCurrency",
+                          "consideration",
+                          "distinctiveNumbers",
+                          "resolutionRef",
+                          "note",
+                          "certificatesIssued",
+                          "certificatesCancelled",
+                          "applied",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "dates": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      }
+                    },
+                    "reconciliation": {
+                      "type": "object",
+                      "properties": {
+                        "declaredIssued": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "registerIssued": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": ["declaredIssued", "registerIssued"],
+                      "additionalProperties": false
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "enum": ["authorized-exceeded"]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "className": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "authorized": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["code", "shareClassId", "className", "issued", "authorized"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "asOf",
+                    "today",
+                    "classes",
+                    "holders",
+                    "treasury",
+                    "totals",
+                    "entries",
+                    "dates",
+                    "reconciliation",
+                    "warnings"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{id}/share-entries/{entryId}": {
+      "patch": {
+        "operationId": "updateEntityShareEntry",
+        "tags": ["entities"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": ["allotment", "transfer", "buyback", "cancellation", "conversion"]
+                  },
+                  "effectiveOn": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "shareClassId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "toShareClassId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000000000
+                  },
+                  "from": {
+                    "anyOf": [
+                      {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["holder"]
+                              },
+                              "holderId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "holderId"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["entity"]
+                              },
+                              "entityId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "entityId"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["individual"]
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            },
+                            "required": ["kind", "name"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "to": {
+                    "anyOf": [
+                      {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["holder"]
+                              },
+                              "holderId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "holderId"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["entity"]
+                              },
+                              "entityId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "entityId"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["individual"]
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            },
+                            "required": ["kind", "name"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "pricePerShare": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "priceCurrency": {
+                    "type": ["string", "null"]
+                  },
+                  "consideration": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "distinctiveNumbers": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resolutionRef": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "certificatesCancelled": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 50
+                    }
+                  },
+                  "certificatesIssued": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "number": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 50
+                        },
+                        "holder": {
+                          "type": "string",
+                          "enum": ["from", "to"]
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 1000000000000
+                        },
+                        "distinctiveNumbers": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 200
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": ["number", "holder", "quantity"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["kind", "effectiveOn", "shareClassId", "quantity"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "entryId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asOf": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "today": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "classes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "authorized": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValue": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "parValueCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "votesPerShare": {
+                            "type": "number"
+                          },
+                          "rights": {
+                            "type": ["string", "null"]
+                          },
+                          "position": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "entryCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "authorized",
+                          "parValue",
+                          "parValueCurrency",
+                          "votesPerShare",
+                          "rights",
+                          "position",
+                          "archivedAt",
+                          "entryCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "holders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "holder": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": ["entity", "individual"]
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "jurisdiction": {
+                                    "type": ["string", "null"]
+                                  }
+                                },
+                                "required": [
+                                  "restricted",
+                                  "id",
+                                  "kind",
+                                  "name",
+                                  "entityId",
+                                  "jurisdiction"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "restricted": {
+                                    "type": "boolean",
+                                    "enum": [true]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["restricted", "id"],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "percentOfClass": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          },
+                          "certificates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "memberSince": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "balanceToday": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "holder",
+                          "shareClassId",
+                          "balance",
+                          "percentOfClass",
+                          "percentOfVotes",
+                          "certificates",
+                          "memberSince",
+                          "balanceToday"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "treasury": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["shareClassId", "balance"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "totals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "treasury": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "outstanding": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "votes": {
+                            "type": "number"
+                          },
+                          "percentOfVotes": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "shareClassId",
+                          "issued",
+                          "treasury",
+                          "outstanding",
+                          "votes",
+                          "percentOfVotes"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "entryNo": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "allotment",
+                              "transfer",
+                              "buyback",
+                              "cancellation",
+                              "conversion"
+                            ]
+                          },
+                          "effectiveOn": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "toShareClassId": {
+                            "type": ["string", "null"]
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "from": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [false]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": ["entity", "individual"]
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "jurisdiction": {
+                                        "type": ["string", "null"]
+                                      }
+                                    },
+                                    "required": [
+                                      "restricted",
+                                      "id",
+                                      "kind",
+                                      "name",
+                                      "entityId",
+                                      "jurisdiction"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      },
+                                      "id": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["restricted", "id"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "pricePerShare": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": ["string", "null"]
+                          },
+                          "consideration": {
+                            "type": ["string", "null"]
+                          },
+                          "distinctiveNumbers": {
+                            "type": ["string", "null"]
+                          },
+                          "resolutionRef": {
+                            "type": ["string", "null"]
+                          },
+                          "note": {
+                            "type": ["string", "null"]
+                          },
+                          "certificatesIssued": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "number": {
+                                  "type": "string"
+                                },
+                                "holderId": {
+                                  "type": "string"
+                                },
+                                "shareClassId": {
+                                  "type": "string"
+                                },
+                                "quantity": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "distinctiveNumbers": {
+                                  "type": ["string", "null"]
+                                }
+                              },
+                              "required": [
+                                "number",
+                                "holderId",
+                                "shareClassId",
+                                "quantity",
+                                "distinctiveNumbers"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "certificatesCancelled": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "applied": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "entryNo",
+                          "kind",
+                          "effectiveOn",
+                          "shareClassId",
+                          "toShareClassId",
+                          "quantity",
+                          "from",
+                          "to",
+                          "pricePerShare",
+                          "priceCurrency",
+                          "consideration",
+                          "distinctiveNumbers",
+                          "resolutionRef",
+                          "note",
+                          "certificatesIssued",
+                          "certificatesCancelled",
+                          "applied",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "dates": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      }
+                    },
+                    "reconciliation": {
+                      "type": "object",
+                      "properties": {
+                        "declaredIssued": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "registerIssued": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": ["declaredIssued", "registerIssued"],
+                      "additionalProperties": false
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "enum": ["authorized-exceeded"]
+                          },
+                          "shareClassId": {
+                            "type": "string"
+                          },
+                          "className": {
+                            "type": "string"
+                          },
+                          "issued": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "authorized": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["code", "shareClassId", "className", "issued", "authorized"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "asOf",
+                    "today",
+                    "classes",
+                    "holders",
+                    "treasury",
+                    "totals",
+                    "entries",
+                    "dates",
+                    "reconciliation",
+                    "warnings"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteEntityShareEntry",
+        "tags": ["entities"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "entryId",
             "required": true
           }
         ],

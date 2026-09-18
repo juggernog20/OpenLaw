@@ -22,8 +22,10 @@ import {
 } from "@openlaw/db";
 import { ENTITY_HOLDING_CYCLE_PROBLEM_TYPE } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
-import { recordActivity } from "../../lib/activity.js";
+import { recordHoldingActivity } from "../../lib/holding-activity.js";
+import { DERIVED_HOLDING } from "../../lib/holdings-projection.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { ownershipPath } from "../../lib/ownership-path.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -40,10 +42,13 @@ const HoldingEntitySchema = z.discriminatedUnion("restricted", [
   }),
   z.object({ restricted: z.literal(true) }),
 ]);
+const HoldingSourceSchema = z.enum(["manual", "register"]);
 const HoldingSchema = z.object({
   owner: HoldingEntitySchema,
   owned: HoldingEntitySchema,
   ownershipPercent: z.number(),
+  /** ENT-011: `register` rows are projected from the owned Entity's share register and read-only here. */
+  source: HoldingSourceSchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
@@ -84,6 +89,7 @@ const ChartEdgeSchema = z.object({
   ownerEntityId: z.string(),
   ownedEntityId: z.string(),
   ownershipPercent: z.number(),
+  source: HoldingSourceSchema,
 });
 
 const ownerEntities = alias(entities, "holding_owner_entities");
@@ -97,6 +103,7 @@ function holdingProjection(db: Executor) {
       ownedId: ownedEntities.id,
       ownedName: ownedEntities.legalName,
       ownershipPercent: entityHoldings.ownershipPercent,
+      source: entityHoldings.source,
       createdAt: entityHoldings.createdAt,
       updatedAt: entityHoldings.updatedAt,
     })
@@ -116,6 +123,7 @@ function toHolding(row: HoldingProjection, visible?: ReadonlySet<string>) {
     owner: entity(row.ownerId, row.ownerName),
     owned: entity(row.ownedId, row.ownedName),
     ownershipPercent: Number(row.ownershipPercent),
+    source: row.source,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -176,6 +184,7 @@ function individualProjection(db: Executor) {
       ownedId: entities.id,
       ownedName: entities.legalName,
       ownershipPercent: individualHoldings.ownershipPercent,
+      source: individualHoldings.source,
       createdAt: individualHoldings.createdAt,
       updatedAt: individualHoldings.updatedAt,
     })
@@ -193,6 +202,7 @@ function toIndividualHolding(row: IndividualProjection) {
     },
     owned: { restricted: false as const, id: row.ownedId, legalName: row.ownedName },
     ownershipPercent: Number(row.ownershipPercent),
+    source: row.source,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -247,34 +257,6 @@ async function writtenHolding(tx: Transaction, ownerId: string, ownedId: string)
   return { holding: toHolding(holding), warnings: await warningsFor(tx, [ownedId]) };
 }
 
-/** Finds an existing path from `start` to `target`, following ownership downwards. */
-function ownershipPath(
-  rows: readonly { ownerEntityId: string; ownedEntityId: string }[],
-  start: string,
-  target: string,
-): string[] | null {
-  const children = new Map<string, string[]>();
-  for (const row of rows) {
-    const held = children.get(row.ownerEntityId) ?? [];
-    held.push(row.ownedEntityId);
-    children.set(row.ownerEntityId, held);
-  }
-  const queue: string[][] = [[start]];
-  const seen = new Set([start]);
-  while (queue.length > 0) {
-    const path = queue.shift()!;
-    const last = path.at(-1)!;
-    if (last === target) return path;
-    for (const child of children.get(last) ?? []) {
-      if (!seen.has(child)) {
-        seen.add(child);
-        queue.push([...path, child]);
-      }
-    }
-  }
-  return null;
-}
-
 /** The loop may pass through an Entity the writer cannot reach. That
  * link still names it only as Restricted Entity (ENT-004). */
 async function assertNoCycle(
@@ -306,61 +288,6 @@ async function assertNoCycle(
 function assertEditable(entity: { archivedAt: Date | null }) {
   if (entity.archivedAt) {
     throw httpError(409, "This entity is archived. Restore it before changing Holdings.");
-  }
-}
-
-async function recordHoldingActivity(
-  tx: Transaction,
-  input: Readonly<
-    {
-      actorId: string;
-      ownerId: string;
-      ownerIndividual?: boolean;
-      ownerName: string;
-      ownedId: string;
-      ownedName: string;
-    } & (
-      | { action: "entity_holding.updated"; from: number; to: number }
-      | { action: "entity_holding.created" | "entity_holding.deleted"; ownershipPercent: number }
-    )
-  >,
-) {
-  for (const [entityId, legalName] of [
-    [input.ownerId, input.ownerName],
-    [input.ownedId, input.ownedName],
-  ] as const) {
-    if (input.ownerIndividual && entityId === input.ownerId) continue;
-    const common = {
-      entityType: "entity" as const,
-      entityId,
-      actorId: input.actorId,
-      action: input.action,
-      visibility: "legal_only" as const,
-    };
-    if (input.action === "entity_holding.updated") {
-      await recordActivity(tx, {
-        ...common,
-        action: input.action,
-        payload: {
-          legalName,
-          ownerName: input.ownerName,
-          ownedName: input.ownedName,
-          from: input.from,
-          to: input.to,
-        },
-      });
-    } else {
-      await recordActivity(tx, {
-        ...common,
-        action: input.action,
-        payload: {
-          legalName,
-          ownerName: input.ownerName,
-          ownedName: input.ownedName,
-          ownershipPercent: input.ownershipPercent,
-        },
-      });
-    }
   }
 }
 
@@ -411,6 +338,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
           ownedId: row.ownedId,
           ownedName: row.ownedName,
           ownershipPercent: row.ownershipPercent,
+          source: row.source,
           createdAt: row.createdAt,
           updatedAt: row.updatedAt,
         })),
@@ -462,6 +390,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
           ownerEntityId: row.ownerId,
           ownedEntityId: row.ownedId,
           ownershipPercent: Number(row.ownershipPercent),
+          source: row.source,
         })),
       };
     },
@@ -623,6 +552,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         assertEditable(anchor);
         if (request.params.relatedEntityId.startsWith(INDIVIDUAL_PREFIX)) {
           const row = await individualBeside(tx, anchor.id, request.params.relatedEntityId);
+          if (row.source === "register") throw httpError(409, DERIVED_HOLDING);
           const from = Number(row.ownershipPercent);
           if (from !== request.body.ownershipPercent) {
             await tx
@@ -653,6 +583,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         const row = await holdingBeside(tx, anchor.id, request.params.relatedEntityId);
         if (!row) throw httpError(404, "No Holding exists between these Entities.");
+        if (row.source === "register") throw httpError(409, DERIVED_HOLDING);
         const related = await reachedEntity(tx, request.user, request.params.relatedEntityId, {
           lock: true,
         });
@@ -704,6 +635,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         assertEditable(anchor);
         if (request.params.relatedEntityId.startsWith(INDIVIDUAL_PREFIX)) {
           const row = await individualBeside(tx, anchor.id, request.params.relatedEntityId);
+          if (row.source === "register") throw httpError(409, DERIVED_HOLDING);
           await tx.delete(individualHoldings).where(eq(individualHoldings.id, row.id));
           await recordHoldingActivity(tx, {
             action: "entity_holding.deleted",
@@ -719,6 +651,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         const row = await holdingBeside(tx, anchor.id, request.params.relatedEntityId);
         if (!row) throw httpError(404, "No Holding exists between these Entities.");
+        if (row.source === "register") throw httpError(409, DERIVED_HOLDING);
         const related = await reachedEntity(tx, request.user, request.params.relatedEntityId, {
           lock: true,
         });

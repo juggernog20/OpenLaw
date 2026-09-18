@@ -371,6 +371,30 @@
   "activity.entityRegistration.updated": {
     "defaultMessage": "{actor} changed the {jurisdiction} registration on {name}"
   },
+  "activity.entityShareClass.archived": {
+    "defaultMessage": "{actor} archived the {className} share class of {name}"
+  },
+  "activity.entityShareClass.created": {
+    "defaultMessage": "{actor} added the {className} share class to {name}"
+  },
+  "activity.entityShareClass.updated": {
+    "defaultMessage": "{actor} changed the {className} share class of {name}"
+  },
+  "activity.entityShareEntry.company": {
+    "defaultMessage": "the company"
+  },
+  "activity.entityShareEntry.created": {
+    "defaultMessage": "{actor} recorded entry {entryNo} on the {name} register: {kind} of {quantity} {className} shares from {from} to {to}"
+  },
+  "activity.entityShareEntry.deleted": {
+    "defaultMessage": "{actor} removed entry {entryNo} from the {name} register: {kind} of {quantity} {className} shares"
+  },
+  "activity.entityShareEntry.kind": {
+    "defaultMessage": "{kind, select, allotment {allotment} transfer {transfer} buyback {buyback} cancellation {cancellation} conversion {conversion} other {entry}}"
+  },
+  "activity.entityShareEntry.updated": {
+    "defaultMessage": "{actor} changed entry {entryNo} on the {name} register"
+  },
   "activity.envelope.declined": {
     "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
   },
@@ -4382,12 +4406,6 @@
   "entities.calendar.add": {
     "defaultMessage": "Add obligation"
   },
-  "entities.calendar.allEntities": {
-    "defaultMessage": "All Entities"
-  },
-  "entities.calendar.apply": {
-    "defaultMessage": "Apply"
-  },
   "entities.calendar.assignee": {
     "defaultMessage": "Assignee"
   },
@@ -4396,6 +4414,9 @@
   },
   "entities.calendar.display": {
     "defaultMessage": "Calendar display"
+  },
+  "entities.calendar.due": {
+    "defaultMessage": "Due date"
   },
   "entities.calendar.dueDate": {
     "defaultMessage": "Due date"
@@ -4412,17 +4433,11 @@
   "entities.calendar.every": {
     "defaultMessage": "Every {months, plural, one {month} other {# months}}"
   },
-  "entities.calendar.everyone": {
-    "defaultMessage": "Everyone"
-  },
   "entities.calendar.filed": {
     "defaultMessage": "Filed"
   },
-  "entities.calendar.from": {
-    "defaultMessage": "From"
-  },
   "entities.calendar.includeCompleted": {
-    "defaultMessage": "Include completed"
+    "defaultMessage": "Show completed"
   },
   "entities.calendar.listView": {
     "defaultMessage": "Due-date list"
@@ -4453,9 +4468,6 @@
   },
   "entities.calendar.title": {
     "defaultMessage": "Compliance calendar"
-  },
-  "entities.calendar.to": {
-    "defaultMessage": "To"
   },
   "entities.calendar.today": {
     "defaultMessage": "Today"
@@ -4769,47 +4781,11 @@
   "entities.list.error": {
     "defaultMessage": "The registry could not be read. Try again."
   },
-  "entities.list.filter.active": {
-    "defaultMessage": "Active filters"
-  },
-  "entities.list.filter.chip": {
-    "defaultMessage": "{name}: {value}"
-  },
-  "entities.list.filter.clear": {
-    "defaultMessage": "Clear all"
-  },
-  "entities.list.filter.clear.label": {
-    "defaultMessage": "Clear all filters"
-  },
   "entities.list.filter.jurisdiction": {
     "defaultMessage": "Jurisdiction"
   },
-  "entities.list.filter.jurisdiction.all": {
-    "defaultMessage": "All jurisdictions"
-  },
   "entities.list.filter.majorityOwner": {
     "defaultMessage": "Majority owner"
-  },
-  "entities.list.filter.majorityOwner.all": {
-    "defaultMessage": "All majority owners"
-  },
-  "entities.list.filter.matchedNone": {
-    "defaultMessage": "The active filters matched no Entities."
-  },
-  "entities.list.filter.remove": {
-    "defaultMessage": "Remove {name} filter"
-  },
-  "entities.list.filter.status": {
-    "defaultMessage": "Status"
-  },
-  "entities.list.filter.status.all": {
-    "defaultMessage": "All statuses"
-  },
-  "entities.list.filter.type": {
-    "defaultMessage": "Type"
-  },
-  "entities.list.filter.type.all": {
-    "defaultMessage": "All types"
   },
   "entities.list.filteredEmpty.body": {
     "defaultMessage": "Clear filters to return to the whole registry."
@@ -4864,6 +4840,12 @@
   },
   "entities.ownership.entityLabel": {
     "defaultMessage": "Entity"
+  },
+  "entities.ownership.fromRegister": {
+    "defaultMessage": "From register"
+  },
+  "entities.ownership.fromRegisterHint": {
+    "defaultMessage": "Derived from the share register. Record an entry there to change it."
   },
   "entities.ownership.fullName": {
     "defaultMessage": "Full name"
@@ -5182,6 +5164,345 @@
   },
   "entities.register": {
     "defaultMessage": "Add entity"
+  },
+  "entities.register.asOf": {
+    "defaultMessage": "Register as of"
+  },
+  "entities.register.asOf.next": {
+    "defaultMessage": "Next entry date"
+  },
+  "entities.register.asOf.previous": {
+    "defaultMessage": "Previous entry date"
+  },
+  "entities.register.asOf.reset": {
+    "defaultMessage": "Reset to today"
+  },
+  "entities.register.asOf.today": {
+    "defaultMessage": "Today"
+  },
+  "entities.register.classes.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "entities.register.classes.archiveError": {
+    "defaultMessage": "The share class could not be archived."
+  },
+  "entities.register.classes.authorized": {
+    "defaultMessage": "Authorized shares"
+  },
+  "entities.register.classes.currency": {
+    "defaultMessage": "Currency"
+  },
+  "entities.register.classes.currencyRequired": {
+    "defaultMessage": "Pick the par value's currency."
+  },
+  "entities.register.classes.edit": {
+    "defaultMessage": "Edit {name}"
+  },
+  "entities.register.classes.editing": {
+    "defaultMessage": "Edit {name}"
+  },
+  "entities.register.classes.inUse": {
+    "defaultMessage": "This class has register entries."
+  },
+  "entities.register.classes.name": {
+    "defaultMessage": "Name"
+  },
+  "entities.register.classes.nameRequired": {
+    "defaultMessage": "Give the class a name."
+  },
+  "entities.register.classes.new": {
+    "defaultMessage": "New share class"
+  },
+  "entities.register.classes.noAuthorized": {
+    "defaultMessage": "no cap"
+  },
+  "entities.register.classes.parValue": {
+    "defaultMessage": "Par value"
+  },
+  "entities.register.classes.rights": {
+    "defaultMessage": "Rights summary"
+  },
+  "entities.register.classes.rightsHint": {
+    "defaultMessage": "1 vote per share · converts 1:1 · 1× non-participating"
+  },
+  "entities.register.classes.saveError": {
+    "defaultMessage": "The share class could not be saved."
+  },
+  "entities.register.classes.summary": {
+    "defaultMessage": "{authorized} authorized · {votes} {votes, plural, one {vote} other {votes}} per share · {entries} {entries, plural, one {entry} other {entries}}"
+  },
+  "entities.register.classes.title": {
+    "defaultMessage": "Share classes"
+  },
+  "entities.register.classes.votes": {
+    "defaultMessage": "Votes per share"
+  },
+  "entities.register.classes.votesInvalid": {
+    "defaultMessage": "Votes per share must be zero or more."
+  },
+  "entities.register.declaredOwners": {
+    "defaultMessage": "Declared owners not in the register"
+  },
+  "entities.register.empty": {
+    "defaultMessage": "No share register yet"
+  },
+  "entities.register.emptyHint": {
+    "defaultMessage": "Add a share class, then record the first allotment. Holders come from the entries."
+  },
+  "entities.register.entries.dimmed": {
+    "defaultMessage": "Entries after {date} are dimmed"
+  },
+  "entities.register.entries.none": {
+    "defaultMessage": "No entries match these filters."
+  },
+  "entities.register.entries.title": {
+    "defaultMessage": "Register of allotments and transfers"
+  },
+  "entities.register.entry.addCertificate": {
+    "defaultMessage": "Issue certificate"
+  },
+  "entities.register.entry.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "entities.register.entry.certCancelled": {
+    "defaultMessage": "Cert. cancelled"
+  },
+  "entities.register.entry.certIssued": {
+    "defaultMessage": "Cert. issued"
+  },
+  "entities.register.entry.certificateHolder": {
+    "defaultMessage": "Certificate holder"
+  },
+  "entities.register.entry.certificateInvalid": {
+    "defaultMessage": "Each issued certificate needs a number and a share count."
+  },
+  "entities.register.entry.certificateNumber": {
+    "defaultMessage": "Certificate number"
+  },
+  "entities.register.entry.certificateNumberShort": {
+    "defaultMessage": "No."
+  },
+  "entities.register.entry.certificateShares": {
+    "defaultMessage": "Certificate shares"
+  },
+  "entities.register.entry.certificates": {
+    "defaultMessage": "Certificates"
+  },
+  "entities.register.entry.class": {
+    "defaultMessage": "Class"
+  },
+  "entities.register.entry.classRequired": {
+    "defaultMessage": "Pick a share class."
+  },
+  "entities.register.entry.consideration": {
+    "defaultMessage": "Consideration"
+  },
+  "entities.register.entry.currencyRequired": {
+    "defaultMessage": "Pick the price's currency."
+  },
+  "entities.register.entry.date": {
+    "defaultMessage": "Date"
+  },
+  "entities.register.entry.distinctive": {
+    "defaultMessage": "Distinctive numbers"
+  },
+  "entities.register.entry.distinctiveShort": {
+    "defaultMessage": "Nos."
+  },
+  "entities.register.entry.distinctiveShort2": {
+    "defaultMessage": "Distinctive nos."
+  },
+  "entities.register.entry.edit": {
+    "defaultMessage": "Edit entry {number}"
+  },
+  "entities.register.entry.editTitle": {
+    "defaultMessage": "Edit entry {number}"
+  },
+  "entities.register.entry.effectiveOn": {
+    "defaultMessage": "Effective date"
+  },
+  "entities.register.entry.entity": {
+    "defaultMessage": "Entity"
+  },
+  "entities.register.entry.entityFromRegistry": {
+    "defaultMessage": "Entity from the registry…"
+  },
+  "entities.register.entry.entityRequired": {
+    "defaultMessage": "Pick an Entity from the registry."
+  },
+  "entities.register.entry.from": {
+    "defaultMessage": "From"
+  },
+  "entities.register.entry.fromClass": {
+    "defaultMessage": "From class"
+  },
+  "entities.register.entry.fromRequired": {
+    "defaultMessage": "Pick the holder the shares come from."
+  },
+  "entities.register.entry.issue": {
+    "defaultMessage": "Issue"
+  },
+  "entities.register.entry.kind": {
+    "defaultMessage": "Entry"
+  },
+  "entities.register.entry.liveReadError": {
+    "defaultMessage": "Today's certificates could not be read. Close and try again."
+  },
+  "entities.register.entry.nameRequired": {
+    "defaultMessage": "Enter the individual's name."
+  },
+  "entities.register.entry.newIndividual": {
+    "defaultMessage": "New individual…"
+  },
+  "entities.register.entry.noCertificates": {
+    "defaultMessage": "The holder the shares come from has no live certificate in this class."
+  },
+  "entities.register.entry.note": {
+    "defaultMessage": "Note"
+  },
+  "entities.register.entry.pickClass": {
+    "defaultMessage": "Pick a class…"
+  },
+  "entities.register.entry.pickEntity": {
+    "defaultMessage": "Pick an Entity…"
+  },
+  "entities.register.entry.pickHolder": {
+    "defaultMessage": "Pick a holder…"
+  },
+  "entities.register.entry.price": {
+    "defaultMessage": "Price per share"
+  },
+  "entities.register.entry.record": {
+    "defaultMessage": "Enter in register"
+  },
+  "entities.register.entry.remove": {
+    "defaultMessage": "Remove entry {number}"
+  },
+  "entities.register.entry.removeAction": {
+    "defaultMessage": "Remove"
+  },
+  "entities.register.entry.removeCertificate": {
+    "defaultMessage": "Remove certificate"
+  },
+  "entities.register.entry.removeConfirm": {
+    "defaultMessage": "Remove entry {number}"
+  },
+  "entities.register.entry.removeConsequence": {
+    "defaultMessage": "The register is replayed without it and its number is not reused. This cannot be undone."
+  },
+  "entities.register.entry.removeError": {
+    "defaultMessage": "The entry could not be removed."
+  },
+  "entities.register.entry.removeTitle": {
+    "defaultMessage": "Remove entry {number} from the register?"
+  },
+  "entities.register.entry.resolution": {
+    "defaultMessage": "Resolution reference"
+  },
+  "entities.register.entry.resolutionShort": {
+    "defaultMessage": "Resolution"
+  },
+  "entities.register.entry.saveError": {
+    "defaultMessage": "The entry could not be recorded."
+  },
+  "entities.register.entry.shares": {
+    "defaultMessage": "Shares"
+  },
+  "entities.register.entry.sharesRequired": {
+    "defaultMessage": "Enter a whole number of shares, one or more."
+  },
+  "entities.register.entry.title": {
+    "defaultMessage": "Record entry"
+  },
+  "entities.register.entry.to": {
+    "defaultMessage": "To"
+  },
+  "entities.register.entry.toClass": {
+    "defaultMessage": "To class"
+  },
+  "entities.register.entry.toRequired": {
+    "defaultMessage": "Pick the holder the shares go to."
+  },
+  "entities.register.entry.treasury": {
+    "defaultMessage": "Treasury (shares the company holds)"
+  },
+  "entities.register.export": {
+    "defaultMessage": "Export"
+  },
+  "entities.register.holder": {
+    "defaultMessage": "Holder"
+  },
+  "entities.register.holder.entity": {
+    "defaultMessage": "Entity"
+  },
+  "entities.register.kind.allotment": {
+    "defaultMessage": "Allotment"
+  },
+  "entities.register.kind.buyback": {
+    "defaultMessage": "Buyback"
+  },
+  "entities.register.kind.cancellation": {
+    "defaultMessage": "Cancellation"
+  },
+  "entities.register.kind.conversion": {
+    "defaultMessage": "Conversion"
+  },
+  "entities.register.kind.transfer": {
+    "defaultMessage": "Transfer"
+  },
+  "entities.register.members.change": {
+    "defaultMessage": "Change to today"
+  },
+  "entities.register.members.classSummary": {
+    "defaultMessage": "{outstanding} outstanding · {treasury} in treasury{hasPar, select, yes { · par {par}} other {}}{hasRights, select, yes { · {rights}} other {}}"
+  },
+  "entities.register.members.export": {
+    "defaultMessage": "Export register"
+  },
+  "entities.register.members.meta": {
+    "defaultMessage": "{holders, plural, one {# holder} other {# holders}} · {classes, plural, one {# class} other {# classes}} · derived from {entries, plural, one {# register entry} other {# register entries}}"
+  },
+  "entities.register.members.ofClass": {
+    "defaultMessage": "% of class"
+  },
+  "entities.register.members.since": {
+    "defaultMessage": "Member since"
+  },
+  "entities.register.members.title": {
+    "defaultMessage": "Register of members"
+  },
+  "entities.register.members.titleAt": {
+    "defaultMessage": "Register of members at {date}"
+  },
+  "entities.register.members.total": {
+    "defaultMessage": "Total {className}"
+  },
+  "entities.register.members.voting": {
+    "defaultMessage": "% voting"
+  },
+  "entities.register.overAuthorized": {
+    "defaultMessage": "{issued} {className} shares are issued against {authorized} authorized."
+  },
+  "entities.register.ownedTitle": {
+    "defaultMessage": "Holdings in other Entities"
+  },
+  "entities.register.reconciliation.agrees": {
+    "defaultMessage": "Today the register agrees with Share capital: {issued} issued."
+  },
+  "entities.register.reconciliation.differs": {
+    "defaultMessage": "Today the register does not agree with Share capital. The Overview declares {declared} issued; the register sums to {issued}."
+  },
+  "entities.register.reconciliation.historic": {
+    "defaultMessage": "At {date} the register showed {issued} issued, from {applied, plural, one {# entry} other {# entries}} of {total}."
+  },
+  "entities.register.treasury": {
+    "defaultMessage": "Treasury"
+  },
+  "entities.register.treasuryHint": {
+    "defaultMessage": "Held by the company"
+  },
+  "entities.register.wholeNumber": {
+    "defaultMessage": "Enter a whole number of zero or more."
   },
   "entities.restricted": {
     "defaultMessage": "Restricted Entity"
@@ -7466,11 +7787,11 @@
   "portal.request.documentTitle": {
     "defaultMessage": "{reference} · {title}"
   },
-  "portal.request.meta": {
-    "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
-  },
   "portal.request.legalOwner": {
     "defaultMessage": "Legal Owner"
+  },
+  "portal.request.meta": {
+    "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
   },
   "portal.request.owner": {
     "defaultMessage": "Legal Owner: {name}"
