@@ -668,6 +668,118 @@ describe("the share register", () => {
     expect(onArchived.statusCode, onArchived.body).toBe(409);
   });
 
+  it("projects Holdings from the register and keeps them read-only on the Holdings routes", async () => {
+    const issuer = await newEntity("Projected Ltd");
+    const parent = await newEntity("Projected Parent Ltd");
+    const other = await newEntity("Projected Other Ltd");
+    const ordinary = await newClass(issuer.id, { name: "Ordinary" });
+    const holdingsOf = (id: string) =>
+      harness.app.inject({
+        method: "GET",
+        url: `/api/v1/entities/${id}/holdings`,
+        cookies: memberCookies,
+      });
+
+    // A hand-typed Holding predates the register.
+    const manual = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${issuer.id}/holdings`,
+      cookies: memberCookies,
+      payload: { direction: "owner", relatedEntityId: parent.id, ownershipPercent: 40 },
+    });
+    expect(manual.statusCode, manual.body).toBe(201);
+    expect(manual.json().holding.source).toBe("manual");
+
+    const allot = await entry(issuer.id, {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId: ordinary.id,
+      quantity: 600,
+      to: { kind: "entity", entityId: parent.id },
+    });
+    expect(allot.statusCode, allot.body).toBe(201);
+    const ada = await entry(issuer.id, {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId: ordinary.id,
+      quantity: 400,
+      to: { kind: "individual", name: "Ada" },
+    });
+    expect(ada.statusCode, ada.body).toBe(201);
+    let owners = holdingsOf(issuer.id);
+    expect((await owners).statusCode).toBe(200);
+    let rows = (await owners).json().owners as {
+      owner: { id: string; legalName: string; kind?: string };
+      ownershipPercent: number;
+      source: string;
+    }[];
+    // The manual 40% is replaced by the register's 60%; Ada is projected as an individual.
+    expect(rows.map((row) => [row.owner.legalName, row.ownershipPercent, row.source])).toEqual([
+      ["Ada", 40, "register"],
+      ["Projected Parent Ltd", 60, "register"],
+    ]);
+    const parentRow = rows.find((row) => row.owner.legalName === "Projected Parent Ltd")!;
+    const adaRow = rows.find((row) => row.owner.legalName === "Ada")!;
+
+    for (const relatedId of [parent.id, adaRow.owner.id]) {
+      const patched = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/entities/${issuer.id}/holdings/${relatedId}`,
+        cookies: memberCookies,
+        payload: { ownershipPercent: 10 },
+      });
+      expect(patched.statusCode, patched.body).toBe(409);
+      expect(patched.json().detail).toMatch(/derived from the share register/);
+      const removed = await harness.app.inject({
+        method: "DELETE",
+        url: `/api/v1/entities/${issuer.id}/holdings/${relatedId}`,
+        cookies: memberCookies,
+      });
+      expect(removed.statusCode, removed.body).toBe(409);
+    }
+
+    // A transfer moves the percentages; the chart edge says where they came from.
+    const moved = await entry(issuer.id, {
+      kind: "transfer",
+      effectiveOn: "2024-02-01",
+      shareClassId: ordinary.id,
+      quantity: 100,
+      from: { kind: "entity", entityId: parent.id },
+      to: { kind: "entity", entityId: other.id },
+    });
+    expect(moved.statusCode, moved.body).toBe(201);
+    rows = (await holdingsOf(issuer.id)).json().owners;
+    expect(rows.map((row) => [row.owner.legalName, row.ownershipPercent])).toEqual([
+      ["Ada", 40],
+      ["Projected Other Ltd", 10],
+      ["Projected Parent Ltd", 50],
+    ]);
+    const chart = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/chart",
+      cookies: memberCookies,
+    });
+    const edge = (
+      chart.json().edges as { ownerEntityId: string; ownedEntityId: string; source: string }[]
+    ).find((row) => row.ownerEntityId === other.id && row.ownedEntityId === issuer.id);
+    expect(edge?.source).toBe("register");
+
+    // Removing the register's entries removes what it projected, and nothing else.
+    const ids = (moved.json().entries as { id: string; entryNo: number }[])
+      .sort((a, b) => b.entryNo - a.entryNo)
+      .map((row) => row.id);
+    for (const id of ids) {
+      const gone = await harness.app.inject({
+        method: "DELETE",
+        url: `/api/v1/entities/${issuer.id}/share-entries/${id}`,
+        cookies: memberCookies,
+      });
+      expect(gone.statusCode, gone.body).toBe(204);
+    }
+    expect((await holdingsOf(issuer.id)).json().owners).toEqual([]);
+    expect(parentRow.source).toBe("register");
+  });
+
   it("keeps the register behind Member+ and the Entity's reach", async () => {
     const business = {
       email: "share-register-business@example.com",

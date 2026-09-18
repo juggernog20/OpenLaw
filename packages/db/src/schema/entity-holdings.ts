@@ -5,6 +5,9 @@ import { sql } from "drizzle-orm";
 import { check, index, numeric, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { entities } from "./entities.js";
 
+export const HOLDING_SOURCES = ["manual", "register"] as const;
+export type HoldingSource = (typeof HOLDING_SOURCES)[number];
+
 export const entityHoldings = pgTable(
   "entity_holdings",
   {
@@ -15,6 +18,10 @@ export const entityHoldings = pgTable(
       .notNull()
       .references(() => entities.id),
     ownershipPercent: numeric("ownership_percent", { precision: 5, scale: 2 }).notNull(),
+    /** ENT-011: `register` rows are projected from the owned Entity's
+     * share register after each entry write and refuse direct edits;
+     * `manual` rows are the hand-typed Holdings of ENT-003. */
+    source: text("source", { enum: HOLDING_SOURCES }).notNull().default("manual"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

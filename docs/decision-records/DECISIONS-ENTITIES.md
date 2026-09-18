@@ -77,6 +77,10 @@ Add Holding now offers Entity or Individual. Entity keeps the registry lookup; I
 
 Where an Entity keeps a share register, its owner Holdings are a projection of that register (`source = register`) and are read-only through the Holdings routes. Manual Holdings remain for Entities without a register. The Owners list on the Ownership tab is replaced by the Register of members; the owned side stays as the "Holdings in other Entities" card.
 
+### Built addendum (2026-09-18, M36/4, [#934](https://github.com/juggernog20/OpenLaw/issues/934)) — the projection
+
+Migration 0149 adds `source` (`manual | register`) to `entity_holdings` and `individual_holdings`, and `shareholder_id` to `individual_holdings` so a projected individual row is matched by holder, never by name. After every register entry write, in the same transaction and under the Holdings advisory lock, the issuer's owner Holdings are rewritten from today's holders: each holder's outstanding shares across every class over the issuer's outstanding shares, to two decimals. A manual row for an owner the register now names is taken over; a projected row for a holder who no longer holds is deleted; each change appends the same `entity_holding.*` Activity a hand-typed write would. `PATCH` and `DELETE` on a projected row answer 409. `GET /holdings` and the chart carry `source` on every row and edge; the Ownership tab marks a projected row "From register", disables its controls, and links to the register that produced it. The register's cycle check reads `entity_holdings` only, because the projection has already written the holder's edge when it runs.
+
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
 **Amended 10 September 2026:** the DD-014 administrator bypass is removed. Confidential Entities require a grant for administrators too. New Entity creators receive a recorded grant; explicit grantees can manage access. The DD-014 amendment in [DECISIONS.md](DECISIONS.md) supersedes the original administrator exceptions below.
