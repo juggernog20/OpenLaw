@@ -5,7 +5,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type ApiState, type StubCall } from "../testing/helpers";
 
-const TITLE = "We need to learn a little about you";
+const TITLE = "Welcome to your Business Portal";
 const SALES = { id: "sales", displayName: "Sales" };
 function setup(
   departments: { id: string; displayName: string }[] = [SALES],
@@ -145,6 +145,30 @@ it("omits Department for an empty list and saves profile, theme, and notificatio
   expect(writes.find((call) => call.url.pathname === "/api/v1/me/preferences")?.body).toEqual({
     theme: "dark",
   });
+});
+
+it("removes an uploaded photo and allows the same file to be chosen again", async () => {
+  const { writes } = setup([]);
+  renderAt("/portal/onboarding");
+  const user = userEvent.setup();
+  await screen.findByRole("button", { name: "Choose photo" });
+  const photo = screen.getByLabelText("Photo");
+  const file = new File(["png"], "avatar.png", { type: "image/png" });
+  await user.upload(photo, file);
+  const remove = await screen.findByRole("button", { name: "Remove photo" });
+  await waitFor(() => expect(remove).toBeEnabled());
+  await user.click(remove);
+  await waitFor(() =>
+    expect(screen.queryByRole("button", { name: "Remove photo" })).not.toBeInTheDocument(),
+  );
+  expect(
+    writes.filter((call) => call.url.pathname === "/api/auth/update-user").at(-1)?.body,
+  ).toEqual({
+    image: null,
+  });
+  await user.upload(photo, file);
+  expect(await screen.findByRole("button", { name: "Remove photo" })).toBeVisible();
+  expect(writes.filter((call) => call.url.pathname === "/api/auth/update-user")).toHaveLength(3);
 });
 
 it("shows a refused Department write and keeps Continue disabled", async () => {

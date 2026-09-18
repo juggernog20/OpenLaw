@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
-import { Scale } from "lucide-react";
+import { Camera, Scale } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { AVATAR_BYTE_LIMIT, AVATAR_TYPES } from "../lib/avatar";
@@ -28,7 +28,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
 const COPY = defineMessages({
-  title: { id: "portal.onboarding.title", defaultMessage: "We need to learn a little about you" },
+  title: { id: "portal.onboarding.title", defaultMessage: "Welcome to your Business Portal" },
   department: { id: "portal.onboarding.department", defaultMessage: "Department" },
   profile: { id: "portal.onboarding.profile", defaultMessage: "Name and photo" },
   theme: { id: "portal.onboarding.theme", defaultMessage: "Theme" },
@@ -79,6 +79,7 @@ export function PortalOnboardingPage() {
   });
   const [finishError, setFinishError] = useState<string | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
   const notificationState = useNotificationPreferences(loaded.groups);
   const steps: Step[] = departments.length
     ? ["department", "profile", "theme", "notifications", "tour"]
@@ -209,13 +210,17 @@ export function PortalOnboardingPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-canvas text-primary">
+    <div className="@container/onboarding min-h-dvh bg-canvas text-primary">
       <SkipLink />
       <PageTitle title={intl.formatMessage(COPY.title)} />
       <header className="flex h-(--height-header) items-center justify-between gap-4 border-b border-border-default bg-raised px-page-x">
-        <span className="flex items-center gap-2 text-base font-semibold">
-          <Scale size={20} aria-hidden="true" />
-          <FormattedMessage id="portal.brand" defaultMessage="OpenLaw" />
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-card bg-inverted text-on-inverted">
+            <Scale size={20} aria-hidden="true" />
+          </span>
+          <span className="text-base font-semibold">
+            <FormattedMessage id="portal.brand" defaultMessage="OpenLaw" />
+          </span>
         </span>
         <Button variant="ghost" onClick={() => void signOut()}>
           <FormattedMessage id="auth.signOut" defaultMessage="Sign out" />
@@ -224,213 +229,294 @@ export function PortalOnboardingPage() {
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto flex w-full max-w-(--width-portal-col) flex-col gap-6 px-page-x py-8"
+        className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-10 pb-16 @xl/onboarding:px-6 @xl/onboarding:pt-14"
       >
-        <h1 className="text-2xl font-semibold">
-          <FormattedMessage {...COPY.title} />
-        </h1>
-        <p className="text-sm text-muted">
-          <FormattedMessage
-            id="portal.onboarding.progress"
-            defaultMessage="Step {current} of {total}"
-            values={{ current: index + 1, total: steps.length }}
-          />
-        </p>
-        <section
-          aria-labelledby="first-run-step"
-          className="flex min-w-0 flex-col gap-4 rounded-card border border-border-default bg-raised p-4"
-        >
-          <h2 id="first-run-step" ref={heading} tabIndex={-1} className="text-lg font-semibold">
-            <FormattedMessage {...COPY[step]} />
-          </h2>
-          {step === "department" && (
-            <>
-              <p className="text-sm text-muted">
-                <FormattedMessage
-                  id="portal.onboarding.department.lead"
-                  defaultMessage="Choose the Department you work in. Legal uses this to share the right Auto-Docs with you."
-                />
-              </p>
-              <Label htmlFor="first-run-department">
-                <FormattedMessage {...COPY.department} />
-              </Label>
-              <select
-                id="first-run-department"
-                required
-                className={CONTROL_CLASS}
-                disabled={saving}
-                value={validDepartment ? departmentId! : ""}
-                onChange={(event) => chooseDepartment(event.target.value)}
-              >
-                <option value="" disabled>
-                  {intl.formatMessage({
-                    id: "portal.onboarding.department.choose",
-                    defaultMessage: "Choose your Department",
-                  })}
-                </option>
-                {departments.map((department) => (
-                  <option key={department.id} value={department.id}>
-                    {department.displayName}
-                  </option>
-                ))}
-              </select>
-              <StatusNote {...notes.department} />
-            </>
-          )}
-          {step === "profile" && (
-            <>
-              <Label htmlFor="first-run-name">
-                <FormattedMessage id="settings.profile.fullName" defaultMessage="Full name" />
-              </Label>
-              <Input
-                id="first-run-name"
-                value={name}
-                disabled={saving}
-                onChange={(event) => setName(event.target.value)}
-                onBlur={commitName}
-              />
-              <StatusNote {...notes.name} />
-              <Avatar name={savedName} image={image} className="size-12" />
-              <Label htmlFor="first-run-photo">
-                <FormattedMessage id="portal.onboarding.photo" defaultMessage="Photo" />
-              </Label>
-              <Input
-                id="first-run-photo"
-                type="file"
-                accept={AVATAR_TYPES.join(",")}
-                disabled={saving}
-                onChange={(event) => uploadPhoto(event.target.files?.[0])}
-              />
-              <p className="text-sm text-muted">
-                <FormattedMessage
-                  id="portal.onboarding.photo.hint"
-                  defaultMessage="PNG or JPG, up to 1 MB."
-                />
-              </p>
-              <StatusNote {...notes.photo} />
-            </>
-          )}
-          {step === "theme" && (
-            <>
-              <fieldset className="flex flex-wrap gap-4">
-                <legend className="sr-only">
-                  <FormattedMessage {...COPY.theme} />
-                </legend>
-                {THEMES.map((option) => (
-                  <label key={option} className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="theme"
-                      value={option}
-                      checked={theme === option}
-                      disabled={saving}
-                      onChange={() => chooseTheme(option)}
-                      className="size-4 accent-cta-primary"
-                    />
-                    <FormattedMessage {...COPY[option]} />
-                  </label>
-                ))}
-              </fieldset>
-              <StatusNote {...notes.theme} />
-            </>
-          )}
-          {step === "notifications" && (
-            <>
-              <NotificationSwitchGrid
-                state={notificationState}
-                order={PORTAL_GROUPS}
-                copy={PORTAL_COPY}
-              />
-              <StatusNote status={notificationState.status} detail={notificationState.detail} />
-            </>
-          )}
-          {step === "tour" && (
-            <div className="flex flex-col gap-4">
-              <div>
-                <h3 className="font-semibold">
-                  <FormattedMessage
-                    id="portal.onboarding.tour.requests"
-                    defaultMessage="Requests"
-                  />
-                </h3>
-                <p className="text-sm text-muted">
-                  <FormattedMessage
-                    id="portal.onboarding.tour.requests.detail"
-                    defaultMessage="Ask Legal for help and follow the progress of your Requests."
-                  />
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  <FormattedMessage
-                    id="portal.onboarding.tour.contracts"
-                    defaultMessage="Contracts"
-                  />
-                </h3>
-                <p className="text-sm text-muted">
-                  <FormattedMessage
-                    id="portal.onboarding.tour.contracts.detail"
-                    defaultMessage="Read the Contracts you work on, share Documents, and talk with Legal."
-                  />
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  <FormattedMessage id="portal.onboarding.tour.matters" defaultMessage="Matters" />
-                </h3>
-                <p className="text-sm text-muted">
-                  <FormattedMessage
-                    id="portal.onboarding.tour.matters.detail"
-                    defaultMessage="Follow legal work, its Documents, and its conversations."
-                  />
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  <FormattedMessage
-                    id="portal.onboarding.tour.autoDocs"
-                    defaultMessage="Auto-Docs"
-                  />
-                </h3>
-                <p className="text-sm text-muted">
-                  <FormattedMessage
-                    id="portal.onboarding.tour.autoDocs.detail"
-                    defaultMessage="Fill in a form to generate a document from an Auto-Doc prepared by Legal."
-                  />
-                </p>
-              </div>
-            </div>
-          )}
-        </section>
-        {finishError && (
-          <p role="alert" className="text-sm text-status-danger-fg">
-            {finishError}
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            <FormattedMessage {...COPY.title} />
+          </h1>
+          <p className="text-md text-muted">
+            <FormattedMessage
+              id="portal.onboarding.introduction"
+              defaultMessage="Set up your profile and choose how you’d like to work with Legal."
+            />
           </p>
-        )}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button
-            variant="secondary"
-            disabled={index === 0 || saving}
-            onClick={() => setStep(steps[index - 1]!)}
+        </div>
+        <div className="flex flex-col gap-2.5">
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="portal.onboarding.progress"
+              defaultMessage="Step {current} of {total}"
+              values={{ current: index + 1, total: steps.length }}
+            />
+          </p>
+          <div className="flex gap-1.5" aria-hidden="true">
+            {steps.map((item, position) => (
+              <span
+                key={item}
+                className={`h-1 flex-1 rounded-full ${position <= index ? "bg-cta-primary" : "bg-border-default"}`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-card border border-border-default bg-raised">
+          <section
+            aria-labelledby="first-run-step"
+            className="flex min-w-0 flex-col gap-5 p-5 @xl/onboarding:p-6"
           >
-            <FormattedMessage id="portal.onboarding.back" defaultMessage="Back" />
-          </Button>
-          <div className="flex gap-3">
-            {step !== "department" && (
-              <Button variant="ghost" disabled={saving} onClick={() => void advance()}>
-                <FormattedMessage id="portal.onboarding.skip" defaultMessage="Skip" />
-              </Button>
-            )}
-            <Button
-              disabled={saving || (step === "department" && !validDepartment)}
-              onClick={() => void advance()}
+            <h2
+              id="first-run-step"
+              ref={heading}
+              tabIndex={-1}
+              className="text-lg font-semibold outline-none"
             >
-              {step === "tour" ? (
-                <FormattedMessage id="portal.onboarding.finish" defaultMessage="Finish" />
-              ) : (
-                <FormattedMessage id="portal.onboarding.continue" defaultMessage="Continue" />
-              )}
+              <FormattedMessage {...COPY[step]} />
+            </h2>
+            {step === "department" && (
+              <>
+                <p className="text-sm text-muted">
+                  <FormattedMessage
+                    id="portal.onboarding.department.lead"
+                    defaultMessage="Choose the Department you work in. Legal uses this to share the right Auto-Docs with you."
+                  />
+                </p>
+                <Label htmlFor="first-run-department">
+                  <FormattedMessage {...COPY.department} />
+                </Label>
+                <select
+                  id="first-run-department"
+                  required
+                  className={CONTROL_CLASS}
+                  disabled={saving}
+                  value={validDepartment ? departmentId! : ""}
+                  onChange={(event) => chooseDepartment(event.target.value)}
+                >
+                  <option value="" disabled>
+                    {intl.formatMessage({
+                      id: "portal.onboarding.department.choose",
+                      defaultMessage: "Choose your Department",
+                    })}
+                  </option>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.displayName}
+                    </option>
+                  ))}
+                </select>
+                <StatusNote {...notes.department} />
+              </>
+            )}
+            {step === "profile" && (
+              <>
+                <div className="flex items-start gap-4 rounded-card border border-border-muted bg-canvas p-4">
+                  <Avatar name={savedName} image={image} className="size-16 text-lg" />
+                  <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    <Label htmlFor="first-run-photo">
+                      <FormattedMessage id="portal.onboarding.photo" defaultMessage="Photo" />
+                    </Label>
+                    <p id="first-run-photo-hint" className="text-sm text-muted">
+                      <FormattedMessage
+                        id="portal.onboarding.photo.hint"
+                        defaultMessage="PNG or JPG, up to 1 MB."
+                      />
+                    </p>
+                    <input
+                      ref={photoInput}
+                      id="first-run-photo"
+                      type="file"
+                      className="hidden"
+                      accept={AVATAR_TYPES.join(",")}
+                      disabled={saving}
+                      aria-describedby="first-run-photo-hint"
+                      onChange={(event) => {
+                        uploadPhoto(event.target.files?.[0]);
+                        event.target.value = "";
+                      }}
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={saving}
+                        onClick={() => photoInput.current?.click()}
+                      >
+                        <Camera size={16} aria-hidden="true" />
+                        <FormattedMessage
+                          id="portal.onboarding.photo.choose"
+                          defaultMessage="Choose photo"
+                        />
+                      </Button>
+                      {image && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={saving}
+                          onClick={() =>
+                            void save("photo", async () => {
+                              const result = await authClient.updateUser({ image: null });
+                              if (result.error)
+                                throw new Error(result.error.message ?? networkError(intl));
+                              setImage(null);
+                            })
+                          }
+                        >
+                          <FormattedMessage
+                            id="portal.onboarding.photo.remove"
+                            defaultMessage="Remove photo"
+                          />
+                        </Button>
+                      )}
+                    </div>
+                    <StatusNote {...notes.photo} />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="first-run-name">
+                    <FormattedMessage id="settings.profile.fullName" defaultMessage="Full name" />
+                  </Label>
+                  <Input
+                    id="first-run-name"
+                    autoComplete="name"
+                    value={name}
+                    disabled={saving}
+                    onChange={(event) => setName(event.target.value)}
+                    onBlur={commitName}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") commitName();
+                    }}
+                  />
+                  <StatusNote {...notes.name} />
+                </div>
+              </>
+            )}
+            {step === "theme" && (
+              <>
+                <fieldset className="grid grid-cols-1 gap-3 @xl/onboarding:grid-cols-3">
+                  <legend className="sr-only">
+                    <FormattedMessage {...COPY.theme} />
+                  </legend>
+                  {THEMES.map((option) => (
+                    <label
+                      key={option}
+                      className={`flex cursor-pointer items-center gap-3 rounded-card border p-4 ${theme === option ? "border-link bg-control" : "border-border-default"}`}
+                    >
+                      <input
+                        type="radio"
+                        name="theme"
+                        value={option}
+                        checked={theme === option}
+                        disabled={saving}
+                        onChange={() => chooseTheme(option)}
+                        className="size-4 accent-cta-primary"
+                      />
+                      <FormattedMessage {...COPY[option]} />
+                    </label>
+                  ))}
+                </fieldset>
+                <StatusNote {...notes.theme} />
+              </>
+            )}
+            {step === "notifications" && (
+              <>
+                <NotificationSwitchGrid
+                  state={notificationState}
+                  order={PORTAL_GROUPS}
+                  copy={PORTAL_COPY}
+                />
+                <StatusNote status={notificationState.status} detail={notificationState.detail} />
+              </>
+            )}
+            {step === "tour" && (
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h3 className="font-semibold">
+                    <FormattedMessage
+                      id="portal.onboarding.tour.requests"
+                      defaultMessage="Requests"
+                    />
+                  </h3>
+                  <p className="text-sm text-muted">
+                    <FormattedMessage
+                      id="portal.onboarding.tour.requests.detail"
+                      defaultMessage="Ask Legal for help and follow the progress of your Requests."
+                    />
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">
+                    <FormattedMessage
+                      id="portal.onboarding.tour.contracts"
+                      defaultMessage="Contracts"
+                    />
+                  </h3>
+                  <p className="text-sm text-muted">
+                    <FormattedMessage
+                      id="portal.onboarding.tour.contracts.detail"
+                      defaultMessage="Read the Contracts you work on, share Documents, and talk with Legal."
+                    />
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">
+                    <FormattedMessage
+                      id="portal.onboarding.tour.matters"
+                      defaultMessage="Matters"
+                    />
+                  </h3>
+                  <p className="text-sm text-muted">
+                    <FormattedMessage
+                      id="portal.onboarding.tour.matters.detail"
+                      defaultMessage="Follow legal work, its Documents, and its conversations."
+                    />
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">
+                    <FormattedMessage
+                      id="portal.onboarding.tour.autoDocs"
+                      defaultMessage="Auto-Docs"
+                    />
+                  </h3>
+                  <p className="text-sm text-muted">
+                    <FormattedMessage
+                      id="portal.onboarding.tour.autoDocs.detail"
+                      defaultMessage="Fill in a form to generate a document from an Auto-Doc prepared by Legal."
+                    />
+                  </p>
+                </div>
+              </div>
+            )}
+          </section>
+          {finishError && (
+            <p role="alert" className="px-6 pb-4 text-sm text-status-danger-fg">
+              {finishError}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-default bg-canvas px-5 py-4 @xl/onboarding:px-6">
+            <Button
+              variant="secondary"
+              disabled={index === 0 || saving}
+              onClick={() => setStep(steps[index - 1]!)}
+            >
+              <FormattedMessage id="portal.onboarding.back" defaultMessage="Back" />
             </Button>
+            <div className="flex gap-3">
+              {step !== "department" && (
+                <Button variant="ghost" disabled={saving} onClick={() => void advance()}>
+                  <FormattedMessage id="portal.onboarding.skip" defaultMessage="Skip" />
+                </Button>
+              )}
+              <Button
+                disabled={saving || (step === "department" && !validDepartment)}
+                onClick={() => void advance()}
+              >
+                {step === "tour" ? (
+                  <FormattedMessage id="portal.onboarding.finish" defaultMessage="Finish" />
+                ) : (
+                  <FormattedMessage id="portal.onboarding.continue" defaultMessage="Continue" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </main>
