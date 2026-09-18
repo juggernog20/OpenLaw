@@ -75,6 +75,23 @@ export interface DocEngineServerOptions {
 }
 
 /**
+ * One position at the gate: a slot or a queue place, claimed before the
+ * request body arrives and held until the tool ends or the caller gives
+ * it back.
+ */
+export interface Admission {
+  /**
+   * Runs `work` once a slot is free. The position claimed at admission
+   * is the one the tool takes, so nothing is counted twice. A caller
+   * that goes away while it waits gives up its place in the queue rather
+   * than running a tool for nobody.
+   */
+  run<T>(signal: AbortSignal, work: () => Promise<T>): Promise<T>;
+  /** Gives the position back. A no-op once the tool ran or the position was released. */
+  release(): void;
+}
+
+/**
  * Admission control for the tools.
  *
  * Every route spawns LibreOffice, OCRmyPDF or poppler over a file a
@@ -84,9 +101,16 @@ export interface DocEngineServerOptions {
  * goes with it. The gate lets a fixed number run, holds a fixed number
  * waiting, and refuses the rest with a 503 the API client treats as
  * transient.
+ *
+ * A position is claimed with {@link ToolGate.admit} before the body is
+ * received. The claim is what bounds the temporary files on disk: a
+ * check that only read the counts would let every request that arrived
+ * together pass, and each would write its upload before any of them
+ * reached the gate.
  */
-class ToolGate {
+export class ToolGate {
   private running = 0;
+  private reserved = 0;
   private readonly waiting: Array<() => void> = [];
 
   constructor(
@@ -94,32 +118,62 @@ class ToolGate {
     private readonly maxQueued: number,
   ) {}
 
-  /** Whether a new request would be refused rather than queued. */
+  /** Whether a new request would be refused rather than admitted. */
   get full(): boolean {
-    return this.running >= this.maxConcurrent && this.waiting.length >= this.maxQueued;
+    return (
+      this.running + this.waiting.length + this.reserved >= this.maxConcurrent + this.maxQueued
+    );
+  }
+
+  /** How many tools run now. */
+  get active(): number {
+    return this.running;
+  }
+
+  /** How many admitted requests wait for a slot now. */
+  get queued(): number {
+    return this.waiting.length;
+  }
+
+  /** How many positions are claimed but not yet run. */
+  get held(): number {
+    return this.reserved;
   }
 
   /**
-   * Runs `work` once a slot is free. A caller that goes away while it
-   * waits gives up its place in the queue rather than running a tool
-   * for nobody.
+   * Claims one of the `maxConcurrent + maxQueued` positions now, or
+   * throws the busy problem when every one is taken.
    */
-  async run<T>(signal: AbortSignal, work: () => Promise<T>): Promise<T> {
-    await this.acquire(signal);
-    try {
-      return await work();
-    } finally {
-      this.release();
-    }
+  admit(): Admission {
+    if (this.full) throw engineBusy(BUSY_RETRY_AFTER_SECONDS);
+    this.reserved += 1;
+    let open = true;
+    const give = (): void => {
+      if (!open) return;
+      open = false;
+      this.reserved -= 1;
+    };
+    return {
+      run: async <T>(signal: AbortSignal, work: () => Promise<T>): Promise<T> => {
+        if (!open) throw new Error("The request gave up its position before its tool could run.");
+        // The claim becomes a slot or a queue place. The total is
+        // unchanged, so no queue check is needed here.
+        give();
+        await this.acquire(signal);
+        try {
+          return await work();
+        } finally {
+          this.release();
+        }
+      },
+      release: give,
+    };
   }
 
   private acquire(signal: AbortSignal): Promise<void> {
     if (this.running < this.maxConcurrent) {
       this.running += 1;
       return Promise.resolve();
-    }
-    if (this.waiting.length >= this.maxQueued) {
-      return Promise.reject(engineBusy(BUSY_RETRY_AFTER_SECONDS));
     }
     if (signal.aborted) {
       return Promise.reject(new Error("The request was abandoned before its tool could run."));
@@ -441,29 +495,40 @@ export function createDocEngineServer(options: DocEngineServerOptions): Server {
       return;
     }
 
-    // Refused before the body is read when there is no room. The body is
-    // received first otherwise, so a queued request holds a file on
-    // disk and not an open upload: Node's request timeout would cut an
-    // upload that waited for a slot.
-    if (gate.full) {
-      const busy = engineBusy(BUSY_RETRY_AFTER_SECONDS);
+    // One position is claimed before the body is read, and the request
+    // is refused here when there is none. The body is received next, so
+    // a queued request holds a file on disk and not an open upload:
+    // Node's request timeout would cut an upload that waited for a slot.
+    // The claim, not a count, is what keeps the files on disk to the
+    // gate's capacity while many uploads arrive together.
+    let admission: Admission;
+    try {
+      admission = gate.admit();
+    } catch (error) {
+      if (!(error instanceof OperationError)) throw error;
       request.resume();
       await once(request, "end").catch(() => undefined);
-      sendProblem(response, busy.status, busy.title, busy.message, busy.retryAfterSeconds);
+      sendProblem(response, error.status, error.title, error.message, error.retryAfterSeconds);
       return;
     }
 
-    // A caller that hangs up while its request waits for a slot leaves
-    // the queue. Once the tool runs the operation's own bound applies.
+    // A caller that hangs up while its upload runs or its request waits
+    // for a slot gives the position back and leaves the queue. Once the
+    // tool runs the operation's own bound applies.
     const gone = new AbortController();
     const leaveQueue = (): void => {
-      if (!response.writableEnded) gone.abort();
+      if (response.writableEnded) return;
+      gone.abort();
+      admission.release();
     };
     response.once("close", leaveQueue);
     try {
-      await runTool(request, response, url, path, gone.signal);
+      await runTool(request, response, url, path, gone.signal, admission);
     } finally {
       response.off("close", leaveQueue);
+      // Spent once the tool ran. This gives the position back when the
+      // upload failed or was refused before the tool could take it.
+      admission.release();
     }
   }
 
@@ -473,6 +538,7 @@ export function createDocEngineServer(options: DocEngineServerOptions): Server {
     url: URL,
     path: string,
     gone: AbortSignal,
+    admission: Admission,
   ): Promise<void> {
     if (path === "/convert") {
       const format = (url.searchParams.get("format") ?? "").toLowerCase();
@@ -493,7 +559,7 @@ export function createDocEngineServer(options: DocEngineServerOptions): Server {
         return;
       }
       await withBody(request, format, options.maxBodyBytes, (source) =>
-        gate.run(gone, () =>
+        admission.run(gone, () =>
           convertToPdf(source, format, timeouts, async (pdf) => {
             // Streamed straight off the disk the tool wrote it to. A
             // converted deck is tens of megabytes, and the sidecar answers
@@ -538,7 +604,7 @@ export function createDocEngineServer(options: DocEngineServerOptions): Server {
           newerFormat,
           options.maxBodyBytes,
           (older, newer) =>
-            gate.run(gone, () =>
+            admission.run(gone, () =>
               compareDocuments(
                 older,
                 olderFormat,
@@ -564,7 +630,7 @@ export function createDocEngineServer(options: DocEngineServerOptions): Server {
     }
 
     const text = await withBody(request, "pdf", options.maxBodyBytes, (source) =>
-      gate.run(gone, () =>
+      admission.run(gone, () =>
         path === "/ocr" ? ocrPdf(source, timeouts) : extractPdfText(source, timeouts),
       ),
     );
