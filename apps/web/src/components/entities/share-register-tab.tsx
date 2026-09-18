@@ -181,8 +181,9 @@ export function ShareRegisterTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <RegisterAsOf register={register} onChange={setAsOf} />
-      <ReconciliationNote register={register} />
+      {/* An empty register has no dates to scrub and nothing to reconcile. */}
+      {empty ? null : <RegisterAsOf register={register} onChange={setAsOf} />}
+      {empty ? null : <ReconciliationNote register={register} />}
       {register.warnings.map((warning) => (
         <p
           key={warning.shareClassId}

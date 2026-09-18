@@ -397,6 +397,8 @@ describe("the Entity Ownership tab as a share register", () => {
     expect(
       await screen.findByRole("heading", { name: "No share register yet" }),
     ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Register as of" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/agrees with Share capital/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New share class" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record entry" })).toBeDisabled();
     expect(screen.getByRole("heading", { name: "Holdings in other Entities" })).toBeInTheDocument();
