@@ -33,6 +33,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Alternatives considered** — Deep registry now; light card + jsonb (calendar can't key off a blob).
 - **Consequences** — SCHEMA.md entities section resolved; two configurable lists (types, officer roles) join the settings inventory; `fields.module_scope` enum gains `entity` (CTR-016 revision note).
 
+### ENT-011 amendment (2026-09-18)
+
+The "share registers/cap tables stay in FUTURE-FEATURES" clause is superseded by ENT-011. The three declared share-capital columns stay; the Ownership tab reconciles `shares_issued` against the register.
+
 ### Built addendum (2026-08-29, M27/3–4, #575, #576)
 
 Migration `0082_great_betty_ross` adds the share-capital columns, `entity` Field scope, `entity_type_fields`, officer roles, and `entity_officers`. Entities Settings mounts the shared taxonomy, type-editor, and Field-catalog machinery. The Entity record reads and writes the three share-capital columns and its type-attached Fields through `PATCH /entities/:id`. Each Field commit uses the shared coercion and required-value checks, including live `user` and `entity` references. Officers have Member+ list, create, inline update, resignation, and delete routes. Each write appends its own `entity_officer.*` Activity entry in the same transaction.
@@ -68,6 +72,10 @@ The web chart uses a dependency-free SVG layout. A compact layered forest places
 ### Individual owner addendum (2026-09-18)
 
 Add Holding now offers Entity or Individual. Entity keeps the registry lookup; Individual collects a name and direct ownership percentage without creating an Entity or user account. Migration 0146 stores individual holdings separately, scoped to the owned Entity. Names are not identity keys and matching names are not merged. Individuals appear as terminal owners in the chart and exports, and contribute to the combined ownership-total warning. Their access follows the owned Entity, including for Administrators. This replaces ENT-003's exclusion of individual owners; it does not introduce a separate beneficial-owner register or automatic beneficial-ownership classification.
+
+### ENT-011 amendment (2026-09-18)
+
+Where an Entity keeps a share register, its owner Holdings are a projection of that register (`source = register`) and are read-only through the Holdings routes. Manual Holdings remain for Entities without a register. The Owners list on the Ownership tab is replaced by the Register of members; the owned side stays as the "Holdings in other Entities" card.
 
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
@@ -183,6 +191,16 @@ The Entity Overview commits Portal-listed through `PATCH /entities/:id`. Only an
 
 The request form uses that read through the shared Field control. Entity Fields may be required; person Fields remain optional. The submission locks each selected Entity and checks the same Portal predicate before committing. The predicate and picker loader are shared for Auto-Doc forms. Existing Request references stop naming an Entity if it later becomes Confidential.
 
+## ENT-011 — The share register: classes, entries, certificates; holders derived by replay; Holdings projected from it
+
+- **Status** — Accepted
+- **Date** — 2026-09-18
+- **Context** — ENT-001 shipped share capital as three declared numbers and parked share registers in FUTURE-FEATURES. ENT-003 shipped the Ownership tab as two lists of hand-typed percentages. Neither answers who holds which class, how many, under which certificate, since when, or what the register showed on a record date. Blair asked for a full capitalization table and share register on the Ownership tab, chose the statutory ledger layout with a date scrubber from ten mocks, and ruled that holders must be derived from the transactions, never added by hand.
+- **Decision** — Four tables. `entity_share_classes` (name, authorized, par value with currency, votes per share, rights summary, archivable). `entity_shareholders` (per issuer; kind `entity` with a registry FK, or `individual` with a name). `entity_share_entries` (per-Entity entry number; kind `allotment | transfer | buyback | cancellation | conversion`; effective date; class and, for conversion, a to-class; quantity; from and to holder; price, consideration, distinctive numbers, resolution reference, note). `entity_share_certificates` (number unique per issuer; holder; class; quantity; distinctive numbers; issued-by and cancelled-by entry). **Holders and balances are never stored**: the Register of members is a replay of the entries to a date, ordered by effective date then entry number. Issued = allotments − cancellations; treasury = buybacks − treasury cancellations; outstanding = issued − treasury; votes = balance × votes per share. Every write replays the register with the change applied and refuses (409) any negative balance at any date, any cancelled certificate that is not live for that holder and class, and any ownership cycle. Allotment past `authorized` warns and commits, as ENT-003 does for percentages. The register is read as of a date (`asOf`), today by default. **Holdings project from the register**: after each entry write the issuer's owner Holdings are rewritten from today's holders (percent = holder's outstanding shares over the issuer's outstanding shares, all classes), marked `source = register` and read-only; Entities without a register keep manual Holdings. ENT-001's three declared numbers stay and the tab reconciles `shares_issued` against the register in one line.
+- **Rationale** — A register that stores balances beside entries can disagree with itself; replay cannot. Deriving Holdings from the register removes the second place ownership was typed. Keeping the declared numbers keeps the pre-M27 upgrade path and makes drift visible instead of silently overwriting one source with the other.
+- **Alternatives considered** — Stored holder balances updated per entry (two sources of truth); Holdings computed at read time in the chart and majority-owner SQL (touches every ownership query; the projection keeps them unchanged); certificates as free text on entries (cannot say which certificates are live); dropping ENT-001's declared columns (breaks the upgrade gate and loses the reconciliation signal).
+- **Consequences** — Supersedes ENT-001's "share registers/cap tables stay in FUTURE-FEATURES" clause and the FUTURE-FEATURES row. Amends ENT-003: Holdings gain `source`, and register-sourced rows refuse PATCH and DELETE. The Ownership tab's Owners list is replaced by the Register of members (DES-088). Option pools, convertibles, subdivision and consolidation, waterfalls, beneficial-ownership look-through, certificate PDFs, and per-entry filing status are new FUTURE-FEATURES rows with [#930](https://github.com/juggernog20/OpenLaw/issues/930) as origin.
+
 ## Index of decisions
 
 | #       | Decision                                                                               | Status   |
@@ -197,3 +215,4 @@ The request form uses that read through the shared Field control. Entity Fields 
 | ENT-008 | The registry surface owns a Member+ entity-type read                                   | Accepted |
 | ENT-009 | The type archive guard counts and moves every referencing entity, archived included    | Accepted |
 | ENT-010 | An Entity may be Portal-listed, so Business Users can pick it on a form                | Accepted |
+| ENT-011 | The share register: classes, entries, certificates; holders derived by replay; Holdings projected from it | Accepted |

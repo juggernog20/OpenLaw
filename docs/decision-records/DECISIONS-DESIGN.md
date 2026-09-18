@@ -3169,6 +3169,10 @@ The Documents destination adopts the managed table whole. Title is its required 
 
 The Entity registry adopts the managed table whole under the Calendar/List/Chart destination switch. Legal name is its required flex column; Type, Jurisdiction, Registration no., Status, and Next obligation complete the built-in layout, with Created available from the column menu. Type, Status, Jurisdiction, Majority owner, and Show archived are the saved filter row. The shared resize, reorder, sort, saved-view, truncation, horizontal escape, archived row action, and keyset foot behaviours are unchanged.
 
+### Addendum (2026-09-18, M36/1, [#931](https://github.com/juggernog20/OpenLaw/issues/931)): Entities and the compliance calendar join the shared filter bar
+
+The Entities registry list drops its bespoke row of four always-visible selects, a Show archived switch and pill chips, and mounts the same Filter button, searchable property menu and bordered editable chips as Contracts and Matters. Its properties are Type, Status, Jurisdiction, Majority owner and Show archived. The compliance calendar's list filters (Entity, Assignee, Due date, Show completed) use the same bar. Filter keys and saved layouts do not change.
+
 ### Addendum (2026-09-05, UX review): shared quick filters for Contracts and Matters
 
 Both destinations use one Filter popover with searchable properties and checkbox choices. Values within one property match any selection; separate properties combine with AND. There is no nested condition builder. Active filters are editable chips with individual removal, plus Clear all. Date ranges accept either endpoint and include both boundary dates.
@@ -4948,6 +4952,35 @@ Every requirement stays. What changes is that the person building the form sees 
 The record ships as written, with three things decided at the keyboard. The name renames in place from the sub-bar's title. A published Auto-Doc keeps Generate as its primary action and offers **Publish new pair** in the overflow menu, so a newer file or form can go live without unpublishing first; the Publication card's own Publish button appears only when a newer version exists. The Clause rule commits the moment Include switches to a rule, with the first field and a default value, so the row says "when" at once; a typed value then commits when focus leaves the rule.
 
 `SettingsCard` became a named region (`role="region"` labelled by its title) so a card can be addressed by name; every settings pane inherits that. `ListEditor` gained an optional Add (the Clauses table has none) and a per-row class hook for the builder's selected-row wash. The template guide is a draft Help article (`auto-doc-template`, DOC-028, #875) published to the development edition; the pane's foot links to it.
+
+## DES-088: The Ownership tab is a share register read as of a date (extends DES-032, DES-046, DES-048, DES-005; supersedes the M27 Ownership frame)
+
+- **Status:** Accepted. Blair chose this shape from ten HTML mocks on 2026-09-18: the statutory ledger of mock 1 with the date scrubber of mock 3.
+- **Date:** 2026-09-18
+
+### Context
+
+The M27 Ownership tab is two cards of percentages, owners and owned, each row an Entity name, a number input and a remove button, with an Add Holding button under them. ENT-011 replaces the owners side with a share register whose holders are derived from entries. The page has to show four things in a fixed reading order: the date the register is being read at, who holds what on that date, every entry that produced it, and the Entities this one owns. Ten directions were drawn (a statutory ledger, a stat-tile dashboard, a date scrubber, a per-class view, expandable holder statements, beneficial-owner look-through, a certificate number line, rounds and dilution, a split pane with a draft preview, and a compliance-first page with reconciliation and filing status). The ledger and the scrubber were chosen; the rest are recorded in FUTURE-FEATURES where they carried scope, or dropped where they were only presentation.
+
+### Decision
+
+**Order.** Register as of, the reconciliation line, Register of members, Register of allotments and transfers, Holdings in other Entities. Each is a DES-005 card at the record page's card width; nothing sits beside anything.
+
+**Register as of.** A card whose header is the title on the left and, on the right, a prev button, the date as a secondary button that opens the DES-048 date picker, a next button, and a secondary "Reset to today" button. The body is one timeline: a 2px rail, one 14px tick per distinct effective date, filled ticks for dates on or before the chosen date, an 18px accent tick with a white ring at the chosen date, and a month-year label under each tick. Prev and next step between ticks. The chosen date is `?asOf=` on the tab URL; no param means today, and the timeline's last label is "Today".
+
+**Reconciliation line.** One DES-005 note under the scrubber: success when the register's issued total equals ENT-001's declared `shares_issued` today, warning naming both figures when it does not. At a historic date it also states the issued totals on that date and how many entries applied.
+
+**Register of members.** Card header: the title, with "at {date}" appended when historic; a muted meta "N holders · N classes · derived from N register entries"; a secondary Export register button; a secondary Share classes button. There is no Add holder control, because holders come only from entries. Columns: Holder (the DES-018 avatar, the name, and a muted second line "Entity · jurisdiction" or "Individual"), Class, Shares, % of class, % voting, Certificates (live numbers in the mono face), Member since, and Change to today, which renders only when historic and shows a green plus, a red minus or a dash. Treasury is one row per class with the muted second line "Held by the company" and no vote percent. Each class closes with a total row on the section-header surface: issued, 100%, the class's share of all votes, and a muted "N outstanding · N in treasury · par X" followed by the class's rights summary. Restricted holders follow MTR-015's Restricted Entity cell.
+
+**Register of allotments and transfers.** Card header: the title, a secondary Export, and the primary Record entry. Under the header, the DES-046 `RecordFilterBar` with Class, Entry, Holder and Effective date, on its own strip with a bottom border, and a right-aligned muted "Entries after {date} are dimmed" when historic. Columns: # (three digits, muted), Date, Entry as a DES-005 pill (allotment info, transfer neutral, buyback severe, conversion assigned, cancellation danger), From, To, Class, Shares, Distinctive nos. (mono), Consideration, Cert. issued (mono), Cert. cancelled (mono), Resolution (a link). Rows after the chosen date render at 45% opacity. Row actions are Edit and Delete in the shared row menu.
+
+**Holdings in other Entities.** The M27 owned card, unchanged in shape, with a "From register" pill and disabled controls on ENT-011's derived rows.
+
+**Record entry and Share classes.** Both are DES-017 dialogs on the C10 form-control spec. Record entry is one column of fields in the order kind, date, from, to, class, shares, price, consideration, distinctive numbers, resolution, note, then a Certificates section with a cancel list and an issue list. The class dialog is a list with inline create and edit.
+
+### Consequences
+
+Supersedes the M27 Ownership frame in `designs/entities.pen` (Owners and Owned with percentages); the owned card survives as the last section. The timeline is the first record-page component that reads a URL date; the Home calendar's Today action and the DES-048 picker are reused, not re-drawn. Filters on a record tab are new: the register is the first non-destination surface to mount `RecordFilterBar`, with its state in the tab's search params rather than a saved layout. The M27 ownership frame in the .pen is redrawn to this record when the mocks are next touched; until then the HTML mocks are the visual reference.
 
 ## Index of decisions
 
