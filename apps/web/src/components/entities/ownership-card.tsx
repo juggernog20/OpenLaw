@@ -25,11 +25,20 @@ export function OwnershipCard({
   candidates,
   initial,
   frozen,
+  showOwners = true,
+  showOwned = true,
+  ownersTitle,
+  ownedTitle,
 }: Readonly<{
   entity: EntityRow;
   candidates: EntityRow[];
   initial: EntityHoldings;
   frozen: boolean;
+  /** ENT-011: the register replaces the owners side; only declared owners outside it still list here. */
+  showOwners?: boolean;
+  showOwned?: boolean;
+  ownersTitle?: ReactNode;
+  ownedTitle?: ReactNode;
 }>) {
   const intl = useIntl();
   const [holdings, setHoldings] = useState(initial);
@@ -146,38 +155,58 @@ export function OwnershipCard({
           {error}
         </p>
       ) : null}
-      <div className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-2">
-        <HoldingList
-          title={<FormattedMessage id="entities.ownership.owners" defaultMessage="Owners" />}
-          empty={intl.formatMessage({
-            id: "entities.ownership.noOwners",
-            defaultMessage: "No owners recorded.",
-          })}
-          rows={holdings.owners}
-          entityId={entity.id}
-          frozen={frozen}
-          onUpdate={update}
-          onRemove={remove}
-        />
-        <HoldingList
-          title={<FormattedMessage id="entities.ownership.owned" defaultMessage="Owned Entities" />}
-          empty={intl.formatMessage({
-            id: "entities.ownership.noneOwned",
-            defaultMessage: "This Entity owns no other Entities.",
-          })}
-          rows={holdings.owned}
-          entityId={entity.id}
-          frozen={frozen}
-          onUpdate={update}
-          onRemove={remove}
-        />
+      <div
+        className={
+          (showOwners || holdings.owners.length > 0) && showOwned
+            ? "grid grid-cols-1 gap-4 @2xl/page:grid-cols-2"
+            : "grid grid-cols-1 gap-4"
+        }
+      >
+        {showOwners || holdings.owners.length > 0 ? (
+          <HoldingList
+            title={
+              ownersTitle ?? (
+                <FormattedMessage id="entities.ownership.owners" defaultMessage="Owners" />
+              )
+            }
+            empty={intl.formatMessage({
+              id: "entities.ownership.noOwners",
+              defaultMessage: "No owners recorded.",
+            })}
+            rows={holdings.owners}
+            entityId={entity.id}
+            frozen={frozen}
+            onUpdate={update}
+            onRemove={remove}
+          />
+        ) : null}
+        {showOwned ? (
+          <HoldingList
+            title={
+              ownedTitle ?? (
+                <FormattedMessage id="entities.ownership.owned" defaultMessage="Owned Entities" />
+              )
+            }
+            empty={intl.formatMessage({
+              id: "entities.ownership.noneOwned",
+              defaultMessage: "This Entity owns no other Entities.",
+            })}
+            rows={holdings.owned}
+            entityId={entity.id}
+            frozen={frozen}
+            onUpdate={update}
+            onRemove={remove}
+          />
+        ) : null}
       </div>
-      <div>
-        <Button disabled={frozen} onClick={() => setDialogOpen(true)}>
-          <Plus size={16} aria-hidden="true" />
-          <FormattedMessage id="entities.ownership.addHolding" defaultMessage="Add Holding" />
-        </Button>
-      </div>
+      {showOwned ? (
+        <div>
+          <Button variant="secondary" disabled={frozen} onClick={() => setDialogOpen(true)}>
+            <Plus size={16} aria-hidden="true" />
+            <FormattedMessage id="entities.ownership.addHolding" defaultMessage="Add Holding" />
+          </Button>
+        </div>
+      ) : null}
       {dialogOpen ? (
         <AddHoldingDialog
           entityId={entity.id}
