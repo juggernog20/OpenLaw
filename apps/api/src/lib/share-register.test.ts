@@ -209,11 +209,39 @@ describe("the share register replay", () => {
       {
         classes: CLASSES,
         entries,
-        certificates: [{ ...certificates[0]!, holderId: "b" }, certificates[1]!, certificates[2]!],
+        certificates: [{ ...certificates[0]!, holderId: "z" }, certificates[1]!, certificates[2]!],
       },
       END_OF_TIME,
     );
     expect(wrongHolder.violation?.detail).toMatch(/another holder or class/);
+
+    // The transferee may hand in what they already held and take one
+    // consolidated certificate: the cancelled one belongs to a party.
+    const consolidated = replayRegister(
+      {
+        classes: CLASSES,
+        entries: [
+          entry({ id: "first", kind: "allotment", quantity: 10, toHolderId: "b", entryNo: 1 }),
+          ...entries.map((row) => ({ ...row, entryNo: row.entryNo + 1 })),
+        ],
+        certificates: [
+          {
+            id: "c0",
+            number: "000",
+            holderId: "b",
+            shareClassId: "ord",
+            quantity: 10,
+            issuedByEntryId: "first",
+            cancelledByEntryId: "move",
+          },
+          certificates[0]!,
+          certificates[1]!,
+          { ...certificates[2]!, quantity: 50 },
+        ],
+      },
+      END_OF_TIME,
+    );
+    expect(consolidated.violation).toBeNull();
 
     const notLive = replayRegister(
       {
