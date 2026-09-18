@@ -853,6 +853,15 @@ function convertedRecord(intl: IntlShape, payload: Payload): string {
   return convertedContract(intl, payload);
 }
 
+/** The company's own side of a register entry: allotments come from
+ * it, buybacks and cancellations go to it. */
+function company(intl: IntlShape): string {
+  return intl.formatMessage({
+    id: "activity.entityShareEntry.company",
+    defaultMessage: "the company",
+  });
+}
+
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
@@ -3332,6 +3341,84 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       owner: named(intl, payload, "ownerName"),
       owned: named(intl, payload, "ownedName"),
       percent: named(intl, payload, "ownershipPercent"),
+    }),
+  },
+  "entity_share_class.created": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityShareClass.created",
+      defaultMessage: "{actor} added the {className} share class to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      className: named(intl, payload, "className"),
+    }),
+  },
+  "entity_share_class.updated": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityShareClass.updated",
+      defaultMessage: "{actor} changed the {className} share class of {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      className: named(intl, payload, "className"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_share_class.archived": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityShareClass.archived",
+      defaultMessage: "{actor} archived the {className} share class of {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      className: named(intl, payload, "className"),
+    }),
+  },
+  "entity_share_entry.created": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityShareEntry.created",
+      defaultMessage:
+        "{actor} recorded entry {entryNo} on the {name} register: {kind} of {quantity} {className} shares from {from} to {to}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      entryNo: named(intl, payload, "entryNo"),
+      kind: named(intl, payload, "kind"),
+      quantity: named(intl, payload, "quantity"),
+      className: named(intl, payload, "className"),
+      from: text(payload, "fromName") ?? company(intl),
+      to: text(payload, "toName") ?? company(intl),
+    }),
+  },
+  "entity_share_entry.updated": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityShareEntry.updated",
+      defaultMessage: "{actor} changed entry {entryNo} on the {name} register",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      entryNo: named(intl, payload, "entryNo"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_share_entry.deleted": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityShareEntry.deleted",
+      defaultMessage:
+        "{actor} removed entry {entryNo} from the {name} register: {kind} of {quantity} {className} shares",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      entryNo: named(intl, payload, "entryNo"),
+      kind: named(intl, payload, "kind"),
+      quantity: named(intl, payload, "quantity"),
+      className: named(intl, payload, "className"),
     }),
   },
   "entity_obligation.created": {
