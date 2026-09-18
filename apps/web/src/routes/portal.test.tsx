@@ -562,7 +562,7 @@ describe("my-requests", () => {
   it("shows ownership on Your requests without a separate return estimate", async () => {
     stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
     renderAt("/portal");
-    expect(await screen.findByText("Owner: Lee Member")).toBeInTheDocument();
+    expect(await screen.findByText("Legal Owner: Lee Member")).toBeInTheDocument();
     expect(screen.queryByText(/Expected back/)).not.toBeInTheDocument();
     expect(screen.queryByText("Estimate passed")).not.toBeInTheDocument();
     expect(screen.queryByText("Oct 10, 2026")).not.toBeInTheDocument();
