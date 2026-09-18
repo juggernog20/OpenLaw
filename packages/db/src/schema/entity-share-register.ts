@@ -64,6 +64,8 @@ export const entityShareClasses = pgTable(
       .notNull()
       .references(() => entities.id),
     name: text("name").notNull(),
+    /** Null means no authorized cap: the replay raises no
+     * `authorized-exceeded` warning for such a class. */
     authorized: bigint("authorized", { mode: "number" }),
     /** Minor currency units, as `entities.par_value`. */
     parValue: bigint("par_value", { mode: "number" }),

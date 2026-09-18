@@ -1,3 +1,12 @@
+-- Share register (ENT-011). Five tables, the Holdings `source` columns
+-- with their CHECKs, composite foreign keys and indexes. None of these
+-- may land alone: a table without its CHECKs would take a row the replay
+-- refuses, and a rerun after a mid-file failure would die on the objects
+-- already created. So the file opens its own transaction rather than
+-- inheriting one (TECH-006 addendum, 2026-08-21); 0060 is the worked
+-- example.
+COMMIT;--> statement-breakpoint
+BEGIN;--> statement-breakpoint
 CREATE TABLE "entity_share_certificates" (
 	"id" text PRIMARY KEY NOT NULL,
 	"entity_id" text NOT NULL,
@@ -124,4 +133,7 @@ ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_shareholde
 CREATE UNIQUE INDEX "individual_holdings_shareholder_idx" ON "individual_holdings" USING btree ("shareholder_id") WHERE "individual_holdings"."shareholder_id" is not null;--> statement-breakpoint
 ALTER TABLE "entity_holdings" ADD CONSTRAINT "entity_holdings_source_known" CHECK ("entity_holdings"."source" in ('manual', 'register'));--> statement-breakpoint
 ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_source_known" CHECK ("individual_holdings"."source" in ('manual', 'register'));--> statement-breakpoint
-ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_source_shape" CHECK (("individual_holdings"."source" = 'register') = ("individual_holdings"."shareholder_id" is not null));
+ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_source_shape" CHECK (("individual_holdings"."source" = 'register') = ("individual_holdings"."shareholder_id" is not null));--> statement-breakpoint
+
+-- Closes the transaction the BEGIN above opened.
+COMMIT;

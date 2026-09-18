@@ -80,11 +80,13 @@ export function ShareEntryDialog({
   const [shareClassId, setShareClassId] = useState(entry?.shareClassId ?? live[0]?.id ?? "");
   const [toShareClassId, setToShareClassId] = useState(entry?.toShareClassId ?? "");
   const [quantity, setQuantity] = useState(entry ? String(entry.quantity) : "");
+  // A holder the editor cannot see stays on the entry, by id: the API
+  // refuses an edit that would replace or drop it (ENT-011).
   const [from, setFrom] = useState<HolderChoice>(
-    entry?.from && !entry.from.restricted ? { ...NONE, pick: `holder:${entry.from.id}` } : NONE,
+    entry?.from ? { ...NONE, pick: `holder:${entry.from.id}` } : NONE,
   );
   const [to, setTo] = useState<HolderChoice>(
-    entry?.to && !entry.to.restricted ? { ...NONE, pick: `holder:${entry.to.id}` } : NONE,
+    entry?.to ? { ...NONE, pick: `holder:${entry.to.id}` } : NONE,
   );
   const [price, setPrice] = useState(
     entry?.pricePerShare !== null && entry?.pricePerShare !== undefined && entry.priceCurrency
@@ -340,6 +342,15 @@ export function ShareEntryDialog({
               {holder.name}
             </option>
           ))}
+          {choice.pick.startsWith("holder:") &&
+          !holders.some((holder) => `holder:${holder.id}` === choice.pick) ? (
+            <option value={choice.pick}>
+              {intl.formatMessage({
+                id: "entities.restricted",
+                defaultMessage: "Restricted Entity",
+              })}
+            </option>
+          ) : null}
           <option value="entity">
             {intl.formatMessage({
               id: "entities.register.entry.entityFromRegistry",

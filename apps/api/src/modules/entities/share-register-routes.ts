@@ -685,6 +685,36 @@ async function resolveEntry(
   return { from, to, shareClass, toShareClass };
 }
 
+/**
+ * An entry that names an Entity the editor cannot see keeps that holder.
+ * The dialog sends it back by id, so every other field stays editable;
+ * only replacing or dropping the side the editor cannot read is refused.
+ */
+async function assertRestrictedHoldersKept(
+  tx: Transaction,
+  user: User,
+  issuerId: string,
+  current: { fromHolderId: string | null; toHolderId: string | null },
+  resolved: ResolvedEntry,
+) {
+  const sides = [
+    [current.fromHolderId, resolved.from?.id ?? null],
+    [current.toHolderId, resolved.to?.id ?? null],
+  ] as const;
+  if (sides.every(([before, after]) => before === null || before === after)) return;
+  const [holders, visible] = await Promise.all([readHolders(tx, issuerId), reachableIds(tx, user)]);
+  for (const [before, after] of sides) {
+    if (before === null || before === after) continue;
+    const row = holders.find((holder) => holder.id === before);
+    if (row && holderRef(row, visible).restricted) {
+      throw httpError(
+        409,
+        "This entry names an Entity you cannot see. That holder stays until someone who can see the Entity changes it.",
+      );
+    }
+  }
+}
+
 function entryValues(issuerId: string, body: EntryInput, resolved: ResolvedEntry, actorId: string) {
   return {
     entityId: issuerId,
@@ -1307,6 +1337,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
           );
         if (!current) throw httpError(404, "No register entry exists with this id.");
         const resolved = await resolveEntry(tx, request.user, entity, request.body);
+        await assertRestrictedHoldersKept(tx, request.user, entity.id, current, resolved);
         await detachCertificates(tx, current.id);
         const values = entryValues(entity.id, request.body, resolved, request.user.id);
         await tx
