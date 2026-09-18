@@ -156,6 +156,7 @@ describe("the request types a requester is offered", () => {
       description: "Mutual or one-way NDA with a counterparty.",
       turnaroundDays: null,
       displayOrder: 1,
+      formFieldOrder: [],
     });
   });
 
@@ -168,6 +169,7 @@ describe("the request types a requester is offered", () => {
       "description",
       "displayName",
       "displayOrder",
+      "formFieldOrder",
       "id",
       "slug",
       "turnaroundDays",
