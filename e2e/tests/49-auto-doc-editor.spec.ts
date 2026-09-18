@@ -43,7 +43,12 @@ test("Legal uploads a template, edits its form from the card, and retains orphan
   await fields.getByRole("button", { name: "Edit Signing date", exact: true }).click();
   const card = page.getByRole("region", { name: "Signing date", exact: true });
   await card.getByRole("combobox", { name: "Type", exact: true }).selectOption("date");
-  await expect(fields.getByText("signing_date · Date", { exact: true })).toBeVisible();
+  await expect(
+    fields
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("button", { name: "Edit Signing date", exact: true }) })
+      .getByText("Date", { exact: true }),
+  ).toBeVisible();
   await card.getByLabel("Help text", { exact: true }).fill("Use the agreed date.");
   await card.getByLabel("Help text", { exact: true }).blur();
   await card.getByRole("checkbox", { name: "Required", exact: true }).click();

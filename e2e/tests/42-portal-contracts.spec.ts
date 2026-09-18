@@ -36,7 +36,7 @@ const ContractRows = z.object({
 
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
 
-test("Business Owner is a statement, and team membership grants revocable Portal work", async ({
+test("Business Owner joins the team, and membership grants revocable Portal work", async ({
   page,
   browser,
 }) => {
@@ -110,19 +110,13 @@ test("Business Owner is a statement, and team membership grants revocable Portal
     await choosePerson(page, "Business Owner", owner.displayName);
     await expect(businessOwner).toHaveAttribute("title", owner.displayName);
     await expect(legalOwner).toHaveAttribute("title", "Unassigned");
-    expect((await portal.request.get(portalPath)).status()).toBe(404);
+    await expect.poll(async () => (await portal.request.get(portalPath)).status()).toBe(200);
     const businessBox = await businessOwner.boundingBox();
     const legalBox = await legalOwner.boundingBox();
     const entityBox = await page.getByLabel("Our entity", { exact: true }).boundingBox();
     expect(businessBox!.y).toBeGreaterThan(legalBox!.y);
     expect(entityBox!.y).toBeGreaterThan(businessBox!.y + businessBox!.height);
     expect(entityBox!.width).toBeGreaterThan(businessBox!.width * 1.5);
-    await page.getByRole("button", { name: "Contract team", exact: true }).click();
-    await page.getByRole("button", { name: "Add team member", exact: true }).click();
-    const add = page.getByRole("dialog", { name: "Add team member" });
-    await add.getByLabel("Person").selectOption(owner.id);
-    await add.getByRole("button", { name: "Add", exact: true }).click();
-    await expect.poll(async () => (await portal.request.get(portalPath)).status()).toBe(200);
     expect((await portal.request.get(`/api/v1/contracts/${contract.number}`)).status()).toBe(403);
     const detail = await portal.request.get(portalPath);
     expect(detail.status()).toBe(200);

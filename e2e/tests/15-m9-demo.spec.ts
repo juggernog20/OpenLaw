@@ -381,7 +381,7 @@ test.describe.serial("M9 demo path", () => {
     // reaches it, so the placement is proved and not assumed.
     await page.goto("/settings/general");
     const rail = page.getByRole("navigation", { name: "Settings sections" });
-    await rail.getByRole("button", { name: "Security" }).click();
+    await rail.getByRole("button", { name: "Advanced" }).click();
     await rail.getByRole("link", { name: "Audit log" }).click();
     await expect(page).toHaveURL(/\/settings\/audit-log$/);
     await expect(page).toHaveTitle("Audit log · OpenLaw");
