@@ -862,6 +862,12 @@ function company(intl: IntlShape): string {
   });
 }
 
+/** A count the payload carries as a number: an entry number, a share quantity. */
+function numbered(intl: IntlShape, payload: Payload, key: string): string {
+  const value = payload[key];
+  return typeof value === "number" ? intl.formatNumber(value) : notSet(intl);
+}
+
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
@@ -3386,9 +3392,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({
       name: thingName(intl, payload),
-      entryNo: named(intl, payload, "entryNo"),
+      entryNo: numbered(intl, payload, "entryNo"),
       kind: named(intl, payload, "kind"),
-      quantity: named(intl, payload, "quantity"),
+      quantity: numbered(intl, payload, "quantity"),
       className: named(intl, payload, "className"),
       from: text(payload, "fromName") ?? company(intl),
       to: text(payload, "toName") ?? company(intl),
@@ -3402,7 +3408,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({
       name: thingName(intl, payload),
-      entryNo: named(intl, payload, "entryNo"),
+      entryNo: numbered(intl, payload, "entryNo"),
     }),
     changes: changesFrom,
   },
@@ -3415,9 +3421,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({
       name: thingName(intl, payload),
-      entryNo: named(intl, payload, "entryNo"),
+      entryNo: numbered(intl, payload, "entryNo"),
       kind: named(intl, payload, "kind"),
-      quantity: named(intl, payload, "quantity"),
+      quantity: numbered(intl, payload, "quantity"),
       className: named(intl, payload, "className"),
     }),
   },

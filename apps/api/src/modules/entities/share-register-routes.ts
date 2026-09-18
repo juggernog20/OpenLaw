@@ -507,6 +507,69 @@ async function assertSoundRegister(tx: Transaction, entityId: string) {
 }
 
 /**
+ * The ownership edges the registers add: every Entity holder with shares
+ * today, on every register. A holder row alone is not an edge, because a
+ * holder that sold out, or whose entries were removed, no longer owns.
+ */
+async function registerEdges(tx: Transaction) {
+  const holders = await tx
+    .select({
+      id: entityShareholders.id,
+      entityId: entityShareholders.entityId,
+      holderEntityId: entityShareholders.holderEntityId,
+    })
+    .from(entityShareholders)
+    .where(eq(entityShareholders.kind, "entity"));
+  if (holders.length === 0) return [];
+  const issuerIds = [...new Set(holders.map((holder) => holder.entityId))];
+  const entryRows = await tx
+    .select()
+    .from(entityShareEntries)
+    .where(inArray(entityShareEntries.entityId, issuerIds));
+  const today = todayIsoDate();
+  const edges: { ownerEntityId: string; ownedEntityId: string }[] = [];
+  for (const issuerId of issuerIds) {
+    const state = replayRegister(
+      {
+        classes: [],
+        entries: entryRows.filter((row) => row.entityId === issuerId).map(toReplayEntry),
+        certificates: [],
+      },
+      today,
+    );
+    const held = new Map<string, number>();
+    for (const row of state.balances) {
+      held.set(row.holderId, (held.get(row.holderId) ?? 0) + row.balance);
+    }
+    for (const holder of holders) {
+      if (holder.entityId !== issuerId || !holder.holderEntityId) continue;
+      if ((held.get(holder.id) ?? 0) > 0) {
+        edges.push({ ownerEntityId: holder.holderEntityId, ownedEntityId: issuerId });
+      }
+    }
+  }
+  return edges;
+}
+
+/** Drops the issuer's holder rows no entry or certificate names any more. */
+async function pruneHolders(tx: Transaction, entityId: string) {
+  await tx.execute(sql`
+    delete from ${entityShareholders}
+    where ${entityShareholders.entityId} = ${entityId}
+      and not exists (
+        select 1 from ${entityShareEntries}
+        where ${entityShareEntries.entityId} = ${entityId}
+          and (${entityShareEntries.fromHolderId} = ${entityShareholders.id}
+            or ${entityShareEntries.toHolderId} = ${entityShareholders.id})
+      )
+      and not exists (
+        select 1 from ${entityShareCertificates}
+        where ${entityShareCertificates.holderId} = ${entityShareholders.id}
+      )
+  `);
+}
+
+/**
  * A holder Entity owning the issuer is an ownership edge. The issuer
  * owning that holder, through Holdings or through other registers, would
  * close a loop. The loop may pass through an Entity the writer cannot
@@ -524,21 +587,7 @@ async function assertNoRegisterCycle(
       ownedEntityId: entityHoldings.ownedEntityId,
     })
     .from(entityHoldings);
-  const registers = await tx
-    .select({
-      ownerEntityId: entityShareholders.holderEntityId,
-      ownedEntityId: entityShareholders.entityId,
-    })
-    .from(entityShareholders)
-    .where(eq(entityShareholders.kind, "entity"));
-  const rows = [
-    ...holdings,
-    ...registers.flatMap((row) =>
-      row.ownerEntityId
-        ? [{ ownerEntityId: row.ownerEntityId, ownedEntityId: row.ownedEntityId }]
-        : [],
-    ),
-  ];
+  const rows = [...holdings, ...(await registerEdges(tx))];
   const path = ownershipPath(rows, issuerId, holderEntityId);
   if (!path) return;
   const loopIds = [holderEntityId, ...path];
@@ -618,13 +667,13 @@ async function resolveEntry(
   }[body.kind];
   const refuse = (detail: string) => httpError(400, detail);
   if (wants.from === true && !body.from)
-    throw refuse(`A ${body.kind} needs a holder the shares come from.`);
+    throw refuse(`This ${body.kind} needs a holder the shares come from.`);
   if (wants.from === false && body.from)
-    throw refuse(`An ${body.kind} comes from the company, not a holder.`);
+    throw refuse(`This ${body.kind} comes from the company, not a holder.`);
   if (wants.to === true && !body.to)
-    throw refuse(`A ${body.kind} needs a holder the shares go to.`);
+    throw refuse(`This ${body.kind} needs a holder the shares go to.`);
   if (wants.to === false && body.to)
-    throw refuse(`A ${body.kind} goes to the company, not a holder.`);
+    throw refuse(`This ${body.kind} goes to the company, not a holder.`);
   if (wants.toClass && !toShareClass)
     throw refuse("A conversion needs the class the shares become.");
   if (!wants.toClass && toShareClass) throw refuse(`Only a conversion names a second class.`);
@@ -1152,6 +1201,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
           .set({ ...values, updatedAt: new Date() })
           .where(eq(entityShareEntries.id, current.id));
         await writeCertificates(tx, entity.id, current.id, request.body, resolved);
+        await pruneHolders(tx, entity.id);
         await assertSoundRegister(tx, entity.id);
         if (resolved.to?.kind === "entity" && resolved.to.holderEntityId) {
           await assertNoRegisterCycle(tx, request.user, resolved.to.holderEntityId, entity.id);
@@ -1237,6 +1287,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         const classes = await readClasses(tx, entity.id);
         await detachCertificates(tx, current.id);
         await tx.delete(entityShareEntries).where(eq(entityShareEntries.id, current.id));
+        await pruneHolders(tx, entity.id);
         await assertSoundRegister(tx, entity.id);
         await recordEntryActivity(tx, "entity_share_entry.deleted", {
           actorId: request.user.id,

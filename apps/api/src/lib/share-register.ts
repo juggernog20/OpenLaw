@@ -62,7 +62,8 @@ export interface ReplayState {
   treasury: Map<string, number>;
   /** Allotted minus cancelled, per class. Treasury shares are issued. */
   issued: Map<string, number>;
-  /** The first date a holder held anything, and whether they still do. */
+  /** The first date each holder held anything. Whether they still do is
+   * a question for `balances`. */
   memberSince: Map<string, string>;
   /** Certificates issued by an applied entry and not cancelled by one. */
   liveCertificates: ReplayCertificate[];
@@ -110,9 +111,22 @@ export function replayRegister(
   const live = new Map<string, ReplayCertificate>();
   let violation: ReplayViolation | null = null;
 
+  // Totals live in JS numbers, so a sum past the safe-integer range would
+  // round silently. That is a violation too, not a bigger number.
+  const unsafe = (value: number, entry: ReplayEntry) => {
+    if (Number.isSafeInteger(value)) return false;
+    violation ??= {
+      entryId: entry.id,
+      entryNo: entry.entryNo,
+      detail: `Entry ${entry.entryNo} would take a total past the largest count the register can hold.`,
+    };
+    return true;
+  };
+
   const move = (holderId: string, shareClassId: string, delta: number, entry: ReplayEntry) => {
     const k = key(holderId, shareClassId);
     const next = (balances.get(k) ?? 0) + delta;
+    if (unsafe(next, entry)) return;
     if (next < 0 && !violation) {
       violation = {
         entryId: entry.id,
@@ -131,6 +145,7 @@ export function replayRegister(
     what: string,
   ) => {
     const next = (map.get(id) ?? 0) + delta;
+    if (unsafe(next, entry)) return;
     if (next < 0 && !violation) {
       violation = {
         entryId: entry.id,
@@ -207,6 +222,7 @@ export function replayRegister(
         if (certificate.holderId === holderId && certificate.shareClassId === shareClassId)
           certified += certificate.quantity;
       }
+      if (unsafe(certified, entry)) continue;
       if (certified > (balances.get(k) ?? 0)) {
         violation ??= {
           entryId: entry.id,

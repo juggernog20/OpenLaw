@@ -6,6 +6,11 @@
  * a replay of the entries to a date, so the register cannot disagree
  * with itself. Holdings (ENT-003) are projected from it where one
  * exists.
+ *
+ * Every dependant references its parent by (entity_id, id), so a class,
+ * holder or entry can only be named by its own Entity's register; a
+ * single-column key would let a direct write stitch two registers
+ * together.
  */
 
 import { sql } from "drizzle-orm";
@@ -13,17 +18,19 @@ import {
   bigint,
   check,
   date,
+  foreignKey,
   index,
   integer,
   numeric,
   pgTable,
   text,
   timestamp,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { users } from "./auth.js";
 import { entities } from "./entities.js";
 import { uuidPk } from "./helpers.js";
-import { users } from "./auth.js";
 
 export const SHARE_ENTRY_KINDS = [
   "allotment",
@@ -36,6 +43,9 @@ export type ShareEntryKind = (typeof SHARE_ENTRY_KINDS)[number];
 
 export const SHAREHOLDER_KINDS = ["entity", "individual"] as const;
 export type ShareholderKind = (typeof SHAREHOLDER_KINDS)[number];
+
+/** The JS boundary: bigint columns read through `Number`, so nothing above this is stored. */
+const MAX_SAFE = sql.raw("9007199254740991");
 
 const timestamps = () => ({
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -67,17 +77,18 @@ export const entityShareClasses = pgTable(
   },
   (table) => [
     index("entity_share_classes_entity_idx").on(table.entityId),
+    unique("entity_share_classes_entity_id_id_key").on(table.entityId, table.id),
     uniqueIndex("entity_share_classes_live_name_idx")
       .on(table.entityId, sql`lower(${table.name})`)
       .where(sql`${table.archivedAt} is null`),
     check("entity_share_classes_name_length", sql`length(trim(${table.name})) between 1 and 100`),
     check(
       "entity_share_classes_authorized_range",
-      sql`${table.authorized} is null or ${table.authorized} >= 0`,
+      sql`${table.authorized} is null or (${table.authorized} >= 0 and ${table.authorized} <= ${MAX_SAFE})`,
     ),
     check(
       "entity_share_classes_par_value_range",
-      sql`${table.parValue} is null or ${table.parValue} >= 0`,
+      sql`${table.parValue} is null or (${table.parValue} >= 0 and ${table.parValue} <= ${MAX_SAFE})`,
     ),
     check("entity_share_classes_votes_range", sql`${table.votesPerShare} >= 0`),
     check(
@@ -103,6 +114,7 @@ export const entityShareholders = pgTable(
   },
   (table) => [
     index("entity_shareholders_entity_idx").on(table.entityId),
+    unique("entity_shareholders_entity_id_id_key").on(table.entityId, table.id),
     uniqueIndex("entity_shareholders_entity_holder_idx")
       .on(table.entityId, table.holderEntityId)
       .where(sql`${table.kind} = 'entity'`),
@@ -126,18 +138,16 @@ export const entityShareEntries = pgTable(
     entityId: text("entity_id")
       .notNull()
       .references(() => entities.id),
-    /** Per Entity, assigned max + 1 on insert, never reused. */
+    /** Per Entity, from `entity_share_entry_counters`, never reused. */
     entryNo: integer("entry_no").notNull(),
     kind: text("kind", { enum: SHARE_ENTRY_KINDS }).notNull(),
     effectiveOn: date("effective_on").notNull(),
-    shareClassId: text("share_class_id")
-      .notNull()
-      .references(() => entityShareClasses.id),
+    shareClassId: text("share_class_id").notNull(),
     /** Conversion only: the class the shares become. */
-    toShareClassId: text("to_share_class_id").references(() => entityShareClasses.id),
+    toShareClassId: text("to_share_class_id"),
     quantity: bigint("quantity", { mode: "number" }).notNull(),
-    fromHolderId: text("from_holder_id").references(() => entityShareholders.id),
-    toHolderId: text("to_holder_id").references(() => entityShareholders.id),
+    fromHolderId: text("from_holder_id"),
+    toHolderId: text("to_holder_id"),
     /** Minor currency units. */
     pricePerShare: bigint("price_per_share", { mode: "number" }),
     priceCurrency: text("price_currency"),
@@ -150,8 +160,33 @@ export const entityShareEntries = pgTable(
   },
   (table) => [
     uniqueIndex("entity_share_entries_entity_no_idx").on(table.entityId, table.entryNo),
+    unique("entity_share_entries_entity_id_id_key").on(table.entityId, table.id),
     index("entity_share_entries_entity_date_idx").on(table.entityId, table.effectiveOn),
-    check("entity_share_entries_quantity_positive", sql`${table.quantity} > 0`),
+    foreignKey({
+      name: "entity_share_entries_class_fk",
+      columns: [table.entityId, table.shareClassId],
+      foreignColumns: [entityShareClasses.entityId, entityShareClasses.id],
+    }),
+    foreignKey({
+      name: "entity_share_entries_to_class_fk",
+      columns: [table.entityId, table.toShareClassId],
+      foreignColumns: [entityShareClasses.entityId, entityShareClasses.id],
+    }),
+    foreignKey({
+      name: "entity_share_entries_from_holder_fk",
+      columns: [table.entityId, table.fromHolderId],
+      foreignColumns: [entityShareholders.entityId, entityShareholders.id],
+    }),
+    foreignKey({
+      name: "entity_share_entries_to_holder_fk",
+      columns: [table.entityId, table.toHolderId],
+      foreignColumns: [entityShareholders.entityId, entityShareholders.id],
+    }),
+    check("entity_share_entries_entry_no_positive", sql`${table.entryNo} > 0`),
+    check(
+      "entity_share_entries_quantity_positive",
+      sql`${table.quantity} > 0 and ${table.quantity} <= ${MAX_SAFE}`,
+    ),
     check(
       "entity_share_entries_kind_shape",
       sql`case ${table.kind}
@@ -164,7 +199,7 @@ export const entityShareEntries = pgTable(
     ),
     check(
       "entity_share_entries_price_range",
-      sql`${table.pricePerShare} is null or ${table.pricePerShare} >= 0`,
+      sql`${table.pricePerShare} is null or (${table.pricePerShare} >= 0 and ${table.pricePerShare} <= ${MAX_SAFE})`,
     ),
     check(
       "entity_share_entries_text_lengths",
@@ -185,29 +220,46 @@ export const entityShareCertificates = pgTable(
       .notNull()
       .references(() => entities.id),
     number: text("number").notNull(),
-    holderId: text("holder_id")
-      .notNull()
-      .references(() => entityShareholders.id),
-    shareClassId: text("share_class_id")
-      .notNull()
-      .references(() => entityShareClasses.id),
+    holderId: text("holder_id").notNull(),
+    shareClassId: text("share_class_id").notNull(),
     quantity: bigint("quantity", { mode: "number" }).notNull(),
     distinctiveNumbers: text("distinctive_numbers"),
-    issuedByEntryId: text("issued_by_entry_id")
-      .notNull()
-      .references(() => entityShareEntries.id),
-    cancelledByEntryId: text("cancelled_by_entry_id").references(() => entityShareEntries.id),
+    issuedByEntryId: text("issued_by_entry_id").notNull(),
+    cancelledByEntryId: text("cancelled_by_entry_id"),
     ...timestamps(),
   },
   (table) => [
     uniqueIndex("entity_share_certificates_entity_number_idx").on(table.entityId, table.number),
     index("entity_share_certificates_issued_idx").on(table.issuedByEntryId),
     index("entity_share_certificates_cancelled_idx").on(table.cancelledByEntryId),
+    foreignKey({
+      name: "entity_share_certificates_holder_fk",
+      columns: [table.entityId, table.holderId],
+      foreignColumns: [entityShareholders.entityId, entityShareholders.id],
+    }),
+    foreignKey({
+      name: "entity_share_certificates_class_fk",
+      columns: [table.entityId, table.shareClassId],
+      foreignColumns: [entityShareClasses.entityId, entityShareClasses.id],
+    }),
+    foreignKey({
+      name: "entity_share_certificates_issued_fk",
+      columns: [table.entityId, table.issuedByEntryId],
+      foreignColumns: [entityShareEntries.entityId, entityShareEntries.id],
+    }),
+    foreignKey({
+      name: "entity_share_certificates_cancelled_fk",
+      columns: [table.entityId, table.cancelledByEntryId],
+      foreignColumns: [entityShareEntries.entityId, entityShareEntries.id],
+    }),
     check(
       "entity_share_certificates_number_length",
       sql`length(trim(${table.number})) between 1 and 50`,
     ),
-    check("entity_share_certificates_quantity_positive", sql`${table.quantity} > 0`),
+    check(
+      "entity_share_certificates_quantity_positive",
+      sql`${table.quantity} > 0 and ${table.quantity} <= ${MAX_SAFE}`,
+    ),
     check(
       "entity_share_certificates_distinctive_length",
       sql`${table.distinctiveNumbers} is null or length(${table.distinctiveNumbers}) <= 200`,
@@ -220,12 +272,16 @@ export const entityShareCertificates = pgTable(
  * reused, so a deleted entry leaves a gap and the counter, not
  * `max(entry_no)`, says what comes next.
  */
-export const entityShareEntryCounters = pgTable("entity_share_entry_counters", {
-  entityId: text("entity_id")
-    .primaryKey()
-    .references(() => entities.id),
-  lastEntryNo: integer("last_entry_no").notNull().default(0),
-});
+export const entityShareEntryCounters = pgTable(
+  "entity_share_entry_counters",
+  {
+    entityId: text("entity_id")
+      .primaryKey()
+      .references(() => entities.id),
+    lastEntryNo: integer("last_entry_no").notNull().default(0),
+  },
+  (table) => [check("entity_share_entry_counters_non_negative", sql`${table.lastEntryNo} >= 0`)],
+);
 
 export type EntityShareClass = typeof entityShareClasses.$inferSelect;
 export type EntityShareholder = typeof entityShareholders.$inferSelect;

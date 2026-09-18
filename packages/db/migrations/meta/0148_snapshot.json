@@ -1,5 +1,5 @@
 {
-  "id": "6683e4d4-02c4-4049-8177-ec7ac83dc602",
+  "id": "9752ec15-c696-4db8-a73e-a907e8bfac35",
   "prevId": "04aab761-bba0-4e67-823d-11f47d2fe03b",
   "version": "7",
   "dialect": "postgresql",
@@ -7791,39 +7791,39 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "entity_share_certificates_holder_id_entity_shareholders_id_fk": {
-          "name": "entity_share_certificates_holder_id_entity_shareholders_id_fk",
+        "entity_share_certificates_holder_fk": {
+          "name": "entity_share_certificates_holder_fk",
           "tableFrom": "entity_share_certificates",
           "tableTo": "entity_shareholders",
-          "columnsFrom": ["holder_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": ["entity_id", "holder_id"],
+          "columnsTo": ["entity_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "entity_share_certificates_share_class_id_entity_share_classes_id_fk": {
-          "name": "entity_share_certificates_share_class_id_entity_share_classes_id_fk",
+        "entity_share_certificates_class_fk": {
+          "name": "entity_share_certificates_class_fk",
           "tableFrom": "entity_share_certificates",
           "tableTo": "entity_share_classes",
-          "columnsFrom": ["share_class_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": ["entity_id", "share_class_id"],
+          "columnsTo": ["entity_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "entity_share_certificates_issued_by_entry_id_entity_share_entries_id_fk": {
-          "name": "entity_share_certificates_issued_by_entry_id_entity_share_entries_id_fk",
+        "entity_share_certificates_issued_fk": {
+          "name": "entity_share_certificates_issued_fk",
           "tableFrom": "entity_share_certificates",
           "tableTo": "entity_share_entries",
-          "columnsFrom": ["issued_by_entry_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": ["entity_id", "issued_by_entry_id"],
+          "columnsTo": ["entity_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "entity_share_certificates_cancelled_by_entry_id_entity_share_entries_id_fk": {
-          "name": "entity_share_certificates_cancelled_by_entry_id_entity_share_entries_id_fk",
+        "entity_share_certificates_cancelled_fk": {
+          "name": "entity_share_certificates_cancelled_fk",
           "tableFrom": "entity_share_certificates",
           "tableTo": "entity_share_entries",
-          "columnsFrom": ["cancelled_by_entry_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": ["entity_id", "cancelled_by_entry_id"],
+          "columnsTo": ["entity_id", "id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -7838,7 +7838,7 @@
         },
         "entity_share_certificates_quantity_positive": {
           "name": "entity_share_certificates_quantity_positive",
-          "value": "\"entity_share_certificates\".\"quantity\" > 0"
+          "value": "\"entity_share_certificates\".\"quantity\" > 0 and \"entity_share_certificates\".\"quantity\" <= 9007199254740991"
         },
         "entity_share_certificates_distinctive_length": {
           "name": "entity_share_certificates_distinctive_length",
@@ -7979,7 +7979,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "entity_share_classes_entity_id_id_key": {
+          "name": "entity_share_classes_entity_id_id_key",
+          "nullsNotDistinct": false,
+          "columns": ["entity_id", "id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {
         "entity_share_classes_name_length": {
@@ -7988,11 +7994,11 @@
         },
         "entity_share_classes_authorized_range": {
           "name": "entity_share_classes_authorized_range",
-          "value": "\"entity_share_classes\".\"authorized\" is null or \"entity_share_classes\".\"authorized\" >= 0"
+          "value": "\"entity_share_classes\".\"authorized\" is null or (\"entity_share_classes\".\"authorized\" >= 0 and \"entity_share_classes\".\"authorized\" <= 9007199254740991)"
         },
         "entity_share_classes_par_value_range": {
           "name": "entity_share_classes_par_value_range",
-          "value": "\"entity_share_classes\".\"par_value\" is null or \"entity_share_classes\".\"par_value\" >= 0"
+          "value": "\"entity_share_classes\".\"par_value\" is null or (\"entity_share_classes\".\"par_value\" >= 0 and \"entity_share_classes\".\"par_value\" <= 9007199254740991)"
         },
         "entity_share_classes_votes_range": {
           "name": "entity_share_classes_votes_range",
@@ -8180,42 +8186,6 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "entity_share_entries_share_class_id_entity_share_classes_id_fk": {
-          "name": "entity_share_entries_share_class_id_entity_share_classes_id_fk",
-          "tableFrom": "entity_share_entries",
-          "tableTo": "entity_share_classes",
-          "columnsFrom": ["share_class_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "entity_share_entries_to_share_class_id_entity_share_classes_id_fk": {
-          "name": "entity_share_entries_to_share_class_id_entity_share_classes_id_fk",
-          "tableFrom": "entity_share_entries",
-          "tableTo": "entity_share_classes",
-          "columnsFrom": ["to_share_class_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "entity_share_entries_from_holder_id_entity_shareholders_id_fk": {
-          "name": "entity_share_entries_from_holder_id_entity_shareholders_id_fk",
-          "tableFrom": "entity_share_entries",
-          "tableTo": "entity_shareholders",
-          "columnsFrom": ["from_holder_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "entity_share_entries_to_holder_id_entity_shareholders_id_fk": {
-          "name": "entity_share_entries_to_holder_id_entity_shareholders_id_fk",
-          "tableFrom": "entity_share_entries",
-          "tableTo": "entity_shareholders",
-          "columnsFrom": ["to_holder_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "entity_share_entries_recorded_by_users_id_fk": {
           "name": "entity_share_entries_recorded_by_users_id_fk",
           "tableFrom": "entity_share_entries",
@@ -8224,15 +8194,61 @@
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "entity_share_entries_class_fk": {
+          "name": "entity_share_entries_class_fk",
+          "tableFrom": "entity_share_entries",
+          "tableTo": "entity_share_classes",
+          "columnsFrom": ["entity_id", "share_class_id"],
+          "columnsTo": ["entity_id", "id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "entity_share_entries_to_class_fk": {
+          "name": "entity_share_entries_to_class_fk",
+          "tableFrom": "entity_share_entries",
+          "tableTo": "entity_share_classes",
+          "columnsFrom": ["entity_id", "to_share_class_id"],
+          "columnsTo": ["entity_id", "id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "entity_share_entries_from_holder_fk": {
+          "name": "entity_share_entries_from_holder_fk",
+          "tableFrom": "entity_share_entries",
+          "tableTo": "entity_shareholders",
+          "columnsFrom": ["entity_id", "from_holder_id"],
+          "columnsTo": ["entity_id", "id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "entity_share_entries_to_holder_fk": {
+          "name": "entity_share_entries_to_holder_fk",
+          "tableFrom": "entity_share_entries",
+          "tableTo": "entity_shareholders",
+          "columnsFrom": ["entity_id", "to_holder_id"],
+          "columnsTo": ["entity_id", "id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "entity_share_entries_entity_id_id_key": {
+          "name": "entity_share_entries_entity_id_id_key",
+          "nullsNotDistinct": false,
+          "columns": ["entity_id", "id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {
+        "entity_share_entries_entry_no_positive": {
+          "name": "entity_share_entries_entry_no_positive",
+          "value": "\"entity_share_entries\".\"entry_no\" > 0"
+        },
         "entity_share_entries_quantity_positive": {
           "name": "entity_share_entries_quantity_positive",
-          "value": "\"entity_share_entries\".\"quantity\" > 0"
+          "value": "\"entity_share_entries\".\"quantity\" > 0 and \"entity_share_entries\".\"quantity\" <= 9007199254740991"
         },
         "entity_share_entries_kind_shape": {
           "name": "entity_share_entries_kind_shape",
@@ -8240,7 +8256,7 @@
         },
         "entity_share_entries_price_range": {
           "name": "entity_share_entries_price_range",
-          "value": "\"entity_share_entries\".\"price_per_share\" is null or \"entity_share_entries\".\"price_per_share\" >= 0"
+          "value": "\"entity_share_entries\".\"price_per_share\" is null or (\"entity_share_entries\".\"price_per_share\" >= 0 and \"entity_share_entries\".\"price_per_share\" <= 9007199254740991)"
         },
         "entity_share_entries_text_lengths": {
           "name": "entity_share_entries_text_lengths",
@@ -8282,7 +8298,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "entity_share_entry_counters_non_negative": {
+          "name": "entity_share_entry_counters_non_negative",
+          "value": "\"entity_share_entry_counters\".\"last_entry_no\" >= 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.entity_shareholders": {
@@ -8394,7 +8415,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "entity_shareholders_entity_id_id_key": {
+          "name": "entity_shareholders_entity_id_id_key",
+          "nullsNotDistinct": false,
+          "columns": ["entity_id", "id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {
         "entity_shareholders_kind_shape": {
