@@ -3,10 +3,10 @@
 /**
  * The type editor screen (#85: one machinery, every type editor), from
  * the ST15/ST16 frames of settings.pen (DES-022): one taxonomy type's
- * own screen, reached from its row on a Types pane. The left card
+ * own screen, reached from its row on a Types pane. The details card
  * edits identity — display name and description on DES-017
  * commit-on-confirm inputs — and the
- * right card is the attachment surface: catalog fields in per-type
+ * main card is the attachment surface: catalog fields in per-type
  * order with drag or arrow-key reorder, a per-attachment required
  * checkbox, detach, and an Attach menu over the module's attachable
  * catalog fields. Every change applies immediately on save (SET-003).
@@ -16,20 +16,21 @@
  *
  * Four parts are per mount (#354, #355, #400, ST14).
  *
- * **The right card is optional.** A mount with no attachment surface
- * omits `attachments` and the screen is the left card alone.
+ * **The fields card is optional.** A mount with no attachment surface
+ * omits `attachments` and the screen is the details card alone.
  *
- * **The left card takes one more control.** `identityExtra` draws below
+ * **The details card takes one more control.** `identityExtra` draws below
  * the description — ST14's Target select and its help line. It is the mount's
  * own column, so it owns its own save, exactly as the extras hook owns
  * its own columns on the API side.
  *
- * **The right card takes locked rows above the attachments.** `basics`
+ * **The fields card includes questions that cannot be removed.** `basics`
  * is what a form always collects whatever an Administrator configures
  * — ST14's Title, Description, Attachments, Department, and Urgency (INT-002).
  * They are stated, not configured: no catalog row is behind them,
  * nothing detaches them, and their required flags are facts, so the
- * card draws them disabled and never offers them in the Attach menu.
+ * card disables their required checkboxes and omits them from the Attach menu.
+ * With `formOrder`, their position can change alongside attached fields.
  *
  * **A mount may lock the required box on some attached rows.**
  * `requiredRule` names the field types whose box this mount never
@@ -43,6 +44,8 @@ import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "rea
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { ArrowLeft, GripVertical, Lock, Plus, X } from "lucide-react";
+import { resolveIntakeFieldOrder } from "@openlaw/shared";
+import { DefaultFields } from "./default-fields";
 import { FieldEditorDialog } from "./field-editor-dialog";
 import { PageTitle } from "./page-title";
 import { SettingsCard } from "./settings-card";
@@ -84,6 +87,7 @@ export type EditorFieldType =
 
 /** One attached field, as the editor renders it. */
 export interface AttachedFieldRow {
+  builtInKey?: string | null;
   fieldId: string;
   slug: string;
   displayName: string;
@@ -95,6 +99,7 @@ export interface AttachedFieldRow {
 
 /** One catalog row the Attach menu offers. */
 export interface EditorCatalogRow {
+  builtInKey?: string | null;
   id: string;
   displayName: string;
   moduleScope: string;
@@ -152,7 +157,7 @@ export interface TypeEditorIdentityApi {
   ): Promise<ProblemResult<EditorTypeRow>>;
 }
 
-/** The attachment half, implemented by a mount that draws the right card. */
+/** The attachment half, implemented by a mount that draws the fields card. */
 export interface TypeEditorAttachmentsApi {
   attach(id: string, fieldId: string): Promise<ProblemResult<AttachedFieldRow>>;
   detach(id: string, fieldId: string): Promise<{ ok: boolean } & ProblemResult<never>>;
@@ -164,10 +169,10 @@ export interface TypeEditorAttachmentsApi {
   reorder(id: string, fieldIds: string[]): Promise<ProblemResult<AttachedFieldRow[]>>;
 }
 
-/** Both halves, which is what a mount with a right card implements. */
+/** Both halves, which is what a mount with a fields card implements. */
 export type TypeEditorApi = TypeEditorIdentityApi & TypeEditorAttachmentsApi;
 
-/** The left card's vocabulary, defined per module with `defineMessages`. */
+/** The details card's vocabulary, defined per module with `defineMessages`. */
 export interface TypeEditorIdentityMessages {
   allTypes: MessageDescriptor;
   displayName: MessageDescriptor;
@@ -178,7 +183,7 @@ export interface TypeEditorIdentityMessages {
   inUse?: MessageDescriptor;
 }
 
-/** The right card's vocabulary, for a mount that draws one. */
+/** The fields card's vocabulary, for a mount that draws one. */
 export interface TypeEditorAttachmentsMessages {
   attachedFields: MessageDescriptor;
   fieldColumn: MessageDescriptor;
@@ -208,7 +213,7 @@ export interface TypeEditorBasics {
   rows: readonly EditorBasicRow[];
   /** The header caption over them — "Basics are always on the form". */
   caption: MessageDescriptor;
-  /** What a reader hears in place of the grip on a locked row. */
+  /** Explains why a basic question cannot be removed or made optional. */
   locked: MessageDescriptor;
 }
 
@@ -216,26 +221,29 @@ export interface TypeEditorBasics {
 export type TypeEditorMessages = TypeEditorIdentityMessages & TypeEditorAttachmentsMessages;
 
 /**
- * The right card, for a mount that has one.
+ * The fields card, for a mount that has one.
  *
  * The four parts travel together because a card with a catalog and no
  * way to attach from it, or an API with no rows to act on, is not a
  * half-built card — it is a bug. Request types mount the editor without
  * it: the form definition is #355's, and until then the screen is the
- * left card alone.
+ * details card alone.
  */
 export interface TypeEditorAttachments {
+  defaultFieldsModule?: "contract" | "matter";
+  formOrder?: {
+    initial: string[];
+    save(typeId: string, keys: string[]): Promise<ProblemResult<string[]>>;
+  };
   initialAttached: AttachedFieldRow[];
-  createFieldModule?: "contract" | "matter";
+  createFieldModule?: "contract" | "matter" | "choose";
   /** The module's attachable catalog (live fields, already scoped). */
   catalog: EditorCatalogRow[];
   api: TypeEditorAttachmentsApi;
   messages: TypeEditorAttachmentsMessages;
   /**
-   * Rows the mount states rather than configures, drawn locked above
-   * the attachments (ST14's fixed basics). The two type editors have
-   * none: every field on a contract type is attached, so there is
-   * nothing to state.
+   * Always-present questions. With formOrder, these can move among the
+   * attachments; otherwise they appear above them.
    */
   basics?: TypeEditorBasics;
   /**
@@ -262,7 +270,7 @@ function typeLabel(intl: IntlShape, fieldType: EditorFieldType): string {
 }
 
 /**
- * The right card (ST15/ST16): the module's catalog fields attached to
+ * The fields card (ST15/ST16): the module's catalog fields attached to
  * one type, in per-type order, with drag or arrow-key reorder, a
  * per-attachment required checkbox, detach, and an Attach menu over
  * what the module's scope rule allows. A mount that has no attachment
@@ -271,6 +279,8 @@ function typeLabel(intl: IntlShape, fieldType: EditorFieldType): string {
 function AttachedFieldsCard({
   typeId,
   initialAttached,
+  defaultFieldsModule,
+  formOrder,
   createFieldModule,
   catalog,
   api,
@@ -281,11 +291,33 @@ function AttachedFieldsCard({
   const intl = useIntl();
 
   /** Display the field type beside its name. */
-  function fieldCaption(row: { fieldType: EditorFieldType }) {
+  function fieldCaption(row: { fieldType: EditorFieldType; builtInKey?: string | null }) {
+    if (row.builtInKey === "counterparties")
+      return intl.formatMessage({
+        id: "settings.fields.counterpartyLookup",
+        defaultMessage: "Counterparty lookup",
+      });
     return typeLabel(intl, row.fieldType);
   }
 
   const [rows, setRows] = useState<AttachedFieldRow[]>(initialAttached);
+  const [savedFormOrder, setSavedFormOrder] = useState(formOrder?.initial ?? []);
+  const orderedKeys = formOrder
+    ? resolveIntakeFieldOrder(
+        rows.map((row) => row.fieldId),
+        savedFormOrder,
+      )
+    : rows.map((row) => row.fieldId);
+  const entries = orderedKeys.map((key) => {
+    const basic = formOrder ? basics?.rows.find((item) => `basic:${item.key}` === key) : undefined;
+    const row = rows.find((item) => item.fieldId === key);
+    return {
+      key,
+      basic,
+      row,
+      name: basic ? intl.formatMessage(basic.name) : (row?.displayName ?? key),
+    };
+  });
   const [createdFields, setCreatedFields] = useState<EditorCatalogRow[]>([]);
   const [addingField, setAddingField] = useState(false);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
@@ -301,7 +333,13 @@ function AttachedFieldsCard({
   const [announcement, setAnnouncement] = useState("");
   const dragFrom = useRef<number | null>(null);
 
-  const attachable: EditorCatalogRow[] = [...catalog, ...createdFields].filter(
+  const availableCreatedFields = createdFields.filter(
+    (field) =>
+      !createFieldModule ||
+      createFieldModule === "choose" ||
+      field.moduleScope === createFieldModule,
+  );
+  const attachable: EditorCatalogRow[] = [...catalog, ...availableCreatedFields].filter(
     (field) => !rows.some((row) => row.fieldId === field.id),
   );
   const matchingFields = attachable
@@ -387,8 +425,33 @@ function AttachedFieldsCard({
   /** One validated move from the grip (arrow key or drop) — commit the
    * permutation and announce the landing position (DES-020). */
   async function move(fromIndex: number, toIndex: number) {
-    if (toIndex < 0 || toIndex >= rows.length || fromIndex === toIndex) return;
+    if (toIndex < 0 || toIndex >= entries.length || fromIndex === toIndex) return;
     if (orderStatus === "saving") return;
+    if (formOrder) {
+      const keys = [...orderedKeys];
+      const moved = keys.splice(fromIndex, 1)[0]!;
+      keys.splice(toIndex, 0, moved);
+      setOrderStatus("saving");
+      setOrderError(undefined);
+      const { data, detail } = await formOrder
+        .save(typeId, keys)
+        .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
+      if (data) {
+        setSavedFormOrder(data);
+        setOrderStatus("saved");
+        setAnnouncement(
+          intl.formatMessage(messages.moved, {
+            name: entries[fromIndex]!.name,
+            position: toIndex + 1,
+            total: entries.length,
+          }),
+        );
+      } else {
+        setOrderStatus("error");
+        setOrderError(detail);
+      }
+      return;
+    }
     const row = rows[fromIndex]!;
     const fieldIds = rows.map(({ fieldId }) => fieldId);
     fieldIds.splice(fromIndex, 1);
@@ -415,6 +478,40 @@ function AttachedFieldsCard({
     }
   }
 
+  function renderGrip(name: string, index: number) {
+    return (
+      <span className="flex w-9 shrink-0 justify-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="cursor-grab px-1"
+          // aria-disabled, not disabled: a disabled grip
+          // drops keyboard focus mid-reorder (DES-011);
+          // `move` already refuses while a save is in
+          // flight.
+          aria-disabled={orderStatus === "saving"}
+          aria-label={intl.formatMessage(messages.reorder, {
+            name,
+            position: index + 1,
+            total: entries.length,
+          })}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              void move(index, index - 1);
+            }
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              void move(index, index + 1);
+            }
+          }}
+        >
+          <GripVertical size={16} aria-hidden="true" className="text-muted" />
+        </Button>
+      </span>
+    );
+  }
+
   function drop(event: DragEvent, targetIndex: number) {
     event.preventDefault();
     const from = dragFrom.current;
@@ -424,9 +521,11 @@ function AttachedFieldsCard({
   }
 
   return (
-    <div className="flex min-w-0 flex-[1_1_20rem] flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <SettingsCard
         title={<FormattedMessage {...messages.attachedFields} />}
+        className="max-w-none"
+        collapsible={!!defaultFieldsModule}
         flush
         actions={
           <span className="flex items-center gap-2">
@@ -465,7 +564,7 @@ function AttachedFieldsCard({
             the disabled box, and the muted caption already say locked,
             and fading text the reader still has to read would drop it
             under DES-011's contrast floor. */}
-        {locked && locked.rows.length > 0 && (
+        {locked && !formOrder && locked.rows.length > 0 && (
           // Two lists in one card, so each says which it is: a reader
           // moving between them hears "always on the form" and the
           // card's own title rather than two anonymous lists.
@@ -509,100 +608,119 @@ function AttachedFieldsCard({
           </ul>
         )}
         <ul tabIndex={-1} aria-label={intl.formatMessage(messages.attachedFields)}>
-          {rows.map((row, index) => (
-            <li
-              key={row.fieldId}
-              draggable
-              onDragStart={() => {
-                dragFrom.current = index;
-              }}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => drop(event, index)}
-              className="flex h-11 items-center border-b border-border-muted pe-3"
-            >
-              <span className="flex w-9 shrink-0 justify-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="cursor-grab px-1"
-                  // aria-disabled, not disabled: a disabled grip
-                  // drops keyboard focus mid-reorder (DES-011);
-                  // `move` already refuses while a save is in
-                  // flight.
-                  aria-disabled={orderStatus === "saving"}
-                  aria-label={intl.formatMessage(messages.reorder, {
-                    name: row.displayName,
-                    position: index + 1,
-                    total: rows.length,
-                  })}
-                  onKeyDown={(event) => {
-                    if (event.key === "ArrowUp") {
-                      event.preventDefault();
-                      void move(index, index - 1);
-                    }
-                    if (event.key === "ArrowDown") {
-                      event.preventDefault();
-                      void move(index, index + 1);
-                    }
+          {entries.map((entry, index) => {
+            if (entry.basic) {
+              const basic = entry.basic;
+              return (
+                <li
+                  key={entry.key}
+                  draggable
+                  onDragStart={() => {
+                    dragFrom.current = index;
                   }}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => drop(event, index)}
+                  className="flex min-h-11 items-center border-b border-border-muted py-2 pe-3"
                 >
-                  <GripVertical size={16} aria-hidden="true" className="text-muted" />
-                </Button>
-              </span>
-              <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
-                <span className="truncate text-base font-medium text-primary">
-                  {row.displayName}
-                </span>
-                <span className="text-sm whitespace-nowrap text-muted">{fieldCaption(row)}</span>
-              </span>
-              <span className="flex w-24 items-center px-3">
-                <Checkbox
-                  checked={row.isRequired}
-                  disabled={isRequiredLocked(row) || rowStatus[row.fieldId] === "saving"}
-                  aria-label={intl.formatMessage(messages.requiredFor, {
-                    name: row.displayName,
-                  })}
-                  // The reason is the box's description, not a sentence
-                  // that happens to sit beside it — a reader that lands
-                  // on the box hears why it is shut.
-                  aria-describedby={
-                    isRequiredLocked(row) ? `required-locked-${row.fieldId}` : undefined
-                  }
-                  onCheckedChange={(checked) => void toggleRequired(row, checked === true)}
-                />
-                {/* A disabled box says "not yours to set" and nothing
-                    more, so the reason rides beside it. The help line
-                    under the card says the same thing on the screen. */}
-                {lockedRequired && isRequiredLocked(row) && (
-                  <span id={`required-locked-${row.fieldId}`} className="sr-only">
-                    <FormattedMessage
-                      {...lockedRequired.reason}
-                      values={{ name: row.displayName }}
+                  {renderGrip(entry.name, index)}
+                  <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 ps-1">
+                    <span className="text-base font-medium text-primary">{entry.name}</span>
+                    <span className="text-sm text-muted">
+                      <FormattedMessage {...basic.caption} />
+                    </span>
+                  </span>
+                  <span className="flex w-24 shrink-0 items-center px-3">
+                    <Checkbox
+                      checked={basic.isRequired}
+                      disabled
+                      aria-label={intl.formatMessage(messages.requiredFor, { name: entry.name })}
                     />
                   </span>
-                )}
-              </span>
-              <span className="flex items-center gap-1">
-                <StatusNote
-                  status={rowStatus[row.fieldId] ?? "idle"}
-                  detail={rowError[row.fieldId]}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="px-1.5"
-                  disabled={rowStatus[row.fieldId] === "saving"}
-                  aria-label={intl.formatMessage(messages.detach, {
-                    name: row.displayName,
-                  })}
-                  onClick={() => void detach(row)}
-                >
-                  <X size={16} aria-hidden="true" className="text-muted" />
-                </Button>
-              </span>
-            </li>
-          ))}
-          {rows.length === 0 && (
+                  <span className="flex w-8 shrink-0 justify-center">
+                    <Lock size={16} aria-hidden="true" className="text-muted" />
+                    <span className="sr-only">
+                      <FormattedMessage {...basics!.locked} values={{ name: entry.name }} />
+                    </span>
+                  </span>
+                </li>
+              );
+            }
+            const row = entry.row!;
+            return (
+              <li
+                key={row.fieldId}
+                draggable
+                onDragStart={() => {
+                  dragFrom.current = index;
+                }}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => drop(event, index)}
+                className="flex h-11 items-center border-b border-border-muted pe-3"
+              >
+                {renderGrip(row.displayName, index)}
+                <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
+                  <span className="truncate text-base font-medium text-primary">
+                    {row.displayName}
+                  </span>
+                  <span className="text-sm whitespace-nowrap text-muted">
+                    {row.builtInKey && (
+                      <FormattedMessage
+                        id="settings.typeEditor.defaultFieldPrefix"
+                        defaultMessage="Default · "
+                      />
+                    )}
+                    {fieldCaption(row)}
+                  </span>
+                </span>
+                <span className="flex w-24 items-center px-3">
+                  <Checkbox
+                    checked={row.isRequired}
+                    disabled={isRequiredLocked(row) || rowStatus[row.fieldId] === "saving"}
+                    aria-label={intl.formatMessage(messages.requiredFor, {
+                      name: row.displayName,
+                    })}
+                    // The reason is the box's description, not a sentence
+                    // that happens to sit beside it — a reader that lands
+                    // on the box hears why it is shut.
+                    aria-describedby={
+                      isRequiredLocked(row) ? `required-locked-${row.fieldId}` : undefined
+                    }
+                    onCheckedChange={(checked) => void toggleRequired(row, checked === true)}
+                  />
+                  {/* A disabled box says "not yours to set" and nothing
+                    more, so the reason rides beside it. The help line
+                    under the card says the same thing on the screen. */}
+                  {lockedRequired && isRequiredLocked(row) && (
+                    <span id={`required-locked-${row.fieldId}`} className="sr-only">
+                      <FormattedMessage
+                        {...lockedRequired.reason}
+                        values={{ name: row.displayName }}
+                      />
+                    </span>
+                  )}
+                </span>
+                <span className="flex items-center gap-1">
+                  <StatusNote
+                    status={rowStatus[row.fieldId] ?? "idle"}
+                    detail={rowError[row.fieldId]}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="px-1.5"
+                    disabled={rowStatus[row.fieldId] === "saving"}
+                    aria-label={intl.formatMessage(messages.detach, {
+                      name: row.displayName,
+                    })}
+                    onClick={() => void detach(row)}
+                  >
+                    <X size={16} aria-hidden="true" className="text-muted" />
+                  </Button>
+                </span>
+              </li>
+            );
+          })}
+          {entries.length === 0 && (
             <li className="flex h-11 items-center border-b border-border-muted px-4 text-sm text-muted">
               <FormattedMessage {...messages.empty} />
             </li>
@@ -701,7 +819,15 @@ function AttachedFieldsCard({
                     onSelect={() => void attach(field)}
                   >
                     <span className="text-base text-primary">{field.displayName}</span>
-                    <span className="text-sm text-muted">{fieldCaption(field)}</span>
+                    <span className="text-sm text-muted">
+                      {field.builtInKey && (
+                        <FormattedMessage
+                          id="settings.typeEditor.defaultFieldPrefix"
+                          defaultMessage="Default · "
+                        />
+                      )}
+                      {fieldCaption(field)}
+                    </span>
                   </DropdownMenuItem>
                 ))}
                 {matchingFields.length === 0 && (
@@ -730,7 +856,8 @@ function AttachedFieldsCard({
       {addingField && createFieldModule && (
         <FieldEditorDialog
           target={null}
-          module={createFieldModule}
+          module={createFieldModule === "choose" ? "contract" : createFieldModule}
+          allowModuleSelection={createFieldModule === "choose"}
           onOpenChange={setAddingField}
           onRowChanged={() => {}}
           onCloseAutoFocus={(event) => {
@@ -781,14 +908,14 @@ export function TypeEditorScreen({
   api: TypeEditorIdentityApi;
   messages: TypeEditorIdentityMessages;
   /**
-   * One more control on the left card, below the description (ST14's Target
+   * One more control on the details card, below the description (ST14's Target
    * select and its help line). It owns its own save, because what it
    * writes is the mount's column and not the shared identity — see the
    * request-type editor, the only mount that passes one.
    */
   identityExtra?: ReactNode;
   extraCards?: ReactNode;
-  /** The right card; omit for a mount that has no attachment surface. */
+  /** The fields card; omit for a mount that has no attachment surface. */
   attachments?: TypeEditorAttachments;
 }>) {
   const [saved, setSaved] = useState<EditorTypeRow>(initialType);
@@ -850,7 +977,7 @@ export function TypeEditorScreen({
   return (
     <>
       <PageTitle title={saved.displayName} />
-      <div className="flex w-full max-w-270 flex-col gap-4">
+      <div className="@container/type-editor flex w-full max-w-270 flex-col gap-4">
         {tabs}
         <Link
           to={backPath}
@@ -859,8 +986,22 @@ export function TypeEditorScreen({
           <ArrowLeft size={16} aria-hidden="true" />
           <FormattedMessage {...messages.allTypes} />
         </Link>
-        <div className="flex flex-wrap items-start gap-4">
-          <div className="flex min-w-0 max-w-full flex-[0_1_35rem] flex-col gap-4">
+        <div
+          className={
+            attachments
+              ? "grid min-w-0 grid-cols-1 items-start gap-4 @3xl/type-editor:grid-cols-[minmax(0,1fr)_20rem]"
+              : "grid min-w-0 grid-cols-1 items-start gap-4"
+          }
+        >
+          {attachments && (
+            <div className="flex min-w-0 flex-col gap-4">
+              {attachments.defaultFieldsModule && (
+                <DefaultFields module={attachments.defaultFieldsModule} />
+              )}
+              <AttachedFieldsCard typeId={saved.id} {...attachments} />
+            </div>
+          )}
+          <div className="flex min-w-0 flex-col gap-4">
             <SettingsCard title={saved.displayName}>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="type-display-name">
@@ -912,8 +1053,6 @@ export function TypeEditorScreen({
             </SettingsCard>
             {extraCards}
           </div>
-
-          {attachments && <AttachedFieldsCard typeId={saved.id} {...attachments} />}
         </div>
       </div>
     </>

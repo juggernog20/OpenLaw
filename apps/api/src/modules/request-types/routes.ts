@@ -50,10 +50,12 @@ import {
   eq,
   matterTypes,
   requestTypes,
+  requestTypeFields,
   type Executor,
   type RequestType,
 } from "@openlaw/db";
-import type { ChangedFields } from "@openlaw/shared";
+import { resolveIntakeFieldOrder, type ChangedFields } from "@openlaw/shared";
+import { selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
 import { requestTypeUsage } from "../requests/type-usage.js";
 import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
@@ -109,6 +111,7 @@ export const requestTypesRoutes = taxonomyRoutes({
   recordNoun: { singular: "request", plural: "requests" },
   extras: {
     rowSchema: {
+      formFieldOrder: z.array(z.string()),
       turnaroundDays: z.number().int().nullable(),
       targetModule: TargetModuleSchema.nullable(),
       targetTypeId: z.string().nullable(),
@@ -126,6 +129,7 @@ export const requestTypesRoutes = taxonomyRoutes({
     projectRow: (row, counts) => {
       const type = row as RequestType;
       return {
+        formFieldOrder: type.formFieldOrder,
         turnaroundDays: type.turnaroundDays,
         targetModule: type.targetModule as TargetModule | null,
         targetTypeId: targetTypeId(type),
@@ -133,6 +137,7 @@ export const requestTypesRoutes = taxonomyRoutes({
       };
     },
     patchSchema: {
+      formFieldOrder: z.array(z.string().min(1)).max(1005).optional(),
       turnaroundDays: z.number().int().min(0).max(36500).nullable().optional(),
       targetModule: TargetModuleSchema.nullable().optional(),
       targetTypeId: z.string().nullable().optional(),
@@ -143,6 +148,25 @@ export const requestTypesRoutes = taxonomyRoutes({
       const current = row as RequestType;
       const columns: Partial<RequestType> = {};
       const changed: ChangedFields = {};
+      if (body.formFieldOrder !== undefined) {
+        const attached = await selectAttachedFields(tx, requestTypeFields, current.id);
+        const expected = resolveIntakeFieldOrder(attached.map((field) => field.fieldId));
+        const order = body.formFieldOrder;
+        if (
+          order.length !== expected.length ||
+          new Set(order).size !== order.length ||
+          order.some((key) => !expected.includes(key))
+        ) {
+          throw httpError(
+            400,
+            "Include every default and attached field exactly once. Refresh the form and try again.",
+          );
+        }
+        if (JSON.stringify(order) !== JSON.stringify(current.formFieldOrder)) {
+          columns.formFieldOrder = order;
+          changed.formFieldOrder = { from: current.formFieldOrder, to: order };
+        }
+      }
       if (body.turnaroundDays !== undefined && body.turnaroundDays !== current.turnaroundDays) {
         columns.turnaroundDays = body.turnaroundDays;
         changed.turnaroundDays = { from: current.turnaroundDays, to: body.turnaroundDays };

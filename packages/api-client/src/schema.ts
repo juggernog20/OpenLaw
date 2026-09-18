@@ -3894,6 +3894,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/portal/request-types/{id}/counterparties": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["searchIntakeCounterparties"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/requests/{number}": {
     parameters: {
       query?: never;
@@ -13366,6 +13382,7 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -13426,6 +13443,7 @@ export interface operations {
           "application/json": {
             attachedField: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -13516,6 +13534,7 @@ export interface operations {
           "application/json": {
             attachedField: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -13575,6 +13594,7 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -14602,6 +14622,7 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -14662,6 +14683,7 @@ export interface operations {
           "application/json": {
             attachedField: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -14752,6 +14774,7 @@ export interface operations {
           "application/json": {
             attachedField: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -14811,6 +14834,7 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -15511,6 +15535,7 @@ export interface operations {
               slug: string;
               displayName: string;
               fields: {
+                builtInKey?: string | null;
                 fieldId: string;
                 slug: string;
                 displayName: string;
@@ -15676,6 +15701,7 @@ export interface operations {
               archived: boolean;
             } | null;
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -15852,6 +15878,7 @@ export interface operations {
               archived: boolean;
             } | null;
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -17965,6 +17992,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
@@ -18015,6 +18043,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
@@ -18061,6 +18090,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
@@ -18123,6 +18153,7 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
+          formFieldOrder?: string[];
           turnaroundDays?: number | null;
           targetModule?: ("matter" | "contract") | null;
           targetTypeId?: string | null;
@@ -18146,6 +18177,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
@@ -18196,6 +18228,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
@@ -18248,6 +18281,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
@@ -18294,6 +18328,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               targetModule: ("matter" | "contract") | null;
               targetTypeId: string | null;
@@ -18333,6 +18368,7 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -18393,6 +18429,7 @@ export interface operations {
           "application/json": {
             attachedField: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -18483,6 +18520,7 @@ export interface operations {
           "application/json": {
             attachedField: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -18542,6 +18580,7 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -18837,6 +18876,7 @@ export interface operations {
         content: {
           "application/json": {
             requestTypes: {
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               id: string;
               slug: string;
@@ -18921,6 +18961,7 @@ export interface operations {
         content: {
           "application/json": {
             requestType: {
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               id: string;
               slug: string;
@@ -18929,6 +18970,7 @@ export interface operations {
               displayOrder: number;
             };
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -20198,6 +20240,7 @@ export interface operations {
               id: string;
               description: string | null;
               fields: {
+                builtInKey?: string | null;
                 fieldId: string;
                 slug: string;
                 displayName: string;
@@ -20255,6 +20298,7 @@ export interface operations {
                   } | null;
                 }[];
                 fields: {
+                  builtInKey?: string | null;
                   fieldId: string;
                   slug: string;
                   displayName: string;
@@ -20342,6 +20386,7 @@ export interface operations {
               id: string;
               description: string | null;
               fields: {
+                builtInKey?: string | null;
                 fieldId: string;
                 slug: string;
                 displayName: string;
@@ -20399,6 +20444,7 @@ export interface operations {
                   } | null;
                 }[];
                 fields: {
+                  builtInKey?: string | null;
                   fieldId: string;
                   slug: string;
                   displayName: string;
@@ -21093,6 +21139,14 @@ export interface operations {
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };
+          counterparties?: (
+            | {
+                counterpartyId: string;
+              }
+            | {
+                name: string;
+              }
+          )[];
         };
       };
     };
@@ -21231,6 +21285,7 @@ export interface operations {
             } | null;
             recordArchived: boolean;
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -21734,6 +21789,45 @@ export interface operations {
       };
     };
   };
+  searchIntakeCounterparties: {
+    parameters: {
+      query?: {
+        query?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            counterparties: {
+              id: string;
+              name: string;
+              jurisdiction: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   readRequest: {
     parameters: {
       query?: never;
@@ -21810,6 +21904,7 @@ export interface operations {
               by: string | null;
             } | null;
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -23762,6 +23857,7 @@ export interface operations {
               slug: string;
               displayName: string;
               fields: {
+                builtInKey?: string | null;
                 fieldId: string;
                 slug: string;
                 displayName: string;
@@ -23940,6 +24036,7 @@ export interface operations {
               updatedAt: string;
             };
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -24233,6 +24330,7 @@ export interface operations {
               updatedAt: string;
             };
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -32491,6 +32589,7 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -32551,6 +32650,7 @@ export interface operations {
           "application/json": {
             attachedField: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -32641,6 +32741,7 @@ export interface operations {
           "application/json": {
             attachedField: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -32700,6 +32801,7 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
+              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -34431,6 +34533,7 @@ export interface operations {
         "application/json": {
           legalName: string;
           entityTypeId: string;
+          portalListed?: boolean;
           jurisdiction?: string;
           /** Format: date */
           formedOn?: string;
@@ -34652,6 +34755,7 @@ export interface operations {
               updatedAt: string;
             };
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -34781,6 +34885,7 @@ export interface operations {
               updatedAt: string;
             };
             fields: {
+              builtInKey?: string | null;
               fieldId: string;
               slug: string;
               displayName: string;
@@ -36838,6 +36943,7 @@ export interface operations {
     parameters: {
       query?: {
         includeArchived?: "true" | "false";
+        intake?: "true" | "false";
       };
       header?: never;
       path?: never;
@@ -36875,6 +36981,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              builtInKey?: string | null;
               archivedAt: string | null;
               inUseCount: number;
             }[];
@@ -36956,6 +37063,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              builtInKey?: string | null;
               archivedAt: string | null;
               inUseCount: number;
             };
@@ -37025,6 +37133,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              builtInKey?: string | null;
               archivedAt: string | null;
               inUseCount: number;
             };
@@ -37083,6 +37192,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              builtInKey?: string | null;
               archivedAt: string | null;
               inUseCount: number;
             };
@@ -37141,6 +37251,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              builtInKey?: string | null;
               archivedAt: string | null;
               inUseCount: number;
             };

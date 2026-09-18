@@ -70,6 +70,7 @@ import { httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/prob
 import { attachmentDisposition } from "../../lib/uploads.js";
 
 const PortalRequestTypeSchema = z.object({
+  formFieldOrder: z.array(z.string()),
   turnaroundDays: z.number().int().nullable(),
   id: z.string(),
   /** Addresses the type's form; the picker links on it. */
@@ -209,6 +210,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           description: requestTypes.description,
           turnaroundDays: requestTypes.turnaroundDays,
           displayOrder: requestTypes.displayOrder,
+          formFieldOrder: requestTypes.formFieldOrder,
         })
         .from(requestTypes)
         .where(isNull(requestTypes.archivedAt))
@@ -299,6 +301,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           description: requestTypes.description,
           turnaroundDays: requestTypes.turnaroundDays,
           displayOrder: requestTypes.displayOrder,
+          formFieldOrder: requestTypes.formFieldOrder,
         })
         .from(requestTypes)
         .where(and(eq(requestTypes.slug, request.params.slug), isNull(requestTypes.archivedAt)))

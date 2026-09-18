@@ -75,6 +75,8 @@ export const fields = pgTable(
     /** Machine identity, derived from the name at creation; never
      * changes — it keys the per-module `custom_fields` jsonb. */
     slug: text("slug").notNull(),
+    /** Protected intake question mapped to a native record column at conversion. */
+    builtInKey: text("built_in_key"),
     displayName: text("display_name").notNull(),
     /** Shown as help text on forms; NULL = the field renders with no
      * help text. */
@@ -102,6 +104,7 @@ export const fields = pgTable(
   },
   (table) => [
     uniqueIndex("fields_slug_unique").on(table.slug),
+    uniqueIndex("fields_built_in_key_unique").on(table.builtInKey),
     check(
       "fields_module_scope_check",
       sql`${table.moduleScope} in ('matter', 'contract', 'entity')`,

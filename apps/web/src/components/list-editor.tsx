@@ -64,6 +64,7 @@ export interface ListEditorProps<Row extends ListEditorRow> {
    * archives nothing, so it leaves this out. */
   archivedRows?: Row[];
   title: ReactNode;
+  cardClassName?: string;
   /** The row-count caption content (ICU plural, pane vocabulary). */
   count: ReactNode;
   /** An optional caption before the count (e.g. the pane's scope note). */
@@ -139,6 +140,7 @@ export function ListEditor<Row extends ListEditorRow>({
   rows,
   archivedRows = [],
   title,
+  cardClassName,
   count,
   headerCaption,
   addLabel,
@@ -314,6 +316,7 @@ export function ListEditor<Row extends ListEditorRow>({
     <div className="flex flex-col gap-2">
       <SettingsCard
         title={title}
+        className={cardClassName}
         flush
         region={region}
         collapsible={collapsible}

@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import {
+  IntakeCounterpartiesInput,
+  resolveIntakeCounterparties,
+} from "../../lib/intake-counterparties.js";
+import {
+  readIntakeContractFacts,
+  withAnsweredIntakeDefaults,
+} from "../../lib/intake-default-fields.js";
 
 /**
  * The Request record (INT-001, INT-002, #378): submission, and the
@@ -243,6 +251,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           /** DES-018's four severity levels and nothing else. */
           urgency: z.enum(SEVERITY_LEVELS),
           customFields: CustomFieldsInput.optional(),
+          counterparties: IntakeCounterpartiesInput.optional(),
         }),
         response: { 201: z.object({ request: RequestSchema }), default: problemResponse },
       },
@@ -276,7 +285,16 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // The portal's form route reads the same thing the same way —
         // that is what makes the refusal and the screen agree.
         const attached = await selectAttachedFields(tx, requestTypeFields, requestType.id);
-        const customFields = collectValues(attached, body.customFields ?? {});
+        const rawFields = { ...(body.customFields ?? {}) };
+        let intakeCounterparties: Array<{ counterpartyId?: string; name: string }> = [];
+        if (body.counterparties !== undefined) {
+          const field = attached.find((field) => field.builtInKey === "counterparties");
+          if (!field) throw httpError(400, "This form does not collect counterparties.");
+          intakeCounterparties = await resolveIntakeCounterparties(tx, body.counterparties);
+          rawFields[field.slug] = intakeCounterparties.map((party) => party.name).join("\n");
+        }
+        const customFields = collectValues(attached, rawFields);
+        await readIntakeContractFacts(tx, customFields);
 
         // Lock referenced rows until submission commits, so a concurrent
         // archive or change to Portal-listed cannot admit a stale choice.
@@ -326,6 +344,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             description,
             urgency: body.urgency,
             customFields,
+            intakeCounterparties,
           })
           .returning();
 
@@ -566,6 +585,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         selectAttachedFields(app.db, requestTypeFields, row.typeId),
         row.status === "converted" ? [] : selectAttachments(app.db, row.id),
       ]);
+      const readableFields = await withAnsweredIntakeDefaults(app.db, attached, row.customFields);
       return {
         redirectTo,
         recordArchived,
@@ -578,8 +598,8 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
           customFields: row.customFields,
           declinedReason: row.declinedReason,
         },
-        fields: attached,
-        customFieldRefs: await resolveRefs(app.db, attached, row.customFields),
+        fields: readableFields,
+        customFieldRefs: await resolveRefs(app.db, readableFields, row.customFields),
         attachments,
       };
     },

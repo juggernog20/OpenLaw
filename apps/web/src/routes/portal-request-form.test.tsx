@@ -28,6 +28,7 @@ const REQUESTER = {
 };
 
 interface FormField {
+  builtInKey?: string;
   fieldId: string;
   slug: string;
   displayName: string;
@@ -72,6 +73,7 @@ interface Submissions {
 function portalForm(
   state: {
     fields?: FormField[];
+    formFieldOrder?: string[];
     departments?: { id: string; displayName: string }[];
     entities?: { id: string; name: string }[];
     intakeLinks?: { id: string; label: string; url: string; displayOrder: number }[];
@@ -101,6 +103,7 @@ function portalForm(
     ) {
       return json(200, {
         requestType: {
+          formFieldOrder: state.formFieldOrder ?? [],
           id: "rt2",
           slug: "contract_review",
           displayName: "Contract review",
@@ -541,4 +544,103 @@ it("submits without a Department when none exist and explains the empty list", a
   await user.click(screen.getByRole("button", { name: "Submit request" }));
   expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
   expect(submissions.bodies[0]).toMatchObject({ departmentId: null });
+});
+
+it("looks up counterparties, supports multiple selections and stages a new name", async () => {
+  const submissions: Submissions = { bodies: [], uploads: [] };
+  const field = {
+    ...COUNTERPARTY,
+    builtInKey: "counterparties",
+    fieldType: "long_text",
+    displayName: "Counterparties",
+  };
+  const base = portalForm({ fields: [field] }, submissions);
+  stubApi({
+    signedIn: REQUESTER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/portal/request-types/rt2/counterparties")
+        return json(200, {
+          counterparties: call.url.searchParams.get("query")?.includes("New")
+            ? []
+            : [{ id: "party-b", name: "Acme", jurisdiction: "Delaware" }],
+        });
+      return base(call);
+    },
+  });
+  renderAt("/portal/new/contract_review");
+  const user = userEvent.setup();
+  await user.type(await screen.findByLabelText(/^Title/), "Services agreement");
+  await user.type(screen.getByLabelText(/^Description/), "Please prepare the agreement.");
+  const picker = screen.getByRole("combobox", { name: /^Counterparties/ });
+  expect(picker).toHaveAttribute("aria-required", "true");
+  await user.type(picker, "Acme");
+  await user.click(await screen.findByRole("option", { name: /Acme.*Delaware/ }));
+  expect(screen.getByText("Primary")).toBeInTheDocument();
+  await user.type(picker, "New Vendor");
+  await user.click(await screen.findByRole("option", { name: 'Add new "New Vendor"' }));
+  expect(screen.getByRole("button", { name: "Remove New Vendor" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Submit request" }));
+  await screen.findByRole("heading", { name: /R-42/ });
+  expect(submissions.bodies[0]).toMatchObject({
+    counterparties: [{ counterpartyId: "party-b" }, { name: "New Vendor" }],
+    customFields: { counterparty: "Acme\nNew Vendor" },
+  });
+});
+
+it("does not offer adding a counterparty when lookup fails", async () => {
+  const base = portalForm(
+    {
+      fields: [
+        { ...COUNTERPARTY, builtInKey: "counterparties", fieldType: "long_text" } as FormField,
+      ],
+    },
+    { bodies: [], uploads: [] },
+  );
+  stubApi({
+    signedIn: REQUESTER,
+    extra: (call) =>
+      call.url.pathname.endsWith("/counterparties") ? problem(500, "Search failed") : base(call),
+  });
+  renderAt("/portal/new/contract_review");
+  const user = userEvent.setup();
+  await user.type(
+    await screen.findByRole("combobox", { name: /^Counterparty/ }),
+    "Unavailable vendor",
+  );
+  await screen.findByText("Could not load counterparties. Try searching again.");
+  expect(screen.queryByRole("option", { name: /Add new/ })).toBeNull();
+});
+
+it("renders default and attached questions in the saved order", async () => {
+  const submissions = { bodies: [], uploads: [] };
+  stubApi({
+    signedIn: REQUESTER,
+    extra: portalForm(
+      {
+        fields: [COUNTERPARTY],
+        formFieldOrder: [
+          "basic:urgency",
+          "f1",
+          "basic:description",
+          "basic:title",
+          "basic:department",
+          "basic:attachments",
+        ],
+      },
+      submissions,
+    ),
+  });
+  renderAt("/portal/new/contract_review");
+  const urgency = await screen.findByRole("combobox", { name: /Urgency/ });
+  const counterparty = screen.getByRole("textbox", { name: /Counterparty/ });
+  const description = screen.getByRole("textbox", { name: /Description/ });
+  const title = screen.getByRole("textbox", { name: /Title/ });
+  for (const [first, second] of [
+    [urgency, counterparty],
+    [counterparty, description],
+    [description, title],
+  ]) {
+    expect(first!.compareDocumentPosition(second!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  }
+  expect(title).toHaveAttribute("aria-required", "true");
 });

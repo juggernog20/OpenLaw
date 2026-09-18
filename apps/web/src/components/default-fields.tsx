@@ -108,9 +108,10 @@ export function DefaultFields({ module }: Readonly<{ module: "matter" | "contrac
   return (
     <ListEditor
       region
+      cardClassName="max-w-none"
       collapsible
       defaultOpen={false}
-      title={<FormattedMessage id="settings.fields.defaults" defaultMessage="Default fields" />}
+      title={<FormattedMessage id="settings.fields.defaults" defaultMessage="Default Fields" />}
       rows={rows}
       count={
         <FormattedMessage

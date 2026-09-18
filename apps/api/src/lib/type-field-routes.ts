@@ -199,6 +199,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
   /** One attachment, joined to the catalog columns the editor renders. */
   const AttachedFieldSchema = z.object({
     fieldId: z.string(),
+    builtInKey: z.string().nullable().optional(),
     slug: z.string(),
     displayName: z.string(),
     fieldType: z.enum(FIELD_TYPES),
@@ -212,6 +213,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
   function toRow(join: TypeFieldRow, field: Field) {
     return {
       fieldId: field.id,
+      ...(field.builtInKey ? { builtInKey: field.builtInKey } : {}),
       slug: field.slug,
       displayName: field.displayName,
       fieldType: field.fieldType,
@@ -304,6 +306,12 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
           if (!field) throw httpError(404, "No field exists with this id.");
           // The rule is resolved here, under the type's own lock: what
           // it reads off the row cannot change while this attach runs.
+          if (field.builtInKey && path !== "request-types") {
+            throw httpError(
+              400,
+              "Default fields are already part of records and can only be attached to intake forms.",
+            );
+          }
           const rule = scopeRuleFor(type);
           if (
             !rule.scopes.includes(field.moduleScope) ||

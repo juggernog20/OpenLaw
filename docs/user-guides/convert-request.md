@@ -57,6 +57,12 @@ If another person decided first, close the dialog and read the recorded Outcome.
 
 An answer listed as not carrying stays on the Request. Check the destination Type's Field configuration before assuming the resulting record contains it. If promoted paper or conversation appears wrong, retain the R- and C-/M- references when asking for help.
 
+## Default contract answers
+
+Default contract questions on an intake form populate native Contract fields at conversion, independently of the chosen Contract Type’s custom fields. The dialog lists these under **Carries into the contract**. Selected counterparties are linked by their registry IDs; proposed new names are matched or created at conversion. Archived selections refuse conversion until restored or replaced during triage. For earlier free-text submissions, names are still matched or created. An explicit counterparty entered during triage replaces that submitted list. A deliberate clear leaves the submitted counterparties on the Request.
+
+A complete Value needs amount, currency, and frequency. Partial values and contract-specific answers on a Matter conversion remain on the Request. Our entity must still be Portal-listed and available when conversion runs; an unavailable selection refuses conversion without creating a partial record.
+
 ## Related guides
 
 - [Assign and triage Requests](triage-requests.md).

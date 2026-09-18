@@ -616,3 +616,4 @@ export const CONTRACT_OVERVIEW_FIELD_SLUGS: readonly string[] = ["owning_departm
 export const MAX_CONTRACT_CLASSIFICATION_LENGTH = 200;
 
 export { parseKnowledgeMarkdown, type MarkdownBlock, type MarkdownInline } from "./markdown.js";
+export { INTAKE_BASIC_FIELD_KEYS, resolveIntakeFieldOrder } from "./intake-field-order.js";

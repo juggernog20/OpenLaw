@@ -96,6 +96,11 @@ export const requests = pgTable(
     urgency: text("urgency", { enum: SEVERITY_LEVELS }).notNull(),
     /** The form's collected values, keyed by field slug (INT-002) —
      * the contract column's shape, so conversion is a copy. */
+    /** Exact registry selections and proposed names collected by the intake lookup. */
+    intakeCounterparties: jsonb("intake_counterparties")
+      .$type<Array<{ counterpartyId?: string; name: string }>>()
+      .notNull()
+      .default([]),
     customFields: jsonb("custom_fields")
       .$type<Record<string, CustomFieldValue>>()
       .notNull()

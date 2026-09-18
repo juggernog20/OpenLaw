@@ -420,9 +420,27 @@ export function ConvertDialog({
       ? [INTAKE_CARRY_SLUGS.counterpartyName]
       : []),
   ]);
+  const nativeValueComplete = ["valueAmount", "valueCurrency", "valueCadence"].every((key) =>
+    fields.some(
+      (field) => field.builtInKey === key && isAnswered(request.customFields[field.slug]),
+    ),
+  );
+  const nativeCarried =
+    targetModule === "contract"
+      ? fields.filter(
+          (field) =>
+            field.builtInKey &&
+            isAnswered(request.customFields[field.slug]) &&
+            (!["valueAmount", "valueCurrency", "valueCadence"].includes(field.builtInKey) ||
+              nativeValueComplete) &&
+            (field.builtInKey !== "counterparties" ||
+              (!human.has("counterparty") && counterpartyName.trim() === "")),
+        )
+      : [];
   const staysBehind = fields.filter(
     (field) =>
       isAnswered(request.customFields[field.slug]) &&
+      !nativeCarried.some((native) => native.fieldId === field.fieldId) &&
       !drawnSlugs.has(field.slug) &&
       !targetAttaches(field.slug),
   );
@@ -1008,6 +1026,22 @@ export function ConvertDialog({
                   />
                 </AiField>
                 {marker("needed_by")}
+              </div>
+            )}
+            {target && nativeCarried.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-sm font-medium">
+                  <FormattedMessage
+                    id="convert.nativeCarried"
+                    defaultMessage="Carries into the contract"
+                  />
+                </p>
+                <p className="text-xs text-muted">
+                  {intl.formatList(
+                    nativeCarried.map((field) => field.displayName),
+                    { type: "conjunction" },
+                  )}
+                </p>
               </div>
             )}
             {target && staysBehind.length > 0 && (

@@ -2117,3 +2117,41 @@ describe("Contract and Matter preparation together", () => {
     expect(api.conversions[0]).not.toHaveProperty("templateId");
   });
 });
+
+it("distinguishes native facts that carry from partial value answers", async () => {
+  const native = (key: string, name: string, fieldType = "date") => ({
+    ...DEAL_DESK,
+    fieldId: key,
+    slug: key,
+    builtInKey: key,
+    displayName: name,
+    fieldType,
+  });
+  const response: Record<string, unknown> = {
+    ...detail(request()),
+    fields: [
+      native("effectiveDate", "Effective date"),
+      native("valueAmount", "Value amount", "number"),
+    ],
+  };
+  response.request = {
+    ...(response.request as Record<string, unknown>),
+    customFields: { effectiveDate: "2026-09-17", valueAmount: 123 },
+  };
+  const api = requestApi();
+  const handler = api.handler;
+  open({
+    ...api,
+    handler: (call) =>
+      call.method === "GET" && call.url.pathname === "/api/v1/requests/45"
+        ? json(200, response)
+        : handler(call),
+  });
+  const dialog = await openConvert(userEvent.setup());
+  expect(within(dialog).getByText("Carries into the contract").parentElement).toHaveTextContent(
+    "Effective date",
+  );
+  expect(
+    within(dialog).getByText("Does not carry into the contract").parentElement,
+  ).toHaveTextContent("Value amount");
+});

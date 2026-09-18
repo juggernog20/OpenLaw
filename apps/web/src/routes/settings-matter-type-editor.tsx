@@ -50,7 +50,7 @@ const MESSAGES = defineMessages({
   },
   attachedFields: {
     id: "settings.matterTypeEditor.attachedFields",
-    defaultMessage: "Attached fields",
+    defaultMessage: "Custom Fields",
   },
   fieldColumn: { id: "settings.matterTypeEditor.fieldColumn", defaultMessage: "Field" },
   requiredColumn: {
@@ -148,6 +148,7 @@ export function SettingsMatterTypeEditorPage() {
       api={EDITOR_API}
       messages={MESSAGES}
       attachments={{
+        defaultFieldsModule: "matter",
         createFieldModule: "matter",
         initialAttached: attachedFields,
         catalog,

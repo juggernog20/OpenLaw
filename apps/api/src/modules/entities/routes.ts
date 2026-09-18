@@ -561,6 +561,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.object({
           legalName: LegalNameSchema,
           entityTypeId: z.string(),
+          portalListed: z.boolean().optional(),
           jurisdiction: CardTextSchema.optional(),
           formedOn: z.iso.date().optional(),
           registrationNumber: CardTextSchema.optional(),
@@ -577,6 +578,9 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const body = request.body;
+      if (body.portalListed !== undefined && request.user.role !== "administrator") {
+        throw httpError(403, "Only an Administrator can change Portal-listed.");
+      }
       const { row, entityTypeName } = await app.db.transaction(async (tx) => {
         // Lock the type row so a concurrent archive can't slip between
         // the check and the insert.
@@ -599,6 +603,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           .values({
             legalName: body.legalName.trim(),
             entityTypeId: entityType.id,
+            portalListed: body.portalListed ?? false,
             jurisdiction: body.jurisdiction?.trim() || null,
             formedOn: body.formedOn ?? null,
             registrationNumber: body.registrationNumber?.trim() || null,
@@ -635,6 +640,16 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
             status: created!.status,
           },
         });
+        if (created!.portalListed) {
+          await recordActivity(tx, {
+            entityType: "entity",
+            entityId: created!.id,
+            actorId: request.user.id,
+            action: "entity.portal_listed_set",
+            visibility: "legal_only",
+            payload: { legalName: created!.legalName, from: false, to: true },
+          });
+        }
         return { row: created!, entityTypeName: entityType.displayName };
       });
       return reply.status(201).send({ entity: toRow(row, entityTypeName) });

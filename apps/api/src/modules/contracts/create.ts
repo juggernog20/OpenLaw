@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import type { IntakeContractFacts } from "../../lib/intake-default-fields.js";
+import { assertPortalEntity } from "../../lib/portal-entities.js";
 
 import { lockedRegionName } from "../regions/references.js";
 
@@ -134,6 +136,8 @@ export interface CreateContractInput {
   /** Trusted Auto-Doc provenance and facts resolved by the Generation path. */
   autoDoc?: { id: string; generationId: string; facts: AutoDocContractSnapshot };
   title: string;
+  /** Validated native facts collected on an intake form. */
+  intakeFacts?: IntakeContractFacts;
   description?: string | null;
   owningDepartmentId?: string | null | undefined;
   region?: string | null | undefined;
@@ -325,6 +329,8 @@ export async function createContract(
 
   if (input.owningDepartmentId) await lockedDepartment(tx, input.owningDepartmentId);
 
+  if (input.intakeFacts?.entityId)
+    await assertPortalEntity(tx, input.intakeFacts.entityId, "Our entity");
   const isConfidential = input.isConfidential ?? false;
   const [row] = await tx
     .insert(contracts)
@@ -347,6 +353,7 @@ export async function createContract(
       // honestly is (MTR-012).
       ...(input.priority ? { priority: input.priority } : {}),
       ...(copied ?? {}),
+      ...(input.intakeFacts ?? {}),
       ...(input.autoDoc
         ? {
             createdByGenerationId: input.autoDoc.generationId,

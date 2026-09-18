@@ -947,3 +947,84 @@ it("counts used Request types and requires reassignment before archiving", async
   });
   expect((await listTypes()).find((row) => row.id === to)?.inUseCount).toBe(1);
 });
+
+it("persists a complete form order for the Portal and refuses incomplete or stale orders", async () => {
+  const created = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/request-types",
+    cookies: adminCookies,
+    payload: { displayName: "Reordered intake" },
+  });
+  expect(created.statusCode, created.body).toBe(201);
+  const type = created.json().requestType;
+  const patch = (id: string, payload: Record<string, unknown>) =>
+    harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/request-types/${id}`,
+      cookies: adminCookies,
+      payload,
+    });
+  const field = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/fields",
+    cookies: adminCookies,
+    payload: {
+      displayName: "Order test field",
+      fieldType: "text",
+      moduleScope: "contract",
+      fieldTag: "business",
+    },
+  });
+  expect(field.statusCode, field.body).toBe(201);
+  const fieldId = field.json().field.id;
+  const attached = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/request-types/${type.id}/fields`,
+    cookies: adminCookies,
+    payload: { fieldId },
+  });
+  expect(attached.statusCode, attached.body).toBe(201);
+  const formFieldOrder = [
+    "basic:urgency",
+    fieldId,
+    "basic:title",
+    "basic:description",
+    "basic:department",
+    "basic:attachments",
+  ];
+  const saved = await patch(type.id, { formFieldOrder });
+  expect(saved.statusCode, saved.body).toBe(200);
+  expect(saved.json().requestType.formFieldOrder).toEqual(formFieldOrder);
+  const portal = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/portal/request-types/${type.slug}`,
+    cookies: adminCookies,
+  });
+  expect(portal.statusCode, portal.body).toBe(200);
+  expect(portal.json().requestType.formFieldOrder).toEqual(formFieldOrder);
+  const [stored] = await harness.db.select().from(requestTypes).where(eq(requestTypes.id, type.id));
+  expect(stored!.formFieldOrder).toEqual(formFieldOrder);
+  for (const invalid of [
+    formFieldOrder.slice(1),
+    [...formFieldOrder, fieldId],
+    [...formFieldOrder.slice(0, -1), "unknown-field"],
+  ]) {
+    const refused = await patch(type.id, { formFieldOrder: invalid });
+    expect(refused.statusCode, refused.body).toBe(400);
+  }
+  const memberCookies = await harnessSignInCookies(harness.app, MEMBER.email, MEMBER.password);
+  const denied = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/request-types/${type.id}`,
+    cookies: memberCookies,
+    payload: { formFieldOrder },
+  });
+  expect(denied.statusCode).toBe(403);
+  await harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/request-types/${type.id}/fields/${fieldId}`,
+    cookies: adminCookies,
+  });
+  const stale = await patch(type.id, { formFieldOrder });
+  expect(stale.statusCode, stale.body).toBe(400);
+});

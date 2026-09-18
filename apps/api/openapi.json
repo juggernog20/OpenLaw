@@ -18166,6 +18166,9 @@
                           "fieldId": {
                             "type": "string"
                           },
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "slug": {
                             "type": "string"
                           },
@@ -18277,6 +18280,9 @@
                       "properties": {
                         "fieldId": {
                           "type": "string"
+                        },
+                        "builtInKey": {
+                          "type": ["string", "null"]
                         },
                         "slug": {
                           "type": "string"
@@ -18395,6 +18401,9 @@
                       "properties": {
                         "fieldId": {
                           "type": "string"
+                        },
+                        "builtInKey": {
+                          "type": ["string", "null"]
                         },
                         "slug": {
                           "type": "string"
@@ -18549,6 +18558,9 @@
                         "properties": {
                           "fieldId": {
                             "type": "string"
+                          },
+                          "builtInKey": {
+                            "type": ["string", "null"]
                           },
                           "slug": {
                             "type": "string"
@@ -20779,6 +20791,9 @@
                           "fieldId": {
                             "type": "string"
                           },
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "slug": {
                             "type": "string"
                           },
@@ -20890,6 +20905,9 @@
                       "properties": {
                         "fieldId": {
                           "type": "string"
+                        },
+                        "builtInKey": {
+                          "type": ["string", "null"]
                         },
                         "slug": {
                           "type": "string"
@@ -21008,6 +21026,9 @@
                       "properties": {
                         "fieldId": {
                           "type": "string"
+                        },
+                        "builtInKey": {
+                          "type": ["string", "null"]
                         },
                         "slug": {
                           "type": "string"
@@ -21162,6 +21183,9 @@
                         "properties": {
                           "fieldId": {
                             "type": "string"
+                          },
+                          "builtInKey": {
+                            "type": ["string", "null"]
                           },
                           "slug": {
                             "type": "string"
@@ -23082,6 +23106,9 @@
                             "items": {
                               "type": "object",
                               "properties": {
+                                "builtInKey": {
+                                  "type": ["string", "null"]
+                                },
                                 "fieldId": {
                                   "type": "string"
                                 },
@@ -23696,6 +23723,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -24340,6 +24370,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -30559,6 +30592,12 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
+                          "formFieldOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "turnaroundDays": {
                             "anyOf": [
                               {
@@ -30600,6 +30639,7 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
+                          "formFieldOrder",
                           "turnaroundDays",
                           "targetModule",
                           "targetTypeId",
@@ -30697,6 +30737,12 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
+                        "formFieldOrder": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -30738,6 +30784,7 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
+                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
                         "targetTypeId",
@@ -30828,6 +30875,12 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
+                        "formFieldOrder": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -30869,6 +30922,7 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
+                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
                         "targetTypeId",
@@ -30921,6 +30975,14 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "formFieldOrder": {
+                    "maxItems": 1005,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "turnaroundDays": {
                     "anyOf": [
@@ -31012,6 +31074,12 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
+                        "formFieldOrder": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -31053,6 +31121,7 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
+                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
                         "targetTypeId",
@@ -31185,6 +31254,12 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
+                          "formFieldOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "turnaroundDays": {
                             "anyOf": [
                               {
@@ -31226,6 +31301,7 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
+                          "formFieldOrder",
                           "turnaroundDays",
                           "targetModule",
                           "targetTypeId",
@@ -31332,6 +31408,12 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
+                        "formFieldOrder": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -31373,6 +31455,7 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
+                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
                         "targetTypeId",
@@ -31463,6 +31546,12 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
+                        "formFieldOrder": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -31504,6 +31593,7 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
+                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
                         "targetTypeId",
@@ -31561,6 +31651,9 @@
                         "properties": {
                           "fieldId": {
                             "type": "string"
+                          },
+                          "builtInKey": {
+                            "type": ["string", "null"]
                           },
                           "slug": {
                             "type": "string"
@@ -31673,6 +31766,9 @@
                       "properties": {
                         "fieldId": {
                           "type": "string"
+                        },
+                        "builtInKey": {
+                          "type": ["string", "null"]
                         },
                         "slug": {
                           "type": "string"
@@ -31791,6 +31887,9 @@
                       "properties": {
                         "fieldId": {
                           "type": "string"
+                        },
+                        "builtInKey": {
+                          "type": ["string", "null"]
                         },
                         "slug": {
                           "type": "string"
@@ -31945,6 +32044,9 @@
                         "properties": {
                           "fieldId": {
                             "type": "string"
+                          },
+                          "builtInKey": {
+                            "type": ["string", "null"]
                           },
                           "slug": {
                             "type": "string"
@@ -32500,6 +32602,12 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "formFieldOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "turnaroundDays": {
                             "anyOf": [
                               {
@@ -32531,6 +32639,7 @@
                           }
                         },
                         "required": [
+                          "formFieldOrder",
                           "turnaroundDays",
                           "id",
                           "slug",
@@ -32669,6 +32778,12 @@
                     "requestType": {
                       "type": "object",
                       "properties": {
+                        "formFieldOrder": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -32700,6 +32815,7 @@
                         }
                       },
                       "required": [
+                        "formFieldOrder",
                         "turnaroundDays",
                         "id",
                         "slug",
@@ -32714,6 +32830,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -36065,6 +36184,9 @@
                           "items": {
                             "type": "object",
                             "properties": {
+                              "builtInKey": {
+                                "type": ["string", "null"]
+                              },
                               "fieldId": {
                                 "type": "string"
                               },
@@ -36277,6 +36399,9 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
+                                    "builtInKey": {
+                                      "type": ["string", "null"]
+                                    },
                                     "fieldId": {
                                       "type": "string"
                                     },
@@ -36552,6 +36677,9 @@
                           "items": {
                             "type": "object",
                             "properties": {
+                              "builtInKey": {
+                                "type": ["string", "null"]
+                              },
                               "fieldId": {
                                 "type": "string"
                               },
@@ -36764,6 +36892,9 @@
                                 "items": {
                                   "type": "object",
                                   "properties": {
+                                    "builtInKey": {
+                                      "type": ["string", "null"]
+                                    },
                                     "fieldId": {
                                       "type": "string"
                                     },
@@ -38387,6 +38518,38 @@
                         }
                       ]
                     }
+                  },
+                  "counterparties": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "counterpartyId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["counterpartyId"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200,
+                              "pattern": "^[^\\r\\n]+$"
+                            }
+                          },
+                          "required": ["name"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
                   }
                 },
                 "required": ["requestTypeId", "title", "description", "urgency"],
@@ -39092,6 +39255,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -40231,6 +40397,76 @@
         }
       }
     },
+    "/api/v1/portal/request-types/{id}/counterparties": {
+      "get": {
+        "operationId": "searchIntakeCounterparties",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "query",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "counterparties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "jurisdiction": {
+                            "type": ["string", "null"]
+                          }
+                        },
+                        "required": ["id", "name", "jurisdiction"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["counterparties"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/requests/{number}": {
       "get": {
         "operationId": "readRequest",
@@ -40504,6 +40740,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -45896,6 +46135,9 @@
                             "items": {
                               "type": "object",
                               "properties": {
+                                "builtInKey": {
+                                  "type": ["string", "null"]
+                                },
                                 "fieldId": {
                                   "type": "string"
                                 },
@@ -46582,6 +46824,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -47796,6 +48041,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -71651,6 +71899,9 @@
                           "fieldId": {
                             "type": "string"
                           },
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "slug": {
                             "type": "string"
                           },
@@ -71762,6 +72013,9 @@
                       "properties": {
                         "fieldId": {
                           "type": "string"
+                        },
+                        "builtInKey": {
+                          "type": ["string", "null"]
                         },
                         "slug": {
                           "type": "string"
@@ -71880,6 +72134,9 @@
                       "properties": {
                         "fieldId": {
                           "type": "string"
+                        },
+                        "builtInKey": {
+                          "type": ["string", "null"]
                         },
                         "slug": {
                           "type": "string"
@@ -72034,6 +72291,9 @@
                         "properties": {
                           "fieldId": {
                             "type": "string"
+                          },
+                          "builtInKey": {
+                            "type": ["string", "null"]
                           },
                           "slug": {
                             "type": "string"
@@ -76474,6 +76734,9 @@
                   "entityTypeId": {
                     "type": "string"
                   },
+                  "portalListed": {
+                    "type": "boolean"
+                  },
                   "jurisdiction": {
                     "type": "string",
                     "maxLength": 200
@@ -77077,6 +77340,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -77593,6 +77859,9 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "builtInKey": {
+                            "type": ["string", "null"]
+                          },
                           "fieldId": {
                             "type": "string"
                           },
@@ -83254,6 +83523,15 @@
             "in": "query",
             "name": "includeArchived",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "intake",
+            "required": false
           }
         ],
         "responses": {
@@ -83318,6 +83596,9 @@
                             "enum": ["business", "legal"]
                           },
                           "aiPrompt": {
+                            "type": ["string", "null"]
+                          },
+                          "builtInKey": {
                             "type": ["string", "null"]
                           },
                           "archivedAt": {
@@ -83496,6 +83777,9 @@
                           "enum": ["business", "legal"]
                         },
                         "aiPrompt": {
+                          "type": ["string", "null"]
+                        },
+                        "builtInKey": {
                           "type": ["string", "null"]
                         },
                         "archivedAt": {
@@ -83682,6 +83966,9 @@
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
+                        "builtInKey": {
+                          "type": ["string", "null"]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -83812,6 +84099,9 @@
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
+                        "builtInKey": {
+                          "type": ["string", "null"]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -83940,6 +84230,9 @@
                           "enum": ["business", "legal"]
                         },
                         "aiPrompt": {
+                          "type": ["string", "null"]
+                        },
+                        "builtInKey": {
                           "type": ["string", "null"]
                         },
                         "archivedAt": {

@@ -73,7 +73,8 @@ function parseOptions(optionsText: string): string[] {
 
 export function FieldEditorDialog({
   target,
-  module,
+  module: initialModule,
+  allowModuleSelection = false,
   onOpenChange,
   onRowChanged,
   onCreated,
@@ -82,6 +83,8 @@ export function FieldEditorDialog({
   /** The field being edited, or null for create mode. */
   target: FieldRow | null;
   module: ModuleScope;
+  /** Intake forms without a destination can collect Contract or Matter fields. */
+  allowModuleSelection?: boolean;
   onOpenChange: (open: boolean) => void;
   /** The saved field after a successful edit. */
   onRowChanged: (row: FieldRow) => void;
@@ -89,6 +92,7 @@ export function FieldEditorDialog({
   onCloseAutoFocus?: ComponentProps<typeof DialogContent>["onCloseAutoFocus"];
 }>) {
   const intl = useIntl();
+  const [module, setModule] = useState(initialModule);
   const [draft, setDraft] = useState<EditorDraft>(() => draftOf(target));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -242,6 +246,36 @@ export function FieldEditorDialog({
             void submit();
           }}
         >
+          {target === null && allowModuleSelection && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="field-module">
+                <FormattedMessage
+                  id="settings.fields.catalogLabel"
+                  defaultMessage="Field catalog"
+                />
+              </Label>
+              <select
+                id="field-module"
+                className={CONTROL_CLASS}
+                value={module}
+                disabled={busy}
+                onChange={(event) => setModule(event.target.value as ModuleScope)}
+              >
+                <option value="contract">
+                  {intl.formatMessage({
+                    id: "settings.fields.contractCatalog",
+                    defaultMessage: "Contract fields",
+                  })}
+                </option>
+                <option value="matter">
+                  {intl.formatMessage({
+                    id: "settings.fields.matterCatalog",
+                    defaultMessage: "Matter fields",
+                  })}
+                </option>
+              </select>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="field-name">
               <FormattedMessage id="settings.contractFields.nameLabel" defaultMessage="Name" />
@@ -364,14 +398,20 @@ export function FieldEditorDialog({
               </Label>
               <AutoResizeTextarea
                 id="field-ai-prompt"
+                aria-describedby="field-ai-prompt-help"
+                placeholder={intl.formatMessage({
+                  id: "settings.contractFields.aiPromptExample",
+                  defaultMessage:
+                    "Example: Extract the notice period, in days, required to terminate without cause. Exclude notice periods for breach.",
+                })}
                 value={draft.aiPrompt}
                 className={TEXTAREA_CLASS}
                 onChange={(event) => set("aiPrompt", event.target.value)}
               />
-              <p className="text-xs text-muted">
+              <p id="field-ai-prompt-help" className="text-xs text-muted">
                 <FormattedMessage
                   id="settings.contractFields.aiPromptHelp"
-                  defaultMessage="Contract analysis extracts this field with the prompt. Leave empty to skip it."
+                  defaultMessage="Describe what AI should extract for this field, including any distinctions it should make. Leave blank to exclude this field from Contract analysis."
                 />
               </p>
             </div>

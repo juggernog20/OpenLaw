@@ -23,12 +23,14 @@ import {
   asc,
   contractCounterparties,
   counterparties,
+  eq,
   isNull,
   sql,
   type Transaction,
 } from "@openlaw/db";
 import { MAX_COUNTERPARTY_NAME_LENGTH } from "@openlaw/shared";
 import { z } from "zod";
+import { httpError } from "./problem.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "./activity.js";
 
 /** The name and nothing else, as every inline creation writes it. */
@@ -79,15 +81,43 @@ export async function linkPrimaryCounterparty(
   input: {
     contract: { id: string; number: number; title: string };
     name: string;
+    counterpartyId?: string;
+    isPrimary?: boolean;
     actorId: string;
   },
 ): Promise<void> {
-  const { counterparty: party, born } = await findOrCreateCounterparty(tx, input.name);
-  await tx.insert(contractCounterparties).values({
-    contractId: input.contract.id,
-    counterpartyId: party.id,
-    isPrimary: true,
-  });
+  const selected = input.counterpartyId
+    ? (
+        await tx
+          .select({ id: counterparties.id, name: counterparties.name })
+          .from(counterparties)
+          .where(
+            and(eq(counterparties.id, input.counterpartyId), isNull(counterparties.archivedAt)),
+          )
+          .limit(1)
+          .for("update")
+      )[0]
+    : undefined;
+  if (input.counterpartyId && !selected)
+    throw httpError(
+      400,
+      "A selected counterparty is no longer available. Choose a replacement during conversion.",
+    );
+  const { counterparty: party, born } = selected
+    ? { counterparty: selected, born: false }
+    : await findOrCreateCounterparty(tx, input.name);
+  const inserted = await tx
+    .insert(contractCounterparties)
+    .values({
+      contractId: input.contract.id,
+      counterpartyId: party.id,
+      isPrimary: input.isPrimary ?? true,
+    })
+    .onConflictDoNothing({
+      target: [contractCounterparties.contractId, contractCounterparties.counterpartyId],
+    })
+    .returning();
+  if (inserted.length === 0) return;
   await recordActivity(tx, {
     entityType: "contract",
     entityId: input.contract.id,
@@ -98,7 +128,7 @@ export async function linkPrimaryCounterparty(
       number: input.contract.number,
       title: input.contract.title,
       counterparty: party.name,
-      isPrimary: true,
+      isPrimary: input.isPrimary ?? true,
       created: born,
     },
   });

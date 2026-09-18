@@ -65,6 +65,7 @@ const FieldSchema = z.object({
   options: z.array(z.string()).nullable(),
   fieldTag: FieldTagSchema,
   aiPrompt: z.string().nullable(),
+  builtInKey: z.string().nullable().optional(),
   archivedAt: z.iso.datetime().nullable(),
   /** Records holding a value plus type attachments — the SET-003 guard
    * number. Contract-type attachments count since #84 and matter-type
@@ -96,6 +97,7 @@ function toRow(row: Field, inUseCount: number) {
     options: row.options ?? null,
     fieldTag: row.fieldTag,
     aiPrompt: row.aiPrompt,
+    ...(row.builtInKey ? { builtInKey: row.builtInKey } : {}),
     archivedAt: row.archivedAt?.toISOString() ?? null,
     inUseCount,
   };
@@ -123,6 +125,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   async function lockedField(tx: Transaction, id: string): Promise<Field> {
     const [row] = await tx.select().from(fields).where(eq(fields.id, id)).limit(1).for("update");
     if (!row) throw httpError(404, "No field exists with this id.");
+    if (row.builtInKey) throw httpError(400, "Default fields cannot be edited or archived.");
     return row;
   }
 
@@ -233,14 +236,20 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           "and entity fields, in creation order; archived rows only with " +
           "includeArchived=true",
         tags: ["fields"],
-        querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
+        querystring: z.object({
+          includeArchived: z.enum(["true", "false"]).optional(),
+          intake: z.enum(["true", "false"]).optional(),
+        }),
         response: { 200: FieldListEnvelope, default: problemResponse },
       },
     },
     async (request) => {
       // The catalog has no display order (fields render in per-type
       // attachment order once #84 lands); the pane lists creation order.
-      const scoped = inArray(fields.moduleScope, [...OPEN_SCOPES]);
+      const scoped = and(
+        inArray(fields.moduleScope, [...OPEN_SCOPES]),
+        request.query.intake === "true" ? undefined : isNull(fields.builtInKey),
+      );
       const rows = await app.db
         .select()
         .from(fields)

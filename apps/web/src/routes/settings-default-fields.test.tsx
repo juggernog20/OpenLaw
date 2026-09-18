@@ -22,13 +22,13 @@ describe("default and custom field settings", () => {
         },
       });
       renderAt(`/settings/${module}/fields`);
-      const defaults = await screen.findByRole("region", { name: "Default fields" });
+      const defaults = await screen.findByRole("region", { name: "Default Fields" });
       const custom = screen.getByRole("region", { name: "Custom Fields" });
       expect(
         defaults.compareDocumentPosition(custom) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
       const user = userEvent.setup();
-      const toggle = within(defaults).getByRole("button", { name: "Default fields" });
+      const toggle = within(defaults).getByRole("button", { name: "Default Fields" });
       expect(toggle).toHaveAttribute("aria-expanded", "false");
       expect(within(defaults).queryByText("Title")).not.toBeInTheDocument();
       expect(within(custom).getByRole("button", { name: "Custom Fields" })).toHaveAttribute(

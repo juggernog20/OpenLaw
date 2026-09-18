@@ -343,3 +343,51 @@ describe("the /entities destination", () => {
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
   });
 });
+
+it.each([true, false])(
+  "saves the Administrator's Portal-listed choice %s during registration",
+  async (listed) => {
+    let posted: unknown;
+    stubApi({
+      signedIn: ADMIN,
+      extra: registryApi([], (call) => {
+        posted = call.body;
+        return json(201, { entity: entityRow({ id: "e-portal", portalListed: listed }) });
+      }),
+    });
+    renderAt("/entities?view=list");
+    const user = userEvent.setup();
+    await screen.findByRole("heading", { name: "No Entities yet" });
+    await user.click(screen.getAllByRole("button", { name: "Add entity" })[0]!);
+    const dialog = await screen.findByRole("dialog");
+    const toggle = within(dialog).getByRole("switch", { name: "Portal-listed" });
+    expect(toggle).not.toBeChecked();
+    if (listed) await user.click(toggle);
+    await user.type(within(dialog).getByLabelText(/^Legal name\*?$/), "Portal Entity Ltd");
+    await user.selectOptions(within(dialog).getByLabelText(/^Entity type\*?$/), "t-corp");
+    await user.click(within(dialog).getByRole("button", { name: "Register" }));
+    await waitFor(() => expect(posted).toMatchObject({ portalListed: listed }));
+  },
+);
+
+it("keeps Portal listing out of the Member's registration form and request", async () => {
+  let posted: unknown;
+  stubApi({
+    signedIn: MEMBER,
+    extra: registryApi([], (call) => {
+      posted = call.body;
+      return json(201, { entity: entityRow({ id: "e-member" }) });
+    }),
+  });
+  renderAt("/entities?view=list");
+  const user = userEvent.setup();
+  await screen.findByRole("heading", { name: "No Entities yet" });
+  await user.click(screen.getAllByRole("button", { name: "Add entity" })[0]!);
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).queryByRole("switch", { name: "Portal-listed" })).not.toBeInTheDocument();
+  await user.type(within(dialog).getByLabelText(/^Legal name\*?$/), "Member Entity Ltd");
+  await user.selectOptions(within(dialog).getByLabelText(/^Entity type\*?$/), "t-corp");
+  await user.click(within(dialog).getByRole("button", { name: "Register" }));
+  await waitFor(() => expect(posted).toBeDefined());
+  expect(posted).not.toHaveProperty("portalListed");
+});

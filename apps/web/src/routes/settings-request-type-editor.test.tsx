@@ -47,6 +47,7 @@ interface StubType {
   targetTypeId: string | null;
   turnaroundDays: number | null;
   formFieldCount: number;
+  formFieldOrder?: string[];
 }
 
 /** One catalog row, as the Fields pane's list route answers it. */
@@ -56,6 +57,7 @@ interface StubField {
   displayName: string;
   moduleScope: "contract" | "matter" | "contract";
   fieldType: "text" | "number";
+  builtInKey?: string;
 }
 
 const CATALOG: StubField[] = [
@@ -349,15 +351,14 @@ describe("the form definition (ST14's right card)", () => {
       expect(box).toBeDisabled();
       expect(box).toHaveAttribute("data-state", required ? "checked" : "unchecked");
       expect(
-        screen.getByText(`${name} is always collected and can't be changed.`),
+        screen.getByText(`${name} is always collected. You can change its position.`),
       ).toBeInTheDocument();
     }
     const urgencyRow = screen.getByRole("checkbox", { name: "Urgency required" }).closest("li")!;
     expect(within(urgencyRow).getByText("Single select")).toBeInTheDocument();
     // A basic is stated, never detachable.
     expect(screen.queryByRole("button", { name: "Detach Title" })).not.toBeInTheDocument();
-    // Two lists in one card, each naming which it is.
-    expect(screen.getByRole("list", { name: "Basics are always on the form" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Reorder Title, position 1 of 6/ })).toBeEnabled();
     expect(screen.getByRole("list", { name: "Form fields" })).toBeInTheDocument();
   });
 
@@ -369,7 +370,7 @@ describe("the form definition (ST14's right card)", () => {
     const menu = await screen.findByRole("menu");
     // Contract target: contract-scoped. Counterparty name is
     // already attached, so what is left is one of each.
-    expect(within(menu).getAllByRole("menuitem")).toHaveLength(2);
+    expect(within(menu).getAllByRole("menuitem")).toHaveLength(3);
     expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();
     expect(within(menu).getByRole("menuitem", { name: /Governing law/ })).toBeInTheDocument();
     expect(within(menu).queryByText("Practice area")).not.toBeInTheDocument();
@@ -448,7 +449,7 @@ describe("the form definition (ST14's right card)", () => {
     await screen.findByText("Form fields");
     expect(screen.getByRole("button", { name: "Detach Business owner" })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Reorder Business owner, position 2 of 2/ }),
+      screen.getByRole("button", { name: /Reorder Business owner, position 7 of 7/ }),
     ).toBeInTheDocument();
     // Only this row's box is locked; an ordinary field keeps its own.
     expect(screen.getByRole("checkbox", { name: "Counterparty name required" })).toBeEnabled();
@@ -504,7 +505,7 @@ describe("moving between two request types on the same route (#372)", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Attach field" }));
     const menu = await screen.findByRole("menu");
-    expect(within(menu).getAllByRole("menuitem")).toHaveLength(4);
+    expect(within(menu).getAllByRole("menuitem")).toHaveLength(5);
     expect(within(menu).getByRole("menuitem", { name: /Department/ })).toBeInTheDocument();
     expect(within(menu).getByRole("menuitem", { name: /Practice area/ })).toBeInTheDocument();
     expect(within(menu).getByRole("menuitem", { name: /Governing law/ })).toBeInTheDocument();
@@ -621,3 +622,134 @@ it("keeps the keyboard in the turnaround box when the save is refused", async ()
   await user.keyboard("{Enter}");
   await waitFor(() => expect(calls.patches).toHaveLength(2));
 });
+
+it("requests the intake catalog and labels default field choices", async () => {
+  const field = {
+    id: "native",
+    slug: "native_notice",
+    displayName: "Notice period (days)",
+    fieldType: "number" as const,
+    moduleScope: "contract" as const,
+    builtInKey: "noticePeriodDays",
+  };
+  CATALOG.push(field);
+  try {
+    const handler = editorApi(newCalls());
+    let queriedIntake = false;
+    openEditor((call) => {
+      if (call.url.pathname === "/api/v1/fields")
+        queriedIntake = call.url.searchParams.get("intake") === "true";
+      return handler(call);
+    });
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Attach field" }));
+    expect(
+      await screen.findByRole("menuitem", { name: /Notice period.*Default/ }),
+    ).toBeInTheDocument();
+    expect(queriedIntake).toBe(true);
+  } finally {
+    CATALOG.pop();
+  }
+});
+
+it("moves a default field among attached fields and saves the complete form order", async () => {
+  const calls = newCalls();
+  openEditor(editorApi(calls));
+  const user = userEvent.setup();
+  const grip = await screen.findByRole("button", { name: /Reorder Urgency, position 5 of 6/ });
+  grip.focus();
+  await user.keyboard("{ArrowDown}");
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Reorder Urgency, position 6 of 6/ })).toHaveFocus(),
+  );
+  expect(calls.patches).toContainEqual({
+    formFieldOrder: [
+      "basic:title",
+      "basic:description",
+      "basic:attachments",
+      "basic:department",
+      "f-cp",
+      "basic:urgency",
+    ],
+  });
+  expect(screen.getByRole("checkbox", { name: "Urgency required" })).toBeDisabled();
+});
+
+it.each([
+  { destination: "contract", catalog: "contract" },
+  { destination: "matter", catalog: "matter" },
+  { destination: null, catalog: "contract" },
+  { destination: null, catalog: "matter" },
+] as const)(
+  "creates and attaches a $catalog field with destination $destination",
+  async ({ destination, catalog }) => {
+    const calls = newCalls();
+    const serve = editorApi(calls, review({ targetModule: destination }), undefined, []);
+    const writes: StubCall[] = [];
+    let created: Record<string, unknown>;
+    openEditor((call) => {
+      if (call.url.pathname === "/api/v1/fields" && call.method === "POST") {
+        writes.push(call);
+        created = {
+          ...(call.body as Record<string, unknown>),
+          id: "f-new",
+          slug: "additional_context",
+          displayOrder: 0,
+          archivedAt: null,
+          options: null,
+          builtInKey: null,
+        };
+        return json(201, { field: created });
+      }
+      if (call.url.pathname === "/api/v1/request-types/r2/fields" && call.method === "POST") {
+        writes.push(call);
+        return json(201, { attachedField: { ...created, fieldId: "f-new", isRequired: false } });
+      }
+      return serve(call);
+    });
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Attach field" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Add new field" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    if (destination === null) {
+      await user.selectOptions(
+        within(dialog).getByRole("combobox", { name: "Field catalog" }),
+        catalog,
+      );
+    } else {
+      expect(
+        within(dialog).queryByRole("combobox", { name: "Field catalog" }),
+      ).not.toBeInTheDocument();
+    }
+    await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Additional context");
+    await user.type(
+      within(dialog).getByRole("textbox", { name: "Description" }),
+      "Explain the request",
+    );
+    await user.selectOptions(within(dialog).getByRole("combobox", { name: "Type" }), "text");
+    await user.click(within(dialog).getByRole("button", { name: "Add field" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(writes[0]?.body).toMatchObject({
+      displayName: "Additional context",
+      description: "Explain the request",
+      moduleScope: catalog,
+      fieldType: "text",
+      fieldTag: "business",
+    });
+    expect(writes[1]?.body).toMatchObject({ fieldId: "f-new" });
+    expect(screen.getByText("Additional context")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Attach field" })).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "Detach Additional context" }));
+    await waitFor(() => expect(screen.queryByText("Additional context")).not.toBeInTheDocument());
+    await user.selectOptions(
+      screen.getByLabelText("Default destination"),
+      catalog === "contract" ? "matter" : "contract",
+    );
+    await waitFor(() => expect(calls.patches).toHaveLength(1));
+    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    const menu = await screen.findByRole("menu");
+    expect(
+      within(menu).queryByRole("menuitem", { name: /Additional context/ }),
+    ).not.toBeInTheDocument();
+  },
+);

@@ -20,7 +20,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { asc, counterparties, ilike, isNull, and, sql } from "@openlaw/db";
+import { asc, counterparties, ilike, isNull, and, sql, type Executor } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { escapeLikePattern } from "../../lib/like.js";
 import { problemResponse } from "../../lib/problem.js";
@@ -38,7 +38,7 @@ const SEARCH_LIMIT = 20;
 /** One counterparty as the typeahead draws it. The jurisdiction rides
  * along as the disambiguator: two organizations do share a name, and
  * "Delaware" beside one of them is what tells them apart. */
-const CounterpartyOptionSchema = z.object({
+export const CounterpartyOptionSchema = z.object({
   id: z.string(),
   name: z.string(),
   jurisdiction: z.string().nullable(),
@@ -67,28 +67,34 @@ export const counterpartiesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const term = request.query.query;
-      const rows = await app.db
-        .select({
-          id: counterparties.id,
-          name: counterparties.name,
-          jurisdiction: counterparties.jurisdiction,
-        })
-        .from(counterparties)
-        .where(
-          and(
-            // Archived is out of the picker, in with the record: this
-            // read exists to be picked from (SET-003).
-            isNull(counterparties.archivedAt),
-            // Contains, not starts-with: "Helix" has to find "The Helix
-            // Group", or the typeahead makes a duplicate of it.
-            term ? ilike(counterparties.name, `%${escapeLikePattern(term)}%`) : undefined,
-          ),
-        )
-        // Case-insensitive, as the name index is built: "iCloud Ltd"
-        // files under I wherever the default collation would put it.
-        .orderBy(asc(sql`lower(${counterparties.name})`), asc(counterparties.createdAt))
-        .limit(SEARCH_LIMIT);
+      const rows = await searchCounterparties(app.db, term);
       return { counterparties: rows };
     },
   );
 };
+
+export function searchCounterparties(db: Executor, term?: string) {
+  return (
+    db
+      .select({
+        id: counterparties.id,
+        name: counterparties.name,
+        jurisdiction: counterparties.jurisdiction,
+      })
+      .from(counterparties)
+      .where(
+        and(
+          // Archived is out of the picker, in with the record: this
+          // read exists to be picked from (SET-003).
+          isNull(counterparties.archivedAt),
+          // Contains, not starts-with: "Helix" has to find "The Helix
+          // Group", or the typeahead makes a duplicate of it.
+          term ? ilike(counterparties.name, `%${escapeLikePattern(term)}%`) : undefined,
+        ),
+      )
+      // Case-insensitive, as the name index is built: "iCloud Ltd"
+      // files under I wherever the default collation would put it.
+      .orderBy(asc(sql`lower(${counterparties.name})`), asc(counterparties.createdAt))
+      .limit(SEARCH_LIMIT)
+  );
+}

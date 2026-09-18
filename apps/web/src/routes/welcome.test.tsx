@@ -1402,6 +1402,7 @@ const REVIEW_RESPONSES = {
         targetModule: null,
         targetTypeId: null,
         formFieldCount: 0,
+        formFieldOrder: [],
       },
     ],
   },

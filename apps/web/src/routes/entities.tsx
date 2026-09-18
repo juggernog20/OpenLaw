@@ -77,6 +77,7 @@ import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Switch } from "../components/ui/switch";
 
 type EntitiesQuery = NonNullable<paths["/api/v1/entities"]["get"]["parameters"]["query"]>;
 
@@ -733,6 +734,7 @@ function EntitiesPageState() {
       {registerOpen && (
         <RegisterEntityDialog
           entityTypes={entityTypes}
+          canListInPortal={user.role === "administrator"}
           onOpenChange={setRegisterOpen}
           onRegistered={(row) =>
             setRows((current) => [...current, { ...row, nextObligation: null }].sort(byLegalName))
@@ -1255,6 +1257,7 @@ function EmptyRegistry({
 /** The identity card the register form collects (ENT-001): legal name
  * and type required, the rest optional. */
 interface RegisterDraft {
+  portalListed: boolean;
   legalName: string;
   entityTypeId: string;
   status: EntityStatus;
@@ -1267,6 +1270,7 @@ interface RegisterDraft {
 }
 
 const EMPTY_DRAFT: RegisterDraft = {
+  portalListed: false,
   legalName: "",
   entityTypeId: "",
   status: "active",
@@ -1280,10 +1284,12 @@ const EMPTY_DRAFT: RegisterDraft = {
 
 function RegisterEntityDialog({
   entityTypes,
+  canListInPortal,
   onOpenChange,
   onRegistered,
 }: Readonly<{
   entityTypes: EntityTypeOption[];
+  canListInPortal: boolean;
   onOpenChange: (open: boolean) => void;
   onRegistered: (row: EntityRow) => void;
 }>) {
@@ -1323,6 +1329,7 @@ function RegisterEntityDialog({
         body: {
           legalName: draft.legalName.trim(),
           entityTypeId: draft.entityTypeId,
+          portalListed: canListInPortal ? draft.portalListed : undefined,
           status: draft.status,
           jurisdiction: draft.jurisdiction.trim() || undefined,
           formedOn: draft.formedOn || undefined,
@@ -1514,6 +1521,28 @@ function RegisterEntityDialog({
                 onChange={(event) => set("registeredAddress", event.target.value)}
               />
             </div>
+            {canListInPortal && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id="create-entity-portal-listed"
+                    checked={draft.portalListed}
+                    disabled={busy}
+                    aria-describedby="create-entity-portal-listed-help"
+                    onCheckedChange={(value) => set("portalListed", value)}
+                  />
+                  <Label htmlFor="create-entity-portal-listed">
+                    <FormattedMessage id="entities.portalListed" defaultMessage="Portal-listed" />
+                  </Label>
+                </div>
+                <p id="create-entity-portal-listed-help" className="text-sm text-muted">
+                  <FormattedMessage
+                    id="entities.portalListed.help"
+                    defaultMessage="Business Users can pick this Entity by name on Portal forms."
+                  />
+                </p>
+              </div>
+            )}
             <CreateAttachments uploads={attachments} disabled={busy} />
             {error && (
               <p role="alert" className="text-xs text-status-danger-fg">

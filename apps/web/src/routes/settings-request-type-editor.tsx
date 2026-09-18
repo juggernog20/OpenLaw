@@ -30,7 +30,7 @@ export async function settingsRequestTypeEditorLoader({ params }: LoaderFunction
   const [typeRes, attachedRes, catalogRes, matterRes, contractRes] = await Promise.all([
     api.GET("/api/v1/request-types/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/request-types/{id}/fields", { params: { path: { id } } }),
-    api.GET("/api/v1/fields", {}),
+    api.GET("/api/v1/fields", { params: { query: { intake: "true" } } }),
     api.GET("/api/v1/matter-types", { params: { query: { includeArchived: "true" } } }),
     api.GET("/api/v1/contract-types", { params: { query: { includeArchived: "true" } } }),
   ]);
@@ -110,7 +110,7 @@ const BASICS = defineMessages({
   },
   locked: {
     id: "settings.requestTypeEditor.basicLocked",
-    defaultMessage: "{name} is always collected and can't be changed.",
+    defaultMessage: "{name} is always collected. You can change its position.",
   },
   title: { id: "settings.requestTypeEditor.basicTitle", defaultMessage: "Title" },
   titleType: { id: "settings.requestTypeEditor.basicTitleType", defaultMessage: "Text" },
@@ -511,6 +511,19 @@ export function SettingsRequestTypeEditorPage() {
         </>
       }
       attachments={{
+        createFieldModule: destination.targetModule ?? "choose",
+        formOrder: {
+          initial: requestType.formFieldOrder ?? [],
+          save: async (id, formFieldOrder) => {
+            const result = await api
+              .PATCH("/api/v1/request-types/{id}", {
+                params: { path: { id } },
+                body: { formFieldOrder },
+              })
+              .catch(() => undefined);
+            return { data: result?.data?.requestType.formFieldOrder, ...(await problem(result)) };
+          },
+        },
         initialAttached: attachedFields,
         catalog: catalog.filter((field) => scopes.includes(field.moduleScope)),
         api: EDITOR_API,

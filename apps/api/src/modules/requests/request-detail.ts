@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { withAnsweredIntakeDefaults } from "../../lib/intake-default-fields.js";
 
 /**
  * The staff request detail (INT-006, INT-007, #414): one Request as
@@ -153,11 +154,17 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
               .orderBy(asc(activityLog.createdAt), asc(activityLog.id))
               .limit(1)
           : [];
+      const readableFields = await withAnsweredIntakeDefaults(app.db, attached, row.customFields);
       return {
         conversion: conversion ? { at: conversion.at.toISOString(), by: conversion.by } : null,
         request: toStaffRequest(row),
-        fields: attached,
-        customFieldRefs: await resolveStaffRefs(app.db, attached, row.customFields, request.user),
+        fields: readableFields,
+        customFieldRefs: await resolveStaffRefs(
+          app.db,
+          readableFields,
+          row.customFields,
+          request.user,
+        ),
         attachments,
       };
     },

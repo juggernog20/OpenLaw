@@ -42,9 +42,21 @@ Check the Portal's request-type card for this duration as general guidance befor
 2. Turn on that Field's **Required** checkbox if the Requester must answer it. Wait for the save to finish.
 3. Repeat for the other Fields you need. Use the reorder controls to put them in a useful order; with a reorder control focused, the arrow keys move its Field.
 
-Plan the form around its fixed basics: **Title**, **Description**, **Attachments**, **Department**, and **Urgency**. Title, Description, Department, and Urgency are required; attachments are optional. Department uses the shared list managed under **Settings → Organization → Departments** and carries into the converted record without a Field attachment. These basics cannot be removed or reordered here.
+To create a Field while editing the form, choose **Attach field → Add new field**. Enter its name, type, description, and any other details, then select **Add field**. It is saved to the catalog and attached to this form. Contract and Matter destinations use their matching catalog; with **Decide during triage**, choose **Contract fields** or **Matter fields** in the dialog. Contract fields also support an AI prompt.
+
+Every form includes **Title**, **Description**, **Attachments**, **Department**, and **Urgency**. Drag their reorder handles, or focus a handle and use the arrow keys, to position them anywhere among the attached Fields. The Business Portal displays the saved order. These basics cannot be removed, and their required settings cannot be changed: Title, Description, and Urgency are required; Department is required when departments are available; attachments are optional. Department uses the shared list managed under **Settings → Organization → Departments** and carries into the converted record without a Field attachment.
 
 The default destination decides which Fields **Attach field** offers. A Contract target offers Contract Fields. A Matter target offers Matter Fields. **Decide during triage** without a destination module offers Contract and Matter Fields, so you can build the questionnaire before deciding where requests will be converted. A User Field cannot be required on a Portal form, because the Portal does not offer people for the Requester to choose. An Entity Field can be required; the Portal offers only Portal-listed Entities for it. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
+
+## Collect default contract fields
+
+For a **Contract** destination or **Decide during triage**, the picker also offers protected questions marked **Default**: Our entity, Counterparties, Effective date, Expiry date, Term type, Renewal period (months), Notice period (days), Value amount, Value currency, and Value frequency. Attach, require, detach, and reorder these like other form questions. Their definitions cannot be renamed or archived.
+
+These answers populate the Contract’s existing fields during conversion; they do not create custom fields on the Contract. Counterparties uses a searchable lookup with **Add new** when the name is not found. Select multiple counterparties; the first becomes primary. Remove a selection using its remove button. Existing selections keep their registry identity, and new names are added to the directory when Legal converts the request. Our entity offers only Portal-listed Entities. A renewal period requires an auto-renewing term; supplying a renewal period without a term type means auto-renewing. An evergreen term cannot have an expiry date.
+
+To collect a complete **Value**, attach **Value amount**, **Value currency**, and **Value frequency**. Enter the amount in full currency units, such as 1500.50. All three must be answered for the value to populate the Contract; partial answers remain on the Request. The conversion dialog identifies answers that carry and those that remain on the Request.
+
+If Legal converts the Request into a Matter, these contract-specific answers remain on the Request. Submitted default answers remain readable even if the question is later detached. Internal fields such as Reference, Status, and Legal Owner are not intake questions.
 
 ## Offer guidance before submission
 

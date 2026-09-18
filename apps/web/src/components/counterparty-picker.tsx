@@ -36,7 +36,7 @@ import { cn } from "../lib/utils";
  * takes, so nothing has to translate between them. */
 export type CounterpartyPick = { counterpartyId: string } | { name: string };
 
-interface CounterpartyOption {
+export interface CounterpartyOption {
   id: string;
   name: string;
   jurisdiction: string | null;
@@ -54,8 +54,14 @@ export function CounterpartyPicker({
   ref,
   disabled = false,
   exclude = [],
+  excludeNames = [],
+  required = false,
   onPick,
   className,
+  search,
+  invalid,
+  describedBy,
+  addNewLabel = false,
 }: Readonly<{
   id: string;
   /** React 19 passes a function component's ref through props. Callers
@@ -66,9 +72,15 @@ export function CounterpartyPicker({
   /** Counterparties already named on this record. They are dropped from
    * the list rather than offered and refused. */
   exclude?: readonly string[];
+  excludeNames?: readonly string[];
+  required?: boolean;
   /** Fires once per commit. The caller owns the write and the busy
    * state; this control has committed as soon as it calls. */
-  onPick: (pick: CounterpartyPick) => void;
+  onPick: (pick: CounterpartyPick, label: string) => void;
+  search?: (query: string) => Promise<CounterpartyOption[]>;
+  invalid?: boolean;
+  describedBy?: string;
+  addNewLabel?: boolean;
   className?: string;
 }>) {
   const intl = useIntl();
@@ -79,6 +91,8 @@ export function CounterpartyPicker({
   /** The term `matches` is the answer to, or null before any answer.
    * "Searching" is derived from it: the list is open and its term has
    * no answer yet. */
+  const [failed, setFailed] = useState(false);
+  const [refresh, setRefresh] = useState(0);
   const [answeredFor, setAnsweredFor] = useState<string | null>(null);
   const listboxId = useId();
 
@@ -90,15 +104,27 @@ export function CounterpartyPicker({
     if (!open) return;
     let live = true;
     const timer = setTimeout(() => {
-      void api
-        .GET("/api/v1/counterparties", {
-          params: { query: { query: trimmed || undefined } },
-        })
-        .catch(() => ({ data: undefined }))
-        .then(({ data }) => {
-          // A slower earlier answer must never overwrite a later one.
+      const read = search
+        ? search(trimmed)
+        : api
+            .GET("/api/v1/counterparties", {
+              params: { query: { query: trimmed || undefined } },
+            })
+            .then(({ data }) => {
+              if (!data) throw new Error("Counterparty search failed");
+              return data.counterparties;
+            });
+      void read
+        .then((options) => {
           if (!live) return;
-          setMatches(data?.counterparties ?? []);
+          setMatches(options);
+          setFailed(false);
+          setAnsweredFor(trimmed);
+        })
+        .catch(() => {
+          if (!live) return;
+          setMatches([]);
+          setFailed(true);
           setAnsweredFor(trimmed);
         });
     }, SEARCH_DEBOUNCE_MS);
@@ -106,13 +132,13 @@ export function CounterpartyPicker({
       live = false;
       clearTimeout(timer);
     };
-  }, [open, trimmed]);
+  }, [open, trimmed, search, refresh]);
 
   const searching = open && answeredFor !== trimmed;
 
   /** What the list offers: everything found, less what the record
    * already names. */
-  const available = matches.filter((option) => !exclude.includes(option.id));
+  const available = searching ? [] : matches.filter((option) => !exclude.includes(option.id));
   /**
    * Whether to offer creating what was typed. The whole search answer
    * is consulted, not just what is offered — an organization we hold
@@ -122,6 +148,8 @@ export function CounterpartyPicker({
   const canCreate =
     trimmed.length > 0 &&
     !searching &&
+    !failed &&
+    !excludeNames.some((name) => name.toLocaleLowerCase() === trimmed.toLocaleLowerCase()) &&
     !matches.some((option) => option.name.toLowerCase() === trimmed.toLowerCase());
 
   const rowCount = available.length + (canCreate ? 1 : 0);
@@ -137,9 +165,9 @@ export function CounterpartyPicker({
   function commit(index: number) {
     const option = available[index];
     if (option) {
-      onPick({ counterpartyId: option.id });
+      onPick({ counterpartyId: option.id }, option.name);
     } else if (canCreate && index === available.length) {
-      onPick({ name: trimmed });
+      onPick({ name: trimmed }, trimmed);
     } else {
       return;
     }
@@ -149,12 +177,18 @@ export function CounterpartyPicker({
     setActiveIndex(0);
     setMatches([]);
     setAnsweredFor(null);
+    setRefresh((value) => value + 1);
   }
 
-  const createLabel = intl.formatMessage(
-    { id: "counterparty.picker.create", defaultMessage: 'Create "{name}"' },
-    { name: trimmed },
-  );
+  const createLabel = addNewLabel
+    ? intl.formatMessage(
+        { id: "counterparty.picker.addNew", defaultMessage: 'Add new "{name}"' },
+        { name: trimmed },
+      )
+    : intl.formatMessage(
+        { id: "counterparty.picker.create", defaultMessage: 'Create "{name}"' },
+        { name: trimmed },
+      );
 
   return (
     <div className={cn("relative", className)}>
@@ -166,6 +200,10 @@ export function CounterpartyPicker({
         aria-controls={listboxId}
         aria-activedescendant={open && rowCount > 0 ? rowId(active) : undefined}
         aria-autocomplete="list"
+        aria-invalid={invalid || undefined}
+        aria-required={required || undefined}
+        maxLength={200}
+        aria-describedby={describedBy}
         aria-busy={searching}
         autoComplete="off"
         spellCheck={false}
@@ -194,12 +232,10 @@ export function CounterpartyPicker({
             return;
           }
           if (event.key === "Enter") {
-            if (open && rowCount > 0) {
-              // A picked row must not also submit the form around it.
-              // With nothing to pick, Enter is left alone — an intake
-              // form built around this control keeps its submit key.
+            if (open) {
+              // Enter belongs to the lookup while its list is open, including during search.
               event.preventDefault();
-              commit(active);
+              if (rowCount > 0) commit(active);
             }
             return;
           }
@@ -278,7 +314,12 @@ export function CounterpartyPicker({
             aria-disabled="true"
             aria-selected={false}
           >
-            {searching ? (
+            {failed && !searching ? (
+              <FormattedMessage
+                id="counterparty.picker.failed"
+                defaultMessage="Could not load counterparties. Try searching again."
+              />
+            ) : searching ? (
               <FormattedMessage id="counterparty.picker.searching" defaultMessage="Searching…" />
             ) : (
               <FormattedMessage

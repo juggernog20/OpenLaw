@@ -1,0 +1,1 @@
+ALTER TABLE "request_types" ADD COLUMN "form_field_order" jsonb DEFAULT '[]'::jsonb NOT NULL;

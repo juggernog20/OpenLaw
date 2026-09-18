@@ -116,6 +116,8 @@ function newCalls(): EditorCalls {
 function editorApi(calls: EditorCalls, attached = [GOVERNING_LAW, DEPARTMENT]) {
   return (call: StubCall): Response | undefined => {
     const path = call.url.pathname;
+    if (path.endsWith("/approval-default")) return json(200, { groupId: null });
+    if (path === "/api/v1/approver-groups") return json(200, { approverGroups: [] });
     if (/^\/api\/v1\/contract-types\/[^/]+\/people$/.test(path)) return json(200, { people: [] });
     if (path === "/api/v1/users") return json(200, { users: [] });
     if (path === "/api/v1/contract-types" && call.method === "GET") {
@@ -238,7 +240,7 @@ describe("the attached-fields card (ST16 right)", () => {
     stubApi({ signedIn: ADMIN, extra: editorApi(newCalls()) });
     renderAt("/settings/contracts/types/t1");
 
-    const rows = within(await screen.findByRole("list", { name: "Attached fields" })).getAllByRole(
+    const rows = within(await screen.findByRole("list", { name: "Custom Fields" })).getAllByRole(
       "listitem",
     );
     expect(within(rows[0]!).getByText("Governing law")).toBeInTheDocument();
@@ -293,7 +295,7 @@ describe("the attached-fields card (ST16 right)", () => {
     await user.keyboard("{ArrowDown}");
     await waitFor(() => expect(calls.orders).toEqual([{ fieldIds: ["f2", "f1"] }]));
 
-    const rows = within(screen.getByRole("list", { name: "Attached fields" })).getAllByRole(
+    const rows = within(screen.getByRole("list", { name: "Custom Fields" })).getAllByRole(
       "listitem",
     );
     expect(within(rows[0]!).getByText("Department")).toBeInTheDocument();
@@ -340,7 +342,7 @@ describe("the attached-fields card (ST16 right)", () => {
 
     await user.click(within(menu).getByText("Our position"));
     await waitFor(() => expect(calls.attaches).toEqual([{ fieldId: "f3" }]));
-    const rows = within(screen.getByRole("list", { name: "Attached fields" })).getAllByRole(
+    const rows = within(screen.getByRole("list", { name: "Custom Fields" })).getAllByRole(
       "listitem",
     );
     expect(within(rows[2]!).getByText("Our position")).toBeInTheDocument();
@@ -364,7 +366,7 @@ describe("the attached-fields card (ST16 right)", () => {
 
     expect(await screen.findByText("Our position is already attached.")).toBeInTheDocument();
     expect(
-      within(screen.getByRole("list", { name: "Attached fields" })).getAllByRole("listitem"),
+      within(screen.getByRole("list", { name: "Custom Fields" })).getAllByRole("listitem"),
     ).toHaveLength(2);
   });
 
@@ -390,7 +392,7 @@ describe("the attached-fields card (ST16 right)", () => {
     expect(
       await screen.findByText("The order must include every attached field."),
     ).toBeInTheDocument();
-    const rows = within(screen.getByRole("list", { name: "Attached fields" })).getAllByRole(
+    const rows = within(screen.getByRole("list", { name: "Custom Fields" })).getAllByRole(
       "listitem",
     );
     expect(within(rows[0]!).getByText("Governing law")).toBeInTheDocument();

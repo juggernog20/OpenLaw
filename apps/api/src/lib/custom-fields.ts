@@ -90,6 +90,7 @@ export const CustomFieldsInput = z.record(z.string(), CustomFieldValueSchema.nul
  * just the value — a select with no options is not a control.
  */
 export const AttachedCustomFieldSchema = z.object({
+  builtInKey: z.string().nullable().optional(),
   fieldId: z.string(),
   /** What the value is keyed by, here and in the jsonb column. */
   slug: z.string(),
@@ -123,6 +124,7 @@ export async function selectAttachedFields(
 ): Promise<AttachedCustomField[]> {
   const rows = await db
     .select({
+      builtInKey: fields.builtInKey,
       fieldId: fields.id,
       slug: fields.slug,
       displayName: fields.displayName,
@@ -137,7 +139,11 @@ export async function selectAttachedFields(
     .innerJoin(fields, eq(joinTable.fieldId, fields.id))
     .where(and(eq(joinTable.typeId, typeId), isNull(fields.archivedAt)))
     .orderBy(asc(joinTable.displayOrder), asc(joinTable.createdAt));
-  return rows.map((row) => ({ ...row, options: row.options ?? null }));
+  return rows.map(({ builtInKey, ...row }) => ({
+    ...row,
+    ...(builtInKey ? { builtInKey } : {}),
+    options: row.options ?? null,
+  }));
 }
 
 /**

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { readIntakeContractFacts } from "../../lib/intake-default-fields.js";
 
 /**
  * Convert (INT-002, INT-006, INT-007, DD-018, #420): the disposition
@@ -242,6 +243,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                 departmentId: requests.departmentId,
                 description: requests.description,
                 customFields: requests.customFields,
+                intakeCounterparties: requests.intakeCounterparties,
                 targetModule: requestTypes.targetModule,
                 targetContractTypeId: contractTypes.id,
                 targetMatterTypeId: matterTypes.id,
@@ -311,6 +313,19 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               if (value !== undefined) carried[field.slug] = value;
             }
 
+            const intake =
+              target.module === "contract"
+                ? await readIntakeContractFacts(tx, row.customFields)
+                : null;
+            const intakeParties = request.body.counterpartyCleared
+              ? []
+              : counterpartyName !== undefined
+                ? [{ name: counterpartyName }]
+                : target.module !== "contract"
+                  ? []
+                  : row.intakeCounterparties.length
+                    ? row.intakeCounterparties
+                    : (intake?.counterparties ?? []).map((name) => ({ name }));
             const customFields = { ...carried, ...(answers ?? {}) };
             const born =
               target.module === "contract"
@@ -318,6 +333,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
+                    ...(intake ? { intakeFacts: intake.facts } : {}),
                     owningDepartmentId: row.departmentId,
                     region:
                       typeof row.customFields.region === "string" ? row.customFields.region : null,
@@ -407,10 +423,11 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             // lock spans two inserts and the commit rather than the blob
             // copies above. The contract arm was refused above for a
             // matter, so a name here is always on a contract.
-            if (counterpartyName !== undefined) {
+            for (const [index, party] of intakeParties.entries()) {
               await linkPrimaryCounterparty(tx, {
                 contract: { id: born.row.id, number: born.row.number, title: born.row.title },
-                name: counterpartyName,
+                ...party,
+                isPrimary: index === 0,
                 actorId: request.user.id,
               });
             }

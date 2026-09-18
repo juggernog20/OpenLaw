@@ -5,13 +5,8 @@
  * frame of intake.pen: one request type's form, and the confirmation a
  * submission earns.
  *
- * **The form is a read, not a second copy of the rule.** The four fixed
- * basics — Title, Description, Attachments, Department, Urgency — are drawn here
- * because INT-002's M19/4 addendum makes them a fact about every form
- * rather than a configuration of one. Everything after them is the
- * request type's attached catalog fields, in the Administrator's
- * display order, exactly as the API answers them. Nothing on this
- * screen decides what a form collects.
+ * Default and attached fields share the request type's saved presentation
+ * order. Required validation and submission values do not depend on position.
  *
  * **The refusal is shown twice, on purpose.** One alert says what is
  * wrong, and each unanswered field says it again beside the box that
@@ -31,11 +26,8 @@
  *    description, an order, and a target (INT-002) — no icon — so the
  *    title is the name alone. It is the I5 picker's normalization,
  *    applied to the same row on the next screen.
- * 2. I6 places Attachments last, under the type's own fields. The four
- *    basics render first, in INT-002's order — Title, Description,
- *    Attachments, Department, Urgency — which is the order the M19 editor locks
- *    them in. The Administrator reads the form as fixed basics over the
- *    attached fields, and the requester fills in the same thing.
+ * 2. Default fields stay on every form, but Administrators can move them
+ *    alongside attached fields. Unsaved forms retain the original order.
  * 3. I6's Urgency control offers "Normal". DES-018's ramp replaced that
  *    vocabulary, as INT-002 already records: the four levels are low,
  *    medium, high, and critical.
@@ -77,11 +69,16 @@
  * yet; the honest answer is the fact and the reference to quote.
  */
 
+import {
+  IntakeCounterpartiesInput,
+  type IntakeCounterpartySelection,
+} from "../components/intake/counterparties-input";
 import { HelpLink } from "../components/documentation/help-link";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { CircleCheck, FileText, Mail, TriangleAlert, Upload, X } from "lucide-react";
+import { resolveIntakeFieldOrder } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { SEVERITY_LEVELS, severityLabel } from "../lib/contracts";
@@ -179,6 +176,7 @@ export function PortalRequestFormPage() {
   const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
   /** The paper, chosen but not yet sent: an attachment is a row against
    * a Request, and there is no Request until Submit is pressed. */
+  const [counterparties, setCounterparties] = useState<IntakeCounterpartySelection[]>([]);
   const [files, setFiles] = useState<readonly File[]>([]);
   const [busy, setBusy] = useState(false);
   /** The refusal, as a sentence and as a set of boxes. Both come from
@@ -280,6 +278,9 @@ export function PortalRequestFormPage() {
           description: description.trim(),
           urgency,
           customFields,
+          ...(fields.some((field) => field.builtInKey === "counterparties")
+            ? { counterparties: counterparties.map((selection) => selection.pick) }
+            : {}),
         },
       })
       .catch(() => undefined);
@@ -321,6 +322,137 @@ export function PortalRequestFormPage() {
     setSubmitted((current) => (current === null ? current : { ...current, uploading: false }));
   }
 
+  const fieldOrder = resolveIntakeFieldOrder(
+    fields.map((field) => field.fieldId),
+    requestType.formFieldOrder,
+  );
+  const formControls: Record<string, ReactNode> = {
+    "basic:title": (
+      <Field
+        htmlFor="request-title"
+        label={intl.formatMessage(BASIC_LABELS.title)}
+        required
+        unanswered={unanswered.has("title")}
+      >
+        <Input
+          id="request-title"
+          value={title}
+          aria-required="true"
+          aria-invalid={unanswered.has("title") || undefined}
+          placeholder={intl.formatMessage({
+            id: "portal.form.summaryHint",
+            defaultMessage: "Enter a descriptive title for your request",
+          })}
+          onChange={(event) => {
+            setTitle(event.target.value);
+            clearMark("title");
+          }}
+        />
+      </Field>
+    ),
+    "basic:description": (
+      <Field
+        htmlFor="request-description"
+        label={intl.formatMessage(BASIC_LABELS.description)}
+        required
+        unanswered={unanswered.has("description")}
+      >
+        <AutoResizeTextarea
+          id="request-description"
+          rows={4}
+          value={description}
+          aria-required="true"
+          aria-invalid={unanswered.has("description") || undefined}
+          placeholder={intl.formatMessage({
+            id: "portal.form.descriptionHint",
+            defaultMessage:
+              "What is it, who is on the other side, and what do you need from Legal?",
+          })}
+          onChange={(event) => {
+            setDescription(event.target.value);
+            clearMark("description");
+          }}
+        />
+      </Field>
+    ),
+    "basic:department": (
+      <Field
+        htmlFor="request-department"
+        required={departments.length > 0}
+        unanswered={unanswered.has("department")}
+        label={intl.formatMessage({
+          id: "records.department",
+          defaultMessage: "Department",
+        })}
+      >
+        <DepartmentPicker
+          id="request-department"
+          required={departments.length > 0}
+          invalid={unanswered.has("department")}
+          value={departmentId}
+          options={departments}
+          onChange={(value) => {
+            setDepartmentId(value);
+            clearMark("department");
+          }}
+          disabled={busy || departments.length === 0}
+        />
+        {departments.length === 0 && (
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="portal.form.noDepartments"
+              defaultMessage="No Departments are configured. You can submit without one; an Administrator can add Departments in Settings."
+            />
+          </p>
+        )}
+      </Field>
+    ),
+    "basic:urgency": (
+      <Field htmlFor="request-urgency" label={intl.formatMessage(BASIC_LABELS.urgency)} required>
+        <select
+          id="request-urgency"
+          value={urgency}
+          className={CONTROL_CLASS}
+          aria-required="true"
+          // Read back off the ramp rather than asserted onto
+          // it: the four options are the only ones the select
+          // draws, and this is what makes that a fact rather
+          // than a promise the compiler was told to believe.
+          onChange={(event) => {
+            const picked = SEVERITY_LEVELS.find((level) => level === event.target.value);
+            if (picked) setUrgency(picked);
+          }}
+        >
+          {SEVERITY_LEVELS.map((level) => (
+            <option key={level} value={level}>
+              {severityLabel(intl, level)}
+            </option>
+          ))}
+        </select>
+      </Field>
+    ),
+    "basic:attachments": <AttachmentsField files={files} onFiles={setFiles} />,
+    ...Object.fromEntries(
+      fields.map((field) => [
+        field.fieldId,
+        <AttachedField
+          key={field.slug}
+          field={field}
+          entities={entities}
+          requestTypeId={requestType.id}
+          counterparties={counterparties}
+          onCounterparties={setCounterparties}
+          draft={drafts[field.slug] ?? emptyDraft(field)}
+          unanswered={unanswered.has(field.slug)}
+          onDraft={(next) => {
+            setDrafts((current) => ({ ...current, [field.slug]: next }));
+            clearMark(field.slug);
+          }}
+        />,
+      ]),
+    ),
+  };
+
   return (
     <PortalShell user={user} onSignOut={() => void signOut()}>
       <PageTitle title={intl.formatMessage(TITLE)} />
@@ -356,142 +488,10 @@ export function PortalRequestFormPage() {
                 </h2>
               </div>
               <div className="flex flex-col gap-5 p-4">
-                <Field
-                  htmlFor="request-title"
-                  label={intl.formatMessage(BASIC_LABELS.title)}
-                  required
-                  unanswered={unanswered.has("title")}
-                >
-                  <Input
-                    id="request-title"
-                    autoFocus
-                    value={title}
-                    aria-required="true"
-                    aria-invalid={unanswered.has("title") || undefined}
-                    placeholder={intl.formatMessage({
-                      id: "portal.form.summaryHint",
-                      defaultMessage: "Enter a descriptive title for your request",
-                    })}
-                    onChange={(event) => {
-                      setTitle(event.target.value);
-                      clearMark("title");
-                    }}
-                  />
-                </Field>
-                <Field
-                  htmlFor="request-description"
-                  label={intl.formatMessage(BASIC_LABELS.description)}
-                  required
-                  unanswered={unanswered.has("description")}
-                >
-                  <AutoResizeTextarea
-                    id="request-description"
-                    rows={4}
-                    value={description}
-                    aria-required="true"
-                    aria-invalid={unanswered.has("description") || undefined}
-                    placeholder={intl.formatMessage({
-                      id: "portal.form.descriptionHint",
-                      defaultMessage:
-                        "What is it, who is on the other side, and what do you need from Legal?",
-                    })}
-                    onChange={(event) => {
-                      setDescription(event.target.value);
-                      clearMark("description");
-                    }}
-                  />
-                </Field>
-                {/* The third basic. Optional on every form (INT-002):
-                    a submission with no paper is a complete one. */}
-                <AttachmentsField files={files} onFiles={setFiles} />
-
-                <Field
-                  htmlFor="request-department"
-                  required={departments.length > 0}
-                  unanswered={unanswered.has("department")}
-                  label={intl.formatMessage({
-                    id: "records.department",
-                    defaultMessage: "Department",
-                  })}
-                >
-                  <DepartmentPicker
-                    id="request-department"
-                    required={departments.length > 0}
-                    invalid={unanswered.has("department")}
-                    value={departmentId}
-                    options={departments}
-                    onChange={(value) => {
-                      setDepartmentId(value);
-                      clearMark("department");
-                    }}
-                    disabled={busy || departments.length === 0}
-                  />
-                  {departments.length === 0 && (
-                    <p className="text-sm text-muted">
-                      <FormattedMessage
-                        id="portal.form.noDepartments"
-                        defaultMessage="No Departments are configured. You can submit without one; an Administrator can add Departments in Settings."
-                      />
-                    </p>
-                  )}
-                </Field>
-                <Field
-                  htmlFor="request-urgency"
-                  label={intl.formatMessage(BASIC_LABELS.urgency)}
-                  required
-                >
-                  <select
-                    id="request-urgency"
-                    value={urgency}
-                    className={CONTROL_CLASS}
-                    aria-required="true"
-                    // Read back off the ramp rather than asserted onto
-                    // it: the four options are the only ones the select
-                    // draws, and this is what makes that a fact rather
-                    // than a promise the compiler was told to believe.
-                    onChange={(event) => {
-                      const picked = SEVERITY_LEVELS.find((level) => level === event.target.value);
-                      if (picked) setUrgency(picked);
-                    }}
-                  >
-                    {SEVERITY_LEVELS.map((level) => (
-                      <option key={level} value={level}>
-                        {severityLabel(intl, level)}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                {fieldOrder.map((key) => (
+                  <Fragment key={key}>{formControls[key]}</Fragment>
+                ))}
               </div>
-              {/* The request type's own fields, in the Administrator's
-                  display order (INT-002), under their own strip. */}
-              {fields.length > 0 && (
-                <>
-                  <div className="flex h-section-header items-center border-y border-border-default bg-section-header px-4">
-                    <h2 className="text-base font-semibold">
-                      <FormattedMessage
-                        id="portal.form.fieldsHeading"
-                        defaultMessage="Details for {requestType}"
-                        values={{ requestType: requestType.displayName }}
-                      />
-                    </h2>
-                  </div>
-                  <div className="flex flex-col gap-5 p-4">
-                    {fields.map((field) => (
-                      <AttachedField
-                        key={field.slug}
-                        field={field}
-                        entities={entities}
-                        draft={drafts[field.slug] ?? emptyDraft(field)}
-                        unanswered={unanswered.has(field.slug)}
-                        onDraft={(next) => {
-                          setDrafts((current) => ({ ...current, [field.slug]: next }));
-                          clearMark(field.slug);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
               {error && (
                 <p role="alert" className="px-4 pb-4 text-sm text-status-danger-fg">
                   {error}
@@ -728,7 +728,13 @@ function AttachedField({
   draft,
   unanswered,
   onDraft,
+  requestTypeId,
+  counterparties,
+  onCounterparties,
 }: Readonly<{
+  requestTypeId: string;
+  counterparties: readonly IntakeCounterpartySelection[];
+  onCounterparties: (value: IntakeCounterpartySelection[]) => void;
   field: FormField;
   entities: readonly FieldReference[];
   draft: CustomFieldDraft;
@@ -745,16 +751,31 @@ function AttachedField({
       hintId={`${controlId}-help`}
       unanswered={unanswered}
     >
-      <CustomFieldControl
-        id={controlId}
-        field={field}
-        entities={entities}
-        draft={draft}
-        required={field.isRequired}
-        invalid={unanswered}
-        describedBy={field.description ? `${controlId}-help` : undefined}
-        onDraft={onDraft}
-      />
+      {field.builtInKey === "counterparties" ? (
+        <IntakeCounterpartiesInput
+          required={field.isRequired}
+          id={controlId}
+          requestTypeId={requestTypeId}
+          selections={counterparties}
+          invalid={unanswered}
+          describedBy={field.description ? `${controlId}-help` : undefined}
+          onChange={(next) => {
+            onCounterparties(next);
+            onDraft(next.map((selection) => selection.label).join("\n"));
+          }}
+        />
+      ) : (
+        <CustomFieldControl
+          id={controlId}
+          field={field}
+          entities={entities}
+          draft={draft}
+          required={field.isRequired}
+          invalid={unanswered}
+          describedBy={field.description ? `${controlId}-help` : undefined}
+          onDraft={onDraft}
+        />
+      )}
     </Field>
   );
 }

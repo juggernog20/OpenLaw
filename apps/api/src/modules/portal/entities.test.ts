@@ -209,3 +209,42 @@ it("accepts a required Entity from the Portal list and refuses hidden, Confident
   ).toBe(200);
   expect((await submit(id)).statusCode).toBe(400);
 });
+
+it("lets an Administrator list an Entity during creation and audits the choice", async () => {
+  const res = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/entities",
+    cookies: admin,
+    payload: { legalName: "Listed at registration Ltd", entityTypeId, portalListed: true },
+  });
+  expect(res.statusCode, res.body).toBe(201);
+  const entity = res.json().entity;
+  expect(entity.portalListed).toBe(true);
+  expect((await list()).json().entities).toContainEqual({ id: entity.id, name: entity.legalName });
+  const events = await h.db
+    .select()
+    .from(activityLog)
+    .where(
+      and(eq(activityLog.entityId, entity.id), eq(activityLog.action, "entity.portal_listed_set")),
+    );
+  expect(events).toHaveLength(1);
+  expect(events[0]!.payload).toMatchObject({ from: false, to: true });
+});
+
+it.each([true, false])(
+  "refuses a Member's Portal-listed choice %s before creating the Entity",
+  async (portalListed) => {
+    const name = `Refused portal registration ${portalListed}`;
+    const res = await h.app.inject({
+      method: "POST",
+      url: "/api/v1/entities",
+      cookies: member,
+      payload: { legalName: name, entityTypeId, portalListed },
+    });
+    expect(res.statusCode).toBe(403);
+    const registry = await h.app.inject({ method: "GET", url: "/api/v1/entities", cookies: admin });
+    expect(
+      registry.json().entities.some((entity: { legalName: string }) => entity.legalName === name),
+    ).toBe(false);
+  },
+);

@@ -55,7 +55,7 @@ const MESSAGES = defineMessages({
   },
   attachedFields: {
     id: "settings.contractTypeEditor.attachedFields",
-    defaultMessage: "Attached fields",
+    defaultMessage: "Custom Fields",
   },
   fieldColumn: { id: "settings.contractTypeEditor.fieldColumn", defaultMessage: "Field" },
   requiredColumn: {
@@ -168,6 +168,7 @@ export function SettingsContractTypeEditorPage() {
         </>
       }
       attachments={{
+        defaultFieldsModule: "contract",
         createFieldModule: "contract",
         initialAttached: attachedFields,
         catalog,
