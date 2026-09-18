@@ -132,6 +132,16 @@ function surface({
 
 const lastQuery = (queries: URLSearchParams[]) => queries[queries.length - 1]!;
 
+/** Opens the DES-046 bar, picks one single-choice value, and applies it. */
+async function pick(user: ReturnType<typeof userEvent.setup>, property: string, choice: string) {
+  await user.click(screen.getByRole("button", { name: /^Filter/ }));
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", { name: property }),
+  );
+  await user.click(screen.getByRole("radio", { name: choice }));
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+}
+
 async function expectQuery(queries: URLSearchParams[], key: string, value: string | null) {
   await waitFor(() => expect(lastQuery(queries).get(key)).toBe(value));
 }
@@ -149,7 +159,7 @@ describe("the Entity registry managed list", () => {
       expect(new URLSearchParams(router.state.location.search).get("q")).toBe("Aldgate"),
     );
     expect(search).toHaveFocus();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Status" }), "dormant");
+    await pick(user, "Status", "Dormant");
     await waitFor(() => expect(api.queries.at(-1)?.get("status")).toBe("dormant"));
     expect(api.queries.at(-1)?.get("q")).toBe("Aldgate");
     await user.click(screen.getByRole("button", { name: "Show more" }));
@@ -212,17 +222,16 @@ describe("the Entity registry managed list", () => {
     const entityRow = within(table).getAllByRole("row")[1]!;
     expect(within(entityRow).getAllByRole("cell")[5]).toHaveTextContent(/^Yes$/);
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Type" }), "t-llc");
+    await pick(user, "Type", "LLC");
     await expectQuery(api.queries, "type", "t-llc");
-    await user.selectOptions(screen.getByRole("combobox", { name: "Status" }), "dormant");
+    await pick(user, "Status", "Dormant");
     await expectQuery(api.queries, "status", "dormant");
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Jurisdiction" }),
-      "England & Wales",
-    );
+    await pick(user, "Jurisdiction", "England & Wales");
     await expectQuery(api.queries, "jurisdiction", "England & Wales");
-    await user.selectOptions(screen.getByRole("combobox", { name: "Majority owner" }), "owner-1");
+    await pick(user, "Majority owner", "Aldgate Parent plc");
     await expectQuery(api.queries, "majorityOwner", "owner-1");
+    expect(screen.getByRole("button", { name: "Type: LLC" })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Filter\s*4$/ })).toBeVisible();
     expect(router.state.location.search).toContain("view=list");
     expect(router.state.location.search).toContain("majorityOwner=owner-1");
     expect(screen.getByRole("button", { name: "Remove Majority owner filter" })).toBeVisible();
@@ -239,11 +248,14 @@ describe("the Entity registry managed list", () => {
     const { router } = renderAt("/entities?view=list");
 
     expect(await screen.findByRole("button", { name: /Owned dormant companies/ })).toBeVisible();
-    expect(screen.getByRole("combobox", { name: "Type" })).toHaveValue("t-corp");
-    expect(screen.getByRole("combobox", { name: "Status" })).toHaveValue("dormant");
-    expect(screen.getByRole("combobox", { name: "Jurisdiction" })).toHaveValue("England & Wales");
-    expect(screen.getByRole("combobox", { name: "Majority owner" })).toHaveValue("owner-1");
-    expect(screen.getByRole("switch", { name: "Show archived" })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Type: Corporation" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Status: Dormant" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Jurisdiction: England & Wales" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Majority owner: Aldgate Parent plc" }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Show archived" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Remove Show archived filter" })).toBeVisible();
     await expectQuery(api.queries, "sort", "nextObligation");
     await waitFor(() => expect(router.state.location.search).toContain("status=dormant"));
   });
@@ -255,7 +267,7 @@ describe("the Entity registry managed list", () => {
     renderAt("/entities?view=list");
     expect(await screen.findByRole("heading", { name: "No Entities yet" })).toBeVisible();
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Type" }), "t-corp");
+    await pick(user, "Type", "Corporation");
     expect(
       await screen.findByRole("heading", { name: "No Entities match these filters" }),
     ).toBeVisible();
