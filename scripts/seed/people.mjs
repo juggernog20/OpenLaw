@@ -15,12 +15,36 @@
  * state the app can never reach.
  */
 
+import { readFileSync } from "node:fs";
 import { Session, pool } from "./client.mjs";
 import { extractLink, waitForMail } from "./mailpit.mjs";
 import { ADMIN, BUSINESS_USERS, ORG, STAFF } from "./data.mjs";
 
 /** A shared password, because this instance is a review sandbox. */
 export const PASSWORD = "correct-horse-battery";
+
+/**
+ * The bootstrap token first-run setup demands on an empty install
+ * (TECH-031). From the environment first, then from the repo's .env,
+ * which is the file the dev loop's API process reads too. Undefined
+ * when neither names one: the API then printed a generated token to
+ * its own log, and this script cannot read that.
+ */
+function setupToken() {
+  if (process.env.SETUP_TOKEN) return process.env.SETUP_TOKEN;
+  try {
+    const line = readFileSync(new URL("../../.env", import.meta.url), "utf8")
+      .split("\n")
+      .find((entry) => entry.startsWith("SETUP_TOKEN="));
+    const value = line
+      ?.slice("SETUP_TOKEN=".length)
+      .trim()
+      .replace(/^"(.*)"$/, "$1");
+    return value || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * better-auth refuses a request that carries a session cookie and no
@@ -53,9 +77,19 @@ export async function establishAdministrator(log) {
   const anonymous = new Session("setup");
   const { body: probe } = await anonymous.get("/api/v1/auth/setup");
   if (probe.needsSetup) {
+    const token = setupToken();
+    if (!token)
+      throw new Error(
+        "First-run setup needs the setup token. Set SETUP_TOKEN in .env (the dev loop's API reads it too) and restart the loop, or run setup in the browser with the token printed in the API log.",
+      );
     log(`first-run setup as ${ADMIN.email}`);
     await anonymous.request("POST", "/api/v1/auth/setup", {
-      json: { email: ADMIN.email, displayName: ADMIN.displayName, password: ADMIN.password },
+      json: {
+        email: ADMIN.email,
+        displayName: ADMIN.displayName,
+        password: ADMIN.password,
+        setupToken: token,
+      },
       expect: [201, 409],
     });
   } else {
@@ -99,7 +133,8 @@ async function activateStaff(admin, person, log) {
 
   const mail = await waitForMail(person.email, /password/i);
   const link = extractLink(mail.text, "/auth/set-password");
-  const token = new URL(link).searchParams.get("token");
+  // The token rides in the URL fragment (TECH-032), read as query-shaped pairs.
+  const token = new URLSearchParams(new URL(link).hash.slice(1)).get("token");
   if (!token) throw new Error(`The set-password link for ${person.email} carries no token.`);
 
   const activation = new Session(person.displayName);

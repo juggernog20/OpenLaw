@@ -25,7 +25,7 @@ describe("set-password activation", () => {
       if (call.url.pathname === "/api/auth/reset-password") passwordRequests.push(call.method);
       return undefined;
     });
-    renderAt("/auth/set-password?token=tok-123");
+    renderAt("/auth/set-password#token=tok-123");
 
     await userEvent.type(await screen.findByLabelText("New password"), "long-enough-1");
     await userEvent.type(screen.getByLabelText("Confirm password"), "long-enough-2");
@@ -41,7 +41,7 @@ describe("set-password activation", () => {
         ? json(200, { status: true })
         : undefined,
     );
-    renderAt("/auth/set-password?token=tok-123");
+    renderAt("/auth/set-password#token=tok-123");
 
     await userEvent.type(await screen.findByLabelText("New password"), "long-enough-1");
     await userEvent.type(screen.getByLabelText("Confirm password"), "long-enough-1");
@@ -56,7 +56,7 @@ describe("set-password activation", () => {
         ? json(400, { code: "INVALID_TOKEN", message: "invalid token" })
         : undefined,
     );
-    renderAt("/auth/set-password?token=tok-stale");
+    renderAt("/auth/set-password#token=tok-stale");
 
     await userEvent.type(await screen.findByLabelText("New password"), "long-enough-1");
     await userEvent.type(screen.getByLabelText("Confirm password"), "long-enough-1");

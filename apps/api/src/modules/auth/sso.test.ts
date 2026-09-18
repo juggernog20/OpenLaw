@@ -275,7 +275,7 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
       payload: { ...staffer, role: "legal_team_member" },
     });
     expect(invited.statusCode, invited.body).toBe(201);
-    const setToken = /\/auth\/set-password\?token=([A-Za-z0-9._~-]+)/.exec(
+    const setToken = /\/auth\/set-password#token=([A-Za-z0-9._~-]+)/.exec(
       harness.mailer.messagesTo(staffer.email)[0]!.text,
     )![1]!;
     const reset = await harness.app.inject({

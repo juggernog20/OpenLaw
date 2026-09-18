@@ -101,9 +101,17 @@ export async function signInCookies(
   return cookies;
 }
 
-/** The set-password token a recipient would click, from a captured email. */
+/**
+ * The bootstrap token a suite passes to a token-gated app (TECH-031). The shared harness config leaves the token unset
+ * so the many suites that run first-run setup keep working; a suite that
+ * asserts the gate builds its own app with this value.
+ */
+export const TEST_SETUP_TOKEN = "openlaw-test-setup-token"; // NOSONAR — inert fixture
+
+/** The set-password token a recipient would click, from a captured email.
+ * The token rides in the URL fragment (TECH-032). */
 export function tokenFrom(text: string): string {
-  const match = /\/auth\/set-password\?token=([A-Za-z0-9._~-]+)/.exec(text);
+  const match = /\/auth\/set-password#token=([A-Za-z0-9._~-]+)/.exec(text);
   if (!match?.[1]) throw new Error(`no set-password link in:\n${text}`);
   return match[1];
 }

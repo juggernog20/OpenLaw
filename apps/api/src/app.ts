@@ -27,7 +27,8 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
-import { HttpError, PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
+import { HttpError, httpError, PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
+import { loggable } from "./logging.js";
 import {
   clearActivityEmitter,
   setActivityEmitter,
@@ -245,12 +246,58 @@ declare module "fastify" {
     /** The upload ceiling in bytes, so the routes that refuse an
      * oversized file can name the limit they refused it against. */
     maxUploadBytes: number;
+    /** The reverse proxies whose forwarded client address is believed
+     * (TECH-032). The per-address limiters read it to tell a client
+     * address from the proxy's own. */
+    trustedProxies: readonly string[];
+    /** The bootstrap token first-run setup demands, or null when the
+     * entrypoint set none (TECH-031). */
+    setupToken: string | null;
   }
 }
 
+/** The request methods that change state. Reads are never Origin-checked. */
+const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+/**
+ * The one address under /api/v1 another site is meant to call: the
+ * signing provider's webhook. It proves itself with an HMAC over the
+ * body and carries no cookie, so the Origin check has nothing to add.
+ */
+const ORIGIN_CHECK_EXEMPT_PREFIX = "/api/v1/signing/";
+
+/**
+ * Whether a browser-originated mutation came from this install's own
+ * origin. `SameSite=Lax` already stops a cross-site POST from carrying
+ * the cookie, but a sibling origin on the same site (`other.example.com`
+ * beside `legal.example.com`) is same-site to the browser and can post a
+ * form with the victim's cookie. The browser names the sender in one of
+ * two headers; a request with neither (curl, the test harness, the E2E
+ * runner's API context) is not a browser form and passes.
+ */
+function fromOwnOrigin(
+  headers: { origin?: string; "sec-fetch-site"?: string },
+  ownOrigin: string,
+): boolean {
+  if (headers.origin !== undefined && headers.origin !== ownOrigin) return false;
+  const site = headers["sec-fetch-site"];
+  if (site !== undefined && site !== "same-origin" && site !== "none") return false;
+  return true;
+}
+
 export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
-  const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
+  // One list of trusted proxies feeds both address readers (TECH-032):
+  // Fastify's `request.ip` here and better-auth's rate limiter in
+  // auth/instance.ts. Derived from the config rather than passed as a
+  // server option so the two can never name different proxies.
+  const trustedProxies = [...(deps.config.trustedProxies ?? [])];
+  const app = Fastify({
+    trustProxy: trustedProxies.length > 0 ? trustedProxies : false,
+    ...opts,
+  }).withTypeProvider<ZodTypeProvider>();
   app.decorate("db", deps.db);
+  app.decorate("trustedProxies", trustedProxies);
+  app.decorate("setupToken", deps.config.setupToken ?? null);
   app.decorate("resolveMailer", deps.resolveMailer);
   app.decorate("storage", deps.storage);
   app.decorate("docEngine", deps.docEngine);
@@ -455,7 +502,9 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     }
 
     const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
-    if (status >= 500) request.log.error(error, "request failed");
+    // Through `loggable`, not as the raw error: a failed query's message
+    // is the SQL and its bind parameters (TECH-029).
+    if (status >= 500) request.log.error({ err: loggable(error) }, "request failed");
     // 5xx messages are scrubbed — an unexpected error's text can leak
     // internals — unless an HttpError opted its client-authored message
     // in (the 502 test-send reasons). The title stays a stable status
@@ -485,6 +534,19 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
           ...problem,
         }),
       );
+  });
+
+  // The Origin check on API mutations (TECH-033). Registered on the root
+  // context before any route, and scoped by path rather than mounted per
+  // plugin, so a module registered later cannot forget it. The better-auth
+  // handler lives outside /api/v1 and runs its own origin check.
+  const ownOrigin = new URL(deps.config.baseUrl).origin;
+  app.addHook("onRequest", async (request) => {
+    if (!UNSAFE_METHODS.has(request.method)) return;
+    const pathname = request.url.split("?", 1)[0] ?? request.url;
+    if (!pathname.startsWith("/api/v1/") || pathname.startsWith(ORIGIN_CHECK_EXEMPT_PREFIX)) return;
+    if (!fromOwnOrigin(request.headers, ownOrigin))
+      throw httpError(403, "This request did not come from this OpenLaw instance's own origin.");
   });
 
   await app.register(authHandler);

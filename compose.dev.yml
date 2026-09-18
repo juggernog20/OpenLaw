@@ -55,6 +55,10 @@ services:
       # The E2E suite replays sign-in flows from one IP far faster than
       # any human; production keeps better-auth's limits.
       AUTH_RATE_LIMIT: "off"
+      # First-run setup demands a bootstrap token (TECH-031). Pinned so
+      # the suite and the seed can run setup without reading the log; a
+      # real deployment leaves it unset and reads the generated one.
+      SETUP_TOKEN: "e2e-setup-token"
       # Mounts POST /api/v1/notifications/morning-round, which no real
       # install carries (TECH-018). The morning round is a cron on the
       # hour, and the M18 demo cannot wait an hour for a tick; the round

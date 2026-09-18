@@ -53,6 +53,7 @@ export function SetupPage() {
           email: String(form.get("email") ?? ""),
           displayName: String(form.get("displayName") ?? ""),
           password,
+          setupToken: String(form.get("setupToken") ?? "").trim(),
         },
       });
       if (response.status === 201) {
@@ -110,6 +111,24 @@ export function SetupPage() {
         )}
         {error && <Alert variant="danger">{error}</Alert>}
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="setupToken">
+              <FormattedMessage id="auth.setup.token" defaultMessage="Setup token" />
+            </Label>
+            <Input
+              id="setupToken"
+              name="setupToken"
+              autoComplete="off"
+              spellCheck={false}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              <FormattedMessage
+                id="auth.setup.tokenHint"
+                defaultMessage="The server printed it at start. Under Compose: docker compose logs app."
+              />
+            </p>
+          </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="displayName">
               <FormattedMessage id="auth.field.displayName" defaultMessage="Name" />

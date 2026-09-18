@@ -272,7 +272,14 @@ async function signInAdmin() {
 async function seed() {
   const status = await get("/api/v1/auth/setup");
   check(status.needsSetup, "the seed needs a fresh install; this one already has an Administrator");
-  await post("/api/v1/auth/setup", ADMIN, { accept: [201] });
+  // The bootstrap token (TECH-031). The baseline stack runs with
+  // compose.dev.yml, which pins SETUP_TOKEN to this value; a baseline
+  // older than the token ignores the extra field.
+  await post(
+    "/api/v1/auth/setup",
+    { ...ADMIN, setupToken: process.env.UPGRADE_SETUP_TOKEN ?? "e2e-setup-token" },
+    { accept: [201] },
+  );
   await post("/api/v1/onboarding/complete");
   const adminUser = (await get("/api/v1/me")).user;
   // DD-023 removed Contributor invites and team tags. Read the baseline's

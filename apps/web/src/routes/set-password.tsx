@@ -7,7 +7,7 @@
  */
 
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useLocation } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
@@ -22,10 +22,14 @@ import { PageTitle } from "../components/page-title";
 
 export function SetPasswordPage() {
   const intl = useIntl();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  // The token rides in the URL fragment, not the query string, so the
+  // browser never sends it and no server or proxy log holds a live one
+  // (TECH-032). The fragment is read as query-shaped pairs.
+  const { hash } = useLocation();
+  const fragment = new URLSearchParams(hash.replace(/^#/, ""));
+  const token = fragment.get("token");
   const loginUrl =
-    token?.startsWith("business.") || searchParams.get("portal") === "1"
+    token?.startsWith("business.") || fragment.get("portal") === "1"
       ? "/portal/login"
       : "/auth/login";
   const [error, setError] = useState<string | null>(null);

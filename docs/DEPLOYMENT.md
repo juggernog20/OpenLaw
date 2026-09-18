@@ -12,7 +12,7 @@ The blessed path is Docker Compose (TECH-005): one documented `docker compose up
 
 OpenLaw can run entirely behind the company network or VPN. Use an internal DNS hostname, a trusted HTTPS reverse proxy, and firewall rules permitting only office/VPN access. Bind the app port to loopback behind a host proxy and keep Postgres and the document engine unpublished. No public app endpoint is required for outbound SMTP or Signing in Polling mode.
 
-Follow [Deploy on a private VM](user-guides/deployment-configuration.md#deploy-on-a-private-vm) for the Compose override, internal DNS and VPN requirements, certificates, firewall boundaries, SSO callback, and verification steps. Apply those settings **before starting the stack**: the base Compose mapping publishes port 3000 on all host interfaces.
+Follow [Deploy on a private VM](user-guides/deployment-configuration.md#deploy-on-a-private-vm) for the Compose override, internal DNS and VPN requirements, certificates, firewall boundaries, SSO callback, and verification steps. Apply those settings **before starting the stack**. The base Compose mapping publishes port 3000 on `127.0.0.1` only; see [`APP_BIND`](#the-app-port-and-app_bind) before you change that.
 
 Set `BASE_URL` to the HTTPS address employees use, such as `https://openlaw.company.example`, in both app and worker. Email recipients must be on the office network or VPN to open links. `localhost` points to the recipient's own computer; changing the origin requires recreating the containers and issuing fresh email links.
 
@@ -30,6 +30,14 @@ docker compose up -d
 
 Then open `http://<host>:3000` — a fresh install lands on first-run setup, where you create the initial Administrator.
 
+The setup screen asks for a **setup token** (TECH-031). The app prints one at start, while the install has no users:
+
+```bash
+docker compose logs app | grep -A2 "setup token"
+```
+
+Paste it into the setup screen with the Administrator's name, email and password. The token is what stops anyone who can reach the port before you from claiming the Administrator seat. It changes on every restart; set `SETUP_TOKEN` in `.env` to choose it yourself, which you need with more than one API replica. Once a user exists the route refuses everyone and the token is no longer read.
+
 `OPENLAW_SECRET_KEY` encrypts the credentials your Administrators later save in Settings. Before you set up a backup job, read [The credential encryption key](#the-credential-encryption-key) — the one mistake that undoes it is storing the key in the same archive as the database dump.
 
 `compose.yml` references the release image and carries a `build:` context, so the same file works before any release exists: Compose builds the image locally when it isn't present.
@@ -45,6 +53,8 @@ Deployment configuration uses environment variables in `.env`; [`.env.example`](
 | `OPENLAW_SECRET_KEY_PREVIOUS`   | no       | The retiring key while `OPENLAW_SECRET_KEY` is being rotated. Set it for one boot, then remove it — see [The credential encryption key](#the-credential-encryption-key).                                                                                                                                         |
 | `DATABASE_URL`                  | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                                                                                                  |
 | `BASE_URL`                      | in prod  | The browser-facing origin (e.g. `https://legal.example.com`), which may be private to the office network or VPN. Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                                              |
+| `TRUSTED_PROXIES`               | in prod  | Comma-separated addresses or CIDR ranges of your reverse proxies, e.g. `127.0.0.1,::1`. The app believes `X-Forwarded-For` only from these senders — see [Trusted proxies](#trusted-proxies). Unset, every visitor behind a proxy shares one sign-in bucket, and the app warns at start.                         |
+| `SETUP_TOKEN`                   | no       | The token first-run setup asks for. Unset, the app generates one at start and prints it to the log, which is enough for one replica. Set it to pin the value. Not read once a user exists.                                                                                                                       |
 | `SMTP_URL` / `SMTP_FROM`        | no       | Outbound email; setting `SMTP_URL` pins SMTP to the environment, overriding anything saved in the app (see [Email](#email)). Unset = configurable in the app; with neither, email flows report "unconfigured" instead of sending.                                                                                |
 | `STORAGE_DRIVER`                | no       | Where uploaded files go (DOC-009): `local` (the default — a directory, no extra service), `s3` (an S3-compatible object store), or `azure-blob` (Azure Blob Storage). See [Files](#files).                                                                                                                       |
 | `STORAGE_PATH`                  | no       | The `local` driver's root. Defaults to `/var/lib/openlaw/files`, the mount point of the `openlaw-files` named volume. Keep the default under Compose — see [Files](#files).                                                                                                                                      |
@@ -56,19 +66,39 @@ Deployment configuration uses environment variables in `.env`; [`.env.example`](
 | `DOC_ENGINE_COMPARE_TIMEOUT_MS` | no       | How long one Word compare may take before it is abandoned. Compare is the engine's slowest operation and has its own bound. Defaults to 600000 (ten minutes); 840000 (fourteen minutes) is the most it accepts, and a larger value stops the start.                                                              |
 | `DOC_ENGINE_TMPFS_SIZE`         | no       | Compose only. Scratch space for the doc engine's read-only container, as a RAM-backed tmpfs. Defaults to `2g` — see [The doc engine](#the-doc-engine).                                                                                                                                                           |
 | `PORT`                          | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                                                                                                       |
+| `APP_BIND`                      | no       | Compose only. The host address the app port is published on. Defaults to `127.0.0.1` — see [The app port and `APP_BIND`](#the-app-port-and-app_bind).                                                                                                                                                            |
+| `OPENLAW_PLAIN_HTTP_HOSTS`      | no       | Comma-separated hosts an Administrator may save with a plain `http://` address under Settings → Advanced. Localhost and private network addresses are always allowed; every other host must use `https://`.                                                                                                      |
+
+### The app port and `APP_BIND`
+
+Compose publishes the app on `127.0.0.1:3000` by default. Only a process on the same host can reach it, which is where a reverse proxy normally sits. Docker writes its own firewall rules when it publishes a port, and those rules run before ufw or firewalld see the packet, so a port published on every interface is open to the network whatever the host firewall says. That is a way around the proxy and the TLS, rate limits and security headers it provides.
+
+If the proxy runs on another host, set `APP_BIND=0.0.0.0` in `.env` (or the address of one interface) and put a network rule in front of port 3000 that admits the proxy alone. Every environment variable set in `.env` is read by both the app and the worker, and any Settings → Advanced value the environment sets is pinned there: the Advanced pane shows it as deployment configuration and refuses to change it.
+
+The development overlay inherits the same loopback binding. The E2E suite and the CI workflow reach the stack on `localhost`, so they need no change.
 
 ## Reverse proxy contract
 
 The stack serves plain HTTP on one port and ships no proxy (TECH-017): TLS and the browser-facing hostname belong to _your_ ingress. Any proxy works if it honors this contract:
 
-1. **Terminate TLS** and forward to the app port (default `3000`).
+1. **Terminate TLS** and forward to the app port (default `127.0.0.1:3000`; set `APP_BIND` for a proxy on another host).
 2. **Set `BASE_URL`** in `.env` to the browser-facing origin the proxy serves. Public internet access is not required.
 3. **Pass `Origin` and `Host` through unmodified** — the auth layer's CSRF protection compares the `Origin` header against `BASE_URL` (TECH-008); a proxy that rewrites or strips it breaks sign-in.
 4. **No path rewriting.** The app owns the whole path space; serve it at the domain root.
 5. **Don't buffer `/api/events`.** Live surfaces use Server-Sent Events (TECH-009); response buffering turns them into nothing.
 6. **Allow a request body at least as large as `MAX_UPLOAD_MB`.** File uploads stream through the app (DOC-012); a proxy with a smaller body limit refuses them first, with its own error instead of the app's.
+7. **Forward the client address and name the proxy.** Set `X-Forwarded-For` to the client's address, overwriting whatever the client sent, and set `X-Forwarded-Proto`. Then put the proxy's own address in `TRUSTED_PROXIES` — see [Trusted proxies](#trusted-proxies).
 
 Everything else — HTTP/2, compression, request logging — is your choice.
+
+### Trusted proxies
+
+The sign-in limiters key on the client address (TECH-032). The app reads that address from the socket, and from `X-Forwarded-For` only when the socket peer is one of the addresses in `TRUSTED_PROXIES`. Two things go wrong when the list is missing or the proxy does not forward the address:
+
+- **Unset `TRUSTED_PROXIES` behind a proxy.** Every request arrives from the proxy's address, so every visitor shares one bucket. Three wrong passwords from anyone close password sign-in for everyone for ten seconds, and thirty password-setup requests close that door for the org for fifteen minutes. The app warns at start when `NODE_ENV=production` and the list is empty.
+- **A proxy that passes `X-Forwarded-For` through.** A client can then write any address into the header and get a fresh bucket per request. This is why the recipes below overwrite the header rather than append to it, and why the app believes the header only from a named proxy.
+
+Set the list to the proxy's real address or subnet, never to a broad range that also covers clients. On the same host that is `127.0.0.1` (and `::1` if the proxy connects over IPv6). When a trusted proxy forwards no client address at all, the per-address limiters stand down for that request so one proxy cannot lock the org out, and the per-email limiters still apply.
 
 ### Your proxy owns the security response headers
 
@@ -88,6 +118,8 @@ OpenLaw ships no `helmet`-style header middleware on purpose. It runs as one ups
 ### Rate limiting is yours too, except sign-in
 
 Sign-in has its own limiter inside the app, because it protects a credential rather than a resource and the counter has to be the one the auth layer keeps. `AUTH_RATE_LIMIT=off` turns it off; that switch belongs to the test overlay and the app warns loudly at boot when it is set. **Never set it on a real deployment.**
+
+Three more counters live in the database and stay on whatever the switch says (TECH-032). Ten wrong passwords for one email address in fifteen minutes close password sign-in for that address until the window ends, account or not. The addresses that send email to anyone who asks, password setup and magic links, take three requests per email address and thirty per client address in fifteen minutes. And a password reset ends every session the account had before it.
 
 Everything else is unlimited by the app and should be limited by you. What to bound, in the order it matters:
 
@@ -112,7 +144,7 @@ legal.example.com {
 }
 ```
 
-Set `BASE_URL=https://legal.example.com` in `.env`. This example assumes DNS and network access meet Caddy's automatic certificate issuance requirements. For an installation without public inbound access, use the [private VM certificate and port-binding example](user-guides/deployment-configuration.md#deploy-on-a-private-vm).
+Set `BASE_URL=https://legal.example.com` and `TRUSTED_PROXIES=127.0.0.1,::1` in `.env`. Caddy already meets item 7 of the contract: it replaces any `X-Forwarded-For` the client sent with the client's own address and sets `X-Forwarded-Proto`, so nothing in the Caddyfile changes. This example assumes DNS and network access meet Caddy's automatic certificate issuance requirements. For an installation without public inbound access, use the [private VM certificate and port-binding example](user-guides/deployment-configuration.md#deploy-on-a-private-vm).
 
 ### Example: nginx
 
@@ -134,16 +166,25 @@ server {
         proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
         # Origin is passed through untouched by default — do not override it.
+        # The client address, overwritten rather than appended: a client
+        # that sends its own X-Forwarded-For must not be believed. Then
+        # name this proxy in TRUSTED_PROXIES (item 7 of the contract).
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     location /api/events {
         proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_buffering off;      # SSE (TECH-009)
         proxy_read_timeout 24h;
     }
 }
 ```
+
+Set `TRUSTED_PROXIES=127.0.0.1,::1` in `.env` for this recipe. `$remote_addr` is the address nginx accepted the connection from, so the header never carries what the client wrote.
 
 ## External or managed Postgres
 

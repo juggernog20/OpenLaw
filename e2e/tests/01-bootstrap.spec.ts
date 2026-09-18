@@ -13,6 +13,7 @@ import {
   ensureAdminExists,
   ensureOnboardingComplete,
   needsSetup,
+  SETUP_TOKEN,
   signInAs,
   uniqueEmail,
 } from "./helpers.js";
@@ -26,6 +27,7 @@ test.describe("bootstrap probe", () => {
       // A fresh instance owns every route: even the root bounces to setup.
       await page.goto("/");
       await expect(page).toHaveURL(/\/auth\/setup$/);
+      await page.getByLabel("Setup token").fill(SETUP_TOKEN);
       await page.getByLabel("Name").fill(ADMIN.displayName);
       await page.getByLabel("Email").fill(ADMIN.email);
       await page.getByLabel("Password", { exact: true }).fill(ADMIN.password);

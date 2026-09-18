@@ -6,6 +6,7 @@
  * auth flows are better-auth's own handler under /api/auth/*.
  */
 
+import { createHash, timingSafeEqual } from "node:crypto";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { fromNodeHeaders } from "better-auth/node";
 import { isAPIError } from "better-auth/api";
@@ -29,6 +30,7 @@ import {
 } from "./authentication-policy-routes.js";
 import { authenticationPolicy, authenticationForEmail } from "../../auth/authentication-policy.js";
 import { provisionUser, withTrustedIssuerOrigin } from "../../auth/instance.js";
+import { clientAddress, consumeAuthRequestBudget } from "../../auth/limits.js";
 import { requireAuth, requireRole, requireSession, userColumns } from "../../auth/guards.js";
 import { readTwoFactorPolicy } from "../../auth/two-factor-policy.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -47,6 +49,16 @@ const UserSchema = z.object({
 });
 
 const UserEnvelope = z.object({ user: UserSchema });
+
+/**
+ * Compares the offered setup token with the expected one in constant
+ * time. Both sides are hashed first, so the comparison never depends on
+ * the length of what the caller sent.
+ */
+function setupTokenMatches(offered: string | undefined, expected: string): boolean {
+  const digest = (value: string) => createHash("sha256").update(value).digest();
+  return timingSafeEqual(digest(offered ?? ""), digest(expected));
+}
 
 /**
  * Invitable roles: everyone but Business Users, who are JIT-provisioned
@@ -371,6 +383,8 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           email: z.email(),
           displayName: z.string().min(1),
           password: z.string().min(8),
+          /** The bootstrap token from the server log (TECH-031). Required while the install is empty. */
+          setupToken: z.string().max(200).optional(),
         }),
         response: { 201: UserEnvelope, default: problemResponse },
       },
@@ -388,6 +402,14 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       const outcome = await tryWithAdvisoryLock(app.db, ADVISORY_LOCK.firstRunSetup, async () => {
         const anyUser = await app.db.select({ id: users.id }).from(users).limit(1);
         if (anyUser.length > 0) throw httpError(409, "Setup has already been completed.");
+        // After the emptiness check, so a finished install keeps answering
+        // 409 to everyone and never asks for a token it no longer needs.
+        // One sentence for a missing token and a wrong one alike.
+        if (app.setupToken !== null && !setupTokenMatches(request.body.setupToken, app.setupToken))
+          throw httpError(
+            403,
+            "The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.",
+          );
 
         const created = await provisionUser(app.auth, { email, displayName, password });
         const [row] = await app.db
@@ -1152,6 +1174,19 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const email = request.body.email.toLowerCase();
+
+      // This route calls better-auth's API directly and so skips its
+      // HTTP rate limiter. The shared budget (TECH-032) is counted first
+      // and for every address alike, so the refusal reveals nothing
+      // about eligibility.
+      if (
+        !(await consumeAuthRequestBudget(app.db, {
+          route: "magic-link",
+          email,
+          address: clientAddress(request, app.trustedProxies),
+        }))
+      )
+        throw httpError(429, "Too many sign-in link requests. Try again later.");
 
       const { settings, user, options } = await authenticationForEmail(app.db, email);
       const policy = authenticationPolicy(settings);

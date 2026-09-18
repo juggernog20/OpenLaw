@@ -1169,6 +1169,12 @@
   "auth.setup.title": {
     "defaultMessage": "Set up OpenLaw"
   },
+  "auth.setup.token": {
+    "defaultMessage": "Setup token"
+  },
+  "auth.setup.tokenHint": {
+    "defaultMessage": "The server printed it at start. Under Compose: docker compose logs app."
+  },
   "auth.signOut": {
     "defaultMessage": "Sign out"
   },

@@ -400,3 +400,31 @@ it.each(["/api/v1/auth/magic-link", "/api/auth/sign-in/magic-link"])(
     expect(harness.mailer.messagesTo(unknown)).toHaveLength(0);
   },
 );
+
+describe("the request budget (TECH-032)", () => {
+  // Its own client address, so this budget is separate from the one the
+  // suite above spends from the default address.
+  const ask = (email: string) =>
+    harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/magic-link",
+      remoteAddress: "192.0.2.77",
+      payload: { email },
+    });
+
+  it("issues three links for one address in a window and refuses the fourth", async () => {
+    const email = "budgeted@acme.example";
+    for (let n = 0; n < 3; n++) expect((await ask(email)).statusCode).toBe(202);
+    const refused = await ask(email);
+    expect(refused.statusCode).toBe(429);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    expect(harness.mailer.messagesTo(email)).toHaveLength(3);
+  });
+
+  it("counts an ineligible address the same way, so the refusal reveals nothing", async () => {
+    const email = "outsider@evil.example";
+    for (let n = 0; n < 3; n++) expect((await ask(email)).statusCode).toBe(202);
+    expect((await ask(email)).statusCode).toBe(429);
+    expect(harness.mailer.messagesTo(email)).toHaveLength(0);
+  });
+});

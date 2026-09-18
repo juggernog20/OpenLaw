@@ -1405,6 +1405,152 @@ A targeted Value map stores `valueCurrency` and `valueCadence` in the form snaps
 
 One runtime dependency pair in `apps/api`. A `FakeFillEngine` beside `FakeDocEngine` for tests. The sidecar is unchanged.
 
+## TECH-029: The log carries the path and the Postgres code, never a query string or a bind parameter
+
+- **Status:** Accepted
+- **Date:** 2026-09-18
+- **Origin:** [Security review 2026-09-17, H5](../reviews/security-review-2026-09-17.md)
+
+### Context
+
+The API booted with `{ logger: true }`. Fastify's default request serializer writes `req.url` with its query string, so the set-password token, the magic-link token, and the OIDC callback code all landed in the log. Pino's default error serializer writes an error's message and every enumerable field on it. drizzle-orm wraps a failed query in a `DrizzleQueryError` whose message is the SQL text plus every bind parameter, so one failed write of a Document Version's text put the whole text in the log. pg-boss stores what a handler throws in `pgboss.job.output`, fields and all, so the same text was persisted in the queue table on every retry. A malformed `SMTP_URL` printed the relay password at boot through Node's `Invalid URL` error, which carries its input.
+
+### Decision
+
+One module, `apps/api/src/logging.ts`, states the policy and the API, the pipeline logger, and the worker all use it.
+
+A request line carries the request id, the method, the path cut before `?`, and the client address. It never reads a header. A response line carries the status code. An error line carries the error's type, message, stack, and driver code. A failed query becomes its Postgres SQLSTATE, constraint, table, and column, and never the SQL text, the bind parameters, or the driver's `detail` line, which quotes the offending value. The logger's `redact` list masks `req.headers.cookie`, `req.headers.authorization`, `err.params`, and `err.query` anyway, for any object logged under those keys by hand.
+
+The pipeline follows the same rule. `reasonOf` answers the Postgres code for a failed query. Every `boss.work` registration goes through a wrapper that rethrows a plain `Error` with the one-line reason, so `pgboss.job.output` holds nothing else. The text writer strips U+0000 before every write, and SQLSTATE 22021 is a terminal failure, because a retry sends the same bytes. `errorCode` reads through the `cause` chain, since drizzle-orm keeps the driver's error there.
+
+A configuration value that fails to parse is reported by the name of the setting that holds it. The SMTP relay URL is the first case.
+
+### Alternatives considered
+
+- **Keep `logger: true` and redact `req.url`.** Redaction masks the whole field, and the path is what an operator reads. A serializer that writes the path is the same line without the secret.
+- **Redact `err.params` and `err.query` only.** The message and the stack header carry the same text, so redaction on two fields leaves two more.
+- **Catch `DrizzleQueryError` at each call site.** There are hundreds. One serializer and one `reasonOf` cover every site, including the ones written later.
+
+### Consequences
+
+A log reader learns which query failed by its Postgres code and object names, and not by its text. An operator who needs the SQL reproduces it from the code path. `apps/api/src/logging.test.ts` asserts what a line never carries, and the documents text suite uploads a PDF whose text layer holds U+0000 and requires a `ready` derivation.
+
+## TECH-030: Connector calls never follow a redirect, DocuSign sends only to its own hosts, and every answer is read under a byte ceiling and an idle deadline
+
+- **Status:** Accepted
+- **Date:** 2026-09-18
+- **Origin:** [Security review 2026-09-17, M10 and M16](../reviews/security-review-2026-09-17.md)
+
+### Context
+
+The AI connector and the signing connector are the two places this install sends a credential to a host an Administrator named. Three things were wrong with how they did it. The AI request used `fetch` defaults, so a redirect from the endpoint sent the API key wherever the `Location` header pointed. The DocuSign driver took the `base_uri` from the `/oauth/userinfo` answer as given and sent the bearer token and every document there, so whoever could shape that one answer chose the destination. And the DocuSign driver read every answer with `response.json()` and `response.text()`, which buffer whatever arrives, while the executed-copy download stopped its timer once the headers landed, so a socket that went quiet mid-file held the job open with no deadline at all. The AI connector test also copied the provider's refusal body into the 502 detail, and a provider can quote back the key it was handed.
+
+### Decision
+
+Every connector `fetch` passes `redirect: "error"`. A redirect is the far side choosing where the credential goes next. It is now a transport failure, on the transient side of each connector's error split, and the Administrator sees "could not be reached".
+
+The DocuSign driver checks the discovered `base_uri` before it stores it. It must be an `https` origin whose host is `docusign.net` or `docusign.com` or a subdomain of one, with no embedded credentials. The one exception is an origin equal to a configured host override, which is how the contract suite points the driver at a local stub. Anything else is a `SigningConfigError` that names the rule and not the host. Only the origin is kept; a path on the answer is dropped.
+
+Every DocuSign answer is read through `apps/api/src/lib/signing/bounded-body.ts`. JSON answers stop at 8 MiB. Refusal bodies kept as an error cause stop at 64 KiB. The executed copy streams through a `Readable` that counts bytes against the upload ceiling, `MAX_UPLOAD_MB`, and fails the stream past it. The executed-copy job meters the same stream against the same ceiling; the driver's count is the backstop that holds whatever consumes it. The call's clock is an idle deadline, not a total one: it restarts on every chunk and runs across the whole body, so a large file that keeps flowing is fine and a socket that stops sending is a timeout. The AI side already read under a byte ceiling and one total deadline that covers the body, and keeps that.
+
+An AI provider's refusal reaches a person as the status code only: "The provider refused the request with HTTP 401." The provider's own body goes on the error as `upstream.summary`, cut to one line of at most 200 characters with every header token of eight or more characters blanked, and the connector routes write that to the log at warn. The OpenAI-compatible adapter reads the field name it relearns the wire shape from out of that summary.
+
+### Alternatives considered
+
+- **Follow redirects but strip the credential.** `fetch` has no hook between the redirect and the next request, and a same-origin redirect with the key is still a destination the Administrator did not name.
+- **Allow any `https` `base_uri`.** The token and the documents would still go to whatever host the userinfo answer named. The estate is two domains; the allowlist costs one regular expression.
+- **Keep one total deadline on the executed copy.** A clock cannot tell a large file from a stuck socket, which is why the timer was cleared in the first place. An idle deadline can.
+- **Keep the provider's reason in the message and redact the key.** The key is the one secret we know; the body can carry anything else the provider was handed. The status code is enough to act on, and the log has the rest.
+
+### Consequences
+
+`apps/api/src/lib/signing/docusign.test.ts` holds the `base_uri` rule on its own and runs the driver against a stub that redirects, names a foreign host, stalls mid-file, and exceeds the document ceiling. `apps/api/src/lib/ai/http.test.ts` runs a real redirecting server and asserts the second request never happens. The adapter suites and the live connector suite assert the generic message and the absence of the provider's text.
+
+## TECH-031: First-run setup demands a bootstrap token the operator reads from the log
+
+- **Status:** Accepted
+- **Date:** 2026-09-18
+- **Origin:** [Security review 2026-09-17, H3](../reviews/security-review-2026-09-17.md)
+
+### Context
+
+`POST /api/v1/auth/setup` creates the initial Administrator on an empty install. It asked for nothing but a name, an email and a password. The advisory lock made sure exactly one caller won, but not that the operator was the one. Compose published the port on every interface and Docker's firewall rules run before the host's, so the first client to reach port 3000 after `docker compose up` could take the seat.
+
+### Decision
+
+The entrypoint checks for users after the migrations. While there are none it settles a setup token: `SETUP_TOKEN` from the environment when set, otherwise 24 random bytes as base64url, printed once to the log with a sentence that says what it is for. The token goes to the app as `AuthConfig.setupToken`. The route demands it in the body and compares it in constant time, after the emptiness check, so a finished install keeps answering 409 to everyone and a fresh one answers one 403 sentence for a missing token and a wrong one alike. The setup screen has a Setup token field with a hint that names `docker compose logs app`.
+
+Once a user exists no token is made and none is read. The route is closed by then regardless.
+
+The test harness leaves `setupToken` unset, which is the one configuration that asks for no token. About 160 suites run first-run setup, and the gate is asserted in `setup.test.ts` on an app built with `TEST_SETUP_TOKEN`. The dev and E2E overlay pins `SETUP_TOKEN=e2e-setup-token` in `compose.dev.yml`, and the E2E suite, the seed script, the upgrade rehearsal and the documentation lab send that value.
+
+### Alternatives considered
+
+- **A CLI setup path inside the container.** It needs a shell into the container and an argument parser the app does not have. The token needs a log line.
+- **Publish on loopback and call it fixed.** M15 does that too, and it is right on its own. It does not cover an install whose proxy is on another host, where `APP_BIND` opens the port again.
+- **A token in the browser session only.** There is no session before the first user.
+
+### Consequences
+
+`compose.yml` must pass `SETUP_TOKEN` through to the app service for the pinned value to reach the container. A second API replica generates a token of its own unless `SETUP_TOKEN` is pinned; the log line says so. `docs/user-guides/first-run.md` describes the setup screen and needs the new field.
+
+## TECH-032: Sign-in defences: trusted proxies, a per-address password lockout, resets that end sessions, tokens in the fragment
+
+- **Status:** Accepted
+- **Date:** 2026-09-18
+- **Origin:** [Security review 2026-09-17, H4, H5 (set-password part), M1, M2, M3 and M13](../reviews/security-review-2026-09-17.md)
+
+### Context
+
+Four things on the sign-in surfaces were weaker than they looked. better-auth's rate limiter keyed on `X-Forwarded-For`, which it believed from anyone when no trusted proxy was named, so a client got a fresh bucket per request by writing a new address into the header; and behind the documented nginx recipe, which forwarded no address at all, every visitor shared one bucket and three wrong passwords locked the org out of sign-in for ten seconds at a time. There was no per-account limit on password guesses at all; the lockout covered only the TOTP challenge. The typed magic-link route and password-setup completion had no limiter, and completion ran Argon2 before it looked the token up. A password reset left the account's other sessions alive. And the set-password link carried its token in the query string, which the request log recorded before the person had used it.
+
+### Decision
+
+**One list of trusted proxies.** `TRUSTED_PROXIES` is read at the entrypoint as comma-separated addresses or CIDR ranges and travels as `AuthConfig.trustedProxies`. `buildApp` derives Fastify's `trustProxy` from it, and `createAuth` passes the same list to better-auth as `advanced.ipAddress.trustedProxies` with `ipAddressHeaders: ["x-forwarded-for"]`. The two readers can never name different proxies. The better-auth handler writes the address Fastify resolved into `X-Forwarded-For` as its one value before handing the request over, because better-auth sees only headers and cannot tell a proxy from a client on its own. With no trusted proxy the socket address is the client and the header is ignored. The app warns at start when `NODE_ENV=production` and the list is empty. The nginx recipe overwrites the header with `$remote_addr` and sets `X-Forwarded-Proto`; Caddy already does both.
+
+**Counters in the database.** `apps/api/src/auth/limits.ts` keeps three counters in the `verifications` table, keyed on a hash of what they count, under an advisory lock per key. The password lockout counts wrong passwords per email address: ten in fifteen minutes close password sign-in for that address until the window ends, account or not, with the TOTP lockout's numbers and wording. The refusal comes from the before hook, which skips the after hook, so a refused attempt is not counted again. A correct password clears the count. The request budget on the email-sending doors, password setup and magic links, is three per email address and thirty per client address in fifteen minutes, each door with a budget of its own; password-setup completion takes the address budget alone. The per-address scope stands down when a trusted proxy forwarded no client address, so one proxy cannot lock the org out, and the per-email scope never does.
+
+**Completion looks the token up first.** `POST /auth/password-setup/complete` spends the address budget, then selects and locks the verification row, then checks policy, and hashes the password only after all of that.
+
+**A reset ends every session.** `emailAndPassword.revokeSessionsOnPasswordReset` is on. Open live-event streams are not cut: the event hub has no per-user close, and a stream re-checks its session only when it reconnects.
+
+**The set-password token rides in the URL fragment.** Both set-password mails link to `/auth/set-password#token=...`. A browser never sends the fragment, so no request log on the app or the proxy holds a live token. The page reads `location.hash` as query-shaped pairs.
+
+### Alternatives considered
+
+- **better-auth's `trustedProxies` alone.** It walks the header from the right and skips trusted hops, but it has no socket address to start from. A spoofed single-value header from a direct client is still believed. Fastify has the socket; the handler passes its answer on.
+- **A column on `accounts` for the failure count.** A counter on the account row cannot count guesses at an address with no account, and the difference would be visible. The `verifications` table already holds the password-setup counter and needs no migration.
+- **Answer 401 to a locked address.** It would be indistinguishable from a wrong password, and a person who typed the right one would keep trying. A 429 with the TOTP lockout's sentence says what to do.
+- **Keep the token in the query string and drop it from the log.** TECH-029 drops the query string from the request line, which closes the app's log. The proxy's log is not ours to configure.
+
+### Consequences
+
+`sign-in-lockout.test.ts` holds the lockout and the address handling, the latter through the password-setup budget, which is the app's own code keyed on `request.ip`. better-auth's own limiter is off outside `NODE_ENV=production` and is not exercised in the suite. `password-reset.test.ts` holds the session revocation and the fragment. `magic-link.test.ts` and `authentication-policy.test.ts` hold the budgets and the hash order. `compose.yml` must pass `TRUSTED_PROXIES` through to the app service.
+
+## TECH-033: API mutations under /api/v1 must come from the install's own origin
+
+- **Status:** Accepted
+- **Date:** 2026-09-18
+- **Origin:** [Security review 2026-09-17, M14](../reviews/security-review-2026-09-17.md)
+
+### Context
+
+The session cookie is `SameSite=Lax`, which stops a cross-site POST from carrying it, and a JSON body needs a preflight. Neither covers a sibling origin on the same site: `other.example.com` beside `legal.example.com` is same-site to the browser and can post a multipart form to `/api/v1/comments` or an upload route with the victim's cookie. better-auth checks the Origin on its own handler; the typed routes checked nothing.
+
+### Decision
+
+One `onRequest` hook on the root context, registered before any route so no module can forget it. It applies to `POST`, `PUT`, `PATCH` and `DELETE` under `/api/v1/` and refuses with a 403 problem when the request carries an `Origin` other than `BASE_URL`'s origin, or a `Sec-Fetch-Site` other than `same-origin` or `none`. A request with neither header (curl, the test harness, the E2E runner's API context) is not a browser form and passes. The signing webhook under `/api/v1/signing/` is exempt: another site is meant to call it, and it proves itself with an HMAC over the body. The better-auth handler lives outside `/api/v1` and keeps its own check.
+
+### Alternatives considered
+
+- **A CSRF token in a header.** Every client would need to fetch and carry it, including the E2E runner and the seed script. The browser already names the sender.
+- **`SameSite=Strict`.** It breaks the emailed links, which open the app from another site.
+- **A preHandler per module.** Sixty registrations, and the next module is the one that forgets.
+
+### Consequences
+
+`apps/api/src/origin-check.test.ts` holds the rule, container-free. The web bundle is served same-origin (TECH-017) and its client uses `window.location.origin`, so no fetch changes. In development Vite proxies `/api` and sets `Origin` to the API's own origin, which passes.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                    |
@@ -1437,3 +1583,8 @@ One runtime dependency pair in `apps/api`. A `FakeFillEngine` beside `FakeDocEng
 | TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                  |
 | TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026 |
 | TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted                  |
+| TECH-029 | The log carries the path and the Postgres code, never a query string or param | Accepted                  |
+| TECH-030 | Connector calls: no redirects, DocuSign host allowlist, bounded reads         | Accepted                  |
+| TECH-031 | First-run setup demands a bootstrap token from the log                        | Accepted                  |
+| TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                  |
+| TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted                  |

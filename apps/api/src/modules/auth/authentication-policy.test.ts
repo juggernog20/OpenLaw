@@ -27,10 +27,13 @@ const policy = (group: string, options = basic, cookies = admin) =>
   });
 const requestLink = (email: string) =>
   harness.app.inject({ method: "POST", url: "/api/v1/auth/password-setup", payload: { email } });
+// The token rides in the URL fragment (TECH-032), read as query-shaped pairs.
 const tokenFor = (email: string) =>
-  new URL(
-    /https?:\/\/\S+/.exec(harness.mailer.messagesTo(email).at(-1)!.text)![0]!,
-  ).searchParams.get("token")!;
+  new URLSearchParams(
+    new URL(/https?:\/\/\S+/.exec(harness.mailer.messagesTo(email).at(-1)!.text)![0]!).hash.slice(
+      1,
+    ),
+  ).get("token")!;
 const complete = (token: string) =>
   harness.app.inject({
     method: "POST",
@@ -173,5 +176,34 @@ it("limits password setup across addresses sharing an IP", async () => {
       payload: { email: `denied-${attempt}@unlisted.example` },
     });
     expect(response.statusCode, response.body).toBe(attempt < 30 ? 202 : 429);
+  }
+});
+
+it("answers a dead completion token before hashing the password", async () => {
+  const context = await harness.app.auth.$context;
+  const original = context.password.hash;
+  let hashes = 0;
+  context.password.hash = (password) => {
+    hashes += 1;
+    return original(password);
+  };
+  try {
+    const dead = await complete("business.not-a-live-token");
+    expect(dead.statusCode, dead.body).toBe(400);
+    expect(hashes).toBe(0);
+  } finally {
+    context.password.hash = original;
+  }
+});
+
+it("limits completion attempts by client address", async () => {
+  for (let attempt = 0; attempt <= 30; attempt++) {
+    const response = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/password-setup/complete",
+      remoteAddress: "192.0.2.91",
+      payload: { token: `business.dead-${attempt}`, password: "business-test-password" },
+    });
+    expect(response.statusCode, response.body).toBe(attempt < 30 ? 400 : 429);
   }
 });
