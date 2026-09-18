@@ -185,9 +185,9 @@ export function replayRegister(
         bump(issued, entry.toShareClassId!, entry.quantity, entry, "the issued count");
         break;
     }
-    // Certificates: the ones this entry cancels must be live, for the
-    // holder the shares leave, in the class they leave; then the ones
-    // it issues join the live set.
+    // Certificates: the ones this entry cancels must be live and belong
+    // to a party of the entry, in a class the entry touches; then the
+    // ones it issues join the live set.
     for (const certificate of cancelledBy.get(entry.id) ?? []) {
       const current = live.get(certificate.id);
       if (!current) {
@@ -198,7 +198,15 @@ export function replayRegister(
         };
         continue;
       }
-      if (current.holderId !== entry.fromHolderId || current.shareClassId !== entry.shareClassId) {
+      // Either party may hand in a certificate: the transferor for the
+      // shares leaving, or the transferee consolidating what they already
+      // held with what arrives. A stranger's certificate is a violation.
+      const party =
+        current.holderId === entry.fromHolderId || current.holderId === entry.toHolderId;
+      const inClass =
+        current.shareClassId === entry.shareClassId ||
+        current.shareClassId === entry.toShareClassId;
+      if (!party || !inClass) {
         violation ??= {
           entryId: entry.id,
           entryNo: entry.entryNo,
