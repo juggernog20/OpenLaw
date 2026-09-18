@@ -1,5 +1,5 @@
 {
-  "id": "d5f6a81c-f3c5-4ed4-a806-4e5d3138737c",
+  "id": "cdce7abe-0df7-4e2f-a2e8-65d1852f5f05",
   "prevId": "9752ec15-c696-4db8-a73e-a907e8bfac35",
   "version": "7",
   "dialect": "postgresql",
@@ -7191,6 +7191,10 @@
           "name": "entity_holdings_percent_range",
           "value": "\"entity_holdings\".\"ownership_percent\" >= 0 and \"entity_holdings\".\"ownership_percent\" <= 100"
         },
+        "entity_holdings_source_known": {
+          "name": "entity_holdings_source_known",
+          "value": "\"entity_holdings\".\"source\" in ('manual', 'register')"
+        },
         "entity_holdings_distinct_entities": {
           "name": "entity_holdings_distinct_entities",
           "value": "\"entity_holdings\".\"owner_entity_id\" <> \"entity_holdings\".\"owned_entity_id\""
@@ -8874,6 +8878,10 @@
         "individual_holdings_name_length": {
           "name": "individual_holdings_name_length",
           "value": "length(trim(\"individual_holdings\".\"name\")) between 1 and 200"
+        },
+        "individual_holdings_source_known": {
+          "name": "individual_holdings_source_known",
+          "value": "\"individual_holdings\".\"source\" in ('manual', 'register')"
         },
         "individual_holdings_source_shape": {
           "name": "individual_holdings_source_shape",

@@ -706,7 +706,7 @@ describe("the share register", () => {
       to: { kind: "individual", name: "Ada" },
     });
     expect(ada.statusCode, ada.body).toBe(201);
-    let owners = holdingsOf(issuer.id);
+    const owners = holdingsOf(issuer.id);
     expect((await owners).statusCode).toBe(200);
     let rows = (await owners).json().owners as {
       owner: { id: string; legalName: string; kind?: string };
@@ -778,6 +778,49 @@ describe("the share register", () => {
     }
     expect((await holdingsOf(issuer.id)).json().owners).toEqual([]);
     expect(parentRow.source).toBe("register");
+  });
+
+  it("refuses to delete an entry when the holder it restores would close a loop", async () => {
+    const a = await newEntity("Restore A Ltd");
+    const h = await newEntity("Restore H Ltd");
+    const aClass = await newClass(a.id, { name: "Ordinary" });
+    // H holds A, then sells out to an individual: H no longer owns A.
+    const allot = await entry(a.id, {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId: aClass.id,
+      quantity: 10,
+      to: { kind: "entity", entityId: h.id },
+    });
+    expect(allot.statusCode, allot.body).toBe(201);
+    const sale = await entry(a.id, {
+      kind: "transfer",
+      effectiveOn: "2024-02-01",
+      shareClassId: aClass.id,
+      quantity: 10,
+      from: { kind: "entity", entityId: h.id },
+      to: { kind: "individual", name: "Buyer" },
+    });
+    expect(sale.statusCode, sale.body).toBe(201);
+    // Now A may own H.
+    const reverse = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${a.id}/holdings`,
+      cookies: memberCookies,
+      payload: { direction: "owned", relatedEntityId: h.id, ownershipPercent: 100 },
+    });
+    expect(reverse.statusCode, reverse.body).toBe(201);
+    // Deleting the sale would hand A back to H: A → H → A.
+    const saleId = sale.json().entries.find((row: { entryNo: number }) => row.entryNo === 2).id;
+    const removed = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/entities/${a.id}/share-entries/${saleId}`,
+      cookies: memberCookies,
+    });
+    expect(removed.statusCode, removed.body).toBe(409);
+    expect(removed.json().detail).toMatch(/ownership loop/);
+    // Rolled back: the sale is still on the register.
+    expect((await register(a.id)).json().entries).toHaveLength(2);
   });
 
   it("keeps the register behind Member+ and the Entity's reach", async () => {

@@ -558,6 +558,22 @@ async function assertNoRegisterCycle(
   });
 }
 
+/**
+ * Every Entity owner the projection wrote for this issuer, checked for a
+ * loop. An update or delete can restore an earlier holder, not only add
+ * the entry's own `to`, so the check covers them all; runs inside the
+ * write's transaction so a loop rolls the projection back with it.
+ */
+async function assertProjectionAcyclic(tx: Transaction, user: User, issuerId: string) {
+  const owners = await tx
+    .select({ ownerEntityId: entityHoldings.ownerEntityId })
+    .from(entityHoldings)
+    .where(and(eq(entityHoldings.ownedEntityId, issuerId), eq(entityHoldings.source, "register")));
+  for (const owner of owners) {
+    await assertNoRegisterCycle(tx, user, owner.ownerEntityId, issuerId);
+  }
+}
+
 async function resolveHolder(
   tx: Transaction,
   user: User,
@@ -1109,9 +1125,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await writeCertificates(tx, entity.id, inserted!.id, request.body, resolved);
         await assertSoundRegister(tx, entity.id);
         await projectRegisterHoldings(tx, request.user.id, entity);
-        if (resolved.to?.kind === "entity" && resolved.to.holderEntityId) {
-          await assertNoRegisterCycle(tx, request.user, resolved.to.holderEntityId, entity.id);
-        }
+        await assertProjectionAcyclic(tx, request.user, entity.id);
         await recordEntryActivity(tx, "entity_share_entry.created", {
           actorId: request.user.id,
           issuer: entity,
@@ -1166,9 +1180,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await pruneHolders(tx, entity.id);
         await assertSoundRegister(tx, entity.id);
         await projectRegisterHoldings(tx, request.user.id, entity);
-        if (resolved.to?.kind === "entity" && resolved.to.holderEntityId) {
-          await assertNoRegisterCycle(tx, request.user, resolved.to.holderEntityId, entity.id);
-        }
+        await assertProjectionAcyclic(tx, request.user, entity.id);
         const holders = await readHolders(tx, entity.id);
         const nameOf = (holderId: string | null) => {
           const holder = holderId ? holders.find((row) => row.id === holderId) : undefined;
@@ -1253,6 +1265,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.delete(entityShareEntries).where(eq(entityShareEntries.id, current.id));
         await assertSoundRegister(tx, entity.id);
         await projectRegisterHoldings(tx, request.user.id, entity);
+        await assertProjectionAcyclic(tx, request.user, entity.id);
         await pruneHolders(tx, entity.id);
         await recordEntryActivity(tx, "entity_share_entry.deleted", {
           actorId: request.user.id,
