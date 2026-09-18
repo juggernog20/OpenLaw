@@ -1209,6 +1209,55 @@ describe("who still mutates a confidential contract (M10/3)", () => {
       });
       expect(refused.statusCode, refused.body).toBe(403);
     });
+
+    it("treats naming the Owner as an audience change, so a plain team Member is refused it", async () => {
+      const walled = await newContract("Confi roster: the Owner seat", adminCookies);
+      await putOnTeam(walled.number, idOf(TEAMMATE));
+      await markConfidential(walled.id);
+      const managerBefore = async () => {
+        const [row] = await harness.db
+          .select({ managerId: contracts.managerId })
+          .from(contracts)
+          .where(eq(contracts.id, walled.id));
+        return row!.managerId;
+      };
+      const seat = await managerBefore();
+
+      // Self first: the Owner reaches the record by being its Owner
+      // (CTR-022), and the Owner may clear the flag. Naming yourself
+      // would be the first of two steps that open the record.
+      const self = await patchContract(teammateCookies, walled.number, {
+        managerId: idOf(TEAMMATE),
+      });
+      expect(self.statusCode, self.body).toBe(403);
+      expect(self.headers["content-type"]).toContain("application/problem+json");
+      expect(self.json().detail).toContain("confidential contract");
+
+      // Then an outsider: one request that would put them inside the wall.
+      const outsider = await patchContract(teammateCookies, walled.number, {
+        managerId: idOf(OUTSIDER),
+      });
+      expect(outsider.statusCode, outsider.body).toBe(403);
+
+      // Neither refusal wrote anything.
+      expect(await managerBefore()).toBe(seat);
+      expect((await getContract(outsiderCookies, walled.number)).statusCode).toBe(404);
+
+      // The Administrator hands the seat over, and the Owner hands it on.
+      const byAdmin = await patchContract(adminCookies, walled.number, { managerId: idOf(OWNER) });
+      expect(byAdmin.statusCode, byAdmin.body).toBe(200);
+      const byOwner = await patchContract(ownerCookies, walled.number, {
+        managerId: idOf(TEAMMATE),
+      });
+      expect(byOwner.statusCode, byOwner.body).toBe(200);
+      expect(await managerBefore()).toBe(idOf(TEAMMATE));
+
+      // An open contract keeps CTR-004's generous rule: any Member names the Owner.
+      const open = await newContract("Open roster: any Member names the Owner", adminCookies);
+      await putOnTeam(open.number, idOf(MEMBER));
+      const named = await patchContract(memberCookies, open.number, { managerId: idOf(MEMBER) });
+      expect(named.statusCode, named.body).toBe(200);
+    });
   });
 
   it("keeps a Contributor on the team refused at the Member+ floor, flag or no flag", async () => {
@@ -1288,6 +1337,72 @@ describe("what a set and a clear leave behind (M10/2, DD-017)", () => {
  * It runs last in this file, because it makes more contracts than every
  * test above it put together and the list-shape tests count rows.
  */
+describe("the far side of a link (security review 2026-09-17, M5)", () => {
+  type Entry = { action: string; entityId?: string | null; payload: Record<string, unknown> };
+  const relationEntry = (entries: Entry[], contractId: string) =>
+    entries.find(
+      (entry) =>
+        entry.action === "contract.relation_added" &&
+        (entry.entityId === undefined || entry.entityId === contractId),
+    );
+
+  it("narrates the link on the open record without the confidential record's number and title, in the feed, the audit log, and its CSV", async () => {
+    const open = await newContract("Open side: the services agreement", adminCookies);
+    // Made by the Legal Team Member, so the Administrator has no team
+    // row on it and does not reach it once it is walled.
+    const hidden = await newContract("Hidden side: the settlement", memberCookies);
+    const linked = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${open.number}/relations`,
+      cookies: memberCookies,
+      payload: { relatedContractNumber: hidden.number, relationType: "related" },
+    });
+    expect(linked.statusCode, linked.body).toBe(201);
+    await markConfidential(hidden.id);
+
+    // The outsider reads the open record and sees the link, not the name.
+    const feed = await readActivity(outsiderCookies, open.id);
+    expect(feed.statusCode, feed.body).toBe(200);
+    const redacted = relationEntry(feed.json().entries, open.id);
+    expect(redacted).toBeDefined();
+    expect(redacted!.payload).toMatchObject({ number: open.number, relationType: "related" });
+    expect(redacted!.payload).not.toHaveProperty("relatedNumber");
+    expect(redacted!.payload).not.toHaveProperty("relatedTitle");
+    expect(feed.body).not.toContain("Hidden side");
+
+    // Somebody inside the wall reads the whole sentence.
+    const insider = await readActivity(memberCookies, open.id);
+    expect(insider.statusCode, insider.body).toBe(200);
+    expect(relationEntry(insider.json().entries, open.id)!.payload).toMatchObject({
+      relatedNumber: hidden.number,
+      relatedTitle: hidden.title,
+    });
+
+    // The Administrator is outside this wall, and the audit log answers
+    // them the same way, on the page and in the export.
+    const query = "entityType=contract&action=contract.relation_added";
+    const log = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/audit-log?${query}`,
+      cookies: adminCookies,
+    });
+    expect(log.statusCode, log.body).toBe(200);
+    const logged = relationEntry(log.json().entries, open.id);
+    expect(logged).toBeDefined();
+    expect(logged!.payload).not.toHaveProperty("relatedTitle");
+    expect(log.body).not.toContain("Hidden side");
+
+    const csv = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/audit-log/export?${query}`,
+      cookies: adminCookies,
+    });
+    expect(csv.statusCode, csv.body).toBe(200);
+    expect(csv.body).toContain(open.id);
+    expect(csv.body).not.toContain("Hidden side");
+  });
+});
+
 describe("the bound and the gate, in that order (CTR-024)", () => {
   const PAGE = 50;
 

@@ -978,6 +978,23 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             "Only an Administrator, the matter's creator, or its Matter Manager can change this.",
           );
         }
+        // The Matter Manager reaches a confidential matter by being its
+        // Manager, so naming one is an audience change. It takes the
+        // same actor set the team routes do, asked at the same point:
+        // before the archived refusal, and before the named person is
+        // read.
+        if (
+          current.row.isConfidential &&
+          body.managerId !== undefined &&
+          body.managerId !== current.row.managerId
+        ) {
+          await assertAudienceActor(
+            tx,
+            current,
+            request.user,
+            "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
+          );
+        }
         assertEditable(current);
         const target = current.row;
         const patch: Partial<Matter> = {};

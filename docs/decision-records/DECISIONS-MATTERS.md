@@ -989,3 +989,7 @@ in INT-002.
 The Matter details section includes an optional Region picker beside Department, using Organization Settings → Regions (SET-012). Only live Regions can be assigned; archived references remain visible. Renames update existing Matters. Existing Matter edit permissions apply, and changes are audited. The Business Portal displays the saved Region.
 
 The shared catalog couples Matter classification to Contract classification and makes a rename visible in both modules. Free text would allow inconsistent spellings; a separate Matter catalog would require Administrators to maintain the same geography twice.
+
+### 2026-09-18 — Security review H1: naming the Matter Manager on a Confidential Matter
+
+Naming the Matter Manager of a Confidential Matter is an audience change. The Manager reaches the record by the seat alone and may clear the flag, so `PATCH /matters/:number` with `managerId` on a Confidential Matter takes the team routes' actor set: an Administrator, the creator, or the current Manager. A team Member who is none of the three is refused with the team routes' own 403. An open Matter is unchanged, and any Member+ names the Manager. The change stays narrated inside `matter.updated`.

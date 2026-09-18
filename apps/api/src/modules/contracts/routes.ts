@@ -2371,6 +2371,14 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.isConfidential !== undefined) {
           await assertMayFlagConfidential(tx, current, request.user);
         }
+        // The Owner reaches a confidential contract by being its Owner
+        // (CTR-022), so naming one is an audience change. It takes the
+        // same actor set the roster does (CTR-023), asked at the same
+        // point: before the archived refusal, and before the named
+        // person is read.
+        if (body.managerId !== undefined && body.managerId !== current.row.managerId) {
+          await assertMayChangeTeam(tx, current, request.user);
+        }
         assertEditable(current);
         const target = current.row;
 

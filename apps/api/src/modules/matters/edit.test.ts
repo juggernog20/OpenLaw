@@ -29,6 +29,7 @@ const CONTRIBUTOR = {
 
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
+let memberCookies: Record<string, string>;
 let outsiderCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
 let adminId: string;
@@ -66,6 +67,7 @@ beforeAll(async () => {
     signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password),
     signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password),
   ]);
+  memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   const [admin] = await harness.db
     .select({ id: users.id })
     .from(users)
@@ -466,6 +468,67 @@ describe("matter team, confidentiality, and recovery", () => {
       .from(matters)
       .where(eq(matters.id, matter.id));
     expect(historical?.createdBy).toBe(adminId);
+  });
+
+  it("treats naming the Matter Manager on a confidential matter as an audience change", async () => {
+    const matter = await create();
+    const addMember = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/matters/${matter.number}/team`,
+      cookies: adminCookies,
+      payload: { userId: memberId },
+    });
+    expect(addMember.statusCode, addMember.body).toBe(201);
+    expect((await patchMatter(matter.number, { isConfidential: true })).statusCode).toBe(200);
+    const seat = async () => {
+      const [row] = await harness.db
+        .select({ managerId: matters.managerId })
+        .from(matters)
+        .where(eq(matters.id, matter.id));
+      return row!.managerId;
+    };
+    const before = await seat();
+
+    // A team Member who is neither creator nor Manager may not name the
+    // Manager: the Manager reaches the record by the seat alone, and
+    // may clear the flag. Self first, then an outsider.
+    const self = await patchMatter(matter.number, { managerId: memberId }, memberCookies);
+    expect(self.statusCode, self.body).toBe(403);
+    expect(self.json().detail).toContain("confidential matter");
+    const outsider = await patchMatter(matter.number, { managerId: outsiderId }, memberCookies);
+    expect(outsider.statusCode, outsider.body).toBe(403);
+    expect(await seat()).toBe(before);
+    expect(
+      (
+        await harness.app.inject({
+          method: "GET",
+          url: `/api/v1/matters/${matter.number}`,
+          cookies: outsiderCookies,
+        })
+      ).statusCode,
+    ).toBe(404);
+
+    // The Administrator hands the seat over, and the Manager hands it on.
+    const byAdmin = await patchMatter(matter.number, { managerId: outsiderId });
+    expect(byAdmin.statusCode, byAdmin.body).toBe(200);
+    const byManager = await patchMatter(matter.number, { managerId: memberId }, outsiderCookies);
+    expect(byManager.statusCode, byManager.body).toBe(200);
+    expect(await seat()).toBe(memberId);
+
+    // An open matter keeps the generous rule: a Member on the team names the Manager.
+    const open = await create();
+    expect(
+      (
+        await harness.app.inject({
+          method: "POST",
+          url: `/api/v1/matters/${open.number}/team`,
+          cookies: adminCookies,
+          payload: { userId: memberId },
+        })
+      ).statusCode,
+    ).toBe(201);
+    const named = await patchMatter(open.number, { managerId: memberId }, memberCookies);
+    expect(named.statusCode, named.body).toBe(200);
   });
 
   it("archives out of the default list, restores, and narrates every mutation class", async () => {

@@ -65,6 +65,7 @@ import {
   type Executor,
 } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
+import { documentAudienceScope } from "../../lib/contract-access.js";
 import { AttachedCustomFieldSchema, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/problem.js";
 import { attachmentDisposition } from "../../lib/uploads.js";
@@ -354,10 +355,20 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const item = await portalKnowledgeItem(app.db, request.params.id);
       if (!item) return portalKnowledgeNotFound(reply);
+      // The Document's own Confidential flag (DOC-008) narrows the paper
+      // one level below the item gate. The same predicate every staff
+      // read applies, so a flagged file leaves the Portal listing with
+      // the staff surfaces.
       const paper = await app.db
         .select({ id: documents.id, title: documents.title })
         .from(documents)
-        .where(and(eq(documents.knowledgeItemId, item.id), isNull(documents.archivedAt)))
+        .where(
+          and(
+            eq(documents.knowledgeItemId, item.id),
+            isNull(documents.archivedAt),
+            documentAudienceScope(app.db, request.user),
+          ),
+        )
         .orderBy(asc(documents.createdAt), asc(documents.id));
       const withVersions = (
         await Promise.all(
@@ -437,6 +448,9 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
             eq(documents.id, request.params.documentId),
             eq(documents.knowledgeItemId, item.id),
             isNull(documents.archivedAt),
+            // The listing's predicate, asked again on the bytes: a
+            // flagged file answers the same 404 as one that is not there.
+            documentAudienceScope(app.db, request.user),
           ),
         )
         .orderBy(desc(documentVersions.versionNumber))
