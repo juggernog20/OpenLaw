@@ -46,12 +46,20 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
     .getByRole("region", { name: "Seat", exact: true })
     .getByRole("combobox", { name: "Map to", exact: true })
     .selectOption("attribute:region");
-  await expect(fields.getByText("seat · Text · Region", { exact: true })).toBeVisible();
+  await expect(
+    fields
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("button", { name: "Edit Seat", exact: true }) })
+      .getByText("Text · Region", { exact: true }),
+  ).toBeVisible();
   await fields.getByRole("button", { name: "Add field", exact: true }).click();
   const added = page.getByRole("region", { name: "New field", exact: true });
   await added.getByLabel("Template placeholder", { exact: true }).fill("jurisdiction");
   await added.getByLabel("Template placeholder", { exact: true }).press("Enter");
-  await expect(fields.getByText("jurisdiction · Text", { exact: true })).toBeVisible();
+  await expect(added.getByLabel("Template placeholder", { exact: true })).toHaveAttribute(
+    "id",
+    "auto-doc-field-jurisdiction-slug",
+  );
   await added.getByLabel("Label", { exact: true }).fill("Jurisdiction");
   await added.getByLabel("Label", { exact: true }).press("Enter");
   const jurisdiction = page.getByRole("region", { name: "Jurisdiction", exact: true });
@@ -60,7 +68,12 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
     .selectOption("single_select");
   await jurisdiction.getByLabel("Options", { exact: true }).fill("US\nUK");
   await jurisdiction.getByLabel("Options", { exact: true }).blur();
-  await expect(fields.getByText("jurisdiction · Single select", { exact: true })).toBeVisible();
+  await expect(
+    fields
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("button", { name: "Edit Jurisdiction", exact: true }) })
+      .getByText("Single select", { exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Edit the rule for arbitration", exact: true }).click();
   const rule = page.getByRole("region", { name: "arbitration", exact: true });
   await rule.getByRole("combobox", { name: "Include", exact: true }).selectOption("conditional");

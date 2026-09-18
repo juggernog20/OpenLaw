@@ -114,7 +114,7 @@ test.describe.serial("M5 demo path", () => {
       // The pane draws Legal first and Business second, and the two
       // cards carry the same switch labels, so the card is what tells
       // them apart.
-      await rail.getByRole("button", { name: "Security" }).click();
+      await rail.getByRole("button", { name: "Advanced" }).click();
       await rail.getByRole("link", { name: "Authentication" }).click();
       await expect(page).toHaveURL(/\/settings\/authentication$/);
       const legalMagicLink = page.getByRole("switch", { name: "Email magic link" }).first();
@@ -189,7 +189,7 @@ test.describe.serial("M5 demo path", () => {
       await expect(rail.getByText("Organization")).toHaveCount(0);
       await expect(rail.getByRole("link", { name: "General" })).toHaveCount(0);
       await expect(rail.getByRole("link", { name: "Users" })).toHaveCount(0);
-      await expect(rail.getByRole("button", { name: "Security" })).toHaveCount(0);
+      await expect(rail.getByRole("button", { name: "Advanced" })).toHaveCount(0);
 
       // Every Organization URL bounces them to their own settings home.
       for (const path of [

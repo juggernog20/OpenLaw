@@ -94,8 +94,8 @@ test("public documentation and export avoid API reads and all themes fit narrow 
       exact: true,
     }),
   ).toHaveCount(0);
-  // The complete edition is verified, so no validation badge shows.
-  await expect(page.getByText("Validation in progress", { exact: true })).toHaveCount(0);
+  // This guide is awaiting review in the development edition.
+  await expect(page.getByText("Validation in progress", { exact: true })).toBeVisible();
   await expect(page.getByText(/Development preview/)).toHaveCount(0);
   expect(apiRequests).toEqual([]);
   await page.goto("/documentation/unavailable-fixture");

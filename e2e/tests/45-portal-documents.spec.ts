@@ -31,10 +31,12 @@ test("Portal Documents keep one current row, read earlier versions and accept re
     password: "correct-horse-battery",
   });
   const portal = colleague.page;
-  const invitedEmail = `portal-team-added-${Date.now()}@example.com`;
+  const invitedRun = Date.now();
+  const invitedEmail = `portal-team-added-${invitedRun}@example.com`;
+  const invitedName = `Portal added colleague ${invitedRun}`;
   const invited = await onboardActivatedMember(page.request, browser, {
     email: invitedEmail,
-    displayName: "Portal added colleague",
+    displayName: invitedName,
     role: "business_user",
     password: "correct-horse-battery",
   });
@@ -108,7 +110,7 @@ test("Portal Documents keep one current row, read earlier versions and accept re
       ).toBe(201);
       const upload = await page.request.post(`/api/v1/${module}s/${record.number}/documents`, {
         multipart: {
-          kind: "draft_theirs",
+          kind: module === "contract" ? "draft_theirs" : "general",
           note: "Initial proposal",
           file: { name: "proposal.png", mimeType: "image/png", buffer: PNG },
         },
@@ -147,13 +149,13 @@ test("Portal Documents keep one current row, read earlier versions and accept re
       const teamDialog = portal.getByRole("dialog", { name: "Add team member" });
       await teamDialog
         .getByRole("combobox", { name: "Person" })
-        .selectOption({ label: "Portal added colleague" });
+        .selectOption({ label: invitedName });
       await teamDialog.getByRole("button", { name: "Add", exact: true }).click();
       await expect(teamDialog).toBeHidden();
       const roster = portal.getByRole("complementary", {
         name: module === "contract" ? "Contract team" : "Matter team",
       });
-      await expect(roster.getByText("Portal added colleague", { exact: true })).toHaveCount(1);
+      await expect(roster.getByText(invitedName, { exact: true })).toHaveCount(1);
       await expect(portal.getByRole("button", { name: "Add team member" })).toBeFocused();
       await portal.keyboard.press("Escape");
       await expect(roster).toBeHidden();
@@ -171,7 +173,8 @@ test("Portal Documents keep one current row, read earlier versions and accept re
       await dialog
         .getByLabel("Files to upload")
         .setInputFiles({ name: "proposal-revised.png", mimeType: "image/png", buffer: PNG });
-      await dialog.getByLabel("Kind", { exact: true }).selectOption("redline_theirs");
+      if (module === "contract")
+        await dialog.getByLabel("Kind", { exact: true }).selectOption("redline_theirs");
       await dialog.getByLabel("Note (optional)").fill("Updated delivery scope");
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
       await expect(dialog).toBeHidden();
@@ -227,7 +230,7 @@ test("Portal Documents keep one current row, read earlier versions and accept re
     }
   } finally {
     for (const record of records)
-      await page.request.delete(`/api/v1/${record.module}s/${record.number}`);
+      await page.request.post(`/api/v1/${record.module}s/${record.number}/archive`);
     await ensureMemberInert(page.request, email);
     await colleague.context.close();
     await ensureMemberInert(page.request, invitedEmail);

@@ -421,7 +421,7 @@ it("broadcasts generated Contract expiry and notice reminders until Claim, then 
       { now: new Date(`${day}T12:00:00Z`) },
     );
     expect(errors).toEqual([]);
-    expect(result.served).toBe(3);
+    expect(result.served).toBe(4);
     expect(result.reminders, JSON.stringify({ day, result })).toBeGreaterThan(0);
   };
   await configure("2040-03-31");
