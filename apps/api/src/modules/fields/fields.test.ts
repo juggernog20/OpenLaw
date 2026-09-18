@@ -60,6 +60,7 @@ interface FieldRow {
   options: string[] | null;
   fieldTag: string;
   aiPrompt: string | null;
+  isSystemDefault: boolean;
   archivedAt: string | null;
   inUseCount: number;
 }
@@ -147,12 +148,28 @@ describe("the seeded catalog (CTR-008 core fields)", () => {
       expect(seed.moduleScope, slug).toBe("contract");
       expect(seed.aiPrompt, slug).toBeTruthy();
       expect(seed.archivedAt, slug).toBeNull();
+      // The SET-004 default Field flag, set by migration 0148.
+      expect(seed.isSystemDefault, slug).toBe(true);
     }
     expect(bySlug.get("governing_law")!.fieldType).toBe("text");
     expect(bySlug.get("governing_law")!.fieldTag).toBe("legal");
     expect(bySlug.get("jurisdiction")!.fieldType).toBe("text");
     expect(bySlug.get("our_position")!.fieldType).toBe("single_select");
     expect(bySlug.get("our_position")!.options).toEqual(["Customer", "Provider", "Other"]);
+  });
+
+  it("refuses to archive a default Field (SET-004: the Fields panes lock it)", async () => {
+    const seed = (await listFields()).find((row) => row.slug === "governing_law")!;
+    const refused = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/fields/${seed.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.json().detail).toBe(
+      "The Governing law field is a default Field and can't be archived.",
+    );
+    expect((await listFields()).find((row) => row.slug === "governing_law")!.archivedAt).toBeNull();
   });
 });
 
