@@ -17,6 +17,7 @@ import {
   loggerOptions,
   pathOf,
   REDACT_PATHS,
+  redactSecrets,
   serializers,
 } from "./logging.js";
 
@@ -52,14 +53,16 @@ describe("the request line", () => {
   });
 
   it("never carries the query string or a header", () => {
-    const line = serializers.req({
+    // Fastify's request carries headers. Held in a variable, so the extra
+    // field is accepted by shape and the serializer must not read it.
+    const request = {
       id: "req-2",
       method: "GET",
       url: "/auth/set-password?token=one-hour-token",
       ip: "10.0.0.7",
-      // Fastify's request carries these. The serializer must not read them.
-      ...({ headers: { cookie: "session=abc", authorization: "Bearer xyz" } } as object),
-    });
+      headers: { cookie: "session=abc", authorization: "Bearer xyz" },
+    };
+    const line = serializers.req(request);
     const printed = JSON.stringify(line);
     expect(printed).not.toContain("one-hour-token");
     expect(printed).not.toContain("session=abc");
@@ -77,12 +80,11 @@ describe("the request line", () => {
 
 describe("the response line", () => {
   it("carries the status code and nothing else", () => {
-    expect(
-      serializers.res({
-        statusCode: 302,
-        ...({ getHeaders: () => ({ "set-cookie": "session=abc" }) } as object),
-      }),
-    ).toEqual({ statusCode: 302 });
+    const reply = {
+      statusCode: 302,
+      getHeaders: () => ({ "set-cookie": "session=abc" }),
+    };
+    expect(serializers.res(reply)).toEqual({ statusCode: 302 });
   });
 });
 
@@ -129,10 +131,11 @@ describe("the error line", () => {
 
   it("keeps the frames of a failed query's stack and drops its header", () => {
     const { stack } = loggable(failed);
-    expect(stack).toBeDefined();
     expect(stack).not.toContain("Failed query");
     expect(stack).not.toContain("assignor");
-    expect(stack!.split("\n").every((line) => line.trimStart().startsWith("at "))).toBe(true);
+    const frames = stack?.split("\n") ?? [];
+    expect(frames.length).toBeGreaterThan(0);
+    expect(frames.every((line) => line.trimStart().startsWith("at "))).toBe(true);
   });
 
   it("keeps an ordinary error whole, and follows its cause", () => {
@@ -145,6 +148,68 @@ describe("the error line", () => {
       cause: { type: "Error", message: "relay refused", code: "ECONNREFUSED" },
     });
     expect(loggable(outer).stack).toContain("could not send");
+  });
+
+  describe("masks the few secret shapes a message is known to carry", () => {
+    /** The message, and the stack header that V8 builds from it. */
+    function messageAndHeader(text: string): { message: string; header: string } {
+      const line = loggable(new Error(text));
+      const header = line.stack?.split("\n").find((l) => !l.trimStart().startsWith("at ")) ?? "";
+      return { message: line.message, header };
+    }
+
+    it("the userinfo of a URL", () => {
+      const { message, header } = messageAndHeader(
+        "Invalid URL: smtp://relay:hunter2@mail.example.com:587",
+      );
+      expect(message).toBe("Invalid URL: smtp://***@mail.example.com:587");
+      expect(header).toContain("smtp://***@mail.example.com:587");
+      expect(header).not.toContain("hunter2");
+    });
+
+    it("a credential-shaped query parameter", () => {
+      const { message, header } = messageAndHeader(
+        "GET /verify?token=one-hour-token&code=oidc-code&state=csrf-state&next=/home failed",
+      );
+      expect(message).toBe("GET /verify?token=***&code=***&state=***&next=/home failed");
+      expect(header).toContain("token=***&code=***&state=***");
+      for (const name of ["key", "secret", "password", "signature", "api_key"]) {
+        expect(redactSecrets(`https://h/p?${name}=s3cret&x=1`)).toBe(`https://h/p?${name}=***&x=1`);
+      }
+    });
+
+    it("a bearer value", () => {
+      const { message, header } = messageAndHeader(
+        "provider refused Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.token",
+      );
+      expect(message).toBe("provider refused Authorization: Bearer ***");
+      expect(header).toContain("Bearer ***");
+      expect(header).not.toContain("eyJhbGci");
+    });
+
+    it("in a nested cause", () => {
+      const inner = new Error("fetch https://svc:pa55@api.example.com/x?api_key=k3y failed");
+      const outer = new Error("connector call failed", { cause: inner });
+      const printed = JSON.stringify(loggable(outer));
+      expect(printed).toContain("https://***@api.example.com/x?api_key=***");
+      expect(printed).not.toContain("pa55");
+      expect(printed).not.toContain("k3y");
+    });
+
+    it("and leaves an ordinary message as it is", () => {
+      const text = 'relation "contracts" does not exist; error code=42P01 was returned';
+      // `code=` is in the fixed set, so a Postgres code after it is masked
+      // too. That is the cost of a short list, and the code has its own
+      // field on the line.
+      expect(redactSecrets("relay refused, retry in 30s")).toBe("relay refused, retry in 30s");
+      expect(redactSecrets("https://api.example.com/v1/models")).toBe(
+        "https://api.example.com/v1/models",
+      );
+      expect(redactSecrets(text)).toBe(
+        'relation "contracts" does not exist; error code=*** was returned',
+      );
+      expect(loggable(new Error("relay refused")).message).toBe("relay refused");
+    });
   });
 
   it("applies the query rule to a cause that is a failed query", () => {

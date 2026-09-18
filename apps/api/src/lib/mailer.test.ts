@@ -18,8 +18,10 @@ describe("a malformed relay URL", () => {
     } catch (error) {
       failure = error;
     }
-    expect(failure).toBeInstanceOf(Error);
-    const printed = `${(failure as Error).message}\n${(failure as Error).stack}\n${JSON.stringify(failure)}`;
+    // Narrowed by `instanceof`, so the fields below are read on a real
+    // Error and not on a cast.
+    if (!(failure instanceof Error)) throw new Error("createSmtpMailer did not throw an Error");
+    const printed = `${failure.message}\n${failure.stack}\n${JSON.stringify(failure)}`;
     expect(printed).toContain("SMTP_URL");
     expect(printed).toContain("not a valid URL");
     expect(printed).not.toContain("hunter2");

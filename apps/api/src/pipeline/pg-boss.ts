@@ -22,7 +22,13 @@
  * one maintainer rather than one per replica.
  */
 
-import { PgBoss, type JobWithMetadata, type WorkHandlerFor, type WorkOptions } from "pg-boss";
+import {
+  PgBoss,
+  type Db,
+  type JobWithMetadata,
+  type WorkHandlerFor,
+  type WorkOptions,
+} from "pg-boss";
 import type { MailerResolver } from "../lib/mailer.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
@@ -50,7 +56,8 @@ import {
   type NotificationEmailJob,
   type TextExtractionJob,
 } from "./jobs.js";
-import { createConsoleLogger, type PipelineLogger } from "./logger.js";
+import { createConsoleLogger, type LogFields, type PipelineLogger } from "./logger.js";
+import { loggable } from "../logging.js";
 import { MORNING_ROUND_CRON, runMorningRound } from "./morning-round.js";
 import { RECONCILIATION_SWEEP_CRON, runReconciliationSweep } from "./reconciliation.js";
 import { handleTextExtraction } from "./text-extraction.js";
@@ -293,16 +300,40 @@ export const MORNING_ROUND_QUEUE_OPTIONS = {
   retryLimit: 0,
 } as const;
 
-/** The same handler, throwing a plain Error in place of whatever it threw. */
-function storingOnlyTheReason<H extends (...args: never[]) => Promise<unknown>>(handler: H): H {
-  const guarded = async (...args: Parameters<H>) => {
+/**
+ * The same handler, throwing a plain Error in place of whatever it threw.
+ *
+ * Every shape `WorkHandlerFor` resolves to is a function of a jobs array
+ * and, for a transactional worker, a `tx`. The wrapper forwards both.
+ * The one assertion on the return is there because `WorkHandlerFor` is
+ * a conditional type on `O`, and the compiler cannot resolve it while
+ * `O` is still a type parameter.
+ */
+export function storingOnlyTheReason<O extends WorkOptions, ReqData>(
+  handler: WorkHandlerFor<O, ReqData>,
+): WorkHandlerFor<O, ReqData> {
+  const guarded = async (jobs: JobWithMetadata<ReqData>[], tx: Db) => {
     try {
-      return await handler(...args);
+      return await handler(jobs, tx);
     } catch (error) {
       throw plainFailure(error);
     }
   };
-  return guarded as unknown as H;
+  return guarded as WorkHandlerFor<O, ReqData>;
+}
+
+/**
+ * What the log carries when pg-boss reports a failure of its own.
+ *
+ * pg-boss runs its upkeep on the same Postgres, with its own `pg`
+ * client, so the error it emits is the driver's. That error's `detail`
+ * quotes the offending row, and its message can repeat a query. It goes
+ * through {@link loggable} here, at the source, so both of the loggers a
+ * process may pass in receive the code and the object names and never
+ * the text (TECH-029).
+ */
+export function queueErrorFields(error: unknown): LogFields {
+  return { error: loggable(error) };
 }
 
 /** What a process needs to bring the pipeline up. */
@@ -373,10 +404,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
   // query, a queue that is filling up. With no listener these are lost,
   // and on `error` an EventEmitter throws instead.
   boss.on("error", (error) => {
-    log.error(
-      { reason: error instanceof Error ? error.message : String(error) },
-      "job queue error",
-    );
+    log.error(queueErrorFields(error), "job queue error");
   });
   boss.on("warning", (warning) => {
     log.warn({ reason: warning.message }, "job queue warning");

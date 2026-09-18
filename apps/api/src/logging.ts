@@ -20,6 +20,10 @@
  *   code. A database error carries the Postgres code, constraint, table,
  *   and column. It never carries the SQL text, the bind parameters, or
  *   the driver's `detail` line, which quotes the offending value.
+ * - In any other error's message and stack header, a URL's userinfo, the
+ *   value of a query parameter named like a credential, and a bearer
+ *   value are each replaced with `***`. The set of shapes is fixed and
+ *   short. It is not a secret detector.
  * - `redact` masks the header and parameter paths anyway, for any
  *   object logged under a key the serializers do not own.
  *
@@ -93,6 +97,48 @@ function withoutUndefined<T extends object>(fields: T): T {
 }
 
 /**
+ * The secret shapes an error message is known to carry, and what
+ * replaces each one. An `Invalid URL` error repeats its input, which can
+ * be a relay URL with a password in it. An HTTP client's error can name
+ * the URL it called, query string and all, and this app's own links put
+ * a token, a code, or a state there. A refusal can quote the
+ * `Authorization` header it was sent.
+ *
+ * The list is deliberately short. Each pattern names one shape and
+ * replaces one value. A message with none of these shapes passes
+ * through unchanged, so a log reader still gets the text that
+ * explains a failure.
+ */
+const SECRET_SHAPES: readonly (readonly [RegExp, string])[] = [
+  // URL userinfo: `smtp://relay:hunter2@host` becomes `smtp://***@host`.
+  [/(\b[a-z][a-z0-9+.-]*:\/\/)[^\s/@]+@/gi, "$1***@"],
+  // A credential-shaped query parameter: `?token=abc` becomes `?token=***`.
+  [/(?<![\w-])(token|code|state|key|secret|password|signature|api_key)=[^&\s#"']*/gi, "$1=***"],
+  // A bearer value: `Bearer eyJhbGci...` becomes `Bearer ***`.
+  [/\bBearer\s+[^\s,;"']+/gi, "Bearer ***"],
+];
+
+/** `text` with each of the {@link SECRET_SHAPES} replaced. */
+export function redactSecrets(text: string): string {
+  return SECRET_SHAPES.reduce((redacted, [shape, mask]) => redacted.replace(shape, mask), text);
+}
+
+/**
+ * A stack with {@link redactSecrets} applied to its header. The header
+ * is every line before the first `at ...` frame, and it is where V8
+ * repeats the message. The frames are file paths and line numbers, and
+ * they are kept as they are.
+ */
+function redactedStack(stack: string | undefined): string | undefined {
+  if (!stack) return undefined;
+  const lines = stack.split("\n");
+  const firstFrame = lines.findIndex((line) => line.trimStart().startsWith("at "));
+  const headerEnd = firstFrame < 0 ? lines.length : firstFrame;
+  for (let i = 0; i < headerEnd; i += 1) lines[i] = redactSecrets(lines[i]!);
+  return lines.join("\n");
+}
+
+/**
  * Only the frames of a stack. A DrizzleQueryError's stack opens with its
  * message, which is the query and its parameters, so the header lines
  * are dropped and the `at ...` lines are kept.
@@ -127,12 +173,13 @@ function loggableDriverError(cause: unknown): LoggableError {
  *
  * A DrizzleQueryError becomes its driver error's code and object names,
  * with its own frames and none of its text. Any other error keeps its
- * type, message, stack, and codes, and its `cause` chain follows the
- * same rule a few links deep.
+ * type, message, stack, and codes, with the {@link SECRET_SHAPES}
+ * masked in the message and the stack header, and its `cause` chain
+ * follows the same rule a few links deep.
  */
 export function loggable(error: unknown, depth = 0): LoggableError {
   if (!(error instanceof Error)) {
-    return { type: typeof error, message: String(error) };
+    return { type: typeof error, message: redactSecrets(String(error)) };
   }
   if (isDrizzleQueryError(error)) {
     return withoutUndefined({
@@ -147,8 +194,8 @@ export function loggable(error: unknown, depth = 0): LoggableError {
       : undefined;
   return withoutUndefined({
     type: error.constructor.name || error.name,
-    message: error.message,
-    stack: error.stack,
+    message: redactSecrets(error.message),
+    stack: redactedStack(error.stack),
     code: stringField(error, "code"),
     statusCode: numberField(error, "statusCode"),
     cause,
