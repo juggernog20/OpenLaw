@@ -7,7 +7,7 @@
 #   web     http://localhost:5173   Vite, hot module reload
 #   api     http://localhost:3000   tsx watch, restarts on save
 #   worker  no port                 tsx watch, restarts on save
-#   mail    http://localhost:8025   Mailpit, every sent link lands here
+#   mail    http://localhost:8025   Mailpit, used when no relay is configured
 #
 # Two flags, for an instance with something on its screens:
 #
@@ -28,7 +28,8 @@
 #   --offset N  place that block by hand, if the derived one collides.
 #
 #   --smtp-in-app  configure email through the wizard instead of pinning
-#                  Mailpit in the environment. Uses any saved app relay.
+#                  Mailpit in the environment. Normal restarts detect a saved
+#                  relay automatically; this flag also enables first-time setup.
 #
 # Without --isolated every checkout reaches the same instance, which is
 # the point: a worktree is a branch of the code, not a second database.
@@ -82,6 +83,11 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+if $seed && $smtp_in_app; then
+  echo "error: --smtp-in-app cannot be combined with --seed, --fresh, or --isolated." >&2
+  exit 1
+fi
 
 # Compose names the containers and the database volume after the
 # project, and it defaults that name to the directory it runs in. A
@@ -239,15 +245,27 @@ done
 # there either way.
 export DATABASE_URL="${DATABASE_URL:-postgres://openlaw:openlaw@127.0.0.1:${POSTGRES_PORT:-55432}/openlaw}"
 export DOC_ENGINE_URL="${DOC_ENGINE_URL:-http://127.0.0.1:${DOC_ENGINE_PORT:-8080}}"
-if $smtp_in_app; then
-  # Empty exports also override values read from .env by the watch processes.
-  export SMTP_URL=""
-  export SMTP_FROM=""
-  echo "==> email configured in app; local test relay smtp://127.0.0.1:$MAILPIT_SMTP_PORT"
-else
-  export SMTP_URL="${SMTP_URL:-smtp://127.0.0.1:${MAILPIT_SMTP_PORT:-1025}}"
-  export SMTP_FROM="${SMTP_FROM:-OpenLaw <openlaw@localhost>}"
-fi
+# Only the default development fallback yields to a saved relay. Explicit
+# SMTP configuration stays pinned; seeded runs always capture mail locally.
+smtp_mode="$(node scripts/dev-smtp.mjs "$smtp_in_app" "$seed")"
+case "$smtp_mode" in
+  app)
+    # Empty exports also override values read from .env by the watch processes.
+    export SMTP_URL=""
+    export SMTP_FROM=""
+    echo "==> email uses the relay configured in the app"
+    ;;
+  env)
+    export SMTP_URL
+    export SMTP_FROM="${SMTP_FROM:-OpenLaw <openlaw@localhost>}"
+    echo "==> email uses the explicitly configured environment relay"
+    ;;
+  mailpit)
+    export SMTP_URL="smtp://127.0.0.1:${MAILPIT_SMTP_PORT:-1025}"
+    export SMTP_FROM="OpenLaw <openlaw@localhost>"
+    echo "==> email captured by Mailpit at http://localhost:$MAILPIT_PORT"
+    ;;
+esac
 # Where the seed reads the mail the loop sends. Moves with MAILPIT_PORT,
 # like everything else here.
 export SEED_MAILPIT_URL="${SEED_MAILPIT_URL:-http://127.0.0.1:${MAILPIT_PORT:-8025}}"

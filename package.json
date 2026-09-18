@@ -41,7 +41,7 @@
     "check": "pnpm check:static && pnpm test:ci-tools && turbo run test --continue",
     "check:security": "pnpm audit --audit-level=high && pnpm licenses list",
     "check:static": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && pnpm lint:migrations && pnpm lint:versions && pnpm docs:lint && turbo run lint typecheck --continue",
-    "test:ci-tools": "node --test scripts/dev-processes.test.mjs e2e/scripts/upgrade-baseline.test.mjs scripts/documentation/*.test.mjs",
+    "test:ci-tools": "node --test scripts/dev-processes.test.mjs scripts/dev-smtp.test.mjs e2e/scripts/upgrade-baseline.test.mjs scripts/documentation/*.test.mjs",
     "docs:lint": "eslint scripts/documentation",
     "docs:check": "node scripts/documentation/build.mjs",
     "docs:complete": "node scripts/documentation/build.mjs --complete",
