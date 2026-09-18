@@ -219,9 +219,9 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         ] as const) {
           await review.getByRole("link", { name: label, exact: true }).click();
           await expect(page).toHaveURL(address);
-          const defaults = page.getByRole("region", { name: "Default fields", exact: true });
+          const defaults = page.getByRole("region", { name: "Default Fields", exact: true });
           const custom = page.getByRole("region", { name: "Custom Fields", exact: true });
-          await expect(defaults.getByRole("button", { name: "Default fields" })).toHaveAttribute(
+          await expect(defaults.getByRole("button", { name: "Default Fields" })).toHaveAttribute(
             "aria-expanded",
             "false",
           );
@@ -230,7 +230,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
             "true",
           );
           await expect(custom.getByRole("button", { name: "Add field" })).toBeVisible();
-          await defaults.getByRole("button", { name: "Default fields" }).click();
+          await defaults.getByRole("button", { name: "Default Fields" }).click();
           await expect(
             defaults.getByRole("img", { name: "Title: built-in field, read-only here" }),
           ).toBeVisible();
