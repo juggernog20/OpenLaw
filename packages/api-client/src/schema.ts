@@ -1877,6 +1877,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/portal/approvals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPortalApprovals"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/approvals/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPortalApproval"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/approvals/{id}/document": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["downloadPortalApprovalDocument"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/approvals/{id}/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["previewPortalApprovalDocument"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/approvals/{id}/decision": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["decidePortalApproval"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types/{id}/people": {
     parameters: {
       query?: never;
@@ -4143,7 +4223,7 @@ export interface paths {
     /** The CTR-012 approver-group templates in name order, each carrying its member list; archived groups only with includeArchived=true */
     get: operations["listApproverGroups"];
     put?: never;
-    /** Create an approver-group template with its name, an optional description, and an optional starting member list; members must be live Member+ users. The name must be one no live group already carries, compared case-insensitively — 409 if it is */
+    /** Create an approver-group template with its name, an optional description, and an optional starting member list; members must be active users. The name must be one no live group already carries, compared case-insensitively — 409 if it is */
     post: operations["createApproverGroup"];
     delete?: never;
     options?: never;
@@ -4176,7 +4256,7 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Replace an approver group's member list; every id must name a live Member+ user, and each person added or removed writes its own activity entry */
+    /** Replace an approver group's member list; every id must name a active user, and each person added or removed writes its own activity entry */
     put: operations["setApproverGroupMembers"];
     post?: never;
     delete?: never;
@@ -4540,7 +4620,7 @@ export interface paths {
     /** The approval requests on one contract, oldest ask first (CTR-012) — who was asked, who asked them, where the request came from, the decision, the approver's note, and when it landed. Requests run in parallel, so the roster is a set rather than a queue, and a re-request after a rejection is a new row beneath the one it answers rather than an overwrite of it. Access is inherited from the contract and nothing else: a Contributor on the team reads the roster, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
     get: operations["listContractApprovals"];
     put?: never;
-    /** Ask one or more named colleagues to sign a contract off (CTR-012). Every request is created at once and every one of them runs in parallel — there are no chains and no order. An approver must be a live Member+ user: a Contributor, a Business User, and an archived person are each refused by name, because a request nobody can act on is worse than no request. On a confidential contract the approver must already be inside the record's audience, so no request is created that its approver could not open. At most one pending request per approver per contract — a second is refused rather than silently collapsed — but a decided one blocks nothing, so a re-request after a rejection writes a new row and the earlier ask stays on the record. Every request made here carries source manual; applying an approver group is its own act. Appends one approval.requested entry per approver on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new request until it is restored */
+    /** Request parallel approvals from active users. Business approvers receive a Portal review packet; staff approvers need access to confidential Contracts. Archived Contracts and duplicate pending requests are refused. */
     post: operations["requestContractApprovals"];
     delete?: never;
     options?: never;
@@ -4557,7 +4637,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Apply an approver group to a contract (CTR-012): every current member of the template is asked to sign the record off, in one act and in parallel. The ask is a **snapshot** — each request records the group it came from, and renaming the template, editing its members, or archiving it never touches a request that already exists. A member who already holds a pending request on this contract is skipped rather than refused, because applying a group is one act about a set. An archived member is skipped too: they have left, so the ask would reach nobody. A group with nobody left to ask — no members, or every member already asked — is refused as the no-op it would be, and an archived group is refused because it has left the picker. Every other rule is the named ask's, applied by the same code: a member who is no longer Member+ is refused by name, and on a confidential contract a member outside the record's audience is refused by name too. Appends one approval.requested entry per person asked, naming the group, at the working-team tier (DD-017). Member+; an archived contract takes no request until it is restored */
+    /** Request parallel approvals from a group's active members, skipping pending duplicates. The organization policy restricts overriding an inherited default group. Business approvers receive a Portal review packet; staff approvers must have access to confidential Contracts. */
     post: operations["applyApproverGroup"];
     delete?: never;
     options?: never;
@@ -12869,6 +12949,216 @@ export interface operations {
         content: {
           "application/json": {
             groupId: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalApprovals: {
+    parameters: {
+      query?: {
+        status?: "pending" | "completed";
+        q?: string;
+        before?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            approvals: {
+              id: string;
+              contractNumber: number;
+              contractTitle: string;
+              requestedBy: string;
+              requestedAt: string;
+              /** @enum {string} */
+              status: "pending" | "approved" | "rejected";
+              note: string | null;
+              decidedAt: string | null;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getPortalApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            approval: {
+              id: string;
+              contractNumber: number;
+              contractTitle: string;
+              requestedBy: string;
+              requestedAt: string;
+              /** @enum {string} */
+              status: "pending" | "approved" | "rejected";
+              note: string | null;
+              decidedAt: string | null;
+            };
+            document: {
+              filename: string;
+              downloadUrl: string;
+              previewUrl: string;
+              byteSize: number;
+              /** @enum {string} */
+              preview: "pdf" | "image" | "pending" | "unavailable";
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadPortalApprovalDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  previewPortalApprovalDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  decidePortalApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          decision: "approved" | "rejected";
+          note?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            approval: {
+              id: string;
+              contractNumber: number;
+              contractTitle: string;
+              requestedBy: string;
+              requestedAt: string;
+              /** @enum {string} */
+              status: "pending" | "approved" | "rejected";
+              note: string | null;
+              decidedAt: string | null;
+            };
           };
         };
       };

@@ -1,80 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * A contract's approvals (M14/3) — CTR-012's manual sign-off, asked and
- * answered on the record.
- *
- * A Member+ user with reach to a contract asks named colleagues to sign
- * it off; each of them approves or rejects with an optional note; and
- * the requester, the Owner, or an Administrator withdraws an ask that
- * should not have been made. The roster answers all of it in one read,
- * which is what the record's Approvals section draws.
- *
- * **Every request runs in parallel** (CTR-012). There are no chains and
- * no order: three approvers asked together answer in whatever order
- * they get to it, and nothing waits on anything.
- *
- * **An approver is a live Member+ user, and on a confidential contract
- * they must already be inside its audience.** The first half is
- * {@link eligibleApprovers}, the same rule an approver group's member
- * list is held to — a template must never hold somebody the record then
- * refuses. The second half is asked of
- * {@link contractMentionCandidates}, which is the reach rule said over
- * **people** rather than over rows: exactly the set that can open the
- * record. Asking it there rather than restating it here is what keeps
- * "who can be asked" from drifting away from "who can see it", and the
- * refusal is the point of the rule — a request its approver could not
- * open would be an ask nobody could answer.
- *
- * **At most one pending request per approver per contract.** Checked
- * under the contract's row lock and backed by a partial unique index,
- * so two requests racing on one person cannot both land. A **decided**
- * row does not block anything: re-asking after a rejection writes a new
- * row, and the earlier ask stays on the record.
- *
- * **Only the named approver decides their own request, and a decision
- * is final.** There is no un-approve and no re-decide; a request that
- * has been answered is answered. Self-approval is allowed — CTR-012
- * says there is no rule engine to say otherwise.
- *
- * **Cancelling deletes the pending row, and the activity entry is the
- * durable record** (CTR-012, the activity-log-is-source-of-truth
- * precedent). Three actors may: the person who asked, the contract's
- * Owner, and an Administrator. A decided row is never deleted.
- *
- * **Access is inherited and nothing is held here** (DD-014, CTR-021).
- * Every route answers the owning contract's reach question first, with
- * `contractTeamScope` — the same predicate the record, its paper, its
- * comments, and its feed are read through — so a viewer who cannot
- * reach the contract is answered exactly as for a contract that was
- * never created, on the roster and on every write alike. Confidentiality
- * therefore inherits for free: the roster of a walled-off record is
- * invisible to everybody outside its audience, and no rule here had to
- * say so. Reads are the contract read floor, so a Contributor on the
- * team sees who was asked; DD-015 deliberately keeps these legal writes
- * at Member+.
- *
- * **Every act is narrated** (DD-017). Request, approve, reject, and
- * cancel each append one entry on the owning contract at the standing
- * record tier, inside the same transaction as the write — so a failed
- * log write rolls the mutation back rather than leaving an unrecorded
- * change.
- *
- * **Applying an approver group asks its whole membership at once, and
- * the ask is a snapshot** (CTR-012, #234). One row per current
- * unarchived member, each stamped `source = group` with the template it
- * came from, and nothing about the template is read again afterwards:
- * renaming it, editing its members, or archiving it leaves every
- * request it already made exactly as it was. Somebody who already holds
- * a pending request on the record is **skipped** rather than refused —
- * applying a group is one act about a set, and a set that overlaps what
- * has already been asked is normal. A group with nobody left to ask is
- * refused as the no-op it would be. Everything else — Member+, live,
- * and inside a confidential record's audience — is the same rule the
- * manual ask applies, asked by the same code.
- *
- * The soft gate is the next ticket (#235) — nothing here branches on
- * stage.
+ * Legal staff request parallel approvals on Contracts they can access.
+ * Any active user may approve. Business recipients review a limited packet
+ * through the Portal; requesting approval does not add them to the team.
+ * Staff approvers still need access to confidential records.
+ * Group application snapshots its current members and skips pending duplicates.
+ * The organization policy controls overrides of the default group inherited
+ * at Contract creation. Decisions are final and recorded in activity history.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -335,7 +268,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
       ).map((person) => person.id),
     );
     for (const approver of approvers) {
-      if (!reachable.has(approver.id)) {
+      if (approver.role !== "business_user" && !reachable.has(approver.id)) {
         throw httpError(
           422,
           `${approver.displayName} can't see this contract, so they can't be asked to approve it.`,
@@ -488,26 +421,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "requestContractApprovals",
         summary:
-          "Ask one or more named colleagues to sign a contract off " +
-          "(CTR-012). Every request is created at once and every one of " +
-          "them runs in parallel — there are no chains and no order. An " +
-          "approver must be a live Member+ user: a Contributor, a " +
-          "Business User, and an archived person are each refused by " +
-          "name, because a request nobody can act on is worse than no " +
-          "request. On a confidential contract the approver must " +
-          "already be inside the record's audience, so no request is " +
-          "created that its approver could not open. At most one " +
-          "pending request per approver per contract — a second is " +
-          "refused rather than silently collapsed — but a decided one " +
-          "blocks nothing, so a re-request after a rejection writes a " +
-          "new row and the earlier ask stays on the record. Every " +
-          "request made here carries source manual; applying an " +
-          "approver group is its own act. Appends one " +
-          "approval.requested entry per approver on the owning contract " +
-          "at the working-team tier (DD-017). Member+: a Contributor " +
-          "who reaches the record is refused 403 rather than 404, " +
-          "because they can already see it. An archived contract takes " +
-          "no new request until it is restored",
+          "Request parallel approvals from active users. Business approvers receive a Portal review packet; staff approvers need access to confidential Contracts. Archived Contracts and duplicate pending requests are refused.",
         tags: ["approvals"],
         params: NumberParams,
         body: z.object({
@@ -528,7 +442,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         assertOpen(contract);
 
-        // The standing rule first — live Member+ — so somebody who
+        // The eligibility rule first — active users — so somebody who
         // could never approve anything is told that rather than being
         // told they are outside an audience.
         const approvers = await eligibleApprovers(
@@ -573,26 +487,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "applyApproverGroup",
         summary:
-          "Apply an approver group to a contract (CTR-012): every " +
-          "current member of the template is asked to sign the record " +
-          "off, in one act and in parallel. The ask is a **snapshot** — " +
-          "each request records the group it came from, and renaming " +
-          "the template, editing its members, or archiving it never " +
-          "touches a request that already exists. A member who already " +
-          "holds a pending request on this contract is skipped rather " +
-          "than refused, because applying a group is one act about a " +
-          "set. An archived member is skipped too: they have left, so " +
-          "the ask would reach nobody. A group with nobody left to ask " +
-          "— no members, or every member already asked — is refused as " +
-          "the no-op it would be, and an archived group is refused " +
-          "because it has left the picker. Every other rule is the " +
-          "named ask's, applied by the same code: a member who is no " +
-          "longer Member+ is refused by name, and on a confidential " +
-          "contract a member outside the record's audience is refused " +
-          "by name too. Appends one approval.requested entry per person " +
-          "asked, naming the group, at the working-team tier (DD-017). " +
-          "Member+; an archived contract takes no request until it is " +
-          "restored",
+          "Request parallel approvals from a group's active members, skipping pending duplicates. The organization policy restricts overriding an inherited default group. Business approvers receive a Portal review packet; staff approvers must have access to confidential Contracts.",
         tags: ["approvals"],
         params: NumberParams,
         body: z.object({ groupId: RecordIdSchema }),
@@ -661,7 +556,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           );
         }
 
-        // What is left is asked exactly as a named ask is: Member+ and
+        // What is left is asked exactly as a named ask is: active and
         // live, then inside a confidential record's audience. A member
         // who has since lost their standing is refused by name rather
         // than dropped — the record must not quietly ask fewer people
@@ -734,10 +629,14 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           );
         }
 
-        await tx
+        const [decided] = await tx
           .update(contractApprovals)
           .set({ status: decision, note, decidedAt: new Date() })
-          .where(eq(contractApprovals.id, approval.id));
+          .where(
+            and(eq(contractApprovals.id, approval.id), eq(contractApprovals.status, "pending")),
+          )
+          .returning({ id: contractApprovals.id });
+        if (!decided) throw httpError(409, "This approval request has already been decided.");
 
         await recordActivity(tx, {
           entityType: "contract",

@@ -1433,3 +1433,9 @@ Conversion drafts enforce their `pending | ready | failed` states and `matter | 
 `matters.region` is nullable text referencing `regions.display_name` with `ON UPDATE CASCADE` (migration `0136`). Region usage counts and deletion protection include both Matters and Contracts.
 
 `contracts.value_cadence` also accepts `other`; `value_cadence_description` is required only for that choice and otherwise null (migration `0137`). The Contract Value API carries it as optional `cadenceDescription`, including portal reads and successor copies.
+
+### Approval defaults (0141)
+
+`contract_types.default_approver_group_id` and `contracts.default_approver_group_id` are nullable foreign keys to `approver_groups.id`. Creation copies the type's default into the Contract. Existing Contracts are not backfilled, and changing a type does not rewrite prior snapshots.
+
+`org_settings.allow_legal_approver_group_override` is a non-null boolean defaulting to true. False restricts applying a different group on a Contract with a default to Administrators. Business approval access uses the existing named `contract_approvals` row; it creates no team grant or additional approval table.

@@ -14,9 +14,8 @@
  * `taxonomy-routes` — a group has no slug, no display order, and no
  * reassignment story.
  *
- * Members must be Member+ users (CTR-012, DD-013): a Contributor or a
- * Business User is refused, as is an archived person, because a request
- * nobody can act on is worse than no request. Everything sits behind
+ * Members may be any active user, including Business Users.
+ * Archived people cannot join a group. Everything sits behind
  * SET-002's single role gate — Administrators only — and every mutation
  * appends to the activity log at `admin_only` (DD-017) inside the same
  * transaction.
@@ -164,7 +163,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * The CTR-012 membership rule, checked once for a whole set: every id
-   * must name a live Member+ user. The rule itself is shared with the
+   * must name a active user. The rule itself is shared with the
    * contract's own approval request (#233) — a template must never hold
    * somebody the record would then refuse — and only the archived
    * sentence differs, because a template holds members and a record
@@ -218,7 +217,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Create an approver-group template with its name, an optional " +
           "description, and an optional starting member list; members " +
-          "must be live Member+ users. The name must be one no live " +
+          "must be active users. The name must be one no live " +
           "group already carries, compared case-insensitively — 409 if " +
           "it is",
         tags: ["approver-groups"],
@@ -356,7 +355,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "setApproverGroupMembers",
         summary:
           "Replace an approver group's member list; every id must name a " +
-          "live Member+ user, and each person added or removed writes " +
+          "active user, and each person added or removed writes " +
           "its own activity entry",
         tags: ["approver-groups"],
         params: z.object({ id: z.string() }),

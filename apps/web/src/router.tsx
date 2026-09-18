@@ -63,6 +63,7 @@ import {
 import { PortalHomePage, portalHomeLoader } from "./routes/portal";
 import { PortalRequestFormPage, portalRequestFormLoader } from "./routes/portal-request-form";
 import { PortalRequestPage, portalRequestLoader } from "./routes/portal-request";
+import { PortalApprovalsPage, portalApprovalsLoader } from "./routes/portal-approvals";
 import { PortalContractsPage, portalContractsLoader } from "./routes/portal-contracts";
 import { PortalContractPage, portalContractLoader } from "./routes/portal-contract";
 import { PortalKnowledgePage, portalKnowledgeLoader } from "./routes/portal-knowledge";
@@ -719,6 +720,16 @@ export const routes: RouteObject[] = [
       },
       { index: true, loader: portalHomeLoader, element: <PortalHomePage /> },
       { path: "contracts", loader: portalContractsLoader, element: <PortalContractsPage /> },
+      { path: "approvals", loader: portalApprovalsLoader, element: <PortalApprovalsPage /> },
+      {
+        path: "approvals/:id",
+        loader: portalApprovalsLoader,
+        element: (
+          <KeyedByParam name="id">
+            <PortalApprovalsPage />
+          </KeyedByParam>
+        ),
+      },
       { path: "matters", loader: portalMattersLoader, element: <PortalMattersPage /> },
       {
         path: "matters/:number",

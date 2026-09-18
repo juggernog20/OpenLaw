@@ -274,7 +274,7 @@ describe("POST /approver-groups", () => {
     expect(res.statusCode, res.body).toBe(400);
   });
 
-  it("refuses a Contributor as a member and writes nothing", async () => {
+  it("includes business users when creating a group", async () => {
     const { result: res, entries } = await entriesDuring(() =>
       harness.app.inject({
         method: "POST",
@@ -283,10 +283,9 @@ describe("POST /approver-groups", () => {
         payload: { name: "Wrong roles", memberIds: [memberId, contributorId] },
       }),
     );
-    expect(res.statusCode, res.body).toBe(422);
-    expect(res.json().detail).toContain(CONTRIBUTOR.displayName);
-    expect(entries).toHaveLength(0);
-    expect((await listGroups(true)).some((row) => row.name === "Wrong roles")).toBe(false);
+    expect(res.statusCode, res.body).toBe(201);
+    expect(entries).toHaveLength(1);
+    expect((await listGroups(true)).some((row) => row.name === "Wrong roles")).toBe(true);
   });
 
   it("refuses an archived person as a member", async () => {
@@ -486,7 +485,7 @@ describe("PUT /approver-groups/:id/members", () => {
     expect(entries).toHaveLength(0);
   });
 
-  it("refuses a Contributor and leaves the existing list alone", async () => {
+  it("adds business users to an existing group", async () => {
     const group = await createGroup({ name: "Guarded", memberIds: [memberId] });
     const { result: res, entries } = await entriesDuring(() =>
       harness.app.inject({
@@ -496,11 +495,12 @@ describe("PUT /approver-groups/:id/members", () => {
         payload: { memberIds: [memberId, contributorId] },
       }),
     );
-    expect(res.statusCode, res.body).toBe(422);
-    expect(entries).toHaveLength(0);
+    expect(res.statusCode, res.body).toBe(200);
+    expect(entries).toHaveLength(1);
     const rows = await listGroups(true);
     expect(rows.find((row) => row.id === group.id)!.members.map((member) => member.id)).toEqual([
       memberId,
+      contributorId,
     ]);
   });
 

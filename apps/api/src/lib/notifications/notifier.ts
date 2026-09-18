@@ -55,6 +55,7 @@
  * process happened to be running would silently drop one real recipient.
  */
 
+import { approvalRecipients } from "../approval-access.js";
 import {
   commentMentions,
   and,
@@ -866,7 +867,9 @@ async function fanOut(
   // so no event can skip it, whichever record it is about.
   const reachable =
     entity.type === CONTRACT_ENTITY
-      ? await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
+      ? eventType === "approval.requested"
+        ? await approvalRecipients(tx, entity.id, [...byUser.keys()])
+        : await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
       : entity.type === MATTER_ENTITY
         ? await matterReachedBy(tx, entity.id, [...byUser.keys()], narrowing)
         : entity.type === ENTITY_ENTITY
@@ -890,7 +893,12 @@ async function fanOut(
         (eventType === "comment.posted" || eventType === "comment.mentioned") &&
         narrowing.tier === "full_thread" &&
         !byUser.get(person.id)?.payload.taskId;
-      if (!sharedComment && !PORTAL_SHARED_EVENTS.includes(eventType)) reachable.delete(person.id);
+      if (
+        eventType !== "approval.requested" &&
+        !sharedComment &&
+        !PORTAL_SHARED_EVENTS.includes(eventType)
+      )
+        reachable.delete(person.id);
     }
   }
 

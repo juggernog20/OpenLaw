@@ -114,6 +114,11 @@ function groupsApi(calls: GroupCalls, rows = seededGroups()) {
   const byId = (id: string) => rows.find((row) => row.id === id)!;
   return (call: StubCall): Response | undefined => {
     const path = call.url.pathname;
+    if (path === "/api/v1/org/approval-policy")
+      return json(
+        200,
+        call.method === "PUT" ? call.body : { allowLegalApproverGroupOverride: true },
+      );
     if (path === "/api/v1/users" && call.method === "GET") {
       return json(200, { users: USERS });
     }
@@ -270,7 +275,7 @@ describe("create (the group-editor dialog)", () => {
     ).toEqual(["Commercial sign-off", "Data protection", "Empty for now", "Finance sign-off"]);
   });
 
-  it("offers Member+ people only, and refuses a nameless group", async () => {
+  it("offers all active users, and refuses a nameless group", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: groupsApi(calls) });
     renderAt("/settings/contracts/approver-groups");
@@ -283,7 +288,7 @@ describe("create (the group-editor dialog)", () => {
     // A Contributor never approves; an archived person never appears.
     expect(
       within(dialog).queryByRole("checkbox", { name: /Robin Procurement/ }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
     expect(within(dialog).queryByRole("checkbox", { name: /Sam Gone/ })).not.toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Add group" }));
@@ -447,4 +452,25 @@ describe("the archive guard (snapshot, never reassignment)", () => {
       expect(screen.getByRole("button", { name: "Rename Data protection" })).toBeInTheDocument(),
     );
   });
+});
+
+it("defaults group overrides to legal team members and saves administrator-only selection", async () => {
+  const writes: unknown[] = [];
+  const base = groupsApi(newCalls());
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/org/approval-policy" && call.method === "PUT") {
+        writes.push(call.body);
+        return json(200, call.body);
+      }
+      return base(call);
+    },
+  });
+  renderAt("/settings/contracts/approver-groups");
+  const select = await screen.findByLabelText("Who can override a default approver group?");
+  await waitFor(() => expect(select).toHaveValue("true"));
+  await userEvent.setup().selectOptions(select, "false");
+  await waitFor(() => expect(writes).toEqual([{ allowLegalApproverGroupOverride: false }]));
+  expect(select).toHaveValue("false");
 });

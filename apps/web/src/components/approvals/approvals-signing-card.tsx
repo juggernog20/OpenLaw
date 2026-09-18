@@ -170,7 +170,7 @@ import {
 
 /** The roles that may approve a contract (CTR-012, DD-013). Said here
  * so the picker offers nobody the seam would refuse by name. */
-const APPROVER_ROLES = new Set(["administrator", "legal_team_member"]);
+const APPROVER_ROLES = new Set(["administrator", "legal_team_member", "business_user"]);
 
 /** The em dash the roster prints where a pending row has no answer and
  * no date. One string, so the two cells cannot disagree. */
@@ -298,6 +298,7 @@ export function ApprovalsSigningCard({
     .filter((person) => APPROVER_ROLES.has(person.role) && !pendingApprovers.has(person.id))
     .filter(
       (person) =>
+        person.role === "business_user" ||
         !isConfidential ||
         person.role === "administrator" ||
         onTeam.has(person.id) ||
@@ -505,7 +506,7 @@ export function ApprovalsSigningCard({
                 disabled when no Administrator has set a template up:
                 a control whose dialog could only say "there are none"
                 is not a control. */}
-            {approverGroups.length > 0 && (
+            {(approverGroups.length > 0 || approvalDefault?.groupId) && (
               <Button variant="secondary" disabled={busy} onClick={() => setApplying(true)}>
                 <Users size={16} aria-hidden="true" />
                 <FormattedMessage id="approvals.applyGroup" defaultMessage="Apply group" />

@@ -17394,6 +17394,419 @@
         }
       }
     },
+    "/api/v1/portal/approvals": {
+      "get": {
+        "operationId": "listPortalApprovals",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "default": "pending",
+              "type": "string",
+              "enum": ["pending", "completed"]
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "before",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "approvals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "contractNumber": {
+                            "type": "number"
+                          },
+                          "contractTitle": {
+                            "type": "string"
+                          },
+                          "requestedBy": {
+                            "type": "string"
+                          },
+                          "requestedAt": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["pending", "approved", "rejected"]
+                          },
+                          "note": {
+                            "type": ["string", "null"]
+                          },
+                          "decidedAt": {
+                            "type": ["string", "null"]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "contractNumber",
+                          "contractTitle",
+                          "requestedBy",
+                          "requestedAt",
+                          "status",
+                          "note",
+                          "decidedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["approvals", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/approvals/{id}": {
+      "get": {
+        "operationId": "getPortalApproval",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "approval": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "contractNumber": {
+                          "type": "number"
+                        },
+                        "contractTitle": {
+                          "type": "string"
+                        },
+                        "requestedBy": {
+                          "type": "string"
+                        },
+                        "requestedAt": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["pending", "approved", "rejected"]
+                        },
+                        "note": {
+                          "type": ["string", "null"]
+                        },
+                        "decidedAt": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "contractNumber",
+                        "contractTitle",
+                        "requestedBy",
+                        "requestedAt",
+                        "status",
+                        "note",
+                        "decidedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "document": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "filename": {
+                              "type": "string"
+                            },
+                            "downloadUrl": {
+                              "type": "string"
+                            },
+                            "previewUrl": {
+                              "type": "string"
+                            },
+                            "byteSize": {
+                              "type": "number"
+                            },
+                            "preview": {
+                              "type": "string",
+                              "enum": ["pdf", "image", "pending", "unavailable"]
+                            }
+                          },
+                          "required": [
+                            "filename",
+                            "downloadUrl",
+                            "previewUrl",
+                            "byteSize",
+                            "preview"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["approval", "document"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/approvals/{id}/document": {
+      "get": {
+        "operationId": "downloadPortalApprovalDocument",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/approvals/{id}/preview": {
+      "get": {
+        "operationId": "previewPortalApprovalDocument",
+        "tags": ["portal"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/approvals/{id}/decision": {
+      "post": {
+        "operationId": "decidePortalApproval",
+        "tags": ["portal"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "decision": {
+                    "type": "string",
+                    "enum": ["approved", "rejected"]
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": ["decision"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "approval": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "contractNumber": {
+                          "type": "number"
+                        },
+                        "contractTitle": {
+                          "type": "string"
+                        },
+                        "requestedBy": {
+                          "type": "string"
+                        },
+                        "requestedAt": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["pending", "approved", "rejected"]
+                        },
+                        "note": {
+                          "type": ["string", "null"]
+                        },
+                        "decidedAt": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "contractNumber",
+                        "contractTitle",
+                        "requestedBy",
+                        "requestedAt",
+                        "status",
+                        "note",
+                        "decidedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["approval"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/contract-types/{id}/people": {
       "get": {
         "operationId": "listContractTypeDefaultPeople",
@@ -43426,7 +43839,7 @@
       },
       "post": {
         "operationId": "createApproverGroup",
-        "summary": "Create an approver-group template with its name, an optional description, and an optional starting member list; members must be live Member+ users. The name must be one no live group already carries, compared case-insensitively — 409 if it is",
+        "summary": "Create an approver-group template with its name, an optional description, and an optional starting member list; members must be active users. The name must be one no live group already carries, compared case-insensitively — 409 if it is",
         "tags": ["approver-groups"],
         "requestBody": {
           "required": true,
@@ -43678,7 +44091,7 @@
     "/api/v1/approver-groups/{id}/members": {
       "put": {
         "operationId": "setApproverGroupMembers",
-        "summary": "Replace an approver group's member list; every id must name a live Member+ user, and each person added or removed writes its own activity entry",
+        "summary": "Replace an approver group's member list; every id must name a active user, and each person added or removed writes its own activity entry",
         "tags": ["approver-groups"],
         "requestBody": {
           "required": true,
@@ -53234,7 +53647,7 @@
       },
       "post": {
         "operationId": "requestContractApprovals",
-        "summary": "Ask one or more named colleagues to sign a contract off (CTR-012). Every request is created at once and every one of them runs in parallel — there are no chains and no order. An approver must be a live Member+ user: a Contributor, a Business User, and an archived person are each refused by name, because a request nobody can act on is worse than no request. On a confidential contract the approver must already be inside the record's audience, so no request is created that its approver could not open. At most one pending request per approver per contract — a second is refused rather than silently collapsed — but a decided one blocks nothing, so a re-request after a rejection writes a new row and the earlier ask stays on the record. Every request made here carries source manual; applying an approver group is its own act. Appends one approval.requested entry per approver on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new request until it is restored",
+        "summary": "Request parallel approvals from active users. Business approvers receive a Portal review packet; staff approvers need access to confidential Contracts. Archived Contracts and duplicate pending requests are refused.",
         "tags": ["approvals"],
         "requestBody": {
           "required": true,
@@ -53388,7 +53801,7 @@
     "/api/v1/contracts/{number}/approvals/group": {
       "post": {
         "operationId": "applyApproverGroup",
-        "summary": "Apply an approver group to a contract (CTR-012): every current member of the template is asked to sign the record off, in one act and in parallel. The ask is a **snapshot** — each request records the group it came from, and renaming the template, editing its members, or archiving it never touches a request that already exists. A member who already holds a pending request on this contract is skipped rather than refused, because applying a group is one act about a set. An archived member is skipped too: they have left, so the ask would reach nobody. A group with nobody left to ask — no members, or every member already asked — is refused as the no-op it would be, and an archived group is refused because it has left the picker. Every other rule is the named ask's, applied by the same code: a member who is no longer Member+ is refused by name, and on a confidential contract a member outside the record's audience is refused by name too. Appends one approval.requested entry per person asked, naming the group, at the working-team tier (DD-017). Member+; an archived contract takes no request until it is restored",
+        "summary": "Request parallel approvals from a group's active members, skipping pending duplicates. The organization policy restricts overriding an inherited default group. Business approvers receive a Portal review packet; staff approvers must have access to confidential Contracts.",
         "tags": ["approvals"],
         "requestBody": {
           "required": true,

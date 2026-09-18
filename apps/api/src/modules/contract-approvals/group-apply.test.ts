@@ -432,7 +432,7 @@ describe("what an apply refuses", () => {
     expect(res.statusCode, res.body).toBe(404);
   });
 
-  it("refuses a member who is no longer Member+, by name", async () => {
+  it("keeps a group member eligible after moving to a business role", async () => {
     const contract = await newContract("A demoted member");
     const group = await newGroup("Template with a demotion", [idOf(FIRST), idOf(DEMOTED)]);
     await harness.db
@@ -442,11 +442,8 @@ describe("what an apply refuses", () => {
 
     try {
       const res = await applyGroup(as(MEMBER), contract.number, group);
-      expect(res.statusCode, res.body).toBe(422);
-      expect(res.json().detail).toContain(DEMOTED.displayName);
-      // The eligible half of the template must not land while the other
-      // half is refused.
-      expect(await roster(contract.number)).toEqual([]);
+      expect(res.statusCode, res.body).toBe(201);
+      expect(await roster(contract.number)).toHaveLength(2);
     } finally {
       await harness.db
         .update(users)
@@ -646,5 +643,120 @@ describe("type defaults and organization override permissions", () => {
       await setDefault(typeId, null);
       await policy(true);
     }
+  });
+});
+
+describe("business approvers in the Portal", () => {
+  const portal = (path: string, jar = as(CONTRIBUTOR)) =>
+    harness.app.inject({ method: "GET", url: `/api/v1/portal/${path}`, cookies: jar });
+  const decide = (id: string, decision: string, jar = as(CONTRIBUTOR)) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/portal/approvals/${id}/decision`,
+      cookies: jar,
+      payload: { decision, note: "Budget reviewed." },
+    });
+
+  it("reviews only the assigned primary document, records one decision, and keeps legal data private", async () => {
+    const contract = await newContract("Business budget sign-off");
+    await wallOff(contract.id);
+    const boundary = "approval-packet";
+    const bytes = "%PDF-1.4\nBusiness approval document";
+    const upload = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/documents`,
+      cookies: as(MEMBER),
+      headers: { "content-type": `multipart/form-data; boundary=${boundary}` },
+      payload: Buffer.from(
+        `--${boundary}\r\ncontent-disposition: form-data; name="kind"\r\n\r\ndraft_ours\r\n--${boundary}\r\ncontent-disposition: form-data; name="file"; filename="budget.pdf"\r\ncontent-type: application/pdf\r\n\r\n${bytes}\r\n--${boundary}--\r\n`,
+      ),
+    });
+    expect(upload.statusCode, upload.body).toBe(201);
+    const group = await newGroup("Business and legal reviewers", [idOf(CONTRIBUTOR), idOf(MEMBER)]);
+    const applied = await applyGroup(as(MEMBER), contract.number, group);
+    expect(applied.statusCode, applied.body).toBe(201);
+    const id = applied
+      .json()
+      .approvals.find((row: ApprovalRow) => row.approver.id === idOf(CONTRIBUTOR)).id;
+    const list = await portal("approvals");
+    expect(list.statusCode, list.body).toBe(200);
+    expect(list.json().approvals.some((row: { id: string }) => row.id === id)).toBe(true);
+    const packet = await portal(`approvals/${id}`);
+    expect(packet.statusCode, packet.body).toBe(200);
+    expect(Object.keys(packet.json()).sort()).toEqual(["approval", "document"]);
+    expect(packet.json().approval).not.toHaveProperty("customFields");
+    expect(packet.json().document.filename).toBe("budget.pdf");
+    const download = await portal(`approvals/${id}/document`);
+    expect(download.statusCode, download.body).toBe(200);
+    expect(download.body).toBe(bytes);
+    expect((await portal(`contracts/${contract.number}`)).statusCode).toBe(404);
+    expect(
+      (
+        await harness.app.inject({
+          method: "GET",
+          url: `/api/v1/contracts/${contract.number}`,
+          cookies: as(CONTRIBUTOR),
+        })
+      ).statusCode,
+    ).toBe(403);
+    for (const suffix of ["", "/document", "/preview"])
+      expect((await portal(`approvals/${id}${suffix}`, as(OUTSIDER))).statusCode).toBe(404);
+    expect((await decide(id, "approved", as(OUTSIDER))).statusCode).toBe(404);
+    const bell = await portal("notifications");
+    expect(
+      bell
+        .json()
+        .notifications.some(
+          (row: { payload: { approvalId?: string } }) => row.payload.approvalId === id,
+        ),
+    ).toBe(true);
+    const decisions = await Promise.all([decide(id, "approved"), decide(id, "rejected")]);
+    expect(decisions.map((result) => result.statusCode).sort()).toEqual([200, 409]);
+    const completed = await portal("approvals?status=completed");
+    expect(completed.json().approvals.find((row: { id: string }) => row.id === id).note).toBe(
+      "Budget reviewed.",
+    );
+    expect(
+      (await portal("approvals")).json().approvals.some((row: { id: string }) => row.id === id),
+    ).toBe(false);
+    expect((await decide(id, "approved")).statusCode).toBe(409);
+    const entries = await harness.db
+      .select()
+      .from(activityLog)
+      .where(
+        and(eq(activityLog.entityId, contract.id), eq(activityLog.actorId, idOf(CONTRIBUTOR))),
+      );
+    expect(
+      entries.filter(
+        (row) => row.action === "approval.approved" || row.action === "approval.rejected",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("withdrawal and contract archival revoke packet access and decisions", async () => {
+    const contract = await newContract("Withdraw business approval");
+    const asked = await requestApprovals(as(MEMBER), contract.number, [idOf(CONTRIBUTOR)]);
+    expect(asked.statusCode).toBe(201);
+    const id = asked.json().approvals[0].id;
+    const withdrawn = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/approvals/${id}`,
+      cookies: as(MEMBER),
+    });
+    expect(withdrawn.statusCode).toBe(200);
+    expect((await portal(`approvals/${id}`)).statusCode).toBe(404);
+    expect((await portal(`approvals/${id}/document`)).statusCode).toBe(404);
+    expect((await decide(id, "approved")).statusCode).toBe(404);
+    const again = await requestApprovals(as(MEMBER), contract.number, [idOf(CONTRIBUTOR)]);
+    const next = again.json().approvals[0].id;
+    await harness.db
+      .update(contracts)
+      .set({ archivedAt: new Date() })
+      .where(eq(contracts.id, contract.id));
+    expect((await portal(`approvals/${next}`)).statusCode).toBe(404);
+    expect((await decide(next, "approved")).statusCode).toBe(404);
+    expect(
+      (await portal("approvals")).json().approvals.some((row: { id: string }) => row.id === next),
+    ).toBe(false);
   });
 });

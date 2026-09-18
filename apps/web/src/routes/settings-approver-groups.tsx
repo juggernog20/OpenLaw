@@ -15,11 +15,9 @@
  * so an archived group only leaves the apply picker and every request it
  * already produced is untouched; the guard says exactly that.
  *
- * Only Member+ users can approve a contract (CTR-012, DD-013), so the
- * member picker offers Administrators and Legal Team Members only. A
- * person who was on a group before they lost that standing still renders
- * — dropping them silently would edit the template behind the
- * Administrator's back — and the API's refusal is what says so.
+ * All active users can be group members. Business users review their
+ * own approval requests in the Portal. Archived members remain visible
+ * so an Administrator can remove them from the group.
  *
  * The loader is the client half of SET-002's gate; the API's 403 is the
  * real refusal.
@@ -32,7 +30,6 @@ import { History, Pencil, TriangleAlert } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
-import { MEMBER_PLUS_ROLES } from "../lib/roles";
 import { requireUser } from "../lib/session";
 import { ApprovalOverridePolicy } from "../components/approval-default-settings";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
@@ -98,7 +95,7 @@ interface Candidate {
   id: string;
   displayName: string;
   email: string;
-  /** False for a member who is no longer Member+ or has been archived:
+  /** False for a member who has been archived:
    * still drawn, still checked, and refused by the API on save. */
   eligible: boolean;
 }
@@ -109,10 +106,7 @@ type UserRow =
 
 function eligiblePeople(users: readonly UserRow[]): Candidate[] {
   return users
-    .filter(
-      (user) =>
-        user.status !== "archived" && (MEMBER_PLUS_ROLES as readonly string[]).includes(user.role),
-    )
+    .filter((user) => user.status !== "archived")
     .map((user) => ({
       id: user.id,
       displayName: user.displayName,
@@ -333,7 +327,7 @@ function GroupEditorDialog({
               <p className="text-sm text-muted">
                 <FormattedMessage
                   id="settings.approverGroups.noCandidates"
-                  defaultMessage="No Administrator or Legal team member is available yet."
+                  defaultMessage="No active user is available yet."
                 />
               </p>
             ) : (
@@ -370,7 +364,7 @@ function GroupEditorDialog({
             <p className="text-xs text-muted">
               <FormattedMessage
                 id="settings.approverGroups.membersHelp"
-                defaultMessage="Only Administrators and Legal team members can approve a contract."
+                defaultMessage="Any active user can approve. Business users review requests in the Legal portal."
               />
             </p>
           </fieldset>

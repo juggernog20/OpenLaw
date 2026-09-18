@@ -57,6 +57,7 @@ export type MailRecord =
 
 /** One notification, as the template layer needs it described. */
 export interface NotificationMail {
+  recipientRole?: string;
   eventType: NotificationEventType;
   /** The record the item is about — its number is its address. */
   record: MailRecord;
@@ -386,7 +387,13 @@ function contractMail(
   to: string,
   baseUrl: string,
 ): MailMessage | null {
-  const link = recordLink(baseUrl, record.number);
+  const approvalId = detail(notification, "approvalId");
+  const link =
+    notification.eventType === "approval.requested" &&
+    notification.recipientRole === "business_user" &&
+    approvalId
+      ? `${origin(baseUrl).replace(/\/portal$/, "")}/portal/approvals/${encodeURIComponent(approvalId)}`
+      : recordLink(baseUrl, record.number);
   const who = notification.actorName ?? "Somebody";
   const contractTitle = record.title;
   switch (notification.eventType) {

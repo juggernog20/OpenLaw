@@ -280,18 +280,16 @@ describe("requesting approvals", () => {
     }
   });
 
-  it("refuses a Contributor and a Business User as approvers, by name", async () => {
+  it("allows business users to be named as approvers", async () => {
     const contract = await newContract("Not approvers");
 
     const contributor = await requestApprovals(as(MEMBER), contract.number, [idOf(CONTRIBUTOR)]);
-    expect(contributor.statusCode, contributor.body).toBe(422);
-    expect(contributor.json().detail).toContain(CONTRIBUTOR.displayName);
+    expect(contributor.statusCode, contributor.body).toBe(201);
 
     const business = await requestApprovals(as(MEMBER), contract.number, [idOf(BUSINESS)]);
-    expect(business.statusCode, business.body).toBe(422);
-    expect(business.json().detail).toContain(BUSINESS.displayName);
+    expect(business.statusCode, business.body).toBe(201);
 
-    expect(await roster(as(MEMBER), contract.number)).toEqual([]);
+    expect(await roster(as(MEMBER), contract.number)).toHaveLength(2);
   });
 
   it("refuses an archived person, because the ask would reach nobody", async () => {
@@ -329,10 +327,7 @@ describe("requesting approvals", () => {
 
   it("refuses the whole ask when one named person is refused", async () => {
     const contract = await newContract("All or nothing");
-    const res = await requestApprovals(as(MEMBER), contract.number, [
-      idOf(FIRST),
-      idOf(CONTRIBUTOR),
-    ]);
+    const res = await requestApprovals(as(MEMBER), contract.number, [idOf(FIRST), idOf(DEPARTED)]);
     expect(res.statusCode, res.body).toBe(422);
     // Nothing was written: the eligible half of the list must not land
     // while the other half is refused.

@@ -49,6 +49,7 @@ import {
   and,
   asc,
   contracts,
+  contractApprovals,
   comments,
   sql,
   ne,
@@ -709,6 +710,25 @@ function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
     ),
   );
   return or(
+    and(
+      eq(notifications.entityType, CONTRACT_ENTITY),
+      eq(notifications.eventType, "approval.requested"),
+      inArray(
+        sql<string>`${notifications.payload}->>'approvalId'`,
+        db
+          .select({ id: contractApprovals.id })
+          .from(contractApprovals)
+          .innerJoin(contracts, eq(contracts.id, contractApprovals.contractId))
+          .where(
+            and(
+              eq(contractApprovals.approverId, user.id),
+              eq(contractApprovals.contractId, notifications.entityId),
+              eq(contractApprovals.status, "pending"),
+              isNull(contracts.archivedAt),
+            ),
+          ),
+      ),
+    ),
     and(
       eq(notifications.entityType, REQUEST_ENTITY),
       inArray(notifications.eventType, requestEventTypesOn("requester")),

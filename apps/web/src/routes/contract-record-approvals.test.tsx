@@ -154,6 +154,7 @@ function recordApi(
   row: Record<string, unknown> = contractRow(),
   team: Record<string, unknown>[] = [{ ...named("u2"), archived: false, role: "creator" }],
   groups: { id: string; name: string; memberIds: string[] }[] = GROUPS,
+  approvalDefault = { defaultGroupId: null as string | null, canOverrideDefaultGroup: true },
 ) {
   let approvals = initialApprovals;
   let reads = 0;
@@ -163,7 +164,7 @@ function recordApi(
   const writes: { method: string; path: string; body: unknown }[] = [];
   let refuse: { status: number; detail: string } | null = null;
 
-  const envelope = () => json(200, { approvals });
+  const envelope = () => json(200, { approvals, ...approvalDefault });
 
   const handler = (call: StubCall) => {
     if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
@@ -539,7 +540,7 @@ describe("the contract record's Approvals section", () => {
     await waitFor(async () => expect(await rosterRows()).toHaveLength(2));
   });
 
-  it("offers no Contributor and nobody who already has a pending ask", async () => {
+  it("offers business users but excludes people with a pending ask", async () => {
     const user = userEvent.setup();
     const api = recordApi([approval({ id: "a1", approver: named("u4"), status: "pending" })]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
@@ -550,7 +551,7 @@ describe("the contract record's Approvals section", () => {
     // A Contributor never approves anything (DD-013).
     expect(
       within(dialog).queryByRole("checkbox", { name: "Casey Contributor" }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
     // And a second pending ask at one person is refused at the seam, so
     // the picker does not offer it.
     expect(within(dialog).queryByRole("checkbox", { name: "Sarah Chen" })).not.toBeInTheDocument();
@@ -812,4 +813,20 @@ describe("the contract record's Approvals section", () => {
       await screen.findByText("No approvals requested on this contract yet."),
     ).toBeInTheDocument();
   });
+});
+
+it("preselects the inherited group and locks changes when the policy restricts overrides", async () => {
+  const data = recordApi([], contractRow(), [], GROUPS, {
+    defaultGroupId: "g1",
+    canOverrideDefaultGroup: false,
+  });
+  stubApi({ signedIn: MEMBER, extra: data.handler });
+  renderAt("/contracts/42/approvals");
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Apply group" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByLabelText("Approver group")).toHaveValue("g1");
+  expect(within(dialog).getByLabelText("Approver group")).toBeDisabled();
+  expect(
+    within(dialog).getByText("Only an administrator can choose a different group."),
+  ).toBeVisible();
 });

@@ -24,6 +24,8 @@ it.each([
   ["/portal/requests/42", "Requests"],
   ["/portal/contracts?q=supply", "Contracts"],
   ["/portal/contracts/42", "Contracts"],
+  ["/portal/approvals", "Approvals"],
+  ["/portal/approvals/a1", "Approvals"],
   ["/portal/matters", "Matters"],
   ["/portal/matters/42", "Matters"],
 ])("marks the current destination at %s", (path, name) => {
@@ -39,7 +41,7 @@ it("leaves every destination available on settings without marking one current",
   expect(nav.getByRole("link", { name: "Requests" })).toHaveFocus();
   await user.tab();
   await user.keyboard("{Enter}");
-  expect(nav.getByRole("link", { current: "page" })).toHaveAccessibleName("Contracts");
+  expect(nav.getByRole("link", { current: "page" })).toHaveAccessibleName("Approvals");
   await user.click(nav.getByRole("link", { name: "Matters" }));
   expect(nav.getByRole("link", { current: "page" })).toHaveAccessibleName("Matters");
   await user.click(nav.getByRole("link", { name: "Requests" }));

@@ -48,6 +48,10 @@ For a Confidential record, ask Legal to add people. Removing members and creatin
 
 ## Work that stays with Legal
 
-Ask Legal to change record Fields, Description, Value, dates, Status, Type, owners, parties, confidentiality, relationships, Tasks, Key dates, Approvals or signatures, or to remove team members. Business Users create [Requests](submit-request.md) to start new work.
+Ask Legal to change record Fields, Description, Value, dates, Status, Type, owners, parties, confidentiality, relationships, Tasks, Key dates, approval requests or signatures, or to remove team members. Business Users create [Requests](submit-request.md) to start new work.
 
 Closing a Matter or Ending a Contract does not remove permitted Portal work. Archiving removes the record from the Portal. If the record disappears, ask Legal to check its archive state and your membership. See [roles and access](roles-and-access.md).
+
+## Review an approval request
+
+Open **Approvals** in the Legal portal to see Contracts awaiting your decision. Open a request, review its primary Document, and choose **Approve** or **Reject**, with an optional note. Only the named approver can decide. Your completed decisions appear under **Completed**. See [Request and give approval](contract-approvals.md).

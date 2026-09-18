@@ -525,6 +525,12 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * written for, and the reader's role does not come into it.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined, surface: "staff" | "portal"): string | null {
+  if (
+    surface === "portal" &&
+    item.eventType === "approval.requested" &&
+    typeof item.payload.approvalId === "string"
+  )
+    return `/portal/approvals/${encodeURIComponent(item.payload.approvalId)}`;
   if (surface === "portal" && (item.entityType === "contract" || item.entityType === "matter")) {
     const number = wholeNumber(item.payload, `${item.entityType}Number`);
     return number === null ? null : `/portal/${item.entityType}s/${number}`;

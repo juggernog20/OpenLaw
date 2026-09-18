@@ -4,7 +4,7 @@ Create Approval Requests for named colleagues and read their decisions on the Co
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator with access to an unarchived Contract. Approval Requests record internal decisions; they do not sign the Document or send it to a Signer. For Confidential work, the proposed approvers must already have the required access.
+Sign in as a Legal Team Member or Administrator with access to an unarchived Contract. Approval Requests record internal decisions; they do not sign the Document or send it to a Signer. For Confidential work, staff approvers must already have the required access. Business approvers receive a limited review packet in the Portal.
 
 ## Ask for approval
 
@@ -12,7 +12,7 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 2. Select **Add approver**. Choose one or more people under **Approvers**.
 3. Select **Request approvals**. Check each new **Pending** row.
 
-Everyone selected is asked at once and may answer in any order. A person with a pending request is not offered for a duplicate. The picker offers eligible Legal Team Members and Administrators, not Business Users.
+Everyone selected is asked at once and may answer in any order. A person with a pending request is not offered for a duplicate. The picker offers all active users, including Business Users.
 
 If an Administrator has configured groups, select **Apply group**, choose the **Approver group**, and inspect the named people and any skipped pending requests before confirming. Applying a group asks its current members. Later edits to the group do not rewrite existing requests. See [Configure reusable Approver groups](approver-groups.md).
 
@@ -32,6 +32,14 @@ The app provides parallel requests and reusable groups. It does not apply a sequ
 
 ## If an action is unavailable
 
-Check whether the request is still pending, whether it names you, and whether the Contract is archived or outside your access. If a group contains someone who cannot reach Confidential work, review access or ask an Administrator to correct the group before trying again. Do not assume applying a group grants access.
+Check whether the request is still pending, whether it names you, and whether the Contract is archived or outside your access. If a group contains someone who cannot reach Confidential work, review access or ask an Administrator to correct the group before trying again. Business approvers receive access only to their own review packet.
 
 After an uncertain save, reload the list before requesting another approval. [Notifications](notifications.md) explains where an eligible recipient may see the request and how preferences affect email.
+
+## Approve from the business portal
+
+Open **Approvals** in the Legal portal. **Pending** lists your outstanding requests; **Completed** shows your previous decisions. Search by Contract title or requester name, then open a request.
+
+Review the primary Document beside the decision panel. Supported Documents open in the shared viewer; use **Download** when a preview is unavailable. Enter an optional note, then choose **Approve** or **Reject**. Your decision appears on the Contract for Legal. Only you can answer a request assigned to you, and a completed decision cannot be changed.
+
+An approval request does not add you to the Contract team or reveal internal comments, custom fields, or other Documents. Withdrawing the request or archiving the Contract removes access to the review page. Approval notifications link directly to your Portal review page.

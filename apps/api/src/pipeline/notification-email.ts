@@ -37,6 +37,7 @@
  * yet must not be the one thing that leaves the building unchecked.
  */
 
+import { approvalRecipients } from "../lib/approval-access.js";
 import {
   and,
   eq,
@@ -242,7 +243,12 @@ async function sendNotificationEmail(
   const payload = row.payload;
   let record: MailRecord;
   if (row.entityType === CONTRACT_ENTITY) {
-    const reachable = await reachedBy(deps.db, row.entityId, [row.userId]);
+    const reachable =
+      row.eventType === "approval.requested"
+        ? typeof payload.approvalId === "string"
+          ? await approvalRecipients(deps.db, row.entityId, [row.userId], payload.approvalId)
+          : new Set<string>()
+        : await reachedBy(deps.db, row.entityId, [row.userId]);
     if (!reachable.has(row.userId)) return "unreachable";
     // The payload is a snapshot taken by whichever build wrote the row,
     // so every field is read defensively — the activity narrator's rule.
@@ -295,6 +301,7 @@ async function sendNotificationEmail(
       // two keys above are lifted out because every arm needs them and
       // a row without them has no address at all.
       details: payload,
+      recipientRole: row.recipientRole,
     },
     row.recipientEmail,
     row.recipientRole === "business_user" && row.entityType !== "request"
