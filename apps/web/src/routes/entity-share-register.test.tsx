@@ -357,6 +357,40 @@ describe("the Entity Ownership tab as a share register", () => {
     await waitFor(() => expect(within(entries).getAllByRole("row").slice(1)).toHaveLength(3));
   });
 
+  it("keeps projected owners out of the declared-owner list", async () => {
+    const projected = (name: string, id: string, source: "register" | "manual") => ({
+      owner: { restricted: false, id, legalName: name, kind: "individual" },
+      owned: { restricted: false, id: "e1", legalName: "Wentworth Capital Partners Ltd" },
+      ownershipPercent: 10,
+      source,
+      createdAt: "2026-08-01T00:00:00.000Z",
+      updatedAt: "2026-08-01T00:00:00.000Z",
+    });
+    const api = registerApi();
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1/holdings" && call.method === "GET") {
+          return json(200, {
+            owners: [
+              projected("Blair Wentworth", "individual:p1", "register"),
+              projected("Old Founder", "individual:p2", "manual"),
+            ],
+            owned: [],
+            warnings: [],
+          });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/entities/e1/ownership");
+    const declared = (
+      await screen.findByRole("heading", { name: "Declared owners not in the register" })
+    ).closest("section")!;
+    expect(within(declared).getByText("Old Founder")).toBeInTheDocument();
+    expect(within(declared).queryByText("Blair Wentworth")).not.toBeInTheDocument();
+  });
+
   it("opens on the empty state, with Record entry waiting on a share class", async () => {
     stubApi({ signedIn: MEMBER, extra: registerApi({ empty: true }).handler });
     renderAt("/entities/e1/ownership");
