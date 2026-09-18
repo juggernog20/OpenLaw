@@ -188,7 +188,7 @@ describe("the error line", () => {
     });
 
     it("in a nested cause", () => {
-      const inner = new Error("fetch https://svc:pa55@api.example.com/x?api_key=k3y failed");
+      const inner = new Error("fetch https://svc:pa55@api.example.com/x?api_key=k3y failed"); // secretlint-disable-line -- fictional credential the redaction test must contain
       const outer = new Error("connector call failed", { cause: inner });
       const printed = JSON.stringify(loggable(outer));
       expect(printed).toContain("https://***@api.example.com/x?api_key=***");
