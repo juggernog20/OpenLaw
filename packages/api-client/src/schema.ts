@@ -34241,15 +34241,6 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": string;
-        };
-      };
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {

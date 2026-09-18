@@ -802,10 +802,10 @@ describe("the share register", () => {
     expect(members.headers["content-type"]).toContain("text/csv");
     expect(members.headers["content-disposition"]).toContain('"Export, Ltd register of members ');
     expect(members.body).toContain(
-      "Holder,Holder kind,Jurisdiction,Class,Shares,% of class,% voting,Certificates,Member since",
+      '"Holder","Holder kind","Jurisdiction","Class","Shares","% of class","% voting","Certificates","Member since"',
     );
     expect(members.body).toContain(
-      '"Ada ""Quotes"" Lovelace",individual,,Ordinary,10,100,100,A1,2024-01-01',
+      '"Ada ""Quotes"" Lovelace","individual","","Ordinary","10","100","100","A1","2024-01-01"',
     );
     const entries = await harness.app.inject({
       method: "GET",
@@ -814,7 +814,7 @@ describe("the share register", () => {
     });
     expect(entries.statusCode, entries.body).toBe(200);
     expect(entries.body).toContain(
-      '1,2024-01-01,allotment,,"Ada ""Quotes"" Lovelace",Ordinary,,10,,,"cash, in full",,A1,,,',
+      '"1","2024-01-01","allotment","","Ada ""Quotes"" Lovelace","Ordinary","","10","","","cash, in full","","A1","","",""',
     );
     const before = await harness.app.inject({
       method: "GET",
@@ -823,6 +823,24 @@ describe("the share register", () => {
     });
     expect(before.body.split("\r\n").filter(Boolean)).toHaveLength(1);
     expect(before.headers["content-disposition"]).toContain("2023-12-31");
+
+    // A value a spreadsheet would run as a formula is defused.
+    const formula = await entry(issuer.id, {
+      kind: "allotment",
+      effectiveOn: "2024-02-01",
+      shareClassId: ordinary.id,
+      quantity: 1,
+      to: { kind: "individual", name: '=HYPERLINK("http://x")' },
+      note: "@SUM(A1)",
+    });
+    expect(formula.statusCode, formula.body).toBe(201);
+    const defused = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/entities/${issuer.id}/share-register/export?kind=entries`,
+      cookies: memberCookies,
+    });
+    expect(defused.body).toContain(`"'=HYPERLINK(""http://x"")"`);
+    expect(defused.body).toContain(`"'@SUM(A1)"`);
   });
 
   it("refuses to delete an entry when the holder it restores would close a loop", async () => {

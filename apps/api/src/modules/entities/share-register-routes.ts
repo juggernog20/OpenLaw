@@ -32,6 +32,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { CurrencySchema } from "../../lib/currencies.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { csvRow } from "../../lib/csv.js";
 import { projectRegisterHoldings } from "../../lib/holdings-projection.js";
 import { ownershipPath } from "../../lib/ownership-path.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -914,15 +915,6 @@ async function assertClassNameFree(
   }
 }
 
-/** RFC 4180: quote a field when it holds a comma, a quote or a line break. */
-function csv(rows: readonly (string | number | null)[][]): string {
-  const cell = (value: string | number | null) => {
-    const text = value === null ? "" : String(value);
-    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-  };
-  return rows.map((row) => row.map(cell).join(",")).join("\r\n") + "\r\n";
-}
-
 function csvHolder(ref: { restricted: boolean; name?: string } | null) {
   return ref === null ? "" : ref.restricted ? "Restricted Entity" : (ref.name ?? "");
 }
@@ -950,7 +942,12 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
           asOf: z.iso.date().optional(),
           kind: z.enum(["members", "entries"]).default("members"),
         }),
-        response: { 200: z.string(), default: problemResponse },
+        produces: ["text/csv"],
+        // No 200 schema on purpose, as the audit log's export: this answers
+        // `text/csv` with a Content-Disposition filename, and a response
+        // schema would put the JSON serializer in front of it. Refusals
+        // still answer a Problem body.
+        response: { default: problemResponse },
       },
     },
     async (request, reply) => {
@@ -1043,10 +1040,15 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         request.query.kind === "members"
           ? `${stem} register of members ${register.asOf}.csv`
           : `${stem} register of entries.csv`;
-      return reply
-        .header("content-type", "text/csv; charset=utf-8")
-        .header("content-disposition", `attachment; filename="${filename.replace(/"/g, "")}"`)
-        .send("\uFEFF" + csv(rows));
+      return (
+        reply
+          .header("content-type", "text/csv; charset=utf-8")
+          .header("content-disposition", `attachment; filename="${filename.replace(/"/g, "")}"`)
+          // The only declared response is the Problem default, so the reply's
+          // payload type is Problem. The CSV sits outside it on purpose, as
+          // the audit log's does; the cast says so.
+          .send(("\uFEFF" + rows.map(csvRow).join("")) as never)
+      );
     },
   );
 

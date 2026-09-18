@@ -236,10 +236,16 @@ function HoldingList({
   onUpdate: (row: EntityHolding, percent: number) => Promise<void>;
   onRemove: (row: EntityHolding) => Promise<void>;
 }>) {
+  const headingId = useId();
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      aria-labelledby={headingId}
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+    >
       <header className="flex h-section-header items-center border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 id={headingId} className="text-base font-semibold">
+          {title}
+        </h2>
       </header>
       {rows.length === 0 ? (
         <p className="p-4 text-sm text-muted">{empty}</p>

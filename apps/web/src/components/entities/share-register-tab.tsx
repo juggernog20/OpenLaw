@@ -6,7 +6,7 @@
  * allotments and transfers, then the Entities this one owns. Holders are
  * never added here; they come from entries.
  */
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useRevalidator, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { ChevronLeft, ChevronRight, Download, Pencil, Plus, Trash2 } from "lucide-react";
@@ -74,6 +74,7 @@ export function ShareRegisterTab({
   const intl = useIntl();
   const [params, setParams] = useSearchParams();
   const { revalidate } = useRevalidator();
+  const entriesHeading = useId();
   const [classesOpen, setClassesOpen] = useState(false);
   const [entryDialog, setEntryDialog] = useState<{ entry?: RegisterEntry } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -234,9 +235,12 @@ export function ShareRegisterTab({
             frozen={frozen}
             onClasses={() => setClassesOpen(true)}
           />
-          <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+          <section
+            className="overflow-hidden rounded-card border border-border-default bg-raised"
+            aria-labelledby={entriesHeading}
+          >
             <header className="flex h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4">
-              <h2 className="text-base font-semibold">
+              <h2 id={entriesHeading} className="text-base font-semibold">
                 <FormattedMessage
                   id="entities.register.entries.title"
                   defaultMessage="Register of allotments and transfers"
@@ -346,6 +350,7 @@ function RegisterAsOf({
   onChange,
 }: Readonly<{ register: ShareRegister; onChange: (next: string | null) => void }>) {
   const intl = useIntl();
+  const asOfHeading = useId();
   const ticks = [...new Set([...register.dates, register.today])].sort();
   const earlier = ticks.filter((date) => date < register.asOf);
   const later = ticks.filter((date) => date > register.asOf);
@@ -364,9 +369,12 @@ function RegisterAsOf({
     }
   }
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+      aria-labelledby={asOfHeading}
+    >
       <header className="flex h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">
+        <h2 id={asOfHeading} className="text-base font-semibold">
           <FormattedMessage id="entities.register.asOf" defaultMessage="Register as of" />
         </h2>
         <div className="flex items-center gap-2">
@@ -627,14 +635,18 @@ function RegisterOfMembers({
   onClasses: () => void;
 }>) {
   const intl = useIntl();
+  const membersHeading = useId();
   const holders = new Set(
     register.holders.map((row) => (row.holder.restricted ? `r:${row.holder.id}` : row.holder.id)),
   );
   const applied = register.entries.filter((entry) => entry.applied).length;
   return (
-    <section className="overflow-hidden rounded-card border border-border-default bg-raised">
+    <section
+      className="overflow-hidden rounded-card border border-border-default bg-raised"
+      aria-labelledby={membersHeading}
+    >
       <header className="flex h-section-header items-center justify-between gap-3 border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">
+        <h2 id={membersHeading} className="text-base font-semibold">
           {historic ? (
             <FormattedMessage
               id="entities.register.members.titleAt"

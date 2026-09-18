@@ -75655,16 +75655,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
           "default": {
             "description": "Problem details (RFC 9457)",
             "content": {
