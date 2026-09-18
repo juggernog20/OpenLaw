@@ -94,7 +94,7 @@ test.describe.serial("magic link → JIT provisioning → route guards", () => {
     // theirs (INT-001, #376).
     await expect(page).toHaveURL(/\/portal\/onboarding$/);
     await expect(
-      page.getByRole("heading", { name: "We need to learn a little about you" }),
+      page.getByRole("heading", { level: 1, name: "Welcome to your Business Portal" }),
     ).toBeVisible();
 
     // DD-010: an unknown identity on an allowed domain is admitted as

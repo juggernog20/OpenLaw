@@ -7122,7 +7122,7 @@
     "defaultMessage": "{count, plural, one {This file did not attach.} other {These files did not attach.}} Quote {reference} and send {count, plural, one {it} other {them}} to Legal another way."
   },
   "portal.form.attachmentsHint": {
-    "defaultMessage": "Drop files here — the redline, the prior agreement, the term sheet. Up to {max} files."
+    "defaultMessage": "Drop up to {max} files related to your request here."
   },
   "portal.form.attachmentsMovedToThread": {
     "defaultMessage": "{count, plural, one {This file did not attach.} other {These files did not attach.}} <thread>Add {count, plural, one {it} other {them}} to a reply on {reference}</thread>."
@@ -7143,10 +7143,10 @@
     "defaultMessage": "Back to the portal"
   },
   "portal.form.confirmationBody": {
-    "defaultMessage": "Quote {reference} when you talk to Legal about it. You'll get updates by email and here in the portal."
+    "defaultMessage": "You can track your open requests through this portal"
   },
   "portal.form.confirmationHeading": {
-    "defaultMessage": "Request {reference} is with Legal"
+    "defaultMessage": "Thanks! Your request has been submitted to legal."
   },
   "portal.form.confirmationOpen": {
     "defaultMessage": "Open request"
@@ -7487,8 +7487,11 @@
   "portal.request.meta": {
     "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
   },
+  "portal.request.legalOwner": {
+    "defaultMessage": "Legal Owner"
+  },
   "portal.request.owner": {
-    "defaultMessage": "Owner: {name}"
+    "defaultMessage": "Legal Owner: {name}"
   },
   "portal.request.paperOnThread": {
     "defaultMessage": "<composer>Attach new files to a reply</composer>."
@@ -10000,15 +10003,6 @@
   },
   "settings.notifications.briefing.title": {
     "defaultMessage": "Briefing"
-  },
-  "settings.notifications.caption": {
-    "defaultMessage": "Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
-  },
-  "settings.notifications.captionEmailOnly": {
-    "defaultMessage": "A group with no in-app switch reaches you by email only; its one switch is the whole choice."
-  },
-  "settings.notifications.captionInAppOnly": {
-    "defaultMessage": "Approaching-date emails are set in the Briefing group below."
   },
   "settings.notifications.channel.email": {
     "defaultMessage": "Email"

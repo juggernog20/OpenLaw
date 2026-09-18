@@ -115,17 +115,17 @@ export function PortalHomePage() {
                 >
                   <span className="flex min-w-0 flex-col gap-1">
                     <span className="text-md font-semibold text-primary">{type.displayName}</span>
+                    {type.description !== null && (
+                      <span className="text-sm text-muted">{type.description}</span>
+                    )}
                     {type.turnaroundDays != null && (
-                      <span className="text-sm text-muted">
+                      <span className="text-sm text-link">
                         <FormattedMessage
                           id="portal.turnaround"
                           defaultMessage="Estimated turnaround: {days, plural, one {# business day} other {# business days}}"
                           values={{ days: type.turnaroundDays }}
                         />
                       </span>
-                    )}
-                    {type.description !== null && (
-                      <span className="text-sm text-muted">{type.description}</span>
                     )}
                   </span>
                   {/* The door's arrow: it says the card opens something,
