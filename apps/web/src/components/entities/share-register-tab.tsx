@@ -9,7 +9,7 @@
 import { useState, type ReactNode } from "react";
 import { useRevalidator, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
 import type { EntityHoldings, EntityRow } from "../../lib/entities";
 import { toMajorUnits } from "../../lib/format";
@@ -206,6 +206,7 @@ export function ShareRegisterTab({
       ) : (
         <>
           <RegisterOfMembers
+            entityId={entity.id}
             register={register}
             historic={historic}
             frozen={frozen}
@@ -219,17 +220,22 @@ export function ShareRegisterTab({
                   defaultMessage="Register of allotments and transfers"
                 />
               </h2>
-              <Button
-                size="sm"
-                disabled={frozen || live.length === 0}
-                onClick={() => setEntryDialog({})}
-              >
-                <Plus size={14} aria-hidden="true" />
-                <FormattedMessage
-                  id="entities.register.entry.title"
-                  defaultMessage="Record entry"
-                />
-              </Button>
+              <div className="flex items-center gap-2">
+                <ExportLink entityId={entity.id} kind="entries">
+                  <FormattedMessage id="entities.register.export" defaultMessage="Export" />
+                </ExportLink>
+                <Button
+                  size="sm"
+                  disabled={frozen || live.length === 0}
+                  onClick={() => setEntryDialog({})}
+                >
+                  <Plus size={14} aria-hidden="true" />
+                  <FormattedMessage
+                    id="entities.register.entry.title"
+                    defaultMessage="Record entry"
+                  />
+                </Button>
+              </div>
             </header>
             <div className="flex flex-wrap items-center gap-3 border-b border-border-default px-4 py-2.5">
               <RecordFilterBar
@@ -447,6 +453,32 @@ function RegisterAsOf({
   );
 }
 
+/** A same-origin download of the CSV the API renders; the browser keeps the API's filename. */
+function ExportLink({
+  entityId,
+  kind,
+  asOf,
+  children,
+}: Readonly<{
+  entityId: string;
+  kind: "members" | "entries";
+  asOf?: string;
+  children: ReactNode;
+}>) {
+  const params = new URLSearchParams({ kind });
+  if (asOf) params.set("asOf", asOf);
+  return (
+    <a
+      href={`/api/v1/entities/${entityId}/share-register/export?${params.toString()}`}
+      download
+      className="inline-flex h-7 items-center gap-1.5 rounded-button border border-border-default bg-raised px-2.5 text-sm hover:bg-control"
+    >
+      <Download size={14} aria-hidden="true" />
+      {children}
+    </a>
+  );
+}
+
 function ReconciliationNote({ register }: Readonly<{ register: ShareRegister }>) {
   const intl = useIntl();
   const { declaredIssued, registerIssued } = register.reconciliation;
@@ -560,11 +592,13 @@ function HolderCell({ row }: Readonly<{ row: RegisterRow }>) {
 }
 
 function RegisterOfMembers({
+  entityId,
   register,
   historic,
   frozen,
   onClasses,
 }: Readonly<{
+  entityId: string;
   register: ShareRegister;
   historic: boolean;
   frozen: boolean;
@@ -604,6 +638,12 @@ function RegisterOfMembers({
               }}
             />
           </span>
+          <ExportLink entityId={entityId} kind="members" asOf={register.asOf}>
+            <FormattedMessage
+              id="entities.register.members.export"
+              defaultMessage="Export register"
+            />
+          </ExportLink>
           <Button variant="secondary" size="sm" disabled={frozen} onClick={onClasses}>
             <FormattedMessage id="entities.register.classes.title" defaultMessage="Share classes" />
           </Button>

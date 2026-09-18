@@ -4883,6 +4883,12 @@
   "entities.ownership.entityLabel": {
     "defaultMessage": "Entity"
   },
+  "entities.ownership.fromRegister": {
+    "defaultMessage": "From register"
+  },
+  "entities.ownership.fromRegisterHint": {
+    "defaultMessage": "Derived from the share register. Record an entry there to change it."
+  },
   "entities.ownership.fullName": {
     "defaultMessage": "Full name"
   },
@@ -5447,6 +5453,9 @@
   "entities.register.entry.treasury": {
     "defaultMessage": "Treasury (shares the company holds)"
   },
+  "entities.register.export": {
+    "defaultMessage": "Export"
+  },
   "entities.register.holder": {
     "defaultMessage": "Holder"
   },
@@ -5473,6 +5482,9 @@
   },
   "entities.register.members.classSummary": {
     "defaultMessage": "{outstanding} outstanding · {treasury} in treasury{par}"
+  },
+  "entities.register.members.export": {
+    "defaultMessage": "Export register"
   },
   "entities.register.members.meta": {
     "defaultMessage": "{holders, plural, one {# holder} other {# holders}} · {classes, plural, one {# class} other {# classes}} · derived from {entries, plural, one {# register entry} other {# register entries}}"
@@ -7805,11 +7817,11 @@
   "portal.request.documentTitle": {
     "defaultMessage": "{reference} · {title}"
   },
-  "portal.request.meta": {
-    "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
-  },
   "portal.request.legalOwner": {
     "defaultMessage": "Legal Owner"
+  },
+  "portal.request.meta": {
+    "defaultMessage": "{reference} · {requestType} · Submitted {submitted}"
   },
   "portal.request.owner": {
     "defaultMessage": "Legal Owner: {name}"

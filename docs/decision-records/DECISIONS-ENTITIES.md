@@ -37,6 +37,10 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 
 The "share registers/cap tables stay in FUTURE-FEATURES" clause is superseded by ENT-011. The three declared share-capital columns stay; the Ownership tab reconciles `shares_issued` against the register.
 
+### Built addendum (2026-09-18, M36/3, [#933](https://github.com/juggernog20/OpenLaw/issues/933))
+
+The Ownership tab's reconciliation line compares the Overview's declared `shares_issued` with the register's issued total across every class, today, and says so in one sentence: success when they agree, a warning naming both figures when they do not.
+
 ### Built addendum (2026-08-29, M27/3–4, #575, #576)
 
 Migration `0082_great_betty_ross` adds the share-capital columns, `entity` Field scope, `entity_type_fields`, officer roles, and `entity_officers`. Entities Settings mounts the shared taxonomy, type-editor, and Field-catalog machinery. The Entity record reads and writes the three share-capital columns and its type-attached Fields through `PATCH /entities/:id`. Each Field commit uses the shared coercion and required-value checks, including live `user` and `entity` references. Officers have Member+ list, create, inline update, resignation, and delete routes. Each write appends its own `entity_officer.*` Activity entry in the same transaction.
@@ -204,6 +208,10 @@ The request form uses that read through the shared Field control. Entity Fields 
 - **Rationale** — A register that stores balances beside entries can disagree with itself; replay cannot. Deriving Holdings from the register removes the second place ownership was typed. Keeping the declared numbers keeps the pre-M27 upgrade path and makes drift visible instead of silently overwriting one source with the other.
 - **Alternatives considered** — Stored holder balances updated per entry (two sources of truth); Holdings computed at read time in the chart and majority-owner SQL (touches every ownership query; the projection keeps them unchanged); certificates as free text on entries (cannot say which certificates are live); dropping ENT-001's declared columns (breaks the upgrade gate and loses the reconciliation signal).
 - **Consequences** — Supersedes ENT-001's "share registers/cap tables stay in FUTURE-FEATURES" clause and the FUTURE-FEATURES row. Amends ENT-003: Holdings gain `source`, and register-sourced rows refuse PATCH and DELETE. The Ownership tab's Owners list is replaced by the Register of members (DES-088). Option pools, convertibles, subdivision and consolidation, waterfalls, beneficial-ownership look-through, certificate PDFs, and per-entry filing status are new FUTURE-FEATURES rows with [#930](https://github.com/juggernog20/OpenLaw/issues/930) as origin.
+
+### Built addendum (2026-09-18, M36/2–5, [#932](https://github.com/juggernog20/OpenLaw/issues/932)–[#935](https://github.com/juggernog20/OpenLaw/issues/935))
+
+Migration 0148 adds `entity_share_classes`, `entity_shareholders`, `entity_share_entries`, `entity_share_certificates` and `entity_share_entry_counters`; every dependant references its parent by (`entity_id`, `id`), bigint columns carry a safe-integer ceiling, and entry numbers come from the counter so a deleted entry's number is never reused. `lib/share-register.ts` is the pure replay: entries ordered by effective date then number, applied to nothing, answering balances, treasury, issued, member-since dates, live certificates, the first violation and authorized-overrun warnings. `GET /entities/:id/share-register?asOf=` replays to the date and to today. Share classes and entries have create, update and remove routes; each write replays the register with the change applied and refuses a negative balance, a certificate that is not live for a party of the entry, or an ownership loop through `entity_holdings`. A certificate an entry cancels may belong to either party, so a transferee can consolidate. Certificates issued by an entry that a later entry cancelled pin the entry until that later entry changes. A holder no entry or certificate names is pruned. `GET …/share-register/export?kind=members|entries` renders CSV. Six `entity_share_*` Activity actions land on the issuer and on each Entity holder the entry names.
 
 ## Index of decisions
 

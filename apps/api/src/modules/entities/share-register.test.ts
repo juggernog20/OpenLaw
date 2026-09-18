@@ -780,6 +780,51 @@ describe("the share register", () => {
     expect(parentRow.source).toBe("register");
   });
 
+  it("exports the register of members and the entries as CSV", async () => {
+    const issuer = await newEntity("Export, Ltd");
+    const ordinary = await newClass(issuer.id, { name: "Ordinary" });
+    const allot = await entry(issuer.id, {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId: ordinary.id,
+      quantity: 10,
+      to: { kind: "individual", name: 'Ada "Quotes" Lovelace' },
+      consideration: "cash, in full",
+      certificatesIssued: [{ number: "A1", holder: "to", quantity: 10 }],
+    });
+    expect(allot.statusCode, allot.body).toBe(201);
+    const members = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/entities/${issuer.id}/share-register/export?kind=members`,
+      cookies: memberCookies,
+    });
+    expect(members.statusCode, members.body).toBe(200);
+    expect(members.headers["content-type"]).toContain("text/csv");
+    expect(members.headers["content-disposition"]).toContain('"Export, Ltd register of members ');
+    expect(members.body).toContain(
+      "Holder,Holder kind,Jurisdiction,Class,Shares,% of class,% voting,Certificates,Member since",
+    );
+    expect(members.body).toContain(
+      '"Ada ""Quotes"" Lovelace",individual,,Ordinary,10,100,100,A1,2024-01-01',
+    );
+    const entries = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/entities/${issuer.id}/share-register/export?kind=entries`,
+      cookies: memberCookies,
+    });
+    expect(entries.statusCode, entries.body).toBe(200);
+    expect(entries.body).toContain(
+      '1,2024-01-01,allotment,,"Ada ""Quotes"" Lovelace",Ordinary,,10,,,"cash, in full",,A1,,,',
+    );
+    const before = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/entities/${issuer.id}/share-register/export?kind=members&asOf=2023-12-31`,
+      cookies: memberCookies,
+    });
+    expect(before.body.split("\r\n").filter(Boolean)).toHaveLength(1);
+    expect(before.headers["content-disposition"]).toContain("2023-12-31");
+  });
+
   it("keeps the register behind Member+ and the Entity's reach", async () => {
     const business = {
       email: "share-register-business@example.com",
