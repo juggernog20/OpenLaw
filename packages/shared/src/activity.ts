@@ -170,6 +170,15 @@ type OrgSettingsPayloads = {
 };
 
 /**
+ * Start blank on the Review step (SET-004): one entry per emptied
+ * list, so the audit trail explains why Settings looks bare. `list` is
+ * the list's action prefix; `removed` is how many catalog rows went.
+ */
+type SettingsPayloads = {
+  "settings.catalog_cleared": { list: string; removed: number };
+};
+
+/**
  * The contract statuses (CTR-001). Nearly the taxonomy set, minus the
  * `updated` verb: a status has a stage rather than a description, so
  * there is no edit for it to write. Its payloads carry the stage, which
@@ -1356,6 +1365,7 @@ type AutoDocPayloads = {
 export type ActivityPayloadMap = AutoDocPayloads &
   UserPayloads &
   OrgSettingsPayloads &
+  SettingsPayloads &
   Prefixed<"department", TaxonomyPayloads> &
   Prefixed<"region", TaxonomyPayloads> &
   Prefixed<"contract_type", TaxonomyPayloads> &

@@ -369,6 +369,21 @@ function SettingsFieldsPage({
           onRename={(row, displayName) => void rename(row, displayName)}
           rowDetails={rowDetails}
           nameSlotClassName="min-w-0 flex-1"
+          // The lock the taxonomy panes draw on their fallback row: a
+          // default Field is skeleton Start blank keeps (SET-004), and
+          // the API refuses its archive regardless. Rename and the
+          // editor stay open, as they do for the seeds' AI prompts.
+          protectedLabel={(row) =>
+            row.isSystemDefault
+              ? intl.formatMessage(
+                  {
+                    id: "settings.contractFields.locked",
+                    defaultMessage: "{name} is a default Field and can't be archived",
+                  },
+                  { name: row.displayName },
+                )
+              : null
+          }
           rowActions={(row) =>
             row.archivedAt ? null : (
               <Button

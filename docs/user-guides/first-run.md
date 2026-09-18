@@ -27,9 +27,31 @@ Account setup is available only while the instance has no users. If setup has al
 7. In **Invite your team**, enter each colleague's **Name** and **Email**. Select **Legal team member** or **Administrator**, then select **Send invite**. You can invite more users later from **Settings → Organization → Users**.
 8. In **E-signature**, connect DocuSign, or select **Set up later** to keep the manual signing hand-off. See [Configure the Signing connector](configure-signing.md).
 9. In **AI analysis**, connect your AI provider, or select **Set up later**. Without a connector, Contract analysis does not run. See [Configure the AI connector and Field prompts](configure-analysis.md).
-10. In **Review**, check the row counts of the seeded lists and the reminder offsets. Matter fields, Contract fields, and Entity fields have separate rows. To change a list, select its name. Settings then shows **Return to setup**, which opens **Review** again. Select **Finish** to record the review and enter the app.
+10. In **Review**, check the row counts of the seeded lists and the reminder offsets. Matter fields, Contract fields, and Entity fields have separate rows. We recommend that you keep the seeded lists. To change a list, select its name. Settings then shows **Return to setup**, which opens **Review** again. To begin with empty lists instead, select **Start blank**. A dialog names each list and the number of rows it will remove. Select **Start blank** in the dialog to confirm. See [Start blank](#start-blank). Select **Finish** to record the review and enter the app.
 
 On every step except Welcome to OpenLaw and Outbound email, **Set up later** moves on without saving that step's unsaved entries. Skipping does not supply missing identity-provider or connector configuration. Finish those settings before you rely on the affected sign-in, signing, or analysis flow.
+
+## Start blank
+
+**Start blank** on the **Review** step removes the seeded rows that OpenLaw does not need to run. Use it when your organization has its own vocabulary or a bulk import. It removes the rows in one step. The removed rows cannot be restored.
+
+Start blank removes every seeded row from Matter types, Matter statuses, Contract types, Contract statuses, Entity types, Officer roles, Knowledge types, and Request types, except the rows OpenLaw needs. It keeps these rows:
+
+- The **Other** row in Matter types, Contract types, Entity types, and Officer roles.
+- The **Open** and **Closed** Matter statuses.
+- The **Draft**, **Active**, and **Expired** Contract statuses.
+- The default Fields: **Governing law**, **Jurisdiction**, and **Our position**.
+- The reminder offsets.
+
+After Start blank, the Contract Stages Review, Approval, and Signature hold no Status, and the Open Category holds only **Open**. Add your own Statuses in Settings. See [Configure Types, Statuses, and Fields](types-statuses-fields.md).
+
+OpenLaw refuses Start blank in three cases. The dialog names the list that blocks it.
+
+- Onboarding is complete.
+- A list holds a row that you added. Remove the row first, or keep the seeded lists.
+- A seeded row is in use by a record. Move the record first, or keep the seeded lists.
+
+Start blank records the review, so the **Setup checklist** does not show **Review seeded types**. The audit log holds one entry for each emptied list, with the number of rows removed.
 
 ## Resume or finish later
 

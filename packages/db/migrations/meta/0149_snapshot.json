@@ -1,6 +1,6 @@
 {
-  "id": "cdce7abe-0df7-4e2f-a2e8-65d1852f5f05",
-  "prevId": "9752ec15-c696-4db8-a73e-a907e8bfac35",
+  "id": "3db80494-e674-4387-b93a-709e5738444a",
+  "prevId": "19190d1c-c686-457c-928a-f461343dc61a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -8680,6 +8680,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_system_default": {
+          "name": "is_system_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "archived_at": {
           "name": "archived_at",

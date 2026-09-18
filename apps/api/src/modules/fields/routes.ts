@@ -66,6 +66,9 @@ const FieldSchema = z.object({
   fieldTag: FieldTagSchema,
   aiPrompt: z.string().nullable(),
   builtInKey: z.string().nullable().optional(),
+  /** A default Field (SET-004): seeded by a migration, kept by Start
+   * blank, and locked against archive in the Fields panes. */
+  isSystemDefault: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
   /** Records holding a value plus type attachments — the SET-003 guard
    * number. Contract-type attachments count since #84 and matter-type
@@ -98,6 +101,7 @@ function toRow(row: Field, inUseCount: number) {
     fieldTag: row.fieldTag,
     aiPrompt: row.aiPrompt,
     ...(row.builtInKey ? { builtInKey: row.builtInKey } : {}),
+    isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     inUseCount,
   };
@@ -444,6 +448,15 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const row = await app.db.transaction(async (tx) => {
         const target = await lockedField(tx, request.params.id);
+        // The same lock the taxonomy panes draw on their fallback row
+        // (SET-004): a default Field is part of the skeleton Start blank
+        // keeps, so the server refuses regardless of what a client sends.
+        if (target.isSystemDefault) {
+          throw httpError(
+            409,
+            `The ${target.displayName} field is a default Field and can't be archived.`,
+          );
+        }
         if (target.archivedAt) throw httpError(409, "This field is already archived.");
         const [updated] = await tx
           .update(fields)

@@ -620,6 +620,9 @@
   "activity.request.unnamedRecord": {
     "defaultMessage": "a request"
   },
+  "activity.settings.catalogCleared": {
+    "defaultMessage": "{actor} chose Start blank and removed {removed, plural, one {# seeded row} other {# seeded rows}} from {list, select, matter_type {matter types} matter_status {matter statuses} contract_type {contract types} contract_status {contract statuses} entity_type {entity types} officer_role {officer roles} knowledge_type {knowledge types} request_type {request types} other {a seeded list}}"
+  },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
   },
@@ -8822,6 +8825,9 @@
   "settings.contractFields.invalidResponse": {
     "defaultMessage": "The server returned a field outside this catalog."
   },
+  "settings.contractFields.locked": {
+    "defaultMessage": "{name} is a default Field and can't be archived"
+  },
   "settings.contractFields.nameLabel": {
     "defaultMessage": "Name"
   },
@@ -11625,7 +11631,7 @@
     "defaultMessage": "Review could not be saved. Try again."
   },
   "welcome.review.hint": {
-    "defaultMessage": "Your install started with these lists and reminder offsets. These are their current counts, including archived rows. Open a list in Settings to make changes."
+    "defaultMessage": "We recommend that you start with the small set of work types, statuses, and fields that came with this setup. If you would rather start completely fresh, choose Start blank. This removes every seeded row that OpenLaw does not need to run. The table shows each list's current count, including archived rows. Open a list in Settings to make changes."
   },
   "welcome.review.knowledgeTypes": {
     "defaultMessage": "Knowledge types"
@@ -11650,6 +11656,33 @@
   },
   "welcome.review.requestTypes": {
     "defaultMessage": "Request types"
+  },
+  "welcome.review.startBlank": {
+    "defaultMessage": "Start blank"
+  },
+  "welcome.review.startBlank.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "welcome.review.startBlank.confirm": {
+    "defaultMessage": "Start blank"
+  },
+  "welcome.review.startBlank.done": {
+    "defaultMessage": "Seeded rows removed. The counts below are current."
+  },
+  "welcome.review.startBlank.error": {
+    "defaultMessage": "The seeded lists could not be removed. Try again."
+  },
+  "welcome.review.startBlank.keeps": {
+    "defaultMessage": "Kept: the Other types, the Open and Closed matter statuses, the Draft, Active, and Expired contract statuses, the default Fields, and the reminder offsets."
+  },
+  "welcome.review.startBlank.rows": {
+    "defaultMessage": "{count, plural, one {# row} other {# rows}}"
+  },
+  "welcome.review.startBlank.title": {
+    "defaultMessage": "Start blank"
+  },
+  "welcome.review.startBlank.warning": {
+    "defaultMessage": "This removes every seeded row that OpenLaw does not need to run. The rows cannot be restored. Add your own in Settings afterwards."
   },
   "welcome.skip": {
     "defaultMessage": "Set up later"

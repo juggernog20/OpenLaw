@@ -144,7 +144,7 @@ The Review step shows the seeded lists and the reminder offsets and asks for one
 
 Start blank hard-deletes the catalog rows. It does not archive them. At first run nothing references them, so the SET-003 guard has nothing to protect, and archived seed rows would clutter every Settings pane for the life of the instance.
 
-**Fields gain `is_system_default`.** The taxonomy tables carry the column through the shared helper; `fields` does not. The migration adds it, sets it true on the three default Fields, and leaves user-created Fields false. Start blank keeps default Fields by that flag, so a later seed migration that adds a Field is covered without a code change. The Fields panes show the same lock the taxonomy panes show.
+**Fields gain `is_system_default`.** The taxonomy tables carry the column through the shared helper; `fields` does not. The migration adds it, sets it true on the three default Fields, and leaves user-created Fields false. Start blank keeps default Fields by that flag, so a later seed migration that adds a Field is covered without a code change. The Fields panes show the same lock the taxonomy panes show, and the API refuses to archive a default Field the way it refuses the taxonomy fallback row, so the lock never shows a control the server would not honour. Rename, description, and AI prompt edits stay open.
 
 **Preconditions.** The call answers 409 when onboarding is already complete, when any list already holds a user-created row, or when any removable row is in use. The dialog reports which list blocks it. This keeps a demo seed, or an Administrator who created records before finishing the wizard, from losing data.
 
@@ -169,6 +169,10 @@ Start blank hard-deletes the catalog rows. It does not archive them. At first ru
 - **Rationale** — An Admin thinks "cut this person off" and looks for the person, not a global sessions table; every action that touches a person lives on their row. Immediate revocation on archive is the point of archiving — the departing-employee case is exactly why the operation exists.
 - **Alternatives considered** — Roles fixed at invite (change = archive + re-invite): pointless ceremony, and DD-017's "who changed this user's role last quarter?" presumes role changes happen. A Security-pane global sessions view: big-org machinery for a 2–10 person team.
 - **Consequences** — New typed routes: list users, edit role, archive (writes `users.archived_at`), revoke sessions. Every mutation lands in the activity log per DD-017/SET-003. The archived-user render state is a design-system obligation across all later surfaces (pickers, comments, activity, teams).
+
+### Addendum (2026-09-18): invites refuse while the instance cannot send email
+
+An invite exists only through its set-password email. When the effective mailer is unconfigured, for example `SMTP_URL` set with `SMTP_FROM` unset, `POST /auth/invites` and `POST /auth/invites/:userId/resend` answer 409 with the problem type `/problems/email-setup-required`, the same answer `POST /onboarding/complete` gives. The refusal is checked before any write, so no **Invited** row is created that nobody can activate and the Administrator has nothing to revoke. The Invite user dialog shows the API's detail, and Resend invite shows it beside the row. The alternative, creating the row and reporting that the email was not sent, was declined: the row would sit as Invited until someone noticed, which is the failure #889 reported.
 
 ## SET-006 — Personal profile scope; email change deferred
 

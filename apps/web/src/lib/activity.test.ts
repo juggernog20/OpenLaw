@@ -133,6 +133,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
 
   // Organization settings
   "org_settings.updated": { field: "defaultTimezone", old: "UTC", new: "Asia/Dubai" },
+  "settings.catalog_cleared": { list: "matter_type", removed: 8 },
 
   // Settings taxonomies
   "contract_type.created": TAXONOMY_NAMED,

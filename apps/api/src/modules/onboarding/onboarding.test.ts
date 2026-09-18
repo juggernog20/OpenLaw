@@ -9,7 +9,20 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { aiConnector, orgSettings, signingConnectors } from "@openlaw/db";
+import {
+  activityLog,
+  aiConnector,
+  asc,
+  contractTypeFields,
+  eq,
+  fields,
+  knowledgeItems,
+  matterTemplates,
+  matterTypes,
+  orgSettings,
+  signingConnectors,
+  users,
+} from "@openlaw/db";
 import { ONBOARDING_STEPS, StatusSchema, type OnboardingStatus } from "./routes.js";
 import { NO_PERMISSION } from "../../auth/guards.js";
 import { PROBLEM_CONTENT_TYPE, UNNAMED_PROBLEM_TYPE } from "../../lib/problem.js";
@@ -455,6 +468,286 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
       completed: true,
       steps: { review: { done: true } },
     });
+  });
+});
+
+/** The eight catalog lists as the API lists them, with the skeleton
+ * each keeps (SET-004, Start blank). */
+const CATALOG_LISTS = [
+  ["/api/v1/matter-types", "matterTypes", ["other"]],
+  ["/api/v1/matter-statuses", "matterStatuses", ["open", "closed"]],
+  ["/api/v1/contract-types", "contractTypes", ["other"]],
+  ["/api/v1/contract-statuses", "contractStatuses", ["draft", "active", "expired"]],
+  ["/api/v1/entity-types", "entityTypes", ["other"]],
+  ["/api/v1/officer-roles", "officerRoles", ["other"]],
+  ["/api/v1/knowledge/types", "knowledgeTypes", []],
+  ["/api/v1/request-types", "requestTypes", []],
+] as const;
+
+/** Every slug a list holds, archived rows included, in display order. */
+async function listSlugs(path: string, key: string): Promise<string[]> {
+  const res = await harness.app.inject({
+    method: "GET",
+    url: `${path}?includeArchived=true`,
+    cookies: adminCookies,
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  const rows = (res.json() as Record<string, { slug: string }[]>)[key]!;
+  return rows.map((row) => row.slug);
+}
+
+async function catalogSlugs(): Promise<Record<string, string[]>> {
+  return Object.fromEntries(
+    await Promise.all(
+      CATALOG_LISTS.map(async ([path, key]) => [key, await listSlugs(path, key)] as const),
+    ),
+  );
+}
+
+const clearedRows = () =>
+  harness.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.action, "settings.catalog_cleared"))
+    .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
+
+/** `null` is the anonymous call; omitted is the Administrator's. */
+const startBlank = (cookies: Record<string, string> | null = adminCookies) =>
+  harness.app.inject({
+    method: "POST",
+    url: "/api/v1/onboarding/start-blank",
+    cookies: cookies ?? undefined,
+  });
+
+describe("Start blank (POST /api/v1/onboarding/start-blank)", () => {
+  it("is an Administrator-only surface", async () => {
+    expect((await startBlank(null)).statusCode).toBe(401);
+    expect((await startBlank(staffCookies)).statusCode).toBe(403);
+  });
+
+  it("refuses once onboarding is complete, and removes nothing", async () => {
+    // The suite above finished the wizard; an existing installation
+    // never sees the action (SET-004).
+    expect((await status(adminCookies)).completed).toBe(true);
+    const before = await catalogSlugs();
+    const refused = await startBlank();
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.json().type).toBe("/problems/onboarding-complete");
+    expect(await catalogSlugs()).toEqual(before);
+    expect(await clearedRows()).toEqual([]);
+  });
+
+  it("refuses a list that already holds a user-created row, and names the list", async () => {
+    // Reopened so the remaining cases run against a first run.
+    await harness.db.update(orgSettings).set({ onboardingCompletedAt: null });
+    const before = await catalogSlugs();
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matter-types",
+      cookies: adminCookies,
+      payload: { displayName: "Regional" },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    try {
+      const refused = await startBlank();
+      expect(refused.statusCode, refused.body).toBe(409);
+      expect(refused.json()).toMatchObject({
+        type: "/problems/catalog-has-custom-rows",
+        detail:
+          "Matter types already holds 1 row you added. Remove them first, or keep the seeded lists.",
+        list: "matter_type",
+      });
+      expect(await catalogSlugs()).toEqual({
+        ...before,
+        matterTypes: [...before.matterTypes!, "regional"],
+      });
+      expect(await clearedRows()).toEqual([]);
+    } finally {
+      const deleted = await harness.app.inject({
+        method: "DELETE",
+        url: `/api/v1/matter-types/${created.json().matterType.id}`,
+        cookies: adminCookies,
+      });
+      expect(deleted.statusCode, deleted.body).toBe(204);
+    }
+  });
+
+  it("refuses a removable row in use, names the list, and rolls every list back", async () => {
+    const before = await catalogSlugs();
+    const [admin] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, TEST_ADMIN.email));
+    const [employment] = await harness.db
+      .select({ id: matterTypes.id })
+      .from(matterTypes)
+      .where(eq(matterTypes.slug, "employment"));
+
+    // A matter template points at a seed matter type through an FK the
+    // type's pane does not count; the delete would fail on it.
+    const [template] = await harness.db
+      .insert(matterTemplates)
+      .values({ matterTypeId: employment!.id, name: "Onboarding template" })
+      .returning({ id: matterTemplates.id });
+    try {
+      const refused = await startBlank();
+      expect(refused.statusCode, refused.body).toBe(409);
+      expect(refused.json()).toMatchObject({
+        type: "/problems/catalog-in-use",
+        detail:
+          "Matter types has 1 seeded row in use. Move those records first, or keep the seeded lists.",
+        list: "matter_type",
+      });
+    } finally {
+      await harness.db.delete(matterTemplates).where(eq(matterTemplates.id, template!.id));
+    }
+
+    // Knowledge types come seventh: six lists are emptied inside the
+    // transaction before this refusal, and all six must come back.
+    const template_ = await listSlugs("/api/v1/knowledge/types", "knowledgeTypes");
+    expect(template_).toContain("template");
+    const [item] = await harness.db
+      .insert(knowledgeItems)
+      .values({
+        title: "Board minutes template",
+        knowledgeTypeId: (
+          await harness.app
+            .inject({ method: "GET", url: "/api/v1/knowledge/types", cookies: adminCookies })
+            .then((res) => res.json().knowledgeTypes as { id: string; slug: string }[])
+        ).find((row) => row.slug === "template")!.id,
+        createdBy: admin!.id,
+        updatedBy: admin!.id,
+      })
+      .returning({ id: knowledgeItems.id });
+    try {
+      const refused = await startBlank();
+      expect(refused.statusCode, refused.body).toBe(409);
+      expect(refused.json()).toMatchObject({
+        type: "/problems/catalog-in-use",
+        detail:
+          "Knowledge types has 1 seeded row in use. Move those records first, or keep the seeded lists.",
+        list: "knowledge_type",
+      });
+    } finally {
+      await harness.db.delete(knowledgeItems).where(eq(knowledgeItems.id, item!.id));
+    }
+    expect(await catalogSlugs()).toEqual(before);
+    expect(await clearedRows()).toEqual([]);
+    expect((await status(adminCookies)).completed).toBe(false);
+  });
+
+  it("hard-deletes the catalog, keeps the skeleton, marks Review, and logs one row per list", async () => {
+    // A per-type Field attachment on a catalog row goes with the row;
+    // the Field itself stays.
+    const contractTypesBefore = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contract-types",
+      cookies: adminCookies,
+    });
+    const nda = (contractTypesBefore.json().contractTypes as { id: string; slug: string }[]).find(
+      (row) => row.slug === "nda",
+    )!;
+    const [governingLaw] = await harness.db
+      .select({ id: fields.id })
+      .from(fields)
+      .where(eq(fields.slug, "governing_law"));
+    const attached = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${nda.id}/fields`,
+      cookies: adminCookies,
+      payload: { fieldId: governingLaw!.id },
+    });
+    expect(attached.statusCode, attached.body).toBe(201);
+    expect(await harness.db.select().from(contractTypeFields)).toHaveLength(1);
+
+    const offsetsBefore = (
+      await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/org/reminder-offsets",
+        cookies: adminCookies,
+      })
+    ).json();
+    const fieldsBefore = await harness.db.select().from(fields).orderBy(asc(fields.slug));
+    // The earlier suite marked Review; clear it so this call's mark is its own.
+    await harness.db.update(orgSettings).set({ onboardingReviewedTypesAt: null });
+    expect((await status(adminCookies)).steps.review.done).toBe(false);
+
+    const cleared = await startBlank();
+    expect(cleared.statusCode, cleared.body).toBe(200);
+    expect(cleared.json()).toMatchObject({ completed: false, steps: { review: { done: true } } });
+
+    // The skeleton, and nothing else.
+    expect(await catalogSlugs()).toEqual(
+      Object.fromEntries(CATALOG_LISTS.map(([, key, keep]) => [key, keep])),
+    );
+    expect(await harness.db.select().from(contractTypeFields)).toEqual([]);
+    // Default Fields, the intake defaults, and every other Field stay.
+    expect(await harness.db.select().from(fields).orderBy(asc(fields.slug))).toEqual(fieldsBefore);
+    expect(fieldsBefore.filter((row) => row.isSystemDefault).map((row) => row.slug)).toEqual([
+      "governing_law",
+      "jurisdiction",
+      "our_position",
+    ]);
+    // The reminder offsets are a global setting, not vocabulary.
+    expect(
+      (
+        await harness.app.inject({
+          method: "GET",
+          url: "/api/v1/org/reminder-offsets",
+          cookies: adminCookies,
+        })
+      ).json(),
+    ).toEqual(offsetsBefore);
+
+    const [after] = await harness.db.select().from(orgSettings);
+    expect(after?.onboardingReviewedTypesAt).toBeInstanceOf(Date);
+    expect(after?.onboardingCompletedAt).toBeNull();
+
+    // One admin_only row per emptied list, in the order the lists were
+    // emptied, each naming the list and the removed count.
+    expect(
+      (await clearedRows()).map((row) => ({
+        entityType: row.entityType,
+        entityId: row.entityId,
+        visibility: row.visibility,
+        actor: row.actorId !== null,
+        payload: row.payload,
+      })),
+    ).toEqual(
+      [
+        ["matter_type", 8],
+        ["matter_status", 2],
+        ["contract_type", 7],
+        ["contract_status", 5],
+        ["entity_type", 4],
+        ["officer_role", 4],
+        ["knowledge_type", 4],
+        ["request_type", 3],
+      ].map(([list, removed]) => ({
+        entityType: "system",
+        entityId: null,
+        visibility: "admin_only",
+        actor: true,
+        payload: { list, removed },
+      })),
+    );
+  });
+
+  it("answers 200 and logs nothing once the catalog is already empty", async () => {
+    const before = await catalogSlugs();
+    const logged = (await clearedRows()).length;
+    const again = await startBlank();
+    expect(again.statusCode, again.body).toBe(200);
+    expect(await catalogSlugs()).toEqual(before);
+    expect(await clearedRows()).toHaveLength(logged);
+    // Finish still works after Start blank.
+    const completed = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/onboarding/complete",
+      cookies: adminCookies,
+    });
+    expect(completed.statusCode, completed.body).toBe(200);
+    expect(completed.json()).toMatchObject({ completed: true, steps: { review: { done: true } } });
   });
 });
 

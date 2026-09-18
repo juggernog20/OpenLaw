@@ -89,23 +89,30 @@ function slugBaseOf(displayName: string): string {
   return base || "status";
 }
 
+/**
+ * The SET-003 guard numbers: how many contracts hold each status
+ * (#113). Archived contracts count, the same rule the type guard
+ * follows (ENT-009) — the counted set and the set the
+ * `contracts.status_id` FK protects on hard delete are one set, and a
+ * restored contract must never come back holding an archived status.
+ * Exported for Start blank (SET-004), which refuses to remove a seed
+ * status any contract still holds.
+ */
+export async function contractStatusUsageCounts(
+  db: Executor,
+  ids: string[],
+): Promise<Map<string, number>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db
+    .select({ statusId: contracts.statusId, inUse: count() })
+    .from(contracts)
+    .where(inArray(contracts.statusId, ids))
+    .groupBy(contracts.statusId);
+  return new Map(rows.map((row) => [row.statusId, row.inUse]));
+}
+
 export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
-  /**
-   * The SET-003 guard numbers: how many contracts hold each status
-   * (#113). Archived contracts count, the same rule the type guard
-   * follows (ENT-009) — the counted set and the set the
-   * `contracts.status_id` FK protects on hard delete are one set, and a
-   * restored contract must never come back holding an archived status.
-   */
-  async function usageCounts(db: Executor, ids: string[]): Promise<Map<string, number>> {
-    if (ids.length === 0) return new Map();
-    const rows = await db
-      .select({ statusId: contracts.statusId, inUse: count() })
-      .from(contracts)
-      .where(inArray(contracts.statusId, ids))
-      .groupBy(contracts.statusId);
-    return new Map(rows.map((row) => [row.statusId, row.inUse]));
-  }
+  const usageCounts = contractStatusUsageCounts;
 
   /** One row as its envelope value, with its live count. */
   async function rowJson(row: ContractStatus) {

@@ -91,6 +91,11 @@ export const fields = pgTable(
      * lives on contract-scoped fields, seeded on the core three. NULL =
      * contract analysis skips the field. */
     aiPrompt: text("ai_prompt"),
+    /** True for a default Field, one a migration seeded (SET-004): the
+     * three CTR-008 core fields today. Start blank keeps these rows by
+     * this flag, and the Fields panes lock them. User-created fields
+     * are false. */
+    isSystemDefault: boolean("is_system_default").notNull().default(false),
     /** SET-003 soft delete: NULL = live; a timestamp = archived, hidden
      * everywhere, stored values retained (MTR-014). */
     archivedAt: timestamp("archived_at", { withTimezone: true }),

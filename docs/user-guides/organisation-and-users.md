@@ -21,7 +21,7 @@ The saved **Organization name** and logo also appear on the sign-in pages for st
 
 Business Users enter through the [Business Portal](portal-sign-in.md); they are not a fourth staff-invitation choice. An allowed email domain does not grant a staff role.
 
-If delivery fails, check the address and [outbound email](authentication-and-email.md). Use the pending row's **Resend invite** action to send a replacement link. **Revoke invite** withdraws an unused invitation. Use the latest email link after a resend. Invalid addresses and invitations for already activated accounts are rejected. Inviting an already pending address with the same role resends its invitation instead of creating a duplicate row. OpenLaw refuses an invitation that names a different role, and refuses a Business User's address, because that account already exists. Correct an invalid entry, or change the role on the existing row.
+If delivery fails, check the address and [outbound email](authentication-and-email.md). If **Send invite** or **Resend invite** reports that OpenLaw cannot send email, configure outbound email first; no **Invited** row is added until the invitation is sent. Use the pending row's **Resend invite** action to send a replacement link. **Revoke invite** withdraws an unused invitation. Use the latest email link after a resend. Invalid addresses and invitations for already activated accounts are rejected. Inviting an already pending address with the same role resends its invitation instead of creating a duplicate row. OpenLaw refuses an invitation that names a different role, and refuses a Business User's address, because that account already exists. Correct an invalid entry, or change the role on the existing row.
 
 ## Change a role or revoke sessions
 

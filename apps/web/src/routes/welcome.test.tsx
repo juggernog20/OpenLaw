@@ -1514,13 +1514,153 @@ describe("welcome wizard Review step (#700)", () => {
       expect(review.getByText(text, { exact: false })).toBeInTheDocument();
     expect(review.queryByText(/Reminder offsets live at/)).not.toBeInTheDocument();
     expect(review.queryByRole("textbox")).not.toBeInTheDocument();
-    expect(review.queryByRole("button")).not.toBeInTheDocument();
+    // The one control on the step is Start blank (#921); every list
+    // still edits in Settings.
+    expect(review.getAllByRole("button")).toHaveLength(1);
+    expect(review.getByRole("button", { name: "Start blank" })).toBeInTheDocument();
+    expect(review.getByText(/We recommend that you start with the small set/)).toBeInTheDocument();
     expect(writes).toEqual([]);
     expect(screen.getByRole("button", { name: "Finish" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.getByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
     expect(writes).toEqual([]);
+  });
+
+  /** Each list as a first run seeds it: its skeleton plus catalog rows. */
+  const SEEDED_SLUGS = {
+    "/api/v1/matter-types": ["other", "employment", "litigation"],
+    "/api/v1/matter-statuses": ["open", "in_progress", "closed"],
+    "/api/v1/contract-types": ["other", "nda", "msa", "sow"],
+    "/api/v1/contract-statuses": ["draft", "internal_review", "active", "expired"],
+    "/api/v1/entity-types": ["other"],
+    "/api/v1/officer-roles": ["other", "director", "ceo"],
+    "/api/v1/knowledge/types": ["template"],
+    "/api/v1/request-types": ["nda_request", "contract_review", "legal_question"],
+    "/api/v1/fields": ["governing_law"],
+  } satisfies Record<ReviewPath, string[]>;
+
+  /** What Start blank removes from each list: every seed outside the skeleton. */
+  const REMOVABLE = [
+    ["Matter types", 2],
+    ["Matter statuses", 1],
+    ["Contract types", 3],
+    ["Contract statuses", 1],
+    ["Entity types", 0],
+    ["Officer roles", 2],
+    ["Knowledge types", 1],
+    ["Request types", 3],
+  ] as const;
+
+  const SKELETON = new Set([
+    "other",
+    "open",
+    "closed",
+    "draft",
+    "active",
+    "expired",
+    "governing_law",
+  ]);
+
+  /** Answers every list read with seed rows, or with the skeleton
+   * alone once Start blank has run. */
+  function seededReads(cleared: () => boolean) {
+    return (call: StubCall) => {
+      if (call.method !== "GET") return undefined;
+      const row = REVIEW_ROWS.find(([, path]) => path === call.url.pathname);
+      if (!row) return undefined;
+      const base = Object.values(REVIEW_RESPONSES[row[1]])[0]![0]!;
+      const slugs = SEEDED_SLUGS[row[1]].filter((slug) => !cleared() || SKELETON.has(slug));
+      return json(200, {
+        [row[2]]: slugs.map((slug, index) => ({
+          ...base,
+          id: `${slug}-${index}`,
+          slug,
+          isSystemDefault: true,
+        })),
+      });
+    };
+  }
+
+  /** The count cell of one list's row in the Review table. Read while
+   * no dialog is open: a modal hides the table from the role queries. */
+  function countOf(label: string) {
+    const row = screen.getByRole("link", { name: label }).closest("tr")!;
+    return within(row).getAllByRole("cell").at(-1)!.textContent;
+  }
+
+  async function openStartBlank(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole("button", { name: "Start blank" }));
+    return within(await screen.findByRole("dialog", { name: "Start blank" }));
+  }
+
+  it("opens a confirmation that names each list with the rows it will remove", async () => {
+    const { user, writes } = setup(seededReads(() => false));
+    await goToReviewStep(user);
+    const dialog = await openStartBlank(user);
+    for (const [label, count] of REMOVABLE) {
+      const item = dialog.getByText(label).closest("li")!;
+      expect(within(item).getByText(count === 1 ? "1 row" : `${count} rows`)).toBeInTheDocument();
+    }
+    expect(dialog.getByText(/Kept: the Other types/)).toBeInTheDocument();
+    expect(writes).toEqual([]);
+    await user.click(dialog.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(writes).toEqual([]);
+  });
+
+  it("removes the seeded rows on confirm, re-reads the counts, and still finishes", async () => {
+    let cleared = false;
+    const { user, writes } = setup((call) => {
+      if (call.url.pathname === "/api/v1/onboarding/start-blank" && call.method === "POST") {
+        cleared = true;
+        return json(200, { completed: false, steps: {} });
+      }
+      return seededReads(() => cleared)(call);
+    });
+    await goToReviewStep(user);
+    expect(countOf("Matter types")).toBe("3");
+    expect(countOf("Request types")).toBe("3");
+    const dialog = await openStartBlank(user);
+
+    await user.click(dialog.getByRole("button", { name: "Start blank" }));
+    expect(
+      await screen.findByText("Seeded rows removed. The counts below are current."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(writes).toEqual(["/api/v1/onboarding/start-blank"]);
+    // The skeleton is what is left: `other` alone on matter types, and
+    // nothing on request types.
+    expect(countOf("Matter types")).toBe("1");
+    expect(countOf("Request types")).toBe("0");
+
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(writes).toEqual([
+      "/api/v1/onboarding/start-blank",
+      "/api/v1/onboarding/reviewed",
+      "/api/v1/onboarding/complete",
+    ]);
+  });
+
+  it("shows the API's refusal inside the dialog and removes nothing", async () => {
+    const detail =
+      "Matter types already holds 1 row you added. Remove them first, or keep the seeded lists.";
+    const { user, writes } = setup((call) =>
+      call.url.pathname === "/api/v1/onboarding/start-blank" && call.method === "POST"
+        ? problem(409, detail, "/problems/catalog-has-custom-rows")
+        : seededReads(() => false)(call),
+    );
+    await goToReviewStep(user);
+    const dialog = await openStartBlank(user);
+    await user.click(dialog.getByRole("button", { name: "Start blank" }));
+    expect(await dialog.findByRole("alert")).toHaveTextContent(detail);
+    expect(screen.getByRole("dialog", { name: "Start blank" })).toBeInTheDocument();
+    expect(writes).toEqual(["/api/v1/onboarding/start-blank"]);
+    await user.click(dialog.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(countOf("Matter types")).toBe("3");
+    expect(screen.queryByText(/Seeded rows removed/)).not.toBeInTheDocument();
   });
 
   it("counts each field catalog including archived fields, excluding legacy Contract overview fields", async () => {

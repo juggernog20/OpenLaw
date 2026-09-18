@@ -93,6 +93,9 @@ CREATE TABLE "entity_shareholders" (
 	CONSTRAINT "entity_shareholders_not_self" CHECK ("entity_shareholders"."holder_entity_id" is null or "entity_shareholders"."holder_entity_id" <> "entity_shareholders"."entity_id")
 );
 --> statement-breakpoint
+ALTER TABLE "entity_holdings" ADD COLUMN "source" text DEFAULT 'manual' NOT NULL;--> statement-breakpoint
+ALTER TABLE "individual_holdings" ADD COLUMN "source" text DEFAULT 'manual' NOT NULL;--> statement-breakpoint
+ALTER TABLE "individual_holdings" ADD COLUMN "shareholder_id" text;--> statement-breakpoint
 ALTER TABLE "entity_share_certificates" ADD CONSTRAINT "entity_share_certificates_entity_id_entities_id_fk" FOREIGN KEY ("entity_id") REFERENCES "public"."entities"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "entity_share_certificates" ADD CONSTRAINT "entity_share_certificates_holder_fk" FOREIGN KEY ("entity_id","holder_id") REFERENCES "public"."entity_shareholders"("entity_id","id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "entity_share_certificates" ADD CONSTRAINT "entity_share_certificates_class_fk" FOREIGN KEY ("entity_id","share_class_id") REFERENCES "public"."entity_share_classes"("entity_id","id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -116,4 +119,9 @@ CREATE UNIQUE INDEX "entity_share_classes_live_name_idx" ON "entity_share_classe
 CREATE UNIQUE INDEX "entity_share_entries_entity_no_idx" ON "entity_share_entries" USING btree ("entity_id","entry_no");--> statement-breakpoint
 CREATE INDEX "entity_share_entries_entity_date_idx" ON "entity_share_entries" USING btree ("entity_id","effective_on");--> statement-breakpoint
 CREATE INDEX "entity_shareholders_entity_idx" ON "entity_shareholders" USING btree ("entity_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "entity_shareholders_entity_holder_idx" ON "entity_shareholders" USING btree ("entity_id","holder_entity_id") WHERE "entity_shareholders"."kind" = 'entity';
+CREATE UNIQUE INDEX "entity_shareholders_entity_holder_idx" ON "entity_shareholders" USING btree ("entity_id","holder_entity_id") WHERE "entity_shareholders"."kind" = 'entity';--> statement-breakpoint
+ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_shareholder_id_entity_shareholders_id_fk" FOREIGN KEY ("shareholder_id") REFERENCES "public"."entity_shareholders"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "individual_holdings_shareholder_idx" ON "individual_holdings" USING btree ("shareholder_id") WHERE "individual_holdings"."shareholder_id" is not null;--> statement-breakpoint
+ALTER TABLE "entity_holdings" ADD CONSTRAINT "entity_holdings_source_known" CHECK ("entity_holdings"."source" in ('manual', 'register'));--> statement-breakpoint
+ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_source_known" CHECK ("individual_holdings"."source" in ('manual', 'register'));--> statement-breakpoint
+ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_source_shape" CHECK (("individual_holdings"."source" = 'register') = ("individual_holdings"."shareholder_id" is not null));
