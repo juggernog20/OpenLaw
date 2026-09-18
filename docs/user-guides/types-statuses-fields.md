@@ -30,6 +30,8 @@ Renaming a Status changes its label, not its Stage, Category, or group. A Matter
 
 Matter and Contract Fields settings show **Default fields** as locked, read-only rows. These built-in definitions cannot be renamed or archived here; their values are managed on each record. **Default fields** starts collapsed; select its heading to expand it. **Custom Fields** starts expanded underneath with the controls to add and manage your own Fields.
 
+Three Contract Fields came with the installation: **Governing law**, **Jurisdiction**, and **Our position**. These are default Fields. Each shows a lock in place of its archive control, because OpenLaw refuses to archive a default Field. You can rename a default Field and edit its description and AI prompt. Start blank in the first-run wizard keeps default Fields. See [Start blank](first-run.md#start-blank).
+
 1. Open **Contracts**, **Matters**, or **Entities**, then **Fields**.
 2. Select **Add field**. Enter **Name** and, if useful, **Description** as help for the person completing it.
 3. Choose **Type**: Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, or Entity. The type cannot change after creation.
