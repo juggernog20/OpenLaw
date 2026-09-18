@@ -11177,6 +11177,9 @@
   "welcome.email.field.host": {
     "defaultMessage": "SMTP server"
   },
+  "welcome.email.field.hostPlaceholder": {
+    "defaultMessage": "smtp.example.com"
+  },
   "welcome.email.field.password": {
     "defaultMessage": "SMTP password"
   },

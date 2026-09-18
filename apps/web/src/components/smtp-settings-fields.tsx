@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { field } from "../lib/forms";
@@ -31,6 +31,7 @@ const selectClassName =
   "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link";
 
 export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
+  const intl = useIntl();
   const [security, setSecurity] = useState<keyof typeof ports>("starttls");
   const [port, setPort] = useState<string>(ports.starttls);
   const [authentication, setAuthentication] = useState("password");
@@ -48,7 +49,10 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
             autoComplete="off"
             required
             maxLength={253}
-            placeholder="smtp.example.com"
+            placeholder={intl.formatMessage({
+              id: "welcome.email.field.hostPlaceholder",
+              defaultMessage: "smtp.example.com",
+            })}
           />
         </div>
         <div className="flex flex-col gap-1.5">
