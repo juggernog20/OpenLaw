@@ -39,9 +39,15 @@ import {
 } from "react";
 import { Link, redirect, useLoaderData, useNavigate, useSearchParams } from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { X } from "lucide-react";
+import { History, TriangleAlert, X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
-import { LOGO_BYTE_LIMIT, LOGO_TYPES } from "@openlaw/shared";
+import {
+  isCatalogRow,
+  LOGO_BYTE_LIMIT,
+  LOGO_TYPES,
+  START_BLANK_LIST_KEYS,
+  type StartBlankList,
+} from "@openlaw/shared";
 import { aiPresetLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
@@ -57,6 +63,7 @@ import { SmtpSettingsFields, readSmtpSettings } from "../components/smtp-setting
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
@@ -131,7 +138,23 @@ async function readReview() {
   ) {
     throw new Error("The seeded lists could not be read.");
   }
+  // What Start blank would remove from each list (SET-004): the seed
+  // rows that are only vocabulary. Counted here from the same rows the
+  // table counts, by the definition the route deletes with, so the
+  // dialog's number is the route's number.
+  const removable = (list: StartBlankList, rows: { slug: string; isSystemDefault: boolean }[]) =>
+    rows.filter((row) => isCatalogRow(list, row)).length;
   return {
+    removable: {
+      matter_type: removable("matter_type", matterTypes.data.matterTypes),
+      matter_status: removable("matter_status", matterStatuses.data.matterStatuses),
+      contract_type: removable("contract_type", contractTypes.data.contractTypes),
+      contract_status: removable("contract_status", contractStatuses.data.contractStatuses),
+      entity_type: removable("entity_type", entityTypes.data.entityTypes),
+      officer_role: removable("officer_role", officerRoles.data.officerRoles),
+      knowledge_type: removable("knowledge_type", knowledgeTypes.data.knowledgeTypes),
+      request_type: removable("request_type", requestTypes.data.requestTypes),
+    } satisfies Record<StartBlankList, number>,
     counts: {
       matterTypes: matterTypes.data.matterTypes.length,
       matterStatuses: matterStatuses.data.matterStatuses.length,
@@ -218,6 +241,131 @@ const REVIEW_TAXONOMIES = [
     settingsPath: "/settings/intake/request-types",
   },
 ] as const;
+
+/** The eight lists Start blank empties, each named as the table names it. */
+const START_BLANK_LABELS: Record<StartBlankList, (typeof REVIEW_TAXONOMIES)[number]["key"]> = {
+  matter_type: "matterTypes",
+  matter_status: "matterStatuses",
+  contract_type: "contractTypes",
+  contract_status: "contractStatuses",
+  entity_type: "entityTypes",
+  officer_role: "officerRoles",
+  knowledge_type: "knowledgeTypes",
+  request_type: "requestTypes",
+};
+
+/**
+ * The Start blank confirmation (SET-004): names each list and the
+ * number of rows the call will remove, then makes the one call. The
+ * API's refusal (setup complete, a row you added, a seed row in use)
+ * names the blocking list and shows here, where the choice was made.
+ */
+function StartBlankDialog({
+  removable,
+  onOpenChange,
+  onCleared,
+}: Readonly<{
+  removable: Record<StartBlankList, number>;
+  onOpenChange: (open: boolean) => void;
+  onCleared: () => Promise<void>;
+}>) {
+  const intl = useIntl();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.POST("/api/v1/onboarding/start-blank");
+      if (result.response.ok) {
+        await onCleared();
+        onOpenChange(false);
+        return;
+      }
+      setError(
+        (await readProblem(result)).detail ??
+          intl.formatMessage({
+            id: "welcome.review.startBlank.error",
+            defaultMessage: "The seeded lists could not be removed. Try again.",
+          }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage id="welcome.review.startBlank.title" defaultMessage="Start blank" />
+        </DialogTitle>
+        <div className="mt-4 flex flex-col gap-4">
+          <div className="flex items-start gap-2 rounded-card bg-status-warning-bg p-3 text-sm text-status-warning-fg">
+            <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+            <p>
+              <FormattedMessage
+                id="welcome.review.startBlank.warning"
+                defaultMessage="This removes every seeded row that OpenLaw does not need to run. The rows cannot be restored. Add your own in Settings afterwards."
+              />
+            </p>
+          </div>
+          <ul className="flex flex-col gap-1 text-sm">
+            {START_BLANK_LIST_KEYS.map((list) => (
+              <li key={list} className="flex items-center justify-between gap-4">
+                <span>
+                  <FormattedMessage
+                    {...REVIEW_TAXONOMIES.find((row) => row.key === START_BLANK_LABELS[list])!
+                      .label}
+                  />
+                </span>
+                <span className="text-muted tabular-nums">
+                  <FormattedMessage
+                    id="welcome.review.startBlank.rows"
+                    defaultMessage="{count, plural, one {# row} other {# rows}}"
+                    values={{ count: removable[list] }}
+                  />
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="welcome.review.startBlank.keeps"
+              defaultMessage="Kept: the Other types, the Open and Closed matter statuses, the Draft, Active, and Expired contract statuses, the default Fields, and the reminder offsets."
+            />
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-muted">
+            <History size={16} aria-hidden="true" />
+            <FormattedMessage
+              id="welcome.review.startBlank.auditNote"
+              defaultMessage="The change applies immediately and is recorded in the audit log."
+            />
+          </p>
+          {error && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="button" variant="danger" disabled={busy} onClick={() => void submit()}>
+              <FormattedMessage
+                id="welcome.review.startBlank.confirm"
+                defaultMessage="Start blank"
+              />
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export async function welcomeLoader() {
   const user = await requireUser({ allowEmailSetup: true });
@@ -374,6 +522,13 @@ export function WelcomePage() {
   // key is write-only, so its box starts blank on a configured
   // connector too — blank keeps the stored key.
   const [aiConnector, setAiConnector] = useState<AiConnector>(loaded.aiConnector);
+
+  // Review step (#921): the counts are state because Start blank
+  // changes them without leaving the step. Re-read from the same
+  // routes the loader used, so the table shows the emptied lists.
+  const [review, setReview] = useState(loaded.review);
+  const [startBlankOpen, setStartBlankOpen] = useState(false);
+  const [reviewNotice, setReviewNotice] = useState<string | null>(null);
   const [aiPreset, setAiPreset] = useState<AiPreset>(
     loaded.aiConnector.preset ?? DEFAULT_AI_PRESET,
   );
@@ -2065,9 +2220,38 @@ export function WelcomePage() {
                     <CardDescription>
                       <FormattedMessage
                         id="welcome.review.hint"
-                        defaultMessage="Your install started with these lists and reminder offsets. These are their current counts, including archived rows. Open a list in Settings to make changes."
+                        defaultMessage="We recommend that you start with the small set of work types, statuses, and fields that came with this setup. If you would rather start completely fresh, choose Start blank. This removes every seeded row that OpenLaw does not need to run. The table shows each list's current count, including archived rows. Open a list in Settings to make changes."
                       />
                     </CardDescription>
+                    {reviewNotice && <Alert variant="success">{reviewNotice}</Alert>}
+                    <div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() => setStartBlankOpen(true)}
+                      >
+                        <FormattedMessage
+                          id="welcome.review.startBlank"
+                          defaultMessage="Start blank"
+                        />
+                      </Button>
+                    </div>
+                    {startBlankOpen && (
+                      <StartBlankDialog
+                        removable={review.removable}
+                        onOpenChange={setStartBlankOpen}
+                        onCleared={async () => {
+                          setReview(await readReview());
+                          setReviewNotice(
+                            intl.formatMessage({
+                              id: "welcome.review.startBlank.done",
+                              defaultMessage: "Seeded rows removed. The counts below are current.",
+                            }),
+                          );
+                        }}
+                      />
+                    )}
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border-default text-left">
@@ -2092,7 +2276,7 @@ export function WelcomePage() {
                               </Link>
                             </th>
                             <td className="py-2 text-right tabular-nums">
-                              {intl.formatNumber(loaded.review.counts[key])}
+                              {intl.formatNumber(review.counts[key])}
                             </td>
                           </tr>
                         ))}
@@ -2110,7 +2294,7 @@ export function WelcomePage() {
                             </Link>
                             <p className="mt-1 text-muted">
                               {intl.formatList(
-                                loaded.review.offsets.map((days) =>
+                                review.offsets.map((days) =>
                                   intl.formatMessage(
                                     {
                                       id: "settings.reminders.offset",
@@ -2124,7 +2308,7 @@ export function WelcomePage() {
                             </p>
                           </th>
                           <td className="py-2 text-right align-top tabular-nums">
-                            {intl.formatNumber(loaded.review.offsets.length)}
+                            {intl.formatNumber(review.offsets.length)}
                           </td>
                         </tr>
                       </tbody>

@@ -50,6 +50,7 @@ interface StubFieldRow {
   options: readonly string[] | null;
   fieldTag: string;
   aiPrompt: string | null;
+  isSystemDefault?: boolean;
   archivedAt: string | null;
   inUseCount: number;
 }
@@ -183,6 +184,27 @@ describe("the seeded catalog (CTR-008 core fields)", () => {
     expect(screen.getByText("3 fields")).toBeInTheDocument();
     // The catalog is unordered: no reorder grips (DES-021).
     expect(screen.queryByRole("button", { name: /^Reorder/ })).not.toBeInTheDocument();
+  });
+
+  it("locks a default Field against archive and keeps its editor (SET-004)", async () => {
+    const rows = seededFields().map((row, index) => ({ ...row, isSystemDefault: index < 2 }));
+    stubApi({ signedIn: ADMIN, extra: fieldsApi(newCalls(), rows) });
+    renderAt("/settings/contracts/fields");
+    await screen.findByText("Governing law");
+    const [first, , third] = within(fieldList()).getAllByRole("listitem");
+    expect(
+      within(first!).getByRole("img", {
+        name: "Governing law is a default Field and can't be archived",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(first!).queryByRole("button", { name: "Archive Governing law" }),
+    ).not.toBeInTheDocument();
+    expect(within(first!).getByRole("button", { name: "Edit Governing law" })).toBeInTheDocument();
+    // A user-created field keeps its archive control.
+    expect(
+      within(third!).getByRole("button", { name: "Archive Our position" }),
+    ).toBeInTheDocument();
   });
 
   it("shows a dash, not a sparkle, on fields without a prompt", async () => {
