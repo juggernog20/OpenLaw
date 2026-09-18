@@ -77,6 +77,103 @@ describe("AI provider HTTP bounds", () => {
     });
   });
 
+  /** A body that sends one chunk and then breaks on the next read. */
+  function brokenBody(): ReadableStream<Uint8Array> {
+    let pulls = 0;
+    return new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls += 1;
+        if (pulls === 1) {
+          controller.enqueue(new TextEncoder().encode('{"error":{"message":"partial'));
+          return;
+        }
+        controller.error(new TypeError("terminated"));
+      },
+    });
+  }
+
+  it("keeps a 401 a configuration fault when its body breaks mid-read", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(new Response(brokenBody(), { status: 401, statusText: "Unauthorized" })),
+    );
+    await expect(
+      postJson(new URL("https://provider.test"), {}, {}, PROBE_BOUND.timeoutMs),
+    ).rejects.toEqual(
+      expect.objectContaining<Partial<AiConfigError>>({
+        name: "AiConfigError",
+        message: "The provider refused the request with HTTP 401.",
+        upstream: { status: 401, summary: "Unauthorized" },
+      }),
+    );
+  });
+
+  it("keeps a 503 unavailable when its body breaks mid-read", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(brokenBody(), { status: 503, statusText: "Service Unavailable" }),
+        ),
+    );
+    await expect(
+      postJson(new URL("https://provider.test"), {}, {}, PROBE_BOUND.timeoutMs),
+    ).rejects.toEqual(
+      expect.objectContaining<Partial<AiUnavailableError>>({
+        name: "AiUnavailableError",
+        message: "The provider refused the request with HTTP 503.",
+        upstream: { status: 503, summary: "Service Unavailable" },
+      }),
+    );
+  });
+
+  it("names the refused field from the whole body, past the summary cut", async () => {
+    const preamble = "The request could not be completed as sent. ".repeat(5);
+    expect(preamble.length).toBeGreaterThan(200);
+    const reason = `${preamble}Unsupported parameter: 'max_tokens' is not supported with this model.`;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(Response.json({ error: { message: reason } }, { status: 400 })),
+    );
+    await expect(
+      postJson(new URL("https://provider.test"), {}, {}, PROBE_BOUND.timeoutMs),
+    ).rejects.toMatchObject({
+      name: "AiConfigError",
+      upstream: {
+        status: 400,
+        summary: reason.slice(0, 200),
+        unsupportedField: "max_tokens",
+      },
+    });
+  });
+
+  it("leaves the refused field unset when it is not one an adapter can drop", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          Response.json(
+            { error: { message: "Unsupported value: 'response_format' is not supported." } },
+            { status: 400 },
+          ),
+        ),
+    );
+    await expect(
+      postJson(new URL("https://provider.test"), {}, {}, PROBE_BOUND.timeoutMs),
+    ).rejects.toEqual(
+      expect.objectContaining<Partial<AiConfigError>>({
+        upstream: {
+          status: 400,
+          summary: "Unsupported value: 'response_format' is not supported.",
+        },
+      }),
+    );
+  });
+
   it("does not follow a redirect with the API key", async () => {
     const paths: string[] = [];
     const server = createServer((request, response) => {

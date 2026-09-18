@@ -17,13 +17,6 @@ import type { AiPreset } from "@openlaw/db";
 /** OpenAI's own hosts. Their current models take `max_completion_tokens` and refuse `max_tokens`. */
 const OPENAI_HOSTED_PRESETS: ReadonlySet<AiPreset> = new Set<AiPreset>(["openai", "azure_openai"]);
 
-/**
- * OpenAI's refusal for a request field its model does not take, for example
- * "Unsupported parameter: 'max_tokens' is not supported with this model" or
- * "Unsupported value: 'temperature' does not support 0 with this model".
- */
-const UNSUPPORTED_FIELD = /unsupported (?:parameter|value)[^']*'(max_tokens|temperature)'/i;
-
 export function createOpenAiCompatibleProvider(config: AiProviderConfig): AiProvider {
   const endpoint =
     config.preset === "azure_openai"
@@ -48,8 +41,9 @@ export function createOpenAiCompatibleProvider(config: AiProviderConfig): AiProv
 
   function relearn(error: unknown): boolean {
     if (!(error instanceof AiConfigError)) return false;
-    // The refusal text lives on the log-only summary. The message is generic.
-    const field = UNSUPPORTED_FIELD.exec(error.upstream?.summary ?? "")?.[1]?.toLowerCase();
+    // The transport reads the refused field from the whole bounded body.
+    // The summary is a cut for the log and is never read here.
+    const field = error.upstream?.unsupportedField;
     if (field === "max_tokens" && wire.tokenField === "max_tokens") {
       wire.tokenField = "max_completion_tokens";
       return true;

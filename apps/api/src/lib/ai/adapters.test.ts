@@ -300,6 +300,32 @@ describe("OpenAI reasoning-model request fields", () => {
     expect(server.requests.at(-1)!.body).not.toHaveProperty("temperature");
   });
 
+  it("relearns from a refusal that names the field after the summary cut", async () => {
+    const preamble = "The request could not be completed as sent. ".repeat(5);
+    expect(preamble.length).toBeGreaterThan(200);
+    const wordy = await startServer("openai", (body) =>
+      "max_tokens" in body
+        ? `${preamble}Unsupported parameter: 'max_tokens' is not supported with this model.`
+        : null,
+    );
+    try {
+      const provider = createOpenAiCompatibleProvider({
+        preset: "custom",
+        protocol: "openai_chat_completions",
+        baseUrl: wordy.baseUrl,
+        apiKey: VALID_KEY,
+        model: MODEL,
+      });
+      await provider.probe();
+      expect(wordy.requests.map((request) => Object.keys(request.body).sort())).toEqual([
+        ["max_tokens", "messages", "model", "response_format", "temperature"],
+        ["max_completion_tokens", "messages", "model", "response_format", "temperature"],
+      ]);
+    } finally {
+      await wordy.stop();
+    }
+  });
+
   it("still surfaces a refusal it cannot learn from", async () => {
     const strict = await startServer(
       "openai",

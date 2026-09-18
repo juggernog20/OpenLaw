@@ -44,15 +44,24 @@ export interface AiProviderConfig {
   model: string;
 }
 
+/** The request fields an adapter knows how to drop when a model refuses them. */
+export const AI_UNSUPPORTED_FIELDS = ["max_tokens", "temperature"] as const;
+export type AiUnsupportedField = (typeof AI_UNSUPPORTED_FIELDS)[number];
+
 /**
  * What the provider answered when it refused. The status code is safe
  * to show. The summary is a short, redacted cut of the provider's own
  * body. It is for logs only: a provider can quote back the key it was
- * handed, or an HTML page nobody should see in Settings.
+ * handed, or an HTML page nobody should see in Settings. Code never
+ * reads the summary. When the refusal names a request field the model
+ * does not take, `unsupportedField` carries it, read from the whole
+ * bounded body before the summary is cut, so an adapter can decide
+ * what to drop on structured data.
  */
 export interface AiUpstreamRefusal {
   status: number;
   summary: string;
+  unsupportedField?: AiUnsupportedField;
 }
 
 export interface AiErrorOptions {
