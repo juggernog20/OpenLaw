@@ -323,6 +323,38 @@ describe("the Field prompts card (#665)", () => {
     expect(await screen.findByText("Saved")).toBeVisible();
   });
 
+  it("throws away an unsaved edit on Escape and sends nothing (#887)", async () => {
+    const user = userEvent.setup();
+    const promptSaves: unknown[] = [];
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ promptSaves }) });
+    renderAt("/settings/ai-analysis");
+
+    const input = await screen.findByLabelText("Effective date prompt");
+    await user.clear(input);
+    await user.type(input, "A draft the Administrator changes their mind about");
+    // Escape reverts and blurs in one handler. The blur lands before
+    // React re-renders, so it still sees the draft; it must not save it.
+    await user.keyboard("{Escape}");
+
+    expect(input).toHaveValue(CORE_ANALYSIS_TARGETS[1].defaultPrompt);
+    expect(input).not.toHaveFocus();
+    await waitFor(() => expect(screen.queryByText("Saving…")).not.toBeInTheDocument());
+    expect(promptSaves).toEqual([]);
+
+    // A real edit after Escape still commits on Enter, and the blur that
+    // follows sends nothing more.
+    await user.click(input);
+    await user.clear(input);
+    await user.type(input, "Use the first stated effective date.{Enter}");
+    await waitFor(() =>
+      expect(promptSaves).toEqual([
+        { slug: "effective_date", prompt: "Use the first stated effective date." },
+      ]),
+    );
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(promptSaves).toHaveLength(1);
+  });
+
   it("shows Reset to default only on an override and restores the built-in prompt", async () => {
     const user = userEvent.setup();
     const promptSaves: unknown[] = [];
