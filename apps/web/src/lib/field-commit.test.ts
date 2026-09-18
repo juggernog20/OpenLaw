@@ -217,6 +217,29 @@ describe("useFieldCommit", () => {
     });
   });
 
+  it("lets the blur that follows Escape pass without saving the reverted draft (#887)", async () => {
+    const { result } = renderHook(() => useFieldCommit<Key>());
+    const send = vi.fn();
+    const reset = vi.fn();
+    const field = { draft: "Discarded", saved: "Old", reset, send };
+
+    // Escape reverts, then blurs, in the same tick: the blur handler
+    // still holds the discarded draft.
+    act(() => {
+      result.current.revertText("title", field);
+      result.current.commitText("title", field);
+    });
+    expect(send).not.toHaveBeenCalled();
+    expect(reset).toHaveBeenCalledWith("Old");
+
+    // Once the tick ends, a fresh edit commits as usual.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    result.current.commitText("title", { ...field, draft: "Renamed" });
+    expect(send).toHaveBeenCalledWith("Renamed");
+  });
+
   it("revertText resets the box and clears the note", async () => {
     const { result } = renderHook(() => useFieldCommit<Key>());
     const reset = vi.fn();

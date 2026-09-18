@@ -58,8 +58,9 @@ export interface TextField {
  * saved or error after it, and calls `adopt` with the answer so the
  * screen can take the server's row as saved truth (TECH-024 rule 2).
  * `commitText` and `revertText` add the text-box rules on top: the
- * unchanged-value no-op, the empty-required revert, and the guard that
- * stops the blur after Enter from sending the same draft twice.
+ * unchanged-value no-op, the empty-required revert, the guard that
+ * stops the blur after Enter from sending the same draft twice, and the
+ * guard that stops the blur after Escape from saving the reverted draft.
  */
 export function useFieldCommit<K extends string>() {
   const [status, setStatus] = useState<Partial<Record<K, FieldStatus>>>({});
@@ -68,6 +69,12 @@ export function useFieldCommit<K extends string>() {
   // Enter and the blur it causes can land before React re-renders, and
   // a guard that read state would let the second send through.
   const inFlight = useRef(new Set<K>());
+  // The fields whose draft Escape just threw away. Escape reverts and
+  // then blurs the box in one handler, and the blur lands before React
+  // re-renders, so its `commitText` still holds the discarded draft and
+  // would save it (#887). The mark lets that one blur pass, and clears
+  // itself once the tick ends so a later edit commits as usual.
+  const reverted = useRef(new Set<K>());
 
   function note(key: K, next: FieldStatus, detail?: string) {
     setStatus((current) => ({ ...current, [key]: next }));
@@ -106,6 +113,9 @@ export function useFieldCommit<K extends string>() {
     // Enter already committed this draft and the request is in flight.
     // The blur that follows must not send a duplicate.
     if (inFlight.current.has(key)) return;
+    // Escape just reverted this box; this is the blur it caused, still
+    // holding the draft the user discarded.
+    if (reverted.current.has(key)) return;
     const draft = field.draft.trim();
     if (draft === field.saved || (field.required && draft === "")) {
       // Nothing to save, or nothing valid. Revert per DES-017.
@@ -121,6 +131,8 @@ export function useFieldCommit<K extends string>() {
   function revertText(key: K, field: TextField) {
     field.reset(field.saved);
     note(key, "idle");
+    reverted.current.add(key);
+    queueMicrotask(() => reverted.current.delete(key));
   }
 
   return { status, error, note, commit, commitText, revertText };
