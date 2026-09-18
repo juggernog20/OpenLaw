@@ -380,6 +380,7 @@ function EntityRecord() {
         user={loaded.user}
         onSignOut={() => void signOut()}
         recordScope={{ entityType: "entity", entityId: loaded.entity.id }}
+        flush
         banner={
           saved.isConfidential ? (
             <ConfidentialBanner
@@ -475,7 +476,7 @@ function EntityRecord() {
             ) : undefined
           }
         >
-          <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
+          <div className="flex flex-col gap-4 px-page-x py-page-y">
             {loaded.tab === "overview" ? (
               <>
                 {frozen ? (
