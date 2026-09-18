@@ -307,20 +307,29 @@ describe("attach and detach (CTR-016 scopes)", () => {
 
   it("refuses an archived field — archived means hidden everywhere", async () => {
     const nda = await typeBySlug("nda");
-    const jurisdiction = await fieldIdBySlug("jurisdiction");
+    // A field of our own: the seeded default Fields refuse archive
+    // (SET-004), so the probe cannot borrow one of them.
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/fields",
+      cookies: adminCookies,
+      payload: {
+        displayName: "Dormant",
+        moduleScope: "contract",
+        fieldType: "text",
+        fieldTag: "legal",
+      },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const dormant = created.json().field.id;
     const archived = await harness.app.inject({
       method: "POST",
-      url: `/api/v1/fields/${jurisdiction}/archive`,
+      url: `/api/v1/fields/${dormant}/archive`,
       cookies: adminCookies,
     });
     expect(archived.statusCode, archived.body).toBe(200);
-    const res = await attach(nda.id, { fieldId: jurisdiction });
+    const res = await attach(nda.id, { fieldId: dormant });
     expect(res.statusCode).toBe(409);
-    await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/fields/${jurisdiction}/restore`,
-      cookies: adminCookies,
-    });
   });
 
   it("refuses attaching the same field twice", async () => {
