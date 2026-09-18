@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Actor-scoped preparation and source evidence for Request conversion (INT-008). */
+import { isOpenRequestStatus } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -108,7 +109,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!(await preparationEnabled(app.db, request.body.targetModule)))
         throw httpError(409, "Preparation is turned off. Continue manually.");
       const row = await requestOf(app.db, request.params.number);
-      if (row.status !== "new")
+      if (!isOpenRequestStatus(row.status))
         throw httpError(409, "This Request has already been dispositioned.");
       const context = await conversionContext(
         app.db,
@@ -198,7 +199,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       let current = false;
       try {
         current =
-          row.status === "new" &&
+          isOpenRequestStatus(row.status) &&
           (await preparationEnabled(app.db, draft.targetModule)) &&
           (await conversionContext(app.db, row.id, draft.targetTypeId, false, draft.targetModule))
             .snapshot === draft.snapshot;
@@ -248,7 +249,8 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       const source = await conversionSources(app.db, row.id);
       const proposal =
         draft.suggestions[request.params.slug] ?? draft.conflicts[request.params.slug];
-      if (row.status !== "new") throw httpError(404, "The Conversion draft is unavailable.");
+      if (!isOpenRequestStatus(row.status))
+        throw httpError(404, "The Conversion draft is unavailable.");
       return conversionEvidence(app.db, request.user, source, draft, proposal);
     },
   );
@@ -357,7 +359,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
             ),
           );
         if (!draft) throw httpError(404, "The source is unavailable.");
-        if (row.status === "new") {
+        if (isOpenRequestStatus(row.status)) {
           if (
             draft.actorId !== request.user.id ||
             !["administrator", "legal_team_member"].includes(request.user.role)

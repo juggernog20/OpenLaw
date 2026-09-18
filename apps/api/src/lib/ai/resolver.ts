@@ -30,6 +30,7 @@ export function createAiResolver(
       row.baseUrl,
       row.apiKey,
       row.model,
+      row.maxOutputTokens,
       row.updatedAt.toISOString(),
     ]);
     if (cached?.key === key) return cached.driver;
@@ -39,6 +40,7 @@ export function createAiResolver(
       baseUrl: row.baseUrl,
       apiKey: row.apiKey,
       model: row.model,
+      maxOutputTokens: row.maxOutputTokens,
     });
     cached = { key, driver };
     return driver;

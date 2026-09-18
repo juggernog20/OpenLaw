@@ -130,7 +130,7 @@ function sharedAssertions(protocol: Protocol, request: CapturedRequest | undefin
       model: MODEL,
       temperature: 0,
       max_completion_tokens: EXTRACTION_BOUND.maxTokens,
-      response_format: { type: "json_object" },
+      response_format: { type: "json_schema", json_schema: { strict: true } },
     });
     expect(body).not.toHaveProperty("max_tokens");
   } else {
@@ -326,7 +326,7 @@ describe("OpenAI reasoning-model request fields", () => {
     }
   });
 
-  it("still surfaces a refusal it cannot learn from", async () => {
+  it("stops after the provider also refuses the prompt-only fallback", async () => {
     const strict = await startServer(
       "openai",
       () => "Unsupported value: 'response_format' is not supported with this model.",
@@ -344,7 +344,7 @@ describe("OpenAI reasoning-model request fields", () => {
         message: "The provider refused the request with HTTP 400.",
         upstream: { status: 400, summary: expect.stringContaining("response_format") },
       });
-      expect(strict.requests).toHaveLength(1);
+      expect(strict.requests).toHaveLength(2);
     } finally {
       await strict.stop();
     }

@@ -11,7 +11,7 @@
  * route sits at this same address under `POST`, because a write of the
  * record does not differ by audience and a read does.
  *
- * The default answer is the new Requests. Explicit status choices or
+ * The default answer includes New and Read Requests. Explicit status choices or
  * includeTriaged widen it; quick filters combine across the whole Inbox.
  *
  * **Default order: urgency rank, then age** (INT-006). Critical first, and inside one
@@ -46,6 +46,7 @@
  * join here.
  */
 
+import { inArray } from "@openlaw/db";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -164,7 +165,7 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
           "The Inbox (INT-006, INT-007): the Requests whose fate is " +
           "undecided, ordered by urgency rank — critical first — then " +
           "age, oldest first, unless sort names a column, and paged by cursor. The answer is " +
-          "the `new` Requests by default; status choices or includeTriaged=true widen it " +
+          "the `new` and `read` Requests by default; status choices or includeTriaged=true widen it " +
           "to the converted, resolved, and declined ones with their " +
           "outcomes. A converted row carries the contract or matter it became " +
           "only when the caller reaches that record, and carries " +
@@ -209,7 +210,7 @@ export const requestInboxRoutes: FastifyPluginAsyncZod = async (app) => {
           ? choiceFilter(requests.status, query.status)
           : query.includeTriaged === "true"
             ? undefined
-            : eq(requests.status, "new"),
+            : inArray(requests.status, ["new", "read"]),
         choiceFilter(requests.requestTypeId, query.type),
         choiceFilter(requests.urgency, query.urgency),
         choiceFilter(requests.requesterId, query.requester, request.user.id),

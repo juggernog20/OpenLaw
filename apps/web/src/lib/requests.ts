@@ -65,6 +65,7 @@ export type MyRequestAttachment = DetailResponse["attachments"][number];
  */
 export const REQUEST_STATUS_PILL: Record<RequestStatus, string> = {
   new: "bg-status-info-bg text-status-info-fg",
+  read: "bg-status-neutral-bg text-status-neutral-fg",
   converted: "bg-status-success-bg text-status-success-fg",
   resolved: "bg-status-neutral-bg text-status-neutral-fg",
   declined: "bg-status-danger-bg text-status-danger-fg",
@@ -84,7 +85,7 @@ export function requestStatusLabel(intl: IntlShape, status: RequestStatus): stri
     {
       id: "requests.statusLabel",
       defaultMessage:
-        "{status, select, new {New} converted {Converted} resolved {Resolved} " +
+        "{status, select, new {New} read {Read} converted {Converted} resolved {Resolved} " +
         "declined {Declined} other {Unknown}}",
     },
     { status },
@@ -109,7 +110,7 @@ export function requesterStatusLabel(intl: IntlShape, status: RequestStatus): st
     {
       id: "requests.requesterStatusLabel",
       defaultMessage:
-        "{status, select, new {Open} converted {In progress} resolved {Resolved} " +
+        "{status, select, new {Open} read {Read} converted {In progress} resolved {Resolved} " +
         "declined {Declined} other {Unknown}}",
     },
     { status },

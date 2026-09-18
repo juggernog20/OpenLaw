@@ -69,7 +69,8 @@ import { withAnsweredIntakeDefaults } from "../../lib/intake-default-fields.js";
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { activityLog, and, asc, eq, requestTypeFields, users } from "@openlaw/db";
+import { activityLog, and, asc, eq, isNull, requests, requestTypeFields, users } from "@openlaw/db";
+import { publishInboxTotal } from "./live-inbox.js";
 import { requireRole } from "../../auth/guards.js";
 import type { Readable } from "node:stream";
 import {
@@ -109,6 +110,38 @@ const requireMember = requireRole("administrator", "legal_team_member");
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 
 export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.post(
+    "/requests/:number/read",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "markRequestRead",
+        summary: "Mark a new request read after a legal user opens the full record",
+        tags: ["requests"],
+        params: NumberParams,
+        response: { 200: z.object({ request: StaffRequestSchema }), default: problemResponse },
+      },
+    },
+    async (request) =>
+      app.db.transaction(async (tx) => {
+        // The condition prevents a delayed view from overwriting a triage decision.
+        const changed = await tx
+          .update(requests)
+          .set({ status: "read" })
+          .where(
+            and(
+              eq(requests.number, request.params.number),
+              eq(requests.status, "new"),
+              isNull(requests.archivedAt),
+            ),
+          )
+          .returning({ id: requests.id });
+        const row = await staffRequestRow(tx, request.user, request.params.number);
+        if (changed.length) await publishInboxTotal(tx);
+        return { request: toStaffRequest(row) };
+      }),
+  );
+
   app.get(
     "/requests/:number",
     {

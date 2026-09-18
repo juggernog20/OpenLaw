@@ -87,6 +87,20 @@ To delete the stored key, select **Remove connector** and confirm. Reconnecting 
 
 When escalating, provide the time, provider, model, displayed error, C- reference, and run's Document Version. Do not include the API key or copy Contract text into a general support report.
 
+## Output token limit
+
+The Provider card includes an **Output token limit per API call** slider and an exact number input. Save the connector to apply it to future analysis calls, including Request preparation. The default is 32,768 tokens; you can choose between 1,024 and 262,144. The setting persists across restarts and applies to every provider protocol. The short connection test keeps its smaller 1,024-token allowance.
+
+Below 32,768, a warning explains that analyses are more likely to fail with incomplete responses, especially when reasoning uses the same output allowance. This threshold is guidance, not a guarantee. Choose a limit supported by the selected model. Higher limits allow longer responses and can increase latency and cost, but do not force the model to use the entire allowance. Each batch and corrective retry respects the saved ceiling; it is not a combined budget for the whole analysis.
+
+## Structured replies and recovery
+
+OpenLaw sends the requested field types and allowed choices to the provider. OpenAI and Azure OpenAI use a JSON response schema, Claude uses its structured output format, and Gemini uses its response schema. OpenRouter, Ollama, and custom compatible endpoints use the adapter for their selected protocol. If a model explicitly rejects an output-format feature, OpenLaw falls back to a supported format while keeping the same local validation.
+
+Large field sets are split into smaller batches, with at most two calls running at once. OpenLaw checks the returned field names, value types, and citation structure, then applies the existing source-evidence checks before saving suggestions. Unsupported answers stay empty. A malformed or truncated response gets one corrective attempt per batch within a five-minute batch budget; all attempts respect the saved output token limit. The full set of fields has a time limit based on the number of batches, up to fifteen minutes per source section. Credential errors and provider refusals are not treated as formatting problems.
+
+Request preparation also uses each attached custom field's AI prompt, along with its description, type, and allowed choices. Editing those instructions makes an earlier conversion draft stale. Preparation failures distinguish unusable replies, output limits, timeouts, availability problems, and rejected configuration. They do not display the provider's raw response or credentials. You can retry or continue manually.
+
 ## Request conversion switches
 
 Under **AI analysis**, find the **Request conversion** card. It appears only after a connector is saved. Its three independent switches start off:

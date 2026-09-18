@@ -2,6 +2,7 @@
 
 /** INT-007 assigns, reassigns or clears triage responsibility. Decided Requests retain a read-only assignee. */
 
+import { isOpenRequestStatus } from "@openlaw/shared";
 import { useEffect, useRef, useState } from "react";
 import { Check, Search, UserPlus, UserRound } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -41,7 +42,7 @@ export function RequestAssignment({
   const face = request.assignee && (
     <Avatar name={request.assignee.displayName} image={request.assignee.image} />
   );
-  if (request.status !== "new")
+  if (!isOpenRequestStatus(request.status))
     return face ? (
       <span role="img" className="inline-flex items-center gap-2" title={name} aria-label={name}>
         {face}

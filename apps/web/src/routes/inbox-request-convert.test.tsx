@@ -1234,6 +1234,26 @@ describe("Matter Conversion drafts", () => {
       },
     };
   }
+  it("shows the saved provider failure and keeps retry and manual conversion available", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi();
+    const failure =
+      "The AI response was cut short by its output limit. Retry or continue manually.";
+    open({
+      ...base,
+      handler: (call: StubCall) => {
+        if (call.url.pathname.endsWith("/conversion-drafts"))
+          return json(202, { draft: { id: "draft-1", state: "failed", failure } });
+        return base.handler(call);
+      },
+    });
+    await openDisposition(user, "Convert to matter");
+    expect(await screen.findByText(failure)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "Continue manually" }));
+    expect(screen.getByRole("textbox", { name: /Title/ })).toBeVisible();
+  });
+
   it("switches descriptions for comparison without changing the conversion draft", async () => {
     const user = userEvent.setup();
     const api = preparedApi();

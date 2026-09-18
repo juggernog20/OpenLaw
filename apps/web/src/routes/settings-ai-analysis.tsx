@@ -10,6 +10,12 @@
 import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
+import {
+  AI_OUTPUT_TOKEN_DEFAULT,
+  AI_OUTPUT_TOKEN_WARNING,
+  AI_OUTPUT_TOKEN_MIN,
+  AI_OUTPUT_TOKEN_MAX,
+} from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { canReuseAiKey } from "../lib/ai-connector-config";
 import { AiModelSelector } from "../components/ai-model-selector";
@@ -68,6 +74,9 @@ export function SettingsAiAnalysisPage() {
   const [protocol, setProtocol] = useState<Protocol>(connector.protocol ?? initial.protocol);
   const [baseUrl, setBaseUrl] = useState(connector.baseUrl ?? initial.baseUrl ?? "");
   const [model, setModel] = useState(connector.model ?? initial.defaultModel);
+  const [maxOutputTokens, setMaxOutputTokens] = useState(
+    connector.maxOutputTokens ?? AI_OUTPUT_TOKEN_DEFAULT,
+  );
   const [apiKey, setApiKey] = useState("");
   const [manualModel, setManualModel] = useState(preset === "azure_openai");
   const [status, setStatus] = useState<Record<Field, FieldStatus>>({
@@ -145,6 +154,7 @@ export function SettingsAiAnalysisPage() {
         body: {
           preset,
           model,
+          maxOutputTokens,
           ...(preset === "custom" ? { protocol } : {}),
           ...(selected.requiresBaseUrl ? { baseUrl } : {}),
           ...(apiKey === "" ? {} : { apiKey }),
@@ -374,6 +384,55 @@ export function SettingsAiAnalysisPage() {
             onManualEntryChange={setManualModel}
           />
 
+          <div className="flex max-w-xl flex-col gap-2">
+            <Label htmlFor="ai-output-tokens">
+              <FormattedMessage
+                id="settings.aiAnalysis.outputTokens"
+                defaultMessage="Output token limit per API call"
+              />
+            </Label>
+            <div className="flex items-center gap-4">
+              <input
+                id="ai-output-tokens"
+                type="range"
+                min={AI_OUTPUT_TOKEN_MIN}
+                max={AI_OUTPUT_TOKEN_MAX}
+                step={1024}
+                value={maxOutputTokens}
+                onChange={(event) => setMaxOutputTokens(Number(event.target.value))}
+                aria-valuetext={intl.formatNumber(maxOutputTokens)}
+                aria-describedby="ai-output-tokens-warning"
+                className="h-8 min-w-0 flex-1 cursor-pointer accent-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+              />
+              <Input
+                type="number"
+                aria-label={intl.formatMessage({
+                  id: "settings.aiAnalysis.outputTokensExact",
+                  defaultMessage: "Exact output token limit",
+                })}
+                min={AI_OUTPUT_TOKEN_MIN}
+                max={AI_OUTPUT_TOKEN_MAX}
+                step={1}
+                required
+                value={maxOutputTokens || ""}
+                onChange={(event) => setMaxOutputTokens(Number(event.target.value))}
+                aria-describedby="ai-output-tokens-warning"
+                className="w-28 shrink-0 tabular-nums"
+              />
+            </div>
+            <div id="ai-output-tokens-warning" aria-live="polite">
+              {maxOutputTokens < AI_OUTPUT_TOKEN_WARNING && (
+                <p className="rounded-card bg-status-warning-bg px-3 py-2 text-sm text-status-warning-fg">
+                  <FormattedMessage
+                    id="settings.aiAnalysis.outputTokensWarning"
+                    defaultMessage="Below {threshold, number} tokens, analyses are more likely to fail with incomplete responses, especially with reasoning models. This is a guideline; the tokens needed vary by model and document."
+                    values={{ threshold: AI_OUTPUT_TOKEN_WARNING }}
+                  />
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             <Button
               type="submit"
@@ -446,7 +505,7 @@ export function SettingsAiAnalysisPage() {
                   {connector.disabledAt === null ? (
                     <FormattedMessage
                       id="settings.aiAnalysis.enabled.on"
-                      defaultMessage="Turn this off to hide AI analysis without deleting the connector."
+                      defaultMessage="Turn this off to disable AI analysis without deleting the connector."
                     />
                   ) : (
                     <FormattedMessage

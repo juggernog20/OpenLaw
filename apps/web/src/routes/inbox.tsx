@@ -371,7 +371,7 @@ export function InboxPage() {
               <EmptyInbox
                 awaitingOnly={
                   JSON.stringify(filterQuery(layout.filters, INBOX_FILTER_KEYS)) ===
-                  JSON.stringify({ status: "new" })
+                  JSON.stringify({ status: "new,read" })
                 }
               />
             ) : (

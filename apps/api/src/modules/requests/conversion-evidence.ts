@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** INT-008: Revalidates original sources and their promoted immutable Versions before disclosing evidence. */
+import { isOpenRequestStatus } from "@openlaw/shared";
 import { z } from "zod";
 import {
   and,
@@ -81,7 +82,7 @@ export async function authorizedAttachment(
     return { file, version };
   }
   // A deleted promoted Version cannot fall back to the Request's retained download.
-  if (file.id.startsWith("attachment:") && source.row.status !== "new") return null;
+  if (file.id.startsWith("attachment:") && !isOpenRequestStatus(source.row.status)) return null;
   return { file, version: null };
 }
 export async function conversionEvidence(

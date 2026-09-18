@@ -538,7 +538,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               requestId: held.id,
               actorId: request.user.id,
               actorName: request.user.displayName,
-              from: "new",
+              from: held.status,
               to: "converted",
             });
           }),

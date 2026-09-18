@@ -1,6 +1,6 @@
 {
-  "id": "5217278d-7235-4582-a2ac-0303383fb3ff",
-  "prevId": "19190d1c-c686-457c-928a-f461343dc61a",
+  "id": "069eff93-23ec-47bf-952a-6c12e977c1a9",
+  "prevId": "5217278d-7235-4582-a2ac-0303383fb3ff",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -11553,7 +11553,7 @@
         },
         "requests_status_check": {
           "name": "requests_status_check",
-          "value": "\"requests\".\"status\" in ('new', 'converted', 'resolved', 'declined')"
+          "value": "\"requests\".\"status\" in ('new', 'read', 'converted', 'resolved', 'declined')"
         },
         "requests_urgency_check": {
           "name": "requests_urgency_check",

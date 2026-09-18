@@ -1459,3 +1459,22 @@ describe("default contract fields on intake forms", () => {
     expect(injected.statusCode).toBe(400);
   });
 });
+
+it("converts a Read request and preserves conversion against a late read receipt", async () => {
+  const row = await submit("Already read by Legal");
+  const read = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${row.number}/read`,
+    cookies: memberCookies,
+  });
+  expect(read.json().request.status).toBe("read");
+  const converted = await convert(row.number, { title: "Reviewed NDA" });
+  expect(converted.statusCode, converted.body).toBe(200);
+  expect(converted.json().request.status).toBe("converted");
+  const late = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${row.number}/read`,
+    cookies: memberCookies,
+  });
+  expect(late.json().request.status).toBe("converted");
+});

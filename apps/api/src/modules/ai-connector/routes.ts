@@ -9,6 +9,7 @@
 import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { AI_OUTPUT_TOKEN_DEFAULT, AI_OUTPUT_TOKEN_MIN, AI_OUTPUT_TOKEN_MAX } from "@openlaw/shared";
 import {
   aiConnector,
   AI_PRESETS,
@@ -50,6 +51,7 @@ const ConnectorSchema = WorkflowSettingsSchema.extend({
   baseUrl: z.string().nullable(),
   hasApiKey: z.boolean(),
   model: z.string().nullable(),
+  maxOutputTokens: z.number().int(),
   disabledAt: z.iso.datetime().nullable(),
   updatedAt: z.iso.datetime().nullable(),
 });
@@ -68,6 +70,7 @@ const ProviderBodySchema = z.object({
 
 const ConnectorBodySchema = ProviderBodySchema.extend({
   model: z.string().trim().min(1).max(300),
+  maxOutputTokens: z.number().int().min(AI_OUTPUT_TOKEN_MIN).max(AI_OUTPUT_TOKEN_MAX).optional(),
 });
 
 function pasted(value: string | undefined): string | null {
@@ -88,6 +91,7 @@ function readConnector(row: AiConnector | undefined): z.infer<typeof ConnectorSc
       baseUrl: null,
       hasApiKey: false,
       model: null,
+      maxOutputTokens: AI_OUTPUT_TOKEN_DEFAULT,
       disabledAt: null,
       updatedAt: null,
     };
@@ -103,6 +107,7 @@ function readConnector(row: AiConnector | undefined): z.infer<typeof ConnectorSc
     baseUrl: row.baseUrl,
     hasApiKey: row.apiKey !== null && row.apiKey !== "",
     model: row.model,
+    maxOutputTokens: row.maxOutputTokens,
     disabledAt: row.disabledAt?.toISOString() ?? null,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -261,7 +266,11 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           }
           const [row] = await tx
             .insert(aiConnector)
-            .values({ ...config, apiKey })
+            .values({
+              ...config,
+              apiKey,
+              maxOutputTokens: request.body.maxOutputTokens ?? AI_OUTPUT_TOKEN_DEFAULT,
+            })
             .returning();
           if (!row) throw httpError(500, "The AI connector could not be saved.");
           await recordActivity(tx, {
@@ -285,6 +294,9 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           .update(aiConnector)
           .set({
             ...config,
+            ...(request.body.maxOutputTokens === undefined
+              ? {}
+              : { maxOutputTokens: request.body.maxOutputTokens }),
             apiKey: apiKey ?? (sameDestination(current, config) ? current.apiKey : null),
             updatedAt: new Date(),
           })
@@ -292,7 +304,13 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           .returning();
         if (!row) throw httpError(500, "The AI connector could not be saved.");
 
-        for (const field of ["preset", "protocol", "baseUrl", "model"] as const) {
+        for (const field of [
+          "preset",
+          "protocol",
+          "baseUrl",
+          "model",
+          "maxOutputTokens",
+        ] as const) {
           if (current[field] !== row[field]) {
             await recordActivity(tx, {
               entityType: "system",

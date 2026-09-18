@@ -746,6 +746,7 @@ function requestMail(
  */
 const REQUEST_STATUS_WORDS: Record<RequestStatus, string> = {
   new: "open",
+  read: "read",
   converted: "in progress",
   resolved: "resolved",
   declined: "declined",

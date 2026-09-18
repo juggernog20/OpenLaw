@@ -63,7 +63,7 @@ function inboxApi(open: Record<string, unknown>[], triaged: Record<string, unkno
       const withTriaged = !call.url.searchParams
         .get("status")
         ?.split(",")
-        .every((status) => status === "new");
+        .every((status) => status === "new" || status === "read");
       return json(200, {
         requests: [...open, ...(withTriaged ? triaged : [])],
         nextCursor: null,
@@ -95,7 +95,7 @@ describe("the Inbox destination", () => {
         });
       });
       expect(api.asked.at(-1)?.searchParams.get("sort")).toBe(dir ? "title" : null);
-      expect(api.asked.at(-1)?.searchParams.get("status")).toBe("new");
+      expect(api.asked.at(-1)?.searchParams.get("status")).toBe("new,read");
       const header = screen.getByRole("columnheader", { name: "Title" });
       if (dir) {
         expect(header).toHaveAttribute("aria-sort", dir === "asc" ? "ascending" : "descending");
@@ -472,7 +472,7 @@ describe("Inbox filters and views", () => {
     await screen.findByRole("row", { name: /Next page/ });
     expect(asked.at(-1)?.searchParams.get("urgency")).toBe("high,critical");
     expect(asked.at(-1)?.searchParams.get("requester")).toBe("u7");
-    expect(asked.at(-1)?.searchParams.get("status")).toBe("new");
+    expect(asked.at(-1)?.searchParams.get("status")).toBe("new,read");
     await act(async () => {
       await router.navigate(-1);
     });

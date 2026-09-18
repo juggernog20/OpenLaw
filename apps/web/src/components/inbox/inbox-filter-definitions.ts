@@ -17,7 +17,7 @@ export function useInboxFilterDefinitions(options: {
       key: "status",
       label: intl.formatMessage({ id: "recordFilters.status", defaultMessage: "Status" }),
       kind: "choices",
-      choices: (["new", "converted", "resolved", "declined"] as const).map((id) => ({
+      choices: (["new", "read", "converted", "resolved", "declined"] as const).map((id) => ({
         id,
         displayName: requestStatusLabel(intl, id),
       })),

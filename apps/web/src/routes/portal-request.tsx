@@ -4,6 +4,7 @@
  * and History in applets (DES-079). Conversion redirects to the record; an
  * archived destination leaves only the read-only original submission. */
 
+import { isOpenRequestStatus } from "@openlaw/shared";
 import { RequestOwner } from "../components/portal/request-owner";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
@@ -268,7 +269,7 @@ function StatusBanner({
             <span className="font-normal">{declinedReason}</span>
           </>
         )}
-        {status !== "new" && (
+        {!isOpenRequestStatus(status) && (
           <>
             {" "}
             <FormattedMessage
@@ -295,6 +296,7 @@ function StatusBanner({
 /** The banner wears its status's own paired tokens, so it and the pill
  * beside it are never two different opinions about the same arm. */
 const BANNER_STYLE: Record<RequestStatus, { tone: string; Glyph: typeof Info }> = {
+  read: { tone: "bg-status-neutral-bg text-status-neutral-fg", Glyph: Info },
   new: { tone: "bg-status-info-bg text-status-info-fg", Glyph: Info },
   converted: { tone: "bg-status-success-bg text-status-success-fg", Glyph: PackageCheck },
   resolved: { tone: "bg-status-neutral-bg text-status-neutral-fg", Glyph: CircleCheck },
@@ -302,6 +304,10 @@ const BANNER_STYLE: Record<RequestStatus, { tone: string; Glyph: typeof Info }> 
 };
 
 const BANNER_COPY = {
+  read: defineMessage({
+    id: "portal.request.bannerRead",
+    defaultMessage: "Your request has been opened by the Legal team.",
+  }),
   new: defineMessage({
     id: "portal.request.bannerNew",
     defaultMessage: "Legal has received your request. You'll get an email when the status changes.",

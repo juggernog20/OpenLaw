@@ -223,30 +223,22 @@ export function AiModelSelector({
           </p>
         )}
       </div>
-      <p className="text-xs text-muted">
-        {azure ? (
+      {azure && (
+        <p className="text-xs text-muted">
           <FormattedMessage
             id="settings.aiAnalysis.models.azure"
             defaultMessage="Enter the deployment name from Azure. The deployment endpoint does not provide a list of deployments."
           />
-        ) : config.preset === "ollama" ? (
+        </p>
+      )}
+      {config.preset === "ollama" && (
+        <p className="text-xs text-muted">
           <FormattedMessage
             id="settings.aiAnalysis.models.ollama"
             defaultMessage="Load models installed in Ollama. This does not download models."
           />
-        ) : (
-          <FormattedMessage
-            id="settings.aiAnalysis.models.hint"
-            defaultMessage="Enter the provider key and endpoint, if required, then load models. Loading does not save the connector or send Contract data."
-          />
-        )}
-      </p>
-      <p className="text-xs text-muted">
-        <FormattedMessage
-          id="settings.aiAnalysis.models.testHint"
-          defaultMessage="A listed model may not support Contract analysis. Save your choice and use Test connection before running an analysis."
-        />
-      </p>
+        </p>
+      )}
     </div>
   );
 }

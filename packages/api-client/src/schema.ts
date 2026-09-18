@@ -3717,7 +3717,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
+    /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` and `read` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
     get: operations["listInbox"];
     put?: never;
     /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user Field must name a live person and an Entity Field must name a Portal-listed Entity */
@@ -3921,6 +3921,23 @@ export interface paths {
     get: operations["searchIntakeCounterparties"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/requests/{number}/read": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark a new request read after a legal user opens the full record */
+    post: operations["markRequestRead"];
     delete?: never;
     options?: never;
     head?: never;
@@ -9470,6 +9487,7 @@ export interface operations {
               baseUrl: string | null;
               hasApiKey: boolean;
               model: string | null;
+              maxOutputTokens: number;
               disabledAt: string | null;
               updatedAt: string | null;
             };
@@ -9523,6 +9541,7 @@ export interface operations {
           baseUrl?: string;
           apiKey?: string;
           model: string;
+          maxOutputTokens?: number;
         };
       };
     };
@@ -9555,6 +9574,7 @@ export interface operations {
               baseUrl: string | null;
               hasApiKey: boolean;
               model: string | null;
+              maxOutputTokens: number;
               disabledAt: string | null;
               updatedAt: string | null;
             };
@@ -9627,6 +9647,7 @@ export interface operations {
               baseUrl: string | null;
               hasApiKey: boolean;
               model: string | null;
+              maxOutputTokens: number;
               disabledAt: string | null;
               updatedAt: string | null;
             };
@@ -9707,6 +9728,7 @@ export interface operations {
               baseUrl: string | null;
               hasApiKey: boolean;
               model: string | null;
+              maxOutputTokens: number;
               disabledAt: string | null;
               updatedAt: string | null;
             };
@@ -9858,6 +9880,7 @@ export interface operations {
               baseUrl: string | null;
               hasApiKey: boolean;
               model: string | null;
+              maxOutputTokens: number;
               disabledAt: string | null;
               updatedAt: string | null;
             };
@@ -9930,6 +9953,7 @@ export interface operations {
               baseUrl: string | null;
               hasApiKey: boolean;
               model: string | null;
+              maxOutputTokens: number;
               disabledAt: string | null;
               updatedAt: string | null;
             };
@@ -21244,7 +21268,7 @@ export interface operations {
               id: string;
               number: number;
               /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
+              status: "new" | "read" | "converted" | "resolved" | "declined";
               title: string;
               /** @enum {string} */
               urgency: "low" | "medium" | "high" | "critical";
@@ -21391,7 +21415,7 @@ export interface operations {
               id: string;
               number: number;
               /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
+              status: "new" | "read" | "converted" | "resolved" | "declined";
               title: string;
               requestType: {
                 id: string;
@@ -21439,7 +21463,7 @@ export interface operations {
               id: string;
               number: number;
               /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
+              status: "new" | "read" | "converted" | "resolved" | "declined";
               title: string;
               requestType: {
                 id: string;
@@ -21552,7 +21576,7 @@ export interface operations {
           };
         };
       };
-      /** @description A Request that is no longer new takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedRecord`, the record a conversion made when the caller may reach it (DD-014), else `null`. */
+      /** @description A triaged Request takes paper on its thread, not as another Request attachment (INT-002, CMT-011). The named refusal carries `request`, the R-### whose portal detail owns that thread; `outcome`, the disposition already recorded; and `convertedRecord`, the record a conversion made when the caller may reach it (DD-014), else `null`. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -21703,7 +21727,7 @@ export interface operations {
               id: string;
               number: number;
               /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
+              status: "new" | "read" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
               departmentId?: string | null;
@@ -22007,6 +22031,90 @@ export interface operations {
       };
     };
   };
+  markRequestRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            request: {
+              id: string;
+              number: number;
+              /** @enum {string} */
+              status: "new" | "read" | "converted" | "resolved" | "declined";
+              title: string;
+              description: string | null;
+              departmentId?: string | null;
+              department?: string | null;
+              /** @enum {string} */
+              urgency: "low" | "medium" | "high" | "critical";
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              declinedReason: string | null;
+              createdAt: string;
+              requestType: {
+                id: string;
+                displayName: string;
+                targetModule: ("matter" | "contract") | null;
+                targetTypeId: string | null;
+                targetTypeName: string | null;
+              };
+              requester: {
+                id: string;
+                displayName: string;
+                email: string;
+                image: string | null;
+              };
+              assignee: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              } | null;
+              convertedContract: {
+                number: number;
+              } | null;
+              convertedRecord:
+                | (
+                    | {
+                        /** @enum {string} */
+                        module: "contract";
+                        number: number;
+                      }
+                    | {
+                        /** @enum {string} */
+                        module: "matter";
+                        number: number;
+                      }
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   readRequest: {
     parameters: {
       query?: never;
@@ -22029,7 +22137,7 @@ export interface operations {
               id: string;
               number: number;
               /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
+              status: "new" | "read" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
               departmentId?: string | null;
@@ -22208,7 +22316,7 @@ export interface operations {
               id: string;
               number: number;
               /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
+              status: "new" | "read" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
               departmentId?: string | null;
@@ -22345,7 +22453,7 @@ export interface operations {
               id: string;
               number: number;
               /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
+              status: "new" | "read" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
               departmentId?: string | null;
@@ -22931,7 +23039,7 @@ export interface operations {
               id: string;
               number: number;
               /** @enum {string} */
-              status: "new" | "converted" | "resolved" | "declined";
+              status: "new" | "read" | "converted" | "resolved" | "declined";
               title: string;
               description: string | null;
               departmentId?: string | null;

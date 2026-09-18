@@ -874,3 +874,78 @@ describe("the thread, at every tier (DD-016, CMT-010)", () => {
     expect((await readDetail(number)).json().request.status).toBe("new");
   });
 });
+
+describe("request read receipts", () => {
+  function markRead(number: number, cookies = memberCookies) {
+    return harness.app.inject({ method: "POST", url: `/api/v1/requests/${number}/read`, cookies });
+  }
+
+  it("marks a request read for the whole team, without removing it from the queue", async () => {
+    const { number } = await submit();
+    const statusNotice = vi.spyOn(harness.notifier, "requestStatusChanged");
+    expect((await readDetail(number)).json().request.status).toBe("new");
+    const portal = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/requests/${number}`,
+      cookies: requesterCookies,
+    });
+    expect(portal.json().request.status).toBe("new");
+    const first = await markRead(number);
+    expect(first.statusCode, first.body).toBe(200);
+    expect(first.json().request.status).toBe("read");
+    expect((await readDetail(number, adminCookies)).json().request.status).toBe("read");
+    expect((await markRead(number, adminCookies)).json().request.status).toBe("read");
+    expect(statusNotice).not.toHaveBeenCalled();
+    statusNotice.mockRestore();
+    for (const query of ["", "?status=read"]) {
+      const list = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/requests${query}`,
+        cookies: memberCookies,
+      });
+      expect(list.json().requests).toEqual(
+        expect.arrayContaining([expect.objectContaining({ number, status: "read" })]),
+      );
+    }
+    const unread = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/requests?status=new",
+      cookies: memberCookies,
+    });
+    expect(unread.json().requests.some((row: { number: number }) => row.number === number)).toBe(
+      false,
+    );
+  });
+
+  it("keeps assignment and resolution available, and never overwrites a completed decision", async () => {
+    const { number } = await submit();
+    await markRead(number);
+    const [member] = await harness.db.select().from(users).where(eq(users.email, MEMBER.email));
+    const assigned = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/requests/${number}/assignee`,
+      cookies: memberCookies,
+      payload: { assigneeId: member!.id },
+    });
+    expect(assigned.statusCode, assigned.body).toBe(200);
+    expect(assigned.json().request.status).toBe("read");
+    const resolved = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/requests/${number}/resolve`,
+      cookies: memberCookies,
+      payload: { reply: "Answered by Legal." },
+    });
+    expect(resolved.statusCode, resolved.body).toBe(200);
+    expect((await markRead(number)).json().request.status).toBe("resolved");
+  });
+
+  it("refuses business users, anonymous callers, missing and archived records", async () => {
+    const { id, number } = await submit();
+    expect((await markRead(number, requesterCookies)).statusCode).toBe(403);
+    expect((await markRead(number, {})).statusCode).toBe(401);
+    expect((await readDetail(number)).json().request.status).toBe("new");
+    expect((await markRead(99999999)).statusCode).toBe(404);
+    await harness.db.update(requests).set({ archivedAt: new Date() }).where(eq(requests.id, id));
+    expect((await markRead(number)).statusCode).toBe(404);
+  });
+});

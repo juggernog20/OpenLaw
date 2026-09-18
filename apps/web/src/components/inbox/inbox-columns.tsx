@@ -144,7 +144,7 @@ export const INBOX_CATALOGUE: ColumnCatalogue<InboxRow> = {
   flexColumnKey: "title",
 };
 export function defaultInboxLayout(): Layout {
-  return { ...builtInLayout(INBOX_CATALOGUE), filters: { status: "new" } };
+  return { ...builtInLayout(INBOX_CATALOGUE), filters: { status: "new,read" } };
 }
 
 export function InboxAssignAction({
