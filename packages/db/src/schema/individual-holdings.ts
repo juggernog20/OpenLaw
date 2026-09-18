@@ -40,6 +40,7 @@ export const individualHoldings = pgTable(
     uniqueIndex("individual_holdings_shareholder_idx")
       .on(table.shareholderId)
       .where(sql`${table.shareholderId} is not null`),
+    check("individual_holdings_source_known", sql`${table.source} in ('manual', 'register')`),
     check(
       "individual_holdings_source_shape",
       sql`(${table.source} = 'register') = (${table.shareholderId} is not null)`,

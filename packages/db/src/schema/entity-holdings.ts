@@ -35,6 +35,7 @@ export const entityHoldings = pgTable(
       "entity_holdings_percent_range",
       sql`${table.ownershipPercent} >= 0 and ${table.ownershipPercent} <= 100`,
     ),
+    check("entity_holdings_source_known", sql`${table.source} in ('manual', 'register')`),
     check(
       "entity_holdings_distinct_entities",
       sql`${table.ownerEntityId} <> ${table.ownedEntityId}`,
