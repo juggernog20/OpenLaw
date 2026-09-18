@@ -181,8 +181,7 @@ async function magicLinkDenied(
     });
   return (
     !options.magicLink ||
-    (!(user && user.role !== "business_user") &&
-      !isEmailDomainAllowed(email, settings.allowedEmailDomains))
+    (user ? !!user.archivedAt : !isEmailDomainAllowed(email, settings.allowedEmailDomains))
   );
 }
 

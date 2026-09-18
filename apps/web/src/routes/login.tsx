@@ -34,7 +34,9 @@ export async function loginLoader({ request }: LoaderFunctionArgs) {
     new URL(request.url).pathname === "/portal/login" ? "business" : "legal";
   if (new URL(request.url).searchParams.get("error") === "INVALID_TOKEN")
     return redirect(`/auth/link-expired${group === "business" ? "?portal=1" : ""}`);
-  if (await currentUser()) return redirect(group === "business" ? "/portal" : "/");
+  const user = await currentUser();
+  if (user)
+    return redirect(user.role === "business_user" || group === "business" ? "/portal" : "/");
   if (await needsSetup()) return redirect("/auth/setup");
   const { data, response } = await api.GET("/api/v1/auth/methods");
   if (!data) throw new Error(`The sign-in methods could not be read (${response.status}).`);
@@ -111,7 +113,11 @@ export function LoginPage() {
         void navigate(group === "business" ? "/auth/two-factor?portal=1" : "/auth/two-factor");
         return;
       }
-      void navigate(group === "business" ? "/portal" : "/");
+      const signedInUser = (res.data as { user?: { role?: string } } | null)?.user;
+      void navigate(
+        signedInUser?.role === "business_user" || group === "business" ? "/portal" : "/",
+        { replace: true },
+      );
     } catch {
       setError(networkError(intl));
     } finally {

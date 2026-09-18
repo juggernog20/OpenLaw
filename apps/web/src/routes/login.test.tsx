@@ -9,9 +9,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen } from "@testing-library/react";
+import { RouterContextProvider } from "react-router";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, renderAt, stubApi } from "../testing/helpers";
+import { loginLoader } from "./login";
+import { json, renderAt, stubApi, type ApiState } from "../testing/helpers";
 
 describe("login offers what the auth mode allows", () => {
   it("leads with the password form in built_in mode, magic link alongside", async () => {
@@ -246,4 +248,65 @@ it.each(["/auth/login", "/portal/login"])("describes a refused magic link at %s"
     "This sign-in link could not be used.",
   );
   expect(screen.queryByText("Single sign-on failed. Try again.")).not.toBeInTheDocument();
+});
+
+describe("landing after authentication", () => {
+  const business = {
+    id: "business1",
+    email: "business@example.com",
+    displayName: "Business User",
+    role: "business_user",
+  };
+
+  it("redirects an authenticated Business User directly from Legal sign-in to the Portal", async () => {
+    stubApi({ signedIn: business });
+    const result = await loginLoader({
+      request: new Request("http://localhost/auth/login"),
+      url: new URL("http://localhost/auth/login"),
+      pattern: "/auth/login",
+      params: {},
+      context: new RouterContextProvider(),
+    });
+    expect(result).toBeInstanceOf(Response);
+    expect((result as Response).headers.get("Location")).toBe("/portal");
+  });
+
+  it.each([
+    ["business_user", "/auth/login", "/portal"],
+    ["legal_team_member", "/auth/login", "/"],
+    ["legal_team_member", "/portal/login", "/portal"],
+  ])("sends %s signing in at %s to %s", async (role, path, destination) => {
+    const account = { ...business, role };
+    const state: ApiState = {
+      signedIn: null,
+      extra: (call) => {
+        if (call.url.pathname === "/api/auth/sign-in/email" && call.method === "POST") {
+          state.signedIn = account;
+          return json(200, {
+            token: "test-session",
+            user: { ...account, name: account.displayName },
+          });
+        }
+        return undefined;
+      },
+    };
+    stubApi(state);
+    const { router } = renderAt(path);
+    const destinations: string[] = [];
+    const unsubscribe = router.subscribe((state) => {
+      const next = state.navigation.location?.pathname;
+      if (next) destinations.push(next);
+    });
+    try {
+      const user = userEvent.setup();
+      await user.type(await screen.findByLabelText("Email"), account.email);
+      await user.type(screen.getByLabelText("Password"), "correct-password");
+      await user.click(screen.getByRole("button", { name: "Sign in" }));
+      await waitFor(() => expect(router.state.location.pathname).toBe(destination));
+      expect(destinations[0]).toBe(destination);
+      expect(router.state.historyAction).toBe("REPLACE");
+    } finally {
+      unsubscribe();
+    }
+  });
 });

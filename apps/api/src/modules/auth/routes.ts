@@ -1164,14 +1164,15 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         );
       if (
         options.magicLink &&
-        ((user?.role !== "business_user" && user) ||
-          isEmailDomainAllowed(email, settings.allowedEmailDomains))
+        (user ? !user.archivedAt : isEmailDomainAllowed(email, settings.allowedEmailDomains))
       ) {
         try {
+          const portal =
+            !user || user.role === "business_user" || request.body.group === "business";
           await app.auth.api.signInMagicLink({
             body: {
               email,
-              callbackURL: request.body.group === "business" ? "/portal" : "/",
+              callbackURL: portal ? "/portal" : "/",
               errorCallbackURL:
                 request.body.group === "business"
                   ? "/portal/login?error=link&method=magic-link"

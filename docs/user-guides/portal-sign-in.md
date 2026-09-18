@@ -1,6 +1,6 @@
 # Sign in to the Business Portal
 
-Use the Portal to send Requests to Legal, follow your own conversations, and work on Contracts and Matters shared with you. Ask Legal for your organization's Portal address. You need access to your work email and an email domain the Administrator allows.
+Use the Portal to send Requests to Legal, follow your own conversations, and work on Contracts and Matters shared with you. Ask Legal for your organization's Portal address. You need access to your email and either an existing active account or an email domain the Administrator allows for new accounts.
 
 ## Get a sign-in link
 
@@ -11,9 +11,9 @@ Use the Portal to send Requests to Legal, follow your own conversations, and wor
 5. When **Check your email** appears, open the sign-in email for that address.
 6. Follow the email's link within five minutes.
 
-The link works once. The Portal opens under that email identity and lists that person's Requests. On your first visit, the Portal shows **We need to learn a little about you** before your Requests. Choose your **Department** if the Portal asks for it, then select **Continue**. You can select **Skip** on the later steps, and **Finish** on the last step opens the Portal. Check the signed-in identity before sending a Request, especially on a shared computer. Use [Submit a Request to Legal](submit-request.md) to start one.
+The link works once. The Portal opens under that email identity and lists that person's Requests. On your first visit, the Portal shows **Welcome to your Business Portal** before your Requests. Choose your **Department** if the Portal asks for it, then select **Continue**. You can select **Skip** on the later steps, and **Finish** on the last step opens the Portal. Check the signed-in identity before sending a Request, especially on a shared computer. Use [Submit a Request to Legal](submit-request.md) to start one.
 
-**Check your email** is a neutral response. It does not confirm that an address is eligible or that a message arrived. If no email arrives, check the address and spam folder, then ask Legal to check access and email delivery. An address outside the allowed domains does not receive a link.
+**Check your email** is a neutral response. It does not confirm that an address is eligible or that a message arrived. If no email arrives, check the address and spam folder, then ask Legal to check access and email delivery. An address outside the allowed domains needs an existing active account to receive a link.
 
 ## Replace an expired or used link
 

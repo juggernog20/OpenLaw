@@ -12,7 +12,7 @@ Administrators retain emergency password sign-in when **Email and password** is 
 
 **Require two-factor authentication** applies to every enabled sign-in method in that group, including single sign-on and email magic links. A person without an authenticator app must set one up before they can use OpenLaw, and each new session must prove a code. If you turn it on under **Legal User Authentication** and you have no authenticator, OpenLaw asks you to set one up before you continue. Users set up and manage their own factor from [two-factor authentication](staff-sign-in.md#turn-on-two-factor-authentication) and [account settings](personal-settings.md).
 
-With **Email magic link** on under **Legal User Authentication**, existing Administrator and Legal Team Member accounts can get a sign-in link. The allowed-domain list does not apply to them. Business Users and new Portal entrants need an allowed domain and a working email relay to get a link.
+Existing active accounts can get a sign-in link when **Email magic link** is enabled for their role and outbound email is configured. This includes Business Users invited individually. The allowed-domain list controls new Portal accounts; it does not restrict existing accounts.
 
 ## Configure single sign-on
 
@@ -29,7 +29,7 @@ To update a registered provider, edit its fields and select **Save provider**. L
 
 ## Control Business Portal entry
 
-Add approved entries under **Allowed email domains** using **Add**; remove an entry with its **Remove** control. Use domains such as `helix.example`, not full addresses. Check the saved list. OpenLaw checks this list every time it issues a magic link to a Business User or to an address with no account. Removing a domain, or leaving the list empty, stops everyone on that domain from getting a new sign-in link, including Business Users who signed in before. The list does not limit existing Administrator or Legal Team Member accounts. Tell the affected people before you narrow the list.
+Add approved entries under **Allowed email domains** using **Add**; remove an entry with its **Remove** control. Use domains such as `helix.example`, not full addresses. Check the saved list. OpenLaw checks this list before sending a magic link to an address with no account, and again before creating the account. Removing a domain prevents new accounts on that domain; existing active users can still sign in using the methods enabled for their role. Archive an individual account to stop that person signing in.
 
 Narrowing the list does not by itself end Portal access. For existing accounts, a session someone already holds keeps working, and a link issued before the change still opens the Portal until it is used or expires. A Business User who has a password can still sign in with **Email and password**, and one who has an identity-provider account can still sign in through single sign-on, if **Business Portal Authentication** allows that method. What the list always governs is entry by someone with no account yet. An unapproved address gets no new sign-in link or password setup link. An identity with no account is refused when it first tries to redeem a link, complete password setup, or arrive through the single sign-on callback. Archive an account to prevent new sign-ins and revoke its existing sessions. Use **Sign out user** when the person should sign in again. See [archive and restore a user](organisation-and-users.md#archive-and-restore-a-user) and [change a role or revoke sessions](organisation-and-users.md#change-a-role-or-revoke-sessions).
 

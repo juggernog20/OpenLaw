@@ -297,7 +297,7 @@ describe("magic-link portal auth (POST /api/v1/auth/magic-link)", () => {
     // the inbox, so the plugin's unproven-account revocation must not
     // fire), and the invited role is untouched.
     const cookies = await signInCookies(harness.app, invitee.email, "casey-sets-her-own");
-    const me = await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies });
+    const me = await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies: cookies! });
     expect(me.statusCode, me.body).toBe(200);
     expect(me.json().user).toMatchObject({ email: invitee.email, role: "legal_team_member" });
   });
@@ -355,5 +355,48 @@ it.each(["legal", "business"])(
     } finally {
       await harness.db.update(users).set({ archivedAt: null }).where(eq(users.email, email));
     }
+  },
+);
+
+it.each(["/api/v1/auth/magic-link", "/api/auth/sign-in/magic-link"])(
+  "sends existing Business Users outside the allowlist a link through %s",
+  async (endpoint) => {
+    const email = endpoint.startsWith("/api/v1")
+      ? "invited@external.example"
+      : "existing@external.example";
+    const created = await harness.app.auth.api.createUser({
+      body: { email, name: "Invited colleague", role: "business_user" },
+    });
+    const issued = await harness.app.inject({
+      method: "POST",
+      url: endpoint,
+      payload: endpoint.startsWith("/api/v1")
+        ? { email, group: "legal" }
+        : { email, callbackURL: "/portal" },
+    });
+    expect(issued.statusCode, issued.body).toBe(endpoint.startsWith("/api/v1") ? 202 : 200);
+    const mail = harness.mailer.messagesTo(email);
+    expect(mail).toHaveLength(1);
+    const response = await redeem(linkFrom(mail[0]!.text));
+    expect(new URL(response.headers.location!).pathname).toBe("/portal");
+    const cookies = sessionCookies(response);
+    expect(cookies).not.toBeNull();
+    const me = await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies: cookies! });
+    expect(me.json().user).toMatchObject({ id: created.user.id, role: "business_user" });
+    const staff = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts",
+      cookies: cookies!,
+    });
+    expect(staff.statusCode).toBe(403);
+    await harness.db
+      .update(users)
+      .set({ archivedAt: new Date() })
+      .where(eq(users.id, created.user.id));
+    await harness.app.inject({ method: "POST", url: endpoint, payload: { email } });
+    expect(harness.mailer.messagesTo(email)).toHaveLength(1);
+    const unknown = "unknown@external.example";
+    await harness.app.inject({ method: "POST", url: endpoint, payload: { email: unknown } });
+    expect(harness.mailer.messagesTo(unknown)).toHaveLength(0);
   },
 );

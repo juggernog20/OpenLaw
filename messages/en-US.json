@@ -824,6 +824,12 @@
   "approvals.decisionFinal": {
     "defaultMessage": "A decision is final. To change it, ask for a new approval."
   },
+  "approvals.defaultRestricted": {
+    "defaultMessage": "Only an administrator can choose a different group."
+  },
+  "approvals.defaultUnavailable": {
+    "defaultMessage": "Default group unavailable — contact an administrator"
+  },
   "approvals.empty": {
     "defaultMessage": "No approvals requested on this contract yet."
   },
@@ -3158,6 +3164,9 @@
   "convert.from": {
     "defaultMessage": "{requestType} · submitted by {requester}"
   },
+  "convert.nativeCarried": {
+    "defaultMessage": "Carries into the contract"
+  },
   "convert.needTitle": {
     "defaultMessage": "Name the {module, select, matter {matter} other {contract}}."
   },
@@ -3188,8 +3197,14 @@
   "convert.typeField": {
     "defaultMessage": "{module, select, matter {Matter} other {Contract}} type"
   },
+  "counterparty.picker.addNew": {
+    "defaultMessage": "Add new \"{name}\""
+  },
   "counterparty.picker.create": {
     "defaultMessage": "Create \"{name}\""
+  },
+  "counterparty.picker.failed": {
+    "defaultMessage": "Could not load counterparties. Try searching again."
   },
   "counterparty.picker.listLabel": {
     "defaultMessage": "Counterparty matches"
@@ -5591,6 +5606,12 @@
   "inbox.unassignedTab": {
     "defaultMessage": "Unassigned contracts ({count})"
   },
+  "intake.counterparties.primary": {
+    "defaultMessage": "Primary"
+  },
+  "intake.counterparties.remove": {
+    "defaultMessage": "Remove {name}"
+  },
   "intake.field.requiredMark": {
     "defaultMessage": "(required)"
   },
@@ -6731,14 +6752,104 @@
   "notifications.unreadRow": {
     "defaultMessage": "Unread"
   },
+  "portal.approvals.approve": {
+    "defaultMessage": "Approve"
+  },
+  "portal.approvals.approved": {
+    "defaultMessage": "Approved"
+  },
+  "portal.approvals.back": {
+    "defaultMessage": "All approvals"
+  },
+  "portal.approvals.completed": {
+    "defaultMessage": "Completed"
+  },
+  "portal.approvals.contract": {
+    "defaultMessage": "Contract"
+  },
+  "portal.approvals.description": {
+    "defaultMessage": "Review Contracts awaiting your sign-off and revisit your decisions."
+  },
+  "portal.approvals.document": {
+    "defaultMessage": "Primary document"
+  },
+  "portal.approvals.downloadAction": {
+    "defaultMessage": "Download"
+  },
+  "portal.approvals.downloadToReview": {
+    "defaultMessage": "Download the document to review it"
+  },
+  "portal.approvals.emptyHelp": {
+    "defaultMessage": "When someone asks for your approval, the request will appear here."
+  },
+  "portal.approvals.failed": {
+    "defaultMessage": "Your decision could not be saved. Please try again."
+  },
+  "portal.approvals.more": {
+    "defaultMessage": "Next page"
+  },
+  "portal.approvals.noDocument": {
+    "defaultMessage": "No primary document is available. Contact the requester if you need a document to review."
+  },
+  "portal.approvals.noDocumentTitle": {
+    "defaultMessage": "No document attached"
+  },
+  "portal.approvals.noMatches": {
+    "defaultMessage": "No matching approvals"
+  },
+  "portal.approvals.noneCompleted": {
+    "defaultMessage": "No completed approvals yet"
+  },
+  "portal.approvals.nonePending": {
+    "defaultMessage": "You're all caught up"
+  },
+  "portal.approvals.note": {
+    "defaultMessage": "Note (optional)"
+  },
+  "portal.approvals.pending": {
+    "defaultMessage": "Pending"
+  },
+  "portal.approvals.preparing": {
+    "defaultMessage": "Preparing document preview"
+  },
+  "portal.approvals.reject": {
+    "defaultMessage": "Reject"
+  },
+  "portal.approvals.rejected": {
+    "defaultMessage": "Rejected"
+  },
+  "portal.approvals.requestDetails": {
+    "defaultMessage": "Approval request"
+  },
+  "portal.approvals.requestedDate": {
+    "defaultMessage": "Requested"
+  },
+  "portal.approvals.requester": {
+    "defaultMessage": "Requested by"
+  },
+  "portal.approvals.search": {
+    "defaultMessage": "Search approvals"
+  },
+  "portal.approvals.searchAction": {
+    "defaultMessage": "Search"
+  },
+  "portal.approvals.status": {
+    "defaultMessage": "Status"
+  },
+  "portal.approvals.title": {
+    "defaultMessage": "Your approvals"
+  },
+  "portal.approvals.trySearch": {
+    "defaultMessage": "Try a different Contract title or requester name."
+  },
+  "portal.approvals.yourDecision": {
+    "defaultMessage": "Your decision"
+  },
   "portal.autoDocs.acknowledgeContinue": {
     "defaultMessage": "Acknowledge and continue"
   },
   "portal.autoDocs.acknowledgeStatement": {
     "defaultMessage": "I acknowledge this statement."
-  },
-  "portal.autoDocs.available": {
-    "defaultMessage": "Available Auto-Docs"
   },
   "portal.autoDocs.back": {
     "defaultMessage": "Back to Auto-Docs"
@@ -6746,14 +6857,32 @@
   "portal.autoDocs.beforeGenerate": {
     "defaultMessage": "Before you generate"
   },
+  "portal.autoDocs.browseTemplates": {
+    "defaultMessage": "Browse templates"
+  },
   "portal.autoDocs.confirmation": {
     "defaultMessage": "Your generated document"
+  },
+  "portal.autoDocs.created": {
+    "defaultMessage": "Created"
+  },
+  "portal.autoDocs.description": {
+    "defaultMessage": "Description"
+  },
+  "portal.autoDocs.document": {
+    "defaultMessage": "Document"
+  },
+  "portal.autoDocs.downloads": {
+    "defaultMessage": "Downloads"
   },
   "portal.autoDocs.empty": {
     "defaultMessage": "No Auto-Docs are available to you yet."
   },
-  "portal.autoDocs.history": {
-    "defaultMessage": "Your Generations"
+  "portal.autoDocs.emptyTitle": {
+    "defaultMessage": "Your template library is on its way"
+  },
+  "portal.autoDocs.format": {
+    "defaultMessage": "Format"
   },
   "portal.autoDocs.historyEmpty": {
     "defaultMessage": "Your generated documents will appear here."
@@ -6761,11 +6890,38 @@
   "portal.autoDocs.historyFailed": {
     "defaultMessage": "Could not read more Generations. Try again."
   },
-  "portal.autoDocs.intro": {
-    "defaultMessage": "Generate documents using the words approved by Legal."
+  "portal.autoDocs.library": {
+    "defaultMessage": "Template library"
+  },
+  "portal.autoDocs.libraryIntro": {
+    "defaultMessage": "Create documents from Legal's approved templates, then find and download your finished documents here."
+  },
+  "portal.autoDocs.noDocuments": {
+    "defaultMessage": "No documents generated yet"
+  },
+  "portal.autoDocs.noMatches": {
+    "defaultMessage": "No matching templates"
+  },
+  "portal.autoDocs.searchTemplates": {
+    "defaultMessage": "Search templates"
+  },
+  "portal.autoDocs.status": {
+    "defaultMessage": "Status"
   },
   "portal.autoDocs.statusFailed": {
     "defaultMessage": "Could not refresh the document status. Try again."
+  },
+  "portal.autoDocs.template": {
+    "defaultMessage": "Template"
+  },
+  "portal.autoDocs.trySearch": {
+    "defaultMessage": "Try a different template name or description."
+  },
+  "portal.autoDocs.unavailable": {
+    "defaultMessage": "Unavailable"
+  },
+  "portal.autoDocs.yourDocuments": {
+    "defaultMessage": "Your documents"
   },
   "portal.brand": {
     "defaultMessage": "OpenLaw"
@@ -6965,9 +7121,6 @@
   "portal.form.fieldRequired": {
     "defaultMessage": "{field} is required."
   },
-  "portal.form.fieldsHeading": {
-    "defaultMessage": "Details for {requestType}"
-  },
   "portal.form.footerNote": {
     "defaultMessage": "You'll get email updates and can track progress here."
   },
@@ -7145,9 +7298,6 @@
   "portal.myRequests.empty": {
     "defaultMessage": "You have not asked Legal for anything yet."
   },
-  "portal.myRequests.emptyPointer": {
-    "defaultMessage": "Pick a request type to make your first request."
-  },
   "portal.myRequests.heading": {
     "defaultMessage": "Your requests"
   },
@@ -7156,6 +7306,9 @@
   },
   "portal.navigation": {
     "defaultMessage": "Portal"
+  },
+  "portal.navigation.approvals": {
+    "defaultMessage": "Approvals"
   },
   "portal.navigation.autoDocs": {
     "defaultMessage": "Auto-Docs"
@@ -7187,17 +7340,26 @@
   "portal.onboarding.finish": {
     "defaultMessage": "Finish"
   },
+  "portal.onboarding.introduction": {
+    "defaultMessage": "Set up your profile and choose how you’d like to work with Legal."
+  },
   "portal.onboarding.notifications": {
     "defaultMessage": "Notifications"
   },
   "portal.onboarding.photo": {
     "defaultMessage": "Photo"
   },
+  "portal.onboarding.photo.choose": {
+    "defaultMessage": "Choose photo"
+  },
   "portal.onboarding.photo.hint": {
     "defaultMessage": "PNG or JPG, up to 1 MB."
   },
   "portal.onboarding.photo.invalid": {
     "defaultMessage": "Choose a PNG or JPG photo no larger than 1 MB."
+  },
+  "portal.onboarding.photo.remove": {
+    "defaultMessage": "Remove photo"
   },
   "portal.onboarding.profile": {
     "defaultMessage": "Name and photo"
@@ -7212,7 +7374,7 @@
     "defaultMessage": "Theme"
   },
   "portal.onboarding.title": {
-    "defaultMessage": "We need to learn a little about you"
+    "defaultMessage": "Welcome to your Business Portal"
   },
   "portal.onboarding.tour": {
     "defaultMessage": "A short tour"
@@ -8042,6 +8204,42 @@
   "settings.appearance.theme": {
     "defaultMessage": "Theme"
   },
+  "settings.approvalDefault.archived": {
+    "defaultMessage": "{name} (archived)"
+  },
+  "settings.approvalDefault.failed": {
+    "defaultMessage": "The default approver group could not be saved or loaded. Please try again."
+  },
+  "settings.approvalDefault.help": {
+    "defaultMessage": "Applies to new Contracts of this type. Approval starts only when someone requests it."
+  },
+  "settings.approvalDefault.label": {
+    "defaultMessage": "Approver group"
+  },
+  "settings.approvalDefault.none": {
+    "defaultMessage": "No default group"
+  },
+  "settings.approvalDefault.title": {
+    "defaultMessage": "Default approver group"
+  },
+  "settings.approvalPolicy.admin": {
+    "defaultMessage": "Administrators only"
+  },
+  "settings.approvalPolicy.failed": {
+    "defaultMessage": "The approval setting could not be saved or loaded. Please try again."
+  },
+  "settings.approvalPolicy.label": {
+    "defaultMessage": "Who can override a default approver group?"
+  },
+  "settings.approvalPolicy.legal": {
+    "defaultMessage": "Legal team members and administrators"
+  },
+  "settings.approvalPolicy.loading": {
+    "defaultMessage": "Loading…"
+  },
+  "settings.approvalPolicy.title": {
+    "defaultMessage": "Approval permissions"
+  },
   "settings.approverGroups.add": {
     "defaultMessage": "Add group"
   },
@@ -8106,7 +8304,7 @@
     "defaultMessage": "The member list could not be saved."
   },
   "settings.approverGroups.membersHelp": {
-    "defaultMessage": "Only Administrators and Legal team members can approve a contract."
+    "defaultMessage": "Any active user can approve. Business users review requests in the Legal portal."
   },
   "settings.approverGroups.membersLabel": {
     "defaultMessage": "Members"
@@ -8118,7 +8316,7 @@
     "defaultMessage": "Name the group."
   },
   "settings.approverGroups.noCandidates": {
-    "defaultMessage": "No Administrator or Legal team member is available yet."
+    "defaultMessage": "No active user is available yet."
   },
   "settings.approverGroups.pageTitle": {
     "defaultMessage": "Approver groups"
@@ -8184,7 +8382,7 @@
     "defaultMessage": "Single sign-on (SSO)"
   },
   "settings.auth.noDomains": {
-    "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
+    "defaultMessage": "No domains allowed yet. New users must be invited individually."
   },
   "settings.auth.portal": {
     "defaultMessage": "Business Portal Authentication"
@@ -8234,8 +8432,11 @@
   "settings.contractFields.addTitle": {
     "defaultMessage": "Add field"
   },
+  "settings.contractFields.aiPromptExample": {
+    "defaultMessage": "Example: Extract the notice period, in days, required to terminate without cause. Exclude notice periods for breach."
+  },
   "settings.contractFields.aiPromptHelp": {
-    "defaultMessage": "Contract analysis extracts this field with the prompt. Leave empty to skip it."
+    "defaultMessage": "Describe what AI should extract for this field, including any distinctions it should make. Leave blank to exclude this field from Contract analysis."
   },
   "settings.contractFields.aiPromptLabel": {
     "defaultMessage": "AI prompt"
@@ -8439,7 +8640,7 @@
     "defaultMessage": "{name} attached."
   },
   "settings.contractTypeEditor.attachedFields": {
-    "defaultMessage": "Attached fields"
+    "defaultMessage": "Custom Fields"
   },
   "settings.contractTypeEditor.description": {
     "defaultMessage": "Description"
@@ -8936,6 +9137,15 @@
   "settings.field.saving": {
     "defaultMessage": "Saving…"
   },
+  "settings.fields.catalogLabel": {
+    "defaultMessage": "Field catalog"
+  },
+  "settings.fields.contractCatalog": {
+    "defaultMessage": "Contract fields"
+  },
+  "settings.fields.counterpartyLookup": {
+    "defaultMessage": "Counterparty lookup"
+  },
   "settings.fields.custom": {
     "defaultMessage": "Custom Fields"
   },
@@ -9027,7 +9237,10 @@
     "defaultMessage": "{name}: built-in field, read-only here"
   },
   "settings.fields.defaults": {
-    "defaultMessage": "Default fields"
+    "defaultMessage": "Default Fields"
+  },
+  "settings.fields.matterCatalog": {
+    "defaultMessage": "Matter fields"
   },
   "settings.general.locale": {
     "defaultMessage": "Default locale"
@@ -9591,7 +9804,7 @@
     "defaultMessage": "{name} attached."
   },
   "settings.matterTypeEditor.attachedFields": {
-    "defaultMessage": "Attached fields"
+    "defaultMessage": "Custom Fields"
   },
   "settings.matterTypeEditor.description": {
     "defaultMessage": "Description"
@@ -9914,8 +10127,20 @@
   "settings.profile.photo": {
     "defaultMessage": "Profile photo"
   },
+  "settings.profile.photo.error.read": {
+    "defaultMessage": "This photo could not be read. Try another JPG or PNG."
+  },
+  "settings.profile.photo.error.size": {
+    "defaultMessage": "Choose a photo smaller than 10 MB."
+  },
+  "settings.profile.photo.error.type": {
+    "defaultMessage": "Choose a JPG or PNG photo."
+  },
+  "settings.profile.photo.error.upload": {
+    "defaultMessage": "Your photo could not be uploaded. Try again."
+  },
   "settings.profile.photo.hint": {
-    "defaultMessage": "JPG or PNG, 1 MB max."
+    "defaultMessage": "JPG or PNG, up to 10 MB. Resized automatically."
   },
   "settings.profile.reenroll": {
     "defaultMessage": "Re-enroll"
@@ -10083,7 +10308,7 @@
     "defaultMessage": "Long text"
   },
   "settings.requestTypeEditor.basicLocked": {
-    "defaultMessage": "{name} is always collected and can't be changed."
+    "defaultMessage": "{name} is always collected. You can change its position."
   },
   "settings.requestTypeEditor.basicTitle": {
     "defaultMessage": "Title"
@@ -10348,6 +10573,9 @@
   },
   "settings.typeEditor.createdNotAttached": {
     "defaultMessage": "{name} was created but could not be attached. Select it from Attach field to try again. {detail}"
+  },
+  "settings.typeEditor.defaultFieldPrefix": {
+    "defaultMessage": "Default ·"
   },
   "settings.typeEditor.noMatchingFields": {
     "defaultMessage": "No matching fields."

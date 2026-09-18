@@ -436,7 +436,7 @@ export function SettingsAuthenticationPage() {
             <p className="text-sm text-muted">
               <FormattedMessage
                 id="settings.auth.noDomains"
-                defaultMessage="No domains allowed yet. Magic-link sign-in is unavailable."
+                defaultMessage="No domains allowed yet. New users must be invited individually."
               />
             </p>
           )}
