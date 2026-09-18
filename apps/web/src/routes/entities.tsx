@@ -839,6 +839,7 @@ function ComplianceCalendar({
               const params = new URLSearchParams();
               if (filters.q) params.set("q", filters.q);
               if (initialView === "month") params.set("calendar", "month");
+              if (initialMonth) params.set("month", initialMonth);
               for (const [key, target] of [
                 ["entity", "entity"],
                 ["assignee", "assignee"],

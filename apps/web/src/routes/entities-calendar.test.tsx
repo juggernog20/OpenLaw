@@ -272,6 +272,25 @@ describe("the Entities compliance calendar", () => {
     expect(await screen.findByRole("heading", { name: "September 2026" })).toBeInTheDocument();
   });
 
+  it("keeps the month a link opened when a filter changes", async () => {
+    const queries: URLSearchParams[] = [];
+    stubApi({ signedIn: MEMBER, extra: calendarApi(obligations, queries) });
+    const { router } = renderAt("/entities?calendar=month&month=2026-07");
+    expect(await screen.findByRole("heading", { name: "July 2026" })).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Show completed",
+      }),
+    );
+    await waitFor(() => expect(queries.at(-1)?.get("includeCompleted")).toBe("true"));
+    const search = new URLSearchParams(router.state.location.search);
+    expect(search.get("month")).toBe("2026-07");
+    expect(search.get("calendar")).toBe("month");
+    expect(await screen.findByRole("heading", { name: "July 2026" })).toBeInTheDocument();
+  });
+
   it("distinguishes a blank calendar from filters that match nothing", async () => {
     stubApi({ signedIn: MEMBER, extra: calendarApi([]) });
     const first = renderAt("/entities");
