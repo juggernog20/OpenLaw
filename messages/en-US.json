@@ -4856,11 +4856,20 @@
   "entities.ownership.entityLabel": {
     "defaultMessage": "Entity"
   },
+  "entities.ownership.fullName": {
+    "defaultMessage": "Full name"
+  },
+  "entities.ownership.individual": {
+    "defaultMessage": "Individual"
+  },
   "entities.ownership.matches": {
     "defaultMessage": "Entity matches"
   },
+  "entities.ownership.nameRequired": {
+    "defaultMessage": "Enter the individual's name."
+  },
   "entities.ownership.noOwners": {
-    "defaultMessage": "No Entity owns this Entity."
+    "defaultMessage": "No owners recorded."
   },
   "entities.ownership.noneOwned": {
     "defaultMessage": "This Entity owns no other Entities."
@@ -4870,6 +4879,9 @@
   },
   "entities.ownership.owned": {
     "defaultMessage": "Owned Entities"
+  },
+  "entities.ownership.ownerType": {
+    "defaultMessage": "Owner type"
   },
   "entities.ownership.owners": {
     "defaultMessage": "Owners"

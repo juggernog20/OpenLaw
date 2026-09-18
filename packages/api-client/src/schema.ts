@@ -33742,8 +33742,9 @@ export interface operations {
                   legalName: string;
                   type: string;
                   jurisdiction: string | null;
+                  status: ("active" | "dormant" | "dissolved" | "divested") | null;
                   /** @enum {string} */
-                  status: "active" | "dormant" | "dissolved" | "divested";
+                  kind?: "individual";
                   primaryOwnerId: string | null;
                 }
               | {
@@ -33797,6 +33798,8 @@ export interface operations {
                     restricted: false;
                     id: string;
                     legalName: string;
+                    /** @enum {string} */
+                    kind?: "individual";
                   }
                 | {
                     /** @enum {boolean} */
@@ -33808,6 +33811,8 @@ export interface operations {
                     restricted: false;
                     id: string;
                     legalName: string;
+                    /** @enum {string} */
+                    kind?: "individual";
                   }
                 | {
                     /** @enum {boolean} */
@@ -33826,6 +33831,8 @@ export interface operations {
                     restricted: false;
                     id: string;
                     legalName: string;
+                    /** @enum {string} */
+                    kind?: "individual";
                   }
                 | {
                     /** @enum {boolean} */
@@ -33837,6 +33844,8 @@ export interface operations {
                     restricted: false;
                     id: string;
                     legalName: string;
+                    /** @enum {string} */
+                    kind?: "individual";
                   }
                 | {
                     /** @enum {boolean} */
@@ -33880,12 +33889,19 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          /** @enum {string} */
-          direction: "owner" | "owned";
-          relatedEntityId: string;
-          ownershipPercent: number;
-        };
+        "application/json":
+          | {
+              /** @enum {string} */
+              direction: "owner" | "owned";
+              relatedEntityId: string;
+              ownershipPercent: number;
+            }
+          | {
+              /** @enum {string} */
+              direction: "owner";
+              individualName: string;
+              ownershipPercent: number;
+            };
       };
     };
     responses: {
@@ -33903,6 +33919,8 @@ export interface operations {
                     restricted: false;
                     id: string;
                     legalName: string;
+                    /** @enum {string} */
+                    kind?: "individual";
                   }
                 | {
                     /** @enum {boolean} */
@@ -33914,6 +33932,8 @@ export interface operations {
                     restricted: false;
                     id: string;
                     legalName: string;
+                    /** @enum {string} */
+                    kind?: "individual";
                   }
                 | {
                     /** @enum {boolean} */
@@ -34008,6 +34028,8 @@ export interface operations {
                     restricted: false;
                     id: string;
                     legalName: string;
+                    /** @enum {string} */
+                    kind?: "individual";
                   }
                 | {
                     /** @enum {boolean} */
@@ -34019,6 +34041,8 @@ export interface operations {
                     restricted: false;
                     id: string;
                     legalName: string;
+                    /** @enum {string} */
+                    kind?: "individual";
                   }
                 | {
                     /** @enum {boolean} */

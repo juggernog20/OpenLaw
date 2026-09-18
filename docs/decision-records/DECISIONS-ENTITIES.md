@@ -65,6 +65,10 @@ Holdings now read and write from either Entity, with graph-wide transaction lock
 
 The web chart uses a dependency-free SVG layout. A compact layered forest places leaf nodes in horizontal slots and centers each primary owner over its children. Entities without Holdings occupy a final row. Secondary Holdings use dashed curves. The SVG supports pointer drag, wheel zoom, arrow-key pan, keyboard zoom, and fit-to-window.
 
+### Individual owner addendum (2026-09-18)
+
+Add Holding now offers Entity or Individual. Entity keeps the registry lookup; Individual collects a name and direct ownership percentage without creating an Entity or user account. Migration 0146 stores individual holdings separately, scoped to the owned Entity. Names are not identity keys and matching names are not merged. Individuals appear as terminal owners in the chart and exports, and contribute to the combined ownership-total warning. Their access follows the owned Entity, including for Administrators. This replaces ENT-003's exclusion of individual owners; it does not introduce a separate beneficial-owner register or automatic beneficial-ownership classification.
+
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
 **Amended 10 September 2026:** the DD-014 administrator bypass is removed. Confidential Entities require a grant for administrators too. New Entity creators receive a recorded grant; explicit grantees can manage access. The DD-014 amendment in [DECISIONS.md](DECISIONS.md) supersedes the original administrator exceptions below.

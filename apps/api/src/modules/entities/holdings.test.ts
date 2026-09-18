@@ -439,3 +439,171 @@ it("uses the largest Holding as the primary owner even below fifty percent", asy
     expect.objectContaining({ id: child.id, primaryOwnerId: largest.id }),
   );
 });
+
+it("records individual owners, includes them in totals and the chart, and supports update/removal", async () => {
+  const company = await newEntity("Individual-owned company");
+  const corporateOwner = await newEntity("Corporate co-owner");
+  expect((await createHolding(company.id, "owner", corporateOwner.id, 60)).statusCode).toBe(201);
+  const created = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${company.id}/holdings`,
+    cookies: memberCookies,
+    payload: { direction: "owner", individualName: "  Alex Morgan  ", ownershipPercent: 50 },
+  });
+  expect(created.statusCode, created.body).toBe(201);
+  const owner = created.json().holding.owner;
+  expect(owner).toMatchObject({ kind: "individual", legalName: "Alex Morgan", restricted: false });
+  expect(created.json().warnings).toEqual([expect.objectContaining({ totalPercent: 110 })]);
+  const read = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/entities/${company.id}/holdings`,
+    cookies: memberCookies,
+  });
+  expect(read.json().owners).toContainEqual(expect.objectContaining({ owner }));
+  const chart = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/entities/chart",
+    cookies: memberCookies,
+  });
+  expect(chart.json().nodes).toContainEqual(
+    expect.objectContaining({
+      id: owner.id,
+      kind: "individual",
+      legalName: "Alex Morgan",
+      status: null,
+    }),
+  );
+  expect(chart.json().edges).toContainEqual({
+    ownerEntityId: owner.id,
+    ownedEntityId: company.id,
+    ownershipPercent: 50,
+  });
+  const url = `/api/v1/entities/${company.id}/holdings/${encodeURIComponent(owner.id)}`;
+  const update = await harness.app.inject({
+    method: "PATCH",
+    url,
+    cookies: memberCookies,
+    payload: { ownershipPercent: 40 },
+  });
+  expect(update.statusCode, update.body).toBe(200);
+  expect(update.json().warnings).toEqual([]);
+  expect(update.json().holding.ownershipPercent).toBe(40);
+  const removed = await harness.app.inject({ method: "DELETE", url, cookies: memberCookies });
+  expect(removed.statusCode).toBe(204);
+  const events = await harness.db
+    .select()
+    .from(activityLog)
+    .where(
+      and(
+        eq(activityLog.entityId, company.id),
+        inArray(activityLog.action, [
+          "entity_holding.created",
+          "entity_holding.updated",
+          "entity_holding.deleted",
+        ]),
+      ),
+    );
+  expect(
+    events.filter((event) => (event.payload as { ownerName?: string }).ownerName === "Alex Morgan"),
+  ).toHaveLength(3);
+  const after = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/entities/chart",
+    cookies: memberCookies,
+  });
+  expect(after.body).not.toContain(owner.id);
+});
+
+it("protects individual names behind the owned Entity's access and archival rules", async () => {
+  const company = await newEntity("Private person holding", null, "active", adminCookies);
+  const url = `/api/v1/entities/${company.id}/holdings`;
+  const create = await harness.app.inject({
+    method: "POST",
+    url,
+    cookies: adminCookies,
+    payload: { direction: "owner", individualName: "Private Person", ownershipPercent: 100 },
+  });
+  expect(create.statusCode, create.body).toBe(201);
+  const personId = create.json().holding.owner.id;
+  expect(
+    (
+      await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/entities/${company.id}`,
+        cookies: adminCookies,
+        payload: { isConfidential: true },
+      })
+    ).statusCode,
+  ).toBe(200);
+  const chart = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/entities/chart",
+    cookies: memberCookies,
+  });
+  expect(chart.body).not.toContain("Private Person");
+  expect(chart.body).not.toContain(personId);
+  for (const method of ["GET", "POST", "PATCH", "DELETE"] as const) {
+    const res = await harness.app.inject({
+      method,
+      url: method === "PATCH" || method === "DELETE" ? `${url}/${personId}` : url,
+      cookies: memberCookies,
+      ...(method === "POST"
+        ? { payload: { direction: "owner", individualName: "Intruder", ownershipPercent: 1 } }
+        : method === "PATCH"
+          ? { payload: { ownershipPercent: 1 } }
+          : {}),
+    });
+    expect(res.statusCode, res.body).toBe(404);
+  }
+  expect(
+    (
+      await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/entities/${company.id}/archive`,
+        cookies: adminCookies,
+        payload: {},
+      })
+    ).statusCode,
+  ).toBe(200);
+  expect(
+    (
+      await harness.app.inject({
+        method: "PATCH",
+        url: `${url}/${personId}`,
+        cookies: adminCookies,
+        payload: { ownershipPercent: 10 },
+      })
+    ).statusCode,
+  ).toBe(409);
+});
+
+it("rejects invalid individual holdings and Business User writes", async () => {
+  const company = await newEntity("Individual validation");
+  const url = `/api/v1/entities/${company.id}/holdings`;
+  for (const payload of [
+    { direction: "owner", individualName: "  ", ownershipPercent: 10 },
+    { direction: "owned", individualName: "Person", ownershipPercent: 10 },
+    { direction: "owner", individualName: "Person", ownershipPercent: 101 },
+    { direction: "owner", individualName: "Person", ownershipPercent: -1 },
+    {
+      direction: "owner",
+      individualName: "Person",
+      relatedEntityId: company.id,
+      ownershipPercent: 10,
+    },
+  ])
+    expect(
+      (await harness.app.inject({ method: "POST", url, cookies: memberCookies, payload }))
+        .statusCode,
+    ).toBe(400);
+  expect(
+    (
+      await harness.app.inject({
+        method: "POST",
+        url,
+        cookies: contributorCookies,
+        payload: { direction: "owner", individualName: "Person", ownershipPercent: 10 },
+      })
+    ).statusCode,
+  ).toBe(403);
+});

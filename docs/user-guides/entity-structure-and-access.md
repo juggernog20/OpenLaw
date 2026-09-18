@@ -22,7 +22,7 @@ The card has one **Currency**, and it applies only to the par value. When you ch
 3. Drag to pan or use the mouse wheel to zoom. With the chart focused, use arrow keys to pan, plus or minus to zoom, and zero to fit the chart. **Fit to window** also resets the view.
 4. Click an Entity once, or focus it and press Space, to highlight its ownership chain. Select **Clear highlight** or press Escape to remove the highlight. Double-click an Entity, or focus it and press Enter, to open it. A **Confidential Entity** box is an Entity you cannot reach. It shows no name and does not open.
 
-The chart is a view of recorded Holdings between your own Entities. It does not include external shareholders. Its primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission. A warning about ownership totals over 100% means the entries need review; it does not mean they failed to save.
+The chart shows recorded Holdings between registered Entities and their individual owners. Individuals appear by name with the label **Individual**. Opening an individual takes you to the associated Entity’s Ownership tab. Individual names follow that Entity’s access restrictions and appear in chart exports. Its primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission. A warning about ownership totals over 100% means the entries need review; it does not mean they failed to save.
 
 ## Read linked Contracts and Matters
 
