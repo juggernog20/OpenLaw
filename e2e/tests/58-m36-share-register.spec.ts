@@ -167,10 +167,11 @@ test.describe.serial("M36 deployer journey", () => {
         .locator("..")
         .locator("..");
       await expect(main(page).getByText(/derived from 4 register entries/)).toBeVisible();
-      const row = (name: string) => members.getByRole("row").filter({ hasText: name });
+      const row = (name: string | RegExp) => members.getByRole("row").filter({ hasText: name });
       await expect(row(OWNER_NAME)).toContainText("700");
       await expect(row(INDIVIDUAL_NAME)).toContainText("250");
-      await expect(row("Treasury")).toContainText("50");
+      // Case-sensitive: the class total row says "in treasury" too.
+      await expect(row(/^Treasury/)).toContainText("50");
       await expect(members.getByText("Total Ordinary")).toBeVisible();
 
       // Between the transfer and the buyback: the founder still held 300.
@@ -187,7 +188,8 @@ test.describe.serial("M36 deployer journey", () => {
         main(page).getByRole("heading", { name: "Register of members", exact: true }),
       ).toBeVisible();
 
-      // The owner Entity's Holdings card shows the projected 70%, read-only.
+      // The owner Entity's Holdings card shows the projected share, read-only:
+      // 700 of the 950 outstanding (the 50 in treasury do not count).
       await page.goto(`/entities/${owner.id}/ownership`);
       const holdings = main(page)
         .getByRole("heading", { name: "Holdings in other Entities" })
@@ -195,7 +197,7 @@ test.describe.serial("M36 deployer journey", () => {
         .locator("..");
       await expect(holdings.getByRole("link", { name: ISSUER_NAME })).toBeVisible();
       await expect(holdings.getByRole("link", { name: "From register" })).toBeVisible();
-      await expect(holdings.getByLabel(`${ISSUER_NAME} ownership percent`)).toHaveValue("70");
+      await expect(holdings.getByLabel(`${ISSUER_NAME} ownership percent`)).toHaveValue("73.68");
       await expect(holdings.getByLabel(`${ISSUER_NAME} ownership percent`)).toBeDisabled();
 
       // The members CSV downloads with the columns the tab shows.
