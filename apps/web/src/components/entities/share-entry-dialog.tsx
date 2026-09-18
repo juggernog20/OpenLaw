@@ -115,12 +115,23 @@ export function ShareEntryDialog({
     void api
       .GET("/api/v1/entities/{id}/share-register", { params: { path: { id: entityId } } })
       .then((result) => {
-        if (!cancelledRead && result.data) setToday(result.data);
+        if (cancelledRead) return;
+        if (result.data) setToday(result.data);
+        else throw new Error("unreadable");
+      })
+      .catch(() => {
+        if (cancelledRead) return;
+        setError(
+          intl.formatMessage({
+            id: "entities.register.entry.liveReadError",
+            defaultMessage: "Today's certificates could not be read. Close and try again.",
+          }),
+        );
       });
     return () => {
       cancelledRead = true;
     };
-  }, [entityId, today]);
+  }, [entityId, today, intl]);
 
   const holders = knownHolders(today ?? register);
   const sides = SIDES[kind];
@@ -789,7 +800,7 @@ export function ShareEntryDialog({
                       ])
                     }
                   >
-                    <Plus size={14} aria-hidden="true" />
+                    <Plus size={16} aria-hidden="true" />
                     <FormattedMessage
                       id="entities.register.entry.addCertificate"
                       defaultMessage="Issue certificate"

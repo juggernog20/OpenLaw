@@ -132,7 +132,7 @@ export function ShareClassesDialog({
       parValue = toMinorUnits(amount, draft.parValueCurrency);
     }
     const votes = Number(draft.votesPerShare);
-    if (!Number.isFinite(votes) || votes < 0) {
+    if (!draft.votesPerShare.trim() || !Number.isFinite(votes) || votes < 0) {
       setError(
         intl.formatMessage({
           id: "entities.register.classes.votesInvalid",
