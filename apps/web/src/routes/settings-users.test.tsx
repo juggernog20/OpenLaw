@@ -269,6 +269,35 @@ describe("the Users pane (#65)", () => {
     expect(screen.getByRole("dialog", { name: "Invite user" })).toBeInTheDocument();
   });
 
+  it("shows in the dialog that the instance cannot send email (#889)", async () => {
+    const user = userEvent.setup();
+    const happy = usersApi(newCalls());
+    const detail =
+      "The invite was not sent: this instance cannot send email. " +
+      "Set up outbound email in Settings → Advanced → Outbound email, " +
+      "or set SMTP_URL and SMTP_FROM in the environment.";
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/auth/invites" && call.method === "POST") {
+          return problem(409, detail);
+        }
+        return happy(call);
+      },
+    });
+    renderAt("/settings/users");
+
+    await user.click(await screen.findByRole("button", { name: "Invite user" }));
+    const dialog = await screen.findByRole("dialog", { name: "Invite user" });
+    await user.type(within(dialog).getByLabelText("Display name"), "Ghost Invite");
+    await user.type(within(dialog).getByLabelText("Email"), "ghost@example.com");
+    await user.click(within(dialog).getByRole("button", { name: "Send invite" }));
+
+    expect(await within(dialog).findByText(detail)).toBeVisible();
+    // No row was created, so the list must not pretend one was.
+    expect(screen.queryByText("ghost@example.com")).not.toBeInTheDocument();
+  });
+
   it("resends an invite from its row and reports the DES-017 micro-state", async () => {
     const user = userEvent.setup();
     const calls = newCalls();
