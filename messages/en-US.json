@@ -824,6 +824,12 @@
   "approvals.decisionFinal": {
     "defaultMessage": "A decision is final. To change it, ask for a new approval."
   },
+  "approvals.defaultRestricted": {
+    "defaultMessage": "Only an administrator can choose a different group."
+  },
+  "approvals.defaultUnavailable": {
+    "defaultMessage": "Default group unavailable — contact an administrator"
+  },
   "approvals.empty": {
     "defaultMessage": "No approvals requested on this contract yet."
   },
@@ -8042,6 +8048,42 @@
   "settings.appearance.theme": {
     "defaultMessage": "Theme"
   },
+  "settings.approvalDefault.archived": {
+    "defaultMessage": "{name} (archived)"
+  },
+  "settings.approvalDefault.failed": {
+    "defaultMessage": "The default approver group could not be saved or loaded. Please try again."
+  },
+  "settings.approvalDefault.help": {
+    "defaultMessage": "Applies to new Contracts of this type. Approval starts only when someone requests it."
+  },
+  "settings.approvalDefault.label": {
+    "defaultMessage": "Approver group"
+  },
+  "settings.approvalDefault.none": {
+    "defaultMessage": "No default group"
+  },
+  "settings.approvalDefault.title": {
+    "defaultMessage": "Default approver group"
+  },
+  "settings.approvalPolicy.admin": {
+    "defaultMessage": "Administrators only"
+  },
+  "settings.approvalPolicy.failed": {
+    "defaultMessage": "The approval setting could not be saved or loaded. Please try again."
+  },
+  "settings.approvalPolicy.label": {
+    "defaultMessage": "Who can override a default approver group?"
+  },
+  "settings.approvalPolicy.legal": {
+    "defaultMessage": "Legal team members and administrators"
+  },
+  "settings.approvalPolicy.loading": {
+    "defaultMessage": "Loading…"
+  },
+  "settings.approvalPolicy.title": {
+    "defaultMessage": "Approval permissions"
+  },
   "settings.approverGroups.add": {
     "defaultMessage": "Add group"
   },
@@ -10948,6 +10990,9 @@
   },
   "welcome.email.field.host": {
     "defaultMessage": "SMTP server"
+  },
+  "welcome.email.field.hostPlaceholder": {
+    "defaultMessage": "smtp.example.com"
   },
   "welcome.email.field.password": {
     "defaultMessage": "SMTP password"
