@@ -52,6 +52,14 @@ describe("password reset", () => {
     expect((await me(first)).statusCode).toBe(200);
     expect((await me(second)).statusCode).toBe(200);
 
+    // Its own token, so the test does not read the email the test
+    // before it left behind.
+    const asked = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/password-setup",
+      payload: { email: TEST_ADMIN.email },
+    });
+    expect(asked.statusCode, asked.body).toBe(202);
     const token = tokenFrom(harness.mailer.messagesTo(TEST_ADMIN.email).at(-1)!.text);
     const newPassword = "a-brand-new-password-1";
     const reset = await harness.app.inject({

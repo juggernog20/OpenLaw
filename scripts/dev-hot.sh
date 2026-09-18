@@ -184,7 +184,7 @@ if ! grep -q '^SETUP_TOKEN=.' .env; then
   token="$(openssl rand -base64 24 | tr '+/' '-_' | tr -d '=')"
   if grep -q '^#\?SETUP_TOKEN=' .env; then
     awk -v token="$token" \
-      '$0 ~ /^#?SETUP_TOKEN=$/ { print "SETUP_TOKEN=" token; next } { print }' .env > .env.tmp
+      '$0 ~ /^#?SETUP_TOKEN=/ { print "SETUP_TOKEN=" token; next } { print }' .env > .env.tmp
     mv .env.tmp .env
   else
     printf '\nSETUP_TOKEN=%s\n' "$token" >> .env

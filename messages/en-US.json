@@ -1173,7 +1173,7 @@
     "defaultMessage": "Setup token"
   },
   "auth.setup.tokenHint": {
-    "defaultMessage": "The server printed it at start. Under Compose: docker compose logs app."
+    "defaultMessage": "Use the value of SETUP_TOKEN. If it is not set, use the token the server printed at first start, shown by docker compose logs app under Compose."
   },
   "auth.signOut": {
     "defaultMessage": "Sign out"

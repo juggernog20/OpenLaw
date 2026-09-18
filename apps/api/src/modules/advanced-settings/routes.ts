@@ -73,6 +73,10 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
           "These settings changed in another session. Reload the page before saving.",
         );
       const values = { ...saved.values };
+      // An older save can hold a value for a key the environment pins
+      // now. The environment wins, so the value is dropped here: it is
+      // not validated, and the next successful save no longer carries it.
+      for (const key of pinned) delete values[key];
       for (const [key, raw] of Object.entries(body.values)) {
         if (!sections[section].includes(key))
           throw httpError(400, "This setting cannot be changed in this section.");
@@ -199,7 +203,7 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
             env,
           )) {
             request.log.warn(
-              { key: change.key, from: change.from, to: change.to, actorId: request.user.id },
+              { key: change.key, from: change.from, to: change.to },
               "advanced settings endpoint host changed",
             );
             await recordActivity(tx, {

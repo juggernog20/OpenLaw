@@ -12,7 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type ApiState } from "../testing/helpers";
 
 async function fillAndSubmit() {
-  await userEvent.type(await screen.findByLabelText("Setup token"), "token-from-the-log");
+  await userEvent.type(await screen.findByLabelText(/^Setup token\*?$/), "token-from-the-log");
   await userEvent.type(screen.getByLabelText("Name"), "Ada Admin");
   await userEvent.type(screen.getByLabelText("Email"), "admin@example.com");
   await userEvent.type(screen.getByLabelText("Password"), "a-long-password");

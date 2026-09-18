@@ -292,8 +292,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // server option so the two can never name different proxies.
   const trustedProxies = [...(deps.config.trustedProxies ?? [])];
   const app = Fastify({
-    trustProxy: trustedProxies.length > 0 ? trustedProxies : false,
     ...opts,
+    trustProxy: trustedProxies.length > 0 ? trustedProxies : false,
   }).withTypeProvider<ZodTypeProvider>();
   app.decorate("db", deps.db);
   app.decorate("trustedProxies", trustedProxies);

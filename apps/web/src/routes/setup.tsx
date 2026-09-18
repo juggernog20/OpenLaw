@@ -112,7 +112,7 @@ export function SetupPage() {
         {error && <Alert variant="danger">{error}</Alert>}
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="setupToken">
+            <Label htmlFor="setupToken" required>
               <FormattedMessage id="auth.setup.token" defaultMessage="Setup token" />
             </Label>
             <Input
@@ -125,7 +125,7 @@ export function SetupPage() {
             <p className="text-xs text-muted-foreground">
               <FormattedMessage
                 id="auth.setup.tokenHint"
-                defaultMessage="The server printed it at start. Under Compose: docker compose logs app."
+                defaultMessage="Use the value of SETUP_TOKEN. If it is not set, use the token the server printed at first start, shown by docker compose logs app under Compose."
               />
             </p>
           </div>

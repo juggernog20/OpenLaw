@@ -184,11 +184,13 @@ describe("advanced settings", () => {
         locked: true,
       });
       // A pinned key that an older save left behind is ignored and
-      // reported as deployment-managed, never as saved in the app.
+      // reported as deployment-managed, never as saved in the app. The
+      // stale value is plain http on a public host, which the https rule
+      // refuses, to show that a pinned value is never validated.
       await pinnedHarness.db.update(orgSettings).set({
         advancedSettings: JSON.stringify({
           version: "stale",
-          values: { BASE_URL: "https://stale.example" },
+          values: { BASE_URL: "http://stale.example" },
         }),
       });
       const stale = await pinnedHarness.app.inject({
@@ -202,6 +204,16 @@ describe("advanced settings", () => {
         locked: true,
       });
       expect(stale.json().restartRequired).toBe(false);
+      // A change to another key still saves, and the save drops the
+      // stale value, so the next read of the row is clean.
+      const cleaned = await pinnedHarness.app.inject({
+        method: "PUT",
+        url: "/api/v1/advanced-settings/uploads",
+        cookies: pinnedCookies,
+        payload: { version: stale.json().version, values: { MAX_UPLOAD_MB: "50" } },
+      });
+      expect(cleaned.statusCode, cleaned.body).toBe(200);
+      expect((await readSettings(pinnedHarness.db)).values).toEqual({ MAX_UPLOAD_MB: "50" });
     } finally {
       await pinnedHarness.stop();
     }
