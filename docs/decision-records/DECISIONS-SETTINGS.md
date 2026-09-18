@@ -144,7 +144,7 @@ The Review step shows the seeded lists and the reminder offsets and asks for one
 
 Start blank hard-deletes the catalog rows. It does not archive them. At first run nothing references them, so the SET-003 guard has nothing to protect, and archived seed rows would clutter every Settings pane for the life of the instance.
 
-**Fields gain `is_system_default`.** The taxonomy tables carry the column through the shared helper; `fields` does not. The migration adds it, sets it true on the three default Fields, and leaves user-created Fields false. Start blank keeps default Fields by that flag, so a later seed migration that adds a Field is covered without a code change. The Fields panes show the same lock the taxonomy panes show.
+**Fields gain `is_system_default`.** The taxonomy tables carry the column through the shared helper; `fields` does not. The migration adds it, sets it true on the three default Fields, and leaves user-created Fields false. Start blank keeps default Fields by that flag, so a later seed migration that adds a Field is covered without a code change. The Fields panes show the same lock the taxonomy panes show, and the API refuses to archive a default Field the way it refuses the taxonomy fallback row, so the lock never shows a control the server would not honour. Rename, description, and AI prompt edits stay open.
 
 **Preconditions.** The call answers 409 when onboarding is already complete, when any list already holds a user-created row, or when any removable row is in use. The dialog reports which list blocks it. This keeps a demo seed, or an Administrator who created records before finishing the wizard, from losing data.
 

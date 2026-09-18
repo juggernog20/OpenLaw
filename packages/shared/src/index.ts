@@ -44,6 +44,14 @@ export {
   type ResolvedDocumentOwner,
 } from "./document-owner.js";
 
+/** Start blank (SET-004): the catalog lists and the skeleton each keeps. */
+export {
+  isCatalogRow,
+  START_BLANK_LIST_KEYS,
+  START_BLANK_LISTS,
+  type StartBlankList,
+} from "./start-blank.js";
+
 /**
  * The Activity vocabulary (DD-017) — the action slugs and the payload
  * each one writes. It is a module of its own because it is long, and it

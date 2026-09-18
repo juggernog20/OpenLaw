@@ -58,16 +58,26 @@ function toRow(row: MatterStatus, counts: Map<string, number>) {
   };
 }
 
+/**
+ * The SET-003 guard numbers: how many matters hold each status. Exported
+ * for Start blank (SET-004), which refuses to remove a seed status any
+ * matter still holds.
+ */
+export async function matterStatusUsageCounts(
+  db: Executor,
+  ids: string[],
+): Promise<Map<string, number>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db
+    .select({ statusId: matters.statusId, inUse: count() })
+    .from(matters)
+    .where(inArray(matters.statusId, ids))
+    .groupBy(matters.statusId);
+  return new Map(rows.map((row) => [row.statusId, row.inUse]));
+}
+
 export const matterStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
-  async function usageCounts(db: Executor, ids: string[]): Promise<Map<string, number>> {
-    if (ids.length === 0) return new Map();
-    const rows = await db
-      .select({ statusId: matters.statusId, inUse: count() })
-      .from(matters)
-      .where(inArray(matters.statusId, ids))
-      .groupBy(matters.statusId);
-    return new Map(rows.map((row) => [row.statusId, row.inUse]));
-  }
+  const usageCounts = matterStatusUsageCounts;
 
   async function rowJson(row: MatterStatus) {
     return toRow(row, await usageCounts(app.db, [row.id]));

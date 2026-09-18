@@ -2610,6 +2610,26 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     changes: fieldChange,
   },
+  // Start blank on the Review step (SET-004): one entry per emptied
+  // list, so a bare Settings pane has an explanation in the log. The
+  // list is an ICU select for the taxonomy reason above; `other` covers
+  // a list a later build stops seeding.
+  "settings.catalog_cleared": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.settings.catalogCleared",
+      defaultMessage:
+        "{actor} chose Start blank and removed {removed, plural, one {# seeded row} other {# seeded rows}} " +
+        "from {list, select, matter_type {matter types} matter_status {matter statuses} " +
+        "contract_type {contract types} contract_status {contract statuses} " +
+        "entity_type {entity types} officer_role {officer roles} " +
+        "knowledge_type {knowledge types} request_type {request types} other {a seeded list}}",
+    }),
+    values: (_intl, payload) => ({
+      removed: wholeCount(payload, "removed"),
+      list: text(payload, "list") ?? "other",
+    }),
+  },
 
   // ---- The identity provider ----
   "sso_provider.registered": {

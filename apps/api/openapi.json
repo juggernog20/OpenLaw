@@ -1973,6 +1973,162 @@
         }
       }
     },
+    "/api/v1/onboarding/start-blank": {
+      "post": {
+        "operationId": "startOnboardingBlank",
+        "summary": "Start blank (SET-004): hard-delete the seeded catalog in one transaction, keep the skeleton, default Fields, and reminder offsets, mark the seeded types reviewed, and log one `settings.catalog_cleared` entry per emptied list; 409 once onboarding is complete, when a list holds a user-created row, or when a removable row is in use",
+        "tags": ["onboarding"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "completed": {
+                      "type": "boolean"
+                    },
+                    "steps": {
+                      "type": "object",
+                      "properties": {
+                        "organization": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "authentication": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "portal": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "email": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "invites": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "e-signature": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "ai-analysis": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        },
+                        "review": {
+                          "type": "object",
+                          "properties": {
+                            "done": {
+                              "type": "boolean"
+                            },
+                            "settingsPath": {
+                              "type": ["string", "null"]
+                            }
+                          },
+                          "required": ["done", "settingsPath"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "organization",
+                        "authentication",
+                        "portal",
+                        "email",
+                        "invites",
+                        "e-signature",
+                        "ai-analysis",
+                        "review"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["completed", "steps"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/onboarding/complete": {
       "post": {
         "operationId": "completeOnboarding",
@@ -83763,6 +83919,9 @@
                           "builtInKey": {
                             "type": ["string", "null"]
                           },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
                           "archivedAt": {
                             "anyOf": [
                               {
@@ -83791,6 +83950,7 @@
                           "options",
                           "fieldTag",
                           "aiPrompt",
+                          "isSystemDefault",
                           "archivedAt",
                           "inUseCount"
                         ],
@@ -83944,6 +84104,9 @@
                         "builtInKey": {
                           "type": ["string", "null"]
                         },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -83972,6 +84135,7 @@
                         "options",
                         "fieldTag",
                         "aiPrompt",
+                        "isSystemDefault",
                         "archivedAt",
                         "inUseCount"
                       ],
@@ -84131,6 +84295,9 @@
                         "builtInKey": {
                           "type": ["string", "null"]
                         },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -84159,6 +84326,7 @@
                         "options",
                         "fieldTag",
                         "aiPrompt",
+                        "isSystemDefault",
                         "archivedAt",
                         "inUseCount"
                       ],
@@ -84264,6 +84432,9 @@
                         "builtInKey": {
                           "type": ["string", "null"]
                         },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -84292,6 +84463,7 @@
                         "options",
                         "fieldTag",
                         "aiPrompt",
+                        "isSystemDefault",
                         "archivedAt",
                         "inUseCount"
                       ],
@@ -84397,6 +84569,9 @@
                         "builtInKey": {
                           "type": ["string", "null"]
                         },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -84425,6 +84600,7 @@
                         "options",
                         "fieldTag",
                         "aiPrompt",
+                        "isSystemDefault",
                         "archivedAt",
                         "inUseCount"
                       ],

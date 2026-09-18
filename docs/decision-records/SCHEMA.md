@@ -413,6 +413,7 @@ Custom-field catalog (Jira model), shared across modules with a scope. A field i
 | `options`                  | jsonb       | nullable; option list for select types                                                                                                                          |
 | `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Business User Portal projection and write permission                                                               |
 | `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt for this catalog Field when it is attached to a Contract Type. Core target prompts do not live here         |
+| `is_system_default`        | boolean     | not null, default false; true on a default Field a migration seeded (**SET-004** Start blank addendum). Start blank keeps these rows; archive refuses them      |
 | `archived_at`              | timestamptz | nullable; archived fields hidden everywhere, stored values retained                                                                                             |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                 |
 

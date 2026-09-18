@@ -345,6 +345,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/onboarding/start-blank": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Start blank (SET-004): hard-delete the seeded catalog in one transaction, keep the skeleton, default Fields, and reminder offsets, mark the seeded types reviewed, and log one `settings.catalog_cleared` entry per emptied list; 409 once onboarding is complete, when a list holds a user-created row, or when a removable row is in use */
+    post: operations["startOnboardingBlank"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/onboarding/complete": {
     parameters: {
       query?: never;
@@ -7980,6 +7997,71 @@ export interface operations {
     };
   };
   reviewOnboardingTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            completed: boolean;
+            steps: {
+              organization: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              authentication: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              portal: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              email: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              invites: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "e-signature": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              "ai-analysis": {
+                done: boolean;
+                settingsPath: string | null;
+              };
+              review: {
+                done: boolean;
+                settingsPath: string | null;
+              };
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  startOnboardingBlank: {
     parameters: {
       query?: never;
       header?: never;
@@ -37052,6 +37134,7 @@ export interface operations {
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
               builtInKey?: string | null;
+              isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
             }[];
@@ -37134,6 +37217,7 @@ export interface operations {
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
               builtInKey?: string | null;
+              isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
             };
@@ -37204,6 +37288,7 @@ export interface operations {
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
               builtInKey?: string | null;
+              isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
             };
@@ -37263,6 +37348,7 @@ export interface operations {
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
               builtInKey?: string | null;
+              isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
             };
@@ -37322,6 +37408,7 @@ export interface operations {
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
               builtInKey?: string | null;
+              isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
             };
