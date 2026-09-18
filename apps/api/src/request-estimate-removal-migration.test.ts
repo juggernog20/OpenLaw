@@ -41,7 +41,7 @@ it("drops return estimates while preserving Requests, submitted dates, ownership
     expect(
       (
         await db.execute(
-          sql`select to_jsonb(r) - 'department_id' as row from requests r where id = 'request'`,
+          sql`select to_jsonb(r) - 'department_id' - 'intake_counterparties' as row from requests r where id = 'request'`,
         )
       ).rows,
     ).toEqual(before);
@@ -52,7 +52,7 @@ it("drops return estimates while preserving Requests, submitted dates, ownership
     expect(
       (
         await db.execute(
-          sql`select to_jsonb(r) - 'department_id' as row from requests r where id = 'request'`,
+          sql`select to_jsonb(r) - 'department_id' - 'intake_counterparties' as row from requests r where id = 'request'`,
         )
       ).rows,
     ).toEqual(before);

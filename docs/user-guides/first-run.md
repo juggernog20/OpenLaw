@@ -10,7 +10,7 @@ This version has nine wizard steps: Welcome to OpenLaw, Your organization, Authe
 
 ## Create the first Administrator
 
-1. Open the instance address. On **Set up OpenLaw**, enter **Name**, **Email**, **Password**, and **Confirm password**.
+1. Open the instance address. On **Set up OpenLaw**, enter **Setup token**, **Name**, **Email**, **Password**, and **Confirm password**. The setup token proves that you, and not another person on the network, claim the first Administrator account. The operator reads it from the app log at first start, or sets it with `SETUP_TOKEN` before the start. Ask the operator for it.
 2. Use at least eight characters for the password and enter the same value in both password fields. Select **Create Administrator**.
 3. Correct any validation message and submit again. A successful setup signs you in and opens **Welcome to OpenLaw**.
 

@@ -41,6 +41,13 @@ export const ADMIN = {
 } as const;
 
 /**
+ * The bootstrap token first-run setup demands on an empty install
+ * (TECH-031). compose.dev.yml pins the stack's SETUP_TOKEN to this value
+ * so the suite can run setup without reading the container log.
+ */
+export const SETUP_TOKEN = process.env.E2E_SETUP_TOKEN ?? "e2e-setup-token";
+
+/**
  * A per-run unique address. Anything a run creates (users, invites)
  * must not collide with what previous runs left in the instance.
  */
@@ -91,7 +98,9 @@ export async function ensureAdminExists(request: APIRequestContext): Promise<voi
     // the caller's jar for the same reason as ensureOnboardingComplete.
     const ctx = await apiRequest.newContext({ baseURL: BASE_URL });
     try {
-      const created = await ctx.post("/api/v1/auth/setup", { data: ADMIN });
+      const created = await ctx.post("/api/v1/auth/setup", {
+        data: { ...ADMIN, setupToken: SETUP_TOKEN },
+      });
       // 201 wins the race; 409 means someone else just did — both mean done.
       expect([201, 409]).toContain(created.status());
     } finally {

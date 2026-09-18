@@ -37,6 +37,11 @@ import {
   optionsForRole,
 } from "./authentication-policy.js";
 import { readTwoFactorPolicy } from "./two-factor-policy.js";
+import {
+  clearPasswordSignInFailures,
+  passwordSignInLocked,
+  recordPasswordSignInFailure,
+} from "./limits.js";
 
 /** The slice of the app's pino logger the auth instance needs. */
 export interface AuthLogger {
@@ -53,6 +58,20 @@ export interface AuthConfig {
    * never should.
    */
   disableRateLimit?: boolean;
+  /**
+   * The reverse proxies whose forwarded client address is believed
+   * (TECH-032), as IP addresses or CIDR ranges. Read from
+   * `TRUSTED_PROXIES` at the entrypoint. Empty or unset, only the socket
+   * address counts and `X-Forwarded-For` is ignored.
+   */
+  trustedProxies?: readonly string[];
+  /**
+   * The bootstrap token first-run setup demands while the install has no
+   * users (TECH-031). The entrypoint generates one and prints it to the
+   * log, or takes `SETUP_TOKEN`. Unset, setup asks for no token; only the
+   * test harness leaves it unset.
+   */
+  setupToken?: string;
 }
 
 /** OWASP-recommended Argon2id parameters (19 MiB, t=2, p=1). */
@@ -295,6 +314,9 @@ export function createAuth(
       // Set-password links for invites *and* ordinary forgotten-password
       // resets both ride this flow; the copy covers both. The link targets
       // our web page, which posts the token to /api/auth/reset-password.
+      // The token rides in the URL fragment: a browser never sends the
+      // fragment, so neither this process nor the proxy in front of it
+      // logs a live token with the GET for the page (TECH-032).
       sendResetPassword: async ({ user, token }) => {
         const { mailer } = await resolveMailer();
         await mailer.send({
@@ -305,7 +327,7 @@ export function createAuth(
             "",
             "Set your OpenLaw password using the link below:",
             "",
-            `${config.baseUrl}/auth/set-password?token=${token}${(user as { role?: string }).role === "business_user" ? "&portal=1" : ""}`,
+            `${config.baseUrl}/auth/set-password#token=${token}${(user as { role?: string }).role === "business_user" ? "&portal=1" : ""}`,
             "",
             "The link expires in one hour. If you did not expect this email, you can ignore it.",
           ].join("\n"),
@@ -325,6 +347,12 @@ export function createAuth(
       onPasswordReset: async ({ user }) => {
         await db.update(users).set({ emailVerified: true }).where(eq(users.id, user.id));
       },
+      // A reset is how a person takes an account back. Every session
+      // that existed before it, a stolen cookie included, ends with it
+      // (TECH-032). Open live-event streams are not cut here: the event
+      // hub has no per-user close, and a stream re-checks its session
+      // only when it reconnects.
+      revokeSessionsOnPasswordReset: true,
     },
     // Set-password and magic-link tokens are at-rest secrets: store their
     // identifiers hashed (lookup hashes symmetrically).
@@ -472,7 +500,17 @@ export function createAuth(
           return;
         }
         if (ctx.path === "/sign-in/email") {
-          await assertPasswordSignIn(db, bodyEmail(ctx.body?.email));
+          const email = bodyEmail(ctx.body?.email);
+          // The password lockout (TECH-032). Keyed on the typed address,
+          // account or not, so the refusal says nothing about whether
+          // one exists. Worded as the TOTP lockout below is, because it
+          // is the same rule on the other factor. A throw here skips the
+          // after hook, so a refused attempt is not counted again.
+          if (await passwordSignInLocked(db, email))
+            throw new APIError("TOO_MANY_REQUESTS", {
+              message: "Too many attempts. Wait 15 minutes, then try again.",
+            });
+          await assertPasswordSignIn(db, email);
           return;
         }
         if (
@@ -485,6 +523,18 @@ export function createAuth(
       // DD-017 audit entries for the profile mutations better-auth owns
       // (SET-006) — see ./audit.ts for what is recorded and why here.
       after: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === "/sign-in/email") {
+          // Only the endpoint's own 401 is a wrong password. Policy
+          // refusals come from the before hook and never reach here;
+          // the 403 for a disabled method or an archived account is not
+          // a guess at the credential.
+          const email = bodyEmail(ctx.body?.email);
+          const returned = ctx.context.returned;
+          if (returned !== undefined && !isAPIError(returned))
+            await clearPasswordSignInFailures(db, email);
+          else if (isAPIError(returned) && returned.statusCode === 401)
+            await recordPasswordSignInFailure(db, email);
+        }
         if (["/two-factor/verify-totp", "/two-factor/verify-backup-code"].includes(ctx.path)) {
           const active = ctx.context.session;
           const successful =
@@ -677,6 +727,19 @@ export function createAuth(
     },
     advanced: {
       database: { generateId: () => uuidv7() },
+      // The client address behind better-auth's own rate limiter
+      // (TECH-032). better-auth sees only headers, never the socket, so
+      // the handler in ./handler.ts writes the address Fastify resolved
+      // into `X-Forwarded-For` before the request gets here. The trusted
+      // list is the same one Fastify's `trustProxy` holds: when the
+      // proxy forwarded no client address, the single value is the
+      // proxy's own, better-auth resolves nothing, and every client
+      // shares one bucket. The boot warning and the proxy recipes in
+      // docs/DEPLOYMENT.md exist for that case.
+      ipAddress: {
+        ipAddressHeaders: ["x-forwarded-for"],
+        trustedProxies: [...(config.trustedProxies ?? [])],
+      },
     },
   });
 }

@@ -51,6 +51,9 @@ it("manages default people from the Contract Type editor", async () => {
           },
         });
       if (path === "/api/v1/contract-types/t1/fields") return json(200, { attachedFields: [] });
+      if (path === "/api/v1/contract-types/t1/approval-default")
+        return json(200, { groupId: null });
+      if (path === "/api/v1/approver-groups") return json(200, { approverGroups: [] });
       if (path === "/api/v1/fields") return json(200, { fields: [] });
       if (path === "/api/v1/contract-types/t1/people") {
         if (call.method === "POST" && rejectAdd === "network")

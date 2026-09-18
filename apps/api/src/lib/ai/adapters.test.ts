@@ -244,11 +244,12 @@ describe("OpenAI-compatible preset authentication", () => {
     expect(server.requests.at(-1)!.body).toHaveProperty("max_completion_tokens");
   });
 
-  it("keeps the provider's reason for a wrong endpoint", async () => {
+  it("keeps the provider's reason for a wrong endpoint in the log summary, not the message", async () => {
     await expect(provider({ baseUrl: `${server.baseUrl}/wrong` }).probe()).rejects.toEqual(
       expect.objectContaining({
         name: "AiConfigError",
-        message: "No model endpoint exists here.",
+        message: "The provider refused the request with HTTP 404.",
+        upstream: { status: 404, summary: "No model endpoint exists here." },
       }),
     );
   });
@@ -299,6 +300,32 @@ describe("OpenAI reasoning-model request fields", () => {
     expect(server.requests.at(-1)!.body).not.toHaveProperty("temperature");
   });
 
+  it("relearns from a refusal that names the field after the summary cut", async () => {
+    const preamble = "The request could not be completed as sent. ".repeat(5);
+    expect(preamble.length).toBeGreaterThan(200);
+    const wordy = await startServer("openai", (body) =>
+      "max_tokens" in body
+        ? `${preamble}Unsupported parameter: 'max_tokens' is not supported with this model.`
+        : null,
+    );
+    try {
+      const provider = createOpenAiCompatibleProvider({
+        preset: "custom",
+        protocol: "openai_chat_completions",
+        baseUrl: wordy.baseUrl,
+        apiKey: VALID_KEY,
+        model: MODEL,
+      });
+      await provider.probe();
+      expect(wordy.requests.map((request) => Object.keys(request.body).sort())).toEqual([
+        ["max_tokens", "messages", "model", "response_format", "temperature"],
+        ["max_completion_tokens", "messages", "model", "response_format", "temperature"],
+      ]);
+    } finally {
+      await wordy.stop();
+    }
+  });
+
   it("still surfaces a refusal it cannot learn from", async () => {
     const strict = await startServer(
       "openai",
@@ -314,7 +341,8 @@ describe("OpenAI reasoning-model request fields", () => {
       });
       await expect(provider.probe()).rejects.toMatchObject({
         name: "AiConfigError",
-        message: expect.stringContaining("response_format"),
+        message: "The provider refused the request with HTTP 400.",
+        upstream: { status: 400, summary: expect.stringContaining("response_format") },
       });
       expect(strict.requests).toHaveLength(1);
     } finally {

@@ -356,6 +356,27 @@ describe("extracting a version's text", () => {
     expect(text.updatedAt).not.toBeNull();
   });
 
+  it("stores a text layer that carries U+0000, with the character dropped", async () => {
+    // Postgres holds no NUL in a text column and refuses the row with
+    // 22021. Before TECH-029 that refusal retried twice and then marked
+    // the derivation failed, with the whole text persisted in the
+    // queue's job output on every attempt. The fake engine answers the
+    // text written after its marker line, NUL and all.
+    const layer = "the assignor\u0000 transfers every right\u0000";
+    const bytes = Buffer.from(`%PDF-1.7\n% openlaw-fake-doc-engine: ${layer}\n`);
+    const { document, version } = await contractWithFile("Text · NUL in the layer", {
+      filename: "nul-in-layer.pdf",
+      contentType: "application/pdf",
+      content: bytes,
+    });
+
+    const text = await settledText(document.id, version.id);
+    expect(text.state).toBe("ready");
+    expect(text.source).toBe("native_layer");
+    expect(text.text).toBe("the assignor transfers every right");
+    expect(text.text).not.toContain("\u0000");
+  });
+
   it("reads an image-only scan with OCR, because extraction found nothing", async () => {
     // DOC-005's whole branch, and the milestone's demo sentence: upload
     // a scan, do nothing else, and its text becomes available.

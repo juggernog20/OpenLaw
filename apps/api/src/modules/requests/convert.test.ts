@@ -26,7 +26,8 @@ import { requestDepartment } from "../../testing/request-department.js";
 
 import { departments, entities, entityTypes } from "@openlaw/db";
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
 import {
   and,
   contractCounterparties,
@@ -209,6 +210,11 @@ beforeAll(async () => {
   // DD-018 rule 5's lossless Re-target, symmetric since M22.
   matterTargetTypeId = await makeRequestType("Advice request", { targetModule: "matter" });
 });
+
+// The per-person Request quota counts a sliding hour (ADO-013). This
+// suite submits more than that in seconds, so each case starts with the
+// window empty.
+beforeEach(() => emptyRequestQuotaWindow(harness.db));
 
 afterAll(async () => {
   await harness.stop();

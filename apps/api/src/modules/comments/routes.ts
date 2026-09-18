@@ -131,9 +131,15 @@ import {
   versionStorageKey,
 } from "../../lib/document-versions.js";
 import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
-import { DocEngineError } from "../../lib/doc-engine/engine.js";
-import { BlobNotFoundError } from "../../lib/storage/adapter.js";
+import {
+  DocEngineError,
+  DocEngineTimeoutError,
+  DocEngineUnavailableError,
+} from "../../lib/doc-engine/engine.js";
+import { BlobNotFoundError, formatBlobRef } from "../../lib/storage/adapter.js";
+import { cachedPdfRendition } from "../../lib/preview-rendition.js";
 import { httpError, HttpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
+import type { Readable } from "node:stream";
 import {
   asUploadRefusal,
   attachmentDisposition,
@@ -391,6 +397,16 @@ function olderThan(commentId: string, scope: SQL | undefined): SQL {
  * 403 on a Legal Only comment would say a Legal Only comment is there,
  * which is the one thing DD-016 will not have leak. */
 const NO_COMMENT = "No comment exists with this id.";
+
+/**
+ * Where one comment attachment's PDF preview is stored (DOC-012). One
+ * key per attachment, so a repeat preview reads it back instead of
+ * converting the same bytes again. The redact route deletes it beside
+ * the original.
+ */
+export function attachmentRenditionKey(attachmentId: string): string {
+  return `comment-attachment-renditions/${attachmentId}`;
+}
 
 export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** The one comment projection, joined to its author. Callers add the
@@ -1654,13 +1670,32 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         const convertFrom = conversionFormatOf("application/octet-stream", row.filename);
         if (!nativeType && !convertFrom)
           throw httpError(415, "A preview is not available for this file type.");
-        const source = await readSource();
-        let preview = source;
+        let preview: Readable;
         if (convertFrom) {
+          // The converted PDF is kept under one key per attachment. The
+          // first GET pays for the conversion and stores the answer; every
+          // GET after it streams the stored rendition. Without this, one
+          // person holding refresh was one LibreOffice run per keypress.
           try {
-            preview = await app.docEngine.convertToPdf(source, convertFrom);
+            preview = await cachedPdfRendition({
+              storage: app.storage,
+              docEngine: app.docEngine,
+              key: attachmentRenditionKey(row.id),
+              format: convertFrom,
+              readSource,
+            });
           } catch (error) {
-            source.destroy();
+            if (
+              error instanceof DocEngineUnavailableError ||
+              error instanceof DocEngineTimeoutError
+            ) {
+              // The sidecar is full or not answering. Both heal with
+              // time, so the client is told when to ask again.
+              reply.header("retry-after", "10");
+              throw httpError(503, "The preview is not ready. Try again in a moment.", {
+                expose: true,
+              });
+            }
             if (error instanceof DocEngineError)
               throw httpError(
                 422,
@@ -1668,6 +1703,8 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
               );
             throw error;
           }
+        } else {
+          preview = await readSource();
         }
         reply.header("content-type", nativeType ?? "application/pdf");
         reply.header("content-disposition", "inline");
@@ -1827,10 +1864,17 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // before commit, so a successful redact cannot strand bytes no
         // row remains to name.
         const paper = await tx
-          .select({ fileRef: commentAttachments.fileRef })
+          .select({ id: commentAttachments.id, fileRef: commentAttachments.fileRef })
           .from(commentAttachments)
           .where(eq(commentAttachments.commentId, held.id));
-        for (const attachment of paper) await app.storage.delete(attachment.fileRef);
+        for (const attachment of paper) {
+          await app.storage.delete(attachment.fileRef);
+          // The stored PDF preview goes with the original. Deleting a
+          // key nothing was written to is not an error.
+          await app.storage.delete(
+            formatBlobRef(app.storage.driver, attachmentRenditionKey(attachment.id)),
+          );
+        }
 
         // The places the text, its addressees, and its paper live. All
         // are ordinary application data, which is the whole point.

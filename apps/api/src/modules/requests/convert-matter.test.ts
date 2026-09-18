@@ -6,7 +6,8 @@ import { requestDepartment } from "../../testing/request-department.js";
 import { createHash } from "node:crypto";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
 import {
   activityLog,
   and,
@@ -162,6 +163,11 @@ beforeAll(async () => {
     .returning();
   emptyRequiredTemplateId = emptyRequiredTemplate!.id;
 });
+
+// The per-person Request quota counts a sliding hour (ADO-013). This
+// suite submits more than that in seconds, so each case starts with the
+// window empty.
+beforeEach(() => emptyRequestQuotaWindow(harness.db));
 
 afterAll(async () => harness.stop());
 

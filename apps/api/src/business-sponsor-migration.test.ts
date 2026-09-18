@@ -29,7 +29,7 @@ it("moves the retired sponsor into an empty Business Owner and deletes the dupli
       from (values ('empty', null, 'sponsor'), ('assigned', 'owner', 'sponsor'), ('orphan', null, 'missing')) fixture(id, owner_id, sponsor_id)
       cross join (select id from contract_types limit 1) ct
       cross join (select id from contract_statuses limit 1) cs`);
-    await runMigrations(db);
+    await migrateThrough(db, "0111_retire_business_sponsor", migrationEntries());
     expect(
       (
         await db.execute(

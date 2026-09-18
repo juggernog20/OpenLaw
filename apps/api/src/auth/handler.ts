@@ -28,10 +28,18 @@ export const authHandler: FastifyPluginAsync = async (app) => {
     handler: async (request, reply) => {
       const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);
       const body = request.body as Buffer | undefined;
+      const headers = fromNodeHeaders(request.headers);
+      // better-auth keys its sign-in rate limiter on `X-Forwarded-For`
+      // and cannot see the socket, so on its own it believes whatever
+      // the client wrote there. Fastify has already resolved the client
+      // address against `TRUSTED_PROXIES` (TECH-032); hand that address
+      // over as the one value of the header, and the spoofable one
+      // never reaches the library.
+      headers.set("x-forwarded-for", request.ip);
       const response = await app.auth.handler(
         new Request(url, {
           method: request.method,
-          headers: fromNodeHeaders(request.headers),
+          headers,
           body: body && body.length > 0 ? new Uint8Array(body) : undefined,
         }),
       );

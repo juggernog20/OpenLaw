@@ -1169,6 +1169,12 @@
   "auth.setup.title": {
     "defaultMessage": "Set up OpenLaw"
   },
+  "auth.setup.token": {
+    "defaultMessage": "Setup token"
+  },
+  "auth.setup.tokenHint": {
+    "defaultMessage": "Use the value of SETUP_TOKEN. If it is not set, use the token the server printed at first start, shown by docker compose logs app under Compose."
+  },
   "auth.signOut": {
     "defaultMessage": "Sign out"
   },
@@ -11188,6 +11194,9 @@
   },
   "welcome.email.field.host": {
     "defaultMessage": "SMTP server"
+  },
+  "welcome.email.field.hostPlaceholder": {
+    "defaultMessage": "smtp.example.com"
   },
   "welcome.email.field.password": {
     "defaultMessage": "SMTP password"

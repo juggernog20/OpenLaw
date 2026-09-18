@@ -31,10 +31,26 @@ export class OperationError extends Error {
     readonly status: number,
     readonly title: string,
     message: string,
+    /** Seconds the caller should wait before asking again, when the failure heals with time. */
+    readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = "OperationError";
   }
+}
+
+/**
+ * Every tool slot and every place in the queue is taken. Transient: the
+ * API client maps a 503 to the same retry path as an unreachable engine,
+ * and Retry-After says how long to wait.
+ */
+export function engineBusy(retryAfterSeconds: number): OperationError {
+  return new OperationError(
+    503,
+    "Doc engine busy",
+    "The doc engine is running as many conversions as it allows and its queue is full.",
+    retryAfterSeconds,
+  );
 }
 
 /** The engine does not convert this source format. */

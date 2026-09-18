@@ -50,7 +50,12 @@ test("Legal keeps answers through Unpublish, then generates and downloads the ap
   await fields.getByRole("button", { name: "Edit Signing date", exact: true }).click();
   const date = page.getByRole("region", { name: "Signing date", exact: true });
   await date.getByRole("combobox", { name: "Type", exact: true }).selectOption("date");
-  await expect(fields.getByText("signing_date · Date", { exact: true })).toBeVisible();
+  await expect(
+    fields
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("button", { name: "Edit Signing date", exact: true }) })
+      .getByText("Date", { exact: true }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Publish", exact: true }).first().click();
   await page.getByRole("dialog").getByRole("button", { name: "Publish", exact: true }).click();

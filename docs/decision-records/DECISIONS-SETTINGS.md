@@ -276,6 +276,8 @@ Every Portal route checks the current user's completion state before its page lo
 | SET-009 | Select the Signing connector update mode                                   | Accepted                                                                           |
 | SET-010 | Departments are an Administrator-managed list, on users and Contracts      | Accepted                                                                           |
 | SET-011 | The Business User first run in the Portal                                  | Accepted; mandatory before M34                                                     |
+| SET-012 | Regions are an Administrator-managed Contract classification               | Accepted                                                                           |
+| SET-013 | The deployment environment pins Advanced settings; endpoints need https    | Accepted                                                                           |
 
 ### SET-010 amendment — consistent record Department, 2026-09-13
 
@@ -309,3 +311,13 @@ Maintaining two group policies requires Administrators to review both sets of me
 Matters also have an optional Region picker using the same organization catalog. Rename, archive, restore, and in-use checks cover both Matters and Contracts. Business Portal Matter overviews display the saved Region. Existing Matters start with no Region; custom Fields remain unchanged. Migration `0136` adds the nullable Matter reference with the same update-cascade behavior as Contracts.
 
 Region references use display names to preserve the existing Contract API. Renames therefore cascade through current records and can lock referencing rows. Stable-ID references would avoid name coupling but require migrating the public string contract; the shared catalog was chosen to keep Contract and Matter classifications consistent.
+
+## SET-013: The deployment environment pins Advanced settings; endpoints need https
+
+- **Status:** Accepted
+- **Date:** 2026-09-18
+- **Decision:** Any Settings → Advanced key the deployment environment sets to a non-empty value is pinned. The Advanced pane shows it as deployment configuration and read only. The PUT refuses a different value with a 400 and ignores an unchanged echo. A value an earlier save left in the database is ignored on the next start. This is the rule `SMTP_URL` already follows for email, applied to the instance address, the upload limit, storage, and the document service. An endpoint saved in the app (`BASE_URL`, `DOC_ENGINE_URL`, `S3_ENDPOINT`, `AZURE_BLOB_ENDPOINT`) must use `https` unless its host is localhost, a private network address, or listed in `OPENLAW_PLAIN_HTTP_HOSTS`. Environment values are not checked. When a save moves an endpoint, the API writes one Audit log row and one process log line per key that names the old and new host. Never the full value, a key, or a credential.
+- **Rationale:** Security review 2026-09-17, M9. A saved value overrode the deployment after the next restart, and a hijacked Administrator session could redirect every future upload to another S3 endpoint or send every document to another doc engine. Pinning keeps the operator's deployment authoritative. The https rule stops a saved endpoint from carrying credentials and documents in clear text off the host.
+- **Alternatives:** Step-up authentication on these PUTs: not built yet, and it does not remove the override. Refusing every app-saved endpoint: too strict for an install that has no environment at all.
+- **Consequences:** Under Compose, `DOC_ENGINE_URL` always has a value, so the Processing address is pinned on every Compose install; change it in `.env`. The user guide's "set the instance address in Settings → Advanced or in `BASE_URL`" becomes "in `BASE_URL` if you set it, in Settings otherwise". No schema change. Existing saved values for pinned keys stay in the database and are ignored.
+- **Source:** `docs/reviews/security-review-2026-09-17.md`, M9.

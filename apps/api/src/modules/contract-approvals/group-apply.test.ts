@@ -26,7 +26,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, asc, contracts, eq, users } from "@openlaw/db";
+import { activityLog, and, asc, contracts, documents, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -731,6 +731,58 @@ describe("business approvers in the Portal", () => {
         (row) => row.action === "approval.approved" || row.action === "approval.rejected",
       ),
     ).toHaveLength(1);
+  });
+
+  it("keeps a confidential primary Document out of the packet, and refuses a staff ask from outside its audience", async () => {
+    const contract = await newContract("Open contract, walled paper");
+    const boundary = "walled-packet";
+    const bytes = "%PDF-1.4\nWalled primary document";
+    const upload = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/documents`,
+      cookies: as(MEMBER),
+      headers: { "content-type": `multipart/form-data; boundary=${boundary}` },
+      payload: Buffer.from(
+        `--${boundary}\r\ncontent-disposition: form-data; name="kind"\r\n\r\ndraft_ours\r\n--${boundary}\r\ncontent-disposition: form-data; name="file"; filename="walled.pdf"\r\ncontent-type: application/pdf\r\n\r\n${bytes}\r\n--${boundary}--\r\n`,
+      ),
+    });
+    expect(upload.statusCode, upload.body).toBe(201);
+    const documentId = upload.json().document.id as string;
+    // The Document's own flag (DOC-008), set straight in the column, the
+    // way `wallOff` sets the record's.
+    await harness.db
+      .update(documents)
+      .set({ isConfidential: true })
+      .where(eq(documents.id, documentId));
+
+    // The outsider reaches the open Contract but not its primary
+    // Document. Naming themselves is refused up front, with the 422 a
+    // walled record gives, rather than answered with an empty packet.
+    const selfAsk = await requestApprovals(as(OUTSIDER), contract.number, [idOf(OUTSIDER)]);
+    expect(selfAsk.statusCode, selfAsk.body).toBe(422);
+    expect(selfAsk.json().detail).toContain("can't be asked to approve");
+    // The same person named by somebody inside the audience: the same refusal.
+    const askedByMember = await requestApprovals(as(MEMBER), contract.number, [idOf(OUTSIDER)]);
+    expect(askedByMember.statusCode, askedByMember.body).toBe(422);
+
+    // A Business User approver is never asked about a flag (DD-023).
+    // Their packet carries no Document, and its two byte routes answer
+    // as for a Document that is not there.
+    const asked = await requestApprovals(as(MEMBER), contract.number, [idOf(CONTRIBUTOR)]);
+    expect(asked.statusCode, asked.body).toBe(201);
+    const id = asked.json().approvals[0].id as string;
+    const packet = await portal(`approvals/${id}`);
+    expect(packet.statusCode, packet.body).toBe(200);
+    expect(packet.json().document).toBeNull();
+    expect((await portal(`approvals/${id}/document`)).statusCode).toBe(404);
+    expect((await portal(`approvals/${id}/preview`)).statusCode).toBe(404);
+
+    // On the team, the same approver is inside the Document's audience
+    // and receives the packet whole.
+    expect((await addToTeam(contract.number, idOf(CONTRIBUTOR))).statusCode).toBe(201);
+    const whole = await portal(`approvals/${id}/document`);
+    expect(whole.statusCode, whole.body).toBe(200);
+    expect(whole.body).toBe(bytes);
   });
 
   it("withdrawal and contract archival revoke packet access and decisions", async () => {

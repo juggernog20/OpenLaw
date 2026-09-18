@@ -9,7 +9,7 @@
  * wires it to a port.
  */
 
-import { createDocEngineServer } from "./server.js";
+import { createDocEngineServer, DEFAULT_MAX_CONCURRENT, DEFAULT_MAX_QUEUED } from "./server.js";
 
 const DEFAULT_PORT = 8080;
 
@@ -55,6 +55,11 @@ const server = createDocEngineServer({
     DEFAULT_COMPARE_TIMEOUT_MS,
   ),
   maxBodyBytes: positiveInteger(process.env.DOC_ENGINE_MAX_BODY_BYTES, DEFAULT_MAX_BODY_BYTES),
+  // How many tools run at once and how many requests wait for a slot.
+  // Past both the sidecar answers 503 with Retry-After. Compose passes
+  // these through from .env; empty means the defaults.
+  maxConcurrent: positiveInteger(process.env.DOC_ENGINE_MAX_CONCURRENT, DEFAULT_MAX_CONCURRENT),
+  maxQueued: positiveInteger(process.env.DOC_ENGINE_MAX_QUEUED, DEFAULT_MAX_QUEUED),
 });
 
 // A conversion is minutes long, and the socket sits idle for all of it

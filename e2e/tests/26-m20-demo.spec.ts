@@ -527,7 +527,7 @@ test.describe.serial("M20 demo path", () => {
       await portal.getByRole("link", { name: "Notification settings" }).click();
       await expect(portal).toHaveURL(/\/portal\/settings$/);
       const prefs = portal.getByRole("region", { name: "How we tell you about your work" });
-      await expect(prefs.getByRole("switch")).toHaveCount(6);
+      await expect(prefs.getByRole("switch")).toHaveCount(8);
       await expect(prefs.getByRole("switch", { name: "Request updates Email" })).toBeChecked();
     } catch (error) {
       // A cleanup that throws here would replace the failure that caused

@@ -71,6 +71,7 @@ import {
   type Db,
   type SQL,
 } from "@openlaw/db";
+import { redactUnreachedReferences } from "../../lib/activity-redaction.js";
 import { contractTeamScope, documentAudienceScope } from "../../lib/contract-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
 import { entityReachScope } from "../../lib/entity-access.js";
@@ -585,7 +586,15 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
       const page = rows.slice(0, PAGE_SIZE);
       const refs = await resolveEntityRefs(app.db, page);
       return {
-        entries: page.map((row) => toEntry(row, refs)),
+        // The far side of a link is stripped for a viewer who does not
+        // reach it, by the helper the record feed shares. The reach
+        // scope above answers for the record the entry hangs off; this
+        // answers for the record its payload names.
+        entries: await redactUnreachedReferences(
+          app.db,
+          request.user,
+          page.map((row) => toEntry(row, refs)),
+        ),
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.
         nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
@@ -674,8 +683,14 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
               cursor === undefined ? bounded : and(bounded, olderThan(cursor)),
               EXPORT_CHUNK,
             );
-            for (const row of chunk) {
-              const entry = toEntry(row);
+            // The same far-side redaction the list applies, per chunk.
+            const entries = await redactUnreachedReferences(
+              app.db,
+              request.user,
+              chunk.map((row) => toEntry(row)),
+            );
+            for (const [index, row] of chunk.entries()) {
+              const entry = entries[index]!;
               yield csvRow([
                 entry.id,
                 entry.createdAt,

@@ -78,6 +78,10 @@ A Knowledge item exists on the portal only while it is live, published, and `eve
 
 The portal article is read-only: its title, current-version downloads, and body, with the primary file first and the body last. It carries no author, folder, type, or edit affordance. Internal deflection links open that route in the same tab. External links retain the existing new-tab behavior.
 
+### Built addendum (2026-09-18, security review H2) — the Portal applies the Document Confidential flag
+
+A Document on a Knowledge Item may carry the DOC-008 Confidential flag, and the Portal reads apply the same Document audience predicate every staff read applies. A flagged Document leaves the Portal article's file list, and its download answers the article's own 404 body. Only an Administrator reaches a flagged Knowledge Document; a Legal Team Member and a Business User do not, whatever the item's audience. The item gate above is unchanged.
+
 ## KNW-005 — Deferred set: search intelligence, usage tracking, staleness, AI, external ingestion
 
 - **Status** — Accepted

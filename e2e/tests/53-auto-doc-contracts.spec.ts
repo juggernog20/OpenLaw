@@ -47,7 +47,10 @@ test("Legal targets a Contract Type and generates its draft Contract with a prim
     .getByRole("combobox", { name: "Map to", exact: true })
     .selectOption("attribute:primary_counterparty_name");
   await expect(
-    fields.getByText("counterparty_name · Text · Primary Counterparty name", { exact: true }),
+    fields
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("button", { name: "Edit Counterparty name", exact: true }) })
+      .getByText("Text · Primary Counterparty name", { exact: true }),
   ).toBeVisible();
   await fields.getByRole("button", { name: "Edit Amount", exact: true }).click();
   const amount = page.getByRole("region", { name: "Amount", exact: true });

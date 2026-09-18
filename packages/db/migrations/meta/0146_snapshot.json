@@ -1,5 +1,5 @@
 {
-  "id": "04aab761-bba0-4e67-823d-11f47d2fe03b",
+  "id": "1f0fbc02-01ab-441b-af3b-8ba0e7cbeaff",
   "prevId": "0000eb0e-8c71-462c-be14-d3b1a34f35a5",
   "version": "7",
   "dialect": "postgresql",
@@ -7967,92 +7967,6 @@
       },
       "isRLSEnabled": false
     },
-    "public.individual_holdings": {
-      "name": "individual_holdings",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "owned_entity_id": {
-          "name": "owned_entity_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ownership_percent": {
-          "name": "ownership_percent",
-          "type": "numeric(5, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "individual_holdings_owned_idx": {
-          "name": "individual_holdings_owned_idx",
-          "columns": [
-            {
-              "expression": "owned_entity_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "individual_holdings_owned_entity_id_entities_id_fk": {
-          "name": "individual_holdings_owned_entity_id_entities_id_fk",
-          "tableFrom": "individual_holdings",
-          "tableTo": "entities",
-          "columnsFrom": ["owned_entity_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "individual_holdings_percent_range": {
-          "name": "individual_holdings_percent_range",
-          "value": "\"individual_holdings\".\"ownership_percent\" >= 0 and \"individual_holdings\".\"ownership_percent\" <= 100"
-        },
-        "individual_holdings_name_length": {
-          "name": "individual_holdings_name_length",
-          "value": "length(trim(\"individual_holdings\".\"name\")) between 1 and 200"
-        }
-      },
-      "isRLSEnabled": false
-    },
     "public.intake_links": {
       "name": "intake_links",
       "schema": "",
@@ -10916,6 +10830,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "byte_size": {
+          "name": "byte_size",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "uploaded_by": {
           "name": "uploaded_by",

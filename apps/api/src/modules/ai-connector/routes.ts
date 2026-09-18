@@ -6,6 +6,7 @@
  * connection probes, lifecycle controls, and the connector's settings history.
  */
 
+import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -154,6 +155,21 @@ function sameDestination(
     return url.toString();
   };
   return normalize(current.baseUrl) === normalize(config.baseUrl);
+}
+
+/**
+ * Writes the provider's refusal to the log and nowhere else. The
+ * message on the error is generic and names only the status code, so
+ * it is what the Administrator sees. The summary is a short, redacted
+ * cut of the provider's own body, which can quote back the key it was
+ * handed.
+ */
+function logUpstreamRefusal(request: FastifyRequest, error: AiProviderError, call: string): void {
+  if (!error.upstream) return;
+  request.log.warn(
+    { providerStatus: error.upstream.status, providerReply: error.upstream.summary },
+    `The AI provider refused the ${call}.`,
+  );
 }
 
 async function lockedConnector(tx: Executor): Promise<AiConnector> {
@@ -346,7 +362,10 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       try {
         return await listAiModels({ ...config, apiKey });
       } catch (error) {
-        if (error instanceof AiProviderError) throw httpError(502, error.message, { expose: true });
+        if (error instanceof AiProviderError) {
+          logUpstreamRefusal(request, error, "model discovery");
+          throw httpError(502, error.message, { expose: true });
+        }
         throw error;
       }
     },
@@ -366,7 +385,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => {
+    async (request) => {
       const provider = await app.resolveAiProvider();
       if (!provider) throw httpError(400, "No enabled AI connector is configured. Save it first.");
       try {
@@ -374,6 +393,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         return { ok: true as const };
       } catch (error) {
         if (error instanceof AiProviderError) {
+          logUpstreamRefusal(request, error, "connection test");
           throw httpError(502, `The connection test failed. ${error.message}`, { expose: true });
         }
         throw error;

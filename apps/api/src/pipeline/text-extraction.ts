@@ -56,6 +56,7 @@ import {
   errorCode,
   FOREIGN_KEY_VIOLATION,
   isTerminalFailure,
+  plainFailure,
   reasonOf,
   withBlob,
   type DerivationDeps,
@@ -135,6 +136,11 @@ export function extractsText(mimeType: string, filename: string): boolean {
   return family === "pdf" || family === "word" || family === "presentation" || family === "email";
 }
 
+/** The text with every U+0000 removed. */
+export function withoutNul(text: string): string {
+  return text.includes("\u0000") ? text.replaceAll("\u0000", "") : text;
+}
+
 /**
  * Records that one version's text is owed.
  *
@@ -174,17 +180,22 @@ export async function writeTextDerivation(
     emailSubject?: string | null;
   },
 ): Promise<void> {
-  const emailSubject = row.emailSubject ?? null;
+  // Postgres holds no U+0000 in a text column and refuses the whole row
+  // (22021). A PDF's text layer can carry one, and a retry would send
+  // the same bytes, so the character is dropped here, once, on the one
+  // path every text write takes. Nothing a person reads is in a NUL.
+  const text = row.text === null ? null : withoutNul(row.text);
+  const emailSubject = row.emailSubject == null ? null : withoutNul(row.emailSubject);
   try {
     await deps.db
       .insert(documentVersionText)
-      .values({ versionId, ...row, emailSubject })
+      .values({ versionId, ...row, text, emailSubject })
       .onConflictDoUpdate({
         target: documentVersionText.versionId,
         set: {
           state: row.state,
           source: row.source,
-          text: row.text,
+          text,
           emailSubject,
           updatedAt: new Date(),
         },
@@ -391,8 +402,10 @@ export async function handleTextExtraction(
     // A terminal failure is settled: the derivation says so, and handing
     // the job back would only retry the same bytes. Everything else goes
     // back to the queue, so the operator's job list shows the failure
-    // whether or not a retry is left.
-    if (!terminal) throw error;
+    // whether or not a retry is left. What goes back is the reason and
+    // nothing else: pg-boss stores what is thrown, and a failed query
+    // carries the text it was writing (TECH-029).
+    if (!terminal) throw plainFailure(error);
   }
   // The text is on the record by now. The analysis ask runs outside the
   // block above, so a fault in it cannot mark ready text as failed or

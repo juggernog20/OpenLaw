@@ -26,7 +26,10 @@ import {
   detectAutoDocTemplate,
   type TemplateDetection,
 } from "../../lib/auto-doc-template.js";
+import { MAX_EXPANDED_TEMPLATE_BYTES } from "../../lib/auto-doc-fill/engine.js";
+import { BlobTooLargeError, readBoundedBlob } from "../../lib/bounded-blob.js";
 import { CurrencySchema } from "../../lib/currencies.js";
+import { screenDocxPackage, verifyZipPackage } from "../../lib/docx-package.js";
 import { httpError } from "../../lib/problem.js";
 import type { StorageAdapter } from "../../lib/storage/adapter.js";
 
@@ -322,9 +325,28 @@ export async function applyTemplateVersion(
   });
 }
 
+/**
+ * Refuses a package the fill must never open: one that inflates past the
+ * fill ceiling, or one with parts that reach outside the file. The same
+ * screen runs at upload and again before every fill, so a template
+ * stored before the screen existed is refused at Generation.
+ */
+export function screenTemplatePackage(bytes: Buffer): void {
+  try {
+    verifyZipPackage(bytes, MAX_EXPANDED_TEMPLATE_BYTES);
+    screenDocxPackage(bytes);
+  } catch (error) {
+    throw httpError(
+      422,
+      error instanceof Error ? error.message : "The Word template could not be read.",
+    );
+  }
+}
+
 export function detectTemplateUpload(bytes: Buffer, filename: string): TemplateDetection {
   if (!filename.toLowerCase().endsWith(".docx"))
     throw httpError(400, "Upload a Word .docx file as the Auto-Doc template.");
+  screenTemplatePackage(bytes);
   try {
     return detectAutoDocTemplate(bytes);
   } catch (error) {
@@ -341,17 +363,13 @@ export async function detectStoredTemplate(
   filename: string,
   maxBytes: number,
 ) {
-  const stream = await storage.get(fileRef);
-  const chunks: Buffer[] = [];
-  let size = 0;
-  for await (const value of stream) {
-    const chunk = Buffer.isBuffer(value) ? value : Buffer.from(value);
-    size += chunk.length;
-    if (size > maxBytes) {
-      stream.destroy();
+  let bytes: Buffer;
+  try {
+    bytes = await readBoundedBlob(await storage.get(fileRef), maxBytes);
+  } catch (error) {
+    if (error instanceof BlobTooLargeError)
       throw httpError(413, "The Word template exceeds the upload limit.");
-    }
-    chunks.push(chunk);
+    throw error;
   }
-  return detectTemplateUpload(Buffer.concat(chunks), filename);
+  return detectTemplateUpload(bytes, filename);
 }

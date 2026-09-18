@@ -27,6 +27,7 @@ import { civilToday, formatFullDate } from "../../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { matterReference } from "../../lib/matters";
 import { problem } from "../../lib/problem";
+import { RestrictedRecordCell } from "../restricted-record-cell";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -410,14 +411,22 @@ function ObligationRow({
             </option>
           ))}
         </select>
-        {row.matter ? (
+        {row.matter === null ? null : "restricted" in row.matter ? (
+          <RestrictedRecordCell
+            className="mt-1"
+            label={{
+              id: "entities.record.obligations.restrictedMatter",
+              defaultMessage: "Restricted matter",
+            }}
+          />
+        ) : (
           <Link
             className="mt-1 block text-sm text-link hover:underline"
             to={`/matters/${row.matter.number}`}
           >
             {matterLabel(intl, row.matter)}
           </Link>
-        ) : null}
+        )}
       </td>
       <td className="p-3">
         <Input

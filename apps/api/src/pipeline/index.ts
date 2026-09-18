@@ -51,7 +51,7 @@ export {
   type BackfillOptions,
   type BackfillSummary,
 } from "./backfill.js";
-export { isTerminalFailure, type DerivationDeps } from "./derivations.js";
+export { isTerminalFailure, reasonOf, type DerivationDeps } from "./derivations.js";
 export { needsDisplayRendition, recordRenditionOwed } from "./display-conversion.js";
 export {
   runExecutedCopySweep,

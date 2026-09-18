@@ -25,7 +25,7 @@
  * filename, so no name a person chose can shape a storage key.
  */
 
-import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { uuidPk } from "./helpers.js";
 import { documentVersions } from "./documents.js";
@@ -50,6 +50,10 @@ export const requestAttachments = pgTable(
     /** The name the file arrived under, and the name a download offers
      * it back as. Stored as the uploader's machine spelled it. */
     filename: text("filename").notNull(),
+    /** How many bytes the upload carried, counted on the way to the
+     * driver. It exists for the per-person hourly byte quota (M12) and
+     * nothing else reads it. Rows from before the quota hold 0. */
+    byteSize: bigint("byte_size", { mode: "number" }).notNull().default(0),
     /** Who attached it. The Requester on the portal. A column of its
      * own because the Request's own `requester_id` answers a different
      * question: who asked, not who put this file here. */

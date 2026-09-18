@@ -55,6 +55,10 @@ const MatterSummary = z.object({
   number: z.number().int(),
   title: z.string(),
 });
+/** A linked Matter the viewer does not reach (DD-014): the link is a
+ * fact about the obligation, the Matter's number and title are not. */
+const RestrictedMatter = z.object({ id: z.string(), restricted: z.literal(true) });
+const LinkedMatter = z.union([MatterSummary, RestrictedMatter]);
 const ObligationSchema = z.object({
   id: z.string(),
   entityId: z.string(),
@@ -64,7 +68,7 @@ const ObligationSchema = z.object({
   nextDueOn: z.iso.date(),
   assignee: AssigneeSummary.nullable(),
   note: z.string().nullable(),
-  matter: MatterSummary.nullable(),
+  matter: LinkedMatter.nullable(),
   completedOn: z.iso.date().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -93,7 +97,13 @@ const UpdateBody = z.strictObject({
   matterId: NullableId.optional(),
 });
 
-function obligationProjection(db: Transaction | Parameters<typeof reachedEntity>[0]) {
+/** The obligation with its display names. The Matter joins through the
+ * viewer's reach (DD-014): a Matter outside it leaves its number and
+ * title NULL, and the projection answers `{ restricted: true }`. */
+function obligationProjection(
+  db: Transaction | Parameters<typeof reachedEntity>[0],
+  user: Parameters<typeof matterTeamScope>[1],
+) {
   return db
     .select({
       obligation: entityObligations,
@@ -109,7 +119,7 @@ function obligationProjection(db: Transaction | Parameters<typeof reachedEntity>
     .innerJoin(entities, eq(entityObligations.entityId, entities.id))
     .leftJoin(entityRegistrations, eq(entityObligations.registrationId, entityRegistrations.id))
     .leftJoin(users, eq(entityObligations.assigneeId, users.id))
-    .leftJoin(matters, eq(entityObligations.matterId, matters.id));
+    .leftJoin(matters, and(eq(entityObligations.matterId, matters.id), matterTeamScope(db, user)));
 }
 
 type Projected = Awaited<ReturnType<typeof obligationProjection>>[number];
@@ -138,11 +148,9 @@ function toObligation(row: Projected) {
       : null,
     note: obligation.note,
     matter: obligation.matterId
-      ? {
-          id: obligation.matterId,
-          number: row.matterNumber!,
-          title: row.matterTitle!,
-        }
+      ? row.matterNumber !== null && row.matterTitle !== null
+        ? { id: obligation.matterId, number: row.matterNumber, title: row.matterTitle }
+        : { id: obligation.matterId, restricted: true as const }
       : null,
     completedOn: obligation.completedOn,
     createdAt: obligation.createdAt.toISOString(),
@@ -150,8 +158,12 @@ function toObligation(row: Projected) {
   };
 }
 
-async function projectedObligation(db: Parameters<typeof obligationProjection>[0], id: string) {
-  const [row] = await obligationProjection(db).where(eq(entityObligations.id, id)).limit(1);
+async function projectedObligation(
+  db: Parameters<typeof obligationProjection>[0],
+  user: Parameters<typeof obligationProjection>[1],
+  id: string,
+) {
+  const [row] = await obligationProjection(db, user).where(eq(entityObligations.id, id)).limit(1);
   if (!row) throw new Error("An obligation projection requires its row.");
   return toObligation(row);
 }
@@ -275,7 +287,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const today = localMoment(new Date(), request.user.timezone).date;
       const overdueRank = sql<number>`case when ${entityObligations.completedOn} is null and ${entityObligations.nextDueOn} < ${today} then 0 else 1 end`;
-      const rows = await obligationProjection(app.db)
+      const rows = await obligationProjection(app.db, request.user)
         .where(
           and(
             isNull(entities.archivedAt),
@@ -358,7 +370,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const entity = await reachedEntity(app.db, request.user, request.params.id);
       if (!entity) throw httpError(404, NO_ENTITY);
-      const rows = await obligationProjection(app.db)
+      const rows = await obligationProjection(app.db, request.user)
         .where(eq(entityObligations.entityId, entity.id))
         .orderBy(asc(entityObligations.nextDueOn), asc(entityObligations.id));
       return { obligations: rows.map(toObligation) };
@@ -414,7 +426,9 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return created!.id;
       });
-      return reply.status(201).send({ obligation: await projectedObligation(app.db, id) });
+      return reply
+        .status(201)
+        .send({ obligation: await projectedObligation(app.db, request.user, id) });
     },
   );
 
@@ -472,7 +486,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return target.id;
       });
-      return { obligation: await projectedObligation(app.db, id) };
+      return { obligation: await projectedObligation(app.db, request.user, id) };
     },
   );
 
@@ -586,7 +600,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return target.id;
       });
-      return { obligation: await projectedObligation(app.db, id) };
+      return { obligation: await projectedObligation(app.db, request.user, id) };
     },
   );
 };

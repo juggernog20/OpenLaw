@@ -630,3 +630,63 @@ it("stops calling a failed Generation's saved Filing pending while retaining its
     h.fillEngine.failure = null;
   }
 });
+
+it("hides a Generation from a Member who no longer reaches the Contract it created", async () => {
+  const outsiderFixture = {
+    email: "filing-outsider@example.com",
+    displayName: "Outsider Member",
+    password: "correct-horse-battery",
+  };
+  const person = await provisionUser(h.app.auth, outsiderFixture);
+  await h.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, person.id));
+  const outsider = await signInCookies(h.app, outsiderFixture.email, outsiderFixture.password);
+  const type = await post("/contract-types", { displayName: "Reach NDA" });
+  const contractTypeId = type.json().contractType.id;
+  const source = await generation(false, { targetContractTypeId: contractTypeId });
+  const [created] = await h.db
+    .select({ number: contracts.number })
+    .from(contracts)
+    .where(eq(contracts.createdByGenerationId, source.generationId));
+  const path = `/auto-docs/${source.id}/generations/${source.generationId}`;
+  expect((await get(path, outsider)).statusCode).toBe(200);
+  expect((await get(`${path}/docx`, outsider)).statusCode).toBe(200);
+
+  const hidden = await h.app.inject({
+    method: "PATCH",
+    url: `/api/v1/contracts/${created!.number}`,
+    cookies: admin,
+    payload: { isConfidential: true },
+  });
+  expect(hidden.statusCode, hidden.body).toBe(200);
+
+  expect((await get(path, outsider)).statusCode).toBe(404);
+  expect((await get(`${path}/docx`, outsider)).statusCode).toBe(404);
+  expect((await get(`${path}/filings`, outsider)).statusCode).toBe(404);
+  const listed = await get(`/auto-docs/${source.id}/generations`, outsider);
+  expect(listed.statusCode).toBe(200);
+  expect(listed.json().generations.map((row: { id: string }) => row.id)).not.toContain(
+    source.generationId,
+  );
+  const target = await destination("matter");
+  expect(
+    (
+      await post(
+        `${path}/filings`,
+        { destination: { kind: "matter", number: target.number } },
+        outsider,
+      )
+    ).statusCode,
+  ).toBe(404);
+  expect((await post(`${path}/retry`, {}, outsider)).statusCode).toBe(404);
+  // The generating Member is on the created Contract's team and keeps reach.
+  expect((await get(path, member)).statusCode).toBe(200);
+  expect(
+    (
+      await post(
+        `${path}/filings`,
+        { destination: { kind: "matter", number: target.number } },
+        member,
+      )
+    ).statusCode,
+  ).toBe(201);
+});

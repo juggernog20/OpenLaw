@@ -2,7 +2,7 @@
 
 /** M28/5's requester-facing Knowledge read and download gate (#603). */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, knowledgeTypes, users } from "@openlaw/db";
+import { documents, eq, knowledgeTypes, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -171,6 +171,55 @@ describe("GET /portal/knowledge/:id", () => {
     expect(download.statusCode, download.body).toBe(200);
     expect(download.body).toBe("%PDF current version");
     expect(download.headers["content-disposition"]).toContain("nda-guide-v2.pdf");
+  });
+
+  it("keeps a Document flagged confidential out of the Portal, listing and bytes alike", async () => {
+    const id = await createItem("Escalation playbook", "everyone");
+    const upload = async (filename: string, content: string) => {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/knowledge/${id}/documents`,
+        cookies: memberCookies,
+        ...multipart(filename, content),
+      });
+      expect(response.statusCode, response.body).toBe(201);
+      return response.json().document as { id: string };
+    };
+    const open = await upload("public-steps.pdf", "%PDF open steps");
+    const walled = await upload("internal-steps.pdf", "%PDF internal steps");
+    // The Document's own flag (DOC-008), set straight in the column: the
+    // flag write has its own tests, and this one is about what the
+    // Portal answers once it is set.
+    await harness.db
+      .update(documents)
+      .set({ isConfidential: true })
+      .where(eq(documents.id, walled.id));
+    await publish(id);
+
+    const listing = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/knowledge/${id}`,
+      cookies: requesterCookies,
+    });
+    expect(listing.statusCode, listing.body).toBe(200);
+    expect(listing.json().knowledgeItem.documents.map((row: { id: string }) => row.id)).toEqual([
+      open.id,
+    ]);
+    expect(listing.body).not.toContain("internal-steps.pdf");
+
+    const download = (documentId: string) =>
+      harness.app.inject({
+        method: "GET",
+        url: `/api/v1/portal/knowledge/${id}/documents/${documentId}/download`,
+        cookies: requesterCookies,
+      });
+    const refused = await download(walled.id);
+    expect(refused.statusCode, refused.body).toBe(404);
+    // The same body a Document that is not there answers with.
+    expect(refused.json()).toEqual((await download("no-such-document")).json());
+    const allowed = await download(open.id);
+    expect(allowed.statusCode, allowed.body).toBe(200);
+    expect(allowed.body).toBe("%PDF open steps");
   });
 
   it("answers draft, Legal Only, archived, and unknown items with the identical 404 body", async () => {

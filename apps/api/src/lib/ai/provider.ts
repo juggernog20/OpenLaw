@@ -44,11 +44,44 @@ export interface AiProviderConfig {
   model: string;
 }
 
-export class AiProviderError extends Error {}
+/** The request fields an adapter knows how to drop when a model refuses them. */
+export const AI_UNSUPPORTED_FIELDS = ["max_tokens", "temperature"] as const;
+export type AiUnsupportedField = (typeof AI_UNSUPPORTED_FIELDS)[number];
+
+/**
+ * What the provider answered when it refused. The status code is safe
+ * to show. The summary is a short, redacted cut of the provider's own
+ * body. It is for logs only: a provider can quote back the key it was
+ * handed, or an HTML page nobody should see in Settings. Code never
+ * reads the summary. When the refusal names a request field the model
+ * does not take, `unsupportedField` carries it, read from the whole
+ * bounded body before the summary is cut, so an adapter can decide
+ * what to drop on structured data.
+ */
+export interface AiUpstreamRefusal {
+  status: number;
+  summary: string;
+  unsupportedField?: AiUnsupportedField;
+}
+
+export interface AiErrorOptions {
+  cause?: unknown;
+  upstream?: AiUpstreamRefusal;
+}
+
+export class AiProviderError extends Error {
+  /** Set when the provider answered with a refusal body. Never shown to a person. */
+  readonly upstream?: AiUpstreamRefusal;
+
+  constructor(message: string, options?: AiErrorOptions) {
+    super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
+    if (options?.upstream) this.upstream = options.upstream;
+  }
+}
 
 /** The provider refused the key, model, endpoint, or request. */
 export class AiConfigError extends AiProviderError {
-  constructor(message: string, options?: { cause?: unknown }) {
+  constructor(message: string, options?: AiErrorOptions) {
     super(message, options);
     this.name = "AiConfigError";
   }
@@ -56,7 +89,7 @@ export class AiConfigError extends AiProviderError {
 
 /** The provider answered, but not with a usable model reply. */
 export class AiResponseError extends AiProviderError {
-  constructor(message: string, options?: { cause?: unknown }) {
+  constructor(message: string, options?: AiErrorOptions) {
     super(message, options);
     this.name = "AiResponseError";
   }
@@ -64,7 +97,7 @@ export class AiResponseError extends AiProviderError {
 
 /** The provider could not be reached. */
 export class AiUnavailableError extends AiProviderError {
-  constructor(message: string, options?: { cause?: unknown }) {
+  constructor(message: string, options?: AiErrorOptions) {
     super(message, options);
     this.name = "AiUnavailableError";
   }
@@ -72,7 +105,7 @@ export class AiUnavailableError extends AiProviderError {
 
 /** The provider did not answer inside the call bound. */
 export class AiTimeoutError extends AiProviderError {
-  constructor(message: string, options?: { cause?: unknown }) {
+  constructor(message: string, options?: AiErrorOptions) {
     super(message, options);
     this.name = "AiTimeoutError";
   }

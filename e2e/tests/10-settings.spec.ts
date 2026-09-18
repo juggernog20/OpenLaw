@@ -165,7 +165,7 @@ test.describe.serial("the settings destination", () => {
       await page.goto("/settings/general");
       const rail = page.getByRole("navigation", { name: "Settings sections" });
       await expect(rail.getByRole("link", { name: "Authentication" })).toBeHidden();
-      await rail.getByRole("button", { name: "Security" }).click();
+      await rail.getByRole("button", { name: "Advanced" }).click();
       await rail.getByRole("link", { name: "Authentication" }).click();
       await expect(page).toHaveURL(/\/settings\/authentication$/);
       await expect(page).toHaveTitle("Authentication · OpenLaw");

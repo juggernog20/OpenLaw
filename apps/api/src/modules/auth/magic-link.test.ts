@@ -400,3 +400,39 @@ it.each(["/api/v1/auth/magic-link", "/api/auth/sign-in/magic-link"])(
     expect(harness.mailer.messagesTo(unknown)).toHaveLength(0);
   },
 );
+
+describe("the request budget (TECH-032)", () => {
+  // Each test names its own client address, so the budget one test
+  // spends never leaks into the next, nor into the suite above, which
+  // sends from the default address.
+  const ask = (email: string, remoteAddress: string) =>
+    harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/magic-link",
+      remoteAddress,
+      payload: { email },
+    });
+
+  it("issues thirty links to distinct addresses from one client address and refuses the thirty-first", async () => {
+    const address = "192.0.2.77";
+    const email = (n: number) => `budgeted-${n}@acme.example`;
+    for (let n = 1; n <= 30; n++) {
+      const res = await ask(email(n), address);
+      expect(res.statusCode, `request ${n}: ${res.body}`).toBe(202);
+      expect(harness.mailer.messagesTo(email(n))).toHaveLength(1);
+    }
+    const refused = await ask(email(31), address);
+    expect(refused.statusCode).toBe(429);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    expect(harness.mailer.messagesTo(email(31))).toHaveLength(0);
+  });
+
+  it("issues three links to one address in a window and refuses the fourth, eligible or not", async () => {
+    const email = "outsider@evil.example";
+    const address = "192.0.2.78";
+    for (let n = 0; n < 3; n++) expect((await ask(email, address)).statusCode).toBe(202);
+    expect((await ask(email, address)).statusCode).toBe(429);
+    // Refused the same way as an eligible address, and nothing was sent.
+    expect(harness.mailer.messagesTo(email)).toHaveLength(0);
+  });
+});

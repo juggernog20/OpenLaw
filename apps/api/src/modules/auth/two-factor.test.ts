@@ -141,7 +141,7 @@ async function inviteActivated(email: string, displayName: string, password: str
     payload: { email, displayName, role: "legal_team_member" },
   });
   expect(invited.statusCode, invited.body).toBe(201);
-  const token = /\/auth\/set-password\?token=([A-Za-z0-9._~-]+)/.exec(
+  const token = /\/auth\/set-password#token=([A-Za-z0-9._~-]+)/.exec(
     harness.mailer.messagesTo(email).at(-1)!.text,
   )![1]!;
   const reset = await harness.app.inject({

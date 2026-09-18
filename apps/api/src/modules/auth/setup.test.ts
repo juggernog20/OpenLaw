@@ -2,7 +2,14 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq, users } from "@openlaw/db";
-import { startHarness, type TestHarness } from "../../testing/harness.js";
+import { buildApp } from "../../app.js";
+import { testDeps } from "../../testing/deps.js";
+import {
+  startHarness,
+  TEST_AUTH_CONFIG,
+  TEST_SETUP_TOKEN,
+  type TestHarness,
+} from "../../testing/harness.js";
 
 let h: TestHarness;
 
@@ -114,5 +121,56 @@ describe("concurrent first-run setup", () => {
       .from(users)
       .where(eq(users.role, "administrator"));
     expect(admins).toHaveLength(1);
+  });
+});
+
+describe("the bootstrap token (TECH-031)", () => {
+  // The shared harness leaves the token unset; this app is what a real
+  // boot builds, with the token the entrypoint printed to the log.
+  let gated: Awaited<ReturnType<typeof buildApp>>;
+
+  beforeAll(async () => {
+    await h.db.delete(users);
+    gated = await buildApp(
+      testDeps({ db: h.db, config: { ...TEST_AUTH_CONFIG, setupToken: TEST_SETUP_TOKEN } }),
+    );
+    await gated.ready();
+  });
+
+  afterAll(async () => {
+    await gated.close();
+  });
+
+  const attempt = (payload: Record<string, string>) =>
+    gated.inject({
+      method: "POST",
+      url: "/api/v1/auth/setup",
+      payload: {
+        email: "gated@example.com",
+        displayName: "Gated Admin",
+        password: "correct-horse-battery",
+        ...payload,
+      },
+    });
+
+  it("refuses setup without the token, in one sentence for missing and wrong", async () => {
+    const missing = await attempt({});
+    const wrong = await attempt({ setupToken: "not-the-token" });
+    expect(missing.statusCode, missing.body).toBe(403);
+    expect(wrong.statusCode, wrong.body).toBe(403);
+    expect(missing.headers["content-type"]).toContain("application/problem+json");
+    expect(missing.json()).toEqual(wrong.json());
+    expect(await h.db.select({ id: users.id }).from(users)).toHaveLength(0);
+  });
+
+  it("creates the Administrator with the token", async () => {
+    const res = await attempt({ setupToken: TEST_SETUP_TOKEN });
+    expect(res.statusCode, res.body).toBe(201);
+    expect(res.json().user).toMatchObject({ email: "gated@example.com", role: "administrator" });
+  });
+
+  it("answers 409 once a user exists, token or not", async () => {
+    expect((await attempt({})).statusCode).toBe(409);
+    expect((await attempt({ setupToken: TEST_SETUP_TOKEN })).statusCode).toBe(409);
   });
 });

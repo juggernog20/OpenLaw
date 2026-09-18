@@ -26,12 +26,15 @@ import {
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
+import { DocEngineUnavailableError } from "../../lib/doc-engine/engine.js";
+import { BlobNotFoundError, formatBlobRef } from "../../lib/storage/adapter.js";
 import {
   signInCookies,
   startHarness,
   TEST_ADMIN as ADMIN,
   type TestHarness,
 } from "../../testing/harness.js";
+import { attachmentRenditionKey } from "./routes.js";
 
 const MEMBER = {
   email: "paper-member@example.com",
@@ -1437,5 +1440,75 @@ describe("Matter attachment filing and previews", () => {
       cookies: memberCookies,
     });
     expect(deleted.statusCode).toBe(404);
+  });
+
+  it("stores a converted preview once and serves it again until the comment is redacted", async () => {
+    const matter = await matterForFiling("Preview cache");
+    const posted = await postMultipart(
+      memberCookies,
+      "matter",
+      matter.id,
+      "Cache this.",
+      "full_thread",
+      [
+        { filename: "advice.rtf", content: "{\\rtf1 advice}" },
+        { filename: "brief.rtf", content: "{\\rtf1 brief}" },
+      ],
+    );
+    expect(posted.statusCode, posted.body).toBe(201);
+    const comment = posted.json().comment;
+    const [cached, busy] = comment.attachments as Array<{ id: string }>;
+    const href = (id: string) =>
+      `/api/v1/comments/${comment.id}/attachments/${id}?entityType=matter&entityId=${matter.id}&preview=true`;
+    const renditionRef = (id: string) =>
+      formatBlobRef(harness.storage.driver, attachmentRenditionKey(id));
+    const convert = vi.spyOn(harness.docEngine, "convertToPdf");
+    try {
+      const first = await harness.app.inject({
+        method: "GET",
+        url: href(cached!.id),
+        cookies: memberCookies,
+      });
+      expect(first.statusCode, first.body).toBe(200);
+      expect(first.headers["content-type"]).toBe("application/pdf");
+      const second = await harness.app.inject({
+        method: "GET",
+        url: href(cached!.id),
+        cookies: memberCookies,
+      });
+      expect(second.statusCode, second.body).toBe(200);
+      expect(second.rawPayload.equals(first.rawPayload)).toBe(true);
+      // One conversion for two reads: the second GET read the stored PDF.
+      expect(convert).toHaveBeenCalledTimes(1);
+      const stored = await harness.storage.get(renditionRef(cached!.id));
+      stored.destroy();
+
+      // A sidecar that is full answers transient failures. The preview
+      // says when to ask again instead of calling the file unreadable.
+      convert.mockRejectedValueOnce(new DocEngineUnavailableError("The doc engine is busy."));
+      const unavailable = await harness.app.inject({
+        method: "GET",
+        url: href(busy!.id),
+        cookies: memberCookies,
+      });
+      expect(unavailable.statusCode, unavailable.body).toBe(503);
+      expect(unavailable.headers["retry-after"]).toBe("10");
+      await expect(harness.storage.get(renditionRef(busy!.id))).rejects.toBeInstanceOf(
+        BlobNotFoundError,
+      );
+    } finally {
+      convert.mockRestore();
+    }
+
+    // Redaction removes the stored preview beside the original.
+    const redacted = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/comments/${comment.id}/redact`,
+      cookies: adminCookies,
+    });
+    expect(redacted.statusCode, redacted.body).toBe(200);
+    await expect(harness.storage.get(renditionRef(cached!.id))).rejects.toBeInstanceOf(
+      BlobNotFoundError,
+    );
   });
 });

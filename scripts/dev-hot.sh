@@ -175,6 +175,22 @@ if [[ ! -f .env ]]; then
   fi
 fi
 
+# First-run setup asks for a token (TECH-031). The seed and the E2E
+# helpers read it from .env, so a file without one stops the seed with
+# a message instead of an Administrator. A copied .env from before the
+# token existed lacks the line too, so this runs after both branches.
+if ! grep -q '^SETUP_TOKEN=.' .env; then
+  echo "==> no SETUP_TOKEN in .env. Adding one for first-run setup"
+  token="$(openssl rand -base64 24 | tr '+/' '-_' | tr -d '=')"
+  if grep -q '^#\?SETUP_TOKEN=' .env; then
+    awk -v token="$token" \
+      '$0 ~ /^#?SETUP_TOKEN=/ { print "SETUP_TOKEN=" token; next } { print }' .env > .env.tmp
+    mv .env.tmp .env
+  else
+    printf '\nSETUP_TOKEN=%s\n' "$token" >> .env
+  fi
+fi
+
 if [[ ! -d node_modules ]]; then
   echo "==> no node_modules here. Installing, which takes a minute, once per worktree"
   pnpm install

@@ -257,14 +257,16 @@ async function sourceRows(
     : sql.raw("");
   const withoutLaterContractColumns = migrated
     ? sql.raw(
-        " - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields' - 'created_by' - 'owning_department_id' - 'region' - 'created_by_generation_id' - 'value_cadence_description'",
+        " - 'search_vector' - 'ai_unverified' - 'business_owner_id' - 'analysis_human_fields' - 'created_by' - 'owning_department_id' - 'region' - 'created_by_generation_id' - 'value_cadence_description' - 'default_approver_group_id'",
       )
     : sql.raw("");
   const withoutLaterDocumentColumns = migrated
     ? sql.raw(" - 'search_vector' - 'entity_id' - 'knowledge_item_id' - 'auto_doc_id'")
     : sql.raw("");
   const withoutLaterRequestColumns = migrated
-    ? sql.raw(" - 'search_vector' - 'assignee_id' - 'expected_by' - 'title' - 'department_id'")
+    ? sql.raw(
+        " - 'search_vector' - 'assignee_id' - 'expected_by' - 'title' - 'department_id' - 'intake_counterparties'",
+      )
     : sql.raw("");
   const tableNames = SEARCH_TABLE_NAMES.map((name) => sql`${name}`);
   const result = await db.execute<{ table_name: string; rows: unknown[] }>(sql`

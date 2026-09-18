@@ -7333,6 +7333,7 @@ export interface operations {
           email: string;
           displayName: string;
           password: string;
+          setupToken?: string;
         };
       };
     };
@@ -33219,11 +33220,20 @@ export interface operations {
                 image: string | null;
               } | null;
               note: string | null;
-              matter: {
-                id: string;
-                number: number;
-                title: string;
-              } | null;
+              matter:
+                | (
+                    | {
+                        id: string;
+                        number: number;
+                        title: string;
+                      }
+                    | {
+                        id: string;
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               completedOn: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -33325,11 +33335,20 @@ export interface operations {
                 image: string | null;
               } | null;
               note: string | null;
-              matter: {
-                id: string;
-                number: number;
-                title: string;
-              } | null;
+              matter:
+                | (
+                    | {
+                        id: string;
+                        number: number;
+                        title: string;
+                      }
+                    | {
+                        id: string;
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               completedOn: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -33399,11 +33418,20 @@ export interface operations {
                 image: string | null;
               } | null;
               note: string | null;
-              matter: {
-                id: string;
-                number: number;
-                title: string;
-              } | null;
+              matter:
+                | (
+                    | {
+                        id: string;
+                        number: number;
+                        title: string;
+                      }
+                    | {
+                        id: string;
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               completedOn: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -33506,11 +33534,20 @@ export interface operations {
                 image: string | null;
               } | null;
               note: string | null;
-              matter: {
-                id: string;
-                number: number;
-                title: string;
-              } | null;
+              matter:
+                | (
+                    | {
+                        id: string;
+                        number: number;
+                        title: string;
+                      }
+                    | {
+                        id: string;
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               completedOn: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -33575,11 +33612,20 @@ export interface operations {
                 image: string | null;
               } | null;
               note: string | null;
-              matter: {
-                id: string;
-                number: number;
-                title: string;
-              } | null;
+              matter:
+                | (
+                    | {
+                        id: string;
+                        number: number;
+                        title: string;
+                      }
+                    | {
+                        id: string;
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
               completedOn: string | null;
               /** Format: date-time */
               createdAt: string;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import {
+  AI_UNSUPPORTED_FIELDS,
   AiConfigError,
   AiResponseError,
   AiTimeoutError,
@@ -8,6 +9,8 @@ import {
   type AiSource,
   type AiExtraction,
   type AiExtractionTarget,
+  type AiUnsupportedField,
+  type AiUpstreamRefusal,
 } from "./provider.js";
 
 const MAX_REFUSAL_BYTES = 500;
@@ -68,19 +71,65 @@ function nestedReason(value: unknown): string | null {
   return null;
 }
 
-/** Reads the provider's own reason without copying an HTML error page into Settings. */
-async function refusalReason(response: Response): Promise<string> {
+/** The longest summary a log line carries. */
+const MAX_SUMMARY_CHARS = 200;
+/** Header values at least this long are treated as credentials and redacted. */
+const MIN_SECRET_CHARS = 8;
+
+/**
+ * OpenAI's refusal for a request field its model does not take, for example
+ * "Unsupported parameter: 'max_tokens' is not supported with this model" or
+ * "Unsupported value: 'temperature' does not support 0 with this model".
+ */
+const UNSUPPORTED_FIELD = /unsupported (?:parameter|value)[^']*'([a-z_]+)'/i;
+
+/** Names the refused request field when it is one an adapter can drop. */
+function unsupportedFieldIn(text: string): AiUnsupportedField | undefined {
+  const field = UNSUPPORTED_FIELD.exec(text)?.[1]?.toLowerCase();
+  return AI_UNSUPPORTED_FIELDS.find((known) => known === field);
+}
+
+/** The provider's refusal body, read once and split for its two readers. */
+type Refusal = Omit<AiUpstreamRefusal, "status">;
+
+/**
+ * Reads the provider's refusal body up to a small cap and splits it in
+ * two. The summary is a short, redacted cut for the log. It never
+ * reaches a person: a provider can quote back the key it was handed,
+ * and an HTML error page says nothing useful in Settings. The
+ * provider's own reason is picked out of JSON when it is JSON, header
+ * values are blanked, and the rest is cut to one line. The unsupported
+ * field is read from the whole bounded body before that cut, so a
+ * long refusal still names the field an adapter can drop.
+ */
+async function readRefusal(
+  response: Response,
+  headers: Readonly<Record<string, string>>,
+): Promise<Refusal> {
+  const fallback = response.statusText || "";
   const reply = await readUpTo(response, MAX_REFUSAL_BYTES);
-  if (!reply || reply.truncated) return response.statusText || `HTTP ${response.status}`;
+  if (!reply) return { summary: fallback };
   const raw = reply.raw;
-  try {
-    const reason = nestedReason(JSON.parse(raw));
-    if (reason) return reason;
-  } catch {
-    // A short plain-text refusal is still the provider's useful reason.
+  let text = raw;
+  if (!reply.truncated) {
+    try {
+      text = nestedReason(JSON.parse(raw)) ?? raw;
+    } catch {
+      // A plain-text refusal is summarised as it is.
+    }
   }
-  const plain = raw.replace(/\s+/g, " ").trim();
-  return plain || response.statusText || `HTTP ${response.status}`;
+  const unsupportedField = unsupportedFieldIn(text);
+  const structured = unsupportedField ? { unsupportedField } : {};
+  if (reply.truncated) return { summary: fallback, ...structured };
+  // Each token of a header value, so `Bearer <key>` blanks the key on its own.
+  for (const value of Object.values(headers)) {
+    for (const token of value.split(/\s+/)) {
+      if (token.length < MIN_SECRET_CHARS) continue;
+      text = text.split(token).join("[redacted]");
+    }
+  }
+  const plain = text.replace(/\s+/g, " ").trim().slice(0, MAX_SUMMARY_CHARS);
+  return { summary: plain || fallback, ...structured };
 }
 
 /** Reads at most `maxBytes` of the body, or says that it is longer and
@@ -121,7 +170,19 @@ function transportReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** One bounded JSON request with the error split later worker jobs need. */
+/**
+ * One bounded JSON request with the error split later worker jobs need.
+ *
+ * The request never follows a redirect. A redirect is the endpoint
+ * choosing where the API key goes next, and `redirect: "error"` makes
+ * that a transport failure instead. The whole call, headers and body,
+ * runs under one deadline, and the body is read up to a fixed byte
+ * ceiling, so a slow or endless reply is a timeout or a reply error
+ * rather than memory.
+ *
+ * A refusal answers with the status code only. The provider's own body
+ * goes on the error as `upstream.summary` for the log and nowhere else.
+ */
 export async function postJson(
   url: URL,
   headers: Readonly<Record<string, string>>,
@@ -136,6 +197,7 @@ export async function postJson(
       headers: { "content-type": "application/json", ...headers },
       body: JSON.stringify(body),
       signal,
+      redirect: "error",
     });
   } catch (error) {
     if (isTimedOut(signal, error)) {
@@ -146,23 +208,24 @@ export async function postJson(
     });
   }
   if (!response.ok) {
-    let reason: string;
+    let refusal: Refusal;
     try {
-      reason = await refusalReason(response);
+      refusal = await readRefusal(response, headers);
     } catch (error) {
       if (isTimedOut(signal, error)) {
         throw new AiTimeoutError("The provider did not answer in time.", { cause: error });
       }
-      throw new AiUnavailableError(
-        `The provider response could not be read. ${transportReason(error)}`,
-        { cause: error },
-      );
+      // The status code is already known and is the fact that matters. A
+      // body that breaks mid-read must not turn a 401 into a retryable
+      // outage, so the refusal is classified on the status alone.
+      refusal = { summary: response.statusText || "" };
     }
-    const message = reason || `The provider refused the request with HTTP ${response.status}.`;
+    const message = `The provider refused the request with HTTP ${String(response.status)}.`;
+    const upstream: AiUpstreamRefusal = { status: response.status, ...refusal };
     if (response.status === 429 || response.status >= 500) {
-      throw new AiUnavailableError(message);
+      throw new AiUnavailableError(message, { upstream });
     }
-    throw new AiConfigError(message);
+    throw new AiConfigError(message, { upstream });
   }
   let reply: { raw: string; truncated: boolean } | null;
   try {

@@ -687,6 +687,10 @@
                   "password": {
                     "type": "string",
                     "minLength": 8
+                  },
+                  "setupToken": {
+                    "type": "string",
+                    "maxLength": 200
                   }
                 },
                 "required": ["email", "displayName", "password"]
@@ -73274,22 +73278,40 @@
                           "matter": {
                             "anyOf": [
                               {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "number": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "title": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["id", "number", "title"],
+                                    "additionalProperties": false
                                   },
-                                  "number": {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  "title": {
-                                    "type": "string"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      }
+                                    },
+                                    "required": ["id", "restricted"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["id", "number", "title"],
-                                "additionalProperties": false
+                                ]
                               },
                               {
                                 "type": "null"
@@ -73553,22 +73575,40 @@
                           "matter": {
                             "anyOf": [
                               {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string"
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "number": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "title": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["id", "number", "title"],
+                                    "additionalProperties": false
                                   },
-                                  "number": {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  "title": {
-                                    "type": "string"
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "restricted": {
+                                        "type": "boolean",
+                                        "enum": [true]
+                                      }
+                                    },
+                                    "required": ["id", "restricted"],
+                                    "additionalProperties": false
                                   }
-                                },
-                                "required": ["id", "number", "title"],
-                                "additionalProperties": false
+                                ]
                               },
                               {
                                 "type": "null"
@@ -73821,22 +73861,40 @@
                         "matter": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["id", "number", "title"],
+                                  "additionalProperties": false
                                 },
-                                "number": {
-                                  "type": "integer",
-                                  "minimum": -9007199254740991,
-                                  "maximum": 9007199254740991
-                                },
-                                "title": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["id", "restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "number", "title"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -74099,22 +74157,40 @@
                         "matter": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["id", "number", "title"],
+                                  "additionalProperties": false
                                 },
-                                "number": {
-                                  "type": "integer",
-                                  "minimum": -9007199254740991,
-                                  "maximum": 9007199254740991
-                                },
-                                "title": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["id", "restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "number", "title"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"
@@ -74359,22 +74435,40 @@
                         "matter": {
                           "anyOf": [
                             {
-                              "type": "object",
-                              "properties": {
-                                "id": {
-                                  "type": "string"
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["id", "number", "title"],
+                                  "additionalProperties": false
                                 },
-                                "number": {
-                                  "type": "integer",
-                                  "minimum": -9007199254740991,
-                                  "maximum": 9007199254740991
-                                },
-                                "title": {
-                                  "type": "string"
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "restricted": {
+                                      "type": "boolean",
+                                      "enum": [true]
+                                    }
+                                  },
+                                  "required": ["id", "restricted"],
+                                  "additionalProperties": false
                                 }
-                              },
-                              "required": ["id", "number", "title"],
-                              "additionalProperties": false
+                              ]
                             },
                             {
                               "type": "null"

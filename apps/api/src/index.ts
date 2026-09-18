@@ -11,6 +11,7 @@ import {
   startRuntimeHeartbeat,
 } from "./modules/advanced-settings/config.js";
 
+import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +22,7 @@ import {
   rewrapSecrets,
   runMigrations,
   useSecretKeys,
+  users,
   PREVIOUS_SECRET_KEY_VARIABLE,
 } from "@openlaw/db";
 import { buildApp } from "./app.js";
@@ -39,6 +41,7 @@ import { createConsoleLogger } from "./pipeline/logger.js";
 import { createSigningResolver } from "./lib/signing/resolver.js";
 import { createAiResolver } from "./lib/ai/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
+import { loggerOptions } from "./logging.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
 
 /** A per-column count, as one readable clause. */
@@ -225,6 +228,50 @@ if (runtimeEnv.BASE_URL === "http://localhost:3000" && process.env.NODE_ENV === 
   );
 }
 
+// TECH-032: the proxies whose forwarded client address is believed, as a
+// comma-separated list of addresses or CIDR ranges. Read here for the
+// storage root's reason, and handed to the app as config so Fastify and
+// better-auth key their limiters on the same address. Unset, the socket
+// address is the client, which behind a proxy is the proxy: every
+// visitor then shares one sign-in bucket, and three wrong passwords from
+// anyone lock the whole org out for ten seconds at a time.
+const trustedProxies = (process.env.TRUSTED_PROXIES ?? "")
+  .split(",")
+  .map((entry) => entry.trim())
+  .filter((entry) => entry.length > 0);
+if (trustedProxies.length === 0 && process.env.NODE_ENV === "production") {
+  console.warn(
+    "TRUSTED_PROXIES is not set. Sign-in rate limits are keyed on the socket address, which behind a reverse proxy is the proxy itself. Set TRUSTED_PROXIES to the proxy's address so each client gets its own bucket. See docs/DEPLOYMENT.md.",
+  );
+}
+
+// TECH-031: first-run setup demands a bootstrap token
+// while the install has no users, so the first client to reach the port
+// cannot claim the Administrator seat. The operator may pin one with
+// SETUP_TOKEN; otherwise one is generated per boot and printed here, and
+// only here. Once a user exists the route answers 409 to everyone and
+// the token is not needed, so none is made.
+const setupToken = await (async function readSetupToken() {
+  const [anyUser] = await db.select({ id: users.id }).from(users).limit(1);
+  if (anyUser) return undefined;
+  const pinned = process.env.SETUP_TOKEN;
+  if (pinned) {
+    console.log("First-run setup is open. The setup screen asks for the token in SETUP_TOKEN.");
+    return pinned;
+  }
+  const generated = randomBytes(24).toString("base64url");
+  console.log(
+    [
+      "First-run setup is open. Paste this setup token into the setup screen:",
+      "",
+      `    ${generated}`,
+      "",
+      "It is printed once per boot and a restart makes a new one. Set SETUP_TOKEN to pin it, for example with more than one API replica.",
+    ].join("\n"),
+  );
+  return generated;
+})();
+
 // TECH-017: serve the built SPA same-origin when it exists — true in the
 // container image and after a local `pnpm build`. Absent (API-only dev,
 // where Vite serves the SPA and proxies /api) every non-API path 404s.
@@ -262,6 +309,8 @@ const app = await buildApp(
       // always runs NODE_ENV=production — fidelity is the point — so the
       // env var is the only signal; the warning below is the guard rail.
       disableRateLimit: process.env.AUTH_RATE_LIMIT === "off",
+      trustedProxies,
+      setupToken,
     },
     advancedRuntime,
     resolveMailer,
@@ -277,7 +326,9 @@ const app = await buildApp(
     morningRoundTrigger,
     webDist: webDistPresent ? webDist : undefined,
   },
-  { logger: true },
+  // TECH-029: the request line carries the path and never the query
+  // string, and an error line never carries a query's bind parameters.
+  { logger: loggerOptions() },
 );
 
 if (!webDistPresent) {
