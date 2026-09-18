@@ -14,12 +14,6 @@
  * Request to what it became; it does not take the requester's window
  * away (INT-001, DD-018), so the row stays and still opens.
  *
- * **The empty state points at the type picker**, which is on the same
- * screen above it. A first visit should teach the loop rather than
- * state a fact about zero. When the Administrator has configured no
- * live types either, the pointer is dropped. There is nothing above to
- * point at.
- *
  * ### Recorded normalization points (I5 deviations accepted)
  *
  * 1. I5's row draws four facts: the reference, the title, the status
@@ -51,15 +45,10 @@ import { formatRelativeOrShort } from "../../lib/format";
 import { REQUEST_STATUS_PILL, requesterStatusLabel, requestReference } from "../../lib/requests";
 import type { MyRequestRow } from "../../lib/requests";
 
-/** The picker's own id, so the empty state can point a first visitor at
- * it. Written rather than generated: the home draws one picker and one
- * my-requests block, and both halves have to name the same thing. */
+/** Stable anchor for the request-type picker on the Portal home page. */
 export const REQUEST_TYPE_PICKER_ID = "portal-request-types";
 
-export function MyRequests({
-  requests,
-  hasRequestTypes,
-}: Readonly<{ requests: readonly MyRequestRow[]; hasRequestTypes: boolean }>) {
+export function MyRequests({ requests }: Readonly<{ requests: readonly MyRequestRow[] }>) {
   const intl = useIntl();
 
   return (
@@ -85,8 +74,7 @@ export function MyRequests({
         )}
       </div>
       {requests.length === 0 ? (
-        /* DES-003's empty state: one glyph, one sentence, and the way
-           on. The way on is the picker above, when there is one. */
+        /* The request-type picker already appears above this empty list. */
         <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
           <Inbox aria-hidden="true" className="size-6 text-subtle" />
           <p className="text-md text-muted">
@@ -95,17 +83,6 @@ export function MyRequests({
               defaultMessage="You have not asked Legal for anything yet."
             />
           </p>
-          {hasRequestTypes && (
-            <a
-              href={`#${REQUEST_TYPE_PICKER_ID}`}
-              className="rounded-chip text-base font-medium text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-            >
-              <FormattedMessage
-                id="portal.myRequests.emptyPointer"
-                defaultMessage="Pick a request type to make your first request."
-              />
-            </a>
-          )}
         </div>
       ) : (
         <ul className="divide-y divide-border-muted">

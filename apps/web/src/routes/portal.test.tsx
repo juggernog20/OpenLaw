@@ -180,11 +180,20 @@ describe("role-based landing", () => {
     expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
   });
 
-  it("routes a Business User bounced off a staff destination to the portal", async () => {
+  it.each([
+    "/entities",
+    "/contracts",
+    "/matters",
+    "/documents",
+    "/inbox",
+    "/auto-docs",
+    "/knowledge",
+    "/search",
+  ])("routes a Business User from %s to the portal", async (path) => {
     // Every staff destination refuses its role floor by bouncing to "/",
     // which is the redirect this leans on.
     stubApi({ signedIn: REQUESTER });
-    renderAt("/entities");
+    renderAt(path);
     expect(await screen.findByRole("heading", { name: PORTAL_HOME })).toBeInTheDocument();
   });
 
@@ -625,7 +634,7 @@ describe("my-requests", () => {
     expect(within(block).getByText("4 requests")).toBeInTheDocument();
   });
 
-  it("points a first visitor at the type picker", async () => {
+  it("keeps the empty request list free of a redundant picker link", async () => {
     stubApi({ signedIn: REQUESTER, extra: homeWith([]) });
     renderAt("/portal");
 
@@ -633,16 +642,14 @@ describe("my-requests", () => {
     expect(
       within(block).getByText(/You have not asked Legal for anything yet/),
     ).toBeInTheDocument();
-    const pointer = within(block).getByRole("link", { name: /Pick a request type/ });
-    expect(pointer).toHaveAttribute("href", "#portal-request-types");
-    // And the thing it points at is on the page.
+    expect(within(block).queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Request types" })).toHaveAttribute(
       "id",
       "portal-request-types",
     );
   });
 
-  it("drops the pointer when there is no picker to point at", async () => {
+  it("shows the empty request list when no request types are available", async () => {
     // An instance whose Administrator has archived every request type:
     // the empty list still states the fact, and points nowhere.
     stubApi({ signedIn: REQUESTER, extra: portalHome({ requestTypes: [], requests: [] }) });

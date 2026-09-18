@@ -162,7 +162,7 @@ export function PortalHomePage() {
             first visit needs, and a returning requester scrolls to the
             list that is theirs. */}
         <div className="min-w-0 @3xl/page:col-span-2">
-          <MyRequests requests={requests} hasRequestTypes={requestTypes.length > 0} />
+          <MyRequests requests={requests} />
         </div>
       </div>
     </PortalShell>
