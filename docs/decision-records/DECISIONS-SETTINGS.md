@@ -170,6 +170,10 @@ Start blank hard-deletes the catalog rows. It does not archive them. At first ru
 - **Alternatives considered** — Roles fixed at invite (change = archive + re-invite): pointless ceremony, and DD-017's "who changed this user's role last quarter?" presumes role changes happen. A Security-pane global sessions view: big-org machinery for a 2–10 person team.
 - **Consequences** — New typed routes: list users, edit role, archive (writes `users.archived_at`), revoke sessions. Every mutation lands in the activity log per DD-017/SET-003. The archived-user render state is a design-system obligation across all later surfaces (pickers, comments, activity, teams).
 
+### Addendum (2026-09-18): invites refuse while the instance cannot send email
+
+An invite exists only through its set-password email. When the effective mailer is unconfigured, for example `SMTP_URL` set with `SMTP_FROM` unset, `POST /auth/invites` and `POST /auth/invites/:userId/resend` answer 409 with the problem type `/problems/email-setup-required`, the same answer `POST /onboarding/complete` gives. The refusal is checked before any write, so no **Invited** row is created that nobody can activate and the Administrator has nothing to revoke. The Invite user dialog shows the API's detail, and Resend invite shows it beside the row. The alternative, creating the row and reporting that the email was not sent, was declined: the row would sit as Invited until someone noticed, which is the failure #889 reported.
+
 ## SET-006 — Personal profile scope; email change deferred
 
 - **Status** — Accepted

@@ -8,6 +8,7 @@ import {
   signInCookies,
   startHarness,
   TEST_ADMIN,
+  TEST_SMTP_ENV,
   tokenFrom,
   type TestHarness,
 } from "../../testing/harness.js";
@@ -453,4 +454,87 @@ it("activates magic-link-only staff and refuses every invite mutation after sign
     expect(response.statusCode, response.body).toBe(409);
   }
   expect(await harness.db.select().from(users).where(eq(users.id, id))).toHaveLength(1);
+});
+
+describe("invites while the instance cannot send email (#889)", () => {
+  const PENDING = {
+    email: "marlowe@example.com",
+    displayName: "Marlowe Ito",
+    role: "legal_team_member",
+  };
+  let pendingId: string;
+
+  beforeAll(async () => {
+    // A pending invite created while email worked, for the resend arms.
+    const res = await invite(adminCookies, PENDING);
+    expect(res.statusCode, res.body).toBe(201);
+    pendingId = res.json().user.id;
+  });
+
+  /** `SMTP_URL` set with `SMTP_FROM` unset: the environment pins the
+   * instance, and the effective mailer is the unconfigured one. */
+  async function withoutFrom(run: () => Promise<void>) {
+    const sent = harness.mailer.messages.length;
+    harness.smtpEnv = { url: TEST_SMTP_ENV.url, from: null };
+    try {
+      await run();
+    } finally {
+      harness.smtpEnv = TEST_SMTP_ENV;
+    }
+    expect(harness.mailer.messages).toHaveLength(sent);
+  }
+
+  const REFUSAL = {
+    status: 409,
+    type: "/problems/email-setup-required",
+    detail: expect.stringMatching(/cannot send email\. Set SMTP_URL and SMTP_FROM together/),
+  };
+
+  it("refuses a new invite and creates no Invited row", async () => {
+    await withoutFrom(async () => {
+      const res = await invite(adminCookies, {
+        email: "ghost@example.com",
+        displayName: "Ghost Invite",
+        role: "legal_team_member",
+      });
+      expect(res.statusCode, res.body).toBe(409);
+      expect(res.headers["content-type"]).toContain("application/problem+json");
+      expect(res.json()).toMatchObject(REFUSAL);
+    });
+    const rows = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, "ghost@example.com"));
+    expect(rows).toEqual([]);
+  });
+
+  it("refuses to re-invite a pending address the same way", async () => {
+    await withoutFrom(async () => {
+      const res = await invite(adminCookies, PENDING);
+      expect(res.statusCode, res.body).toBe(409);
+      expect(res.json()).toMatchObject(REFUSAL);
+    });
+  });
+
+  it("refuses a resend from the row", async () => {
+    await withoutFrom(async () => {
+      const res = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/auth/invites/${pendingId}/resend`,
+        cookies: adminCookies,
+      });
+      expect(res.statusCode, res.body).toBe(409);
+      expect(res.json()).toMatchObject(REFUSAL);
+    });
+  });
+
+  it("sends again once the environment names a sender", async () => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/auth/invites/${pendingId}/resend`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(harness.mailer.messagesTo(PENDING.email)).toHaveLength(2);
+  });
 });

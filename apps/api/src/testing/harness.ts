@@ -210,9 +210,11 @@ export interface TestHarness {
    * acts out an env-pinned deployment — the default, since most suites
    * just need mail to flow into the capturing mailer. Set to null to act
    * out an operator with no SMTP env: resolution then reads org_settings
-   * like production, with sends still captured when configured.
+   * like production, with sends still captured when configured. A null
+   * `from` beside a URL acts out `SMTP_URL` set with `SMTP_FROM` unset:
+   * the environment still pins the instance, and it cannot send.
    */
-  smtpEnv: { url: string; from: string } | null;
+  smtpEnv: { url: string; from: string | null } | null;
   /**
    * The production mailer resolver over that capturing mailer — the same
    * value the app and the pipeline are built with (#37, TECH-011).
@@ -375,7 +377,11 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     // stand-in for the process environment.
     let smtpEnv: TestHarness["smtpEnv"] = TEST_SMTP_ENV;
     const resolveMailer: MailerResolver = async () => {
-      if (smtpEnv) return { source: "env", from: smtpEnv.from, mailer };
+      if (smtpEnv) {
+        return smtpEnv.from
+          ? { source: "env", from: smtpEnv.from, mailer }
+          : { source: "env", from: null, mailer: createUnconfiguredMailer() };
+      }
       const [row] = await db
         .select({ smtpUrl: orgSettings.smtpUrl, smtpFrom: orgSettings.smtpFrom })
         .from(orgSettings)

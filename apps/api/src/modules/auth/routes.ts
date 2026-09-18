@@ -467,6 +467,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const { displayName, role } = request.body;
       const email = request.body.email.toLowerCase();
+      await requireInviteMailer();
 
       const existing = await app.db
         .select({ ...userColumns, lastActiveAt: users.lastActiveAt })
@@ -573,6 +574,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      await requireInviteMailer();
       const user = await pendingInvite(request.params.userId);
       await sendSetPasswordEmail(user.email);
       await recordActivity(app.db, {
@@ -1224,6 +1226,30 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         .send({ message: "If the address is eligible, a sign-in link is on its way." });
     },
   );
+
+  /**
+   * Refuses an invite while the effective mailer cannot send (#889).
+   * The set-password email is the only way an invitee activates, so a
+   * row created without one could never be used. better-auth swallows
+   * the mailer's rejection inside `requestPasswordReset`, which is why
+   * the route asks the resolver itself, before it writes anything.
+   * The same answer `POST /onboarding/complete` gives, so a client can
+   * branch on the one problem type.
+   */
+  async function requireInviteMailer(): Promise<void> {
+    const { source, mailer } = await app.resolveMailer();
+    if (mailer.configured) return;
+    // An environment-pinned relay ignores Settings (TECH-011), so the
+    // remedy names the environment; only an unset instance can be
+    // repaired from the Outbound email pane.
+    const remedy =
+      source === "env"
+        ? "Set SMTP_URL and SMTP_FROM together in the environment."
+        : "Set up outbound email in Settings → Advanced → Outbound email.";
+    throw httpError(409, `The invite was not sent: this instance cannot send email. ${remedy}`, {
+      type: "/problems/email-setup-required",
+    });
+  }
 
   /** Issues a set-password token and emails it (reset-password flow). */
   async function sendSetPasswordEmail(email: string): Promise<void> {
