@@ -30,6 +30,25 @@ export interface Mailer {
 }
 
 /**
+ * Parses the relay URL without ever repeating it.
+ *
+ * Node's `TypeError: Invalid URL` carries the input as its `input`
+ * field, and an uncaught one prints it. The relay password is in that
+ * input. So the failure is reported by the name of the setting that
+ * holds the value, and the value stays where it was (TECH-029).
+ */
+function parseSmtpUrl(url: string, source: string): URL {
+  try {
+    return new URL(url);
+  } catch {
+    throw new Error(
+      `${source} is not a valid URL. Expected smtp://user:pass@host:port or smtps://...; ` +
+        "check the value for a missing scheme or an unescaped character in the password.",
+    );
+  }
+}
+
+/**
  * SMTP sender — `url` is a nodemailer connection URL
  * (smtp[s]://user:pass@host:port, extra options as query parameters).
  *
@@ -39,8 +58,8 @@ export interface Mailer {
  * (nodemailer's documented option channel for URL configs), and an
  * operator's own query parameters win over these defaults.
  */
-export function createSmtpMailer(url: string, from: string): Mailer {
-  const bounded = new URL(url);
+export function createSmtpMailer(url: string, from: string, source = "SMTP_URL"): Mailer {
+  const bounded = parseSmtpUrl(url, source);
   for (const [option, value] of [
     ["connectionTimeout", "10000"],
     ["greetingTimeout", "10000"],
@@ -128,7 +147,11 @@ export function createMailerResolver(db: Db, env: SmtpEnv): MailerResolver {
     return {
       source: "app",
       from: settings.smtpFrom,
-      mailer: createSmtpMailer(settings.smtpUrl, settings.smtpFrom),
+      mailer: createSmtpMailer(
+        settings.smtpUrl,
+        settings.smtpFrom,
+        "the SMTP URL saved in Settings",
+      ),
     };
   };
 }

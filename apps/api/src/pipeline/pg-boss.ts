@@ -22,7 +22,7 @@
  * one maintainer rather than one per replica.
  */
 
-import { PgBoss, type JobWithMetadata } from "pg-boss";
+import { PgBoss, type JobWithMetadata, type WorkHandlerFor, type WorkOptions } from "pg-boss";
 import type { MailerResolver } from "../lib/mailer.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
@@ -31,7 +31,7 @@ import { runBackfillSweep } from "./backfill.js";
 import { sweepConversionAnalysis } from "./conversion-analysis.js";
 import { handleConversionDraft, sweepConversionDrafts } from "./conversion-draft.js";
 import { handleContractAnalysis } from "./contract-analysis.js";
-import type { DerivationDeps } from "./derivations.js";
+import { plainFailure, type DerivationDeps } from "./derivations.js";
 import { handleGenerationDelivery, sweepGenerationDeliveries } from "./generation-delivery.js";
 import { handleDisplayConversion } from "./display-conversion.js";
 import { handleDocumentComparison } from "./document-comparison.js";
@@ -293,6 +293,18 @@ export const MORNING_ROUND_QUEUE_OPTIONS = {
   retryLimit: 0,
 } as const;
 
+/** The same handler, throwing a plain Error in place of whatever it threw. */
+function storingOnlyTheReason<H extends (...args: never[]) => Promise<unknown>>(handler: H): H {
+  const guarded = async (...args: Parameters<H>) => {
+    try {
+      return await handler(...args);
+    } catch (error) {
+      throw plainFailure(error);
+    }
+  };
+  return guarded as unknown as H;
+}
+
 /** What a process needs to bring the pipeline up. */
 export interface PipelineOptions {
   /**
@@ -371,6 +383,23 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
   });
 
   const handlers = options.handlers;
+
+  /**
+   * `boss.work`, with one rule on what a handler may throw.
+   *
+   * pg-boss serialises the thrown error into `pgboss.job.output`, own
+   * fields and all, and keeps it for as long as the job is kept. A
+   * DrizzleQueryError's fields are the SQL text and every bind
+   * parameter, so a failed text write would persist a document's text
+   * in the queue table. What reaches the table is the one-line reason
+   * and nothing else (TECH-029). The handlers' own logging is untouched.
+   */
+  const work = <ReqData, const O extends WorkOptions>(
+    name: string,
+    workOptions: O,
+    handler: WorkHandlerFor<O, ReqData>,
+  ): Promise<string> => boss.work(name, workOptions, storingOnlyTheReason(handler));
+
   /**
    * The sending half, built before the working half needs it.
    *
@@ -628,7 +657,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         burstWhenReadyExceeds: 1,
         notifyPollingIntervalSeconds: 2,
       } as const;
-      await boss.work(
+      await work(
         JOB_QUEUES.textExtraction,
         oneAtATime,
         async (jobs: JobWithMetadata<TextExtractionJob>[]) => {
@@ -645,7 +674,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
-      await boss.work(
+      await work(
         JOB_QUEUES.generationDelivery,
         oneAtATime,
         async (jobs: JobWithMetadata<GenerationDeliveryJob>[]) => {
@@ -661,7 +690,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         },
       );
       await sweepGenerationDeliveries(handlers, queue, sweeping.signal);
-      await boss.work(
+      await work(
         JOB_QUEUES.displayConversion,
         oneAtATime,
         async (jobs: JobWithMetadata<DisplayConversionJob>[]) => {
@@ -678,7 +707,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
-      await boss.work(
+      await work(
         JOB_QUEUES.documentComparison,
         oneAtATime,
         async (jobs: JobWithMetadata<DocumentComparisonJob>[]) => {
@@ -691,7 +720,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
-      await boss.work(
+      await work(
         JOB_QUEUES.executedCopyFetch,
         oneAtATime,
         async (jobs: JobWithMetadata<ExecutedCopyFetchJob>[]) => {
@@ -712,7 +741,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
-      await boss.work(
+      await work(
         JOB_QUEUES.notificationEmail,
         oneAtATime,
         async (jobs: JobWithMetadata<NotificationEmailJob>[]) => {
@@ -733,7 +762,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
-      await boss.work(
+      await work(
         JOB_QUEUES.conversionDraft,
         oneAtATime,
         async (jobs: JobWithMetadata<ConversionDraftJob>[]) => {
@@ -752,7 +781,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       );
       await sweepConversionDrafts(handlers.db, queue);
       await sweepConversionAnalysis(handlers.db, queue);
-      await boss.work(
+      await work(
         JOB_QUEUES.contractAnalysis,
         oneAtATime,
         async (jobs: JobWithMetadata<ContractAnalysisJob>[]) => {
@@ -778,12 +807,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // ones, so an hour-long walk of a large library cannot sit in front
       // of the OCR somebody is waiting on. It takes no metadata and no
       // burst: there is only ever one of it.
-      await boss.work(JOB_QUEUES.conversionSweep, { batchSize: 1 }, async () => {
+      await work(JOB_QUEUES.conversionSweep, { batchSize: 1 }, async () => {
         await sweepConversionDrafts(handlers.db, queue);
         await sweepConversionAnalysis(handlers.db, queue);
         await sweepGenerationDeliveries(handlers, queue, sweeping.signal);
       });
-      await boss.work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
+      await work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
         const summary = await runBackfillSweep({ db: handlers.db, log }, queue, {
           signal: sweeping.signal,
         });
@@ -795,7 +824,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // must not sit in front of the executed copy a person is waiting
       // on. It takes the signing resolver, which is what makes it a
       // handler here rather than a timer in the worker entrypoint.
-      await boss.work(JOB_QUEUES.reconciliationSweep, { batchSize: 1 }, async () => {
+      await work(JOB_QUEUES.reconciliationSweep, { batchSize: 1 }, async () => {
         const summary = await runReconciliationSweep(
           {
             db: handlers.db,
@@ -814,7 +843,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // reconciliation round. It takes the notification seam and the
       // mailer resolver, which is what makes it a handler here rather
       // than a timer in the worker entrypoint.
-      await boss.work(JOB_QUEUES.morningRound, { batchSize: 1 }, async () => {
+      await work(JOB_QUEUES.morningRound, { batchSize: 1 }, async () => {
         const summary = await runMorningRound(
           {
             db: handlers.db,

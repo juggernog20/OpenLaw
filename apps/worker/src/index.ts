@@ -36,7 +36,7 @@
  * yet finds no work and waits, which is the right answer.
  */
 
-import { resolveAdvancedSettings, startRuntimeHeartbeat } from "@openlaw/api/pipeline";
+import { reasonOf, resolveAdvancedSettings, startRuntimeHeartbeat } from "@openlaw/api/pipeline";
 
 import { createDb, readSecretKeys, useSecretKeys } from "@openlaw/db";
 import {
@@ -57,9 +57,9 @@ import {
 
 const log = createConsoleLogger();
 
-function reasonOf(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
+// `reasonOf` is the pipeline's own, so a sweep that failed on a query
+// logs the Postgres code and never the SQL text or its parameters
+// (TECH-029).
 
 function requireEnv(name: string): string {
   const value = process.env[name];
