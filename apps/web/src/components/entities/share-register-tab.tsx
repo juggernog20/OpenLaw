@@ -31,6 +31,7 @@ import { DatePicker } from "../date-picker";
 import { RestrictedRecordCell } from "../restricted-record-cell";
 import { RecordFilterBar, type RecordFilter } from "../table/record-filter-bar";
 import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { OwnershipCard } from "./ownership-card";
 import { ShareClassesDialog } from "./share-classes-dialog";
 import { ShareEntryDialog } from "./share-entry-dialog";
@@ -77,7 +78,7 @@ export function ShareRegisterTab({
   const entriesHeading = useId();
   const [classesOpen, setClassesOpen] = useState(false);
   const [entryDialog, setEntryDialog] = useState<{ entry?: RegisterEntry } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<RegisterEntry | null>(null);
   const historic = register.asOf !== register.today;
   const live = register.classes.filter((row) => row.archivedAt === null);
   const empty = live.length === 0 && register.entries.length === 0;
@@ -104,24 +105,25 @@ export function ShareRegisterTab({
     setParams(search);
   }
 
-  async function remove(entry: RegisterEntry) {
-    setError(null);
+  /** Answers the refusal to print in the dialog, or null once the entry is gone. */
+  async function remove(entry: RegisterEntry): Promise<string | null> {
     const result = await api
       .DELETE("/api/v1/entities/{id}/share-entries/{entryId}", {
         params: { path: { id: entity.id, entryId: entry.id } },
       })
       .catch(() => undefined);
     if (!result?.response.ok) {
-      setError(
+      return (
         (await problem(result)).detail ??
-          intl.formatMessage({
-            id: "entities.register.entry.removeError",
-            defaultMessage: "The entry could not be removed.",
-          }),
+        intl.formatMessage({
+          id: "entities.register.entry.removeError",
+          defaultMessage: "The entry could not be removed.",
+        })
       );
-      return;
     }
+    setRemoving(null);
     void revalidate();
+    return null;
   }
 
   const classNames = new Map(register.classes.map((row) => [row.id, row.name]));
@@ -281,17 +283,12 @@ export function ShareRegisterTab({
                 </span>
               ) : null}
             </div>
-            {error ? (
-              <p role="alert" className="px-4 py-2 text-sm text-status-danger-fg">
-                {error}
-              </p>
-            ) : null}
             <EntriesTable
               entries={shown}
               classNames={classNames}
               frozen={frozen}
               onEdit={(entry) => setEntryDialog({ entry })}
-              onRemove={(entry) => void remove(entry)}
+              onRemove={setRemoving}
             />
           </section>
         </>
@@ -340,7 +337,89 @@ export function ShareRegisterTab({
           }}
         />
       ) : null}
+      {removing ? (
+        <RemoveEntryDialog
+          entry={removing}
+          onClose={() => setRemoving(null)}
+          onConfirm={() => remove(removing)}
+        />
+      ) : null}
     </div>
+  );
+}
+
+/**
+ * One click stands between the Trash button and the register (DES-025's
+ * shape). Removing an entry replays the register without it, rewrites
+ * the projected Holdings, and retires its number for good, so the dialog
+ * names the entry and says so. A refusal prints inside the dialog.
+ */
+function RemoveEntryDialog({
+  entry,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  entry: RegisterEntry;
+  onClose: () => void;
+  onConfirm: () => Promise<string | null>;
+}>) {
+  const intl = useIntl();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Padded as the table and the edit dialog print it: "entry 003".
+  const number = String(entry.entryNo).padStart(3, "0");
+
+  async function submit() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    setError(await onConfirm());
+    setBusy(false);
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage
+            id="entities.register.entry.removeTitle"
+            defaultMessage="Remove entry {number} from the register?"
+            values={{ number }}
+          />
+        </DialogTitle>
+        <p className="mt-4 text-base text-primary">
+          <FormattedMessage
+            id="entities.register.entry.removeConsequence"
+            defaultMessage="The register is replayed without it and its number is not reused. This cannot be undone."
+          />
+        </p>
+        {error ? (
+          <p role="alert" className="mt-2.5 text-xs text-status-danger-fg">
+            {error}
+          </p>
+        ) : null}
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={busy}
+            aria-label={intl.formatMessage(
+              {
+                id: "entities.register.entry.removeConfirm",
+                defaultMessage: "Remove entry {number}",
+              },
+              { number },
+            )}
+            onClick={() => void submit()}
+          >
+            <FormattedMessage id="entities.register.entry.removeAction" defaultMessage="Remove" />
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

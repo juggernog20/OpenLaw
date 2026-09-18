@@ -389,6 +389,9 @@
   "activity.entityShareEntry.deleted": {
     "defaultMessage": "{actor} removed entry {entryNo} from the {name} register: {kind} of {quantity} {className} shares"
   },
+  "activity.entityShareEntry.kind": {
+    "defaultMessage": "{kind, select, allotment {allotment} transfer {transfer} buyback {buyback} cancellation {cancellation} conversion {conversion} other {entry}}"
+  },
   "activity.entityShareEntry.updated": {
     "defaultMessage": "{actor} changed entry {entryNo} on the {name} register"
   },
@@ -5375,11 +5378,23 @@
   "entities.register.entry.remove": {
     "defaultMessage": "Remove entry {number}"
   },
+  "entities.register.entry.removeAction": {
+    "defaultMessage": "Remove"
+  },
   "entities.register.entry.removeCertificate": {
     "defaultMessage": "Remove certificate"
   },
+  "entities.register.entry.removeConfirm": {
+    "defaultMessage": "Remove entry {number}"
+  },
+  "entities.register.entry.removeConsequence": {
+    "defaultMessage": "The register is replayed without it and its number is not reused. This cannot be undone."
+  },
   "entities.register.entry.removeError": {
     "defaultMessage": "The entry could not be removed."
+  },
+  "entities.register.entry.removeTitle": {
+    "defaultMessage": "Remove entry {number} from the register?"
   },
   "entities.register.entry.resolution": {
     "defaultMessage": "Resolution reference"

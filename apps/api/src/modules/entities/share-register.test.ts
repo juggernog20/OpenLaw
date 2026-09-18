@@ -606,6 +606,59 @@ describe("the share register", () => {
     expect(actions.filter((row) => row.entityId === walled.id)).toHaveLength(6);
   });
 
+  it("keeps a holder the editor cannot see on an edited entry", async () => {
+    const issuer = await newEntity("Kept Ltd");
+    const walled = await newEntity("Hidden Investor Ltd", { isConfidential: true });
+    const ordinary = await newClass(issuer.id, { name: "Ordinary" });
+    const allot = await entry(issuer.id, {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId: ordinary.id,
+      quantity: 10,
+      to: { kind: "entity", entityId: walled.id },
+    });
+    expect(allot.statusCode, allot.body).toBe(201);
+    const entryId = allot.json().entries[0].id as string;
+    const seen = await register(issuer.id, undefined, outsiderCookies);
+    expect(seen.statusCode, seen.body).toBe(200);
+    const holderId = seen.json().entries[0].to.id as string;
+    expect(seen.json().entries[0].to).toEqual({ restricted: true, id: holderId });
+
+    const patch = (payload: Record<string, unknown>) =>
+      harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/entities/${issuer.id}/share-entries/${entryId}`,
+        cookies: outsiderCookies,
+        payload: {
+          kind: "allotment",
+          effectiveOn: "2024-01-01",
+          shareClassId: ordinary.id,
+          quantity: 10,
+          ...payload,
+        },
+      });
+    // Sent back by id, the holder stays and the rest of the entry changes.
+    const kept = await patch({ to: { kind: "holder", holderId }, quantity: 12, note: "Corrected" });
+    expect(kept.statusCode, kept.body).toBe(200);
+    expect(kept.json().entries[0]).toMatchObject({
+      quantity: 12,
+      note: "Corrected",
+      to: { restricted: true, id: holderId },
+    });
+    // Replacing it, or turning the entry into one that drops it, is refused.
+    const replaced = await patch({ to: { kind: "individual", name: "Someone Else" } });
+    expect(replaced.statusCode, replaced.body).toBe(409);
+    expect(replaced.json().detail).toMatch(/cannot see/);
+    const dropped = await patch({ kind: "cancellation" });
+    expect(dropped.statusCode, dropped.body).toBe(409);
+    const after = await register(issuer.id, undefined, memberCookies);
+    expect(after.json().entries[0]).toMatchObject({
+      kind: "allotment",
+      quantity: 12,
+      to: { restricted: false, name: "Hidden Investor Ltd" },
+    });
+  });
+
   it("manages share classes: unique live names, no archive while entries reference it", async () => {
     const issuer = await newEntity("Classes Ltd");
     const ordinary = await newClass(issuer.id, { name: "Ordinary" });

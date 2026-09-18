@@ -5077,6 +5077,7 @@ Supersedes the M27 Ownership frame in `designs/entities.pen` (Owners and Owned w
 | DES-085 | The Portal Auto-Docs destination leads from acknowledgement to a generated file                                                                                      | Accepted                                                                                                   |
 | DES-086 | File generated output from history or the generation form                                                                                                            | Accepted                                                                                                   |
 | DES-087 | The Auto-Doc record is a doc builder: the template beside its form, inside a four-section record page                                                                | Accepted                                                                                                   |
+| DES-088 | The Ownership tab is a share register read as of a date                                                                                                              | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

@@ -868,6 +868,19 @@ function numbered(intl: IntlShape, payload: Payload, key: string): string {
   return typeof value === "number" ? intl.formatNumber(value) : notSet(intl);
 }
 
+/** ENT-011's entry kinds as prose. The `other` arm is the floor: a kind
+ * this build does not know still reads as a sentence. */
+function entryKind(intl: IntlShape, payload: Payload): string {
+  return intl.formatMessage(
+    {
+      id: "activity.entityShareEntry.kind",
+      defaultMessage:
+        "{kind, select, allotment {allotment} transfer {transfer} buyback {buyback} cancellation {cancellation} conversion {conversion} other {entry}}",
+    },
+    { kind: text(payload, "kind") ?? "other" },
+  );
+}
+
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
@@ -3413,7 +3426,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({
       name: thingName(intl, payload),
       entryNo: numbered(intl, payload, "entryNo"),
-      kind: named(intl, payload, "kind"),
+      kind: entryKind(intl, payload),
       quantity: numbered(intl, payload, "quantity"),
       className: named(intl, payload, "className"),
       from: text(payload, "fromName") ?? company(intl),
@@ -3442,7 +3455,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({
       name: thingName(intl, payload),
       entryNo: numbered(intl, payload, "entryNo"),
-      kind: named(intl, payload, "kind"),
+      kind: entryKind(intl, payload),
       quantity: numbered(intl, payload, "quantity"),
       className: named(intl, payload, "className"),
     }),

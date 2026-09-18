@@ -244,6 +244,15 @@ function registerApi(options: { empty?: boolean; refuse?: string } = {}) {
       if (options.refuse) return problem(409, options.refuse);
       return json(201, registerAt(TODAY));
     }
+    if (
+      call.url.pathname.startsWith("/api/v1/entities/e1/share-entries/") &&
+      (call.method === "PATCH" || call.method === "DELETE")
+    ) {
+      writes.push(call);
+      if (options.refuse) return problem(409, options.refuse);
+      if (call.method === "DELETE") return new Response(null, { status: 204 });
+      return json(200, registerAt(TODAY));
+    }
     if (call.url.pathname === "/api/v1/entities/e1/share-classes" && call.method === "POST") {
       writes.push(call);
       return json(201, registerAt(TODAY));
@@ -403,6 +412,51 @@ describe("the Entity Ownership tab as a share register", () => {
     expect(screen.getByRole("button", { name: "Record entry" })).toBeDisabled();
     expect(screen.getByRole("heading", { name: "Holdings in other Entities" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Holding" })).toBeInTheDocument();
+  });
+
+  it("keeps a holder the viewer cannot see when an entry is edited", async () => {
+    const api = registerApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1/ownership");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Edit entry 3" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit entry 003" });
+    const to = within(dialog).getByLabelText(/^To/);
+    expect(to).toHaveValue("holder:h-walled");
+    expect(within(to).getByRole("option", { name: "Restricted Entity" })).toBeInTheDocument();
+    await user.clear(within(dialog).getByLabelText(/^Shares/));
+    await user.type(within(dialog).getByLabelText(/^Shares/), "41000");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]?.method).toBe("PATCH");
+    expect(api.writes[0]?.url.pathname).toBe("/api/v1/entities/e1/share-entries/en3");
+    expect(api.writes[0]?.body).toMatchObject({
+      kind: "transfer",
+      quantity: 41_000,
+      from: { kind: "holder", holderId: "h-blair" },
+      to: { kind: "holder", holderId: "h-walled" },
+    });
+  });
+
+  it("asks before removing an entry, and prints the refusal in the dialog", async () => {
+    const api = registerApi({
+      refuse: "Entry 1 issued certificate 001, cancelled by a later entry.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1/ownership");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Remove entry 1" }));
+    const dialog = await screen.findByRole("dialog", {
+      name: "Remove entry 001 from the register?",
+    });
+    expect(api.writes).toHaveLength(0);
+    await user.click(within(dialog).getByRole("button", { name: "Remove entry 001" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "cancelled by a later entry",
+    );
+    expect(api.writes).toHaveLength(1);
+    expect(api.writes[0]?.method).toBe("DELETE");
+    expect(api.writes[0]?.url.pathname).toBe("/api/v1/entities/e1/share-entries/en1");
   });
 
   it("shows the API's refusal when an entry would overdraw a holder", async () => {
