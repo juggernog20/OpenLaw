@@ -263,7 +263,9 @@ describe("submitting the form", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: /^Department/ }), "dept-finance");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
-    await screen.findByRole("heading", { name: /R-42/ });
+    await screen.findByRole("heading", {
+      name: "Thanks! Your request has been submitted to legal.",
+    });
     expect(submissions.bodies[0]).toEqual({
       requestTypeId: "rt2",
       title: "MSA renewal with Orion Cloud",
@@ -274,13 +276,24 @@ describe("submitting the form", () => {
     });
   });
 
-  it("shows a confirmation carrying the R-### number", async () => {
+  it("shows a confirmation with a link to the submitted request", async () => {
     const user = userEvent.setup();
     openForm();
     await fillComplete(user);
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
-    expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Thanks! Your request has been submitted to legal.",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("You can track your open requests through this portal"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open request" })).toHaveAttribute(
+      "href",
+      "/portal/requests/42",
+    );
     // The form is gone: the Request exists, and the boxes are no longer
     // a thing to press.
     expect(screen.queryByRole("button", { name: "Submit request" })).not.toBeInTheDocument();
@@ -334,7 +347,9 @@ describe("submitting the form", () => {
     await user.type(screen.getByLabelText(/^Description/), "About the standard NDA.");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
-    await screen.findByRole("heading", { name: /R-42/ });
+    await screen.findByRole("heading", {
+      name: "Thanks! Your request has been submitted to legal.",
+    });
     expect(Object.keys(submissions.bodies[0] as object).sort()).toEqual([
       "customFields",
       "departmentId",
@@ -376,7 +391,9 @@ describe("the Attachments basic", () => {
     await user.type(screen.getByLabelText(/^Description/), "They sent a redline.");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
-    await screen.findByRole("heading", { name: /R-42 is with Legal/ });
+    await screen.findByRole("heading", {
+      name: "Thanks! Your request has been submitted to legal.",
+    });
     // Addressed by the R-### the submission answered with, one call per
     // file, in the order they were picked.
     expect(submissions.uploads).toEqual([
@@ -393,7 +410,11 @@ describe("the Attachments basic", () => {
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
     // Attachments are optional (INT-002): none is not a refusal.
-    expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Thanks! Your request has been submitted to legal.",
+      }),
+    ).toBeInTheDocument();
     expect(submissions.uploads).toEqual([]);
   });
 
@@ -415,7 +436,11 @@ describe("the Attachments basic", () => {
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
     // The Request landed, and that is the first thing the page says.
-    expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Thanks! Your request has been submitted to legal.",
+      }),
+    ).toBeInTheDocument();
     // The paper that did not follow it is named, with the seam's own
     // reason beside it — a requester can act on a limit and cannot act
     // on "did not attach".
@@ -480,7 +505,9 @@ describe("an out-of-scope attached field", () => {
     await fillComplete(user);
     await user.click(screen.getByRole("button", { name: "Submit request" }));
 
-    await screen.findByRole("heading", { name: /R-42/ });
+    await screen.findByRole("heading", {
+      name: "Thanks! Your request has been submitted to legal.",
+    });
     expect((submissions.bodies[0] as { customFields: unknown }).customFields).toEqual({
       counterparty: "Orion Cloud",
     });
@@ -509,7 +536,11 @@ describe("Portal-listed Entity picker", () => {
     expect(picker).toHaveAttribute("aria-required", "true");
     await user.selectOptions(picker, "Aldgate Operating Ltd");
     await user.click(screen.getByRole("button", { name: "Submit request" }));
-    expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Thanks! Your request has been submitted to legal.",
+      }),
+    ).toBeInTheDocument();
     expect(submissions.bodies[0]).toMatchObject({
       customFields: { signing_entity: "e-operating" },
     });
@@ -542,7 +573,11 @@ it("submits without a Department when none exist and explains the empty list", a
   await user.type(screen.getByLabelText(/^Description/), "Please review the attached terms.");
   expect(screen.getByText(/No Departments are configured/)).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Submit request" }));
-  expect(await screen.findByRole("heading", { name: /R-42 is with Legal/ })).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", {
+      name: "Thanks! Your request has been submitted to legal.",
+    }),
+  ).toBeInTheDocument();
   expect(submissions.bodies[0]).toMatchObject({ departmentId: null });
 });
 
@@ -580,7 +615,7 @@ it("looks up counterparties, supports multiple selections and stages a new name"
   await user.click(await screen.findByRole("option", { name: 'Add new "New Vendor"' }));
   expect(screen.getByRole("button", { name: "Remove New Vendor" })).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Submit request" }));
-  await screen.findByRole("heading", { name: /R-42/ });
+  await screen.findByRole("heading", { name: "Thanks! Your request has been submitted to legal." });
   expect(submissions.bodies[0]).toMatchObject({
     counterparties: [{ counterpartyId: "party-b" }, { name: "New Vendor" }],
     customFields: { counterparty: "Acme\nNew Vendor" },
