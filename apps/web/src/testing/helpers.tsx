@@ -694,6 +694,25 @@ export function stubApi(state: ApiState) {
       return json(200, { owners: [], owned: [], warnings: [] });
     }
     if (
+      /^\/api\/v1\/entities\/[^/]+\/share-register$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      // ENT-011: an Entity with no register yet.
+      const today = new Date().toISOString().slice(0, 10);
+      return json(200, {
+        asOf: call.url.searchParams.get("asOf") ?? today,
+        today,
+        classes: [],
+        holders: [],
+        treasury: [],
+        totals: [],
+        entries: [],
+        dates: [],
+        reconciliation: { declaredIssued: null, registerIssued: 0 },
+        warnings: [],
+      });
+    }
+    if (
       /^\/api\/v1\/entities\/[^/]+\/registrations$/.test(call.url.pathname) &&
       call.method === "GET"
     ) {

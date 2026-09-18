@@ -166,8 +166,12 @@ describe("the Entity Ownership tab", () => {
     renderAt("/entities/current/ownership");
     const user = userEvent.setup();
 
-    expect(await screen.findByRole("heading", { name: "Owners" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Owned Entities" })).toBeInTheDocument();
+    // ENT-011: the register owns the owners side; hand-typed Holdings that
+    // predate it list as declared owners, and the owned side keeps its card.
+    expect(
+      await screen.findByRole("heading", { name: "Declared owners not in the register" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Holdings in other Entities" })).toBeInTheDocument();
     expect(screen.getAllByText("Delaware Parent")).toHaveLength(2);
     expect(screen.getByText("UAE Subsidiary")).toBeInTheDocument();
 

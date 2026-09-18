@@ -34,7 +34,7 @@ import { EntityFieldsCard } from "../components/entities/entity-fields-card";
 import { EntityGrantsDialog } from "../components/entities/entity-grants-dialog";
 import { OfficersCard } from "../components/entities/officers-card";
 import { ObligationsPanel } from "../components/entities/obligations-panel";
-import { OwnershipCard } from "../components/entities/ownership-card";
+import { ShareRegisterTab } from "../components/entities/share-register-tab";
 import { RegistrationsCard } from "../components/entities/registrations-card";
 import { ShareCapitalCard, type CapitalKey } from "../components/entities/share-capital-card";
 import { PageTitle } from "../components/page-title";
@@ -67,6 +67,12 @@ import { ENTITY_LINKED_RECORD_SEAMS } from "../lib/linked-records";
 const RECORD_TABS = ["ownership", "obligations", "documents", "contracts", "matters"] as const;
 type EntityTab = "overview" | (typeof RECORD_TABS)[number];
 
+/** The ENT-011 as-of date: `?asOf=YYYY-MM-DD`, or nothing for today. */
+function registerQuery(request: Request): { asOf?: string } {
+  const asOf = new URL(request.url).searchParams.get("asOf") ?? "";
+  return /^\d{4}-\d{2}-\d{2}$/.test(asOf) && !Number.isNaN(Date.parse(asOf)) ? { asOf } : {};
+}
+
 export async function entityRecordLoader({ params, request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (!isMemberPlus(user.role)) return redirect("/");
@@ -85,6 +91,7 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     obligations,
     obligationOptions,
     counts,
+    register,
   ] = await Promise.all([
     api.GET("/api/v1/entities/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/entities/types"),
@@ -96,6 +103,11 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     api.GET("/api/v1/entities/{id}/obligations", { params: { path: { id } } }),
     api.GET("/api/v1/entities/obligation-options"),
     api.GET("/api/v1/entities/{id}/linked-record-counts", { params: { path: { id } } }),
+    params.tab === "ownership"
+      ? api.GET("/api/v1/entities/{id}/share-register", {
+          params: { path: { id }, query: registerQuery(request) },
+        })
+      : Promise.resolve(undefined),
   ]);
   // An id nobody holds and an Entity this viewer cannot open are the
   // same 404 (DD-014). Both draw a page that says so; every other
@@ -110,7 +122,8 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     !registry.data ||
     !holdings.data ||
     !obligations.data ||
-    !obligationOptions.data
+    !obligationOptions.data ||
+    (params.tab === "ownership" && !register?.data)
   ) {
     throw new Error("The entity could not be read.");
   }
@@ -144,6 +157,7 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     registrations: registrations.data.registrations,
     entities: registry.data.entities,
     holdings: holdings.data,
+    register: register?.data ?? null,
     obligations: obligations.data.obligations,
     obligationOptions: obligationOptions.data,
     documents: paper.documents,
@@ -755,11 +769,12 @@ function EntityRecord() {
                   frozen={frozen}
                 />
               </>
-            ) : loaded.tab === "ownership" ? (
-              <OwnershipCard
+            ) : loaded.tab === "ownership" && loaded.register ? (
+              <ShareRegisterTab
                 entity={saved}
+                register={loaded.register}
+                holdings={loaded.holdings}
                 candidates={loaded.entities}
-                initial={loaded.holdings}
                 frozen={frozen}
               />
             ) : loaded.tab === "obligations" ? (

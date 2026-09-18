@@ -326,7 +326,8 @@ describe("the /entities/:entityId record page", () => {
     expect(await screen.findByRole("navigation", { name: "Entity sections" })).toBeInTheDocument();
 
     await router.navigate("/entities/e1/ownership");
-    expect(await screen.findByRole("heading", { name: "Owners" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Register as of" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "No share register yet" })).toBeInTheDocument();
 
     await router.navigate("/entities/e1/obligations");
     expect(await screen.findByRole("heading", { name: "Obligations" })).toBeInTheDocument();
