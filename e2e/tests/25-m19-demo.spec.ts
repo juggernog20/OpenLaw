@@ -295,8 +295,12 @@ test.describe.serial("M19 demo path", () => {
       await expect(page.getByLabel("Display name")).toHaveValue(typeName);
       await expect(page.getByLabel("Target", { exact: true })).toHaveCount(0);
 
-      // The basics state what every form always collects.
-      const basics = page.getByRole("list", { name: "Basics are always on the form" });
+      // The basics state what every form always collects. They sit in
+      // the Form fields list itself, above anything attached: each row is
+      // locked (no Detach, a disabled required box) but carries a grip,
+      // because a basic can be reordered among the attached Fields.
+      await expect(page.getByText("Basics are always on the form")).toBeVisible();
+      const formFields = page.getByRole("list", { name: "Form fields" });
       for (const [name, caption] of [
         ["Title", "Text"],
         ["Description", "Long text"],
@@ -304,17 +308,26 @@ test.describe.serial("M19 demo path", () => {
         ["Department", "Single select"],
         ["Urgency", "Single select"],
       ] as const) {
+        const basic = formFields
+          .getByRole("listitem")
+          .filter({ has: page.getByRole("checkbox", { name: `${name} required` }) });
+        await expect(basic.getByText(caption, { exact: true })).toBeVisible();
+        await expect(basic.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
         await expect(
-          basics
-            .getByRole("listitem")
-            .filter({ has: page.getByRole("checkbox", { name: `${name} required` }) })
-            .getByText(caption, { exact: true }),
-        ).toBeVisible();
-        await expect(basics.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
+          basic.getByText(`${name} is always collected. You can change its position.`),
+        ).toHaveCount(1);
+        await expect(basic.getByRole("button", { name: `Detach ${name}` })).toHaveCount(0);
+        await expect(
+          basic.getByRole("button", {
+            name: new RegExp(`^Reorder ${name}, position \\d+ of 5\\.`),
+          }),
+        ).toBeEnabled();
       }
-      // Title, Description, Department, and Urgency are required on every form;
-      // Attachments are optional. None can be changed.
-      expect(await basics.getByRole("checkbox", { checked: true }).count()).toBe(4);
+      // Nothing is attached yet, so the five basics are the whole list.
+      // Title, Description, Department, and Urgency are required on every
+      // form; Attachments are optional. None can be changed.
+      await expect(formFields.getByRole("listitem")).toHaveCount(5);
+      expect(await formFields.getByRole("checkbox", { checked: true }).count()).toBe(4);
 
       // Attach two Contract fields from the catalog.
       for (const fieldName of [FIRST_FIELD, SECOND_FIELD]) {
