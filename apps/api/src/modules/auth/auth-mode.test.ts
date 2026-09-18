@@ -291,31 +291,46 @@ describe("archived users are refused at session creation", () => {
   it("rejects magic-link redemption for an archived user", async () => {
     // Born via the portal: a JIT Business User, then archived.
     const email = "former@acme.example";
-    const issueFor = async () => {
-      const issue = await harness.app.inject({
+    const issue = async () => {
+      const res = await harness.app.inject({
         method: "POST",
         url: "/api/v1/auth/magic-link",
         payload: { email },
       });
-      expect(issue.statusCode, issue.body).toBe(202);
-      const link = /(https?:\/\/\S*\/api\/auth\/magic-link\/verify\?\S+)/.exec(
+      expect(res.statusCode, res.body).toBe(202);
+    };
+    const latestLink = () =>
+      /(https?:\/\/\S*\/api\/auth\/magic-link\/verify\?\S+)/.exec(
         harness.mailer.messagesTo(email).at(-1)!.text,
       )![1]!;
+    const redeem = (link: string) => {
       const url = new URL(link);
       return harness.app.inject({ method: "GET", url: url.pathname + url.search });
     };
 
-    expect(hasSessionCookie(await issueFor()), "first redemption provisions and signs in").toBe(
-      true,
-    );
+    await issue();
+    expect(
+      hasSessionCookie(await redeem(latestLink())),
+      "first redemption provisions and signs in",
+    ).toBe(true);
+    // A second link, issued while the account is still active and never
+    // redeemed. The refusal below then comes from the session guard, not
+    // from a spent token.
+    await issue();
+    const fresh = latestLink();
+    const sent = harness.mailer.messagesTo(email).length;
 
     await archive(email, true);
     try {
-      const redeemed = await issueFor();
+      // The request answers as it does for anyone, and nothing is sent.
+      await issue();
+      expect(harness.mailer.messagesTo(email)).toHaveLength(sent);
+      // The unspent link lands on the sign-in page without a session.
+      const redeemed = await redeem(fresh);
       expect(redeemed.statusCode, redeemed.body).toBe(302);
-      expect(new URL(redeemed.headers.location!).searchParams.get("error")).toBe(
-        "failed_to_create_session",
-      );
+      const location = new URL(redeemed.headers.location!);
+      expect(location.pathname).toBe("/auth/login");
+      expect(location.searchParams.get("error")).toBe("failed_to_create_session");
       expect(hasSessionCookie(redeemed), "archived user must not get a session").toBe(false);
     } finally {
       await archive(email, false);

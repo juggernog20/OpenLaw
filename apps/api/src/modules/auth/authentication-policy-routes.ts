@@ -24,6 +24,7 @@ import {
   optionsForRole,
 } from "../../auth/authentication-policy.js";
 import { requireRole } from "../../auth/guards.js";
+import { clientAddress, consumeAuthRequestBudget } from "../../auth/limits.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -106,32 +107,13 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
     async (request, reply) => {
       const email = request.body.email.toLowerCase();
       const now = new Date();
-      // Shared database counters apply across replicas and every eligible-address outcome.
-      const allowed = await app.db.transaction(async (tx) => {
-        for (const [scope, value, maximum] of [
-          ["ip", request.ip, 30],
-          ["email", email, 3],
-        ] as const) {
-          const identifier = `password-setup-rate:${scope}:${createHash("sha256").update(value).digest("hex")}`;
-          await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${identifier}))`);
-          const [existing] = await tx
-            .select()
-            .from(verifications)
-            .where(eq(verifications.identifier, identifier));
-          const count = existing && existing.expiresAt > now ? Number(existing.value) : 0;
-          if (count >= maximum) return false;
-          const expiresAt =
-            existing && existing.expiresAt > now
-              ? existing.expiresAt
-              : new Date(now.getTime() + 15 * 60_000);
-          if (existing)
-            await tx
-              .update(verifications)
-              .set({ value: String(count + 1), expiresAt })
-              .where(eq(verifications.id, existing.id));
-          else await tx.insert(verifications).values({ identifier, value: "1", expiresAt });
-        }
-        return true;
+      // The shared budget (TECH-032): counted in the database so every
+      // replica sees it, and before any eligibility question so the
+      // refusal says nothing about the address.
+      const allowed = await consumeAuthRequestBudget(app.db, {
+        route: "password-setup",
+        email,
+        address: clientAddress(request, app.trustedProxies),
       });
       if (!allowed) throw httpError(429, "Too many password setup requests. Try again later.");
       const { settings, user, options } = await authenticationForEmail(app.db, email);
@@ -178,10 +160,12 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
           const context = await app.auth.$context;
           const origin = new URL(context.baseURL).origin;
           try {
+            // The token rides in the URL fragment, which a browser never
+            // sends, so no request log holds a live token (TECH-032).
             await mailer.send({
               to: email,
               subject: "Set your OpenLaw password",
-              text: `Set your OpenLaw password using the link below:\n\n${origin}/auth/set-password?token=${token}\n\nThe link expires in one hour. If you did not expect this email, you can ignore it.`,
+              text: `Set your OpenLaw password using the link below:\n\n${origin}/auth/set-password#token=${token}\n\nThe link expires in one hour. If you did not expect this email, you can ignore it.`,
             });
           } catch (error) {
             await app.db.delete(verifications).where(eq(verifications.id, verification.id));
@@ -206,7 +190,17 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
       },
     },
     async (request) => {
-      const hash = await (await app.auth.$context).password.hash(request.body.password);
+      // Argon2 costs 19 MiB and two passes per call, so an anonymous
+      // caller must not be able to buy one with a made-up token. The
+      // address budget is spent first, and the hash is computed only
+      // once the token has been found live and locked (TECH-032).
+      if (
+        !(await consumeAuthRequestBudget(app.db, {
+          route: "password-setup-complete",
+          address: clientAddress(request, app.trustedProxies),
+        }))
+      )
+        throw httpError(429, "Too many password setup requests. Try again later.");
       await app.db.transaction(async (tx) => {
         const [verification] = await tx
           .select()
@@ -227,6 +221,7 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
         // Ask for a fresh reset link rather than changing that account through a signup token.
         if (existing)
           throw httpError(409, "An account already exists. Request a new password setup link.");
+        const hash = await (await app.auth.$context).password.hash(request.body.password);
         const [created] = await tx
           .insert(users)
           .values({

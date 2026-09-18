@@ -33,6 +33,7 @@ import {
   StorageError,
   type StorageAdapter,
 } from "../lib/storage/adapter.js";
+import { CHARACTER_NOT_IN_REPERTOIRE, isDrizzleQueryError, loggable } from "../logging.js";
 import type { PipelineLogger } from "./logger.js";
 
 /** Everything a derivation handler needs to do its work. The same four
@@ -82,17 +83,33 @@ export function isTerminalFailure(error: unknown): boolean {
   // that one is worth trying again.
   if (error instanceof BlobNotFoundError) return true;
   if (error instanceof InvalidBlobRefError) return true;
+  // Postgres refused the text itself (22021): a byte the encoding does
+  // not hold, which for extracted text is U+0000. The writer strips it
+  // before every write, so this is a last line. A retry would send the
+  // same bytes and meet the same refusal.
+  if (errorCode(error) === CHARACTER_NOT_IN_REPERTOIRE) return true;
   return false;
 }
 
 /** Postgres' foreign-key violation, as pg reports it. */
 export const FOREIGN_KEY_VIOLATION = "23503";
 
-/** The error code a driver puts on its own rejections. */
+/**
+ * The error code a driver puts on its own rejections.
+ *
+ * drizzle-orm wraps every failed query in a DrizzleQueryError and keeps
+ * the driver's error as its `cause`, so the code is read through the
+ * chain: the error's own first, then each cause in turn.
+ */
 export function errorCode(error: unknown): string | undefined {
-  return typeof error === "object" && error !== null && "code" in error
-    ? String((error as { code: unknown }).code)
-    : undefined;
+  let current: unknown = error;
+  for (let depth = 0; depth < 4 && typeof current === "object" && current !== null; depth += 1) {
+    if ("code" in current && (current as { code: unknown }).code !== undefined) {
+      return String((current as { code: unknown }).code);
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+  return undefined;
 }
 
 /**
@@ -119,10 +136,30 @@ export async function withBlob<T>(
   }
 }
 
-/** What went wrong, in one line, for the operator's log. */
+/**
+ * What went wrong, in one line, for the operator's log.
+ *
+ * A failed query answers its Postgres code and nothing of its text. Its
+ * message is the SQL and every bind parameter, and for a text write
+ * that is the Document Version's whole text (TECH-029).
+ */
 export function reasonOf(error: unknown): string {
+  if (isDrizzleQueryError(error)) return loggable(error).message;
   if (error instanceof DocEngineError || error instanceof StorageError) {
     return `${error.name}: ${error.message}`;
   }
   return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * A failure as pg-boss may store it.
+ *
+ * pg-boss serialises what a handler throws into `pgboss.job.output`,
+ * own fields and all. A DrizzleQueryError carries the SQL text and the
+ * bind parameters as fields, so a failed text write would persist the
+ * document's text in the queue table on every retry. What reaches the
+ * table is a plain Error with the one-line reason and nothing else.
+ */
+export function plainFailure(error: unknown): Error {
+  return new Error(reasonOf(error));
 }

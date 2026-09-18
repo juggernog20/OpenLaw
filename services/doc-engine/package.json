@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "tsx --test src/*.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.13"

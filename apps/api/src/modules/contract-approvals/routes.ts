@@ -20,6 +20,7 @@ import {
   asc,
   contractApprovals,
   contracts,
+  documents,
   eq,
   inArray,
   isNull,
@@ -257,6 +258,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
     tx: Executor,
     contractId: string,
     approvers: readonly ApproverRow[],
+    options: { confidentialDocument?: boolean } = {},
   ): Promise<void> {
     const reachable = new Set(
       (
@@ -264,6 +266,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           tx,
           contractId,
           approvers.map((person) => person.id),
+          options,
         )
       ).map((person) => person.id),
     );
@@ -275,6 +278,34 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
         );
       }
     }
+  }
+
+  /**
+   * Whether the packet an approver would receive is a Document flagged
+   * confidential (DOC-008). The approval grants the current primary
+   * Document, so the Document's own audience is part of the ask: a
+   * staff approver outside it is refused up front, with the same 422 a
+   * walled record gives, rather than handed a packet with no paper in
+   * it. A Business User approver keeps DD-023's rule and is never asked
+   * about a flag; their packet simply carries no Document.
+   */
+  async function primaryDocumentIsConfidential(
+    tx: Executor,
+    contract: Pick<ReachedContract, "id" | "primaryDocumentId">,
+  ): Promise<boolean> {
+    if (!contract.primaryDocumentId) return false;
+    const [row] = await tx
+      .select({ isConfidential: documents.isConfidential })
+      .from(documents)
+      .where(
+        and(
+          eq(documents.id, contract.primaryDocumentId),
+          eq(documents.contractId, contract.id),
+          isNull(documents.archivedAt),
+        ),
+      )
+      .limit(1);
+    return row?.isConfidential ?? false;
   }
 
   /** Who already holds a pending ask on this record. Read under the
@@ -451,8 +482,11 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           (displayName) => `${displayName} is archived and can't be asked to approve.`,
         );
 
-        // Then the record's own audience (DD-014).
-        await assertInAudience(tx, contract.id, approvers);
+        // Then the record's own audience (DD-014), narrowed to the
+        // primary Document's when that Document is flagged (DOC-008).
+        await assertInAudience(tx, contract.id, approvers, {
+          confidentialDocument: await primaryDocumentIsConfidential(tx, contract),
+        });
 
         // One pending ask per person, decided under the lock above. The
         // partial unique index stands behind this as the database's own
@@ -566,7 +600,9 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           wanted,
           (displayName) => `${displayName} is archived and can't be asked to approve.`,
         );
-        await assertInAudience(tx, contract.id, approvers);
+        await assertInAudience(tx, contract.id, approvers, {
+          confidentialDocument: await primaryDocumentIsConfidential(tx, contract),
+        });
 
         await createRequests(tx, contract, request.user, approvers, {
           source: "group",

@@ -74,6 +74,7 @@ import {
   users,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
+import { redactUnreachedReferences } from "../../lib/activity-redaction.js";
 import {
   confidentialDocumentEntryScope,
   contractAudience,
@@ -296,28 +297,12 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
         // would be a number computed from rows this viewer never sees.
         .limit(PAGE_SIZE + 1);
 
-      const page = rows.slice(0, PAGE_SIZE);
-      // A Contract's link narration is still useful to someone who can
-      // read the Contract but not the independently protected Matter,
-      // but its stored M-number and title are not. Keep the append-only
-      // audit payload intact and redact only this viewer's projection.
-      const matterNumbers = page.flatMap((row) => {
-        if (row.action !== "contract.matter_linked" && row.action !== "contract.matter_unlinked") {
-          return [];
-        }
-        const number = row.payload.matterNumber;
-        return typeof number === "number" && Number.isInteger(number) ? [number] : [];
-      });
-      const reachedMatterNumbers =
-        matterNumbers.length === 0
-          ? []
-          : await app.db
-              .select({ number: matters.number })
-              .from(matters)
-              .where(
-                and(inArray(matters.number, matterNumbers), matterTeamScope(app.db, request.user)),
-              );
-      const visibleMatterNumbers = new Set(reachedMatterNumbers.map((row) => row.number));
+      // A link's narration is still useful to someone who reads this
+      // record but not the one on the far side, but the far record's
+      // stored number and title are not. The append-only payload stays
+      // intact; only this viewer's projection is redacted, by the one
+      // helper the audit log shares.
+      const page = await redactUnreachedReferences(app.db, request.user, rows.slice(0, PAGE_SIZE));
       return {
         entries: page.map((row) => ({
           id: row.id,
@@ -335,17 +320,7 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
               }
             : null,
           createdAt: row.createdAt.toISOString(),
-          payload:
-            (row.action === "contract.matter_linked" ||
-              row.action === "contract.matter_unlinked") &&
-            typeof row.payload.matterNumber === "number" &&
-            !visibleMatterNumbers.has(row.payload.matterNumber)
-              ? Object.fromEntries(
-                  Object.entries(row.payload).filter(
-                    ([key]) => key !== "matterNumber" && key !== "matterTitle",
-                  ),
-                )
-              : row.payload,
+          payload: row.payload,
         })),
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.

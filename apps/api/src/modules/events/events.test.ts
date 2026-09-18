@@ -73,6 +73,8 @@ class EventStream {
   private readonly waiters = new Set<() => void>();
   private buffer = "";
   private failure: unknown;
+  /** Set once the server ends the response. */
+  ended = false;
 
   private constructor(
     response: Response,
@@ -133,7 +135,10 @@ class EventStream {
       const decoder = new TextDecoder();
       for (;;) {
         const { done, value } = await this.reader.read();
-        if (done) return;
+        if (done) {
+          this.ended = true;
+          return;
+        }
         this.buffer += decoder.decode(value, { stream: true }).replaceAll("\r\n", "\n");
         let boundary = this.buffer.indexOf("\n\n");
         while (boundary >= 0) {
@@ -703,6 +708,27 @@ describe("GET /api/events", () => {
       harness.jobLog.some((line) => line.message === "live event payload could not be read"),
     ).toBe(true);
     await stream.close();
+  });
+
+  it("closes a person's oldest stream when they open a sixth", async () => {
+    const streams: EventStream[] = [];
+    try {
+      for (let index = 0; index < 5; index += 1) {
+        streams.push(await EventStream.open(streamUrl(), requesterCookies));
+      }
+      const oldest = streams[0]!;
+      expect(oldest.ended).toBe(false);
+      streams.push(await EventStream.open(streamUrl(), requesterCookies));
+      // The server ends the oldest response; the reader sees end of stream.
+      const deadline = Date.now() + 2_000;
+      while (!oldest.ended && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      expect(oldest.ended).toBe(true);
+      for (const stream of streams.slice(1)) expect(stream.ended).toBe(false);
+    } finally {
+      for (const stream of streams) await stream.close();
+    }
   });
 
   it("receives a publish from a second process handle over the shared Postgres channel", async () => {

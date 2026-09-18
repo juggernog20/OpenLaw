@@ -71,7 +71,13 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { activityLog, and, asc, eq, requestTypeFields, users } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
-import { DocEngineError } from "../../lib/doc-engine/engine.js";
+import type { Readable } from "node:stream";
+import {
+  DocEngineError,
+  DocEngineTimeoutError,
+  DocEngineUnavailableError,
+} from "../../lib/doc-engine/engine.js";
+import { cachedPdfRendition } from "../../lib/preview-rendition.js";
 import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
 import { AttachedCustomFieldSchema, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -88,6 +94,12 @@ import {
   StaffRequestSchema,
   toStaffRequest,
 } from "./projection.js";
+
+/** Where one Request attachment's PDF preview is stored. One key per
+ * attachment; see `cachedPdfRendition`. */
+export function attachmentRenditionKey(attachmentId: string): string {
+  return `request-attachment-renditions/${attachmentId}`;
+}
 
 /** INT-006: Member+ triages, and there are no routing rules to narrow
  * that further. The Inbox's own gate, on the screen the Inbox opens. */
@@ -202,13 +214,28 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
         const convertFrom = conversionFormatOf("application/octet-stream", row.filename);
         if (!nativeType && !convertFrom)
           throw httpError(415, "A preview is not available for this file type.");
-        const source = await app.storage.get(row.fileRef);
-        let preview = source;
+        let preview: Readable;
         if (convertFrom) {
+          // One stored PDF per attachment, so a repeat preview reads it
+          // back instead of converting the same bytes again.
           try {
-            preview = await app.docEngine.convertToPdf(source, convertFrom);
+            preview = await cachedPdfRendition({
+              storage: app.storage,
+              docEngine: app.docEngine,
+              key: attachmentRenditionKey(request.params.attachmentId),
+              format: convertFrom,
+              readSource: () => app.storage.get(row.fileRef),
+            });
           } catch (error) {
-            source.destroy();
+            if (
+              error instanceof DocEngineUnavailableError ||
+              error instanceof DocEngineTimeoutError
+            ) {
+              reply.header("retry-after", "10");
+              throw httpError(503, "The preview is not ready. Try again in a moment.", {
+                expose: true,
+              });
+            }
             if (error instanceof DocEngineError)
               throw httpError(
                 422,
@@ -216,6 +243,8 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
               );
             throw error;
           }
+        } else {
+          preview = await app.storage.get(row.fileRef);
         }
         return reply
           .header("content-type", nativeType ?? "application/pdf")

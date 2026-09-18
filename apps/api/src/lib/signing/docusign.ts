@@ -21,12 +21,18 @@
  * suite holds them against known-good fixtures; the shared contract
  * suite runs the driver against a stub server that speaks DocuSign's
  * shapes.
+ *
+ * Outbound rules (TECH-030). No call follows a redirect. The discovered
+ * `base_uri` must sit on DocuSign's own hosts. Every answer is read
+ * under a byte ceiling and an idle deadline that runs across the whole
+ * body, not only until the headers.
  */
 
 import { createHmac, createPrivateKey, createSign, timingSafeEqual } from "node:crypto";
-import { Readable } from "node:stream";
-import type { ReadableStream as WebReadableStream } from "node:stream/web";
+import type { Readable } from "node:stream";
 import type { SigningEnvironment } from "@openlaw/db";
+import { maxUploadBytes } from "../uploads.js";
+import { BodyTooLargeError, boundedReadable, readBoundedBody } from "./bounded-body.js";
 import {
   EnvelopeNotFoundError,
   SigningConfigError,
@@ -75,8 +81,55 @@ const ASSERTION_LIFETIME_SECONDS = 600;
 /** The header DocuSign Connect signs each delivery with. */
 export const CONNECT_SIGNATURE_HEADER = "x-docusign-signature-1";
 
-/** Default bound on one DocuSign call. */
+/**
+ * Default bound on one DocuSign call. It is an idle bound: the clock
+ * restarts on every chunk that arrives, so a large executed copy that
+ * keeps flowing is fine and a socket that stops sending is not.
+ */
 export const DEFAULT_DOCUSIGN_TIMEOUT_MS = 30_000;
+
+/** The most JSON one DocuSign answer may carry. Answers are a few fields. */
+const MAX_JSON_BYTES = 8 * 1024 * 1024;
+
+/** The most of a refusal body kept as an error cause. */
+const MAX_REFUSAL_BYTES = 64 * 1024;
+
+/** DocuSign's own hosts. A discovered `base_uri` may name nothing else. */
+const DOCUSIGN_ESTATE = /(^|\.)docusign\.(net|com)$/i;
+
+/**
+ * The origin a discovered `base_uri` may send envelopes to, or a
+ * configuration fault.
+ *
+ * The value comes off the userinfo answer, and every later call sends
+ * the bearer token and the documents to it. Without this check, whoever
+ * can shape that answer chooses where they go. Accepted: an `https`
+ * origin on `docusign.net` or `docusign.com`, or one of the configured
+ * host origins, which is how the contract suite points the driver at a
+ * local stub. Exported so the suite can hold the rule on its own.
+ */
+export function checkedBaseUri(baseUri: string, trustedOrigins: readonly string[]): string {
+  let url: URL;
+  try {
+    url = new URL(baseUri);
+  } catch {
+    throw new SigningConfigError("DocuSign named an account base URI that is not a URL.");
+  }
+  if (trustedOrigins.includes(url.origin)) return url.origin;
+  if (
+    url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    !DOCUSIGN_ESTATE.test(url.hostname)
+  ) {
+    throw new SigningConfigError(
+      "DocuSign named an account base URI outside its own hosts. " +
+        "Envelopes are sent only to docusign.net and docusign.com.",
+      { cause: url.host },
+    );
+  }
+  return url.origin;
+}
 
 /** Base64url without padding, as a JWS wants it. */
 function base64url(input: Buffer | string): string {
@@ -249,12 +302,14 @@ export function parseConnectDelivery(body: Buffer): WebhookDelivery {
 
 /** What a driver instance may vary. */
 export interface DocuSignDriverOptions {
-  /** Bound on one call. */
+  /** Idle bound on one call: the longest wait for headers or for the next chunk. */
   timeoutMs?: number;
   /** Overrides both hosts. The contract suite points them at a stub. */
   hosts?: { auth: string; api: string };
   /** Now, in milliseconds — fixed by the assertion suite. */
   clock?: () => number;
+  /** The most bytes an executed copy may carry. Defaults to the upload ceiling. */
+  maxDocumentBytes?: number;
 }
 
 /** One minted access token and when it stops being usable. */
@@ -280,6 +335,59 @@ function relayFetchError(error: unknown): never {
 }
 
 /**
+ * Turns a failure while reading a body into the right side of the
+ * split. The ceiling is terminal: the same envelope answers the same
+ * bytes next time. A stall is a timeout, and anything else is the
+ * transport.
+ */
+function relayBodyError(error: unknown, what: string): Error {
+  if (error instanceof BodyTooLargeError) {
+    return new SigningRefusedError(
+      `DocuSign answered with ${what} larger than ${String(error.maxBytes)} bytes.`,
+    );
+  }
+  if (error instanceof Error && error.name === "TimeoutError") {
+    return new SigningTimeoutError("DocuSign stopped sending before the answer was complete.");
+  }
+  return new SigningUnavailableError("DocuSign could not be read.", { cause: error });
+}
+
+/**
+ * One idle deadline for one call. `touch` restarts the clock; the
+ * caller does so on every chunk. `clear` stops it once the body is
+ * consumed. `unref` keeps the timer out of the event loop's reasons to
+ * stay open, so a worker shutting down never waits on a request that
+ * already answered.
+ */
+interface IdleDeadline {
+  signal: AbortSignal;
+  touch: () => void;
+  clear: () => void;
+}
+
+function idleDeadline(timeoutMs: number): IdleDeadline {
+  const controller = new AbortController();
+  let timer: NodeJS.Timeout | null = null;
+  const touch = () => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      // The name is what `relayFetchError` and `relayBodyError` read to
+      // put this on the transient side, and it must keep meaning that.
+      controller.abort(new DOMException("DocuSign did not answer in time.", "TimeoutError"));
+    }, timeoutMs).unref();
+  };
+  touch();
+  return {
+    signal: controller.signal,
+    touch,
+    clear: () => {
+      if (timer) clearTimeout(timer);
+      timer = null;
+    },
+  };
+}
+
+/**
  * The DocuSign driver. One instance holds one connector's credentials
  * and caches the token it mints from them, so a burst of calls costs
  * one grant exchange rather than one each. It is built per resolution
@@ -292,7 +400,10 @@ class DocuSignProvider implements SigningProvider {
 
   private readonly config: DocuSignConfig;
   private readonly hosts: { auth: string; api: string };
+  /** The origins a discovered `base_uri` may name besides DocuSign's own. */
+  private readonly trustedOrigins: readonly string[];
   private readonly timeoutMs: number;
+  private readonly maxDocumentBytes: number;
   private readonly clock: () => number;
   private token: AccessToken | null = null;
   private account: AccountInfo | null = null;
@@ -306,44 +417,29 @@ class DocuSignProvider implements SigningProvider {
     this.config = config;
     this.environment = config.environment;
     this.hosts = options.hosts ?? HOSTS[config.environment];
+    this.trustedOrigins = [new URL(this.hosts.auth).origin, new URL(this.hosts.api).origin];
     this.timeoutMs = options.timeoutMs ?? DEFAULT_DOCUSIGN_TIMEOUT_MS;
+    this.maxDocumentBytes = options.maxDocumentBytes ?? maxUploadBytes(process.env.MAX_UPLOAD_MB);
     this.clock = options.clock ?? Date.now;
   }
 
-  /** One request, with the transient/terminal split applied to its answer. */
-  private async call(
+  /**
+   * One request, with the transient/terminal split applied to its
+   * answer. The response is returned unread. The caller reads it under
+   * the same deadline, so the clock keeps running across the body.
+   *
+   * The request never follows a redirect. A redirect is the far side
+   * choosing where the bearer token goes next.
+   */
+  private async request(
     url: string,
-    init: Omit<RequestInit, "headers" | "signal"> & {
+    init: Omit<RequestInit, "headers" | "signal" | "redirect"> & {
       headers?: Record<string, string>;
       token?: string;
-      /**
-       * The caller reads this answer's body as a stream rather than in
-       * one go, so the timeout covers the wait for headers and stops
-       * there.
-       *
-       * Left running, the request clock keeps counting while the caller
-       * downloads, and an executed copy that takes longer than the
-       * timeout is aborted part way through a transfer that is behaving
-       * perfectly. A clock cannot tell a large file from a stuck
-       * socket. What bounds that read is the size ceiling the
-       * executed-copy job meters the bytes against.
-       */
-      stream?: boolean;
     },
+    deadline: IdleDeadline,
   ): Promise<Response> {
-    const { token, stream, ...rest } = init;
-    // A controller of our own rather than `AbortSignal.timeout`, only
-    // so the streaming case can stop the clock once the headers land —
-    // a timeout signal cannot be called off. `unref` keeps it out of
-    // the event loop's reasons to stay open, which is what
-    // `AbortSignal.timeout` does too: a worker shutting down must not
-    // wait on a timer for a request that already answered.
-    const controller = new AbortController();
-    const timer = setTimeout(() => {
-      // The name is what `relayFetchError` reads to put this on the
-      // transient side of the split, and it must keep meaning that.
-      controller.abort(new DOMException("DocuSign did not answer in time.", "TimeoutError"));
-    }, this.timeoutMs).unref();
+    const { token, ...rest } = init;
     let response: Response;
     try {
       response = await fetch(url, {
@@ -352,22 +448,23 @@ class DocuSignProvider implements SigningProvider {
           ...rest.headers,
           ...(token ? { authorization: `Bearer ${token}` } : {}),
         },
-        signal: controller.signal,
+        signal: deadline.signal,
+        redirect: "error",
       });
     } catch (error) {
       relayFetchError(error);
     }
-    // Only an answer the caller is about to stream stops the clock, and
-    // only once it is known to be one. A refusal's body is read here in
-    // one go, a line or two of JSON, and that read keeps the bound it
-    // has always had.
-    if (stream && response.ok) clearTimeout(timer);
     if (response.ok) return response;
     // 401/403 is the credential answer, 404 is a missing envelope, and
     // every other 4xx is DocuSign saying no to this request — all
     // terminal. 5xx and 429 are the provider's own trouble, which a
-    // retry heals.
-    const body = await response.text().catch(() => "");
+    // retry heals. The refusal body is kept as a bounded cause only.
+    const body = await readBoundedBody(response.body, {
+      maxBytes: MAX_REFUSAL_BYTES,
+      onChunk: deadline.touch,
+    })
+      .then((bytes) => bytes.toString("utf8"))
+      .catch(() => "");
     if (response.status === 401 || response.status === 403) {
       throw new SigningConfigError(
         "DocuSign refused the connector's credentials. Check the integration key, the user ID, " +
@@ -384,6 +481,71 @@ class DocuSignProvider implements SigningProvider {
     throw new SigningRefusedError(`DocuSign refused the request (${response.status}).`, {
       cause: body,
     });
+  }
+
+  /**
+   * One call whose answer is JSON, read whole under a byte ceiling.
+   * An empty body or one that is not JSON answers `null`, which every
+   * caller treats as a missing field.
+   */
+  private async callJson(
+    url: string,
+    init: Parameters<DocuSignProvider["request"]>[1] = {},
+  ): Promise<unknown> {
+    const deadline = idleDeadline(this.timeoutMs);
+    try {
+      const response = await this.request(url, init, deadline);
+      let bytes: Buffer;
+      try {
+        bytes = await readBoundedBody(response.body, {
+          maxBytes: MAX_JSON_BYTES,
+          onChunk: deadline.touch,
+        });
+      } catch (error) {
+        throw relayBodyError(error, "an answer");
+      }
+      if (bytes.length === 0) return null;
+      try {
+        return JSON.parse(bytes.toString("utf8")) as unknown;
+      } catch {
+        return null;
+      }
+    } finally {
+      deadline.clear();
+    }
+  }
+
+  /**
+   * One call whose answer is handed on as a stream. The idle deadline
+   * keeps running across the whole transfer and restarts on every chunk,
+   * and the bytes are counted against the document ceiling as they
+   * pass. The executed-copy job meters the same stream against the same
+   * ceiling; this is the driver's own backstop, so a connector cannot
+   * stream past what the install accepts whatever consumes it.
+   */
+  private async callStream(
+    url: string,
+    init: Parameters<DocuSignProvider["request"]>[1],
+  ): Promise<Readable> {
+    const deadline = idleDeadline(this.timeoutMs);
+    let response: Response;
+    try {
+      response = await this.request(url, init, deadline);
+    } catch (error) {
+      deadline.clear();
+      throw error;
+    }
+    if (!response.body) {
+      deadline.clear();
+      throw new SigningRefusedError("DocuSign returned no executed document for that envelope.");
+    }
+    const stream = boundedReadable(response.body, {
+      maxBytes: this.maxDocumentBytes,
+      onChunk: deadline.touch,
+      mapError: (error) => relayBodyError(error, "an executed copy"),
+    });
+    stream.once("close", deadline.clear);
+    return stream;
   }
 
   /**
@@ -416,9 +578,9 @@ class DocuSignProvider implements SigningProvider {
       audience: new URL(this.hosts.auth).host,
       now,
     });
-    let response: Response;
+    let answer: unknown;
     try {
-      response = await this.call(`${this.hosts.auth}/oauth/token`, {
+      answer = await this.callJson(`${this.hosts.auth}/oauth/token`, {
         method: "POST",
         headers: { "content-type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
@@ -441,7 +603,7 @@ class DocuSignProvider implements SigningProvider {
       }
       throw error;
     }
-    const body = readObject(await response.json().catch(() => null));
+    const body = readObject(answer);
     const value = body && readString(body, "access_token");
     if (!value) {
       throw new SigningConfigError("DocuSign returned no access token for the JWT grant.");
@@ -463,8 +625,7 @@ class DocuSignProvider implements SigningProvider {
 
   private async discoverAccount(): Promise<AccountInfo> {
     const token = await this.accessToken();
-    const response = await this.call(`${this.hosts.auth}/oauth/userinfo`, { token });
-    const body = readObject(await response.json().catch(() => null));
+    const body = readObject(await this.callJson(`${this.hosts.auth}/oauth/userinfo`, { token }));
     const accounts = body && Array.isArray(body.accounts) ? body.accounts : [];
     // The default account, else the first one — an integration user
     // with no account cannot send, so that is a credential fault.
@@ -481,7 +642,7 @@ class DocuSignProvider implements SigningProvider {
     this.account = {
       accountId,
       accountName: readString(chosen, "account_name") ?? accountId,
-      baseUri,
+      baseUri: checkedBaseUri(baseUri, this.trustedOrigins),
       userEmail: (body && readString(body, "email")) ?? this.config.apiUserId,
     };
     return this.account;
@@ -508,13 +669,14 @@ class DocuSignProvider implements SigningProvider {
       this.envelopesUrl(),
       collect(input.document),
     ]);
-    const response = await this.call(url, {
-      method: "POST",
-      token,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(buildEnvelopeDefinition(input, bytes)),
-    });
-    const body = readObject(await response.json().catch(() => null));
+    const body = readObject(
+      await this.callJson(url, {
+        method: "POST",
+        token,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(buildEnvelopeDefinition(input, bytes)),
+      }),
+    );
     const providerEnvelopeId = body && readString(body, "envelopeId");
     if (!providerEnvelopeId) {
       throw new SigningRefusedError("DocuSign accepted the envelope but named no id for it.");
@@ -524,7 +686,7 @@ class DocuSignProvider implements SigningProvider {
 
   async voidEnvelope(providerEnvelopeId: string, reason: string): Promise<void> {
     const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
-    await this.call(`${url}/${encodeURIComponent(providerEnvelopeId)}`, {
+    await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}`, {
       method: "PUT",
       token,
       headers: { "content-type": "application/json" },
@@ -534,8 +696,10 @@ class DocuSignProvider implements SigningProvider {
 
   async readEnvelope(providerEnvelopeId: string): Promise<EnvelopeState> {
     const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
-    const response = await this.call(`${url}/${encodeURIComponent(providerEnvelopeId)}`, { token });
-    const body = readObject(await response.json().catch(() => null)) ?? {};
+    const body =
+      readObject(
+        await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}`, { token }),
+      ) ?? {};
     const rawStatus = readString(body, "status");
     const status = rawStatus ? mapEnvelopeStatus(rawStatus) : undefined;
     if (!status) {
@@ -560,19 +724,9 @@ class DocuSignProvider implements SigningProvider {
     // `combined` is the signed paper plus its certificate of
     // completion, which is the copy CTR-014 pins: the certificate is
     // the evidence the signatures happened.
-    const response = await this.call(
-      `${url}/${encodeURIComponent(providerEnvelopeId)}/documents/combined`,
-      { token, stream: true },
-    );
-    if (!response.body) {
-      throw new SigningRefusedError("DocuSign returned no executed document for that envelope.");
-    }
-    // `lib.dom` joins this program through `@better-auth/sso` (its types
-    // reach samlify, and `@xmldom/xmldom` references the lib), so
-    // `response.body` is typed as the DOM stream rather than Node's.
-    // They are the same object at runtime — undici serves the call — and
-    // `Readable.fromWeb` wants the Node declaration of it.
-    return Readable.fromWeb(response.body as unknown as WebReadableStream<Uint8Array>);
+    return this.callStream(`${url}/${encodeURIComponent(providerEnvelopeId)}/documents/combined`, {
+      token,
+    });
   }
 
   verifyWebhook(body: Buffer, headers: Readonly<Record<string, string>>): WebhookDelivery {

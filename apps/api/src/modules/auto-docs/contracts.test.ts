@@ -544,7 +544,7 @@ it("refuses a built-in map no answer of that form field can fill", async () => {
   expect(refused.json().detail).toContain("The Value map needs a number answer.");
 });
 
-it("hides the Contract link when its current title is outside the reader's audience", async () => {
+it("hides a Generation whose created Contract is outside the reader's audience", async () => {
   const outsider = await provisionUser(h.app.auth, {
     email: "generation-reader@example.com",
     displayName: "Generation reader",
@@ -562,16 +562,30 @@ it("hides the Contract link when its current title is outside the reader's audie
     .update(contracts)
     .set({ isConfidential: true, title: "Confidential new title" })
     .where(eq(contracts.id, generation.createdContract.id));
-  for (const suffix of ["", `/${generation.id}`]) {
+  // ADO-013: the Generation follows the Contract's audience, so the
+  // outsider gets nothing, not a row with the link blanked.
+  const listed = await h.app.inject({
+    url: `/api/v1/auto-docs/${prepared.id}/generations`,
+    cookies: outsiderCookies,
+  });
+  expect(listed.statusCode, listed.body).toBe(200);
+  expect(listed.json().generations).toEqual([]);
+  expect(listed.body).not.toContain("Confidential new title");
+  for (const suffix of ["", "/docx"]) {
     const read = await h.app.inject({
-      url: `/api/v1/auto-docs/${prepared.id}/generations${suffix}`,
+      url: `/api/v1/auto-docs/${prepared.id}/generations/${generation.id}${suffix}`,
       cookies: outsiderCookies,
     });
-    expect(read.statusCode, read.body).toBe(200);
-    const item = suffix ? read.json().generation : read.json().generations[0];
-    expect(item.createdContract).toBeNull();
+    expect(read.statusCode, read.body).toBe(404);
     expect(read.body).not.toContain("Confidential new title");
   }
+  // The generating Administrator is on the team and keeps the row and its link.
+  const own = await h.app.inject({
+    url: `/api/v1/auto-docs/${prepared.id}/generations/${generation.id}`,
+    cookies,
+  });
+  expect(own.statusCode, own.body).toBe(200);
+  expect(own.json().generation.createdContract.title).toBe("Confidential new title");
 });
 
 it("refuses an ambiguous Department name and accepts the chosen Department id", async () => {

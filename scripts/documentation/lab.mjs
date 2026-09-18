@@ -5,6 +5,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
 import {
+  appendFileSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -206,9 +207,17 @@ async function main() {
       const appImage = `${project}-app:${commit.slice(0, 12)}`;
       const engineImage = `${project}-engine:${commit.slice(0, 12)}`;
       const mail = { SMTP_URL: "smtp://mailpit:1025", SMTP_FROM: "OpenLaw <legal@helix.example>" };
+      // The bootstrap token first-run setup demands (TECH-031). Written
+      // into the lab's .env so the seed, which reads that file, can run
+      // setup against the app, which gets the same value here.
+      const setupToken = randomBytes(16).toString("base64url");
+      appendFileSync(join(source, ".env"), `SETUP_TOKEN=${setupToken}\n`, { mode: 0o600 });
       writeJson(join(directory, "overlay.json"), {
         services: {
-          app: { image: appImage, environment: { ...mail, AUTH_RATE_LIMIT: "off" } },
+          app: {
+            image: appImage,
+            environment: { ...mail, AUTH_RATE_LIMIT: "off", SETUP_TOKEN: setupToken },
+          },
           worker: { image: appImage, environment: mail },
           "doc-engine": { image: engineImage },
           mailpit: {

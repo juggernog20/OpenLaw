@@ -14,6 +14,8 @@
  * reads.
  */
 
+import { loggable } from "../logging.js";
+
 /** One structured line. */
 export type LogFields = Readonly<Record<string, unknown>>;
 
@@ -27,9 +29,17 @@ export interface PipelineLogger {
  * fallback for anything built without one. */
 export function createConsoleLogger(): PipelineLogger {
   const write = (level: string, fields: LogFields, message: string) => {
+    // An error in a field goes through the same rule the API's logger
+    // applies (TECH-029). `JSON.stringify` on a raw error prints its
+    // enumerable fields, and a DrizzleQueryError's are the SQL text and
+    // every bind parameter.
+    const safe: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(fields)) {
+      safe[key] = value instanceof Error ? loggable(value) : value;
+    }
     // The caller's fields first, so a field called `level` or `message`
     // cannot quietly replace the ones a log shipper reads.
-    const line = JSON.stringify({ ...fields, level, time: new Date().toISOString(), message });
+    const line = JSON.stringify({ ...safe, level, time: new Date().toISOString(), message });
     // Warnings and failures go to stderr, where a container runtime and
     // an operator's shell both expect to find them.
     if (level === "info") console.log(line);

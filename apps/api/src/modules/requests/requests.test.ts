@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { requestDepartment } from "../../testing/request-department.js";
+import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
 
 /**
  * Submission (#378): what stands between a portal form and a `requests`
@@ -18,7 +19,7 @@ import { requestDepartment } from "../../testing/request-department.js";
  * and the deflection links placed on that form).
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { activityLog, and, departments, eq, requestTypeFields, requests, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -161,6 +162,11 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.stop();
 });
+
+// The per-person Request quota counts a sliding hour (ADO-013). This
+// suite submits more than that in seconds, so each case starts with the
+// window empty.
+beforeEach(() => emptyRequestQuotaWindow(harness.db));
 
 /** A complete submission against "Contract review". */
 function completeBody(overrides: Record<string, unknown> = {}) {
@@ -916,4 +922,36 @@ it("accepts a Request without a Department when no live Departments exist", asyn
         .set({ archivedAt: row.archivedAt })
         .where(eq(departments.id, row.id));
   }
+});
+
+describe("the per-person Request quota", () => {
+  it("refuses the 21st Request in an hour with 429 and admits one once an older ask leaves the window", async () => {
+    const fixture = {
+      email: "quota.person@acme.com",
+      displayName: "Quota Person",
+      password: "correct-horse-battery",
+    };
+    const person = await provisionUser(harness.app.auth, fixture);
+    await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, person.id));
+    const cookies = await harnessSignInCookies(harness.app, fixture.email, fixture.password);
+    for (let index = 0; index < 20; index += 1) {
+      const res = await submit(completeBody({ title: `Ask ${index}` }), cookies);
+      expect(res.statusCode, res.body).toBe(201);
+    }
+    const refused = await submit(completeBody(), cookies);
+    expect(refused.statusCode, refused.body).toBe(429);
+    expect(refused.json().detail).toContain("20 Requests in the last hour");
+    const [oldest] = await harness.db
+      .select({ id: requests.id })
+      .from(requests)
+      .where(eq(requests.requesterId, person.id))
+      .orderBy(requests.createdAt)
+      .limit(1);
+    await harness.db
+      .update(requests)
+      .set({ createdAt: new Date(Date.now() - 2 * 60 * 60_000) })
+      .where(eq(requests.id, oldest!.id));
+    const admitted = await submit(completeBody(), cookies);
+    expect(admitted.statusCode, admitted.body).toBe(201);
+  });
 });

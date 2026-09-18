@@ -13,6 +13,33 @@ import {
 
 export const DEFAULT_EVENT_HEARTBEAT_MS = 15_000;
 
+/**
+ * How many streams one person may hold open at once. A browser opens one
+ * per tab that shows a live surface; five covers a busy day and stops a
+ * script from holding hundreds. Past it the oldest stream is closed.
+ */
+export const DEFAULT_MAX_SUBSCRIPTIONS_PER_USER = 5;
+
+/**
+ * How many streams one API process may hold open in total. Past it a
+ * new stream is refused, never an old one closed: a crowd of new users
+ * must not be able to cut everyone else off.
+ */
+export const DEFAULT_MAX_SUBSCRIPTIONS = 500;
+
+/** The process cap is reached. The route answers 503 with Retry-After. */
+export class EventHubFullError extends Error {
+  constructor() {
+    super("This process has no room for another live event stream.");
+    this.name = "EventHubFullError";
+  }
+}
+
+export interface EventHubLimits {
+  maxPerUser?: number;
+  maxTotal?: number;
+}
+
 export interface EventConnectionScope {
   userId: string;
   role: UserRole;
@@ -27,7 +54,16 @@ export interface EventHub {
   readonly heartbeatMs: number;
   start(): Promise<void>;
   stop(): Promise<void>;
-  subscribe(scope: EventConnectionScope, send: (event: LiveEvent) => void): () => void;
+  /**
+   * Registers one open stream. `close` is called when the hub drops the
+   * stream itself, which happens when its owner opens more than the
+   * per-user cap. Throws {@link EventHubFullError} at the process cap.
+   */
+  subscribe(
+    scope: EventConnectionScope,
+    send: (event: LiveEvent) => void,
+    close?: () => void,
+  ): () => void;
 }
 
 export interface EventHubLog {
@@ -37,6 +73,7 @@ export interface EventHubLog {
 interface Subscriber {
   scope: EventConnectionScope;
   send: (event: LiveEvent) => void;
+  close?: () => void;
 }
 
 function isMemberPlus(role: UserRole): boolean {
@@ -59,12 +96,41 @@ function addressedTo(event: LiveEvent, scope: EventConnectionScope): boolean {
 }
 
 class SubscriberRegistry {
+  // A Set iterates in insertion order, so the first match for a user is
+  // that user's oldest stream.
   readonly subscribers = new Set<Subscriber>();
+  private readonly maxPerUser: number;
+  private readonly maxTotal: number;
 
-  subscribe(scope: EventConnectionScope, send: (event: LiveEvent) => void): () => void {
-    const subscriber = { scope, send };
+  constructor(limits: EventHubLimits = {}) {
+    this.maxPerUser = limits.maxPerUser ?? DEFAULT_MAX_SUBSCRIPTIONS_PER_USER;
+    this.maxTotal = limits.maxTotal ?? DEFAULT_MAX_SUBSCRIPTIONS;
+  }
+
+  subscribe(
+    scope: EventConnectionScope,
+    send: (event: LiveEvent) => void,
+    close?: () => void,
+  ): () => void {
+    const mine = [...this.subscribers].filter((other) => other.scope.userId === scope.userId);
+    while (mine.length >= this.maxPerUser) {
+      this.drop(mine.shift()!);
+    }
+    if (this.subscribers.size >= this.maxTotal) throw new EventHubFullError();
+    const subscriber: Subscriber = { scope, send, close };
     this.subscribers.add(subscriber);
     return () => this.subscribers.delete(subscriber);
+  }
+
+  /** Forgets a stream and tells its route to end the response. */
+  private drop(subscriber: Subscriber): void {
+    this.subscribers.delete(subscriber);
+    try {
+      subscriber.close?.();
+    } catch {
+      // The socket may already be gone. The stream is out of the set
+      // either way, which is what the cap is about.
+    }
   }
 
   fanOut(event: LiveEvent): void {
@@ -83,13 +149,20 @@ class SubscriberRegistry {
 }
 
 /** Inert listener used by suites that build an app but do not exercise Postgres fan-out. */
-export function createTestingEventHub(heartbeatMs = DEFAULT_EVENT_HEARTBEAT_MS): EventHub {
-  const registry = new SubscriberRegistry();
+export function createTestingEventHub(
+  heartbeatMs = DEFAULT_EVENT_HEARTBEAT_MS,
+  limits?: EventHubLimits,
+): EventHub & { fanOut(event: LiveEvent): void; readonly size: number } {
+  const registry = new SubscriberRegistry(limits);
   return {
     heartbeatMs,
     start: () => Promise.resolve(),
     stop: () => Promise.resolve(),
-    subscribe: (scope, send) => registry.subscribe(scope, send),
+    subscribe: (scope, send, close) => registry.subscribe(scope, send, close),
+    fanOut: (event) => registry.fanOut(event),
+    get size() {
+      return registry.subscribers.size;
+    },
   };
 }
 
@@ -102,8 +175,9 @@ export function createPostgresEventHub(options: {
   log: EventHubLog;
   heartbeatMs?: number;
   reconnectMs?: number;
+  limits?: EventHubLimits;
 }): EventHub {
-  const registry = new SubscriberRegistry();
+  const registry = new SubscriberRegistry(options.limits);
   const heartbeatMs = options.heartbeatMs ?? DEFAULT_EVENT_HEARTBEAT_MS;
   const reconnectMs = options.reconnectMs ?? 1_000;
   let client: PoolClient | undefined;
@@ -208,6 +282,6 @@ export function createPostgresEventHub(options: {
         active.release(true);
       }
     },
-    subscribe: (scope, send) => registry.subscribe(scope, send),
+    subscribe: (scope, send, close) => registry.subscribe(scope, send, close),
   };
 }

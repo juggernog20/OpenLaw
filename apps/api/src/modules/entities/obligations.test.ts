@@ -2,7 +2,7 @@
 
 /** M27/6's Entity obligations and unified compliance calendar at the HTTP seam. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, entityObligations, eq, users } from "@openlaw/db";
+import { activityLog, and, entityObligations, eq, matters, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -31,6 +31,7 @@ let harness: TestHarness;
 let memberCookies: Record<string, string>;
 let adminCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
+let colleagueCookies: Record<string, string>;
 let memberId: string;
 let corporationId: string;
 let colleagueId: string;
@@ -54,6 +55,7 @@ beforeAll(async () => {
     if (fixture === MEMBER) memberId = person.id;
   }
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+  colleagueCookies = await signInCookies(harness.app, COLLEAGUE.email, COLLEAGUE.password);
   const contributor = await provisionUser(harness.app.auth, CONTRIBUTOR);
   await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, contributor.id));
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
@@ -436,6 +438,56 @@ describe("the unified compliance calendar", () => {
     });
     expect(reached.body).toContain("Hidden Calendar Vehicle");
     expect(reached.body).toContain("Hidden annual filing");
+  });
+
+  it("names a confidential Matter only to a viewer who reaches it, on the record and on the calendar", async () => {
+    const entity = await newEntity("Obligations Link Vehicle");
+    // Made by the Member, who is its creator and holds its team row.
+    const matter = await newMatter("Walled regulatory response");
+    const created = await createObligation(entity.id, {
+      label: "Regulator filing tied to a walled matter",
+      nextDueOn: "2026-11-15",
+      matterId: matter.id,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    // The flag, straight in the column: the write has its own tests.
+    await harness.db.update(matters).set({ isConfidential: true }).where(eq(matters.id, matter.id));
+
+    const reads = (cookies: Record<string, string>) =>
+      Promise.all([
+        harness.app.inject({
+          method: "GET",
+          url: `/api/v1/entities/${entity.id}/obligations`,
+          cookies,
+        }),
+        harness.app.inject({
+          method: "GET",
+          url: `/api/v1/entities/calendar?entity=${entity.id}`,
+          cookies,
+        }),
+      ]);
+    const linked = (body: { obligations: { label: string; matter: unknown }[] }) =>
+      body.obligations.find((row) => row.label === "Regulator filing tied to a walled matter")!
+        .matter;
+
+    // The colleague reaches the Entity and not the Matter: the link is
+    // a fact about the obligation, the Matter's number and title are not.
+    for (const response of await reads(colleagueCookies)) {
+      expect(response.statusCode, response.body).toBe(200);
+      expect(linked(response.json())).toEqual({ id: matter.id, restricted: true });
+      expect(response.body).not.toContain("Walled regulatory response");
+      expect(response.body).not.toContain(`"number":${matter.number}`);
+    }
+
+    // The Member inside the wall reads the whole link.
+    for (const response of await reads(memberCookies)) {
+      expect(response.statusCode, response.body).toBe(200);
+      expect(linked(response.json())).toEqual({
+        id: matter.id,
+        number: matter.number,
+        title: "Walled regulatory response",
+      });
+    }
   });
 
   it("puts overdue obligations first, then due-date order, and applies every filter", async () => {

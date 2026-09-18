@@ -22,7 +22,9 @@ import {
 } from "@openlaw/db";
 import { MAX_APPROVAL_NOTE_LENGTH } from "@openlaw/shared";
 import { requireAuth } from "../../auth/guards.js";
+import type { AuthenticatedUser } from "../../auth/user.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
+import { documentAudienceScope } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { attachmentDisposition, inlineDisposition } from "../../lib/uploads.js";
 
@@ -90,7 +92,14 @@ function serialize(row: Awaited<ReturnType<typeof ownApprovals>>[number]) {
     decidedAt: row.decidedAt?.toISOString() ?? null,
   };
 }
-async function primaryDocument(db: Executor, contractId: string) {
+/**
+ * The current Version of the Contract's primary Document, as this
+ * viewer may see it. The approval grants the packet, not the Document's
+ * audience: a primary Document flagged confidential (DOC-008) answers
+ * "no document" to an approver outside its audience, the same as it
+ * answers every other read.
+ */
+async function primaryDocument(db: Executor, viewer: AuthenticatedUser, contractId: string) {
   const [row] = await db
     .select({
       versionId: documentVersions.id,
@@ -106,7 +115,12 @@ async function primaryDocument(db: Executor, contractId: string) {
     )
     .innerJoin(documentVersions, eq(documentVersions.documentId, documents.id))
     .where(
-      and(eq(contracts.id, contractId), isNull(documents.archivedAt), isNull(contracts.archivedAt)),
+      and(
+        eq(contracts.id, contractId),
+        isNull(documents.archivedAt),
+        isNull(contracts.archivedAt),
+        documentAudienceScope(db, viewer),
+      ),
     )
     .orderBy(desc(documentVersions.versionNumber))
     .limit(1);
@@ -175,7 +189,7 @@ export const portalApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
       reply.header("Cache-Control", "private, no-store");
       const [approval] = await ownApprovals(app.db, request.user.id, request.params.id).limit(1);
       if (!approval) throw httpError(404, "No approval request exists with this id.");
-      const document = await primaryDocument(app.db, approval.contractId);
+      const document = await primaryDocument(app.db, request.user, approval.contractId);
       let preview: "pdf" | "image" | "pending" | "unavailable" = "unavailable";
       if (document) {
         const family = renderFamilyOf(document.mimeType, document.filename);
@@ -221,7 +235,7 @@ export const portalApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const [approval] = await ownApprovals(app.db, request.user.id, request.params.id).limit(1);
       if (!approval) throw httpError(404, "No approval request exists with this id.");
-      const document = await primaryDocument(app.db, approval.contractId);
+      const document = await primaryDocument(app.db, request.user, approval.contractId);
       if (!document) throw httpError(404, "No primary document is available for review.");
       return reply
         .header("Cache-Control", "private, no-store")
@@ -246,7 +260,7 @@ export const portalApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const [approval] = await ownApprovals(app.db, request.user.id, request.params.id).limit(1);
       if (!approval) throw httpError(404, "No approval request exists with this id.");
-      const document = await primaryDocument(app.db, approval.contractId);
+      const document = await primaryDocument(app.db, request.user, approval.contractId);
       if (!document) throw httpError(404, "No primary document is available for review.");
       let { fileRef, byteSize } = document;
       let contentType = previewContentType(document.mimeType, document.filename);

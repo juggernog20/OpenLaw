@@ -44,13 +44,17 @@ export function describeAiProviderContract(
       await expect(harness!.provider.probe()).resolves.toBeUndefined();
     });
 
-    it("prints the provider reason when credentials are refused", async () => {
+    it("refuses bad credentials as a configuration fault with a message of its own", async () => {
       const refused = harness!.refusingProvider.probe();
+      await expect(refused).rejects.toBeInstanceOf(AiConfigError);
+      // The message is the adapter's, never the provider's body. A live
+      // adapter names the status code; the fake names the key.
       await expect(refused).rejects.toMatchObject({
         name: "AiConfigError",
-        message: expect.stringContaining("API key"),
+        message: expect.stringMatching(
+          /^The provider refused the (request with HTTP \d+|API key)\.$/,
+        ),
       });
-      await expect(refused).rejects.toBeInstanceOf(AiConfigError);
     });
 
     it("extracts one ordered object keyed by slug, including an answer with no evidence", async () => {

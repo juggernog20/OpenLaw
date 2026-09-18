@@ -81,6 +81,12 @@ services:
       # The upload ceiling in whole MB (story 24). Empty means unset:
       # the app falls back to its own default.
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-}
+      # The proxy addresses whose X-Forwarded-For the app believes
+      # (TECH-033), and the token first-run setup asks for (TECH-031).
+      # Empty means unset: the app warns about the first in production
+      # and generates the second while the install has no users.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
       # In-container listen address is fixed; PORT in .env moves the
       # published host port instead (see ports below).
       PORT: 3000
@@ -97,7 +103,13 @@ services:
       - openlaw-backend
       - openlaw-doc-engine
     ports:
-      - "${PORT:-3000}:3000"
+      # Published on loopback by default. Docker writes its own firewall
+      # rules, so a port published on every interface is reachable from
+      # the network even when ufw says otherwise, and that is a way
+      # around the reverse proxy. Set APP_BIND=0.0.0.0 in .env only when
+      # the proxy runs on another host, and add a network rule for the
+      # port when you do. See docs/DEPLOYMENT.md.
+      - "${APP_BIND:-127.0.0.1}:${PORT:-3000}:3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -108,6 +120,12 @@ services:
       # install down with it.
       doc-engine:
         condition: service_started
+    # Ceilings, not reservations. A request that runs away cannot take
+    # the host with it. The defaults fit a 4 CPU, 8 GB VM with room left
+    # for Postgres; raise them in .env for a larger team.
+    cpus: ${APP_CPUS:-2}
+    mem_limit: ${APP_MEM_LIMIT:-1g}
+    pids_limit: ${APP_PIDS_LIMIT:-256}
     restart: unless-stopped
     healthcheck:
       # The image has node and no curl; readiness = the DB answers (TECH-014).
@@ -160,6 +178,12 @@ services:
       # worker down for the app's whole start period.
       app:
         condition: service_started
+    # The app's ceilings, for the app's reason. A fill runs in a worker
+    # thread with its own heap cap, and this is the bound on the process
+    # around it.
+    cpus: ${WORKER_CPUS:-2}
+    mem_limit: ${WORKER_MEM_LIMIT:-1g}
+    pids_limit: ${WORKER_PIDS_LIMIT:-256}
     restart: unless-stopped
     # Compose sends SIGKILL ten seconds after SIGTERM by default, which
     # would cut the drain short. On a signal the worker stops taking new
@@ -193,6 +217,21 @@ services:
       # URL and every secret, and this container is deliberately given
       # neither.
       DOC_ENGINE_COMPARE_TIMEOUT_MS: ${DOC_ENGINE_COMPARE_TIMEOUT_MS:-}
+      # How many tools may run at once, and how many requests may wait
+      # for a slot. Past both the sidecar answers 503 with Retry-After
+      # and the caller retries. Empty means the sidecar's own defaults,
+      # two running and eight waiting.
+      DOC_ENGINE_MAX_CONCURRENT: ${DOC_ENGINE_MAX_CONCURRENT:-}
+      DOC_ENGINE_MAX_QUEUED: ${DOC_ENGINE_MAX_QUEUED:-}
+    # Ceilings for the container that opens counterparty files. The
+    # tmpfs below is RAM and counts against mem_limit, so keep
+    # DOC_ENGINE_MEM_LIMIT above DOC_ENGINE_TMPFS_SIZE with room for
+    # LibreOffice itself. pids_limit is what stops a fork bomb inside a
+    # hostile parse; two conversions plus OCR's per-page workers fit
+    # well under it.
+    cpus: ${DOC_ENGINE_CPUS:-2}
+    mem_limit: ${DOC_ENGINE_MEM_LIMIT:-4g}
+    pids_limit: ${DOC_ENGINE_PIDS_LIMIT:-512}
     # Stateless by design: it streams a file in, runs one tool, streams
     # the answer out, and keeps nothing. No volume, and nothing to back
     # up.
