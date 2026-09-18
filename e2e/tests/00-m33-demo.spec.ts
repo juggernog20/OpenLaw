@@ -10,6 +10,7 @@ import {
   ensureMemberInert,
   needsSetup,
   reportAxeViolations,
+  SETUP_TOKEN,
   signInAs,
   signOut,
   sweepOrSay,
@@ -121,6 +122,9 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
       await test.step("create the Administrator and walk all nine wizard steps", async () => {
         await page.goto("/");
         await expect(page).toHaveURL("/auth/setup");
+        // First-run setup asks for the bootstrap token (TECH-031);
+        // compose.dev.yml pins the one the suite knows.
+        await page.getByLabel("Setup token").fill(SETUP_TOKEN);
         await page.getByLabel("Name").fill(ADMIN.displayName);
         await page.getByLabel("Email").fill(ADMIN.email);
         await page.getByLabel("Password", { exact: true }).fill(ADMIN.password);
