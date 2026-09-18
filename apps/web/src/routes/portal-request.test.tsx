@@ -1123,7 +1123,9 @@ it("shows Legal's owner and submitted Needed by date without a separate return e
     ),
   });
   renderAt("/portal/requests/45");
-  expect(await screen.findByText("Owner: Lee Member")).toBeInTheDocument();
+  expect(await screen.findByText("Legal Owner")).toBeInTheDocument();
+  expect(screen.getByText("Lee Member")).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Help with this page" })).not.toBeInTheDocument();
   expect(screen.queryByText(/Expected back \(estimate\)/)).not.toBeInTheDocument();
   expect(screen.queryByText("Estimate passed")).not.toBeInTheDocument();
   expect(screen.getByText("Needed by")).toBeInTheDocument();
