@@ -231,6 +231,7 @@ export const portalAutoDocRoutes: FastifyPluginAsyncZod = async (app) => {
             request.params.id,
             request.body.acknowledgementId,
           ),
+        reply,
       );
       return reply.code(201).send({
         generation: toGeneration(

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** Storage reads stop at the ceiling instead of holding whatever arrives. */
+import { once } from "node:events";
 import { Readable } from "node:stream";
 import { buffer } from "node:stream/consumers";
 import { expect, it } from "vitest";
@@ -20,5 +21,13 @@ it("fails a streaming consumer past the ceiling and passes one under it", async 
   expect((await buffer(boundedBlobStream(chunks(10, 10), 20))).byteLength).toBe(20);
   const source = chunks(10, 11, 1000);
   await expect(buffer(boundedBlobStream(source, 20))).rejects.toBeInstanceOf(BlobTooLargeError);
+  expect(source.destroyed).toBe(true);
+});
+it("destroys the storage read when the consumer stops early", async () => {
+  const source = chunks(10, 10, 10);
+  const guarded = boundedBlobStream(source, 100);
+  const closed = once(guarded, "close");
+  guarded.destroy();
+  await closed;
   expect(source.destroyed).toBe(true);
 });

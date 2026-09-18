@@ -2,8 +2,14 @@
 
 /** TECH-028: a worker thread lets the request stop a CPU-bound fill on time. */
 import { Worker } from "node:worker_threads";
-import { AutoDocFillError, type AutoDocFillEngine, type AutoDocFillInput } from "./engine.js";
-import { Semaphore } from "./semaphore.js";
+import {
+  AutoDocFillBusyError,
+  AutoDocFillError,
+  type AutoDocFillAdmission,
+  type AutoDocFillEngine,
+  type AutoDocFillInput,
+} from "./engine.js";
+import { Semaphore, SemaphoreFullError, type SemaphoreReservation } from "./semaphore.js";
 
 const BOOTSTRAP = `
 const { parentPort, workerData } = require("node:worker_threads");
@@ -26,20 +32,45 @@ const { parentPort, workerData } = require("node:worker_threads");
  */
 export const MAX_CONCURRENT_FILLS = 2;
 
+/**
+ * How many fills one process lets wait for a slot. The fill timeout
+ * starts only once a slot is held, so without this cap a burst would
+ * hold an open request per waiting fill with no bound on the wait. A
+ * fill past the cap is refused at once with {@link AutoDocFillBusyError}.
+ */
+export const MAX_QUEUED_FILLS = 16;
+
 export function createAutoDocFillEngine({
   timeoutMs = 10_000,
   maxConcurrentFills = MAX_CONCURRENT_FILLS,
-}: { timeoutMs?: number; maxConcurrentFills?: number } = {}): AutoDocFillEngine {
+  maxQueuedFills = MAX_QUEUED_FILLS,
+}: {
+  timeoutMs?: number;
+  maxConcurrentFills?: number;
+  maxQueuedFills?: number;
+} = {}): AutoDocFillEngine {
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
     throw new Error("A fill needs a positive timeout.");
   const source = import.meta.url.endsWith(".ts");
   const moduleUrl = new URL(source ? "./render.ts" : "./render.js", import.meta.url).href;
   // Source runs use the same loader as API development. Compiled deployments do not load tsx.
   const tsxUrl = source ? import.meta.resolve("tsx/esm/api") : undefined;
-  const slots = new Semaphore(maxConcurrentFills);
+  const slots = new Semaphore(maxConcurrentFills, { maxQueued: maxQueuedFills });
+  const busy = (error: unknown): never => {
+    throw error instanceof SemaphoreFullError ? new AutoDocFillBusyError() : error;
+  };
+  const fill = (input: AutoDocFillInput, place?: SemaphoreReservation) =>
+    slots.run(() => fillInWorker(input), place).catch(busy);
   return {
-    fill(input) {
-      return slots.run(() => fillInWorker(input));
+    fill: (input) => fill(input),
+    admit(): AutoDocFillAdmission {
+      let place: SemaphoreReservation;
+      try {
+        place = slots.reserve();
+      } catch (error) {
+        return busy(error);
+      }
+      return { fill: (input) => fill(input, place), release: () => place.release() };
     },
   };
 

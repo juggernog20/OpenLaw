@@ -6,9 +6,16 @@ import { expect, it } from "vitest";
 import type { AutoDocFormDefinition } from "@openlaw/db";
 import PizZip from "pizzip";
 import { templateTextParts } from "../auto-doc-template.js";
+import { AutoDocFillBusyError, AutoDocFillError } from "./engine.js";
 import { createAutoDocFillEngine } from "./real.js";
 import { evaluateCondition } from "./values.js";
-import { buildWordPackage, forgeDeclaredSize } from "../../testing/word-package.js";
+import {
+  buildWordPackage,
+  complexField,
+  forgeDeclaredSize,
+  paragraph,
+  wordBody,
+} from "../../testing/word-package.js";
 
 const fixture = (name: string) =>
   readFile(new URL(`../../testing/fixtures/auto-docs/${name}.docx`, import.meta.url));
@@ -173,6 +180,42 @@ it("refuses an expanded package above 32 MiB before rendering", async () => {
       answers: {},
     }),
   ).rejects.toThrow("expanded Word template exceeds 32 MiB");
+});
+
+it("refuses a template with a part that reaches outside the file, inside the worker", async () => {
+  const template = buildWordPackage({
+    "word/document.xml": wordBody(
+      paragraph("{{counterparty_name}}") + complexField(' DDEAUTO c:\\\\shell "/c calc" '),
+    ),
+  });
+  const refused = engine.fill({
+    template,
+    definition: form("counterparty_name"),
+    answers: { counterparty_name: "Acme" },
+  });
+  await expect(refused).rejects.toBeInstanceOf(AutoDocFillError);
+  await expect(refused).rejects.toThrow("DDEAUTO field in word/document.xml");
+});
+
+it("refuses a fill at once when every slot and queue place is taken", async () => {
+  const bounded = createAutoDocFillEngine({ maxConcurrentFills: 1, maxQueuedFills: 0 });
+  const template = await fixture("plain");
+  const input = {
+    template,
+    definition: form("counterparty_name", "signing_date", "amount"),
+    answers: { counterparty_name: "Acme", signing_date: "2026-09-13", amount: "100" },
+  };
+  const first = bounded.fill(input);
+  await expect(bounded.fill(input)).rejects.toBeInstanceOf(AutoDocFillBusyError);
+  expect(() => bounded.admit()).toThrow(AutoDocFillBusyError);
+  await first;
+  // A claimed place is held until it fills or is given back.
+  const held = bounded.admit();
+  expect(() => bounded.admit()).toThrow(AutoDocFillBusyError);
+  held.release();
+  const next = bounded.admit();
+  expect(text(await next.fill(input))).not.toContain("{{");
+  await expect(bounded.fill(input)).resolves.toBeInstanceOf(Buffer);
 });
 
 it("fills the downloadable agreement and its optional clause after removing the instructions page", async () => {

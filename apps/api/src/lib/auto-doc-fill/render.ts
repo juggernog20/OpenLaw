@@ -12,7 +12,7 @@ import {
   templateTextParts,
 } from "../auto-doc-template.js";
 import { AutoDocFillError, MAX_EXPANDED_TEMPLATE_BYTES, type AutoDocFillInput } from "./engine.js";
-import { verifyZipPackage } from "../docx-package.js";
+import { screenDocxPackage, verifyZipPackage } from "../docx-package.js";
 import { evaluateCondition, resolveAutoDocValue } from "./values.js";
 
 interface LexedPart {
@@ -21,15 +21,27 @@ interface LexedPart {
   position?: string;
 }
 
-export function renderAutoDoc(input: AutoDocFillInput): Buffer {
+/**
+ * Refuses a template the fill must never open: one that inflates past
+ * the fill ceiling, or one with parts that reach outside the file. The
+ * upload runs the same checks and answers 422; here the reason becomes
+ * the Generation's failure detail. This runs inside the fill worker, so
+ * the inflate and the XML parse never block the API event loop.
+ */
+export function screenFillTemplate(template: Buffer): void {
   // Declared sizes are not trusted; every entry is inflated under the ceiling first.
   try {
-    verifyZipPackage(input.template, MAX_EXPANDED_TEMPLATE_BYTES);
+    verifyZipPackage(template, MAX_EXPANDED_TEMPLATE_BYTES);
+    screenDocxPackage(template);
   } catch (error) {
     throw new AutoDocFillError(
       error instanceof Error ? error.message : "The Word template could not be read.",
     );
   }
+}
+
+export function renderAutoDoc(input: AutoDocFillInput): Buffer {
+  screenFillTemplate(input.template);
   const scans = new Map(
     templateTextParts(input.template).map((part) => [
       part.name,

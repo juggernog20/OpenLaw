@@ -32,7 +32,12 @@ import { z } from "zod";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { AUTO_DOC_SLUG } from "../../lib/auto-doc-template.js";
-import { AutoDocFillError } from "../../lib/auto-doc-fill/engine.js";
+import {
+  AutoDocFillBusyError,
+  AutoDocFillError,
+  type AutoDocFillAdmission,
+  type AutoDocFillEngine,
+} from "../../lib/auto-doc-fill/engine.js";
 import { BlobTooLargeError, readBoundedBlob } from "../../lib/bounded-blob.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import { HttpError, httpError, problemResponse } from "../../lib/problem.js";
@@ -57,7 +62,6 @@ import {
 } from "../../lib/document-versions.js";
 import { GenerationFilingInput } from "./filing-schema.js";
 import { filingFormat, reachedFilingDestination, fulfilRequestedFiling } from "./filings.js";
-import { screenTemplatePackage } from "./forms.js";
 import { generationReachScope } from "./generation-access.js";
 import { AutoDocFieldRow } from "./routes.js";
 
@@ -218,12 +222,38 @@ type GenerationDeps = Pick<
   AppDeps,
   "db" | "storage" | "fillEngine" | "jobs" | "notifier" | "maxUploadBytes"
 >;
+
+/** What the 503 tells a caller to wait when every fill place is taken, in seconds. */
+const FILL_RETRY_AFTER_SECONDS = 10;
+
+/**
+ * Claims a fill place before any Generation row is written, so a refusal
+ * for want of room records nothing and the caller simply tries again.
+ * The header goes on `reply` when the route passes one.
+ */
+function admitFill(engine: AutoDocFillEngine, reply?: FastifyReply): AutoDocFillAdmission {
+  try {
+    return engine.admit();
+  } catch (error) {
+    if (error instanceof AutoDocFillBusyError) {
+      reply?.header("retry-after", String(FILL_RETRY_AFTER_SECONDS));
+      throw httpError(
+        503,
+        "OpenLaw is filling as many documents as it can right now. Try again in a moment.",
+        { expose: true },
+      );
+    }
+    throw error;
+  }
+}
+
 async function fillGeneration(
   app: GenerationDeps,
   log: FastifyBaseLogger,
   generation: AutoDocGeneration,
   definition: AutoDocFormDefinition,
   sourceRef: string,
+  admission: AutoDocFillAdmission,
 ) {
   const current = and(
     eq(autoDocGenerations.id, generation.id),
@@ -233,8 +263,9 @@ async function fillGeneration(
   let stage: "fill" | "contract" = "fill";
   let primary: AppendedVersion | undefined;
   try {
-    // The stored template is read under the upload ceiling and screened
-    // again here, so a file stored before the screen existed is refused too.
+    // The stored template is read under the upload ceiling. The fill
+    // worker screens it again, so a file stored before the screen
+    // existed fails its Generation with the screen's reason.
     let template: Buffer;
     try {
       template = await readBoundedBlob(
@@ -246,8 +277,7 @@ async function fillGeneration(
         throw new AutoDocFillError("The Word template exceeds the upload limit.");
       throw error;
     }
-    screenTemplatePackage(template);
-    const output = await app.fillEngine.fill({
+    const output = await admission.fill({
       template,
       definition,
       answers: generation.answers,
@@ -319,6 +349,10 @@ async function fillGeneration(
       })
       .where(current);
     return;
+  } finally {
+    // Spent once the fill ran. This gives the place back only when the
+    // template read before the fill failed.
+    admission.release();
   }
   if (primary) await requestDerivations(app.jobs, log, primary);
   await fulfilRequestedFiling(app, log, generation.id);
@@ -340,7 +374,12 @@ export interface GenerationSubmission {
   filing?: z.infer<typeof GenerationFilingInput>;
 }
 
-/** Portal policy runs in the acceptance transaction, before consuming the submitted pair. */
+/**
+ * Portal policy runs in the acceptance transaction, before consuming the
+ * submitted pair. A fill place is claimed before the transaction, so a
+ * process with no room answers 503 and writes no row. Pass `reply` to
+ * carry Retry-After on that refusal.
+ */
 export async function generateAutoDoc(
   app: GenerationDeps,
   log: FastifyBaseLogger,
@@ -348,8 +387,35 @@ export async function generateAutoDoc(
   id: string,
   submission: GenerationSubmission,
   authorise?: (tx: Transaction) => Promise<void>,
+  reply?: FastifyReply,
 ) {
-  const accepted = await app.db.transaction(async (tx) => {
+  const admission = admitFill(app.fillEngine, reply);
+  let accepted: Awaited<ReturnType<typeof acceptGeneration>>;
+  try {
+    accepted = await acceptGeneration(app, user, id, submission, authorise);
+  } catch (error) {
+    admission.release();
+    throw error;
+  }
+  await fillGeneration(
+    app,
+    log,
+    accepted.generation,
+    accepted.form.definition,
+    accepted.file.fileRef,
+    admission,
+  );
+  return toGeneration(await readGeneration(app.db, user, id, accepted.generation.id));
+}
+
+async function acceptGeneration(
+  app: GenerationDeps,
+  user: AuthenticatedUser,
+  id: string,
+  submission: GenerationSubmission,
+  authorise?: (tx: Transaction) => Promise<void>,
+) {
+  return app.db.transaction(async (tx) => {
     await authorise?.(tx);
     // One person's submissions run one at a time through this lock, so a
     // burst cannot read the same count and all pass the cap.
@@ -428,14 +494,6 @@ export async function generateAutoDoc(
     });
     return { ...live, generation: generation! };
   });
-  await fillGeneration(
-    app,
-    log,
-    accepted.generation,
-    accepted.form.definition,
-    accepted.file.fileRef,
-  );
-  return toGeneration(await readGeneration(app.db, user, id, accepted.generation.id));
 }
 
 export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -530,6 +588,8 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
           request.user,
           request.params.id,
           request.body,
+          undefined,
+          reply,
         ),
       }),
   );
@@ -546,88 +606,94 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: Envelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const accepted = await app.db.transaction(async (tx) => {
-        const [old] = await tx
-          .select()
-          .from(autoDocGenerations)
-          .where(
-            and(
-              eq(autoDocGenerations.id, request.params.generationId),
-              eq(autoDocGenerations.autoDocId, request.params.id),
-              generationReachScope(tx, request.user),
-            ),
-          )
-          .for("update");
-        if (!old) throw httpError(404, "No Generation exists with this id on this Auto-Doc.");
-        if (old.state !== "failed")
-          throw httpError(409, "Only a failed Generation can be retried.");
-        const [file] = await tx
-          .select()
-          .from(documentVersions)
-          .where(eq(documentVersions.id, old.documentVersionId))
-          .for("share");
-        const [form] = await tx
-          .select()
-          .from(autoDocFormVersions)
-          .where(eq(autoDocFormVersions.id, old.formVersionId))
-          .for("share");
-        if (!file || !form)
-          throw httpError(409, "This Generation's original pair is no longer available.");
-        const displayValues = { ...old.displayValues };
-        for (const field of form.definition.fields) {
-          if (
-            field.fieldType !== "entity" ||
-            Object.hasOwn(displayValues, field.slug) ||
-            !Object.hasOwn(old.answers, field.slug)
-          )
-            continue;
-          const value = old.answers[field.slug];
-          if (typeof value !== "string") continue;
-          const [entity] = await tx
-            .select({ name: entities.legalName })
-            .from(entities)
-            .where(and(eq(entities.id, value), isNull(entities.archivedAt)));
-          if (!entity)
-            throw httpError(409, `The Entity used for "${field.label}" is no longer available.`);
-          displayValues[field.slug] = entity.name;
-        }
-        const [generation] = await tx
-          .update(autoDocGenerations)
-          .set({
-            state: "pending",
-            failure: null,
-            filingFailure: null,
-            docxFileRef: null,
-            pdfFileRef: null,
-            emailState: "pending",
-            emailFailure: null,
-            emailSentAt: null,
-            displayValues,
-            attempt: old.attempt + 1,
-            updatedAt: new Date(),
-          })
-          .where(eq(autoDocGenerations.id, old.id))
-          .returning();
-        const [autoDoc] = await tx
-          .select({ name: autoDocs.name })
-          .from(autoDocs)
-          .where(eq(autoDocs.id, old.autoDocId));
-        await recordActivity(tx, {
-          entityType: "auto_doc",
-          entityId: old.autoDocId,
-          actorId: request.user.id,
-          action: "auto_doc.generation_retried",
-          visibility: "legal_only",
-          payload: { name: autoDoc!.name, generationId: old.id },
+    async (request, reply) => {
+      const admission = admitFill(app.fillEngine, reply);
+      const accepted = await app.db
+        .transaction(async (tx) => {
+          const [old] = await tx
+            .select()
+            .from(autoDocGenerations)
+            .where(
+              and(
+                eq(autoDocGenerations.id, request.params.generationId),
+                eq(autoDocGenerations.autoDocId, request.params.id),
+                generationReachScope(tx, request.user),
+              ),
+            )
+            .for("update");
+          if (!old) throw httpError(404, "No Generation exists with this id on this Auto-Doc.");
+          if (old.state !== "failed")
+            throw httpError(409, "Only a failed Generation can be retried.");
+          const [file] = await tx
+            .select()
+            .from(documentVersions)
+            .where(eq(documentVersions.id, old.documentVersionId))
+            .for("share");
+          const [form] = await tx
+            .select()
+            .from(autoDocFormVersions)
+            .where(eq(autoDocFormVersions.id, old.formVersionId))
+            .for("share");
+          if (!file || !form)
+            throw httpError(409, "This Generation's original pair is no longer available.");
+          const displayValues = { ...old.displayValues };
+          for (const field of form.definition.fields) {
+            if (
+              field.fieldType !== "entity" ||
+              Object.hasOwn(displayValues, field.slug) ||
+              !Object.hasOwn(old.answers, field.slug)
+            )
+              continue;
+            const value = old.answers[field.slug];
+            if (typeof value !== "string") continue;
+            const [entity] = await tx
+              .select({ name: entities.legalName })
+              .from(entities)
+              .where(and(eq(entities.id, value), isNull(entities.archivedAt)));
+            if (!entity)
+              throw httpError(409, `The Entity used for "${field.label}" is no longer available.`);
+            displayValues[field.slug] = entity.name;
+          }
+          const [generation] = await tx
+            .update(autoDocGenerations)
+            .set({
+              state: "pending",
+              failure: null,
+              filingFailure: null,
+              docxFileRef: null,
+              pdfFileRef: null,
+              emailState: "pending",
+              emailFailure: null,
+              emailSentAt: null,
+              displayValues,
+              attempt: old.attempt + 1,
+              updatedAt: new Date(),
+            })
+            .where(eq(autoDocGenerations.id, old.id))
+            .returning();
+          const [autoDoc] = await tx
+            .select({ name: autoDocs.name })
+            .from(autoDocs)
+            .where(eq(autoDocs.id, old.autoDocId));
+          await recordActivity(tx, {
+            entityType: "auto_doc",
+            entityId: old.autoDocId,
+            actorId: request.user.id,
+            action: "auto_doc.generation_retried",
+            visibility: "legal_only",
+            payload: { name: autoDoc!.name, generationId: old.id },
+          });
+          return {
+            generation: generation!,
+            file,
+            form,
+            superseded: [old.docxFileRef, old.pdfFileRef],
+          };
+        })
+        .catch((error: unknown) => {
+          admission.release();
+          throw error;
         });
-        return {
-          generation: generation!,
-          file,
-          form,
-          superseded: [old.docxFileRef, old.pdfFileRef],
-        };
-      });
       // The retry mints fresh keys (DOC-012), so the output of the
       // attempt it replaced is referenced by nothing from here on. The
       // removal is best effort, for the display rendition's reason. An
@@ -647,6 +713,7 @@ export const autoDocGenerationRoutes: FastifyPluginAsyncZod = async (app) => {
         accepted.generation,
         accepted.form.definition,
         accepted.file.fileRef,
+        admission,
       );
       return {
         generation: toGeneration(

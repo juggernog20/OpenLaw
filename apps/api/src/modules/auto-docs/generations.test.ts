@@ -487,6 +487,48 @@ it("refuses a stored template that fails the screen when it is filled", async ()
   expect(made.json().generation.failure.detail).toContain("DDEAUTO field in word/document.xml");
 });
 
+it("answers 503 with Retry-After and writes no row when every fill place is taken", async () => {
+  const { id, pair } = await prepare();
+  const before = await h.db
+    .select({ id: autoDocGenerations.id })
+    .from(autoDocGenerations)
+    .where(eq(autoDocGenerations.autoDocId, id));
+  h.fillEngine.busy = true;
+  try {
+    const made = await call(id, "generations", { ...pair, answers: { counterparty_name: "Acme" } });
+    expect(made.statusCode, made.body).toBe(503);
+    expect(made.headers["retry-after"]).toBe("10");
+    expect(made.json().detail).toContain("Try again");
+    const after = await h.db
+      .select({ id: autoDocGenerations.id })
+      .from(autoDocGenerations)
+      .where(eq(autoDocGenerations.autoDocId, id));
+    expect(after).toEqual(before);
+  } finally {
+    h.fillEngine.busy = false;
+  }
+  const made = await call(id, "generations", { ...pair, answers: { counterparty_name: "Acme" } });
+  expect(made.statusCode, made.body).toBe(201);
+  const generationId: string = made.json().generation.id;
+  await h.db
+    .update(autoDocGenerations)
+    .set({ state: "failed", failure: { code: "fill_failed", detail: "forced" } })
+    .where(eq(autoDocGenerations.id, generationId));
+  h.fillEngine.busy = true;
+  try {
+    const retried = await call(id, `generations/${generationId}/retry`, {});
+    expect(retried.statusCode, retried.body).toBe(503);
+    expect(retried.headers["retry-after"]).toBe("10");
+    const [row] = await h.db
+      .select({ state: autoDocGenerations.state, attempt: autoDocGenerations.attempt })
+      .from(autoDocGenerations)
+      .where(eq(autoDocGenerations.id, generationId));
+    expect(row).toMatchObject({ state: "failed", attempt: 1 });
+  } finally {
+    h.fillEngine.busy = false;
+  }
+});
+
 it("refuses a new Generation while the person has the pending cap in flight", async () => {
   const { id, pair } = await prepare();
   const answers = { counterparty_name: "Acme" };

@@ -51,5 +51,11 @@ export function boundedBlobStream(source: Readable, ceiling: number): Readable {
     },
   });
   source.on("error", (error) => guarded.destroy(error));
+  // `pipe` carries data downstream only. A consumer that stops early
+  // destroys `guarded`, and without this the storage read behind it
+  // stays open: a file handle or a socket per abandoned read.
+  guarded.on("close", () => {
+    if (!source.destroyed) source.destroy();
+  });
   return source.pipe(guarded);
 }

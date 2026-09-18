@@ -842,10 +842,11 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
    * the adapter.
    *
    * Streamed straight through: never buffered whole in memory and never
-   * staged on disk. Nothing is derived from the bytes on the way past —
-   * an attachment stores no size, no checksum, and no declared type
-   * (INT-002's "lightweight"), and a conversion that needs any of them
-   * reads them off the blob.
+   * staged on disk. The only thing counted on the way past is the byte
+   * size, which the route persists for the per-person quota (ADO-013).
+   * An attachment stores no checksum and no declared type (INT-002's
+   * "lightweight"), and a conversion that needs either reads it off the
+   * blob.
    */
   async function receiveAttachment(
     request: FastifyRequest,
