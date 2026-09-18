@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { createServer } from "node:net";
 import path from "node:path";
 import process from "node:process";
 import { setTimeout as delay } from "node:timers/promises";
@@ -170,6 +171,65 @@ test(
     assert.match(readFileSync(env.DOCKER_LOG, "utf8"), /^custom-dev-project\n/);
   },
 );
+
+test("fresh starts and shutdowns select the same container connection", async (t) => {
+  const root = mkdtempSync(path.join(tmpdir(), "openlaw-engine-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const directory of ["scripts", "bin", "node_modules", "podman"]) {
+    mkdirSync(path.join(root, directory));
+  }
+  copyFileSync(helper, path.join(root, "scripts/dev-processes.mjs"));
+  copyFileSync(new URL("./dev-hot.sh", import.meta.url), path.join(root, "scripts/dev-hot.sh"));
+  writeFileSync(path.join(root, ".env"), "SETUP_TOKEN=fixture\n");
+  writeFileSync(path.join(root, "bin/ss"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
+  // Stop at compose up so the test exercises fresh cleanup without starting apps.
+  writeFileSync(
+    path.join(root, "bin/docker"),
+    `#!/bin/sh
+printf '%s|%s|%s\\n' "$DOCKER_HOST" "$DOCKER_CONTEXT" "$*" >> "$DOCKER_LOG"
+case " $* " in *" up "*) exit 37 ;; esac
+`,
+    { mode: 0o755 },
+  );
+  const socket = path.join(root, "podman/podman.sock");
+  const server = createServer();
+  server.listen(socket);
+  await once(server, "listening");
+  t.after(() => server.close());
+  const env = {
+    ...process.env,
+    PATH: `${root}/bin:${process.env.PATH}`,
+    XDG_RUNTIME_DIR: root,
+    DOCKER_LOG: `${root}/docker.log`,
+    COMPOSE_PROJECT_NAME: `test-${randomUUID()}`,
+    STORAGE_PATH: `${root}/storage`,
+  };
+  delete env.OPENLAW_DEV_RUN;
+  delete env.DOCKER_HOST;
+  delete env.DOCKER_CONTEXT;
+  for (const [overrides, expected] of [
+    [{}, `unix://${socket}|`],
+    [{ DOCKER_HOST: "unix:///explicit.sock" }, "unix:///explicit.sock|"],
+    [{ DOCKER_CONTEXT: "chosen-context" }, "|chosen-context"],
+    [{ XDG_RUNTIME_DIR: `${root}/missing` }, "|"],
+  ]) {
+    writeFileSync(env.DOCKER_LOG, "");
+    const fresh = launch(t, "bash", [`${root}/scripts/dev-hot.sh`, "--fresh"], {
+      env: { ...env, ...overrides },
+    });
+    assert.equal((await fresh.exited)[0], 37, fresh.output());
+    const down = launch(t, "bash", [`${root}/scripts/dev-hot.sh`, "--down"], {
+      env: { ...env, ...overrides },
+    });
+    assert.equal((await down.exited)[0], 0, down.output());
+    const lines = readFileSync(env.DOCKER_LOG, "utf8").trim().split("\n");
+    assert.equal(lines.length, 3);
+    assert.ok(lines.every((line) => line.startsWith(`${expected}|compose `)));
+    assert.match(lines[0], / down -v$/);
+    assert.match(lines[1], / up -d postgres doc-engine mailpit$/);
+    assert.match(lines[2], / stop postgres doc-engine mailpit$/);
+  }
+});
 
 test(
   "dev:hot tracks the app watchers and seed for a stop from another terminal",

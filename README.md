@@ -98,6 +98,8 @@ To walk through SMTP setup in the wizard, stop the loop and run `pnpm dev:hot --
 
 `pnpm dev:infra` brings up only the containers, for when you start the watch processes yourself; `pnpm dev:infra:down` stops **only those containers**, leaving host watch processes running. Ports move with `POSTGRES_PORT`, `DOC_ENGINE_PORT`, `MAILPIT_SMTP_PORT`. All of it is [`compose.hostdev.yml`](compose.hostdev.yml) plus [`scripts/dev-hot.sh`](scripts/dev-hot.sh), and none of it touches what a deployment runs.
 
+`dev:hot` (including `--fresh`) and `dev:down` use the rootless Podman socket at `$XDG_RUNTIME_DIR/podman/podman.sock` when available, falling back to `/run/user/$(id -u)` when `XDG_RUNTIME_DIR` is unset. Explicit `DOCKER_HOST` or `DOCKER_CONTEXT` settings take precedence; without either setting or a Podman socket, Docker's CLI default applies. The selected connection is printed before setup. Direct Compose commands such as `dev:infra` and `stack` still need `DOCKER_HOST` exported when using Podman, so they reach the same containers.
+
 Everything E2E and every milestone acceptance runs against the built Compose stack instead (TECH-018):
 
 ```sh

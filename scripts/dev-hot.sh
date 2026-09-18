@@ -128,7 +128,19 @@ else
   offset=0
 fi
 
+# Keep fresh starts and shutdowns on the rootless engine when its socket
+# is available. An explicitly selected host or context still wins.
+if [[ -z "${DOCKER_HOST:-}" && -z "${DOCKER_CONTEXT:-}" ]]; then
+  podman_socket="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock"
+  if [[ -S "$podman_socket" ]]; then
+    export DOCKER_HOST="unix://$podman_socket"
+  fi
+fi
+
 compose=(docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml)
+if [[ "$action" != stop ]]; then
+  echo "==> container connection: ${DOCKER_CONTEXT:-${DOCKER_HOST:-Docker CLI default}}"
+fi
 
 if [[ "$action" != start ]]; then
   node scripts/dev-processes.mjs stop "$COMPOSE_PROJECT_NAME"
