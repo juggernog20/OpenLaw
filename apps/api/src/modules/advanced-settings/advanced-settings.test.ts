@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { orgSettings, sql, runtimeStatus } from "@openlaw/db";
+import { activityLog, eq, orgSettings, sql, runtimeStatus } from "@openlaw/db";
 import {
   signInCookies,
   startHarness,
@@ -13,8 +13,11 @@ import {
   digest,
   effectiveEnvironment,
   emptySettings,
+  isPrivateHost,
+  parsePlainHttpHosts,
   parseSettings,
   preserveStorageLocations,
+  requireSecureEndpoints,
   resolveAdvancedSettings,
   startRuntimeHeartbeat,
   validateSettings,
@@ -100,10 +103,154 @@ describe("advanced settings", () => {
       ],
     });
     expect((await save("uploads", { MAX_UPLOAD_MB: "200" }, initial.version)).statusCode).toBe(409);
-    const restarted = await resolveAdvancedSettings(harness.db, {
-      BASE_URL: "http://deployment-default.test",
-    });
+    const restarted = await resolveAdvancedSettings(harness.db, {});
     expect(restarted.active.BASE_URL).toBe("https://legal.corp.example");
+    // A value the deployment environment sets is pinned: the saved
+    // value is ignored on the next start, the way SMTP_URL pins email.
+    const pinnedRestart = await resolveAdvancedSettings(harness.db, {
+      BASE_URL: "https://deployment-default.test",
+    });
+    expect(pinnedRestart.active.BASE_URL).toBe("https://deployment-default.test");
+  });
+  it("pins every key the deployment environment sets and refuses to change it", async () => {
+    const pinnedHarness = await startHarness({
+      advancedRuntime: {
+        baseline: {
+          STORAGE_PATH: harness.storageRoot,
+          BASE_URL: "https://pinned.corp.example",
+          DOC_ENGINE_URL: "http://doc-engine:8080",
+        },
+        active: effectiveEnvironment(
+          {
+            STORAGE_PATH: harness.storageRoot,
+            BASE_URL: "https://pinned.corp.example",
+            DOC_ENGINE_URL: "http://doc-engine:8080",
+          },
+          emptySettings(),
+        ),
+      },
+    });
+    try {
+      await pinnedHarness.app.inject({
+        method: "POST",
+        url: "/api/v1/auth/setup",
+        payload: TEST_ADMIN,
+      });
+      const pinnedCookies = await signInCookies(
+        pinnedHarness.app,
+        TEST_ADMIN.email,
+        TEST_ADMIN.password,
+      );
+      const instance = await pinnedHarness.app.inject({
+        method: "GET",
+        url: "/api/v1/advanced-settings/instance",
+        cookies: pinnedCookies,
+      });
+      expect(instance.statusCode, instance.body).toBe(200);
+      expect(instance.json().fields).toEqual([
+        expect.objectContaining({
+          key: "BASE_URL",
+          value: "https://pinned.corp.example",
+          source: "deployment",
+          locked: true,
+        }),
+      ]);
+      const version = instance.json().version as string;
+      const refused = await pinnedHarness.app.inject({
+        method: "PUT",
+        url: "/api/v1/advanced-settings/instance",
+        cookies: pinnedCookies,
+        payload: { version, values: { BASE_URL: "https://attacker.example" } },
+      });
+      expect(refused.statusCode, refused.body).toBe(400);
+      expect(refused.json().detail).toContain("managed by the deployment environment");
+      // Echoing the environment value unchanged is a no-op, not a refusal.
+      const echoed = await pinnedHarness.app.inject({
+        method: "PUT",
+        url: "/api/v1/advanced-settings/instance",
+        cookies: pinnedCookies,
+        payload: { version, values: { BASE_URL: "https://pinned.corp.example" } },
+      });
+      expect(echoed.statusCode, echoed.body).toBe(200);
+      expect((await readSettings(pinnedHarness.db)).values).toEqual({});
+      const processing = await pinnedHarness.app.inject({
+        method: "GET",
+        url: "/api/v1/advanced-settings/processing",
+        cookies: pinnedCookies,
+      });
+      expect(processing.json().fields[0]).toMatchObject({
+        key: "DOC_ENGINE_URL",
+        source: "deployment",
+        locked: true,
+      });
+      // A pinned key that an older save left behind is ignored and
+      // reported as deployment-managed, never as saved in the app.
+      await pinnedHarness.db.update(orgSettings).set({
+        advancedSettings: JSON.stringify({
+          version: "stale",
+          values: { BASE_URL: "https://stale.example" },
+        }),
+      });
+      const stale = await pinnedHarness.app.inject({
+        method: "GET",
+        url: "/api/v1/advanced-settings/instance",
+        cookies: pinnedCookies,
+      });
+      expect(stale.json().fields[0]).toMatchObject({
+        value: "https://pinned.corp.example",
+        source: "deployment",
+        locked: true,
+      });
+      expect(stale.json().restartRequired).toBe(false);
+    } finally {
+      await pinnedHarness.stop();
+    }
+  });
+  it("requires https for endpoints outside private networks and the allow list", async () => {
+    for (const value of ["http://legal.corp.example", "http://8.8.8.8"])
+      expect((await save("instance", { BASE_URL: value })).statusCode).toBe(400);
+    for (const value of [
+      "http://localhost:3000",
+      "http://app.localhost",
+      "http://10.0.0.5",
+      "http://172.20.1.1:8080",
+      "http://192.168.1.10",
+      "http://[::1]:3000",
+      "http://[fd00::1]",
+    ])
+      expect((await save("instance", { BASE_URL: value })).statusCode, value).toBe(200);
+    expect(() =>
+      requireSecureEndpoints({ DOC_ENGINE_URL: "http://engine.corp.example:8080" }, new Set()),
+    ).toThrow(/https/);
+    expect(() =>
+      requireSecureEndpoints(
+        { DOC_ENGINE_URL: "http://engine.corp.example:8080" },
+        parsePlainHttpHosts("Engine.corp.example, other"),
+      ),
+    ).not.toThrow();
+    expect(isPrivateHost("172.32.0.1")).toBe(false);
+    expect(isPrivateHost("fe80::1")).toBe(true);
+    expect(isPrivateHost("2001:db8::1")).toBe(false);
+    expect(isPrivateHost("evil.localhost.example")).toBe(false);
+  });
+  it("audits the old and new host when an endpoint moves, never the value", async () => {
+    expect((await save("instance", { BASE_URL: "https://one.corp.example" })).statusCode).toBe(200);
+    expect((await save("instance", { BASE_URL: "https://two.corp.example:8443" })).statusCode).toBe(
+      200,
+    );
+    const trail = await harness.db
+      .select({ payload: activityLog.payload })
+      .from(activityLog)
+      .where(eq(activityLog.action, "org_settings.updated"));
+    const hosts = trail
+      .map((row) => row.payload as { field: string; old: unknown; new: unknown })
+      .filter((payload) => payload.field === "advanced.BASE_URL.host");
+    expect(hosts).toContainEqual({
+      field: "advanced.BASE_URL.host",
+      old: "one.corp.example",
+      new: "two.corp.example:8443",
+    });
+    expect(JSON.stringify(trail)).not.toContain("https://two.corp.example");
   });
   it("validates URLs, upload limits, timeouts and the section allowlist", async () => {
     const invalid: Record<string, string>[] = [

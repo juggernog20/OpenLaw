@@ -21,7 +21,8 @@ import { requestDepartment } from "../../testing/request-department.js";
  * those statuses exist.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
 import {
   contracts,
   contractTeam,
@@ -34,6 +35,9 @@ import {
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { fakeComparisonDocx } from "../../lib/doc-engine/fake.js";
+import { DocEngineUnavailableError } from "../../lib/doc-engine/engine.js";
+import { formatBlobRef } from "../../lib/storage/adapter.js";
+import { attachmentRenditionKey } from "./request-detail.js";
 import {
   signInCookies as harnessSignInCookies,
   startHarness,
@@ -143,6 +147,11 @@ beforeAll(async () => {
     expect(attached.statusCode, attached.body).toBe(201);
   }
 });
+
+// The per-person Request quota counts a sliding hour (ADO-013). This
+// suite submits more than that in seconds, so each case starts with the
+// window empty.
+beforeEach(() => emptyRequestQuotaWindow(harness.db));
 
 afterAll(async () => {
   await harness.stop();
@@ -730,6 +739,37 @@ describe("the paper, listed and downloaded through the staff mount", () => {
     expect(
       (await harness.app.inject({ method: "GET", url, cookies: memberCookies })).statusCode,
     ).toBe(404);
+  });
+
+  it("converts a Word attachment once and serves the stored PDF after that", async () => {
+    const { number } = await submit({ title: "Cached preview" });
+    const attachmentId = await attach(number, "agreement.docx", fakeComparisonDocx());
+    const url = `/api/v1/requests/${number}/attachments/${attachmentId}?preview=true`;
+    const convert = vi.spyOn(harness.docEngine, "convertToPdf");
+    try {
+      const first = await harness.app.inject({ method: "GET", url, cookies: memberCookies });
+      expect(first.statusCode, first.body).toBe(200);
+      const second = await harness.app.inject({ method: "GET", url, cookies: memberCookies });
+      expect(second.statusCode, second.body).toBe(200);
+      expect(second.rawPayload.equals(first.rawPayload)).toBe(true);
+      expect(convert).toHaveBeenCalledTimes(1);
+      const stored = await harness.storage.get(
+        formatBlobRef(harness.storage.driver, attachmentRenditionKey(attachmentId)),
+      );
+      stored.destroy();
+
+      const busy = await attach(number, "busy.docx", fakeComparisonDocx());
+      convert.mockRejectedValueOnce(new DocEngineUnavailableError("The doc engine is busy."));
+      const unavailable = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/requests/${number}/attachments/${busy}?preview=true`,
+        cookies: memberCookies,
+      });
+      expect(unavailable.statusCode, unavailable.body).toBe(503);
+      expect(unavailable.headers["retry-after"]).toBe("10");
+    } finally {
+      convert.mockRestore();
+    }
   });
 
   it.each([

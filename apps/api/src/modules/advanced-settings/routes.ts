@@ -11,9 +11,12 @@ import { createStorageFromEnv } from "../../lib/storage/config.js";
 import {
   digest,
   effectiveEnvironment,
+  endpointHostChanges,
   parseSettings,
+  pinnedKeys,
   preserveStorageLocations,
   readSettings,
+  requireSecureEndpoints,
   secrets,
   sectionIds,
   sections,
@@ -60,6 +63,9 @@ const Status = z.object({
 export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginAsyncZod {
   return async (app) => {
     const tested = new Map<string, number>();
+    // The keys the deployment environment sets. They are read-only here,
+    // the same way SMTP_URL pins email: the environment always wins.
+    const pinned = pinnedKeys(runtime.baseline);
     function proposal(saved: SavedSettings, section: SectionId, body: z.infer<typeof Change>) {
       if (saved.version !== body.version)
         throw httpError(
@@ -71,12 +77,23 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
         if (!sections[section].includes(key))
           throw httpError(400, "This setting cannot be changed in this section.");
         if (secrets.has(key) && !raw) continue;
-        values[key] = secrets.has(key) ? raw : raw.trim();
+        const value = secrets.has(key) ? raw : raw.trim();
+        if (pinned.has(key)) {
+          // A client that echoes the environment value unchanged is a
+          // no-op. Anything else is an attempt to override the deployment.
+          if (value === (runtime.baseline[key] ?? "").trim()) continue;
+          throw httpError(
+            400,
+            `${key} is managed by the deployment environment and cannot be changed here.`,
+          );
+        }
+        values[key] = value;
       }
       const candidate = { version: randomUUID(), values };
       const env = effectiveEnvironment(runtime.baseline, candidate);
       try {
         validateSettings(env);
+        requireSecureEndpoints(candidate.values, runtime.plainHttpHosts ?? new Set());
         preserveStorageLocations(effectiveEnvironment(runtime.baseline, saved), env);
         preserveStorageLocations(runtime.active, env);
       } catch (error) {
@@ -102,14 +119,16 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
           configured: Boolean(desired[key]),
           value: secrets.has(key) ? "" : (desired[key] ?? ""),
           activeValue: secrets.has(key) ? "" : (active[key] ?? ""),
-          source:
-            key in saved.values
+          // A pinned key reports the deployment as its source even when
+          // an older save left a value behind: that value is ignored.
+          source: pinned.has(key)
+            ? ("deployment" as const)
+            : key in saved.values
               ? ("app" as const)
-              : runtime.baseline[key]?.trim()
-                ? ("deployment" as const)
-                : ("default" as const),
+              : ("default" as const),
           locked:
             key === "STORAGE_PATH" ||
+            pinned.has(key) ||
             Boolean(
               (desired.S3_BUCKET && ["S3_BUCKET", "S3_ENDPOINT"].includes(key)) ||
               (desired.AZURE_BLOB_CONTAINER &&
@@ -156,11 +175,8 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
             .from(orgSettings)
             .for("update");
           if (!row) throw httpError(409, "Organization settings are unavailable.");
-          const { candidate, env } = proposal(
-            parseSettings(row.raw, row.present),
-            request.params.section,
-            request.body,
-          );
+          const saved = parseSettings(row.raw, row.present);
+          const { candidate, env } = proposal(saved, request.params.section, request.body);
           if (request.params.section === "storage" && (tested.get(digest(env)) ?? 0) < Date.now())
             throw httpError(409, "Test this storage configuration successfully before saving it.");
           await tx.update(orgSettings).set({ advancedSettings: JSON.stringify(candidate) });
@@ -175,6 +191,29 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
               new: "[configuration saved; restart required]",
             },
           });
+          // An endpoint that moves is the change worth a trail: the
+          // Audit log and the process log both name the old and new
+          // host. Host names only, never a key or a credential.
+          for (const change of endpointHostChanges(
+            effectiveEnvironment(runtime.baseline, saved),
+            env,
+          )) {
+            request.log.warn(
+              { key: change.key, from: change.from, to: change.to, actorId: request.user.id },
+              "advanced settings endpoint host changed",
+            );
+            await recordActivity(tx, {
+              entityType: "system",
+              actorId: request.user.id,
+              action: "org_settings.updated",
+              visibility: "admin_only",
+              payload: {
+                field: `advanced.${change.key}.host`,
+                old: change.from ?? "",
+                new: change.to ?? "",
+              },
+            });
+          }
         });
         return state(request.params.section);
       },

@@ -13,6 +13,7 @@ import { z } from "zod";
 import { requireAuth } from "../../auth/guards.js";
 import { contractAudience } from "../../lib/contract-access.js";
 import { entityAudience } from "../../lib/entity-access.js";
+import { EventHubFullError } from "../../lib/event-hub.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { commentAudience } from "../comments/audience.js";
 
@@ -105,12 +106,28 @@ export const eventRoutes: FastifyPluginAsyncZod = async (app) => {
         reply.raw.destroy();
       };
 
-      unsubscribe = app.eventHub.subscribe(
-        { userId: request.user.id, role: request.user.role, record: scopedRecord },
-        (event) => {
-          writeFrame(`event: ${event.kind}\ndata: ${JSON.stringify(event)}\n\n`);
-        },
-      );
+      try {
+        unsubscribe = app.eventHub.subscribe(
+          { userId: request.user.id, role: request.user.role, record: scopedRecord },
+          (event) => {
+            writeFrame(`event: ${event.kind}\ndata: ${JSON.stringify(event)}\n\n`);
+          },
+          // The hub drops this stream when its owner opens one past the
+          // per-user cap. The browser reconnects if it still wants one.
+          () => {
+            close();
+            if (!reply.raw.writableEnded) reply.raw.end();
+          },
+        );
+      } catch (error) {
+        if (error instanceof EventHubFullError) {
+          reply.header("retry-after", "5");
+          throw httpError(503, "Too many live event streams are open. Try again shortly.", {
+            expose: true,
+          });
+        }
+        throw error;
+      }
 
       reply.hijack();
       reply.raw.writeHead(200, {
