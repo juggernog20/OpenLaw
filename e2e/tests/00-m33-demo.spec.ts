@@ -10,6 +10,7 @@ import {
   ensureMemberInert,
   needsSetup,
   reportAxeViolations,
+  SETUP_TOKEN,
   signInAs,
   signOut,
   sweepOrSay,
@@ -121,6 +122,9 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
       await test.step("create the Administrator and walk all nine wizard steps", async () => {
         await page.goto("/");
         await expect(page).toHaveURL("/auth/setup");
+        // First-run setup asks for the bootstrap token (TECH-031);
+        // compose.dev.yml pins the one the suite knows.
+        await page.getByLabel("Setup token").fill(SETUP_TOKEN);
         await page.getByLabel("Name").fill(ADMIN.displayName);
         await page.getByLabel("Email").fill(ADMIN.email);
         await page.getByLabel("Password", { exact: true }).fill(ADMIN.password);
@@ -219,9 +223,9 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         ] as const) {
           await review.getByRole("link", { name: label, exact: true }).click();
           await expect(page).toHaveURL(address);
-          const defaults = page.getByRole("region", { name: "Default fields", exact: true });
+          const defaults = page.getByRole("region", { name: "Default Fields", exact: true });
           const custom = page.getByRole("region", { name: "Custom Fields", exact: true });
-          await expect(defaults.getByRole("button", { name: "Default fields" })).toHaveAttribute(
+          await expect(defaults.getByRole("button", { name: "Default Fields" })).toHaveAttribute(
             "aria-expanded",
             "false",
           );
@@ -230,7 +234,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
             "true",
           );
           await expect(custom.getByRole("button", { name: "Add field" })).toBeVisible();
-          await defaults.getByRole("button", { name: "Default fields" }).click();
+          await defaults.getByRole("button", { name: "Default Fields" }).click();
           await expect(
             defaults.getByRole("img", { name: "Title: built-in field, read-only here" }),
           ).toBeVisible();

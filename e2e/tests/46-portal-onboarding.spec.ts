@@ -43,12 +43,17 @@ test("a Business User completes each accessible first-run step and keeps complet
     await portal.goto("/portal/contracts");
     await expect(portal).toHaveURL(/\/portal\/onboarding$/);
     await expect(
-      portal.getByRole("heading", { name: "We need to learn a little about you" }),
+      portal.getByRole("heading", { level: 1, name: "Welcome to your Business Portal" }),
     ).toBeVisible();
     await expect(portal.getByRole("button", { name: "Continue" })).toBeDisabled();
     await expect(portal.getByRole("button", { name: "Skip", exact: true })).toHaveCount(0);
-    for (const name of ["Department", "Name and photo", "Theme", "Notifications", "A short tour"]) {
+    const steps = ["Department", "Name and photo", "Theme", "Notifications", "A short tour"];
+    for (const [index, name] of steps.entries()) {
+      // Each step is its own region, named by its h2, under a progress
+      // line that says where it sits in the run.
       await expect(portal.getByRole("region", { name, exact: true })).toBeVisible();
+      await expect(portal.getByRole("heading", { level: 2, name, exact: true })).toBeVisible();
+      await expect(portal.getByText(`Step ${index + 1} of ${steps.length}`)).toBeVisible();
       expect(await reportAxeViolations(portal, testInfo, `first-run-${name}`)).toEqual([]);
       if (name === "Department") {
         await portal.getByRole("combobox", { name: "Department" }).selectOption(departmentId);

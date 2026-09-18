@@ -377,13 +377,16 @@ test.describe.serial("M20 demo path", () => {
       await portal.getByRole("button", { name: "Submit request" }).click();
       expect((await created).status()).toBe(201);
 
-      // The confirmation carries R-###, which is the handle a requester
-      // quotes (INT-002). It is read off the screen, so what the rest of
-      // this journey follows is what the requester was told.
-      const confirmation = portal.getByRole("heading", { name: /^Request R-\d+ is with Legal$/ });
-      await expect(confirmation).toBeVisible();
-      const reference = /R-\d+/.exec((await confirmation.textContent()) ?? "")![0];
-      const number = Number(reference.slice(2));
+      await expect(
+        portal.getByRole("heading", { name: "Thanks! Your request has been submitted to legal." }),
+      ).toBeVisible();
+      const requestLink = await portal
+        .getByRole("link", { name: "Open request", exact: true })
+        .getAttribute("href");
+      const confirmed = /\/portal\/requests\/(\d+)$/.exec(requestLink ?? "");
+      expect(confirmed, "the confirmation links to the submitted request").not.toBeNull();
+      const number = Number(confirmed![1]);
+      const reference = `R-${String(number)}`;
       // The files go up after the submission, one call at a time (the
       // INT-002 M20/6 addendum), and none of them was named as failing.
       await expect(portal.getByText("Attaching your files…")).toBeHidden();

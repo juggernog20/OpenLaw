@@ -94,7 +94,7 @@ test("an Administrator lists an Entity and a Business User picks it on a require
     expect(await reportAxeViolations(portal, testInfo, "Portal-required-Entity")).toEqual([]);
     await portal.getByRole("button", { name: "Submit request" }).click();
     await expect(
-      portal.getByRole("heading", { name: /Request R-\d+ is with Legal/ }),
+      portal.getByRole("heading", { name: "Thanks! Your request has been submitted to legal." }),
     ).toBeVisible();
   } finally {
     await colleague?.context.close();
