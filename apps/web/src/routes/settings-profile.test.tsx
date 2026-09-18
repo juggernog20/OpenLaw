@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import * as avatar from "../lib/avatar";
 
 const MEMBER = {
   id: "u2",
@@ -27,6 +28,7 @@ const TOTP_URI =
 describe("the Profile pane (SET-006, #67)", () => {
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it("shows email and role read-only, with the Users pointer", async () => {
@@ -337,14 +339,99 @@ describe("the Profile pane (SET-006, #67)", () => {
     renderAt("/settings/profile");
 
     await screen.findByLabelText("Full name");
-    const oversized = new File([new Uint8Array(1024 * 1024 + 1)], "big.png", {
+    const oversized = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "big.png", {
       type: "image/png",
     });
     await user.upload(screen.getByLabelText("Upload a profile photo"), oversized);
 
     // The error micro-state, with no update-user call. The stub would
     // have thrown on an unstubbed POST.
-    expect(await screen.findByText("The change could not be saved. Try again.")).toBeVisible();
+    expect(await screen.findByText("Choose a photo smaller than 10 MB.")).toBeVisible();
+  });
+
+  it("compresses a photo larger than 1 MB before saving it", async () => {
+    const user = userEvent.setup();
+    const image = "data:image/png;base64,aGVsbG8=";
+    let finish!: (image: string) => void;
+    const prepare = vi.spyOn(avatar, "prepareAvatar").mockImplementation(
+      () =>
+        new Promise<string>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const updates: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/auth/update-user" && call.method === "POST") {
+          updates.push(call.body);
+          return json(200, { status: true });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/settings/profile");
+    const file = new File([new Uint8Array(2 * 1024 * 1024)], "photo.png", { type: "image/png" });
+    await user.upload(await screen.findByLabelText("Upload a profile photo"), file);
+    expect(prepare).toHaveBeenCalledWith(file);
+    expect(screen.getByRole("button", { name: "Upload" })).toBeDisabled();
+    expect(updates).toEqual([]);
+    finish(image);
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(updates).toEqual([{ image }]);
+    expect(screen.getByRole("button", { name: "Upload" })).toBeEnabled();
+    expect(document.querySelector(`img[src="${image}"]`)).toBeInTheDocument();
+  });
+
+  it("explains unsupported image formats without attempting an upload", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    const prepare = vi.spyOn(avatar, "prepareAvatar");
+    stubApi({ signedIn: MEMBER });
+    renderAt("/settings/profile");
+    await user.upload(
+      await screen.findByLabelText("Upload a profile photo"),
+      new File(["gif"], "photo.gif", { type: "image/gif" }),
+    );
+    expect(await screen.findByText("Choose a JPG or PNG photo.")).toBeVisible();
+    expect(prepare).not.toHaveBeenCalled();
+  });
+
+  it("explains unreadable photos and allows retrying", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(avatar, "prepareAvatar").mockRejectedValue(new Error("Invalid image"));
+    stubApi({ signedIn: MEMBER });
+    renderAt("/settings/profile");
+    await user.upload(
+      await screen.findByLabelText("Upload a profile photo"),
+      new File(["broken"], "photo.png", { type: "image/png" }),
+    );
+    expect(
+      await screen.findByText("This photo could not be read. Try another JPG or PNG."),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Upload" })).toBeEnabled();
+  });
+
+  it("keeps the current photo when saving fails", async () => {
+    const user = userEvent.setup();
+    const previousImage = "data:image/png;base64,b2xk";
+    vi.spyOn(avatar, "prepareAvatar").mockResolvedValue("data:image/png;base64,bmV3");
+    stubApi({
+      signedIn: { ...MEMBER, image: previousImage },
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/auth/update-user" && call.method === "POST") {
+          return json(500, { message: "Save failed" });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/settings/profile");
+    await user.upload(
+      await screen.findByLabelText("Upload a profile photo"),
+      new File(["photo"], "photo.png", { type: "image/png" }),
+    );
+    expect(await screen.findByText("Your photo could not be uploaded. Try again.")).toBeVisible();
+    expect(document.querySelector(`img[src="${previousImage}"]`)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upload" })).toBeEnabled();
   });
 
   it("hides the password & two-factor card for an account without a password", async () => {

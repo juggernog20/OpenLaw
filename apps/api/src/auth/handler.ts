@@ -22,6 +22,8 @@ export const authHandler: FastifyPluginAsync = async (app) => {
   app.route({
     method: ["GET", "POST"],
     url: "/api/auth/*",
+    // A 1 MB avatar expands to roughly 1.4 MB in base64; allow JSON overhead too.
+    bodyLimit: 4 * Math.ceil((1024 * 1024) / 3) + 16 * 1024,
     schema: { hide: true },
     handler: async (request, reply) => {
       const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);

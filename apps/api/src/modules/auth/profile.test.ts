@@ -122,6 +122,21 @@ describe("display name and avatar (better-auth /update-user)", () => {
     expect(blank.statusCode, blank.body).toBe(400);
   });
 
+  it("accepts a 1 MB photo after base64 encoding expands the request", async () => {
+    const cookies = await signInCookies();
+    const bytes = Buffer.alloc(1024 * 1024);
+    Buffer.from(PNG_DATA_URI.split(",")[1]!, "base64").copy(bytes);
+    const image = `data:image/png;base64,${bytes.toString("base64")}`;
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/update-user",
+      cookies,
+      payload: { image },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect((await me(cookies)).json().user.image).toBe(image);
+  });
+
   it("appends no audit entry when the update fails", async () => {
     const cookies = await signInCookies();
     const before = (await rowsFor("user.avatar_changed")).length;

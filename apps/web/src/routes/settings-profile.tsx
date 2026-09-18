@@ -19,7 +19,7 @@ import { useLoaderData, useRevalidator } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
-import { AVATAR_BYTE_LIMIT, AVATAR_TYPES } from "../lib/avatar";
+import { AVATAR_UPLOAD_BYTE_LIMIT, AVATAR_TYPES, prepareAvatar } from "../lib/avatar";
 import { formatShortDate } from "../lib/format";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
@@ -80,6 +80,7 @@ export function SettingsProfilePage() {
     Record<"name" | "avatar" | "timezone" | "sessions" | "password", FieldStatus>
   >({ name: "idle", avatar: "idle", timezone: "idle", sessions: "idle", password: "idle" });
   const fileInput = useRef<HTMLInputElement>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
 
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [totpEnabled, setTotpEnabled] = useState(loaded.twoFactorEnabled);
@@ -112,28 +113,58 @@ export function SettingsProfilePage() {
       .catch(() => note("name", "error"));
   }
 
-  function uploadAvatar(file: File | undefined) {
+  async function uploadAvatar(file: File | undefined) {
     if (!file) return;
-    if (!AVATAR_TYPES.includes(file.type) || file.size > AVATAR_BYTE_LIMIT) {
+    setAvatarError(null);
+    if (!AVATAR_TYPES.includes(file.type)) {
+      setAvatarError(
+        intl.formatMessage({
+          id: "settings.profile.photo.error.type",
+          defaultMessage: "Choose a JPG or PNG photo.",
+        }),
+      );
       note("avatar", "error");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const image = reader.result as string;
-      note("avatar", "saving");
-      void authClient
-        .updateUser({ image })
-        .then((res) => {
-          if (res.error) throw new Error(res.error.message);
-          setSaved((s) => ({ ...s, image }));
-          note("avatar", "saved");
-          void revalidator.revalidate();
-        })
-        .catch(() => note("avatar", "error"));
-    };
-    reader.onerror = () => note("avatar", "error");
-    reader.readAsDataURL(file);
+    if (file.size > AVATAR_UPLOAD_BYTE_LIMIT) {
+      setAvatarError(
+        intl.formatMessage({
+          id: "settings.profile.photo.error.size",
+          defaultMessage: "Choose a photo smaller than 10 MB.",
+        }),
+      );
+      note("avatar", "error");
+      return;
+    }
+    note("avatar", "saving");
+    let image: string;
+    try {
+      image = await prepareAvatar(file);
+    } catch {
+      setAvatarError(
+        intl.formatMessage({
+          id: "settings.profile.photo.error.read",
+          defaultMessage: "This photo could not be read. Try another JPG or PNG.",
+        }),
+      );
+      note("avatar", "error");
+      return;
+    }
+    try {
+      const res = await authClient.updateUser({ image });
+      if (res.error) throw new Error(res.error.message);
+      setSaved((s) => ({ ...s, image }));
+      note("avatar", "saved");
+      void revalidator.revalidate();
+    } catch {
+      setAvatarError(
+        intl.formatMessage({
+          id: "settings.profile.photo.error.upload",
+          defaultMessage: "Your photo could not be uploaded. Try again.",
+        }),
+      );
+      note("avatar", "error");
+    }
   }
 
   function commitTimezone(zone: string | null) {
@@ -322,7 +353,7 @@ export function SettingsProfilePage() {
               <span className="text-xs text-muted">
                 <FormattedMessage
                   id="settings.profile.photo.hint"
-                  defaultMessage="JPG or PNG, 1 MB max."
+                  defaultMessage="JPG or PNG, up to 10 MB. Resized automatically."
                 />
               </span>
             </div>
@@ -331,6 +362,7 @@ export function SettingsProfilePage() {
             <input
               ref={fileInput}
               type="file"
+              disabled={status.avatar === "saving"}
               accept={AVATAR_TYPES.join(",")}
               // Visually hidden but still in the accessibility tree, so
               // it carries its own name. The Upload button drives it.
@@ -340,14 +372,19 @@ export function SettingsProfilePage() {
               })}
               className="sr-only"
               onChange={(event) => {
-                uploadAvatar(event.target.files?.[0]);
+                void uploadAvatar(event.target.files?.[0]);
                 event.target.value = "";
               }}
             />
-            <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={status.avatar === "saving"}
+              onClick={() => fileInput.current?.click()}
+            >
               <FormattedMessage id="settings.profile.upload" defaultMessage="Upload" />
             </Button>
-            <StatusNote status={status.avatar} />
+            <StatusNote status={status.avatar} detail={avatarError} />
           </div>
         </div>
 
