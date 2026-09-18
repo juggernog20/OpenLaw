@@ -203,16 +203,16 @@ The request form uses that read through the shared Field control. Entity Fields 
 
 ## Index of decisions
 
-| #       | Decision                                                                               | Status   |
-| ------- | -------------------------------------------------------------------------------------- | -------- |
-| ENT-001 | Schema: typed registry core + officers table; simple share capital; entity field scope | Accepted |
-| ENT-002 | Multi-jurisdiction: registrations table                                                | Accepted |
-| ENT-003 | Corporate structure: full ownership graph + org chart in v1                            | Accepted |
-| ENT-004 | Access: global for legal staff; DD-014 confidential flag                               | Accepted |
-| ENT-005 | Statutory documents: entity-owned documents, no seeded folders                         | Accepted |
-| ENT-006 | Compliance calendar: recurring obligations, blank-start, human-confirmed roll-forward  | Accepted |
-| ENT-007 | Roll-ups: linked-records tabs with query-derived counts                                | Accepted |
-| ENT-008 | The registry surface owns a Member+ entity-type read                                   | Accepted |
-| ENT-009 | The type archive guard counts and moves every referencing entity, archived included    | Accepted |
-| ENT-010 | An Entity may be Portal-listed, so Business Users can pick it on a form                | Accepted |
+| #       | Decision                                                                                                  | Status   |
+| ------- | --------------------------------------------------------------------------------------------------------- | -------- |
+| ENT-001 | Schema: typed registry core + officers table; simple share capital; entity field scope                    | Accepted |
+| ENT-002 | Multi-jurisdiction: registrations table                                                                   | Accepted |
+| ENT-003 | Corporate structure: full ownership graph + org chart in v1                                               | Accepted |
+| ENT-004 | Access: global for legal staff; DD-014 confidential flag                                                  | Accepted |
+| ENT-005 | Statutory documents: entity-owned documents, no seeded folders                                            | Accepted |
+| ENT-006 | Compliance calendar: recurring obligations, blank-start, human-confirmed roll-forward                     | Accepted |
+| ENT-007 | Roll-ups: linked-records tabs with query-derived counts                                                   | Accepted |
+| ENT-008 | The registry surface owns a Member+ entity-type read                                                      | Accepted |
+| ENT-009 | The type archive guard counts and moves every referencing entity, archived included                       | Accepted |
+| ENT-010 | An Entity may be Portal-listed, so Business Users can pick it on a form                                   | Accepted |
 | ENT-011 | The share register: classes, entries, certificates; holders derived by replay; Holdings projected from it | Accepted |
