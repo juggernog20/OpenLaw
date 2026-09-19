@@ -507,13 +507,16 @@ it("answers 503 with Retry-After and writes no row when every fill place is take
   } finally {
     h.fillEngine.busy = false;
   }
-  const made = await call(id, "generations", { ...pair, answers: { counterparty_name: "Acme" } });
-  expect(made.statusCode, made.body).toBe(201);
-  const generationId: string = made.json().generation.id;
-  await h.db
-    .update(autoDocGenerations)
-    .set({ state: "failed", failure: { code: "fill_failed", detail: "forced" } })
-    .where(eq(autoDocGenerations.id, generationId));
+  let generationId: string;
+  h.fillEngine.failure = new AutoDocFillError("Forced failure before retrying a busy fill.");
+  try {
+    const made = await call(id, "generations", { ...pair, answers: { counterparty_name: "Acme" } });
+    expect(made.statusCode, made.body).toBe(201);
+    expect(made.json().generation.state).toBe("failed");
+    generationId = made.json().generation.id;
+  } finally {
+    h.fillEngine.failure = null;
+  }
   h.fillEngine.busy = true;
   try {
     const retried = await call(id, `generations/${generationId}/retry`, {});
