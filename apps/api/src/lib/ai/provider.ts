@@ -7,6 +7,15 @@
 
 import type { AiPreset, AiProtocol, FieldType } from "@openlaw/db";
 
+/**
+ * What one extraction carries beside its targets. `rules` are the
+ * effective shared rule paragraphs (CTR-008, 2026-09-19); a caller that
+ * read none lets the prompt fall back to the built-in text.
+ */
+export interface AiExtractionOptions {
+  rules?: readonly string[];
+}
+
 /** One field the provider should extract from the contract text. */
 export interface AiExtractionTarget {
   slug: string;
@@ -167,6 +176,7 @@ export interface AiProvider {
   extract(
     text: string | readonly AiSource[],
     targets: readonly AiExtractionTarget[],
+    options?: AiExtractionOptions,
   ): Promise<AiExtraction[]>;
 
   /** Makes one small model call to prove the stored configuration. */

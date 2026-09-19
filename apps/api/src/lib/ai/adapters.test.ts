@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { describeAiProviderContract } from "../../testing/ai-provider-contract.js";
 import { createAnthropicProvider } from "./anthropic.js";
 import { createGeminiProvider } from "./gemini.js";
-import { EXTRACTION_BOUND, extractionPrompt } from "./http.js";
+import { EXTRACTION_BOUND, DEFAULT_EXTRACTION_RULES, extractionPrompt } from "./http.js";
 import { createOpenAiCompatibleProvider } from "./openai-compatible.js";
 import { AiUnavailableError } from "./provider.js";
 
@@ -409,6 +409,20 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
     }
   });
 }
+
+it("carries the supplied rule paragraphs in place of the built-in ones, and keeps the format lines", () => {
+  const targets = [{ slug: "term_type", prompt: "Extract term" }];
+  const prompt = extractionPrompt("A fixed term", targets, ["Answer in one sentence."]);
+  expect(prompt).toContain("Answer in one sentence.");
+  expect(prompt).not.toContain("Use null when a value is missing");
+  expect(prompt).toContain("Return one JSON object keyed by the exact slug.");
+  expect(prompt).toContain("- term_type: Extract term");
+  // No rules read means the built-in text, in the built-in order.
+  const fallback = extractionPrompt("A fixed term", targets);
+  const indexes = DEFAULT_EXTRACTION_RULES.map((rule) => fallback.indexOf(rule));
+  expect(indexes.every((index) => index >= 0)).toBe(true);
+  expect([...indexes].sort((a, b) => a - b)).toEqual(indexes);
+});
 
 it("does not request source IDs from legacy unaddressed text", () => {
   const prompt = extractionPrompt("A fixed term", [{ slug: "term_type", prompt: "Extract term" }]);

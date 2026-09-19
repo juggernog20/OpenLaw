@@ -38,6 +38,7 @@ import {
   type ContractAnalysisResult,
 } from "@openlaw/shared";
 import { buildAnalysisTargets, type AnalysisTarget } from "../lib/analysis-targets.js";
+import { readAiPrompts } from "../lib/ai-prompts.js";
 import { AiConfigError, isTerminalAiError, type AiExtraction } from "../lib/ai/provider.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../lib/activity.js";
@@ -745,6 +746,7 @@ export async function handleContractAnalysis(
       const truncated = targetText.text.length > AI_ANALYSIS_CHARACTER_BUDGET;
       const sentText = targetText.text.slice(0, AI_ANALYSIS_CHARACTER_BUDGET);
       const targets = await buildAnalysisTargets(tx, targetText.contractTypeId);
+      const { rules } = await readAiPrompts(tx);
       const milestoneTarget = await keyDatesExtractionTarget(tx, contract.id);
       await tx
         .update(contractAnalysisRuns)
@@ -756,9 +758,9 @@ export async function handleContractAnalysis(
           startedAt: run.startedAt ?? new Date(),
         })
         .where(eq(contractAnalysisRuns.id, run.id));
-      return { provider, targetText, truncated, sentText, targets, milestoneTarget };
+      return { provider, targetText, truncated, sentText, targets, rules, milestoneTarget };
     });
-    const { provider, targetText, truncated, sentText, targets, milestoneTarget } = prepared;
+    const { provider, targetText, truncated, sentText, targets, rules, milestoneTarget } = prepared;
     const extractions = await provider.extract(
       [
         {
@@ -770,6 +772,7 @@ export async function handleContractAnalysis(
         },
       ],
       [...targets, milestoneTarget],
+      { rules },
     );
     await applyAnswers(
       deps,
@@ -874,10 +877,12 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
         "Request sources or Contract Fields changed before extraction.",
       );
     const milestoneTarget = await keyDatesExtractionTarget(deps.db, contract.id);
-    const answers = await extractCompleteSources(provider, context.sources, [
-      ...targets,
-      milestoneTarget,
-    ]);
+    const answers = await extractCompleteSources(
+      provider,
+      context.sources,
+      [...targets, milestoneTarget],
+      { rules: context.rules },
+    );
     const suggestions: Record<string, ConversionSuggestion> = {};
     const checked: AiExtraction[] = [];
     const conflicted = new Set(

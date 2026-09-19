@@ -119,8 +119,8 @@ export function createOpenAiCompatibleProvider(config: AiProviderConfig): AiProv
     preset: config.preset,
     protocol: "openai_chat_completions",
     model: config.model,
-    async extract(text, targets) {
-      return extractStructured(text, targets, complete, config.maxOutputTokens);
+    async extract(text, targets, options) {
+      return extractStructured(text, targets, complete, config.maxOutputTokens, options);
     },
     async probe() {
       await complete('Reply with only the JSON object {"ok":true}.', PROBE_BOUND);

@@ -114,7 +114,7 @@ import {
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import type { ActivityAction } from "@openlaw/shared";
-import { coreAnalysisLabel } from "./core-analysis-labels";
+import { aiPromptLabel } from "./core-analysis-labels";
 import { formatShortDate } from "./format";
 import { roleLabel } from "./roles";
 import {
@@ -973,7 +973,7 @@ function coreTarget(intl: IntlShape, payload: Payload): string {
   if (slug === null) {
     return intl.formatMessage({ id: "activity.contract.unknownField", defaultMessage: "a field" });
   }
-  const label = coreAnalysisLabel(slug);
+  const label = aiPromptLabel(slug);
   return label ? intl.formatMessage(label) : identifierLabel(slug);
 }
 

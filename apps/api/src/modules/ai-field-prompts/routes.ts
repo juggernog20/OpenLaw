@@ -1,26 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Administrator-only core prompt overrides for CTR-008 analysis runs. */
+/**
+ * Administrator-only prompt overrides (CTR-008, M31/5; widened on
+ * 2026-09-19). One route serves the whole editable catalog in
+ * `@openlaw/shared`: the shared rule paragraphs every extraction
+ * carries, the Conversion draft's built-in targets, and the seven core
+ * analysis targets. The table stores an override per slug and nothing
+ * else, so a reset is a delete and absence is the default.
+ */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { aiFieldPrompts, eq, inArray } from "@openlaw/db";
-import {
-  CORE_ANALYSIS_SLUGS,
-  CORE_ANALYSIS_TARGETS,
-  type CoreAnalysisSlug,
-  type CoreAnalysisTarget,
-} from "@openlaw/shared";
+import { AI_PROMPT_GROUPS, AI_PROMPT_SLUGS, AI_PROMPTS, type AiPromptSlug } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { problemResponse } from "../../lib/problem.js";
 
-const CoreSlugSchema = z.enum(CORE_ANALYSIS_SLUGS);
+const SlugSchema = z.enum(AI_PROMPT_SLUGS);
 const AiPromptSchema = z.string().trim().max(2_000);
 type AiFieldPrompt = typeof aiFieldPrompts.$inferSelect;
+type AiPrompt = (typeof AI_PROMPTS)[number];
 
 const PromptSchema = z.object({
-  slug: CoreSlugSchema,
+  slug: SlugSchema,
+  group: z.enum(AI_PROMPT_GROUPS),
   prompt: z.string(),
   defaultPrompt: z.string(),
   overridden: z.boolean(),
@@ -28,13 +32,14 @@ const PromptSchema = z.object({
 const PromptEnvelope = z.object({ prompt: PromptSchema });
 const PromptListEnvelope = z.object({ prompts: z.array(PromptSchema) });
 
-function targetFor(slug: CoreAnalysisSlug): CoreAnalysisTarget {
-  return CORE_ANALYSIS_TARGETS.find((target) => target.slug === slug)!;
+function targetFor(slug: AiPromptSlug): AiPrompt {
+  return AI_PROMPTS.find((target) => target.slug === slug)!;
 }
 
-function effectivePrompt(target: CoreAnalysisTarget, override?: AiFieldPrompt) {
+function effectivePrompt(target: AiPrompt, override?: AiFieldPrompt) {
   return {
-    slug: target.slug,
+    slug: target.slug as AiPromptSlug,
+    group: target.group,
     prompt: override?.prompt ?? target.defaultPrompt,
     defaultPrompt: target.defaultPrompt,
     overridden: override !== undefined,
@@ -48,7 +53,8 @@ export const aiFieldPromptRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "listAiFieldPrompts",
-        summary: "Read the effective and default prompts for the seven core analysis targets",
+        summary:
+          "Read the effective and default text of every editable prompt: the shared extraction rules, the Conversion draft's built-in targets, and the seven core analysis targets",
         tags: ["ai-field-prompts"],
         response: { 200: PromptListEnvelope, default: problemResponse },
       },
@@ -57,12 +63,10 @@ export const aiFieldPromptRoutes: FastifyPluginAsyncZod = async (app) => {
       const rows = await app.db
         .select()
         .from(aiFieldPrompts)
-        .where(inArray(aiFieldPrompts.slug, [...CORE_ANALYSIS_SLUGS]));
+        .where(inArray(aiFieldPrompts.slug, [...AI_PROMPT_SLUGS]));
       const bySlug = new Map(rows.map((row) => [row.slug, row]));
       return {
-        prompts: CORE_ANALYSIS_TARGETS.map((target) =>
-          effectivePrompt(target, bySlug.get(target.slug)),
-        ),
+        prompts: AI_PROMPTS.map((target) => effectivePrompt(target, bySlug.get(target.slug))),
       };
     },
   );
@@ -73,9 +77,9 @@ export const aiFieldPromptRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "saveAiFieldPrompt",
-        summary: "Save or reset one core analysis prompt; null or blank resets it to the default",
+        summary: "Save or reset one prompt by slug; null or blank resets it to the default",
         tags: ["ai-field-prompts"],
-        body: z.object({ slug: CoreSlugSchema, prompt: AiPromptSchema.nullable() }),
+        body: z.object({ slug: SlugSchema, prompt: AiPromptSchema.nullable() }),
         response: { 200: PromptEnvelope, default: problemResponse },
       },
     },

@@ -8480,6 +8480,39 @@
   "settings.aiAnalysis.prompts.catalogPointer": {
     "defaultMessage": "Catalog Fields keep their own analysis prompts in {fields}."
   },
+  "settings.aiAnalysis.prompts.conversion.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "settings.aiAnalysis.prompts.conversion.description": {
+    "defaultMessage": "Description"
+  },
+  "settings.aiAnalysis.prompts.conversion.neededBy": {
+    "defaultMessage": "Needed by"
+  },
+  "settings.aiAnalysis.prompts.conversion.priority": {
+    "defaultMessage": "Priority"
+  },
+  "settings.aiAnalysis.prompts.conversion.title": {
+    "defaultMessage": "Title"
+  },
+  "settings.aiAnalysis.prompts.group.analysis": {
+    "defaultMessage": "Contract analysis fields"
+  },
+  "settings.aiAnalysis.prompts.group.analysisHint": {
+    "defaultMessage": "The seven built-in Contract values every Analysis run extracts."
+  },
+  "settings.aiAnalysis.prompts.group.conversion": {
+    "defaultMessage": "Request conversion"
+  },
+  "settings.aiAnalysis.prompts.group.conversionHint": {
+    "defaultMessage": "The values every Conversion draft proposes beside the target type's Fields. {placeholder} is replaced with Matter or Contract."
+  },
+  "settings.aiAnalysis.prompts.group.rules": {
+    "defaultMessage": "Rules for every AI run"
+  },
+  "settings.aiAnalysis.prompts.group.rulesHint": {
+    "defaultMessage": "Sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list."
+  },
   "settings.aiAnalysis.prompts.inputLabel": {
     "defaultMessage": "{label} prompt"
   },
@@ -8489,8 +8522,23 @@
   "settings.aiAnalysis.prompts.resetLabel": {
     "defaultMessage": "Reset {label} to default"
   },
+  "settings.aiAnalysis.prompts.rules.evidence": {
+    "defaultMessage": "Corrections and conflicts"
+  },
+  "settings.aiAnalysis.prompts.rules.justification": {
+    "defaultMessage": "Justification"
+  },
+  "settings.aiAnalysis.prompts.rules.scope": {
+    "defaultMessage": "Scope of the sources"
+  },
+  "settings.aiAnalysis.prompts.rules.textAnswers": {
+    "defaultMessage": "Text answers"
+  },
+  "settings.aiAnalysis.prompts.rules.unsupported": {
+    "defaultMessage": "Missing and unsupported values"
+  },
   "settings.aiAnalysis.prompts.title": {
-    "defaultMessage": "Field prompts"
+    "defaultMessage": "Prompts"
   },
   "settings.aiAnalysis.protocol": {
     "defaultMessage": "Protocol"

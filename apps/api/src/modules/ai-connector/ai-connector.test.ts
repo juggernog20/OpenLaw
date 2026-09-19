@@ -3,8 +3,9 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { activityLog, aiConnector, aiFieldPrompts, asc, inArray, sql, type Db } from "@openlaw/db";
 import { createAiResolver } from "../../lib/ai/resolver.js";
+import { conversionPrompt, readAiPrompts } from "../../lib/ai-prompts.js";
 import { createFakeAiProvider } from "../../lib/ai/fake.js";
-import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
+import { AI_PROMPTS, CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 import { FAKE_VALID_AI_KEY } from "../../lib/ai/fake.js";
 import {
   signInCookies,
@@ -119,7 +120,7 @@ describe("the AI connector role gate", () => {
 });
 
 describe("the core Field prompts", () => {
-  it("reads all seven effective prompts, defaults, and override states", async () => {
+  it("reads every editable prompt with its default, its section, and its override state", async () => {
     const response = await harness.app.inject({
       method: "GET",
       url: PROMPTS_URL,
@@ -128,13 +129,67 @@ describe("the core Field prompts", () => {
 
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json().prompts).toEqual(
-      CORE_ANALYSIS_TARGETS.map(({ slug, defaultPrompt }) => ({
+      AI_PROMPTS.map(({ slug, group, defaultPrompt }) => ({
         slug,
+        group,
         prompt: defaultPrompt,
         defaultPrompt,
         overridden: false,
       })),
     );
+    // The three sections, in the order the card draws them, with the
+    // seven core targets still last and still all present.
+    const groups = response.json().prompts.map((prompt: { group: string }) => prompt.group);
+    expect([...new Set(groups)]).toEqual(["rules", "conversion", "analysis"]);
+    expect(
+      response
+        .json()
+        .prompts.filter((prompt: { group: string }) => prompt.group === "analysis")
+        .map((prompt: { slug: string }) => prompt.slug),
+    ).toEqual(CORE_ANALYSIS_TARGETS.map((target) => target.slug));
+  });
+
+  it("saves a shared rule and a conversion prompt under their own slugs", async () => {
+    const rule = await harness.app.inject({
+      method: "PUT",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+      payload: { slug: "rules.text_answers", prompt: "Answer text fields in one sentence." },
+    });
+    expect(rule.statusCode, rule.body).toBe(200);
+    expect(rule.json().prompt).toMatchObject({
+      slug: "rules.text_answers",
+      group: "rules",
+      prompt: "Answer text fields in one sentence.",
+      overridden: true,
+    });
+    const conversion = await harness.app.inject({
+      method: "PUT",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+      payload: { slug: "conversion.title", prompt: "Propose a short {module} title." },
+    });
+    expect(conversion.statusCode, conversion.body).toBe(200);
+    expect(conversion.json().prompt).toMatchObject({
+      slug: "conversion.title",
+      group: "conversion",
+      overridden: true,
+    });
+    const book = await readAiPrompts(harness.db);
+    expect(book.rules).toContain("Answer text fields in one sentence.");
+    expect(conversionPrompt(book, "conversion.title", "Contract")).toBe(
+      "Propose a short Contract title.",
+    );
+    for (const slug of ["rules.text_answers", "conversion.title"] as const) {
+      const reset = await harness.app.inject({
+        method: "PUT",
+        url: PROMPTS_URL,
+        cookies: adminCookies,
+        payload: { slug, prompt: null },
+      });
+      expect(reset.statusCode, reset.body).toBe(200);
+    }
+    expect(await harness.db.select().from(aiFieldPrompts)).toHaveLength(0);
   });
 
   it("trims one saved override, bounds it like a catalog Field prompt, and refuses unknown slugs", async () => {
@@ -189,6 +244,7 @@ describe("the core Field prompts", () => {
     expect(reset.statusCode, reset.body).toBe(200);
     expect(reset.json().prompt).toEqual({
       slug: "notice_period_days",
+      group: "analysis",
       prompt: CORE_ANALYSIS_TARGETS[4].defaultPrompt,
       defaultPrompt: CORE_ANALYSIS_TARGETS[4].defaultPrompt,
       overridden: false,

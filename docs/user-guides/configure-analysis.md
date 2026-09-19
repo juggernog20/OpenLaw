@@ -37,15 +37,19 @@ For Ollama, `localhost` means the machine or container running each calling proc
 
 The **Connected** badge means the connector is saved and enabled, even before a successful test. If testing fails, correct the saved configuration and test again. Turning off **Use AI analysis** also disables **Test connection**; turn it on when ready to test. Saving changes to an existing disabled connector leaves it disabled.
 
-## Set core Field prompts
+## Edit the prompts
 
-The **Field prompts** card is the last card on this page. It sits below **Provider**, and below **Request conversion** after a connector is saved. It holds seven prompts for core Contract values. It has no collapse control and is always open. Edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper.
+The **Prompts** card is the last card on this page. It sits below **Provider**, and below **Request conversion** after a connector is saved. It has no collapse control and is always open. It holds three sections.
+
+- **Rules for every AI run.** The shared paragraphs OpenLaw sends with every Contract analysis and every Conversion draft, after the fixed output-format instructions and before the field list. They cover corrections and conflicts, the justification, missing and unsupported values, text answers, and the scope of the sources. The **Text answers** rule asks for one short sentence that states the position, such as "Neither party may assign other than to affiliates.", and leaves the wording of the provision to the citations. Edit it if you want longer or shorter answers for text Fields.
+- **Request conversion.** The five values every Conversion draft proposes beside the target type's Fields: Title, Description, Priority, Needed by, and Counterparty. `{module}` in a prompt is replaced with Matter or Contract when the draft runs.
+- **Contract analysis fields.** The seven built-in Contract values every Analysis run extracts. Edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper.
 
 Press Enter or leave the input to save that prompt, and wait for its save result. Shift+Enter inserts a line break. Press Escape to restore the saved text. Each prompt is required and can contain up to 2,000 characters. If you clear a prompt and leave the input, the saved text comes back. For an overridden prompt, **Reset to default** restores that one built-in prompt.
 
-OpenLaw adds shared instructions to every Analysis request to leave missing, ambiguous, or unsupported values blank and avoid inventing facts. Field prompts only need to describe what to extract and any field-specific interpretation; they do not need to repeat these shared rules.
+The output-format instructions are not on the card. They tell the model how to shape its JSON reply and which source ids to cite, and OpenLaw depends on them to read the answer. Field prompts only need to describe what to extract and any field-specific interpretation; they do not need to repeat the shared rules.
 
-Prompt changes affect subsequent Analysis runs. They do not rewrite earlier results or confirm an existing **Unverified** value. Rerun deliberately after editing a prompt and review the resulting evidence.
+Prompt changes affect subsequent Analysis runs and Conversion drafts. They do not rewrite earlier results or confirm an existing **Unverified** value. Rerun deliberately after editing a prompt and review the resulting evidence.
 
 ## Add a catalog Field to Analysis
 
