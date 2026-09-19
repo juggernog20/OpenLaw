@@ -25,7 +25,7 @@ Every submission creates a Request first. Legal chooses whether to convert it to
 
 This supplies the initial choice during conversion. It does not automatically create a record, and Legal can choose a different destination. New request types start with **Decide during triage**.
 
-The destination also determines which Fields can be added to the form. It does not automatically attach Fields. If existing form Fields are incompatible with a new destination, the change is refused and names the Fields to detach; the saved destination and attachments remain unchanged.
+The destination also determines which Fields can be added to the form. It does not attach Fields by itself. When you attach a Field that the default destination type does not have, the editor asks whether to attach it there too. If existing form Fields are incompatible with a new destination, the change is refused and names the Fields to detach; the saved destination and attachments remain unchanged.
 
 The **Display name** can change. Rename or reorder request types from the list. Archiving a request type takes it out of the Portal's choices and closes its form. The archive dialog shows how many Requests use the type. If it is used, choose a live replacement before archiving; those Requests move to the replacement. Check the replacement’s Fields and routing first. Use **Show archived**, then **Restore**, to offer the type again.
 
@@ -39,6 +39,7 @@ Check the Portal's request-type card for this duration as general guidance befor
 
 1. Under **Form fields**, select **Attach field** and choose a Field, such as **Deal value**.
    Fields are listed alphabetically. Use **Search fields** at the top of the menu to filter by name.
+   If the form has a default destination type that does not have this Field, the editor asks **Attach {Field} to {type} too?**. Choose **Attach to both** so the answer carries into the converted record, or **Form only**.
 2. Turn on that Field's **Required** checkbox if the Requester must answer it. Wait for the save to finish.
 3. Repeat for the other Fields you need. Use the reorder controls to put them in a useful order; with a reorder control focused, the arrow keys move its Field.
 
@@ -74,7 +75,7 @@ Knowledge guidance must remain published and available to Business Users. See [P
 
 Test one form that Legal converts to a Contract and one that Legal converts to a Matter. Open the Portal and select the request type. Confirm that the description, guidance, Fields, order, and required markers match your configuration. Try submitting with a required answer missing, then supply valid fictional answers and submit. Have a Legal Team Member or Administrator convert the Request and check each intended answer on the new record.
 
-Attaching a Field to the form does not attach it to the destination type. Check both configurations before relying on carry-through. For a Matter, also check any selected [Matter template](matter-templates.md): carried answers and explicit choices take precedence over its defaults, and its Tasks and Key dates use the new Matter's creation date.
+Attaching a Field to the form does not attach it to the destination type on its own. When the form has a default destination type and that type lacks the Field, the editor asks **Attach {Field} to {type} too?** Choose **Attach to both** to put the Field on the form and on the destination type in one step, or **Form only** to leave the destination type as it is. A Field marked **Default** is never asked about, because it carries on its own. Check both configurations before relying on carry-through for Fields attached earlier. For a Matter, also check any selected [Matter template](matter-templates.md): carried answers and explicit choices take precedence over its defaults, and its Tasks and Key dates use the new Matter's creation date.
 
 ## If it does not work
 

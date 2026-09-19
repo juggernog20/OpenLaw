@@ -52,6 +52,7 @@ import { SettingsCard } from "./settings-card";
 import { StatusNote, type FieldStatus } from "./status-note";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
+import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -157,9 +158,37 @@ export interface TypeEditorIdentityApi {
   ): Promise<ProblemResult<EditorTypeRow>>;
 }
 
+/** What an attach may ask for beyond the row (INT-002, 2026-09-19). */
+export interface AttachOptions {
+  /** Attach the same field to the type's default destination type in
+   * the same act. Only a mount with a `targetOffer` ever sends it. */
+  alsoAttachToTarget?: boolean;
+  expectedTarget?: { module: "contract" | "matter"; typeId: string };
+}
+
+/** The target's side of a companion attach, as the route answers it. */
+export interface TargetAttachment {
+  module: "contract" | "matter";
+  typeId: string;
+  typeDisplayName: string;
+  /** False when the target already had the field — the outcome asked
+   * for, so not a refusal. */
+  attached: boolean;
+}
+
+/** The attach route's answer: the new row, and the target's side when
+ * the mount asked for one. */
+export interface AttachResult extends AttachedFieldRow {
+  alsoAttachedTo?: TargetAttachment | null;
+}
+
 /** The attachment half, implemented by a mount that draws the fields card. */
 export interface TypeEditorAttachmentsApi {
-  attach(id: string, fieldId: string): Promise<ProblemResult<AttachedFieldRow>>;
+  attach(
+    id: string,
+    fieldId: string,
+    options?: AttachOptions,
+  ): Promise<ProblemResult<AttachResult>>;
   detach(id: string, fieldId: string): Promise<{ ok: boolean } & ProblemResult<never>>;
   setRequired(
     id: string,
@@ -220,6 +249,37 @@ export interface TypeEditorBasics {
 /** Both halves, which is what the contract and matter mounts pass. */
 export type TypeEditorMessages = TypeEditorIdentityMessages & TypeEditorAttachmentsMessages;
 
+/** One offer the card puts to the Administrator before an attach. */
+export interface TargetOffer {
+  typeId: string;
+  module: "contract" | "matter";
+  typeDisplayName: string;
+}
+
+/**
+ * The companion attach on the type's target, for a mount whose types
+ * point at another module's type (INT-002, 2026-09-19). Before a field
+ * is attached, `check` says whether the target type lacks it; when it
+ * does, the card asks whether to attach it there too, in the copy the
+ * mount supplies, and sends the answer as `alsoAttachToTarget`. A
+ * check that fails answers null, and the attach goes on without the
+ * offer: the form attach is the act asked for, and a lookup that could
+ * not run must not refuse it.
+ */
+export interface TypeEditorTargetOffer {
+  check(field: EditorCatalogRow): Promise<TargetOffer | null>;
+  /** "Attach {name} to {target} too?" */
+  title: MessageDescriptor;
+  /** Why: the carry rule, in the mount's words. `{name}`, `{target}`, `{module}`. */
+  body: MessageDescriptor;
+  /** The button that attaches to both. */
+  accept: MessageDescriptor;
+  /** The button that attaches to the form alone. */
+  decline: MessageDescriptor;
+  /** The aria-live confirmation when both were attached. `{name}`, `{target}`. */
+  attachedBoth: MessageDescriptor;
+}
+
 /**
  * The fields card, for a mount that has one.
  *
@@ -252,6 +312,12 @@ export interface TypeEditorAttachments {
    * can answer.
    */
   requiredRule?: EditorRequiredRule;
+  /**
+   * The offer to attach the same field to the type's target (INT-002,
+   * 2026-09-19). Request types pass it; the two record-side editors
+   * have no target and pass none.
+   */
+  targetOffer?: TypeEditorTargetOffer;
 }
 
 /** The Fields pane's vocabulary, reused verbatim across modules (one
@@ -287,6 +353,7 @@ function AttachedFieldsCard({
   messages,
   basics,
   requiredRule,
+  targetOffer,
 }: Readonly<TypeEditorAttachments & { typeId: string }>) {
   const intl = useIntl();
 
@@ -332,6 +399,12 @@ function AttachedFieldsCard({
   const [attachError, setAttachError] = useState<string | undefined>(undefined);
   const [announcement, setAnnouncement] = useState("");
   const dragFrom = useRef<number | null>(null);
+  /** The offer on screen, with the attach that waits on its answer. */
+  const [pendingOffer, setPendingOffer] = useState<{
+    field: EditorCatalogRow;
+    offer: TargetOffer;
+    answer: (choice: "both" | "form" | "cancel") => void;
+  } | null>(null);
 
   const availableCreatedFields = createdFields.filter(
     (field) =>
@@ -374,18 +447,55 @@ function AttachedFieldsCard({
     setRowError((current) => ({ ...current, [fieldId]: detail }));
   }
 
+  /**
+   * Puts the mount's offer, if the target type lacks this field, and
+   * waits for the answer. "cancel" is Esc or the overlay: the attach
+   * is not made, and nothing is reported, because nothing was asked.
+   */
+  async function askTargetOffer(field: EditorCatalogRow): Promise<TargetOffer | "form" | "cancel"> {
+    if (!targetOffer) return "form";
+    const offer = await targetOffer.check(field).catch(() => null);
+    if (!offer) return "form";
+    return new Promise((resolve) =>
+      setPendingOffer({
+        field,
+        offer,
+        answer: (choice) => resolve(choice === "both" ? offer : choice),
+      }),
+    );
+  }
+
   async function attach(field: EditorCatalogRow) {
+    const choice = await askTargetOffer(field);
+    if (choice === "cancel") return false;
     setAttachStatus("saving");
     setAttachError(undefined);
     const { data, detail } = await api
-      .attach(typeId, field.id)
+      .attach(
+        typeId,
+        field.id,
+        typeof choice === "object"
+          ? {
+              alsoAttachToTarget: true,
+              expectedTarget: { module: choice.module, typeId: choice.typeId },
+            }
+          : undefined,
+      )
       .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
-      setRows((current) => [...current, data]);
+      const { alsoAttachedTo, ...row } = data;
+      setRows((current) => [...current, row]);
       setAttachStatus("saved");
       // The new row lands below the menu, out of a reader's view —
       // announce it like detach and reorder do (WCAG 4.1.3).
-      setAnnouncement(intl.formatMessage(messages.attached, { name: field.displayName }));
+      setAnnouncement(
+        alsoAttachedTo?.attached && targetOffer
+          ? intl.formatMessage(targetOffer.attachedBoth, {
+              name: field.displayName,
+              target: alsoAttachedTo.typeDisplayName,
+            })
+          : intl.formatMessage(messages.attached, { name: field.displayName }),
+      );
     } else {
       setAttachStatus("error");
       setAttachError(detail);
@@ -880,6 +990,63 @@ function AttachedFieldsCard({
             }
           }}
         />
+      )}
+      {pendingOffer && targetOffer && (
+        <Dialog
+          open
+          onOpenChange={(open) => {
+            if (open) return;
+            pendingOffer.answer("cancel");
+            setPendingOffer(null);
+          }}
+        >
+          <DialogContent
+            width="md"
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              attachTrigger.current?.focus();
+            }}
+          >
+            <DialogTitle>
+              <FormattedMessage
+                {...targetOffer.title}
+                values={{
+                  name: pendingOffer.field.displayName,
+                  target: pendingOffer.offer.typeDisplayName,
+                }}
+              />
+            </DialogTitle>
+            <p className="mt-2 text-sm text-secondary">
+              <FormattedMessage
+                {...targetOffer.body}
+                values={{
+                  name: pendingOffer.field.displayName,
+                  target: pendingOffer.offer.typeDisplayName,
+                  module: pendingOffer.offer.module,
+                }}
+              />
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  pendingOffer.answer("form");
+                  setPendingOffer(null);
+                }}
+              >
+                <FormattedMessage {...targetOffer.decline} />
+              </Button>
+              <Button
+                onClick={() => {
+                  pendingOffer.answer("both");
+                  setPendingOffer(null);
+                }}
+              >
+                <FormattedMessage {...targetOffer.accept} />
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
       {messages.help && (
         <p className="text-sm text-muted">

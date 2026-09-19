@@ -17,6 +17,11 @@
  * Only the user Field type cannot be required. Entity Fields use the
  * Portal-listed Entity picker (ENT-010).
  *
+ * The companion attach on the default destination type is this
+ * mount's too (`target-attach.ts`): a form field that the target type
+ * does not attach would collect a value with nowhere to land, so the
+ * attach body may ask for both in one act.
+ *
  * The four basics (Title, Description, Attachments, Urgency) are not
  * attachments. INT-002 fixes them on every form, so they have no rows
  * here and never reach these routes. The editor draws them as locked
@@ -26,6 +31,7 @@
 import { requestTypeFields, requestTypes, type RequestType } from "@openlaw/db";
 import { typeFieldRoutes } from "../../lib/type-field-routes.js";
 import { requestFormRequiredRule, requestTypeScopeRule } from "./form-definition.js";
+import { requestTypeTargetAttach } from "./target-attach.js";
 
 export const requestTypeFieldsRoutes = typeFieldRoutes<RequestType>({
   typesTable: requestTypes,
@@ -37,6 +43,9 @@ export const requestTypeFieldsRoutes = typeFieldRoutes<RequestType>({
   scopeRule: requestTypeScopeRule,
   scopeSummary: "the scopes this type's target allows (INT-002)",
   requiredRule: requestFormRequiredRule,
+  // The companion attach on the default destination type (INT-002,
+  // 2026-09-19): the one mount with a target is the one that states it.
+  targetAttach: requestTypeTargetAttach,
   actionPrefix: "request_type_field",
   // The portal enforces the flag when a requester submits (M20); there
   // is no request to enforce it against until then.

@@ -126,6 +126,9 @@ const CONTRACT_TYPES = [
 interface EditorCalls {
   patches: unknown[];
   attached: unknown[];
+  /** Whether each attach asked for the default destination type too. */
+  alsoAttach: boolean[];
+  expectedTargets: unknown[];
   detached: string[];
 }
 
@@ -172,10 +175,25 @@ function editorApi(
   row: StubType = review(),
   refuse?: { status: number; detail: string },
   attached: typeof ATTACHED = ATTACHED,
+  /** The field ids the NDA contract type already attaches. */
+  onNda: string[] = [],
 ) {
   let current = row;
   return (call: StubCall): Response | undefined => {
     const path = call.url.pathname;
+    if (path === "/api/v1/contract-types/ct-nda/fields" && call.method === "GET") {
+      return json(200, {
+        attachedFields: onNda.map((fieldId, index) => ({
+          fieldId,
+          slug: fieldId,
+          displayName: fieldId,
+          fieldType: "text",
+          moduleScope: "contract",
+          displayOrder: index + 1,
+          isRequired: false,
+        })),
+      });
+    }
     if (path === `/api/v1/request-types/${row.id}` && call.method === "GET") {
       return json(200, { requestType: current });
     }
@@ -192,8 +210,14 @@ function editorApi(
       return json(200, { fields: CATALOG });
     }
     if (path === `/api/v1/request-types/${row.id}/fields` && call.method === "POST") {
-      const { fieldId } = call.body as { fieldId: string };
+      const { fieldId, alsoAttachToTarget, expectedTarget } = call.body as {
+        fieldId: string;
+        alsoAttachToTarget?: boolean;
+        expectedTarget?: unknown;
+      };
       calls.attached.push(fieldId);
+      calls.alsoAttach.push(alsoAttachToTarget === true);
+      calls.expectedTargets.push(expectedTarget);
       const field = CATALOG.find((candidate) => candidate.id === fieldId)!;
       return json(201, {
         attachedField: {
@@ -205,6 +229,9 @@ function editorApi(
           displayOrder: 2,
           isRequired: false,
         },
+        alsoAttachedTo: alsoAttachToTarget
+          ? { module: "contract", typeId: "ct-nda", typeDisplayName: "NDA", attached: true }
+          : null,
       });
     }
     if (path.startsWith(`/api/v1/request-types/${row.id}/fields/`) && call.method === "DELETE") {
@@ -221,7 +248,13 @@ function editorApi(
   };
 }
 
-const newCalls = (): EditorCalls => ({ patches: [], attached: [], detached: [] });
+const newCalls = (): EditorCalls => ({
+  patches: [],
+  attached: [],
+  alsoAttach: [],
+  expectedTargets: [],
+  detached: [],
+});
 
 const openEditor = (extra: ReturnType<typeof editorApi>) => {
   stubApi({ signedIn: ADMIN, extra });
@@ -453,6 +486,88 @@ describe("the form definition (ST14's right card)", () => {
     ).toBeInTheDocument();
     // Only this row's box is locked; an ordinary field keeps its own.
     expect(screen.getByRole("checkbox", { name: "Counterparty name required" })).toBeEnabled();
+  });
+});
+
+describe("the offer to attach to the default destination type too (INT-002, 2026-09-19)", () => {
+  const nda = () => review({ targetTypeId: "ct-nda" });
+
+  it("asks before attaching a field the NDA type lacks, and attaches to both on the first button", async () => {
+    const calls = newCalls();
+    openEditor(editorApi(calls, nda()));
+    const user = userEvent.setup();
+    await screen.findByText("Form fields");
+    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    await user.click(await screen.findByRole("menuitem", { name: /Governing law/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Attach Governing law to NDA too?" });
+    expect(dialog).toHaveTextContent(
+      "Governing law is not on the NDA contract type. An answer collected on this form carries into a contract only through a Field its type attaches. Without it, the answer stays on the Request.",
+    );
+    // Nothing is written while the question is open.
+    expect(calls.attached).toEqual([]);
+    await user.click(within(dialog).getByRole("button", { name: "Attach to both" }));
+    await waitFor(() => expect(calls.attached).toEqual(["f-law"]));
+    expect(calls.alsoAttach).toEqual([true]);
+    expect(calls.expectedTargets).toEqual([{ module: "contract", typeId: "ct-nda" }]);
+    expect(
+      await screen.findByText("Governing law attached to the form and to NDA."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // The row landed on the form like any other attach.
+    expect(screen.getByRole("button", { name: "Detach Governing law" })).toBeInTheDocument();
+  });
+
+  it("attaches to the form alone on the second button", async () => {
+    const calls = newCalls();
+    openEditor(editorApi(calls, nda()));
+    const user = userEvent.setup();
+    await screen.findByText("Form fields");
+    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    await user.click(await screen.findByRole("menuitem", { name: /Governing law/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Attach Governing law to NDA too?" });
+    await user.click(within(dialog).getByRole("button", { name: "Form only" }));
+    await waitFor(() => expect(calls.attached).toEqual(["f-law"]));
+    expect(calls.alsoAttach).toEqual([false]);
+    expect(await screen.findByText("Governing law attached.")).toBeInTheDocument();
+  });
+
+  it("attaches nothing when the question is dismissed", async () => {
+    const calls = newCalls();
+    openEditor(editorApi(calls, nda()));
+    const user = userEvent.setup();
+    await screen.findByText("Form fields");
+    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    await user.click(await screen.findByRole("menuitem", { name: /Governing law/ }));
+    await screen.findByRole("dialog", { name: "Attach Governing law to NDA too?" });
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(calls.attached).toEqual([]);
+    expect(screen.queryByText(/attached/)).not.toBeInTheDocument();
+    // The Attach menu is still there to try again from.
+    expect(screen.getByRole("button", { name: "Attach field" })).toHaveFocus();
+  });
+
+  it("asks nothing when the NDA type already attaches the field", async () => {
+    const calls = newCalls();
+    openEditor(editorApi(calls, nda(), undefined, ATTACHED, ["f-law"]));
+    const user = userEvent.setup();
+    await screen.findByText("Form fields");
+    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    await user.click(await screen.findByRole("menuitem", { name: /Governing law/ }));
+    await waitFor(() => expect(calls.attached).toEqual(["f-law"]));
+    expect(calls.alsoAttach).toEqual([false]);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("asks nothing while the destination is a module alone", async () => {
+    const calls = newCalls();
+    openEditor(editorApi(calls));
+    const user = userEvent.setup();
+    await screen.findByText("Form fields");
+    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    await user.click(await screen.findByRole("menuitem", { name: /Governing law/ }));
+    await waitFor(() => expect(calls.attached).toEqual(["f-law"]));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
 
