@@ -5863,7 +5863,7 @@
     "/api/v1/ai-field-prompts": {
       "get": {
         "operationId": "listAiFieldPrompts",
-        "summary": "Read the effective and default prompts for the seven core analysis targets",
+        "summary": "Read the effective and default text of every editable prompt: the shared extraction rules, the Conversion draft's built-in targets, and the seven core analysis targets",
         "tags": ["ai-field-prompts"],
         "responses": {
           "200": {
@@ -5881,6 +5881,16 @@
                           "slug": {
                             "type": "string",
                             "enum": [
+                              "rules.evidence",
+                              "rules.justification",
+                              "rules.unsupported",
+                              "rules.text_answers",
+                              "rules.scope",
+                              "conversion.title",
+                              "conversion.description",
+                              "conversion.priority",
+                              "conversion.needed_by",
+                              "conversion.counterparty",
                               "term_type",
                               "effective_date",
                               "expiry_date",
@@ -5889,6 +5899,10 @@
                               "value",
                               "counterparty"
                             ]
+                          },
+                          "group": {
+                            "type": "string",
+                            "enum": ["rules", "conversion", "analysis"]
                           },
                           "prompt": {
                             "type": "string"
@@ -5900,7 +5914,7 @@
                             "type": "boolean"
                           }
                         },
-                        "required": ["slug", "prompt", "defaultPrompt", "overridden"],
+                        "required": ["slug", "group", "prompt", "defaultPrompt", "overridden"],
                         "additionalProperties": false
                       }
                     }
@@ -5925,7 +5939,7 @@
       },
       "put": {
         "operationId": "saveAiFieldPrompt",
-        "summary": "Save or reset one core analysis prompt; null or blank resets it to the default",
+        "summary": "Save or reset one prompt by slug; null or blank resets it to the default",
         "tags": ["ai-field-prompts"],
         "requestBody": {
           "required": true,
@@ -5937,6 +5951,16 @@
                   "slug": {
                     "type": "string",
                     "enum": [
+                      "rules.evidence",
+                      "rules.justification",
+                      "rules.unsupported",
+                      "rules.text_answers",
+                      "rules.scope",
+                      "conversion.title",
+                      "conversion.description",
+                      "conversion.priority",
+                      "conversion.needed_by",
+                      "conversion.counterparty",
                       "term_type",
                       "effective_date",
                       "expiry_date",
@@ -5977,6 +6001,16 @@
                         "slug": {
                           "type": "string",
                           "enum": [
+                            "rules.evidence",
+                            "rules.justification",
+                            "rules.unsupported",
+                            "rules.text_answers",
+                            "rules.scope",
+                            "conversion.title",
+                            "conversion.description",
+                            "conversion.priority",
+                            "conversion.needed_by",
+                            "conversion.counterparty",
                             "term_type",
                             "effective_date",
                             "expiry_date",
@@ -5985,6 +6019,10 @@
                             "value",
                             "counterparty"
                           ]
+                        },
+                        "group": {
+                          "type": "string",
+                          "enum": ["rules", "conversion", "analysis"]
                         },
                         "prompt": {
                           "type": "string"
@@ -5996,7 +6034,7 @@
                           "type": "boolean"
                         }
                       },
-                      "required": ["slug", "prompt", "defaultPrompt", "overridden"],
+                      "required": ["slug", "group", "prompt", "defaultPrompt", "overridden"],
                       "additionalProperties": false
                     }
                   },

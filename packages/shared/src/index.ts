@@ -21,9 +21,18 @@ export const OPENLAW_VERSION = "0.0.1";
 /** CTR-008's shared Contract analysis vocabulary. */
 export {
   AI_ANALYSIS_CHARACTER_BUDGET,
+  AI_PROMPT_GROUPS,
+  AI_PROMPT_SLUGS,
+  AI_PROMPTS,
+  AI_RULE_PROMPTS,
+  CONVERSION_PROMPTS,
   CORE_ANALYSIS_SLUGS,
   CORE_ANALYSIS_TARGETS,
   CORE_ANALYSIS_TARGET_TYPES,
+  type AiPromptGroup,
+  type AiPromptSlug,
+  type AiRulePromptSlug,
+  type ConversionPromptSlug,
   type AiUnverifiedEntry,
   type AiUnverifiedMap,
   type ContractAnalysisOutcome,

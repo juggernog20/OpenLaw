@@ -114,7 +114,7 @@ import {
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import type { ActivityAction } from "@openlaw/shared";
-import { coreAnalysisLabel } from "./core-analysis-labels";
+import { aiPromptLabel } from "./core-analysis-labels";
 import { formatShortDate } from "./format";
 import { roleLabel } from "./roles";
 import {
@@ -973,7 +973,7 @@ function coreTarget(intl: IntlShape, payload: Payload): string {
   if (slug === null) {
     return intl.formatMessage({ id: "activity.contract.unknownField", defaultMessage: "a field" });
   }
-  const label = coreAnalysisLabel(slug);
+  const label = aiPromptLabel(slug);
   return label ? intl.formatMessage(label) : identifierLabel(slug);
 }
 
@@ -2783,7 +2783,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: FilePen,
     message: defineMessage({
       id: "activity.aiFieldPrompt.updated",
-      defaultMessage: "{actor} changed the analysis prompt for {target}",
+      defaultMessage: "{actor} changed the AI prompt for {target}",
     }),
     values: (intl, payload) => ({ target: coreTarget(intl, payload) }),
   },
@@ -2791,7 +2791,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: Undo2,
     message: defineMessage({
       id: "activity.aiFieldPrompt.reset",
-      defaultMessage: "{actor} reset the analysis prompt for {target} to its default",
+      defaultMessage: "{actor} reset the AI prompt for {target} to its default",
     }),
     values: (intl, payload) => ({ target: coreTarget(intl, payload) }),
   },

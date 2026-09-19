@@ -830,9 +830,9 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Read the effective and default prompts for the seven core analysis targets */
+    /** Read the effective and default text of every editable prompt: the shared extraction rules, the Conversion draft's built-in targets, and the seven core analysis targets */
     get: operations["listAiFieldPrompts"];
-    /** Save or reset one core analysis prompt; null or blank resets it to the default */
+    /** Save or reset one prompt by slug; null or blank resets it to the default */
     put: operations["saveAiFieldPrompt"];
     post?: never;
     delete?: never;
@@ -10024,6 +10024,16 @@ export interface operations {
             prompts: {
               /** @enum {string} */
               slug:
+                | "rules.evidence"
+                | "rules.justification"
+                | "rules.unsupported"
+                | "rules.text_answers"
+                | "rules.scope"
+                | "conversion.title"
+                | "conversion.description"
+                | "conversion.priority"
+                | "conversion.needed_by"
+                | "conversion.counterparty"
                 | "term_type"
                 | "effective_date"
                 | "expiry_date"
@@ -10031,6 +10041,8 @@ export interface operations {
                 | "notice_period_days"
                 | "value"
                 | "counterparty";
+              /** @enum {string} */
+              group: "rules" | "conversion" | "analysis";
               prompt: string;
               defaultPrompt: string;
               overridden: boolean;
@@ -10061,6 +10073,16 @@ export interface operations {
         "application/json": {
           /** @enum {string} */
           slug:
+            | "rules.evidence"
+            | "rules.justification"
+            | "rules.unsupported"
+            | "rules.text_answers"
+            | "rules.scope"
+            | "conversion.title"
+            | "conversion.description"
+            | "conversion.priority"
+            | "conversion.needed_by"
+            | "conversion.counterparty"
             | "term_type"
             | "effective_date"
             | "expiry_date"
@@ -10083,6 +10105,16 @@ export interface operations {
             prompt: {
               /** @enum {string} */
               slug:
+                | "rules.evidence"
+                | "rules.justification"
+                | "rules.unsupported"
+                | "rules.text_answers"
+                | "rules.scope"
+                | "conversion.title"
+                | "conversion.description"
+                | "conversion.priority"
+                | "conversion.needed_by"
+                | "conversion.counterparty"
                 | "term_type"
                 | "effective_date"
                 | "expiry_date"
@@ -10090,6 +10122,8 @@ export interface operations {
                 | "notice_period_days"
                 | "value"
                 | "counterparty";
+              /** @enum {string} */
+              group: "rules" | "conversion" | "analysis";
               prompt: string;
               defaultPrompt: string;
               overridden: boolean;

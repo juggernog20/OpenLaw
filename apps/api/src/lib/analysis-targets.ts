@@ -7,7 +7,6 @@
  */
 
 import {
-  aiFieldPrompts,
   and,
   asc,
   contractTypeFields,
@@ -20,6 +19,7 @@ import {
 } from "@openlaw/db";
 import { CORE_ANALYSIS_TARGETS, type CoreAnalysisTargetType } from "@openlaw/shared";
 import type { AiExtractionTarget } from "./ai/provider.js";
+import { readAiPrompts } from "./ai-prompts.js";
 
 export interface AnalysisTarget extends AiExtractionTarget {
   type: CoreAnalysisTargetType | FieldType;
@@ -32,8 +32,8 @@ export async function buildAnalysisTargets(
   db: Executor,
   contractTypeId: string,
 ): Promise<AnalysisTarget[]> {
-  const [overrides, attached] = await Promise.all([
-    db.select().from(aiFieldPrompts),
+  const [book, attached] = await Promise.all([
+    readAiPrompts(db),
     db
       .select({
         slug: fields.slug,
@@ -53,7 +53,6 @@ export async function buildAnalysisTargets(
       )
       .orderBy(asc(contractTypeFields.displayOrder), asc(contractTypeFields.createdAt)),
   ]);
-  const promptBySlug = new Map(overrides.map((row) => [row.slug, row.prompt]));
   // New Fields cannot take a core slug (the catalog reserves them), but a
   // Field created before M31 may already hold one. The core target owns
   // the slug in the outcome and the unverified map, so such a Field is
@@ -63,7 +62,7 @@ export async function buildAnalysisTargets(
   return [
     ...CORE_ANALYSIS_TARGETS.map((target) => ({
       slug: target.slug,
-      prompt: promptBySlug.get(target.slug) ?? target.defaultPrompt,
+      prompt: book.prompt(target.slug),
       type: target.type,
       options: null,
       core: true,

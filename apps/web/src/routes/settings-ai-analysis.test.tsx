@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { screen, waitFor, within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { paths } from "@openlaw/api-client";
-import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
+import { AI_PROMPTS, CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
@@ -91,8 +91,9 @@ const PRESETS = [
   },
 ] satisfies AiResponse["presets"];
 
-const DEFAULT_PROMPTS = CORE_ANALYSIS_TARGETS.map(({ slug, defaultPrompt }) => ({
+const DEFAULT_PROMPTS = AI_PROMPTS.map(({ slug, group, defaultPrompt }) => ({
   slug,
+  group,
   prompt: defaultPrompt,
   defaultPrompt,
   overridden: false,
@@ -117,7 +118,7 @@ function isAiSaveRequest(value: unknown): value is AiSaveRequest {
 function isPromptSaveRequest(value: unknown): value is PromptSaveRequest {
   return (
     isRecord(value) &&
-    CORE_ANALYSIS_TARGETS.some((target) => target.slug === value.slug) &&
+    AI_PROMPTS.some((target) => target.slug === value.slug) &&
     (typeof value.prompt === "string" || value.prompt === null)
   );
 }
@@ -391,7 +392,7 @@ describe("the Field prompts card (#665)", () => {
     renderAt("/settings/ai-analysis");
 
     const provider = await screen.findByRole("heading", { level: 2, name: "Provider" });
-    const prompts = screen.getByRole("heading", { level: 2, name: "Field prompts" });
+    const prompts = screen.getByRole("heading", { level: 2, name: "Prompts" });
     expect(
       provider.compareDocumentPosition(prompts) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
@@ -399,6 +400,43 @@ describe("the Field prompts card (#665)", () => {
       "href",
       "/settings/contracts/fields",
     );
+  });
+
+  it("draws the shared rules and the conversion targets as their own sections, and saves one rule", async () => {
+    const user = userEvent.setup();
+    const promptSaves: unknown[] = [];
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ promptSaves }) });
+    renderAt("/settings/ai-analysis");
+
+    const rules = await screen.findByRole("region", { name: "Rules for every AI run" });
+    const conversion = screen.getByRole("region", { name: "Request conversion" });
+    const analysis = screen.getByRole("region", { name: "Contract analysis fields" });
+    expect(
+      rules.compareDocumentPosition(conversion) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      conversion.compareDocumentPosition(analysis) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(within(rules).getAllByRole("textbox")).toHaveLength(5);
+    expect(within(conversion).getAllByRole("textbox")).toHaveLength(5);
+    expect(within(analysis).getAllByRole("textbox")).toHaveLength(7);
+    expect(within(conversion).getByText("{module}")).toBeInTheDocument();
+
+    const input = within(rules).getByLabelText("Text answers prompt");
+    expect(input).toHaveValue(
+      AI_PROMPTS.find((prompt) => prompt.slug === "rules.text_answers")!.defaultPrompt,
+    );
+    await user.clear(input);
+    await user.type(input, "Answer text fields in one sentence.");
+    await user.tab();
+    await waitFor(() =>
+      expect(promptSaves).toEqual([
+        { slug: "rules.text_answers", prompt: "Answer text fields in one sentence." },
+      ]),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Reset Text answers to default" }),
+    ).toBeInTheDocument();
   });
 });
 

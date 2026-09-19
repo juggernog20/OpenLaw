@@ -26,6 +26,7 @@ import {
   MAX_COUNTERPARTY_NAME_LENGTH,
   INTAKE_CARRY_SLUGS,
   sameConversionValue,
+  type ConversionPromptSlug,
   type ConversionSuggestion,
   type ConversionAttachmentRead,
 } from "@openlaw/shared";
@@ -37,6 +38,7 @@ import {
 import type { AiExtraction, AiExtractionTarget, AiSource } from "./ai/provider.js";
 import { type AttachmentSource } from "./conversion-attachments.js";
 import { httpError } from "./problem.js";
+import { conversionPrompt, readAiPrompts } from "./ai-prompts.js";
 
 export const ConversionSuggestionSchema = z.object({
   value: CustomFieldValueSchema,
@@ -267,11 +269,15 @@ export async function conversionContext(
         )
     : [];
   const promptById = new Map(fieldPrompts.map((field) => [field.id, field.prompt]));
+  // The built-in targets read the Prompts card's text (CTR-008,
+  // 2026-09-19), so an edited prompt reaches the next draft.
+  const book = await readAiPrompts(db);
+  const said = (slug: ConversionPromptSlug) => conversionPrompt(book, slug, moduleLabel);
   const allTargets: AiExtractionTarget[] = [
     {
       slug: "title",
       type: "text",
-      prompt: `Propose a concise opening ${moduleLabel} title, at most 200 characters.`,
+      prompt: said("conversion.title"),
     },
     {
       slug: `${targetModule}_type`,
@@ -282,26 +288,25 @@ export async function conversionContext(
     {
       slug: "description",
       type: "long_text",
-      prompt: `Synthesize a useful ${moduleLabel} Overview description from the supported facts, at most 10000 characters. Cite all supporting passages. No legal risk assessment.`,
+      prompt: said("conversion.description"),
     },
     {
       slug: "priority",
       type: "single_select",
       options: ["low", "medium", "high", "critical"],
-      prompt: "Propose priority: low, medium, high, critical. Request urgency is the default.",
+      prompt: said("conversion.priority"),
     },
     {
       slug: "needed_by",
       type: "date",
-      prompt:
-        "Extract the explicitly stated Needed by date as YYYY-MM-DD. Do not guess missing date parts.",
+      prompt: said("conversion.needed_by"),
     },
     ...(targetModule === "contract"
       ? [
           {
             slug: "counterparty",
             type: "counterparty" as const,
-            prompt: `Extract the explicitly named Counterparty legal name, at most ${MAX_COUNTERPARTY_NAME_LENGTH} characters. Never invent a name.`,
+            prompt: said("conversion.counterparty"),
           },
         ]
       : []),
@@ -328,6 +333,7 @@ export async function conversionContext(
     fields,
     types,
     targets,
+    rules: book.rules,
     snapshot: hash([
       "complete-sources-v2",
       targetModule,

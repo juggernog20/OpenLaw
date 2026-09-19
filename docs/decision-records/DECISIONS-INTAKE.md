@@ -894,3 +894,12 @@ to that type by hand, and the Convert dialog goes on naming it. Drawing that sta
 editor's row, and offering the same attach from there, is the natural next step and is not
 taken here. It does not touch the strand refusal on a target change, nor the M21/12 two-list
 collision over a detached field.
+
+### INT-008 addendum (2026-09-19) — the built-in targets read the Prompts card
+
+The five values every Conversion draft proposes beside the target type's Fields (title,
+description, priority, needed by, counterparty) take their prompt text from the Prompts card
+on Settings → Organization → AI analysis, under `conversion.*` slugs, and the shared rule
+paragraphs the draft's extraction carries are the card's `rules.*` rows. The mechanics and
+the reason are the CTR-008 implementation note of the same date in `DECISIONS-CONTRACTS.md`.
+Nothing about the draft's sources, bounds, or acceptance changes.

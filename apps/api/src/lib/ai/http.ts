@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { AI_OUTPUT_TOKEN_DEFAULT } from "@openlaw/shared";
+import { AI_RULE_PROMPTS, AI_OUTPUT_TOKEN_DEFAULT } from "@openlaw/shared";
 
 import {
   AI_UNSUPPORTED_FIELDS,
@@ -264,10 +264,24 @@ export async function postJson(
   }
 }
 
-/** The common instruction all protocols carry in their own wire shape. */
+/** The rule paragraphs a prompt carries when the caller supplies none. */
+export const DEFAULT_EXTRACTION_RULES: readonly string[] = AI_RULE_PROMPTS.map(
+  (rule) => rule.defaultPrompt,
+);
+
+/**
+ * The common instruction all protocols carry in their own wire shape.
+ *
+ * The first three lines and the schema are the format contract the
+ * parser depends on, so they are fixed. The `rules` between them and
+ * the field list are the editable paragraphs (CTR-008, 2026-09-19):
+ * an Administrator's overrides arrive here already resolved, and a
+ * caller that reads none sends the built-in text.
+ */
 export function extractionPrompt(
   text: string | readonly AiSource[],
   targets: readonly AiExtractionTarget[],
+  rules: readonly string[] = DEFAULT_EXTRACTION_RULES,
 ): string {
   const fields = targets.map((target) => `- ${target.slug}: ${target.prompt}`).join("\n");
   return [
@@ -276,10 +290,7 @@ export function extractionPrompt(
     typeof text === "string"
       ? 'Each entry must use the properties "value" and "evidence", where "evidence" is an exact supporting quote. Example shape: {"term_type":{"value":"fixed","evidence":"a fixed term"}}.'
       : 'Each entry must use the properties "value", "sourceId", and "evidence". "sourceId" is the exact source id; "evidence" is an exact supporting quote from that source. Example shape: {"needed_by":{"value":"2026-10-02","sourceId":"message:123","evidence":"by October 2, 2026"}}. For synthesis or conflicts, use "citations": [{"sourceId":"message:123","quote":"exact supporting passage"}]. Example values are format examples, never facts.',
-    "A later statement overrides an earlier fact only when it explicitly corrects that fact. For unresolved contradictions return conflict: true and cite the conflicting passages; do not choose a value.",
-    'Include a "justification" for each supported value: one or two short sentences explaining why the cited facts support this field, at most 1000 characters. Explain the conclusion, not your internal deliberation. Do not just repeat the value or copy the whole source. Use short, relevant quotes for citations.',
-    "Use null when a value is missing, ambiguous, or unsupported by the supplied sources. Never invent facts, assume standard terms, or use outside knowledge to fill gaps. Silence is not evidence of permission, prohibition, zero, or false. Boolean false requires explicit support just as true does. These rules apply to every field. Return no prose.",
-    "Only the supplied passages were considered. Sources can be omitted or truncated; never claim complete analysis of every attachment or document.",
+    ...rules,
     "",
     "Fields:",
     fields,

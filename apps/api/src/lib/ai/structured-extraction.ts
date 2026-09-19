@@ -10,6 +10,7 @@ import {
 } from "./http.js";
 import {
   AiResponseError,
+  type AiExtractionOptions,
   AiProviderError,
   AiTimeoutError,
   type AiExtraction,
@@ -204,13 +205,14 @@ export async function extractStructured(
   targets: readonly AiExtractionTarget[],
   complete: StructuredCompletion,
   maxTokens = EXTRACTION_BOUND.maxTokens,
+  options: AiExtractionOptions = {},
 ) {
   const deadline = Date.now() + extractionTimeBudget(targets, sources);
   const batches = extractionBatches(targets, sources);
   async function extractBatch(batch: AiExtractionTarget[]) {
     const batchDeadline = Math.min(deadline, Date.now() + EXTRACTION_BOUND.timeoutMs);
     const schema = extractionSchema(batch, sources);
-    const prompt = `${extractionPrompt(sources, batch)}\n\nResponse JSON Schema (all requested fields must be present; use value: null, empty metadata strings, citations: [], and conflict: false when unsupported):\n${JSON.stringify(schema)}`;
+    const prompt = `${extractionPrompt(sources, batch, options.rules)}\n\nResponse JSON Schema (all requested fields must be present; use value: null, empty metadata strings, citations: [], and conflict: false when unsupported):\n${JSON.stringify(schema)}`;
     let correction = "";
     for (let attempt = 0; attempt < 2; attempt++) {
       const bound = remainingCallBound(

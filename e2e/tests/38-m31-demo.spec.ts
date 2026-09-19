@@ -169,7 +169,7 @@ async function configureConnector(page: Page, stub: OpenAiStub, testInfo: TestIn
   const tested = await testing;
   expect(tested.status(), await tested.text()).toBe(200);
   await expect(page.getByText("Connection successful.")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "Field prompts" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Prompts" })).toBeVisible();
   expect(await reportAxeViolations(page, testInfo, "M31 AI analysis settings")).toEqual([]);
 }
 

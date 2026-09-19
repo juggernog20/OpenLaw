@@ -82,8 +82,8 @@ export function createAnthropicProvider(config: AiProviderConfig): AiProvider {
     preset: config.preset,
     protocol: "anthropic_messages",
     model: config.model,
-    async extract(text, targets) {
-      return extractStructured(text, targets, complete, config.maxOutputTokens);
+    async extract(text, targets, options) {
+      return extractStructured(text, targets, complete, config.maxOutputTokens, options);
     },
     async probe() {
       await complete('Reply with only the JSON object {"ok":true}.', PROBE_BOUND);

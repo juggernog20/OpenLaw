@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The seven editable core prompts used by the next Contract analysis run. */
+/**
+ * The Prompts card (DES-070; CTR-008, M31/5; widened on 2026-09-19): every
+ * editable prompt in three sections. The shared rules every AI run
+ * carries, the Conversion draft's built-in targets, and the seven core
+ * Contract analysis targets. Each row saves on its own and resets to
+ * the built-in text on its own; a change reaches the next run.
+ */
 
 import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { useState, type KeyboardEvent } from "react";
@@ -8,7 +14,8 @@ import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
-import { CORE_ANALYSIS_LABELS } from "../lib/core-analysis-labels";
+import { AI_PROMPT_GROUPS, type AiPromptGroup } from "@openlaw/shared";
+import { AI_PROMPT_GROUP_LABELS, AI_PROMPT_LABELS } from "../lib/core-analysis-labels";
 import { useFieldCommit } from "../lib/field-commit";
 import { SettingsCard } from "./settings-card";
 import { StatusNote } from "./status-note";
@@ -24,7 +31,7 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
   const intl = useIntl();
   const [draft, setDraft] = useState(prompt.prompt);
   const { status, error, commit, commitText, revertText } = useFieldCommit<Slug>();
-  const label = intl.formatMessage(CORE_ANALYSIS_LABELS[prompt.slug]);
+  const label = intl.formatMessage(AI_PROMPT_LABELS[prompt.slug]);
   const inputId = `ai-field-prompt-${prompt.slug}`;
 
   function take(updated: Prompt) {
@@ -125,7 +132,36 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
   );
 }
 
+/** What each section is for, said once under its heading. */
+function GroupHint({ group }: { group: AiPromptGroup }) {
+  switch (group) {
+    case "rules":
+      return (
+        <FormattedMessage
+          id="settings.aiAnalysis.prompts.group.rulesHint"
+          defaultMessage="Sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list."
+        />
+      );
+    case "conversion":
+      return (
+        <FormattedMessage
+          id="settings.aiAnalysis.prompts.group.conversionHint"
+          defaultMessage="The values every Conversion draft proposes beside the target type's Fields. {placeholder} is replaced with Matter or Contract."
+          values={{ placeholder: <code>{"{module}"}</code> }}
+        />
+      );
+    case "analysis":
+      return (
+        <FormattedMessage
+          id="settings.aiAnalysis.prompts.group.analysisHint"
+          defaultMessage="The seven built-in Contract values every Analysis run extracts."
+        />
+      );
+  }
+}
+
 export function AiFieldPromptsCard({ initialPrompts }: Readonly<{ initialPrompts: Prompt[] }>) {
+  const intl = useIntl();
   const [prompts, setPrompts] = useState(initialPrompts);
 
   function adopt(updated: Prompt) {
@@ -134,16 +170,29 @@ export function AiFieldPromptsCard({ initialPrompts }: Readonly<{ initialPrompts
 
   return (
     <SettingsCard
-      title={
-        <FormattedMessage id="settings.aiAnalysis.prompts.title" defaultMessage="Field prompts" />
-      }
+      title={<FormattedMessage id="settings.aiAnalysis.prompts.title" defaultMessage="Prompts" />}
       flush
     >
-      <ul className="divide-y divide-border-default">
-        {prompts.map((prompt) => (
-          <PromptRow key={prompt.slug} prompt={prompt} adopt={adopt} />
-        ))}
-      </ul>
+      {AI_PROMPT_GROUPS.map((group) => {
+        const rows = prompts.filter((prompt) => prompt.group === group);
+        if (rows.length === 0) return null;
+        const heading = intl.formatMessage(AI_PROMPT_GROUP_LABELS[group]);
+        return (
+          <section key={group} aria-label={heading} className="border-t border-border-default">
+            <div className="flex flex-col gap-1 px-4 pt-3">
+              <h3 className="text-sm font-semibold text-primary">{heading}</h3>
+              <p className="text-sm text-muted">
+                <GroupHint group={group} />
+              </p>
+            </div>
+            <ul className="divide-y divide-border-default">
+              {rows.map((prompt) => (
+                <PromptRow key={prompt.slug} prompt={prompt} adopt={adopt} />
+              ))}
+            </ul>
+          </section>
+        );
+      })}
       <p className="border-t border-border-default px-4 py-3 text-sm text-muted">
         <FormattedMessage
           id="settings.aiAnalysis.prompts.catalogPointer"
