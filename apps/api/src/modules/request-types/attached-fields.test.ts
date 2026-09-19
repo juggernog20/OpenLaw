@@ -19,7 +19,18 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, asc, eq, fields, inArray, requestTypeFields, users } from "@openlaw/db";
+import {
+  activityLog,
+  and,
+  asc,
+  eq,
+  fields,
+  inArray,
+  requestTypeFields,
+  users,
+  contractTypes,
+  sql,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -121,13 +132,21 @@ const listAttached = async (typeId: string): Promise<AttachedFieldRow[]> => {
   return res.json().attachedFields;
 };
 
-const attach = async (typeId: string, payload: Record<string, unknown>) =>
-  harness.app.inject({
+const attach = async (typeId: string, payload: Record<string, unknown>) => {
+  if (payload.alsoAttachToTarget && !("expectedTarget" in payload)) {
+    const type = (await listTypes()).find((row) => row.id === typeId)!;
+    payload = {
+      ...payload,
+      expectedTarget: { module: type.targetModule ?? "contract", typeId: type.targetTypeId ?? "" },
+    };
+  }
+  return harness.app.inject({
     method: "POST",
     url: `/api/v1/request-types/${typeId}/fields`,
     cookies: adminCookies,
     payload,
   });
+};
 
 const detach = async (typeId: string, fieldId: string) =>
   harness.app.inject({
@@ -990,6 +1009,89 @@ describe("attaching to the default destination type in the same act (INT-002, 20
     expect(onArchived.statusCode, onArchived.body).toBe(409);
     expect(onArchived.json().detail).toBe("Companion retired is archived. Restore it first.");
     expect(await listAttached(pointed.id)).toEqual([]);
+  });
+
+  it("refuses a changed destination without attaching to either type", async () => {
+    const oldId = (await typeBySlug("nda_request")).targetTypeId!;
+    const made = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/contract-types",
+      cookies: adminCookies,
+      payload: { displayName: "Changed companion destination" },
+    });
+    expect(made.statusCode, made.body).toBe(201);
+    const newId = made.json().contractType.id;
+    const type = await addType("Changed companion");
+    await setTarget(type.id, { targetModule: "contract", targetTypeId: oldId });
+    const fieldId = await createField("Changed companion field", "contract");
+    await setTarget(type.id, { targetModule: "contract", targetTypeId: newId });
+    const before = (await attachmentAuditRows()).length;
+    const refused = await attach(type.id, {
+      fieldId,
+      alsoAttachToTarget: true,
+      expectedTarget: { module: "contract", typeId: oldId },
+    });
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    expect(refused.json().detail).toContain("destination changed");
+    expect(await listAttached(type.id)).toEqual([]);
+    for (const id of [oldId, newId])
+      expect((await listTargetFields("contract", id)).some((row) => row.fieldId === fieldId)).toBe(
+        false,
+      );
+    expect(await attachmentAuditRows()).toHaveLength(before);
+  });
+
+  it("waits for the destination before locking the Field during competing attachments", async () => {
+    const targetId = (await typeBySlug("nda_request")).targetTypeId!;
+    const type = await addType("Concurrent companion");
+    await setTarget(type.id, { targetModule: "contract", targetTypeId: targetId });
+    const fieldId = await createField("Concurrent companion field", "contract");
+    let companion: ReturnType<typeof attach> | undefined;
+    let direct: ReturnType<typeof attach> | undefined;
+    try {
+      await harness.db.transaction(async (tx) => {
+        const holding = await tx.execute(sql`select pg_backend_pid()::int as pid`);
+        const holder = Number(holding.rows[0]?.pid);
+        await tx.select().from(contractTypes).where(eq(contractTypes.id, targetId)).for("update");
+        companion = attach(type.id, {
+          fieldId,
+          alsoAttachToTarget: true,
+          expectedTarget: { module: "contract", typeId: targetId },
+        });
+        await expect
+          .poll(
+            async () => {
+              const waiting = await harness.db.execute(
+                sql`select count(*)::int as waiting from pg_stat_activity where ${holder} = any(pg_blocking_pids(pid))`,
+              );
+              return Number(waiting.rows[0]?.waiting ?? 0);
+            },
+            { timeout: 10000 },
+          )
+          .toBeGreaterThan(0);
+        // A companion waiting for this Type must not already own the Field.
+        await tx.execute(sql`select id from fields where id = ${fieldId} for update nowait`);
+        direct = Promise.resolve(
+          harness.app.inject({
+            method: "POST",
+            url: `/api/v1/contract-types/${targetId}/fields`,
+            cookies: adminCookies,
+            payload: { fieldId },
+          }),
+        );
+      });
+      const first = await companion!;
+      const second = await direct!;
+      expect(first.statusCode, first.body).toBe(201);
+      expect([201, 409]).toContain(second.statusCode);
+      expect(
+        (await listTargetFields("contract", targetId)).filter((row) => row.fieldId === fieldId),
+      ).toHaveLength(1);
+      expect((await listAttached(type.id)).map((row) => row.fieldId)).toEqual([fieldId]);
+    } finally {
+      await Promise.allSettled([companion, direct]);
+    }
   });
 
   it("is this mount's alone: a contract type's attach neither reads nor answers the member", async () => {

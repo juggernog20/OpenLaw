@@ -128,6 +128,7 @@ interface EditorCalls {
   attached: unknown[];
   /** Whether each attach asked for the default destination type too. */
   alsoAttach: boolean[];
+  expectedTargets: unknown[];
   detached: string[];
 }
 
@@ -209,12 +210,14 @@ function editorApi(
       return json(200, { fields: CATALOG });
     }
     if (path === `/api/v1/request-types/${row.id}/fields` && call.method === "POST") {
-      const { fieldId, alsoAttachToTarget } = call.body as {
+      const { fieldId, alsoAttachToTarget, expectedTarget } = call.body as {
         fieldId: string;
         alsoAttachToTarget?: boolean;
+        expectedTarget?: unknown;
       };
       calls.attached.push(fieldId);
       calls.alsoAttach.push(alsoAttachToTarget === true);
+      calls.expectedTargets.push(expectedTarget);
       const field = CATALOG.find((candidate) => candidate.id === fieldId)!;
       return json(201, {
         attachedField: {
@@ -245,7 +248,13 @@ function editorApi(
   };
 }
 
-const newCalls = (): EditorCalls => ({ patches: [], attached: [], alsoAttach: [], detached: [] });
+const newCalls = (): EditorCalls => ({
+  patches: [],
+  attached: [],
+  alsoAttach: [],
+  expectedTargets: [],
+  detached: [],
+});
 
 const openEditor = (extra: ReturnType<typeof editorApi>) => {
   stubApi({ signedIn: ADMIN, extra });
@@ -499,6 +508,7 @@ describe("the offer to attach to the default destination type too (INT-002, 2026
     await user.click(within(dialog).getByRole("button", { name: "Attach to both" }));
     await waitFor(() => expect(calls.attached).toEqual(["f-law"]));
     expect(calls.alsoAttach).toEqual([true]);
+    expect(calls.expectedTargets).toEqual([{ module: "contract", typeId: "ct-nda" }]);
     expect(
       await screen.findByText("Governing law attached to the form and to NDA."),
     ).toBeInTheDocument();

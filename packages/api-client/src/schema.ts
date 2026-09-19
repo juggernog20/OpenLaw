@@ -18620,6 +18620,11 @@ export interface operations {
           fieldId: string;
           isRequired?: boolean;
           alsoAttachToTarget?: boolean;
+          expectedTarget?: {
+            /** @enum {string} */
+            module: "contract" | "matter";
+            typeId: string;
+          };
         };
       };
     };

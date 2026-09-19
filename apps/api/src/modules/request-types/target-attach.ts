@@ -46,12 +46,7 @@ import {
   type TypeFieldTargetAttachRule,
 } from "../../lib/type-field-routes.js";
 
-async function attachToTarget(
-  tx: Transaction,
-  type: RequestType,
-  field: Field,
-  actorId: string,
-): Promise<TargetAttachment> {
+async function lockedTarget(tx: Transaction, type: RequestType) {
   const module: "contract" | "matter" | null =
     type.targetModule === "contract" || type.targetModule === "matter" ? type.targetModule : null;
   const typeId = module === "contract" ? type.targetContractTypeId : type.targetMatterTypeId;
@@ -61,19 +56,6 @@ async function attachToTarget(
       "This request type has no default destination type, so there is no type to attach the field to.",
     );
   }
-  if (field.builtInKey) {
-    throw httpError(
-      400,
-      `${field.displayName} is a default field. It is already part of every record and carries on its own.`,
-    );
-  }
-  if (field.moduleScope !== module) {
-    throw httpError(
-      400,
-      `${field.displayName} is ${field.moduleScope}-scoped and cannot be attached to a ${module} type.`,
-    );
-  }
-
   const typesTable = module === "contract" ? contractTypes : matterTypes;
   const joinTable = module === "contract" ? contractTypeFields : matterTypeFields;
   const [target] = await tx
@@ -87,6 +69,29 @@ async function attachToTarget(
   }
   if (target.archivedAt) {
     throw httpError(409, `${target.displayName} is archived. Restore it first.`);
+  }
+
+  return { module, target, joinTable };
+}
+
+async function attachToTarget(
+  tx: Transaction,
+  type: RequestType,
+  field: Field,
+  actorId: string,
+): Promise<TargetAttachment> {
+  const { module, target, joinTable } = await lockedTarget(tx, type);
+  if (field.builtInKey) {
+    throw httpError(
+      400,
+      `${field.displayName} is a default field. It is already part of every record and carries on its own.`,
+    );
+  }
+  if (field.moduleScope !== module) {
+    throw httpError(
+      400,
+      `${field.displayName} is ${field.moduleScope}-scoped and cannot be attached to a ${module} type.`,
+    );
   }
 
   const answer: Omit<TargetAttachment, "attached"> = {
@@ -114,5 +119,16 @@ async function attachToTarget(
 
 export const requestTypeTargetAttach: TypeFieldTargetAttachRule<RequestType> = {
   summary: "the request type's default destination type (INT-002)",
+  async lock(tx, type, expected) {
+    await lockedTarget(tx, type);
+    const typeId =
+      type.targetModule === "contract" ? type.targetContractTypeId : type.targetMatterTypeId;
+    if (type.targetModule !== expected.module || typeId !== expected.typeId) {
+      throw httpError(
+        409,
+        "The default destination changed. Check the destination and attach the field again.",
+      );
+    }
+  },
   run: attachToTarget,
 };

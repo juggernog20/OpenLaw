@@ -127,6 +127,12 @@ export interface TypeFieldTargetAttachRule<TRow extends TaxonomyRow = TaxonomyRo
   /** The attach summary's fragment, e.g. `the request type's default
    * destination type (INT-002)`. */
   summary: string;
+  /** Lock and validate the confirmed destination before locking the shared Field. */
+  lock(
+    tx: Transaction,
+    type: TRow,
+    expected: { module: "contract" | "matter"; typeId: string },
+  ): Promise<void>;
   run(tx: Transaction, type: TRow, field: Field, actorId: string): Promise<TargetAttachment>;
 }
 
@@ -272,10 +278,19 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
     typeDisplayName: z.string(),
     attached: z.boolean(),
   });
+  const ExpectedTargetSchema = z.object({
+    module: z.enum(["contract", "matter"]),
+    typeId: z.string(),
+  });
   const AttachBodySchema = z.object({
     fieldId: z.string(),
     isRequired: z.boolean().optional(),
-    ...(targetAttach ? { alsoAttachToTarget: z.boolean().optional() } : {}),
+    ...(targetAttach
+      ? {
+          alsoAttachToTarget: z.boolean().optional(),
+          expectedTarget: ExpectedTargetSchema.optional(),
+        }
+      : {}),
   });
   const AttachedFieldEnvelope = z.object({ attachedField: AttachedFieldSchema });
   /** The attach route's own envelope: the row, plus the target's side
@@ -376,9 +391,17 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
       async (request, reply) => {
         const isRequired = request.body.isRequired ?? false;
         const alsoAttachToTarget =
-          (request.body as { alsoAttachToTarget?: boolean }).alsoAttachToTarget === true;
+          "alsoAttachToTarget" in request.body && request.body.alsoAttachToTarget === true;
         const { row, alsoAttachedTo } = await app.db.transaction(async (tx) => {
           const type = await lockedType(tx, request.params.id);
+          if (targetAttach && alsoAttachToTarget) {
+            const expected =
+              "expectedTarget" in request.body ? request.body.expectedTarget : undefined;
+            const confirmed = ExpectedTargetSchema.safeParse(expected);
+            if (!confirmed.success)
+              throw httpError(400, "Confirm the destination type before attaching to both.");
+            await targetAttach.lock(tx, type as TRow, confirmed.data);
+          }
           const [field] = await tx
             .select()
             .from(fields)

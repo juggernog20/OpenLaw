@@ -176,7 +176,12 @@ const EDITOR_API: TypeEditorApi = {
     const result = await api
       .POST("/api/v1/request-types/{id}/fields", {
         params: { path: { id } },
-        body: { fieldId, ...(options?.alsoAttachToTarget ? { alsoAttachToTarget: true } : {}) },
+        body: {
+          fieldId,
+          ...(options?.alsoAttachToTarget
+            ? { alsoAttachToTarget: true, expectedTarget: options.expectedTarget }
+            : {}),
+        },
       })
       .catch(() => undefined);
     return {
@@ -268,12 +273,22 @@ const OFFER_MESSAGES = defineMessages({
  * goes on.
  */
 async function targetLacks(
-  destination: Destination,
+  requestTypeId: string,
   types: readonly DestinationType[],
   field: EditorCatalogRow,
 ): Promise<TargetOffer | null> {
+  const current = await api.GET("/api/v1/request-types/{id}", {
+    params: { path: { id: requestTypeId } },
+  });
+  const destination = current.data?.requestType;
+  if (!destination) return null;
   const { targetModule, targetTypeId } = destination;
-  if (!targetModule || !targetTypeId || field.builtInKey) return null;
+  if (
+    (targetModule !== "contract" && targetModule !== "matter") ||
+    !targetTypeId ||
+    field.builtInKey
+  )
+    return null;
   const type = types.find((candidate) => candidate.id === targetTypeId);
   if (!type || type.archivedAt) return null;
   const result =
@@ -286,7 +301,7 @@ async function targetLacks(
           .catch(() => undefined);
   const attached = result?.data?.attachedFields;
   if (!attached || attached.some((row) => row.fieldId === field.id)) return null;
-  return { module: targetModule, typeDisplayName: type.displayName };
+  return { module: targetModule, typeId: targetTypeId, typeDisplayName: type.displayName };
 }
 
 function DestinationControl({
@@ -557,9 +572,9 @@ export function SettingsRequestTypeEditorPage() {
   });
   const scopes = attachableScopes(destination.targetModule);
   const identity: EditorTypeRow = requestType;
-  const destinationTypes = destination.targetModule === "contract" ? contractTypes : matterTypes;
+  const destinationTypes = [...contractTypes, ...matterTypes];
   const targetOffer: TypeEditorTargetOffer = {
-    check: (field) => targetLacks(destination, destinationTypes, field),
+    check: (field) => targetLacks(requestType.id, destinationTypes, field),
     ...OFFER_MESSAGES,
   };
   return (

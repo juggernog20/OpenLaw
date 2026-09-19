@@ -31940,6 +31940,19 @@
                   },
                   "alsoAttachToTarget": {
                     "type": "boolean"
+                  },
+                  "expectedTarget": {
+                    "type": "object",
+                    "properties": {
+                      "module": {
+                        "type": "string",
+                        "enum": ["contract", "matter"]
+                      },
+                      "typeId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["module", "typeId"]
                   }
                 },
                 "required": ["fieldId"]

@@ -163,6 +163,7 @@ export interface AttachOptions {
   /** Attach the same field to the type's default destination type in
    * the same act. Only a mount with a `targetOffer` ever sends it. */
   alsoAttachToTarget?: boolean;
+  expectedTarget?: { module: "contract" | "matter"; typeId: string };
 }
 
 /** The target's side of a companion attach, as the route answers it. */
@@ -250,6 +251,7 @@ export type TypeEditorMessages = TypeEditorIdentityMessages & TypeEditorAttachme
 
 /** One offer the card puts to the Administrator before an attach. */
 export interface TargetOffer {
+  typeId: string;
   module: "contract" | "matter";
   typeDisplayName: string;
 }
@@ -450,11 +452,17 @@ function AttachedFieldsCard({
    * waits for the answer. "cancel" is Esc or the overlay: the attach
    * is not made, and nothing is reported, because nothing was asked.
    */
-  async function askTargetOffer(field: EditorCatalogRow): Promise<"both" | "form" | "cancel"> {
+  async function askTargetOffer(field: EditorCatalogRow): Promise<TargetOffer | "form" | "cancel"> {
     if (!targetOffer) return "form";
     const offer = await targetOffer.check(field).catch(() => null);
     if (!offer) return "form";
-    return new Promise((answer) => setPendingOffer({ field, offer, answer }));
+    return new Promise((resolve) =>
+      setPendingOffer({
+        field,
+        offer,
+        answer: (choice) => resolve(choice === "both" ? offer : choice),
+      }),
+    );
   }
 
   async function attach(field: EditorCatalogRow) {
@@ -463,7 +471,16 @@ function AttachedFieldsCard({
     setAttachStatus("saving");
     setAttachError(undefined);
     const { data, detail } = await api
-      .attach(typeId, field.id, choice === "both" ? { alsoAttachToTarget: true } : undefined)
+      .attach(
+        typeId,
+        field.id,
+        typeof choice === "object"
+          ? {
+              alsoAttachToTarget: true,
+              expectedTarget: { module: choice.module, typeId: choice.typeId },
+            }
+          : undefined,
+      )
       .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
     if (data) {
       const { alsoAttachedTo, ...row } = data;
