@@ -100,6 +100,8 @@ To walk through SMTP setup in the wizard, stop the loop and run `pnpm dev:hot --
 
 `dev:hot` (including `--fresh`) and `dev:down` use the rootless Podman socket at `$XDG_RUNTIME_DIR/podman/podman.sock` when available, falling back to `/run/user/$(id -u)` when `XDG_RUNTIME_DIR` is unset. Explicit `DOCKER_HOST` or `DOCKER_CONTEXT` settings take precedence; without either setting or a Podman socket, Docker's CLI default applies. The selected connection is printed before setup. Direct Compose commands such as `dev:infra` and `stack` still need `DOCKER_HOST` exported when using Podman, so they reach the same containers.
 
+The two engines keep separate database volumes under the same name. The Podman one holds the seeded Helix instance that the tests and CI expect. Root Docker holds a personal instance. `pnpm dev:hot:w` and `pnpm dev:down:w` pin `DOCKER_HOST` to `/var/run/docker.sock` and run the loop against that one. Both engines publish the same ports, so stop one loop before starting the other.
+
 Everything E2E and every milestone acceptance runs against the built Compose stack instead (TECH-018):
 
 ```sh

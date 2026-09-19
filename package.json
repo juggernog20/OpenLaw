@@ -14,6 +14,8 @@
     "dev:hot": "bash scripts/dev-hot.sh",
     "dev:stop": "bash scripts/dev-hot.sh --stop",
     "dev:down": "bash scripts/dev-hot.sh --down",
+    "dev:hot:w": "DOCKER_HOST=unix:///var/run/docker.sock bash scripts/dev-hot.sh",
+    "dev:down:w": "DOCKER_HOST=unix:///var/run/docker.sock bash scripts/dev-hot.sh --down",
     "dev:seeded": "bash scripts/dev-hot.sh --seed",
     "dev:infra": "docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml up -d postgres doc-engine mailpit",
     "dev:infra:down": "docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml stop postgres doc-engine mailpit",
