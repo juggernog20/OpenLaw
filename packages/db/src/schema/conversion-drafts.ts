@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Durable actor-scoped proposals before Request conversion (INT-008). */
 import { sql } from "drizzle-orm";
-import { check, index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import type { ConversionSuggestion, ConversionAttachmentRead } from "@openlaw/shared";
 import { uuidPk } from "./helpers.js";
 import { requests } from "./requests.js";
@@ -38,6 +47,15 @@ export const conversionDrafts = pgTable(
       .notNull()
       .default([]),
     failure: text("failure"),
+    /**
+     * The actor closed the Convert dialog while this draft was still
+     * pending and asked to hear when it finishes (INT-008 background
+     * addendum). Reopening the dialog clears it: they are watching again.
+     */
+    notifyWhenFinished: boolean("notify_when_finished").notNull().default(false),
+    /** When the finished notice was written, so the worker and the notice
+     * route cannot both write one. */
+    notifiedAt: timestamp("notified_at", { withTimezone: true }),
     leaseAt: timestamp("lease_at", { withTimezone: true }),
     startedAt: timestamp("started_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

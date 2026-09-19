@@ -377,7 +377,7 @@ The Administrator-configured credentials one e-signature provider is reached wit
 _Avoid_: DocuSign integration, e-sign settings, signing provider (that is the code seam behind the connector, not the configuration)
 
 **Conversion draft**:
-An actor-scoped, editable proposal prepared from a Request before a person submits the Convert dialog. It holds suggested values and source citations, creates no Matter or Contract, and does not disposition the Request. Unchanged accepted suggestions become Unverified values; edits and confirmations are human. It is distinct from an Analysis run, which records what an extraction already did [INT-008].
+An actor-scoped, editable proposal prepared from a Request before a person submits the Convert dialog. It holds suggested values and source citations, creates no Matter or Contract, and does not disposition the Request. Unchanged accepted suggestions become Unverified values; edits and confirmations are human. It is distinct from an Analysis run, which records what an extraction already did. Preparation runs in the worker and survives the dialog closing; a person who closes the dialog while it is pending gets a bell item when it is ready or failed, linking back into the Convert dialog [INT-008].
 _Avoid_: Analysis run (for a before-creation proposal), preparation run
 
 **AI connector**:

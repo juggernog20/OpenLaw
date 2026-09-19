@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /** Durable Request conversion preparation with leased work and current-source checks (INT-008). */
 import { isOpenRequestStatus } from "@openlaw/shared";
-import { and, conversionDrafts, eq, isNull, lt, or, sql, users, type Db } from "@openlaw/db";
+import {
+  and,
+  conversionDrafts,
+  eq,
+  isNull,
+  lt,
+  or,
+  requests,
+  sql,
+  users,
+  type Db,
+} from "@openlaw/db";
 import type { ConversionSuggestion } from "@openlaw/shared";
 import {
   checkedSuggestion,
@@ -17,17 +28,89 @@ import type { AiResolver } from "../lib/ai/resolver.js";
 import { aiPreparationFailure, AiProviderError, AiResponseError } from "../lib/ai/provider.js";
 import type { PipelineLogger } from "./logger.js";
 import type { JobQueue } from "./jobs.js";
+import type { Notifier, NotifyingTransaction } from "../lib/notifications/notifier.js";
 
-export async function handleConversionDraft(
-  deps: {
-    db: Db;
-    resolveAiProvider: AiResolver;
-    storage: StorageAdapter;
-    docEngine: DocEngine;
-    log?: PipelineLogger;
-  },
+export interface ConversionDraftDeps {
+  db: Db;
+  resolveAiProvider: AiResolver;
+  storage: StorageAdapter;
+  docEngine: DocEngine;
+  /** The finished notice goes through the seam, in the transaction that
+   * settles the draft, so a draft is never settled without its notice or
+   * noticed without being settled. */
+  notifier: Notifier;
+  log?: PipelineLogger;
+}
+
+/**
+ * Tells the actor a draft they stopped watching has finished, once.
+ *
+ * Both the worker (as it settles the draft) and the notice route (when
+ * the actor leaves after the draft already finished) call this. The
+ * conditional `notified_at` write is what makes it once: the row lock
+ * serialises the two, and the second finds the column set and writes
+ * nothing. A draft still pending, or one nobody left, is not told about.
+ */
+export async function noticeFinishedConversionDraft(
+  tx: NotifyingTransaction,
+  notifier: Notifier,
+  draft: typeof conversionDrafts.$inferSelect,
+): Promise<boolean> {
+  if (draft.state === "pending" || !draft.notifyWhenFinished || draft.notifiedAt) return false;
+  // A draft that failed because its Request was dispositioned meanwhile
+  // is not news: the person who left it converted or resolved the
+  // Request themselves, or watched somebody else do it.
+  const [row] = await tx
+    .select({ status: requests.status })
+    .from(requests)
+    .where(eq(requests.id, draft.requestId));
+  if (!row || !isOpenRequestStatus(row.status)) return false;
+  const [claimed] = await tx
+    .update(conversionDrafts)
+    .set({ notifiedAt: new Date() })
+    .where(
+      and(
+        eq(conversionDrafts.id, draft.id),
+        eq(conversionDrafts.notifyWhenFinished, true),
+        isNull(conversionDrafts.notifiedAt),
+      ),
+    )
+    .returning({ id: conversionDrafts.id });
+  if (!claimed) return false;
+  await notifier.conversionDraftFinished(tx, {
+    requestId: draft.requestId,
+    actorId: draft.actorId,
+    draftId: draft.id,
+    targetModule: draft.targetModule,
+    outcome: draft.state,
+  });
+  return true;
+}
+
+/** Settles a leased draft as ready or failed and raises its notice. */
+async function settleConversionDraft(
+  deps: ConversionDraftDeps,
   id: string,
+  startedAt: Date,
+  patch: Partial<typeof conversionDrafts.$inferInsert> & { state: "ready" | "failed" },
 ) {
+  await deps.notifier.notifying(async (tx) => {
+    const [settled] = await tx
+      .update(conversionDrafts)
+      .set({ ...patch, finishedAt: new Date() })
+      .where(
+        and(
+          eq(conversionDrafts.id, id),
+          eq(conversionDrafts.state, "pending"),
+          eq(conversionDrafts.startedAt, startedAt),
+        ),
+      )
+      .returning();
+    if (settled) await noticeFinishedConversionDraft(tx, deps.notifier, settled);
+  });
+}
+
+export async function handleConversionDraft(deps: ConversionDraftDeps, id: string) {
   const now = new Date();
   const [draft] = await deps.db
     .update(conversionDrafts)
@@ -131,25 +214,15 @@ export async function handleConversionDraft(
       !(await preparationEnabled(deps.db, draft.targetModule))
     )
       throw new Error("changed");
-    await deps.db
-      .update(conversionDrafts)
-      .set({
-        state: "ready",
-        suggestions,
-        attachmentReads,
-        conflicts,
-        warnings: context.warnings,
-        model: provider.model,
-        finishedAt: new Date(),
-        failure: null,
-      })
-      .where(
-        and(
-          eq(conversionDrafts.id, id),
-          eq(conversionDrafts.state, "pending"),
-          eq(conversionDrafts.startedAt, now),
-        ),
-      );
+    await settleConversionDraft(deps, id, now, {
+      state: "ready",
+      suggestions,
+      attachmentReads,
+      conflicts,
+      warnings: context.warnings,
+      model: provider.model,
+      failure: null,
+    });
   } catch (error) {
     deps.log?.warn(
       {
@@ -164,22 +237,12 @@ export async function handleConversionDraft(
       },
       "Request conversion preparation failed",
     );
-    await deps.db
-      .update(conversionDrafts)
-      .set({
-        state: "failed",
-        failure: aiPreparationFailure(error),
-        suggestions: {},
-        conflicts: {},
-        finishedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(conversionDrafts.id, id),
-          eq(conversionDrafts.state, "pending"),
-          eq(conversionDrafts.startedAt, now),
-        ),
-      );
+    await settleConversionDraft(deps, id, now, {
+      state: "failed",
+      failure: aiPreparationFailure(error),
+      suggestions: {},
+      conflicts: {},
+    });
   } finally {
     clearInterval(heartbeat);
   }

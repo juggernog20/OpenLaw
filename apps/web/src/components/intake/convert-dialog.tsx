@@ -7,7 +7,7 @@ import { identifierLabel } from "../../lib/identifier-label";
 import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
 import { ConversionEvidence } from "./conversion-evidence";
 import { DescriptionSourceToggle, RequesterDescription } from "./description-source-toggle";
-import type { ConversionDraft } from "./prepared-convert-dialog";
+import { noticeWhenFinished, type ConversionDraft } from "./prepared-convert-dialog";
 import { api } from "../../lib/api";
 import { AiField } from "../ui/ai-field";
 import { useEffect, useRef, useState } from "react";
@@ -137,10 +137,20 @@ export function ConvertDialog({
   const [initialDraft, setInitialDraft] = useState(suppliedDraft);
   const suggestions = initialDraft?.suggestions ?? {};
   const pendingRead = useRef<AbortController | null>(null);
+  /** A re-targeted draft still being waited on (INT-008). Read once, on
+   * unmount, to ask for the finished notice; cleared when it settles,
+   * when the suggestions are discarded, and when the Request converts. */
+  const pendingDraft = useRef<string | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [preparationFailed, setPreparationFailed] = useState(false);
   const [preparationFailure, setPreparationFailure] = useState<string | null>(null);
-  useEffect(() => () => pendingRead.current?.abort(), []);
+  useEffect(
+    () => () => {
+      pendingRead.current?.abort();
+      if (pendingDraft.current) noticeWhenFinished(request.number, pendingDraft.current);
+    },
+    [request.number],
+  );
   const [human, setHuman] = useState<Set<string>>(new Set());
   const [dropped, setDropped] = useState(false);
   const humanRef = useRef(human);
@@ -272,6 +282,7 @@ export function ConvertDialog({
   function dropPreparedValues() {
     setShowRequesterDescription(false);
     pendingRead.current?.abort();
+    pendingDraft.current = null;
     setPreparing(false);
     setPreparationFailed(false);
     setPreparationFailure(null);
@@ -340,6 +351,7 @@ export function ConvertDialog({
       if (!result.data) throw new Error("unavailable");
       let next: ConversionDraft = result.data.draft;
       while (next.state === "pending" && !controller.signal.aborted) {
+        pendingDraft.current = next.id;
         noteProgress(next);
         await new Promise<void>((resolve) => {
           const finish = () => {
@@ -359,6 +371,7 @@ export function ConvertDialog({
         next = read.data.draft;
       }
       if (controller.signal.aborted) return;
+      pendingDraft.current = null;
       if (next.state === "failed") setPreparationFailure(next.failure);
       if (next.state !== "ready" || next.targetModule !== module || next.targetTypeId !== typeId)
         throw new Error("unavailable");
@@ -587,6 +600,8 @@ export function ConvertDialog({
       ...(drawsNeededBy && neededBy !== "" ? { neededBy } : {}),
     });
     if (result.ok) {
+      // The Request is decided; a late draft is nothing to be told about.
+      pendingDraft.current = null;
       const record = result.request.convertedRecord;
       if (record) {
         await attachments.upload({ entityType: record.module, number: record.number }, onClose);

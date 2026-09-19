@@ -330,6 +330,41 @@ function staffRequestMail(
           "The comment is on the request.",
         ].join("\n"),
       };
+    case "request.conversion_draft_finished": {
+      // Opt-in through group 4, and addressed to the one person who asked
+      // for the draft and then closed the dialog (INT-008). The link
+      // reopens the Convert dialog for the module they were converting
+      // to, so the draft is one click from being reviewed.
+      const module = detail(notification, "targetModule");
+      const convertLink =
+        module === "matter" || module === "contract" ? `${link}?convert=${module}` : link;
+      if (detail(notification, "outcome") === "ready") {
+        return {
+          to,
+          subject: `Conversion draft ready: ${named}`,
+          text: [
+            hello,
+            "",
+            `The conversion draft you asked for on ${named} is ready to review.`,
+            "",
+            convertLink,
+          ].join("\n"),
+        };
+      }
+      return {
+        to,
+        subject: `Conversion draft could not finish: ${named}`,
+        text: [
+          hello,
+          "",
+          `The conversion draft you asked for on ${named} could not finish.`,
+          "",
+          convertLink,
+          "",
+          "Retry it from the Convert dialog, or continue manually.",
+        ].join("\n"),
+      };
+    }
     // A staff-side slug with no copy — a contract's group-1 or group-2
     // event on a Request row, which no build writes. `null` settles it
     // as skipped rather than improvising a message nobody wrote.

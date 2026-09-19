@@ -734,6 +734,43 @@ describe("the notification centre", () => {
     expect(link).toHaveAttribute("href", "/inbox/42");
   });
 
+  it("reopens the Convert dialog for a Conversion draft that finished after the reader left", async () => {
+    // The one staff Request arm with a query: the bell sends the reader
+    // back into the dialog for the module they were converting to, where
+    // the ready draft is one read away (INT-008).
+    const user = userEvent.setup();
+    bellApi({
+      unread: 1,
+      pages: {
+        first: {
+          notifications: [
+            item(1, {
+              eventType: "request.conversion_draft_finished",
+              entityType: "request",
+              entityId: "r1",
+              payload: {
+                requestNumber: 42,
+                requestTitle: "Review the Northwind supply redline",
+                draftId: "draft-1",
+                targetModule: "matter",
+                outcome: "ready",
+              },
+            }),
+          ],
+          nextCursor: null,
+        },
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("1 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    const link = within(centre).getByRole("link", {
+      name: /The Conversion draft for Review the Northwind supply redline is ready to review/,
+    });
+    expect(link).toHaveAttribute("href", "/inbox/42?convert=matter");
+  });
+
   it("deep-links a Task comment to its Task rather than the record's own thread", async () => {
     // A Task keeps its own conversation under the parent record's
     // access (CTR-017/MTR-005 Task detail addenda). The item is written

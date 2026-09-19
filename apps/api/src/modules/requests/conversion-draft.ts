@@ -33,6 +33,7 @@ import { attachmentDisposition, inlineDisposition } from "../../lib/uploads.js";
 import { boundedBytes } from "../../lib/conversion-attachments.js";
 import { reachedContract } from "../../lib/contract-access.js";
 import { boundedQueueAsk } from "../../pipeline/jobs.js";
+import { noticeFinishedConversionDraft } from "../../pipeline/conversion-draft.js";
 
 const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
 const DraftSchema = z.object({
@@ -162,10 +163,21 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
             failure: null,
             suggestions: {},
             conflicts: {},
+            notifyWhenFinished: false,
+            notifiedAt: null,
           })
           .where(and(eq(conversionDrafts.id, draft.id), eq(conversionDrafts.state, "failed")))
           .returning();
         draft = retried ?? draft;
+      } else if (draft.state === "pending" && draft.notifyWhenFinished) {
+        // The actor is watching again, so the bell owes them nothing.
+        // Leaving once more asks again.
+        const [watched] = await app.db
+          .update(conversionDrafts)
+          .set({ notifyWhenFinished: false })
+          .where(and(eq(conversionDrafts.id, draft.id), eq(conversionDrafts.state, "pending")))
+          .returning();
+        draft = watched ?? draft;
       }
       if (draft.state === "pending")
         await boundedQueueAsk(app.jobs.requestConversionDraft(draft.id)).catch(() => {});
@@ -218,6 +230,41 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
               failure: "The sources or settings changed. Retry or continue manually.",
             },
       };
+    },
+  );
+  app.post(
+    "/requests/:number/conversion-drafts/:draftId/notice",
+    {
+      preHandler: gate,
+      schema: {
+        operationId: "noticeConversionDraft",
+        params: params.extend({ draftId: z.string() }),
+        response: { 200: z.object({ ok: z.literal(true) }), default: problemResponse },
+      },
+    },
+    async (request) => {
+      // The actor closed the Convert dialog while the draft was pending.
+      // Preparation carries on in the worker regardless; what changes is
+      // that its finish now reaches the bell. A draft that finished in
+      // the moment between the close and this call is told about here,
+      // once, through the same claim the worker uses.
+      const row = await requestOf(app.db, request.params.number);
+      await app.notifier.notifying(async (tx) => {
+        const [draft] = await tx
+          .update(conversionDrafts)
+          .set({ notifyWhenFinished: true })
+          .where(
+            and(
+              eq(conversionDrafts.id, request.params.draftId),
+              eq(conversionDrafts.requestId, row.id),
+              eq(conversionDrafts.actorId, request.user.id),
+            ),
+          )
+          .returning();
+        if (!draft) throw httpError(404, "The Conversion draft is unavailable.");
+        await noticeFinishedConversionDraft(tx, app.notifier, draft);
+      });
+      return { ok: true as const };
     },
   );
   app.get(

@@ -447,6 +447,21 @@ export interface RequestAssignedEvent extends RequestEvent {
   assigneeId: string;
 }
 
+/**
+ * What a finished Conversion draft tells the person who asked for it
+ * (INT-008). Raised only for a draft its actor left running: they closed
+ * the Convert dialog while it was pending, so the bell is how they hear.
+ */
+export interface ConversionDraftFinishedEvent {
+  requestId: string;
+  /** The draft's actor — the whole audience. A draft is actor-scoped, so
+   * nobody else can open it. */
+  actorId: string;
+  draftId: string;
+  targetModule: "matter" | "contract";
+  outcome: "ready" | "failed";
+}
+
 export interface RequestStatusChangedEvent extends RequestEvent {
   /** The lifecycle either side of the move. A fixed enum, because code
    * branches on it (INT-001 as revised by INT-007) — unlike a contract's
@@ -537,6 +552,13 @@ export interface Notifier {
    * previous one.
    */
   requestAssigned(tx: NotifyingTransaction, event: RequestAssignedEvent): Promise<void>;
+  /** INT-008: a Conversion draft its actor stopped watching has finished
+   * — group 4, bell on and email opt-in (NOT-002). The actor is the whole
+   * audience; the worker that finished it is not a person to exclude. */
+  conversionDraftFinished(
+    tx: NotifyingTransaction,
+    event: ConversionDraftFinishedEvent,
+  ): Promise<void>;
   /** CTR-026 group 1 tells the added person. Adding yourself is silent. */
   contractTeamAdded(tx: NotifyingTransaction, event: ContractTeamAddedEvent): Promise<void>;
   ownerAssigned(tx: NotifyingTransaction, event: OwnerAssignedEvent): Promise<void>;
@@ -1445,6 +1467,34 @@ export function createNotifier(deps: NotifierDeps): Notifier {
               requestTitle: audience.title,
               actorId: event.actorId,
               actorName: event.actorName,
+            },
+          },
+        ],
+      );
+    },
+
+    async conversionDraftFinished(
+      tx: NotifyingTransaction,
+      event: ConversionDraftFinishedEvent,
+    ): Promise<void> {
+      const audience = await requestAudience(tx, event.requestId);
+      if (!audience) return;
+      await fanOut(
+        tx,
+        "request.conversion_draft_finished",
+        { type: REQUEST_ENTITY, id: event.requestId },
+        // No actor: the worker finished it, and the person who asked is
+        // exactly who the item is for.
+        null,
+        [
+          {
+            userId: event.actorId,
+            payload: {
+              requestNumber: audience.requestNumber,
+              requestTitle: audience.title,
+              draftId: event.draftId,
+              targetModule: event.targetModule,
+              outcome: event.outcome,
             },
           },
         ],

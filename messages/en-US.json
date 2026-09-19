@@ -3119,6 +3119,9 @@
   "conversion.preparingHint": {
     "defaultMessage": "The provider reads the Request and its attachments. A long attachment can take a few minutes."
   },
+  "conversion.preparingLeave": {
+    "defaultMessage": "You can close this and keep working. Preparation continues, and a notification tells you when the draft is ready."
+  },
   "conversion.previousPassage": {
     "defaultMessage": "Previous passage"
   },
@@ -7069,6 +7072,9 @@
   },
   "notifications.request.assigned": {
     "defaultMessage": "{actor} assigned you to triage {request}"
+  },
+  "notifications.request.conversionDraftFinished": {
+    "defaultMessage": "{outcome, select, ready {The Conversion draft for {request} is ready to review} other {The Conversion draft for {request} could not finish}}"
   },
   "notifications.request.created": {
     "defaultMessage": "Legal has received your request {request}"
