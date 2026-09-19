@@ -329,7 +329,12 @@ test.describe.serial("M19 demo path", () => {
       await expect(formFields.getByRole("listitem")).toHaveCount(5);
       expect(await formFields.getByRole("checkbox", { checked: true }).count()).toBe(4);
 
-      // Attach two Contract fields from the catalog.
+      // Keep these attachments on the form, leaving the shared NDA Type unchanged.
+      const destinationFields = await page.request.get(
+        `/api/v1/contract-types/${ndaType!.id}/fields`,
+      );
+      expect(destinationFields.status(), await destinationFields.text()).toBe(200);
+      const onDestination = AttachedFields.parse(await destinationFields.json()).attachedFields;
       for (const fieldName of [FIRST_FIELD, SECOND_FIELD]) {
         const attached = page.waitForResponse(
           (response) =>
@@ -338,6 +343,10 @@ test.describe.serial("M19 demo path", () => {
         );
         await page.getByRole("button", { name: "Attach field" }).click();
         await page.getByRole("menuitem", { name: new RegExp(fieldName) }).click();
+        if (!onDestination.some((field) => field.displayName === fieldName)) {
+          const offer = page.getByRole("dialog", { name: `Attach ${fieldName} to NDA too?` });
+          await offer.getByRole("button", { name: "Form only" }).click();
+        }
         expect((await attached).ok()).toBe(true);
         await expect(page.getByRole("button", { name: `Detach ${fieldName}` })).toBeVisible();
       }
