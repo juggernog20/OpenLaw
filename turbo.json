@@ -1,5 +1,5 @@
 {
-  "$schema": "https://turborepo.com/schema.json",
+  "$schema": "https://v2-11-2.turborepo.dev/schema.json",
   // Files outside every package that a task's output still depends on.
   // `styles/` is here because apps/web's entry imports it across the
   // package boundary (`apps/web/src/main.tsx` -> `../../../styles/globals.css`),
