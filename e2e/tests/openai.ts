@@ -14,6 +14,7 @@
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
+import { z } from "zod";
 
 export const DEMO_CONTRACT_LINES = [
   "M31 SERVICES AGREEMENT",
@@ -55,6 +56,44 @@ const CANNED_EXTRACTION = {
     evidence: "The primary Counterparty is Northstar Systems LLC.",
   },
 } as const;
+
+const ExtractionRequest = z.object({
+  response_format: z.object({
+    json_schema: z.object({
+      schema: z.object({
+        properties: z.record(
+          z.string(),
+          z.object({
+            properties: z.object({ sourceId: z.object({ enum: z.array(z.string()) }).optional() }),
+          }),
+        ),
+      }),
+    }),
+  }),
+});
+
+function extractionReply(body: unknown) {
+  const { properties } = ExtractionRequest.parse(body).response_format.json_schema.schema;
+  return Object.fromEntries(
+    Object.entries(properties).map(([slug, schema]) => {
+      const canned = Object.hasOwn(CANNED_EXTRACTION, slug)
+        ? CANNED_EXTRACTION[slug as keyof typeof CANNED_EXTRACTION]
+        : undefined;
+      const sourceId = canned ? (schema.properties.sourceId?.enum.find(Boolean) ?? "") : "";
+      return [
+        slug,
+        {
+          value: canned?.value ?? null,
+          evidence: canned?.evidence ?? "",
+          sourceId,
+          citations: sourceId && canned ? [{ sourceId, quote: canned.evidence }] : [],
+          conflict: false,
+          justification: "",
+        },
+      ];
+    }),
+  );
+}
 
 interface ChatRequest {
   model?: unknown;
@@ -229,7 +268,7 @@ export class OpenAiStub {
       this.#extractionCount += 1;
       this.#noteExtraction();
       await this.#extractionReleased;
-      reply = JSON.stringify(CANNED_EXTRACTION);
+      reply = JSON.stringify(extractionReply(body));
     } else {
       sendJson(response, 422, {
         error: { message: "The stand-in does not know this Contract text." },
