@@ -1148,19 +1148,19 @@ describe("the record's own id-valued and slug-valued changes", () => {
 describe("core prompt narration", () => {
   it("names the target in the AI analysis pane's words", () => {
     expect(narrate("ai_field_prompt.updated", { slug: "effective_date" }).sentence).toBe(
-      "Nadia Counsel changed the analysis prompt for Effective date",
+      "Nadia Counsel changed the AI prompt for Effective date",
     );
     expect(narrate("ai_field_prompt.reset", { slug: "counterparty" }).sentence).toBe(
-      "Nadia Counsel reset the analysis prompt for Counterparty to its default",
+      "Nadia Counsel reset the AI prompt for Counterparty to its default",
     );
   });
 
   it("uses readable words when the pane has no label and names a missing one plainly", () => {
     expect(narrate("ai_field_prompt.updated", { slug: "governing_law" }).sentence).toBe(
-      "Nadia Counsel changed the analysis prompt for Governing law",
+      "Nadia Counsel changed the AI prompt for Governing law",
     );
     expect(narrate("ai_field_prompt.reset", {}).sentence).toBe(
-      "Nadia Counsel reset the analysis prompt for a field to its default",
+      "Nadia Counsel reset the AI prompt for a field to its default",
     );
   });
 });

@@ -2783,7 +2783,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: FilePen,
     message: defineMessage({
       id: "activity.aiFieldPrompt.updated",
-      defaultMessage: "{actor} changed the analysis prompt for {target}",
+      defaultMessage: "{actor} changed the AI prompt for {target}",
     }),
     values: (intl, payload) => ({ target: coreTarget(intl, payload) }),
   },
@@ -2791,7 +2791,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: Undo2,
     message: defineMessage({
       id: "activity.aiFieldPrompt.reset",
-      defaultMessage: "{actor} reset the analysis prompt for {target} to its default",
+      defaultMessage: "{actor} reset the AI prompt for {target} to its default",
     }),
     values: (intl, payload) => ({ target: coreTarget(intl, payload) }),
   },

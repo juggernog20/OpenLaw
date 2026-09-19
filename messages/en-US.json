@@ -72,10 +72,10 @@
     "defaultMessage": "{actor} changed the AI connector {provider}"
   },
   "activity.aiFieldPrompt.reset": {
-    "defaultMessage": "{actor} reset the analysis prompt for {target} to its default"
+    "defaultMessage": "{actor} reset the AI prompt for {target} to its default"
   },
   "activity.aiFieldPrompt.updated": {
-    "defaultMessage": "{actor} changed the analysis prompt for {target}"
+    "defaultMessage": "{actor} changed the AI prompt for {target}"
   },
   "activity.applet": {
     "defaultMessage": "History"
