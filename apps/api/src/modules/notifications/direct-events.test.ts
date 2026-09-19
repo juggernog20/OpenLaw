@@ -614,6 +614,8 @@ describe("being asked again after a rejection (CTR-012)", () => {
     // answered, so nothing about it is still on that person's plate.
     const contract = await newContract("Direct · asked twice");
     const first = await ask(contract, idOf(TARGET));
+    // Rejection can revoke the approver's access before the queued email is delivered.
+    await mailAbout(TARGET, contract);
     await reject(first, TARGET);
 
     const afterRejection = await bellFor(TARGET, contract);
