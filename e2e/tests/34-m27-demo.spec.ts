@@ -165,7 +165,7 @@ test.describe.serial("M27 deployer journey", () => {
       await expect(
         obligationRow.getByRole("cell", { name: OBLIGATION_LABEL, exact: true }),
       ).toBeVisible();
-      await expect(obligationRow).toContainText("Every 12 months");
+      await expect(obligationRow.getByRole("cell", { name: "12", exact: true })).toBeVisible();
 
       await page.goto("/entities?view=list");
       const subsidiaryRow = page.getByRole("row").filter({ hasText: SUBSIDIARY_NAME });
