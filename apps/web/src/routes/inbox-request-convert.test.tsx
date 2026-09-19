@@ -1903,6 +1903,33 @@ describe("Matter Conversion drafts", () => {
     expect(notices).toHaveLength(1);
   });
 
+  it("still requests a completion notice after a poll fails", async () => {
+    const user = userEvent.setup();
+    const base = preparedApi(true);
+    const notices: string[] = [];
+    open({
+      ...base,
+      handler: (call: StubCall) => {
+        if (call.url.pathname.endsWith("/notice") && call.method === "POST") {
+          notices.push(call.url.pathname);
+          return json(200, { ok: true });
+        }
+        if (call.url.pathname.endsWith("/conversion-drafts/draft-1") && call.method === "GET") {
+          return problem(503, "Temporarily unavailable");
+        }
+        return base.handler(call);
+      },
+    });
+    await openDisposition(user, "Convert to matter");
+    expect(
+      await screen.findByText("Preparation could not finish. Retry or continue manually."),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() =>
+      expect(notices).toEqual(["/api/v1/requests/45/conversion-drafts/draft-1/notice"]),
+    );
+  });
+
   it("opens the Convert dialog from the bell's convert link", async () => {
     const api = preparedApi(true);
     stubApi({ signedIn: MEMBER, extra: api.handler });

@@ -70,7 +70,7 @@ export function PreparedConvertDialog({
       if (controller.signal.aborted) return true;
       if (!next || next.state === "failed") {
         clearTimeout(deadlineTimer);
-        pendingDraft.current = null;
+        if (next?.state === "failed") pendingDraft.current = null;
         setFailure(next?.failure ?? null);
         setFailed(true);
         return true;
