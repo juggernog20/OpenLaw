@@ -8478,7 +8478,7 @@
     "defaultMessage": "Contracts → Fields"
   },
   "settings.aiAnalysis.prompts.catalogPointer": {
-    "defaultMessage": "Catalog Fields keep their own analysis prompts in {fields}."
+    "defaultMessage": "Custom Fields keep their own analysis prompts in {fields}."
   },
   "settings.aiAnalysis.prompts.conversion.counterparty": {
     "defaultMessage": "Counterparty"
@@ -8496,19 +8496,19 @@
     "defaultMessage": "Title"
   },
   "settings.aiAnalysis.prompts.group.analysis": {
-    "defaultMessage": "Contract analysis fields"
+    "defaultMessage": "Contract analysis prompts"
   },
   "settings.aiAnalysis.prompts.group.analysisHint": {
     "defaultMessage": "The seven built-in Contract values every Analysis run extracts."
   },
   "settings.aiAnalysis.prompts.group.conversion": {
-    "defaultMessage": "Request conversion"
+    "defaultMessage": "Matter and Contract conversion prompts"
   },
   "settings.aiAnalysis.prompts.group.conversionHint": {
     "defaultMessage": "The values every Conversion draft proposes beside the target type's Fields. {placeholder} is replaced with Matter or Contract."
   },
   "settings.aiAnalysis.prompts.group.rules": {
-    "defaultMessage": "Rules for every AI run"
+    "defaultMessage": "System prompts"
   },
   "settings.aiAnalysis.prompts.group.rulesHint": {
     "defaultMessage": "Sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list."
@@ -8536,9 +8536,6 @@
   },
   "settings.aiAnalysis.prompts.rules.unsupported": {
     "defaultMessage": "Missing and unsupported values"
-  },
-  "settings.aiAnalysis.prompts.title": {
-    "defaultMessage": "Prompts"
   },
   "settings.aiAnalysis.protocol": {
     "defaultMessage": "Protocol"

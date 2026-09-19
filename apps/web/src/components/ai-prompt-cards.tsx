@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Prompts card (DES-070; CTR-008, M31/5; widened on 2026-09-19): every
- * editable prompt in three sections. The shared rules every AI run
- * carries, the Conversion draft's built-in targets, and the seven core
- * Contract analysis targets. Each row saves on its own and resets to
- * the built-in text on its own; a change reaches the next run.
+ * The prompt cards (DES-070; CTR-008, M31/5; split on 2026-09-19): one
+ * collapsible settings card per prompt group, each on DES-054's
+ * disclosure header and closed on arrival. System prompts hold the
+ * shared rules every AI run carries; Matter and Contract conversion
+ * prompts hold the Conversion draft's built-in targets; Contract analysis prompts hold
+ * the seven core targets. Each row saves on its own and resets to the
+ * built-in text on its own; a change reaches the next run.
  */
 
 import { AutoResizeTextarea } from "./auto-resize-textarea";
@@ -132,7 +134,7 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
   );
 }
 
-/** What each section is for, said once under its heading. */
+/** What each card is for, said once under its header. */
 function GroupHint({ group }: { group: AiPromptGroup }) {
   switch (group) {
     case "rules":
@@ -160,8 +162,29 @@ function GroupHint({ group }: { group: AiPromptGroup }) {
   }
 }
 
-export function AiFieldPromptsCard({ initialPrompts }: Readonly<{ initialPrompts: Prompt[] }>) {
-  const intl = useIntl();
+/** Where a catalog Field's own prompt lives; only the analysis card says it. */
+function CatalogPointer() {
+  return (
+    <p className="border-t border-border-default px-4 py-3 text-sm text-muted">
+      <FormattedMessage
+        id="settings.aiAnalysis.prompts.catalogPointer"
+        defaultMessage="Custom Fields keep their own analysis prompts in {fields}."
+        values={{
+          fields: (
+            <Link className="font-medium text-link hover:underline" to="/settings/contracts/fields">
+              <FormattedMessage
+                id="settings.aiAnalysis.prompts.catalogLink"
+                defaultMessage="Contracts → Fields"
+              />
+            </Link>
+          ),
+        }}
+      />
+    </p>
+  );
+}
+
+export function AiPromptCards({ initialPrompts }: Readonly<{ initialPrompts: Prompt[] }>) {
   const [prompts, setPrompts] = useState(initialPrompts);
 
   function adopt(updated: Prompt) {
@@ -169,49 +192,31 @@ export function AiFieldPromptsCard({ initialPrompts }: Readonly<{ initialPrompts
   }
 
   return (
-    <SettingsCard
-      title={<FormattedMessage id="settings.aiAnalysis.prompts.title" defaultMessage="Prompts" />}
-      flush
-    >
+    <>
       {AI_PROMPT_GROUPS.map((group) => {
         const rows = prompts.filter((prompt) => prompt.group === group);
         if (rows.length === 0) return null;
-        const heading = intl.formatMessage(AI_PROMPT_GROUP_LABELS[group]);
         return (
-          <section key={group} aria-label={heading} className="border-t border-border-default">
-            <div className="flex flex-col gap-1 px-4 pt-3">
-              <h3 className="text-sm font-semibold text-primary">{heading}</h3>
-              <p className="text-sm text-muted">
-                <GroupHint group={group} />
-              </p>
-            </div>
-            <ul className="divide-y divide-border-default">
+          <SettingsCard
+            key={group}
+            title={<FormattedMessage {...AI_PROMPT_GROUP_LABELS[group]} />}
+            collapsible
+            defaultOpen={false}
+            region
+            flush
+          >
+            <p className="px-4 py-3 text-sm text-muted">
+              <GroupHint group={group} />
+            </p>
+            <ul className="divide-y divide-border-default border-t border-border-default">
               {rows.map((prompt) => (
                 <PromptRow key={prompt.slug} prompt={prompt} adopt={adopt} />
               ))}
             </ul>
-          </section>
+            {group === "analysis" && <CatalogPointer />}
+          </SettingsCard>
         );
       })}
-      <p className="border-t border-border-default px-4 py-3 text-sm text-muted">
-        <FormattedMessage
-          id="settings.aiAnalysis.prompts.catalogPointer"
-          defaultMessage="Catalog Fields keep their own analysis prompts in {fields}."
-          values={{
-            fields: (
-              <Link
-                className="font-medium text-link hover:underline"
-                to="/settings/contracts/fields"
-              >
-                <FormattedMessage
-                  id="settings.aiAnalysis.prompts.catalogLink"
-                  defaultMessage="Contracts → Fields"
-                />
-              </Link>
-            ),
-          }}
-        />
-      </p>
-    </SettingsCard>
+    </>
   );
 }

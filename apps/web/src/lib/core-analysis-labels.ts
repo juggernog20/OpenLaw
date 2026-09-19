@@ -99,15 +99,15 @@ export const AI_PROMPT_LABELS: Readonly<Record<AiPromptSlug, MessageDescriptor>>
 export const AI_PROMPT_GROUP_LABELS: Readonly<Record<AiPromptGroup, MessageDescriptor>> = {
   rules: defineMessage({
     id: "settings.aiAnalysis.prompts.group.rules",
-    defaultMessage: "Rules for every AI run",
+    defaultMessage: "System prompts",
   }),
   conversion: defineMessage({
     id: "settings.aiAnalysis.prompts.group.conversion",
-    defaultMessage: "Request conversion",
+    defaultMessage: "Matter and Contract conversion prompts",
   }),
   analysis: defineMessage({
     id: "settings.aiAnalysis.prompts.group.analysis",
-    defaultMessage: "Contract analysis fields",
+    defaultMessage: "Contract analysis prompts",
   }),
 };
 

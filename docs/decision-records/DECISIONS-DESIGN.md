@@ -4448,6 +4448,20 @@ The reader carries the popover so nothing is lost by skipping it, and it stacks 
 
 The purple gradient frames the control that holds the value and nothing else: the input, select or textarea, the read-only value text when the record is frozen, or the unverified deadline's date cell on the Key dates card. It never frames the label, the Unverified pill, the confirm row, or a whole card. The Contract record's Title, Contract type, Priority and Description, and every Matter record value, were framing the whole field block; the Convert dialog already framed the control alone. `apps/web/src/components/ui/ai-field.tsx` is unchanged; the Matter field components take an `aiGenerated` flag and place the frame themselves.
 
+### Prompt cards addendum (2026-09-19)
+
+The Field prompts card grew on 2026-09-19 (CTR-008) into one card of three always-open sections: the shared rules, the Conversion draft's built-in targets, and the seven core targets. Seventeen textareas made it a 2,400px column, and it had lost the collapsed arrival this record gave it. Blair, on the running build: "Please separate out the system prompts and field prompts... and make the sections collapsible."
+
+**1. The sections are cards.** Three `SettingsCard`s follow Provider and the Request conversion switches: **System prompts** (the rules every AI run carries), **Matter and Contract conversion prompts** (the built-in Conversion targets), and **Contract analysis prompts** (the core targets). No card is titled "Prompts" any more.
+
+**2. Each is DES-054's disclosure, closed on arrival.** The header is the button, the chevron leads the name, the body is conditionally rendered, and the state does not persist. A nested disclosure inside one card was rejected: DES-054 has one disclosure anatomy in Settings, and it is the card's header.
+
+**3. Each card is a named region.** `region` is set so a reader who walks landmarks finds three prompt groups by name. No card title repeats a control's label, which is the case `SettingsCard`'s `region` note guards against.
+
+**4. The Contracts → Fields pointer belongs to the analysis card alone.** It answers where a catalog Field's own prompt lives, which is a Contract analysis question.
+
+`AiFieldPromptsCard` becomes `AiPromptCards`. The three group labels become the card titles; `settings.aiAnalysis.prompts.title` is gone. The M31 acceptance journey opens a card before it looks for a prompt.
+
 ## DES-071: A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)
 
 - **Status:** Accepted

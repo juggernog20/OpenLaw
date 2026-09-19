@@ -224,6 +224,11 @@ async function openProvider(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole("button", { name: "Provider", expanded: false }));
 }
 
+/** Every prompt card arrives closed (DES-054); its rows exist only once it is open. */
+async function openCard(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(await screen.findByRole("button", { name, expanded: false }));
+}
+
 describe("the AI analysis connector pane (#662)", () => {
   it("bounces a non-Administrator to their settings home", async () => {
     stubApi({ signedIn: MEMBER });
@@ -305,12 +310,13 @@ describe("the AI analysis connector pane (#662)", () => {
   });
 });
 
-describe("the Field prompts card (#665)", () => {
+describe("the prompt cards (#665)", () => {
   it("edits one prompt in place and trims it on commit", async () => {
     const user = userEvent.setup();
     const promptSaves: unknown[] = [];
     stubApi({ signedIn: ADMIN, extra: connectorApi({ promptSaves }) });
     renderAt("/settings/ai-analysis");
+    await openCard(user, "Contract analysis prompts");
 
     const input = await screen.findByLabelText("Effective date prompt");
     expect(input).toHaveValue(CORE_ANALYSIS_TARGETS[1].defaultPrompt);
@@ -331,6 +337,7 @@ describe("the Field prompts card (#665)", () => {
     const promptSaves: unknown[] = [];
     stubApi({ signedIn: ADMIN, extra: connectorApi({ promptSaves }) });
     renderAt("/settings/ai-analysis");
+    await openCard(user, "Contract analysis prompts");
 
     const input = await screen.findByLabelText("Effective date prompt");
     await user.clear(input);
@@ -368,6 +375,7 @@ describe("the Field prompts card (#665)", () => {
     );
     stubApi({ signedIn: ADMIN, extra: connectorApi({ prompts, promptSaves }) });
     renderAt("/settings/ai-analysis");
+    await openCard(user, "Contract analysis prompts");
 
     const reset = await screen.findByRole("button", {
       name: "Reset Effective date to default",
@@ -387,36 +395,53 @@ describe("the Field prompts card (#665)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("sits below Provider and points catalog Fields to Contracts → Fields", async () => {
+  it("is three closed cards below Provider, and only the analysis card points to Contracts → Fields", async () => {
+    const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi() });
     renderAt("/settings/ai-analysis");
 
     const provider = await screen.findByRole("heading", { level: 2, name: "Provider" });
-    const prompts = screen.getByRole("heading", { level: 2, name: "Prompts" });
-    expect(
-      provider.compareDocumentPosition(prompts) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    const names = [
+      "System prompts",
+      "Matter and Contract conversion prompts",
+      "Contract analysis prompts",
+    ];
+    let previous = provider;
+    for (const name of names) {
+      const heading = screen.getByRole("heading", { level: 2, name });
+      expect(
+        previous.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(screen.getByRole("button", { name, expanded: false })).toBeInTheDocument();
+      previous = heading;
+    }
+    // Closed cards keep their rows out of the document, not just out of view.
+    expect(screen.queryByRole("textbox", { name: /prompt$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Contracts → Fields" })).not.toBeInTheDocument();
+
+    await openCard(user, "Contract analysis prompts");
     expect(screen.getByRole("link", { name: "Contracts → Fields" })).toHaveAttribute(
       "href",
       "/settings/contracts/fields",
     );
+    await openCard(user, "System prompts");
+    expect(screen.getAllByRole("link", { name: "Contracts → Fields" })).toHaveLength(1);
   });
 
-  it("draws the shared rules and the conversion targets as their own sections, and saves one rule", async () => {
+  it("holds the shared rules and the conversion targets in their own cards, and saves one rule", async () => {
     const user = userEvent.setup();
     const promptSaves: unknown[] = [];
     stubApi({ signedIn: ADMIN, extra: connectorApi({ promptSaves }) });
     renderAt("/settings/ai-analysis");
+    await openCard(user, "System prompts");
+    await openCard(user, "Matter and Contract conversion prompts");
+    await openCard(user, "Contract analysis prompts");
 
-    const rules = await screen.findByRole("region", { name: "Rules for every AI run" });
-    const conversion = screen.getByRole("region", { name: "Request conversion" });
-    const analysis = screen.getByRole("region", { name: "Contract analysis fields" });
-    expect(
-      rules.compareDocumentPosition(conversion) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(
-      conversion.compareDocumentPosition(analysis) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    const rules = screen.getByRole("region", { name: "System prompts" });
+    const conversion = screen.getByRole("region", {
+      name: "Matter and Contract conversion prompts",
+    });
+    const analysis = screen.getByRole("region", { name: "Contract analysis prompts" });
     expect(within(rules).getAllByRole("textbox")).toHaveLength(5);
     expect(within(conversion).getAllByRole("textbox")).toHaveLength(5);
     expect(within(analysis).getAllByRole("textbox")).toHaveLength(7);

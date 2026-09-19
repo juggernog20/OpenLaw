@@ -39,21 +39,21 @@ The **Connected** badge means the connector is saved and enabled, even before a 
 
 ## Edit the prompts
 
-Open the **Prompts** card at the bottom of this page, below **Provider** and, after saving a connector, **Request conversion**. Use its three always-open sections:
+Three closed cards sit at the bottom of this page, below **Provider** and, after saving a connector, **Request conversion**. Select a card's title to open it. Each card opens on its own, and all three start closed on every visit.
 
-- **Rules for every AI run.** Edit the shared paragraphs sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list. Set rules for corrections and conflicts, justification, missing and unsupported values, text answers, and source scope. Use **Text answers** to control answer length: the default asks for one short sentence, such as "Neither party may assign other than to affiliates.", and leaves the provision's wording to the citations.
-- **Request conversion.** Edit the prompts for Title, Description, Priority, Needed by, and Counterparty, proposed alongside the target Type's Fields. Use `{module}` where the prompt should say Matter or Contract when the draft runs.
-- **Contract analysis fields.** Edit prompts for the seven built-in Contract values. For example, ask the notice-period prompt for the number of days stated in the fictional paper.
+- **System prompts.** Edit the shared paragraphs sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list. Set rules for corrections and conflicts, justification, missing and unsupported values, text answers, and source scope. Use **Text answers** to control answer length: the default asks for one short sentence, such as "Neither party may assign other than to affiliates.", and leaves the provision's wording to the citations.
+- **Matter and Contract conversion prompts.** Edit the prompts for Title, Description, Priority, Needed by, and Counterparty, proposed alongside the target Type's Fields. Use `{module}` where the prompt should say Matter or Contract when the draft runs.
+- **Contract analysis prompts.** Edit prompts for the seven built-in Contract values. For example, ask the notice-period prompt for the number of days stated in the fictional paper.
 
 Press Enter or leave the input to save that prompt, and wait for its save result. Shift+Enter inserts a line break. Press Escape to restore the saved text. Each prompt is required and can contain up to 2,000 characters. If you clear a prompt and leave the input, the saved text comes back. For an overridden prompt, **Reset to default** restores that one built-in prompt.
 
-The output-format instructions are not on the card. They tell the model how to shape its JSON reply and which source ids to cite, and OpenLaw depends on them to read the answer. Field prompts only need to describe what to extract and any field-specific interpretation; they do not need to repeat the shared rules.
+The output-format instructions are not on any card. They tell the model how to shape its JSON reply and which source ids to cite, and OpenLaw depends on them to read the answer. Field prompts only need to describe what to extract and any field-specific interpretation; they do not need to repeat the shared rules.
 
 Prompt changes affect subsequent Analysis runs and Conversion drafts. They do not rewrite earlier results or confirm an existing **Unverified** value. Rerun deliberately after editing a prompt and review the resulting evidence.
 
 ## Add a catalog Field to Analysis
 
-1. Follow **Contracts → Fields** from the prompt card, or open that Settings destination directly.
+1. Follow **Contracts → Fields** from the **Contract analysis prompts** card, or open that Settings destination directly.
 2. Create or edit a Field whose **Scope** is Contract. Enter its **AI prompt** to describe the value to extract, then save the Field. Use [Fields and Type configuration](types-statuses-fields.md) for the catalog controls.
 3. Attach the active Field to the Contract Type used by your test Contract.
 4. Run Analysis on that Contract and check the Field's result and its saved value.
