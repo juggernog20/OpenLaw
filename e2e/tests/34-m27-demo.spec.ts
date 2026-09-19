@@ -161,9 +161,11 @@ test.describe.serial("M27 deployer journey", () => {
       const addedObligation = await obligationResponse;
       expect(addedObligation.status(), await addedObligation.text()).toBe(201);
       obligationId = CreatedObligation.parse(await addedObligation.json()).obligation.id;
+      const obligationRow = main(page).getByRole("row").filter({ hasText: OBLIGATION_LABEL });
       await expect(
-        main(page).getByRole("textbox", { name: `${OBLIGATION_LABEL} label` }),
-      ).toHaveValue(OBLIGATION_LABEL);
+        obligationRow.getByRole("cell", { name: OBLIGATION_LABEL, exact: true }),
+      ).toBeVisible();
+      await expect(obligationRow.getByRole("cell", { name: "12", exact: true })).toBeVisible();
 
       await page.goto("/entities?view=list");
       const subsidiaryRow = page.getByRole("row").filter({ hasText: SUBSIDIARY_NAME });
