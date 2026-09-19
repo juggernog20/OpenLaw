@@ -4994,29 +4994,11 @@
   "entities.record.obligations.emptyHint": {
     "defaultMessage": "Add the first due date when it is known."
   },
-  "entities.record.obligations.fileOneOff": {
-    "defaultMessage": "Filing this completes the one-off obligation."
-  },
-  "entities.record.obligations.fileRecurring": {
-    "defaultMessage": "Filing this moves forward {months, plural, one {# month} other {# months}} from the current due date until the next due date is after the filing date."
-  },
-  "entities.record.obligations.filedOn": {
-    "defaultMessage": "Filed {date}"
-  },
-  "entities.record.obligations.filedOnField": {
-    "defaultMessage": "Filed on"
-  },
   "entities.record.obligations.label": {
     "defaultMessage": "Label"
   },
   "entities.record.obligations.markComplete": {
     "defaultMessage": "Mark complete"
-  },
-  "entities.record.obligations.markFiled": {
-    "defaultMessage": "Mark filed"
-  },
-  "entities.record.obligations.markFiledRow": {
-    "defaultMessage": "Mark {label} filed"
   },
   "entities.record.obligations.matter": {
     "defaultMessage": "Matter"
@@ -5036,9 +5018,6 @@
   "entities.record.obligations.registrationOption": {
     "defaultMessage": "{jurisdiction} · {registrationNumber}"
   },
-  "entities.record.obligations.remove": {
-    "defaultMessage": "Delete {label}"
-  },
   "entities.record.obligations.repeat": {
     "defaultMessage": "Repeat every (months)"
   },
@@ -5047,9 +5026,6 @@
   },
   "entities.record.obligations.rowActions": {
     "defaultMessage": "Actions for {label}"
-  },
-  "entities.record.obligations.rowField": {
-    "defaultMessage": "{label} {field}"
   },
   "entities.record.obligations.title": {
     "defaultMessage": "Obligations"
@@ -7298,9 +7274,6 @@
   "portal.autoDocs.yourDocuments": {
     "defaultMessage": "Your documents"
   },
-  "portal.brand": {
-    "defaultMessage": "OpenLaw"
-  },
   "portal.businessView.active": {
     "defaultMessage": "Viewing as business user"
   },
@@ -7811,6 +7784,9 @@
   "portal.request.bannerNew": {
     "defaultMessage": "Legal has received your request. You'll get an email when the status changes."
   },
+  "portal.request.bannerRead": {
+    "defaultMessage": "Your request has been opened by the Legal team."
+  },
   "portal.request.bannerResolved": {
     "defaultMessage": "Legal has answered this request and closed it."
   },
@@ -8121,10 +8097,10 @@
     "defaultMessage": "R-{number, number, ::group-off}"
   },
   "requests.requesterStatusLabel": {
-    "defaultMessage": "{status, select, new {Open} converted {In progress} resolved {Resolved} declined {Declined} other {Unknown}}"
+    "defaultMessage": "{status, select, new {Open} read {Read} converted {In progress} resolved {Resolved} declined {Declined} other {Unknown}}"
   },
   "requests.statusLabel": {
-    "defaultMessage": "{status, select, new {New} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
+    "defaultMessage": "{status, select, new {New} read {Read} converted {Converted} resolved {Resolved} declined {Declined} other {Unknown}}"
   },
   "resolve.explains": {
     "defaultMessage": "Explain why this request can be closed without creating a contract or matter."
@@ -8224,12 +8200,6 @@
   },
   "search.result.knowledgeDraft": {
     "defaultMessage": "Draft · Knowledge Item"
-  },
-  "search.result.ownedBy": {
-    "defaultMessage": "Owned by"
-  },
-  "search.result.version": {
-    "defaultMessage": "v{number}"
   },
   "search.searching": {
     "defaultMessage": "Searching…"
@@ -8439,7 +8409,7 @@
     "defaultMessage": "Off since {when}. Turn it on to make AI analysis available again."
   },
   "settings.aiAnalysis.enabled.on": {
-    "defaultMessage": "Turn this off to hide AI analysis without deleting the connector."
+    "defaultMessage": "Turn this off to disable AI analysis without deleting the connector."
   },
   "settings.aiAnalysis.intro": {
     "defaultMessage": "Connect your AI provider for Contract analysis and AI-assisted Request conversion. Relevant document text, Request answers, and conversations are sent to the provider when an AI task runs."
@@ -8462,9 +8432,6 @@
   "settings.aiAnalysis.models.failed": {
     "defaultMessage": "Models could not be loaded. Try again or enter the model ID manually."
   },
-  "settings.aiAnalysis.models.hint": {
-    "defaultMessage": "Enter the provider key and endpoint, if required, then load models. Loading does not save the connector or send Contract data."
-  },
   "settings.aiAnalysis.models.load": {
     "defaultMessage": "Load models"
   },
@@ -8486,11 +8453,17 @@
   "settings.aiAnalysis.models.search": {
     "defaultMessage": "Search models"
   },
-  "settings.aiAnalysis.models.testHint": {
-    "defaultMessage": "A listed model may not support Contract analysis. Save your choice and use Test connection before running an analysis."
-  },
   "settings.aiAnalysis.models.useList": {
     "defaultMessage": "Choose from list"
+  },
+  "settings.aiAnalysis.outputTokens": {
+    "defaultMessage": "Output token limit per API call"
+  },
+  "settings.aiAnalysis.outputTokensExact": {
+    "defaultMessage": "Exact output token limit"
+  },
+  "settings.aiAnalysis.outputTokensWarning": {
+    "defaultMessage": "Below {threshold, number} tokens, analyses are more likely to fail with incomplete responses, especially with reasoning models. This is a guideline; the tokens needed vary by model and document."
   },
   "settings.aiAnalysis.pageTitle": {
     "defaultMessage": "AI analysis"
