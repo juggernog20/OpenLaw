@@ -173,7 +173,7 @@ test.describe.serial("M25 deployer journey", () => {
 
       const answer = page.getByRole("listbox", { name: "Search results" });
       const hit = answer.getByRole("option").filter({ hasText: document.title });
-      await expect(hit).toContainText(SEARCH_PHRASE, { ignoreCase: true });
+      await expect(hit).toBeVisible();
       await hit.click();
 
       await expect(page).toHaveURL(new RegExp(`/contracts/${contract.number}/documents\\?`));
@@ -189,6 +189,13 @@ test.describe.serial("M25 deployer journey", () => {
       await expect(panel.getByRole("searchbox", { name: "Find in document" })).toHaveValue(
         SEARCH_PHRASE,
       );
+
+      await page.goto(`/search?${new URLSearchParams({ q: SEARCH_PHRASE })}`);
+      const fullResult = page
+        .getByRole("main")
+        .getByRole("link")
+        .filter({ hasText: document.title });
+      await expect(fullResult).toContainText(SEARCH_PHRASE, { ignoreCase: true });
     } finally {
       await cleanup();
     }
