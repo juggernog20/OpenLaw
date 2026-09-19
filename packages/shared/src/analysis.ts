@@ -154,7 +154,7 @@ export type AiPromptGroup = (typeof AI_PROMPT_GROUPS)[number];
  * Prompts card reads and writes them through one route.
  */
 export const AI_PROMPTS: readonly {
-  slug: string;
+  slug: AiPromptSlug;
   group: AiPromptGroup;
   defaultPrompt: string;
 }[] = [

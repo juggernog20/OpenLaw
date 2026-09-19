@@ -97,7 +97,7 @@ const DEFAULT_PROMPTS = AI_PROMPTS.map(({ slug, group, defaultPrompt }) => ({
   prompt: defaultPrompt,
   defaultPrompt,
   overridden: false,
-})) as PromptResponse["prompts"];
+})) satisfies PromptResponse["prompts"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
