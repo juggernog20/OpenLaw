@@ -1388,11 +1388,21 @@ it("tells the actor a draft they left finishes, once, and stays silent while the
     notifier: harness.notifier,
     resolveAiProvider: harness.resolveAiProvider,
   };
-  const bell = async () =>
-    harness.db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.eventType, "request.conversion_draft_finished"));
+  const bell = async (cookies = cast.memberCookies) => {
+    const response = await harness.app.inject({ url: "/api/v1/notifications", cookies });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.headers["content-type"]).toContain("application/json");
+    return response
+      .json<{
+        notifications: {
+          id: string;
+          entityId: string;
+          eventType: string;
+          payload: Record<string, unknown>;
+        }[];
+      }>()
+      .notifications.filter((item) => item.eventType === "request.conversion_draft_finished");
+  };
   const notice = (number: number, id: string, cookies = cast.memberCookies) =>
     harness.app.inject({
       method: "POST",
@@ -1414,9 +1424,14 @@ it("tells the actor a draft they left finishes, once, and stays silent while the
   await handleConversionDraft(deps, leftId);
   const items = await bell();
   expect(items).toHaveLength(1);
-  expect(items[0]!.userId).toBe(cast.memberId);
+  expect(await bell(cast.otherMemberCookies)).toHaveLength(0);
   expect(items[0]!.entityId).toBe(left.id);
-  expect(items[0]!.emailOwed).toBe(false);
+  // Email delivery state is internal and is not part of the bell response.
+  const [stored] = await harness.db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.id, items[0]!.id));
+  expect(stored!.emailOwed).toBe(false);
   expect(items[0]!.payload).toMatchObject({
     requestNumber: left.number,
     requestTitle: "Original ask",
@@ -1424,16 +1439,6 @@ it("tells the actor a draft they left finishes, once, and stays silent while the
     targetModule: "matter",
     outcome: "ready",
   });
-  // The item reaches the staff bell, addressed to the Convert dialog.
-  const feed = await harness.app.inject({
-    url: "/api/v1/notifications",
-    cookies: cast.memberCookies,
-  });
-  expect(feed.statusCode, feed.body).toBe(200);
-  expect(feed.json().notifications.some((item: { id: string }) => item.id === items[0]!.id)).toBe(
-    true,
-  );
-
   // Left after it had already finished: the route writes the item, and a
   // second leave does not write another.
   const late = await ask();
