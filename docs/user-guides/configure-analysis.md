@@ -39,11 +39,11 @@ The **Connected** badge means the connector is saved and enabled, even before a 
 
 ## Edit the prompts
 
-The **Prompts** card is the last card on this page. It sits below **Provider**, and below **Request conversion** after a connector is saved. It has no collapse control and is always open. It holds three sections.
+Open the **Prompts** card at the bottom of this page, below **Provider** and, after saving a connector, **Request conversion**. Use its three always-open sections:
 
-- **Rules for every AI run.** The shared paragraphs OpenLaw sends with every Contract analysis and every Conversion draft, after the fixed output-format instructions and before the field list. They cover corrections and conflicts, the justification, missing and unsupported values, text answers, and the scope of the sources. The **Text answers** rule asks for one short sentence that states the position, such as "Neither party may assign other than to affiliates.", and leaves the wording of the provision to the citations. Edit it if you want longer or shorter answers for text Fields.
-- **Request conversion.** The five values every Conversion draft proposes beside the target type's Fields: Title, Description, Priority, Needed by, and Counterparty. `{module}` in a prompt is replaced with Matter or Contract when the draft runs.
-- **Contract analysis fields.** The seven built-in Contract values every Analysis run extracts. Edit the prompt for the value you want to describe. For example, make a notice-period prompt ask for the number of days stated in the fictional paper.
+- **Rules for every AI run.** Edit the shared paragraphs sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list. Set rules for corrections and conflicts, justification, missing and unsupported values, text answers, and source scope. Use **Text answers** to control answer length: the default asks for one short sentence, such as "Neither party may assign other than to affiliates.", and leaves the provision's wording to the citations.
+- **Request conversion.** Edit the prompts for Title, Description, Priority, Needed by, and Counterparty, proposed alongside the target Type's Fields. Use `{module}` where the prompt should say Matter or Contract when the draft runs.
+- **Contract analysis fields.** Edit prompts for the seven built-in Contract values. For example, ask the notice-period prompt for the number of days stated in the fictional paper.
 
 Press Enter or leave the input to save that prompt, and wait for its save result. Shift+Enter inserts a line break. Press Escape to restore the saved text. Each prompt is required and can contain up to 2,000 characters. If you clear a prompt and leave the input, the saved text comes back. For an overridden prompt, **Reset to default** restores that one built-in prompt.
 

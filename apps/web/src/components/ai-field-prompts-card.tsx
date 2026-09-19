@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Prompts card (CTR-008, M31/5; widened on 2026-09-19): every
+ * The Prompts card (DES-070; CTR-008, M31/5; widened on 2026-09-19): every
  * editable prompt in three sections. The shared rules every AI run
  * carries, the Conversion draft's built-in targets, and the seven core
  * Contract analysis targets. Each row saves on its own and resets to
@@ -133,7 +133,7 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
 }
 
 /** What each section is for, said once under its heading. */
-function GroupHint({ group }: Readonly<{ group: AiPromptGroup }>) {
+function GroupHint({ group }: { group: AiPromptGroup }) {
   switch (group) {
     case "rules":
       return (
