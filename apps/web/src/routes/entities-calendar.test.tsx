@@ -284,11 +284,16 @@ describe("the Entities compliance calendar", () => {
         name: "Show completed",
       }),
     );
-    await waitFor(() => expect(queries.at(-1)?.get("includeCompleted")).toBe("true"));
+    await waitFor(() => {
+      expect(queries.at(-1)?.get("includeCompleted")).toBe("true");
+      expect(router.state.navigation.state).toBe("idle");
+    });
     const search = new URLSearchParams(router.state.location.search);
     expect(search.get("month")).toBe("2026-07");
     expect(search.get("calendar")).toBe("month");
-    expect(await screen.findByRole("heading", { name: "July 2026" })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "July 2026" })).toBeInTheDocument();
+    });
   });
 
   it("distinguishes a blank calendar from filters that match nothing", async () => {
