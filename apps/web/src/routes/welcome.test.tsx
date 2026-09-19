@@ -1451,6 +1451,7 @@ async function goToReviewStep(user: ReturnType<typeof userEvent.setup>) {
 }
 
 async function finishFromAiAnalysis(user: ReturnType<typeof userEvent.setup>) {
+  await screen.findByRole("heading", { name: "AI analysis" });
   await user.click(screen.getByRole("button", { name: "Continue" }));
   await user.click(await screen.findByRole("button", { name: "Finish" }));
 }
