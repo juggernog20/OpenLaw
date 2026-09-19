@@ -3039,7 +3039,7 @@ export interface paths {
     /** One request type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listRequestTypeFields"];
     put?: never;
-    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002) */
+    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002); alsoAttachToTarget attaches the same field to the request type's default destination type (INT-002) in the same transaction */
     post: operations["attachRequestTypeField"];
     delete?: never;
     options?: never;
@@ -18619,6 +18619,7 @@ export interface operations {
         "application/json": {
           fieldId: string;
           isRequired?: boolean;
+          alsoAttachToTarget?: boolean;
         };
       };
     };
@@ -18652,6 +18653,13 @@ export interface operations {
               displayOrder: number;
               isRequired: boolean;
             };
+            alsoAttachedTo: {
+              /** @enum {string} */
+              module: "contract" | "matter";
+              typeId: string;
+              typeDisplayName: string;
+              attached: boolean;
+            } | null;
           };
         };
       };

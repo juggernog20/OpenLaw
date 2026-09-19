@@ -31923,7 +31923,7 @@
       },
       "post": {
         "operationId": "attachRequestTypeField",
-        "summary": "Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002)",
+        "summary": "Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002); alsoAttachToTarget attaches the same field to the request type's default destination type (INT-002) in the same transaction",
         "tags": ["request-types"],
         "requestBody": {
           "required": true,
@@ -31936,6 +31936,9 @@
                     "type": "string"
                   },
                   "isRequired": {
+                    "type": "boolean"
+                  },
+                  "alsoAttachToTarget": {
                     "type": "boolean"
                   }
                 },
@@ -32015,9 +32018,36 @@
                         "isRequired"
                       ],
                       "additionalProperties": false
+                    },
+                    "alsoAttachedTo": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "module": {
+                              "type": "string",
+                              "enum": ["contract", "matter"]
+                            },
+                            "typeId": {
+                              "type": "string"
+                            },
+                            "typeDisplayName": {
+                              "type": "string"
+                            },
+                            "attached": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["module", "typeId", "typeDisplayName", "attached"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
-                  "required": ["attachedField"],
+                  "required": ["attachedField", "alsoAttachedTo"],
                   "additionalProperties": false
                 }
               }

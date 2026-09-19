@@ -100,6 +100,37 @@ export interface TypeFieldRequiredRule {
 }
 
 /**
+ * What a companion attach on the mount's target type answered (INT-002,
+ * 2026-09-19): which type it reached and whether this call put the
+ * field on it. `attached: false` means the target already had it, which
+ * is the outcome the caller wanted and so is not a refusal.
+ */
+export interface TargetAttachment {
+  module: "contract" | "matter";
+  typeId: string;
+  typeDisplayName: string;
+  attached: boolean;
+}
+
+/**
+ * A mount whose types point at another module's type may attach the
+ * same field there in the same transaction (INT-002, 2026-09-19).
+ * Request types are the one mount with a target, so they are the one
+ * mount that states this rule; the body gains `alsoAttachToTarget` and
+ * the envelope gains `alsoAttachedTo` only where the rule is stated.
+ *
+ * The rule runs after the mount's own attach has been written and under
+ * the same locks, so a refusal inside it rolls the form attach back
+ * with it: the Administrator asked for both, and gets both or neither.
+ */
+export interface TypeFieldTargetAttachRule<TRow extends TaxonomyRow = TaxonomyRow> {
+  /** The attach summary's fragment, e.g. `the request type's default
+   * destination type (INT-002)`. */
+  summary: string;
+  run(tx: Transaction, type: TRow, field: Field, actorId: string): Promise<TargetAttachment>;
+}
+
+/**
  * The mount's own type row.
  *
  * The machinery reads the shared taxonomy columns and nothing else, so
@@ -145,10 +176,38 @@ export interface TypeFieldRoutesConfig<TRow extends TaxonomyRow = TaxonomyRow> {
   requiredRule?: TypeFieldRequiredRule;
   /** DD-017 action prefix, e.g. `contract_type_field`. */
   actionPrefix: TypeFieldActionPrefix;
+  /**
+   * The companion attach on the type's target (INT-002, 2026-09-19).
+   * Omitted by a mount whose types point nowhere — the two record-side
+   * type editors omit it.
+   */
+  targetAttach?: TypeFieldTargetAttachRule<TRow>;
   /** The milestone that will hard-enforce `isRequired`, for a module
    * whose record does not exist yet. Omitted once it does, so the route
    * summary states the live rule rather than promising it. */
   requiredMilestone?: string;
+}
+
+/**
+ * Locks one type's attachments and answers the order a new one takes:
+ * one past the highest, archived fields' rows included, because their
+ * orders are still taken. `null` when the field is already on the type,
+ * which each caller reads as its own outcome — the attach route refuses
+ * it, the companion attach on a target type treats it as already done.
+ */
+export async function appendedOrder(
+  tx: Transaction,
+  joinTable: TypeFieldsTable,
+  typeId: string,
+  fieldId: string,
+): Promise<number | null> {
+  const existing = await tx
+    .select({ fieldId: joinTable.fieldId, displayOrder: joinTable.displayOrder })
+    .from(joinTable)
+    .where(eq(joinTable.typeId, typeId))
+    .for("update");
+  if (existing.some((candidate) => candidate.fieldId === fieldId)) return null;
+  return existing.reduce((top, candidate) => Math.max(top, candidate.displayOrder), 0) + 1;
 }
 
 /**
@@ -159,7 +218,7 @@ export interface TypeFieldRoutesConfig<TRow extends TaxonomyRow = TaxonomyRow> {
 export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
   config: TypeFieldRoutesConfig<TRow>,
 ): FastifyPluginAsyncZod {
-  const { typesTable, joinTable, path, noun, scopeRule, requiredRule } = config;
+  const { typesTable, joinTable, path, noun, scopeRule, requiredRule, targetAttach } = config;
 
   /**
    * The refusal for marking this field required on this mount, or
@@ -207,7 +266,25 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
     displayOrder: z.number().int(),
     isRequired: z.boolean(),
   });
+  const TargetAttachmentSchema = z.object({
+    module: z.enum(["contract", "matter"]),
+    typeId: z.string(),
+    typeDisplayName: z.string(),
+    attached: z.boolean(),
+  });
+  const AttachBodySchema = z.object({
+    fieldId: z.string(),
+    isRequired: z.boolean().optional(),
+    ...(targetAttach ? { alsoAttachToTarget: z.boolean().optional() } : {}),
+  });
   const AttachedFieldEnvelope = z.object({ attachedField: AttachedFieldSchema });
+  /** The attach route's own envelope: the row, plus the target's side
+   * where the mount states a companion rule. The PATCH keeps the plain
+   * envelope, because a required-flag change reaches no target. */
+  const AttachEnvelope = z.object({
+    attachedField: AttachedFieldSchema,
+    ...(targetAttach ? { alsoAttachedTo: TargetAttachmentSchema.nullable() } : {}),
+  });
   const AttachedFieldListEnvelope = z.object({ attachedFields: z.array(AttachedFieldSchema) });
 
   function toRow(join: TypeFieldRow, field: Field) {
@@ -286,16 +363,21 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
             `Attach a catalog field to a ${noun}: ${config.scopeSummary}, ` +
             "appended to the per-type order, optional from the start " +
             "unless isRequired says otherwise" +
-            (requiredRule ? `; ${requiredRule.summary}` : ""),
+            (requiredRule ? `; ${requiredRule.summary}` : "") +
+            (targetAttach
+              ? `; alsoAttachToTarget attaches the same field to ${targetAttach.summary} in the same transaction`
+              : ""),
           tags: [config.tag],
           params: z.object({ id: z.string() }),
-          body: z.object({ fieldId: z.string(), isRequired: z.boolean().optional() }),
-          response: { 201: AttachedFieldEnvelope, default: problemResponse },
+          body: AttachBodySchema,
+          response: { 201: AttachEnvelope, default: problemResponse },
         },
       },
       async (request, reply) => {
         const isRequired = request.body.isRequired ?? false;
-        const row = await app.db.transaction(async (tx) => {
+        const alsoAttachToTarget =
+          (request.body as { alsoAttachToTarget?: boolean }).alsoAttachToTarget === true;
+        const { row, alsoAttachedTo } = await app.db.transaction(async (tx) => {
           const type = await lockedType(tx, request.params.id);
           const [field] = await tx
             .select()
@@ -331,16 +413,10 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
 
           // The order appends after every existing attachment, including
           // ones whose fields are archived — their orders are still taken.
-          const existing = await tx
-            .select({ fieldId: joinTable.fieldId, displayOrder: joinTable.displayOrder })
-            .from(joinTable)
-            .where(eq(joinTable.typeId, type.id))
-            .for("update");
-          if (existing.some((candidate) => candidate.fieldId === field.id)) {
+          const displayOrder = await appendedOrder(tx, joinTable, type.id, field.id);
+          if (displayOrder === null) {
             throw httpError(409, `${field.displayName} is already attached to this type.`);
           }
-          const displayOrder =
-            existing.reduce((top, candidate) => Math.max(top, candidate.displayOrder), 0) + 1;
 
           const [created] = await tx
             .insert(joinTable)
@@ -353,9 +429,17 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
             visibility: "admin_only",
             payload: { typeSlug: type.slug, fieldSlug: field.slug, isRequired },
           });
-          return toRow(created!, field);
+          // The companion attach runs last, under the same locks, so a
+          // refusal in it takes the form attach down with it.
+          const alsoAttachedTo =
+            targetAttach && alsoAttachToTarget
+              ? await targetAttach.run(tx, type as TRow, field, request.user.id)
+              : null;
+          return { row: toRow(created!, field), alsoAttachedTo };
         });
-        return reply.status(201).send({ attachedField: row });
+        return reply
+          .status(201)
+          .send({ attachedField: row, ...(targetAttach ? { alsoAttachedTo } : {}) });
       },
     );
 
