@@ -83,7 +83,7 @@ export function AiSavedKeyControl({
               <p className="text-sm text-muted">
                 <FormattedMessage
                   id="settings.aiAnalysis.forgetBody"
-                  defaultMessage="Forget the Saved key for {provider} at {baseUrl}? You will need to paste a key to use this destination again."
+                  defaultMessage="Forget the Saved key for {provider} at {baseUrl}? Paste it again if you want to use it later."
                   values={{
                     provider: aiPresetLabel(intl, savedKey.preset),
                     baseUrl: savedKey.baseUrl,

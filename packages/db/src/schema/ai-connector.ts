@@ -73,6 +73,7 @@ export const aiConnector = pgTable(
     preset: text("preset", { enum: AI_PRESETS }).notNull(),
     protocol: text("protocol", { enum: AI_PROTOCOLS }).notNull(),
     baseUrl: text("base_url").notNull(),
+    /** The Saved key the connector sends; NULL means it sends none, as for keyless Ollama. */
     savedKeyId: text("saved_key_id").references(() => aiSavedKeys.id, { onDelete: "restrict" }),
     model: text("model").notNull(),
     maxOutputTokens: integer("max_output_tokens").notNull().default(32768),
