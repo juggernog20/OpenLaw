@@ -27,6 +27,8 @@ Loading models does not save settings, run inference, send Contract text or down
 | **Ollama**          | A running local service and an already available model following [Ollama's OpenAI compatibility instructions](https://docs.ollama.com/api/openai-compatibility). The preset uses `http://localhost:11434/v1` and does not require an API key.                                                                                        |
 | **Custom endpoint** | The endpoint's **Protocol**, **Base URL**, **API key**, and **Model**. Protocol choices are **Anthropic Messages**, **OpenAI-compatible chat completions**, and **Gemini**. Use an HTTP or HTTPS URL without embedded credentials; put the key in its own field.                                                                     |
 
+For Groq's `qwen/qwen3.8-27b`, set **Output token limit per API call** to 16,384 or lower before saving. [Groq's model reference](https://console.groq.com/docs/models) gives this model a 16,384-token completion limit, below OpenLaw's default of 32,768.
+
 For Ollama, `localhost` means the machine or container running each calling process. In the standard Compose deployment, the app and worker have separate loopback addresses; an Ollama service on the operator's host is not automatically reachable there. This preset has no Base URL control. The operator must arrange a reachable service for both processes, or configure a suitable **Custom endpoint**. The custom form requires an API key even when the chosen endpoint does not authenticate it. [Local Ollama itself does not require authentication](https://docs.ollama.com/api/authentication).
 
 ## Save and test

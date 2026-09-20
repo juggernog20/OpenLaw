@@ -614,6 +614,9 @@ still applies. A 400 reporting a JSON generation validation failure gets the
 existing correction retry and ends as a response failure if correction fails.
 An invalid key or model remains a configuration refusal.
 
+Qwen's completion limit is 16,384 tokens. An Administrator choosing it must lower
+the connector's output token limit from the 32,768 default to 16,384 or less.
+
 Use a Developer plan. The [free-plan limit](https://console.groq.com/docs/rate-limits)
 for the three strict-schema models is 8K tokens per minute. That cannot fit one
 Contract extraction with OpenLaw's default 32,768-token output allowance plus its

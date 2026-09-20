@@ -219,11 +219,15 @@ describe("Groq extraction recovery", () => {
   }
 
   it("repeats a refused schema in JSON object mode and keeps it for later extractions", async () => {
-    const server = await startServer("openai", (body) =>
-      (body.response_format as { type: string }).type === "json_schema"
+    const server = await startServer("openai", (body) => {
+      const format = body.response_format;
+      return format !== null &&
+        typeof format === "object" &&
+        "type" in format &&
+        format.type === "json_schema"
         ? "response_format json_schema is only available on supported models"
-        : null,
-    );
+        : null;
+    });
     try {
       const groq = provider(server.baseUrl);
       await expect(groq.extract(text, targets)).resolves.toEqual(expected);
