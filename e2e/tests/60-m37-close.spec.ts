@@ -80,7 +80,10 @@ test("M37: an Administrator chooses an Answer style and a Field override, reads 
     const prompts = page.getByRole("region", { name: "Contract analysis prompts", exact: true });
     const datePrompt = prompts.getByRole("textbox", { name: "Effective date prompt", exact: true });
     await expect(datePrompt).toHaveAccessibleDescription("Return a date as YYYY-MM-DD.");
-    const format = prompts.locator("#ai-field-prompt-effective_date-format");
+    const format = prompts
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("textbox", { name: "Effective date prompt", exact: true }) })
+      .getByText("Return a date as YYYY-MM-DD.", { exact: true });
     await expect(format).toBeVisible();
     await expect(format).toHaveClass(/text-muted/);
     await expect(format).toHaveJSProperty("tagName", "P");
