@@ -903,3 +903,11 @@ on Settings → Organization → AI analysis, under `conversion.*` slugs, and th
 paragraphs the draft's extraction carries are the card's `rules.*` rows. The mechanics and
 the reason are the CTR-008 implementation note of the same date in `DECISIONS-CONTRACTS.md`.
 Nothing about the draft's sources, bounds, or acceptance changes.
+
+### INT-008 addendum (2026-09-20) — the shared rules are code-owned
+
+The `rules.*` rows the 2026-09-19 addendum named are gone from the Prompts card. The rule
+paragraphs the draft's extraction carries are code-owned, and the Text answers paragraph is
+replaced by the per-Field answer style of Contract analysis. The draft's built-in targets keep
+their `conversion.*` rows and their own wording; the answer styles do not apply to them. The
+mechanics and the reason are the CTR-008 addendum of the same date in `DECISIONS-CONTRACTS.md`.
