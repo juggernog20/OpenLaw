@@ -832,6 +832,7 @@ export function stubApi(state: ApiState) {
       return json(200, {
         connector: {
           configured: saved !== undefined,
+          answerStyle: "sentence",
           enabled: saved?.enabled ?? saved !== undefined,
           preset: saved?.preset ?? null,
           protocol: saved?.protocol ?? null,

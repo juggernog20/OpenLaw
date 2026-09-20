@@ -42,6 +42,7 @@ export async function buildAnalysisTargets(
       .select({
         slug: fields.slug,
         prompt: fields.aiPrompt,
+        aiAnswerStyle: fields.aiAnswerStyle,
         type: fields.fieldType,
         options: fields.options,
       })
@@ -77,6 +78,7 @@ export async function buildAnalysisTargets(
     ...catalog.map((field) => ({
       slug: field.slug,
       prompt: field.prompt!,
+      aiAnswerStyle: field.aiAnswerStyle,
       type: field.type,
       options: field.options ?? null,
       core: false,

@@ -82,3 +82,44 @@ it("rolls back the whole migration after an earlier migration leaves autocommit 
     await db.$client.end();
   }
 });
+
+it("leaves existing Fields on Organisation default and constrains overrides", async () => {
+  const db = await freshDb(container, "field_answer_styles");
+  try {
+    await migrateThrough(db, "0153_ai-answer-style", migrationEntries());
+    await runMigrations(db);
+    expect((await db.execute(sql`select ai_answer_style from fields`)).rows.length).toBeGreaterThan(
+      0,
+    );
+    expect(
+      (await db.execute(sql`select ai_answer_style from fields where ai_answer_style is not null`))
+        .rows,
+    ).toEqual([]);
+    await db.execute(sql`insert into fields (id, slug, display_name, module_scope, field_type, field_tag, ai_answer_style)
+      values ('style-fixture', 'style_clause', 'Clause', 'contract', 'long_text', 'legal', 'full_clause')`);
+    for (const style of ["few_words", "sentence", "full_clause", null]) {
+      await db.execute(
+        sql`update fields set ai_answer_style = ${style} where slug = 'style_clause'`,
+      );
+    }
+    await expect(
+      db.execute(sql`update fields set ai_answer_style = 'invalid' where slug = 'style_clause'`),
+    ).rejects.toMatchObject({ cause: { code: "23514" } });
+    await expect(
+      db.execute(sql`update fields set ai_answer_style = 'full_clause' where field_type = 'text'`),
+    ).rejects.toMatchObject({ cause: { code: "23514" } });
+    await db.execute(
+      sql`update fields set ai_answer_style = 'sentence' where slug = 'style_clause'`,
+    );
+    for (const fieldType of ["number", "boolean", "user", "entity"]) {
+      await expect(
+        db.execute(sql`update fields set field_type = ${fieldType} where slug = 'style_clause'`),
+      ).rejects.toMatchObject({ cause: { code: "23514" } });
+    }
+    await expect(
+      db.execute(sql`update fields set module_scope = 'matter' where slug = 'style_clause'`),
+    ).rejects.toMatchObject({ cause: { code: "23514" } });
+  } finally {
+    await db.$client.end();
+  }
+});

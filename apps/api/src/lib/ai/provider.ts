@@ -19,6 +19,7 @@ export interface AiExtractionTarget {
   prompt: string;
   type?: FieldType | "term_type" | "integer" | "value" | "counterparty" | "key_dates";
   options?: readonly string[] | null;
+  aiAnswerStyle?: AiAnswerStyle | null;
   /** Conversion title and description do not use the Field answer style. */
   omitAnswerStyle?: boolean;
 }

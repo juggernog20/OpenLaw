@@ -1415,6 +1415,7 @@ const REVIEW_RESPONSES = {
         options: null,
         fieldTag: "business",
         aiPrompt: null,
+        aiAnswerStyle: null,
       },
     ],
   },

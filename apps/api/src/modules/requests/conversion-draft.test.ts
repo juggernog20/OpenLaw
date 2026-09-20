@@ -1568,3 +1568,80 @@ for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini
     },
   );
 }
+
+it("keeps Contract Field style overrides in conversion prompts and freshness checks", async () => {
+  const { contractTypes, contractTypeFields } = await import("@openlaw/db");
+  const [type] = await harness.db.select().from(contractTypes).limit(1);
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "conversion_style",
+      displayName: "Assignment",
+      fieldType: "long_text",
+      moduleScope: "contract",
+      fieldTag: "legal",
+      aiPrompt: "Extract the provision.",
+      aiAnswerStyle: "full_clause",
+    })
+    .returning();
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 100 });
+  const row = await ask();
+  const before = await conversionContext(harness.db, row.id, type!.id, false, "contract");
+  const target = before.targets.find((target) => target.slug === "field:conversion_style")!;
+  expect(extractionPrompt(before.sources, [target], "few_words")).toContain(
+    "- field:conversion_style: Assignment: Extract the provision. Return text up to 10000 characters. Quote the provision verbatim.\n",
+  );
+  await harness.db.update(aiConnector).set({ contractPreparation: true });
+  answers.title = {
+    value: "Prepared Contract",
+    sourceId: `request:${row.id}:title`,
+    evidence: "Original ask",
+  };
+  const created = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${row.number}/conversion-drafts`,
+    cookies: cast.memberCookies,
+    payload: { targetModule: "contract", targetTypeId: type!.id },
+  });
+  expect(created.statusCode, created.body).toBe(202);
+  expect(created.headers["content-type"]).toContain("application/json");
+  const draftId = created.json().draft.id;
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      notifier: harness.notifier,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    draftId,
+  );
+  const read = () =>
+    harness.app.inject({
+      url: `/api/v1/requests/${row.number}/conversion-drafts/${draftId}`,
+      cookies: cast.memberCookies,
+    });
+  const ready = await read();
+  expect(ready.statusCode, ready.body).toBe(200);
+  expect(ready.headers["content-type"]).toContain("application/json");
+  expect(ready.json().draft).toMatchObject({
+    state: "ready",
+    suggestions: { title: { value: "Prepared Contract" } },
+  });
+  await harness.db.update(fields).set({ aiAnswerStyle: null }).where(eq(fields.id, field!.id));
+  const stale = await read();
+  expect(stale.statusCode, stale.body).toBe(200);
+  expect(stale.headers["content-type"]).toContain("application/json");
+  expect(stale.json().draft).toMatchObject({
+    state: "failed",
+    suggestions: {},
+    failure: "The sources or settings changed. Retry or continue manually.",
+  });
+  const after = await conversionContext(harness.db, row.id, type!.id, false, "contract");
+  expect(after.snapshot).not.toBe(before.snapshot);
+  expect(
+    after.targets.find((candidate) => candidate.slug === target.slug)?.aiAnswerStyle,
+  ).toBeNull();
+});

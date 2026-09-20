@@ -2,6 +2,7 @@
 
 /** Entities · Fields at the shared catalog route seam. */
 import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { screen, within } from "@testing-library/react";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -24,7 +25,7 @@ const base = {
 };
 
 describe("the Entities Fields pane", () => {
-  it("shows Entity Fields while excluding other module scopes", async () => {
+  it("shows Entity Fields, excludes other module scopes, and omits Answer style", async () => {
     const fields = [
       { ...base, id: "f1", slug: "lei", displayName: "LEI", moduleScope: "entity" },
       { ...base, id: "f2", slug: "region", displayName: "Region", moduleScope: "entity" },
@@ -40,6 +41,11 @@ describe("the Entities Fields pane", () => {
     expect(await screen.findByRole("button", { name: "Rename LEI" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rename Region" })).toBeInTheDocument();
     expect(screen.queryByText("Term")).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Edit LEI" }));
+    expect(
+      within(screen.getByRole("dialog")).queryByRole("combobox", { name: "Answer style" }),
+    ).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Cancel" }));
     const tabs = screen.getByRole("navigation", { name: "Entities panes" });
     expect(within(tabs).getByRole("link", { name: "Fields" })).toHaveAttribute(
       "aria-current",

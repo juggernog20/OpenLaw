@@ -22,6 +22,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { AI_ANSWER_STYLES } from "@openlaw/shared";
 import { uuidPk } from "./helpers.js";
 
 /**
@@ -91,6 +92,8 @@ export const fields = pgTable(
      * lives on contract-scoped fields, seeded on the core three. NULL =
      * contract analysis skips the field. */
     aiPrompt: text("ai_prompt"),
+    /** NULL follows the organisation default. */
+    aiAnswerStyle: text("ai_answer_style", { enum: AI_ANSWER_STYLES }),
     /** True for a default Field, one a migration seeded (SET-004): the
      * three CTR-008 core fields today. Start blank keeps these rows by
      * this flag, and the Fields panes lock them. User-created fields
@@ -108,6 +111,10 @@ export const fields = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    check(
+      "fields_ai_answer_style_check",
+      sql`${table.aiAnswerStyle} is null or (${table.moduleScope} = 'contract' and ${table.fieldType} in ('text', 'long_text') and ${table.aiAnswerStyle} in ('few_words', 'sentence', 'full_clause') and (${table.aiAnswerStyle} <> 'full_clause' or ${table.fieldType} = 'long_text'))`,
+    ),
     uniqueIndex("fields_slug_unique").on(table.slug),
     uniqueIndex("fields_built_in_key_unique").on(table.builtInKey),
     check(
