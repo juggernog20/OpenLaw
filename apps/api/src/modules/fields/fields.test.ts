@@ -73,6 +73,7 @@ const listFields = async (includeArchived = false): Promise<FieldRow[]> => {
     cookies: adminCookies,
   });
   expect(res.statusCode, res.body).toBe(200);
+  expect(res.headers["content-type"]).toContain("application/json");
   return (res.json() as { fields: FieldRow[] }).fields;
 };
 
@@ -87,6 +88,7 @@ const createField = async (body: Record<string, unknown>) =>
 const createdField = async (body: Record<string, unknown>): Promise<FieldRow> => {
   const res = await createField(body);
   expect(res.statusCode, res.body).toBe(201);
+  expect(res.headers["content-type"]).toContain("application/json");
   return (res.json() as { field: FieldRow }).field;
 };
 
@@ -666,6 +668,7 @@ describe("per-Field answer style", () => {
         payload: patch,
       });
       expect(response.statusCode, response.body).toBe(200);
+      expect(response.headers["content-type"]).toContain("application/json");
       expect(response.json().field.aiAnswerStyle).toBe(expected);
     }
     expect(
@@ -711,6 +714,7 @@ describe("per-Field answer style", () => {
       };
       const created = await createField({ ...body, aiAnswerStyle });
       expect(created.statusCode, created.body).toBe(422);
+      expect(created.headers["content-type"]).toContain("application/problem+json");
       expect(created.json()).toMatchObject({ status: 422, detail });
       const field = await createdField(body);
       const patched = await harness.app.inject({
@@ -720,6 +724,7 @@ describe("per-Field answer style", () => {
         payload: { aiAnswerStyle },
       });
       expect(patched.statusCode, patched.body).toBe(422);
+      expect(patched.headers["content-type"]).toContain("application/problem+json");
       expect(patched.json()).toMatchObject({ status: 422, detail });
     },
   );

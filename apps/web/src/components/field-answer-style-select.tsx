@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * CTR-008 Field override picker: null follows the organisation default.
+ * The short-text restriction is explained on hover and keyboard focus
+ * (DES-011); labels use the shared DES-013 message catalog.
+ */
+
 import { useEffect, useImperativeHandle, useState, type Ref } from "react";
 import { AI_ANSWER_STYLES, type AiAnswerStyle } from "@openlaw/shared";
 import { FormattedMessage, useIntl } from "react-intl";

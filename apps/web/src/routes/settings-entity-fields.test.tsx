@@ -25,7 +25,7 @@ const base = {
 };
 
 describe("the Entities Fields pane", () => {
-  it("shows Entity Fields while excluding other module scopes", async () => {
+  it("shows Entity Fields, excludes other module scopes, and omits Answer style", async () => {
     const fields = [
       { ...base, id: "f1", slug: "lei", displayName: "LEI", moduleScope: "entity" },
       { ...base, id: "f2", slug: "region", displayName: "Region", moduleScope: "entity" },

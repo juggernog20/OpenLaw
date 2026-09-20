@@ -25,7 +25,7 @@ const baseField = {
 };
 
 describe("the Matters Fields pane", () => {
-  it("shows matter fields, excludes contract fields, and creates at matter scope", async () => {
+  it("shows matter fields, excludes contract fields, creates at matter scope, and omits Answer style", async () => {
     const creates: unknown[] = [];
     const fields = [
       {

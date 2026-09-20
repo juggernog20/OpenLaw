@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Shared labels for organisation and Field answer styles (CTR-008, DES-013). */
+
 import { defineMessages } from "react-intl";
 
 export const answerStyleLabels = defineMessages({
