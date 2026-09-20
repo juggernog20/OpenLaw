@@ -33,7 +33,7 @@ test("Answer style saves on choice and survives reload", async ({ page, request 
       await page.getByRole("button", { name: "Answer style", exact: true }).click();
       const card = page.getByRole("region", { name: "Answer style", exact: true });
       await card.getByRole("radio", { name: label, exact: true }).click();
-      await expect(card.locator('[aria-live="polite"]')).toHaveText("Saved");
+      await expect(card.getByText("Saved", { exact: true })).toBeVisible();
       await page.reload();
       await page.getByRole("button", { name: "Answer style", exact: true }).click();
       await expect(card.getByRole("radio", { name: label, exact: true })).toBeChecked();

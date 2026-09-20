@@ -48,3 +48,37 @@ it("defaults existing and new connectors to sentence and deletes only rule overr
     await db.$client.end();
   }
 });
+
+it("rolls back the whole migration after an earlier migration leaves autocommit enabled", async () => {
+  const db = await freshDb(container, "answer_style_rollback");
+  try {
+    await migrateThrough(db, "0147_individual-holdings", migrationEntries());
+    await db.execute(
+      sql`insert into ai_field_prompts (slug, prompt) values ('rules.scope', 'Keep until upgrade succeeds')`,
+    );
+    await db.execute(sql`create function refuse_rule_delete() returns trigger language plpgsql as $$
+      begin raise exception 'Simulated delete failure'; end $$`);
+    await db.execute(sql`create trigger refuse_rule_delete before delete on ai_field_prompts
+      for each row execute function refuse_rule_delete()`);
+    await expect(runMigrations(db)).rejects.toMatchObject({
+      cause: { message: "Simulated delete failure" },
+    });
+    expect(
+      (
+        await db.execute(sql`select column_name from information_schema.columns
+      where table_schema = 'public' and table_name = 'ai_connector' and column_name = 'answer_style'`)
+      ).rows,
+    ).toEqual([]);
+    expect(
+      (await db.execute(sql`select prompt from ai_field_prompts where slug = 'rules.scope'`)).rows,
+    ).toEqual([{ prompt: "Keep until upgrade succeeds" }]);
+    await db.execute(sql`drop trigger refuse_rule_delete on ai_field_prompts`);
+    await db.execute(sql`drop function refuse_rule_delete()`);
+    await runMigrations(db);
+    expect(
+      (await db.execute(sql`select slug from ai_field_prompts where slug like 'rules.%'`)).rows,
+    ).toEqual([]);
+  } finally {
+    await db.$client.end();
+  }
+});

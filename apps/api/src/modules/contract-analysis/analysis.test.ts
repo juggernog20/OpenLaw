@@ -1354,14 +1354,11 @@ it("sends each saved answer style through a real Analysis run to the provider", 
         .split("\n")
         .find((line) => line.startsWith("- governing_law:"));
       expect(shortLine).toBeDefined();
-      expect(shortLine).toMatch(
-        new RegExp(
-          (answerStyle === "full_clause"
-            ? "Answer in one or two short sentences that state the position, at most 200 characters."
-            : sentence
-          ).replaceAll(".", "\\.") + "$",
-        ),
-      );
+      const shortStyle =
+        answerStyle === "full_clause"
+          ? "Answer in one or two short sentences that state the position, at most 200 characters."
+          : sentence;
+      expect(shortLine?.endsWith(shortStyle)).toBe(true);
     }
   } finally {
     server.closeAllConnections();
