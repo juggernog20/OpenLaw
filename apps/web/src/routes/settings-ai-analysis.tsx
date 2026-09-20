@@ -17,7 +17,7 @@ import {
   AI_OUTPUT_TOKEN_MAX,
 } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
-import { AiKeyStatus } from "../components/ai-key-status";
+import { AiSavedKeyControl } from "../components/ai-saved-key-control";
 import { findSavedAiKey } from "../lib/ai-connector-config";
 import { AiModelSelector } from "../components/ai-model-selector";
 import { AiFieldPromptsCard } from "../components/ai-field-prompts-card";
@@ -29,7 +29,7 @@ import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
-import { aiPresetLabel } from "../lib/ai-presets";
+import { aiProviderOptionLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
 import { formatShortDate } from "../lib/format";
 import { problem } from "../lib/problem";
@@ -275,7 +275,7 @@ export function SettingsAiAnalysisPage() {
             >
               {loaded.presets.map((option) => (
                 <option key={option.preset} value={option.preset}>
-                  {aiPresetLabel(intl, option.preset)}
+                  {aiProviderOptionLabel(intl, option.preset, connector.savedKeys)}
                 </option>
               ))}
             </select>
@@ -344,7 +344,11 @@ export function SettingsAiAnalysisPage() {
           <FormField
             id="ai-api-key"
             label={<FormattedMessage id="settings.aiAnalysis.apiKey" defaultMessage="API key" />}
-            status={savedKey && <AiKeyStatus inUse={savedKey.inUse} />}
+            status={
+              savedKey && (
+                <AiSavedKeyControl key={savedKey.id} savedKey={savedKey} onChanged={setConnector} />
+              )
+            }
           >
             <Input
               id="ai-api-key"
@@ -614,7 +618,7 @@ export function SettingsAiAnalysisPage() {
               <p className="text-sm text-muted">
                 <FormattedMessage
                   id="settings.aiAnalysis.removeBody"
-                  defaultMessage="Saved keys stay on file. You can use them when you reconnect."
+                  defaultMessage="Saved keys stay on file. You can use them when you reconnect, or use Forget key to delete them."
                 />
               </p>
               <div className="flex justify-end gap-2">

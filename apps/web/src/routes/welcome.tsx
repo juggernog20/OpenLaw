@@ -27,7 +27,7 @@
 
 import { AiModelSelector } from "../components/ai-model-selector";
 import { isFieldRow } from "../lib/field-catalog";
-import { AiKeyStatus } from "../components/ai-key-status";
+import { AiSavedKeyControl } from "../components/ai-saved-key-control";
 import { findSavedAiKey } from "../lib/ai-connector-config";
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { HelpLink } from "../components/documentation/help-link";
@@ -49,7 +49,7 @@ import {
   START_BLANK_LIST_KEYS,
   type StartBlankList,
 } from "@openlaw/shared";
-import { aiPresetLabel } from "../lib/ai-presets";
+import { aiPresetLabel, aiProviderOptionLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
@@ -2043,7 +2043,7 @@ export function WelcomePage() {
                           >
                             {loaded.aiPresets.map((option) => (
                               <option key={option.preset} value={option.preset}>
-                                {aiPresetLabel(intl, option.preset)}
+                                {aiProviderOptionLabel(intl, option.preset, aiConnector.savedKeys)}
                               </option>
                             ))}
                           </select>
@@ -2123,7 +2123,13 @@ export function WelcomePage() {
                                 defaultMessage="API key"
                               />
                             </Label>
-                            {savedAiKey && <AiKeyStatus inUse={savedAiKey.inUse} />}
+                            {savedAiKey && (
+                              <AiSavedKeyControl
+                                key={savedAiKey.id}
+                                savedKey={savedAiKey}
+                                onChanged={setAiConnector}
+                              />
+                            )}
                           </div>
                           <Input
                             id="welcome-ai-api-key"

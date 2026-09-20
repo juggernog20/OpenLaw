@@ -386,6 +386,7 @@ describe("the AI analysis connector pane (#662)", () => {
     renderAt("/settings/ai-analysis");
     await openProvider(user);
     expect(screen.getByRole("status")).toHaveTextContent("Key in use");
+    expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("API key")).not.toBeRequired();
     await user.selectOptions(screen.getByLabelText("Provider"), "gemini");
     expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
@@ -404,6 +405,110 @@ describe("the AI analysis connector pane (#662)", () => {
       ]),
     );
     expect(await screen.findByText("Key in use")).toBeVisible();
+  });
+
+  it.each([false, true])(
+    "confirms Forget key and refreshes the envelope, or prints a 409 in place: %s",
+    async (refused) => {
+      const user = userEvent.setup();
+      const saved = connector();
+      saved.savedKeys.push({
+        ...saved.savedKeys[0]!,
+        id: "groq-key",
+        preset: "groq",
+        baseUrl: "https://api.groq.com/openai/v1",
+        inUse: false,
+      });
+      const fallback = connectorApi({ connector: saved });
+      const deletes: string[] = [];
+      stubApi({
+        signedIn: ADMIN,
+        extra: (call) => {
+          if (call.method === "DELETE" && call.url.pathname.includes("/saved-keys/")) {
+            deletes.push(call.url.pathname);
+            return refused
+              ? problem(409, "This Saved key is in use by the AI connector.")
+              : json(200, {
+                  connector: { ...saved, savedKeys: saved.savedKeys.slice(0, 1) },
+                  presets: PRESETS,
+                });
+          }
+          return fallback(call);
+        },
+      });
+      renderAt("/settings/ai-analysis");
+      await openProvider(user);
+      expect(screen.getByRole("option", { name: "OpenAI (key saved)" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "Groq (key saved)" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
+      await user.selectOptions(screen.getByLabelText("Provider"), "gemini");
+      expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
+      await user.selectOptions(screen.getByLabelText("Provider"), "groq");
+      await user.click(screen.getByRole("button", { name: "Forget key" }));
+      expect(deletes).toEqual([]);
+      let dialog = screen.getByRole("dialog");
+      expect(within(dialog).getByText(/Groq/)).toBeVisible();
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+      expect(deletes).toEqual([]);
+      await user.click(screen.getByRole("button", { name: "Forget key" }));
+      dialog = screen.getByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Forget key" }));
+      await waitFor(() => expect(deletes).toEqual(["/api/v1/ai-connector/saved-keys/groq-key"]));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      if (refused) {
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "This Saved key is in use by the AI connector.",
+        );
+        expect(screen.getByText("Key saved")).toBeVisible();
+      } else {
+        expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
+        expect(screen.getByRole("option", { name: "Groq" })).toBeInTheDocument();
+        expect(screen.getByRole("option", { name: "OpenAI (key saved)" })).toBeInTheDocument();
+        expect(screen.getByLabelText("API key")).toBeRequired();
+      }
+    },
+  );
+
+  it("matches the custom Saved key as the typed URL and protocol change", async () => {
+    const user = userEvent.setup();
+    const saved = connector();
+    saved.savedKeys.push({
+      ...saved.savedKeys[0]!,
+      id: "custom-key",
+      preset: "custom",
+      baseUrl: "https://custom.test/v1?a=1&b=2",
+      inUse: false,
+    });
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: saved }) });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    expect(screen.getByRole("option", { name: "Custom endpoint (key saved)" })).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Provider"), "custom");
+    expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
+    await user.type(
+      screen.getByLabelText("Base URL"),
+      "https://CUSTOM.test:443/v1/?b=2&a=1#fragment",
+    );
+    expect(screen.getByText("Key saved")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Forget key" })).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("Protocol"), "gemini");
+    expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Protocol"), "openai_chat_completions");
+    expect(screen.getByRole("button", { name: "Forget key" })).toBeVisible();
+    await user.clear(screen.getByLabelText("Base URL"));
+    expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
+  });
+
+  it("explains that Remove connector keeps Saved keys and points to Forget key", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi() });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    await user.click(screen.getByRole("button", { name: "Remove connector" }));
+    expect(
+      within(screen.getByRole("dialog")).getByText(/Saved keys stay.*Forget key/),
+    ).toBeVisible();
   });
 
   it("keeps the stored key write-only and omits blank on save", async () => {

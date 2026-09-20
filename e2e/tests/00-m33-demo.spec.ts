@@ -319,7 +319,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
       await expect(page).toHaveURL("/settings/ai-analysis");
       const provider = page.getByRole("button", { name: "Provider", exact: true });
       if ((await provider.getAttribute("aria-expanded")) === "false") await provider.click();
-      await page.getByLabel("Provider").selectOption({ label: "Custom endpoint" });
+      await page.getByLabel("Provider").selectOption("custom");
       await page
         .getByLabel("Protocol")
         .selectOption({ label: "OpenAI-compatible chat completions" });

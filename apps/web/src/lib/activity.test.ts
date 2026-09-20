@@ -980,6 +980,11 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
 
   // AI connector
+  "ai_saved_key.forgotten": {
+    preset: "openai",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.openai.com/v1",
+  },
   "ai_saved_key.stored": {
     preset: "openai",
     protocol: "openai_chat_completions",
@@ -1430,6 +1435,17 @@ describe("the sentences a reader gets", () => {
     expect(narrate("ai_connector.removed", SAMPLE_PAYLOADS["ai_connector.removed"]).sentence).toBe(
       "Nadia Counsel removed the AI connector OpenAI",
     );
+  });
+
+  it("names the forgotten Saved key provider and never renders a key", () => {
+    const narration = narrate("ai_saved_key.forgotten", {
+      ...SAMPLE_PAYLOADS["ai_saved_key.forgotten"],
+      apiKey: "never-show-this-key",
+    });
+    expect(narration.sentence).toBe(
+      "Nadia Counsel forgot the Saved key for OpenAI at https://api.openai.com/v1",
+    );
+    expect(JSON.stringify(narration)).not.toContain("never-show-this-key");
   });
 
   it("names Groq in AI connector Activity", () => {

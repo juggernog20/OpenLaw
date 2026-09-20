@@ -6192,6 +6192,269 @@
         }
       }
     },
+    "/api/v1/ai-connector/saved-keys/{id}": {
+      "delete": {
+        "operationId": "forgetAiSavedKey",
+        "summary": "Forget one Saved key unless the AI connector references it",
+        "tags": ["ai-connector"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "matterPreparation": {
+                          "type": "boolean"
+                        },
+                        "contractPreparation": {
+                          "type": "boolean"
+                        },
+                        "contractConversionAnalysis": {
+                          "type": "boolean"
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "preset": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "anthropic",
+                                "openai",
+                                "azure_openai",
+                                "gemini",
+                                "openrouter",
+                                "groq",
+                                "ollama",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": ["string", "null"]
+                        },
+                        "hasApiKey": {
+                          "type": "boolean"
+                        },
+                        "savedKeys": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "preset": {
+                                "type": "string",
+                                "enum": [
+                                  "anthropic",
+                                  "openai",
+                                  "azure_openai",
+                                  "gemini",
+                                  "openrouter",
+                                  "groq",
+                                  "ollama",
+                                  "custom"
+                                ]
+                              },
+                              "protocol": {
+                                "type": "string",
+                                "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                              },
+                              "baseUrl": {
+                                "type": "string"
+                              },
+                              "inUse": {
+                                "type": "boolean"
+                              },
+                              "hasApiKey": {
+                                "type": "boolean"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "preset",
+                              "protocol",
+                              "baseUrl",
+                              "inUse",
+                              "hasApiKey",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "model": {
+                          "type": ["string", "null"]
+                        },
+                        "maxOutputTokens": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "matterPreparation",
+                        "contractPreparation",
+                        "contractConversionAnalysis",
+                        "configured",
+                        "enabled",
+                        "preset",
+                        "protocol",
+                        "baseUrl",
+                        "hasApiKey",
+                        "savedKeys",
+                        "model",
+                        "maxOutputTokens",
+                        "disabledAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "preset": {
+                            "type": "string",
+                            "enum": [
+                              "anthropic",
+                              "openai",
+                              "azure_openai",
+                              "gemini",
+                              "openrouter",
+                              "groq",
+                              "ollama",
+                              "custom"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "protocol": {
+                            "type": "string",
+                            "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                          },
+                          "baseUrl": {
+                            "type": ["string", "null"]
+                          },
+                          "defaultModel": {
+                            "type": "string"
+                          },
+                          "requiresApiKey": {
+                            "type": "boolean"
+                          },
+                          "requiresBaseUrl": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "preset",
+                          "label",
+                          "protocol",
+                          "baseUrl",
+                          "defaultModel",
+                          "requiresApiKey",
+                          "requiresBaseUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["connector", "presets"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/ai-field-prompts": {
       "get": {
         "operationId": "listAiFieldPrompts",

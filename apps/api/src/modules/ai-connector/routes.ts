@@ -526,6 +526,51 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.delete(
+    "/ai-connector/saved-keys/:id",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "forgetAiSavedKey",
+        summary: "Forget one Saved key unless the AI connector references it",
+        tags: ["ai-connector"],
+        params: z.object({ id: z.uuid() }),
+        response: { 200: ConnectorEnvelope, 409: problemResponse, default: problemResponse },
+      },
+    },
+    async (request) => {
+      await app.db.transaction(async (tx) => {
+        // Saving and forgetting share the lock so a key cannot become referenced after the check.
+        await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.aiConnectorSave})`);
+        const [current] = await tx.select().from(aiConnector).limit(1).for("update");
+        const [key] = await tx
+          .select()
+          .from(aiSavedKeys)
+          .where(eq(aiSavedKeys.id, request.params.id));
+        if (!key) throw httpError(404, "This Saved key no longer exists.");
+        if (current?.savedKeyId === key.id) {
+          throw httpError(
+            409,
+            "This Saved key is in use by the AI connector. Remove the connector or choose another destination before forgetting it.",
+          );
+        }
+        await tx.delete(aiSavedKeys).where(eq(aiSavedKeys.id, key.id));
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "ai_saved_key.forgotten",
+          visibility: "admin_only",
+          payload: {
+            preset: key.preset,
+            protocol: key.protocol,
+            baseUrl: normalizeAiBaseUrl(key.baseUrl),
+          },
+        });
+      });
+      return envelope(await stored());
+    },
+  );
+
+  app.delete(
     "/ai-connector",
     {
       preHandler: requireRole("administrator"),

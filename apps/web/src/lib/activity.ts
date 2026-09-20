@@ -2738,6 +2738,17 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   },
 
   // ---- The AI connector (CTR-008, TECH-012) ----
+  "ai_saved_key.forgotten": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.aiSavedKey.forgotten",
+      defaultMessage: "{actor} forgot the Saved key for {provider} at {baseUrl}",
+    }),
+    values: (intl, payload) => ({
+      provider: aiPreset(intl, payload),
+      baseUrl: named(intl, payload, "baseUrl"),
+    }),
+  },
   "ai_saved_key.stored": {
     icon: Plug,
     message: defineMessage({

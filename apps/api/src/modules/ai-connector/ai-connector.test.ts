@@ -29,6 +29,7 @@ const URL = "/api/v1/ai-connector";
 const PROMPTS_URL = "/api/v1/ai-field-prompts";
 const ACTIONS = [
   "ai_saved_key.stored",
+  "ai_saved_key.forgotten",
   "ai_connector.configured",
   "ai_connector.updated",
   "ai_connector.disabled",
@@ -107,6 +108,7 @@ describe("the AI connector role gate", () => {
       { method: "POST" as const, url: `${URL}/disable` },
       { method: "POST" as const, url: `${URL}/enable` },
       { method: "DELETE" as const, url: URL },
+      { method: "DELETE" as const, url: `${URL}/saved-keys/00000000-0000-4000-8000-000000000000` },
       { method: "GET" as const, url: PROMPTS_URL },
       {
         method: "PUT" as const,
@@ -899,4 +901,77 @@ describe("output token limits", () => {
       expect(response.statusCode, response.body).toBe(400);
     }
   });
+});
+
+describe("Forget key", () => {
+  it("deletes only the named Saved key, returns the envelope and records its destination without a key", async () => {
+    const first = await save({ preset: "openai", model: "test", apiKey: "first-secret-value" });
+    const id = first.json().connector.savedKeys[0].id;
+    await save({ preset: "groq", model: "test", apiKey: "second-secret-value" });
+    const response = await harness.app.inject({
+      method: "DELETE",
+      url: `${URL}/saved-keys/${id}`,
+      cookies: adminCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().connector.savedKeys).toEqual([
+      expect.objectContaining({ preset: "groq", inUse: true, hasApiKey: true }),
+    ]);
+    const remaining = await harness.db.select().from(aiSavedKeys);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0]?.preset).toBe("groq");
+    expect(remaining[0]?.apiKey).toBe("second-secret-value");
+    const forgotten = (await auditRows(harness.db)).filter(
+      (row) => row.action === "ai_saved_key.forgotten",
+    );
+    expect(forgotten).toEqual([
+      expect.objectContaining({
+        entityType: "system",
+        visibility: "admin_only",
+        actorId: expect.any(String),
+        payload: {
+          preset: "openai",
+          protocol: "openai_chat_completions",
+          baseUrl: "https://api.openai.com/v1",
+        },
+      }),
+    ]);
+    for (const secret of ["first-secret-value", "second-secret-value"]) {
+      expect(response.body).not.toContain(secret);
+      expect(JSON.stringify(await auditRows(harness.db))).not.toContain(secret);
+    }
+    expect(response.body).not.toContain('"apiKey"');
+    const read = await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies });
+    expect(read.json()).toEqual(response.json());
+    const repeated = await harness.app.inject({
+      method: "DELETE",
+      url: `${URL}/saved-keys/${id}`,
+      cookies: adminCookies,
+    });
+    expect(repeated.statusCode).toBe(404);
+  });
+
+  it.each([false, true])(
+    "refuses the referenced key with 409, including when disabled=%s",
+    async (disabled) => {
+      const saved = await save({ preset: "openai", model: "test", apiKey: "in-use-secret-value" });
+      const id = saved.json().connector.savedKeys[0].id;
+      if (disabled)
+        await harness.app.inject({ method: "POST", url: `${URL}/disable`, cookies: adminCookies });
+      const response = await harness.app.inject({
+        method: "DELETE",
+        url: `${URL}/saved-keys/${id}`,
+        cookies: adminCookies,
+      });
+      expect(response.statusCode).toBe(409);
+      expect(response.json().detail).toBe(
+        "This Saved key is in use by the AI connector. Remove the connector or choose another destination before forgetting it.",
+      );
+      expect(response.body).not.toContain("in-use-secret-value");
+      expect(await harness.db.select().from(aiSavedKeys)).toHaveLength(1);
+      expect(
+        (await auditRows(harness.db)).filter((row) => row.action === "ai_saved_key.forgotten"),
+      ).toEqual([]);
+    },
+  );
 });
