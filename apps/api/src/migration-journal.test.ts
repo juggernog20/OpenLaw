@@ -28,6 +28,10 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testconta
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   createDb,
+  aiSavedKeys,
+  readSecretKeys,
+  useSecretKeys,
+  sealSecret,
   findJournalDisorder,
   guardMigrationJournal,
   MigrationJournalError,
@@ -326,13 +330,62 @@ describe("the Groq preset upgrade", () => {
         `);
         const before = await db.execute(sql`select * from ai_connector`);
         await expect(db.execute(sql`update ai_connector set preset = 'groq'`)).rejects.toThrow();
-        await runMigrations(db);
+        await migrateThrough(
+          db,
+          readMigrationJournal(MIGRATIONS).filter((entry) => entry.tag === "0153_groq-preset"),
+          "0153_groq-preset",
+        );
         expect((await db.execute(sql`select * from ai_connector`)).rows).toEqual(before.rows);
         await db.execute(sql`update ai_connector set preset = 'groq'`);
         expect((await db.execute(sql`select preset from ai_connector`)).rows).toEqual([
           { preset: "groq" },
         ]);
         await expect(db.execute(sql`update ai_connector set preset = 'unknown'`)).rejects.toThrow();
+      } finally {
+        await db.$client.end();
+      }
+    },
+  );
+});
+
+describe("the Saved key upgrade", () => {
+  it.each([true, false])(
+    "moves the existing key and reference together, key present: %s",
+    async (hasKey) => {
+      const db = await freshDb(`saved_key_upgrade_${hasKey}`);
+      try {
+        await migrateThrough(db, readMigrationJournal(MIGRATIONS), "0153_groq-preset");
+        useSecretKeys(
+          readSecretKeys({ OPENLAW_SECRET_KEY: "saved-key-migration-test-encryption-key" }),
+        );
+        const sealed = hasKey ? sealSecret("saved-key-migration-fixture", "api_key") : null;
+        await db.execute(sql`
+        insert into ai_connector (id, preset, protocol, base_url, api_key, model)
+        values ('existing-connector', 'ollama', 'openai_chat_completions', 'http://localhost:11434/v1/', ${sealed}, 'saved-model')
+      `);
+        await runMigrations(db);
+        const connector = await db.execute(sql`select * from ai_connector`);
+        expect(connector.rows[0]).not.toHaveProperty("api_key");
+        expect(connector.rows[0]).toMatchObject({
+          saved_key_id: hasKey ? "existing-connector" : null,
+          model: "saved-model",
+        });
+        const raw = await db.execute(sql`select * from ai_saved_keys`);
+        if (hasKey) {
+          expect(raw.rows).toEqual([
+            expect.objectContaining({
+              id: "existing-connector",
+              api_key: sealed,
+              preset: "ollama",
+              base_url: "http://localhost:11434/v1/",
+            }),
+          ]);
+          expect((await db.select().from(aiSavedKeys))[0]?.apiKey).toBe(
+            "saved-key-migration-fixture",
+          );
+        } else {
+          expect(raw.rows).toEqual([]);
+        }
       } finally {
         await db.$client.end();
       }

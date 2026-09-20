@@ -728,10 +728,10 @@ export interface paths {
     };
     /** Read the AI connector without returning its write-only API key */
     get: operations["getAiConnector"];
-    /** Configure or update the AI connector; a blank API key keeps the stored key */
+    /** Configure or update the AI connector; a blank API key uses the destination’s Saved key */
     put: operations["saveAiConnector"];
     post?: never;
-    /** Remove the AI connector and its API key */
+    /** Remove the AI connector, keeping its Saved keys */
     delete: operations["deleteAiConnector"];
     options?: never;
     head?: never;
@@ -9503,6 +9503,26 @@ export interface operations {
               protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
               baseUrl: string | null;
               hasApiKey: boolean;
+              savedKeys: {
+                id: string;
+                /** @enum {string} */
+                preset:
+                  | "anthropic"
+                  | "openai"
+                  | "azure_openai"
+                  | "gemini"
+                  | "openrouter"
+                  | "groq"
+                  | "ollama"
+                  | "custom";
+                /** @enum {string} */
+                protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+                baseUrl: string;
+                inUse: boolean;
+                hasApiKey: boolean;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
               model: string | null;
               maxOutputTokens: number;
               disabledAt: string | null;
@@ -9599,6 +9619,26 @@ export interface operations {
               protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
               baseUrl: string | null;
               hasApiKey: boolean;
+              savedKeys: {
+                id: string;
+                /** @enum {string} */
+                preset:
+                  | "anthropic"
+                  | "openai"
+                  | "azure_openai"
+                  | "gemini"
+                  | "openrouter"
+                  | "groq"
+                  | "ollama"
+                  | "custom";
+                /** @enum {string} */
+                protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+                baseUrl: string;
+                inUse: boolean;
+                hasApiKey: boolean;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
               model: string | null;
               maxOutputTokens: number;
               disabledAt: string | null;
@@ -9674,6 +9714,26 @@ export interface operations {
               protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
               baseUrl: string | null;
               hasApiKey: boolean;
+              savedKeys: {
+                id: string;
+                /** @enum {string} */
+                preset:
+                  | "anthropic"
+                  | "openai"
+                  | "azure_openai"
+                  | "gemini"
+                  | "openrouter"
+                  | "groq"
+                  | "ollama"
+                  | "custom";
+                /** @enum {string} */
+                protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+                baseUrl: string;
+                inUse: boolean;
+                hasApiKey: boolean;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
               model: string | null;
               maxOutputTokens: number;
               disabledAt: string | null;
@@ -9757,6 +9817,26 @@ export interface operations {
               protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
               baseUrl: string | null;
               hasApiKey: boolean;
+              savedKeys: {
+                id: string;
+                /** @enum {string} */
+                preset:
+                  | "anthropic"
+                  | "openai"
+                  | "azure_openai"
+                  | "gemini"
+                  | "openrouter"
+                  | "groq"
+                  | "ollama"
+                  | "custom";
+                /** @enum {string} */
+                protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+                baseUrl: string;
+                inUse: boolean;
+                hasApiKey: boolean;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
               model: string | null;
               maxOutputTokens: number;
               disabledAt: string | null;
@@ -9918,6 +9998,26 @@ export interface operations {
               protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
               baseUrl: string | null;
               hasApiKey: boolean;
+              savedKeys: {
+                id: string;
+                /** @enum {string} */
+                preset:
+                  | "anthropic"
+                  | "openai"
+                  | "azure_openai"
+                  | "gemini"
+                  | "openrouter"
+                  | "groq"
+                  | "ollama"
+                  | "custom";
+                /** @enum {string} */
+                protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+                baseUrl: string;
+                inUse: boolean;
+                hasApiKey: boolean;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
               model: string | null;
               maxOutputTokens: number;
               disabledAt: string | null;
@@ -9993,6 +10093,26 @@ export interface operations {
               protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
               baseUrl: string | null;
               hasApiKey: boolean;
+              savedKeys: {
+                id: string;
+                /** @enum {string} */
+                preset:
+                  | "anthropic"
+                  | "openai"
+                  | "azure_openai"
+                  | "gemini"
+                  | "openrouter"
+                  | "groq"
+                  | "ollama"
+                  | "custom";
+                /** @enum {string} */
+                protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+                baseUrl: string;
+                inUse: boolean;
+                hasApiKey: boolean;
+                /** Format: date-time */
+                updatedAt: string;
+              }[];
               model: string | null;
               maxOutputTokens: number;
               disabledAt: string | null;

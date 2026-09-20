@@ -9,9 +9,19 @@
 import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { AI_OUTPUT_TOKEN_DEFAULT, AI_OUTPUT_TOKEN_MIN, AI_OUTPUT_TOKEN_MAX } from "@openlaw/shared";
+import {
+  AI_OUTPUT_TOKEN_DEFAULT,
+  AI_OUTPUT_TOKEN_MIN,
+  AI_OUTPUT_TOKEN_MAX,
+  normalizeAiBaseUrl,
+} from "@openlaw/shared";
 import {
   aiConnector,
+  aiSavedKeys,
+  ADVISORY_LOCK,
+  asc,
+  sql,
+  type AiSavedKey,
   AI_PRESETS,
   AI_PROTOCOLS,
   eq,
@@ -22,6 +32,7 @@ import {
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { AI_PRESET_DEFINITIONS, AI_PRESET_OPTIONS } from "../../lib/ai/presets.js";
+import { findSavedAiKey } from "../../lib/ai/saved-keys.js";
 import { listAiModels } from "../../lib/ai/models.js";
 import { AiProviderError } from "../../lib/ai/provider.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -43,6 +54,16 @@ const WorkflowSettingsSchema = z.object({
   contractConversionAnalysis: z.boolean(),
 });
 
+const SavedKeySchema = z.object({
+  id: z.string(),
+  preset: z.enum(AI_PRESETS),
+  protocol: z.enum(AI_PROTOCOLS),
+  baseUrl: z.string(),
+  inUse: z.boolean(),
+  hasApiKey: z.boolean(),
+  updatedAt: z.iso.datetime(),
+});
+
 const ConnectorSchema = WorkflowSettingsSchema.extend({
   configured: z.boolean(),
   enabled: z.boolean(),
@@ -50,6 +71,7 @@ const ConnectorSchema = WorkflowSettingsSchema.extend({
   protocol: z.enum(AI_PROTOCOLS).nullable(),
   baseUrl: z.string().nullable(),
   hasApiKey: z.boolean(),
+  savedKeys: z.array(SavedKeySchema),
   model: z.string().nullable(),
   maxOutputTokens: z.number().int(),
   disabledAt: z.iso.datetime().nullable(),
@@ -78,9 +100,22 @@ function pasted(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
-function readConnector(row: AiConnector | undefined): z.infer<typeof ConnectorSchema> {
+function readConnector(
+  row: AiConnector | undefined,
+  keys: AiSavedKey[],
+): z.infer<typeof ConnectorSchema> {
+  const savedKeys = keys.map((key) => ({
+    id: key.id,
+    preset: key.preset,
+    protocol: key.protocol,
+    baseUrl: normalizeAiBaseUrl(key.baseUrl),
+    inUse: row?.savedKeyId === key.id,
+    hasApiKey: !!key.apiKey,
+    updatedAt: key.updatedAt.toISOString(),
+  }));
   if (!row) {
     return {
+      savedKeys,
       matterPreparation: false,
       contractPreparation: false,
       contractConversionAnalysis: false,
@@ -105,16 +140,13 @@ function readConnector(row: AiConnector | undefined): z.infer<typeof ConnectorSc
     preset: row.preset,
     protocol: row.protocol,
     baseUrl: row.baseUrl,
-    hasApiKey: row.apiKey !== null && row.apiKey !== "",
+    hasApiKey: keys.some((key) => key.id === row.savedKeyId && !!key.apiKey),
+    savedKeys,
     model: row.model,
     maxOutputTokens: row.maxOutputTokens,
     disabledAt: row.disabledAt?.toISOString() ?? null,
     updatedAt: row.updatedAt.toISOString(),
   };
-}
-
-function envelope(row: AiConnector | undefined): z.infer<typeof ConnectorEnvelope> {
-  return { connector: readConnector(row), presets: AI_PRESET_OPTIONS };
 }
 
 function checkedBaseUrl(value: string | undefined): string {
@@ -143,23 +175,7 @@ function resolvedConfig(body: z.infer<typeof ProviderBodySchema>): {
   const protocol = body.preset === "custom" ? body.protocol : definition.protocol;
   if (!protocol) throw httpError(400, "Choose the protocol used by the custom endpoint.");
   const baseUrl = definition.baseUrl ?? checkedBaseUrl(body.baseUrl);
-  return { preset: body.preset, protocol, baseUrl };
-}
-
-function sameDestination(
-  current: AiConnector | undefined,
-  config: ReturnType<typeof resolvedConfig>,
-): boolean {
-  if (!current || current.preset !== config.preset || current.protocol !== config.protocol)
-    return false;
-  const normalize = (value: string) => {
-    const url = new URL(value);
-    url.hash = "";
-    url.pathname = url.pathname.replace(/\/$/, "");
-    url.searchParams.sort();
-    return url.toString();
-  };
-  return normalize(current.baseUrl) === normalize(config.baseUrl);
+  return { preset: body.preset, protocol, baseUrl: normalizeAiBaseUrl(baseUrl) };
 }
 
 /**
@@ -184,6 +200,16 @@ async function lockedConnector(tx: Executor): Promise<AiConnector> {
 }
 
 export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
+  async function envelope(
+    row: AiConnector | undefined,
+  ): Promise<z.infer<typeof ConnectorEnvelope>> {
+    const keys = await app.db
+      .select()
+      .from(aiSavedKeys)
+      .orderBy(asc(aiSavedKeys.createdAt), asc(aiSavedKeys.id));
+    return { connector: readConnector(row, keys), presets: AI_PRESET_OPTIONS };
+  }
+
   async function stored(): Promise<AiConnector | undefined> {
     const [row] = await app.db.select().from(aiConnector).limit(1);
     return row;
@@ -249,7 +275,8 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "saveAiConnector",
-        summary: "Configure or update the AI connector; a blank API key keeps the stored key",
+        summary:
+          "Configure or update the AI connector; a blank API key uses the destination’s Saved key",
         tags: ["ai-connector"],
         body: ConnectorBodySchema,
         response: { 200: ConnectorEnvelope, default: problemResponse },
@@ -259,16 +286,50 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       const config = { ...resolvedConfig(request.body), model: request.body.model };
       const apiKey = pasted(request.body.apiKey);
       const saved = await app.db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.aiConnectorSave})`);
         const [current] = await tx.select().from(aiConnector).limit(1).for("update");
+        let key = await findSavedAiKey(tx, config);
+        if (apiKey) {
+          const replaced = key !== undefined;
+          [key] = key
+            ? await tx
+                .update(aiSavedKeys)
+                .set({ apiKey, baseUrl: config.baseUrl })
+                .where(eq(aiSavedKeys.id, key.id))
+                .returning()
+            : await tx
+                .insert(aiSavedKeys)
+                .values({
+                  preset: config.preset,
+                  protocol: config.protocol,
+                  baseUrl: config.baseUrl,
+                  apiKey,
+                })
+                .returning();
+          if (!key) throw httpError(500, "The Saved key could not be stored.");
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "ai_saved_key.stored",
+            visibility: "admin_only",
+            payload: {
+              preset: config.preset,
+              protocol: config.protocol,
+              baseUrl: config.baseUrl,
+              replaced,
+            },
+          });
+        }
+        if (config.preset !== "ollama" && !key?.apiKey) {
+          throw httpError(400, "Paste the API key for this provider.");
+        }
+
         if (!current) {
-          if (config.preset !== "ollama" && !apiKey) {
-            throw httpError(400, "Paste the API key for this provider.");
-          }
           const [row] = await tx
             .insert(aiConnector)
             .values({
               ...config,
-              apiKey,
+              savedKeyId: key?.id ?? null,
               maxOutputTokens: request.body.maxOutputTokens ?? AI_OUTPUT_TOKEN_DEFAULT,
             })
             .returning();
@@ -283,13 +344,6 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           return row;
         }
 
-        if (
-          config.preset !== "ollama" &&
-          !apiKey &&
-          (!current.apiKey || !sameDestination(current, config))
-        ) {
-          throw httpError(400, "Paste the API key for this provider.");
-        }
         const [row] = await tx
           .update(aiConnector)
           .set({
@@ -297,7 +351,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
             ...(request.body.maxOutputTokens === undefined
               ? {}
               : { maxOutputTokens: request.body.maxOutputTokens }),
-            apiKey: apiKey ?? (sameDestination(current, config) ? current.apiKey : null),
+            savedKeyId: key?.id ?? null,
             updatedAt: new Date(),
           })
           .where(eq(aiConnector.id, current.id))
@@ -325,20 +379,6 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
               },
             });
           }
-        }
-        if (apiKey || current.apiKey !== row.apiKey) {
-          await recordActivity(tx, {
-            entityType: "system",
-            actorId: request.user.id,
-            action: "ai_connector.updated",
-            visibility: "admin_only",
-            payload: {
-              preset: row.preset,
-              field: "apiKey",
-              old: "[secret]",
-              new: "[secret]",
-            },
-          });
         }
         return row;
       });
@@ -371,10 +411,8 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           400,
           "Enter the deployment name from Azure manually. This endpoint does not list deployments.",
         );
-      const current = await stored();
       const apiKey =
-        pasted(request.body.apiKey) ??
-        (sameDestination(current, config) ? (current?.apiKey ?? null) : null);
+        pasted(request.body.apiKey) ?? ((await findSavedAiKey(app.db, config))?.apiKey || null);
       if (AI_PRESET_DEFINITIONS[config.preset].requiresApiKey && !apiKey)
         throw httpError(400, "Paste the API key for this provider and endpoint to load models.");
       try {
@@ -493,7 +531,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "deleteAiConnector",
-        summary: "Remove the AI connector and its API key",
+        summary: "Remove the AI connector, keeping its Saved keys",
         tags: ["ai-connector"],
         response: { 200: ConnectorEnvelope, default: problemResponse },
       },

@@ -350,6 +350,15 @@ export interface ApiState {
     model: string;
     /** Defaults to true; the write-only key is never answered. */
     hasApiKey?: boolean;
+    savedKeys?: {
+      id: string;
+      preset: AiPreset;
+      protocol: AiProtocol;
+      baseUrl: string;
+      hasApiKey: boolean;
+      inUse: boolean;
+      updatedAt: string;
+    }[];
     /** Defaults to on; set false for a configured connector that was turned off. */
     enabled?: boolean;
     disabledAt?: string | null;
@@ -846,6 +855,21 @@ export function stubApi(state: ApiState) {
           protocol: saved?.protocol ?? null,
           baseUrl: saved?.baseUrl ?? null,
           hasApiKey: saved === undefined ? false : (saved.hasApiKey ?? true),
+          savedKeys:
+            saved?.savedKeys ??
+            (saved && saved.baseUrl && saved.hasApiKey !== false
+              ? [
+                  {
+                    id: "saved-ai-key",
+                    preset: saved.preset,
+                    protocol: saved.protocol,
+                    baseUrl: saved.baseUrl,
+                    hasApiKey: true,
+                    inUse: true,
+                    updatedAt: "2026-08-16T09:00:00.000Z",
+                  },
+                ]
+              : []),
           model: saved?.model ?? null,
           disabledAt: saved?.disabledAt ?? null,
           updatedAt: saved === undefined ? null : "2026-08-16T09:00:00.000Z",

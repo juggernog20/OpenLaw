@@ -27,7 +27,8 @@
 
 import { AiModelSelector } from "../components/ai-model-selector";
 import { isFieldRow } from "../lib/field-catalog";
-import { canReuseAiKey } from "../lib/ai-connector-config";
+import { AiKeyStatus } from "../components/ai-key-status";
+import { findSavedAiKey } from "../lib/ai-connector-config";
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { HelpLink } from "../components/documentation/help-link";
 import {
@@ -546,7 +547,7 @@ export function WelcomePage() {
   const [aiModel, setAiModel] = useState(loaded.aiConnector.model ?? chosenPreset.defaultModel);
   const [aiApiKey, setAiApiKey] = useState("");
   const [manualAiModel, setManualAiModel] = useState(aiPreset === "azure_openai");
-  const canKeepAiKey = canReuseAiKey(aiConnector, {
+  const savedAiKey = findSavedAiKey(aiConnector.savedKeys, {
     preset: aiPreset,
     protocol: aiProtocol,
     baseUrl: aiBaseUrl,
@@ -2115,24 +2116,28 @@ export function WelcomePage() {
                         )}
 
                         <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="welcome-ai-api-key">
-                            <FormattedMessage
-                              id="settings.aiAnalysis.apiKey"
-                              defaultMessage="API key"
-                            />
-                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Label htmlFor="welcome-ai-api-key">
+                              <FormattedMessage
+                                id="settings.aiAnalysis.apiKey"
+                                defaultMessage="API key"
+                              />
+                            </Label>
+                            {savedAiKey && <AiKeyStatus inUse={savedAiKey.inUse} />}
+                          </div>
                           <Input
                             id="welcome-ai-api-key"
+                            required={chosenPreset.requiresApiKey && !savedAiKey}
                             type="password"
                             autoComplete="off"
                             value={aiApiKey}
                             onChange={(event) => setAiApiKey(event.target.value)}
                           />
                           <p className="text-sm text-muted">
-                            {aiConnector.hasApiKey ? (
+                            {savedAiKey ? (
                               <FormattedMessage
                                 id="settings.aiAnalysis.apiKey.keep"
-                                defaultMessage="Leave blank to keep the current key. Paste a new one to rotate."
+                                defaultMessage="Leave blank to use the saved key. Paste a new one to rotate it."
                               />
                             ) : chosenPreset.requiresApiKey ? (
                               <FormattedMessage
@@ -2163,7 +2168,7 @@ export function WelcomePage() {
                             ...(aiApiKey.trim() ? { apiKey: aiApiKey } : {}),
                           }}
                           canLoad={
-                            (!chosenPreset.requiresApiKey || canKeepAiKey || !!aiApiKey.trim()) &&
+                            (!chosenPreset.requiresApiKey || !!savedAiKey || !!aiApiKey.trim()) &&
                             (!chosenPreset.requiresBaseUrl || !!aiBaseUrl.trim())
                           }
                           value={aiModel}

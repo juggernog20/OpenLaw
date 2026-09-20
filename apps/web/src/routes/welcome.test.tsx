@@ -1005,6 +1005,17 @@ function aiWizardExtra(calls: AiCalls, save?: () => Response) {
           protocol: body.protocol ?? "anthropic_messages",
           baseUrl: body.baseUrl ?? "https://api.anthropic.com/v1",
           hasApiKey: true,
+          savedKeys: [
+            {
+              id: "saved-ai-key",
+              preset: body.preset,
+              protocol: body.protocol ?? "anthropic_messages",
+              baseUrl: body.baseUrl ?? "https://api.anthropic.com/v1",
+              hasApiKey: true,
+              inUse: true,
+              updatedAt: "2026-09-05T09:00:00.000Z",
+            },
+          ],
           model: body.model,
           disabledAt: null,
           updatedAt: "2026-09-05T09:00:00.000Z",
@@ -1278,6 +1289,58 @@ describe("welcome wizard AI analysis step (#699)", () => {
     expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
   });
 
+  it("shows a Saved key for a pending destination and saves it with a blank key", async () => {
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      aiConnector: {
+        preset: "anthropic",
+        protocol: "anthropic_messages",
+        baseUrl: "https://api.anthropic.com/v1",
+        model: "claude-sonnet-5",
+        savedKeys: [
+          {
+            id: "anthropic-key",
+            preset: "anthropic",
+            protocol: "anthropic_messages",
+            baseUrl: "https://api.anthropic.com/v1",
+            hasApiKey: true,
+            inUse: true,
+            updatedAt: "2026-09-05T09:00:00.000Z",
+          },
+          {
+            id: "openai-key",
+            preset: "openai",
+            protocol: "openai_chat_completions",
+            baseUrl: "https://api.openai.com/v1/",
+            hasApiKey: true,
+            inUse: false,
+            updatedAt: "2026-09-05T09:00:00.000Z",
+          },
+        ],
+      },
+      extra: aiWizardExtra(calls),
+    });
+    renderAt("/welcome");
+    const user = userEvent.setup();
+    await goToAiAnalysisStep(user);
+    await user.click(screen.getByRole("button", { name: "Replace credentials" }));
+    expect(screen.getByText("Key in use")).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("Provider"), "groq");
+    expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("API key")).toBeRequired();
+    expect(screen.getByText(/Required for this provider/)).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("Provider"), "openai");
+    expect(screen.getByText("Key saved")).toBeVisible();
+    expect(screen.getByLabelText("API key")).not.toBeRequired();
+    expect(screen.getByLabelText("API key")).toHaveValue("");
+    expect(screen.getByText(/Leave blank to use the saved key/)).toBeVisible();
+    await finishFromAiAnalysis(user);
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(calls.saves).toEqual([{ preset: "openai", model: "gpt-5.6-luna" }]);
+  });
+
   it("rotates the model without asking for the stored key again", async () => {
     const calls: AiCalls = { saves: [], completed: 0 };
     stubApi({
@@ -1298,7 +1361,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await user.click(screen.getByRole("button", { name: "Replace credentials" }));
     // The key box opens blank, and blank keeps what is stored.
     expect(screen.getByLabelText("API key")).toHaveValue("");
-    expect(screen.getByText(/Leave blank to keep the current key/)).toBeInTheDocument();
+    expect(screen.getByText(/Leave blank to use the saved key/)).toBeInTheDocument();
 
     // The way back, so opening the form is not a one-way door.
     await user.click(screen.getByRole("button", { name: "Keep current credentials" }));

@@ -199,18 +199,36 @@ Source: **CTR-008**, **TECH-012**, **TECH-022**, **SET-007**
 
 The one AI connector for this install: the singleton provider configuration for Contract analysis. A unique index on constant `true` makes the singleton rule a database fact. It is configured at runtime in Settings → Organization → AI analysis and resolved live for both the API's Test connection call and every worker analysis run. There is no environment variable for the AI connector; the row is the only source.
 
-| Column                     | Type        | Notes                                                                                                                                                   |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                       | UUID        | PK                                                                                                                                                      |
-| `preset`                   | text (enum) | `anthropic` \| `openai` \| `azure_openai` \| `gemini` \| `openrouter` \| `groq` \| `ollama` \| `custom`                                                 |
-| `protocol`                 | text (enum) | `anthropic_messages` \| `openai_chat_completions` \| `gemini`; a custom endpoint still chooses one supported wire protocol                              |
-| `base_url`                 | text        | not null; preset-supplied or Administrator-supplied endpoint                                                                                            |
-| `api_key`                  | text        | nullable for keyless local endpoints; write-only through the API and encrypted at rest with `OPENLAW_SECRET_KEY` through `encryptedText` (**TECH-022**) |
-| `model`                    | text        | not null; always editable, including for a preset                                                                                                       |
-| `disabled_at`              | timestamptz | nullable; a disabled row resolves as no connector without deleting its configuration                                                                    |
-| `created_at`, `updated_at` | timestamptz |                                                                                                                                                         |
+| Column                     | Type        | Notes                                                                                                                      |
+| -------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                         |
+| `preset`                   | text (enum) | `anthropic` \| `openai` \| `azure_openai` \| `gemini` \| `openrouter` \| `groq` \| `ollama` \| `custom`                    |
+| `protocol`                 | text (enum) | `anthropic_messages` \| `openai_chat_completions` \| `gemini`; a custom endpoint still chooses one supported wire protocol |
+| `base_url`                 | text        | not null; preset-supplied or Administrator-supplied endpoint                                                               |
+| `saved_key_id`             | UUID FK     | nullable reference to `ai_saved_keys.id`, `ON DELETE RESTRICT`; null for keyless Ollama                                    |
+| `model`                    | text        | not null; always editable, including for a preset                                                                          |
+| `disabled_at`              | timestamptz | nullable; a disabled row resolves as no connector without deleting its configuration                                       |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                            |
 
 Landed in M31/1, migration `0085_loud_scourge`. No `archived_at`: the singleton is disabled or removed.
+Removing the connector retains all Saved keys. Migration `0154_saved-ai-keys` moves the existing sealed key to `ai_saved_keys` and sets `saved_key_id` before dropping `api_key`.
+
+### `ai_saved_keys`
+
+Source: **CTR-008**, **TECH-022**, [SET-008], #980
+
+One Saved key per AI provider destination: preset, protocol, and normalized base URL. A unique index on those columns backs the API's destination lookup. New rows store the normalized URL: drop the fragment, strip one trailing path slash, and sort the query. Migrated rows retain their original URL spelling; the lookup normalizes both sides. The connector and its referenced Saved key are read in one query before resolving the driver.
+
+| Column                     | Type        | Notes                                                                                               |
+| -------------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                  |
+| `preset`                   | text (enum) | same presets as `ai_connector`                                                                      |
+| `protocol`                 | text (enum) | same protocols as `ai_connector`                                                                    |
+| `base_url`                 | text        | not null; destination URL                                                                           |
+| `api_key`                  | text        | not null; write-only, sealed by `encryptedText` under `OPENLAW_SECRET_KEY`; included in boot rewrap |
+| `created_at`, `updated_at` | timestamptz | creation and last key change; boot rewrap preserves timestamps                                      |
+
+The API exposes only `id`, `preset`, `protocol`, normalized `baseUrl`, `inUse`, `hasApiKey`, and `updatedAt` in `connector.savedKeys`. `hasApiKey` is false when the seal cannot be opened; the row remains listed, but cannot be offered for reuse. A pasted replacement repairs the same row. A pasted key replaces only its destination's row and records `ai_saved_key.stored` with the destination and a `replaced` flag. Blank saves and Load models use the matching Saved key. Ollama can use a null reference or a pasted Saved key.
 
 ---
 

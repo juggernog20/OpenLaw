@@ -211,6 +211,7 @@ test.describe("accessibility floor", () => {
             protocol: null,
             baseUrl: null,
             hasApiKey: false,
+            savedKeys: [],
             model: null,
             disabledAt: null,
             updatedAt: null,

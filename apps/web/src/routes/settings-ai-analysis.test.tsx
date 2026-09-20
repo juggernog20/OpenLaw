@@ -133,7 +133,7 @@ function isPromptSaveRequest(value: unknown): value is PromptSaveRequest {
 }
 
 function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse["connector"] {
-  return {
+  const row: AiResponse["connector"] = {
     matterPreparation: false,
     contractPreparation: false,
     contractConversionAnalysis: false,
@@ -143,12 +143,34 @@ function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse
     protocol: "openai_chat_completions",
     baseUrl: "https://api.openai.com/v1",
     hasApiKey: true,
+    savedKeys: [],
     model: "gpt-saved",
     maxOutputTokens: 32768,
     disabledAt: null,
     updatedAt: "2026-09-02T12:00:00.000Z",
     ...overrides,
   };
+  if (
+    overrides.savedKeys === undefined &&
+    row.hasApiKey &&
+    row.preset &&
+    row.protocol &&
+    row.baseUrl &&
+    row.updatedAt
+  ) {
+    row.savedKeys = [
+      {
+        id: `${row.preset}-key`,
+        preset: row.preset,
+        protocol: row.protocol,
+        baseUrl: row.baseUrl,
+        hasApiKey: true,
+        inUse: true,
+        updatedAt: row.updatedAt,
+      },
+    ];
+  }
+  return row;
 }
 
 function unconfigured(): AiResponse["connector"] {
@@ -162,6 +184,7 @@ function unconfigured(): AiResponse["connector"] {
     protocol: null,
     baseUrl: null,
     hasApiKey: false,
+    savedKeys: [],
     model: null,
     updatedAt: null,
   });
@@ -186,13 +209,38 @@ function connectorApi(
         if (!isAiSaveRequest(call.body)) throw new Error("Unexpected AI connector save body");
         const body = call.body;
         const option = PRESETS.find((candidate) => candidate.preset === body.preset)!;
+        const protocol = body.protocol ?? option.protocol;
+        const baseUrl = body.baseUrl ?? option.baseUrl;
+        let keys = stored.savedKeys.map((key) => ({
+          ...key,
+          inUse:
+            key.preset === option.preset && key.protocol === protocol && key.baseUrl === baseUrl,
+        }));
+        if (body.apiKey) keys = keys.map((key) => (key.inUse ? { ...key, hasApiKey: true } : key));
+        if (body.apiKey && !keys.some((key) => key.inUse) && baseUrl) {
+          keys = [
+            ...keys,
+            {
+              id: `${option.preset}-key`,
+              preset: option.preset,
+              protocol,
+              baseUrl,
+              hasApiKey: true,
+              inUse: true,
+              updatedAt: "2026-09-02T12:00:00.000Z",
+            },
+          ];
+        }
+        if (option.requiresApiKey && !keys.some((key) => key.inUse && key.hasApiKey))
+          return problem(400, "Paste the API key for this provider.");
         stored = connector({
+          savedKeys: keys,
           preset: option.preset,
           protocol: body.protocol ?? option.protocol,
           baseUrl: body.baseUrl ?? option.baseUrl,
           model: body.model,
           maxOutputTokens: body.maxOutputTokens ?? stored.maxOutputTokens,
-          hasApiKey: stored.hasApiKey || body.apiKey !== undefined,
+          hasApiKey: keys.some((key) => key.inUse && key.hasApiKey),
           enabled: stored.configured ? stored.enabled : true,
           disabledAt: stored.disabledAt,
         });
@@ -307,6 +355,57 @@ describe("the AI analysis connector pane (#662)", () => {
     },
   );
 
+  it("requires a replacement when the destination's Saved key cannot be read", async () => {
+    const user = userEvent.setup();
+    const saved = connector();
+    saved.hasApiKey = false;
+    saved.savedKeys[0]!.hasApiKey = false;
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: saved }) });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
+    expect(screen.queryByText("Key in use")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("API key")).toBeRequired();
+    expect(screen.getByRole("button", { name: "Load models" })).toBeDisabled();
+  });
+
+  it("shows Saved keys by pending destination and saves a different provider with a blank key", async () => {
+    const user = userEvent.setup();
+    const saves: unknown[] = [];
+    const saved = connector();
+    saved.savedKeys.push({
+      id: "groq-key",
+      preset: "groq",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://api.groq.com/openai/v1",
+      hasApiKey: true,
+      inUse: false,
+      updatedAt: "2026-09-02T12:00:00.000Z",
+    });
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: saved }, saves) });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    expect(screen.getByRole("status")).toHaveTextContent("Key in use");
+    expect(screen.getByLabelText("API key")).not.toBeRequired();
+    await user.selectOptions(screen.getByLabelText("Provider"), "gemini");
+    expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
+    expect(screen.queryByText("Key in use")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("API key")).toBeRequired();
+    expect(screen.getByText(/Required for this provider/)).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("Provider"), "groq");
+    expect(screen.getByRole("status")).toHaveTextContent("Key saved");
+    expect(screen.getByLabelText("API key")).not.toBeRequired();
+    expect(screen.getByLabelText("API key")).toHaveValue("");
+    expect(screen.getByRole("button", { name: "Load models" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "Save connector" }));
+    await waitFor(() =>
+      expect(saves).toEqual([
+        { preset: "groq", model: "openai/gpt-oss-120b", maxOutputTokens: 32768 },
+      ]),
+    );
+    expect(await screen.findByText("Key in use")).toBeVisible();
+  });
+
   it("keeps the stored key write-only and omits blank on save", async () => {
     const user = userEvent.setup();
     const saves: unknown[] = [];
@@ -314,7 +413,7 @@ describe("the AI analysis connector pane (#662)", () => {
     renderAt("/settings/ai-analysis");
     await openProvider(user);
     expect(screen.getByLabelText("API key")).toHaveValue("");
-    expect(screen.getByText(/Leave blank to keep the current key/)).toBeVisible();
+    expect(screen.getByText(/Leave blank to use the saved key/)).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
     await user.clear(screen.getByLabelText("Model"));
     await user.type(screen.getByLabelText("Model"), "gpt-updated");
