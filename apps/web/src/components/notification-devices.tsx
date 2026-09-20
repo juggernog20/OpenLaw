@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The Devices card on Personal Notifications (DES-089). Lists registered browsers,
+ * requests permission on click, and saves revocation and record-name choices immediately.
+ */
 import { useCallback, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
-import { enrolDevice, supportsDeviceNotifications } from "../lib/device-notifications";
+import {
+  enrolDevice,
+  supportsDeviceNotifications,
+  NotificationWorkerUnavailableError,
+} from "../lib/device-notifications";
 import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import { SettingsCard } from "./settings-card";
 import { StatusNote, type FieldStatus } from "./status-note";
@@ -124,7 +133,17 @@ export function NotificationDevices({
       setStatus(changed === false ? "idle" : "saved");
     } catch (error) {
       setStatus("error");
-      setDetail(error instanceof Error ? error.message : null);
+      setDetail(
+        error instanceof NotificationWorkerUnavailableError
+          ? intl.formatMessage({
+              id: "settings.devices.workerUnavailable",
+              defaultMessage:
+                "Device notifications could not start in this browser. Reload to try again, or update your browser and try again.",
+            })
+          : error instanceof Error
+            ? error.message
+            : null,
+      );
     }
   }
   async function turnOn() {

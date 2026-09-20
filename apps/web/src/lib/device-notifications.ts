@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Browser enrolment and worker messages for device notifications (DES-089).
+ * The signed-in shell owns registration. Enrolment follows a permission request on click.
+ */
 import { applicationServerKey, subscriptionBody, type NotificationSurface } from "./push-protocol";
 import { api } from "./api";
 import { problem } from "./problem";
@@ -25,21 +30,27 @@ export async function registerNotificationWorker() {
   return registrations.get(container);
 }
 
+export class NotificationWorkerUnavailableError extends Error {}
+
 async function readyRegistration() {
-  const container = navigator.serviceWorker;
-  const registration = await (registrations.get(container) ?? container.getRegistration("/"));
-  if (!registration) throw new Error();
-  if (registration.active) return registration;
-  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await Promise.race([
-      container.ready,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error()), 15_000);
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
+    const container = navigator.serviceWorker;
+    const registration = await (registrations.get(container) ?? container.getRegistration("/"));
+    if (!registration) throw new Error();
+    if (registration.active) return registration;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        container.ready,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error()), 15_000);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    throw new NotificationWorkerUnavailableError();
   }
 }
 

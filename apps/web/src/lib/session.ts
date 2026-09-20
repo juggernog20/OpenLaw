@@ -84,10 +84,18 @@ export async function requireUser(
 export function useSignOut(to: string): () => Promise<void> {
   const navigate = useNavigate();
   return async () => {
+    let cleanupTimer: ReturnType<typeof setTimeout> | undefined;
     try {
-      await unsubscribeDevice();
+      await Promise.race([
+        unsubscribeDevice(),
+        new Promise<void>((resolve) => {
+          cleanupTimer = setTimeout(resolve, 3_000);
+        }),
+      ]);
     } catch {
       /* Session deletion also revokes server delivery. */
+    } finally {
+      clearTimeout(cleanupTimer);
     }
     await authClient.signOut();
     void navigate(to, { replace: true });

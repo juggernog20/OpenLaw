@@ -7085,43 +7085,43 @@
   "notifications.push.contract.generated": {
     "defaultMessage": "A Contract was generated and you are its Legal Owner"
   },
-  "notifications.push.contract.generated_unassigned": {
+  "notifications.push.contract.generatedUnassigned": {
     "defaultMessage": "A generated Contract needs a Legal Owner"
   },
-  "notifications.push.contract.owner_assigned": {
+  "notifications.push.contract.ownerAssigned": {
     "defaultMessage": "You were assigned a Contract"
   },
-  "notifications.push.contract.status_changed": {
+  "notifications.push.contract.statusChanged": {
     "defaultMessage": "The status of a Contract changed"
   },
-  "notifications.push.contract.task_assigned": {
+  "notifications.push.contract.taskAssigned": {
     "defaultMessage": "You were assigned a Task"
   },
-  "notifications.push.contract.team_added": {
+  "notifications.push.contract.teamAdded": {
     "defaultMessage": "You were added to a Contract team"
   },
-  "notifications.push.date.expiry_approaching": {
+  "notifications.push.date.expiryApproaching": {
     "defaultMessage": "A Contract is expiring"
   },
-  "notifications.push.date.key_date_approaching": {
+  "notifications.push.date.keyDateApproaching": {
     "defaultMessage": "A Key date is coming up"
   },
-  "notifications.push.date.notice_deadline_approaching": {
+  "notifications.push.date.noticeDeadlineApproaching": {
     "defaultMessage": "A notice deadline is coming up"
   },
-  "notifications.push.date.obligation_approaching": {
+  "notifications.push.date.obligationApproaching": {
     "defaultMessage": "An Obligation is coming up"
   },
   "notifications.push.document.added": {
     "defaultMessage": "A Document was added to a record"
   },
-  "notifications.push.document.version_added": {
+  "notifications.push.document.versionAdded": {
     "defaultMessage": "A Document Version was added to a record"
   },
   "notifications.push.envelope.ended": {
     "defaultMessage": "Signing ended on a Contract"
   },
-  "notifications.push.matter.task_assigned": {
+  "notifications.push.matter.taskAssigned": {
     "defaultMessage": "You were assigned a Task"
   },
   "notifications.push.new": {
@@ -7130,7 +7130,7 @@
   "notifications.push.request.assigned": {
     "defaultMessage": "You were assigned to triage a Request"
   },
-  "notifications.push.request.conversion_draft_finished": {
+  "notifications.push.request.conversionDraftFinished": {
     "defaultMessage": "A Conversion draft finished"
   },
   "notifications.push.request.created": {
@@ -7142,7 +7142,7 @@
   "notifications.push.request.replied": {
     "defaultMessage": "Legal replied on your Request"
   },
-  "notifications.push.request.status_changed": {
+  "notifications.push.request.statusChanged": {
     "defaultMessage": "The status of your Request changed"
   },
   "notifications.push.request.submitted": {
@@ -9418,6 +9418,9 @@
   },
   "settings.devices.unsupported": {
     "defaultMessage": "This browser does not support device notifications. On iPhone or iPad, add OpenLaw to your Home Screen and open it there."
+  },
+  "settings.devices.workerUnavailable": {
+    "defaultMessage": "Device notifications could not start in this browser. Reload to try again, or update your browser and try again."
   },
   "settings.eSignature.chip.connected": {
     "defaultMessage": "Connected"

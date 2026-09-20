@@ -1077,7 +1077,7 @@ it("does not send a read receipt when the write is refused", async () => {
     ...navigator,
     serviceWorker: { getRegistration: vi.fn(async () => ({ active: { postMessage } })) },
   });
-  bellApi({
+  const writes = bellApi({
     unread: 1,
     failWrites: true,
     pages: { first: { notifications: [item(1)], nextCursor: null } },
@@ -1088,6 +1088,7 @@ it("does not send a read receipt when the write is refused", async () => {
   await user.click(
     await screen.findByRole("link", { name: /Nadia Counsel asked you to approve Acme MSA 1/ }),
   );
+  await waitFor(() => expect(writes).toHaveLength(1));
   expect(postMessage).not.toHaveBeenCalled();
 });
 

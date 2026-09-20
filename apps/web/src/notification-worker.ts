@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Device notification delivery and read receipts for both bells, with no offline cache
+ * (DES-089). Every push rechecks the row and the record-name preference through the API.
+ */
 /// <reference lib="webworker" />
 import { createIntl, createIntlCache } from "react-intl";
 import { narrateNotification, genericNotification, type BellItem } from "./lib/notifications";

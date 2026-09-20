@@ -191,7 +191,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "contract.team_added": {
     generic: defineMessage({
-      id: "notifications.push.contract.team_added",
+      id: "notifications.push.contract.teamAdded",
       defaultMessage: "You were added to a Contract team",
     }),
     icon: UserPlus,
@@ -214,7 +214,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "contract.generated_unassigned": {
     generic: defineMessage({
-      id: "notifications.push.contract.generated_unassigned",
+      id: "notifications.push.contract.generatedUnassigned",
       defaultMessage: "A generated Contract needs a Legal Owner",
     }),
     icon: UserPlus,
@@ -225,7 +225,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "contract.owner_assigned": {
     generic: defineMessage({
-      id: "notifications.push.contract.owner_assigned",
+      id: "notifications.push.contract.ownerAssigned",
       defaultMessage: "You were assigned a Contract",
     }),
     icon: UserPlus,
@@ -238,7 +238,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "contract.task_assigned": {
     generic: defineMessage({
-      id: "notifications.push.contract.task_assigned",
+      id: "notifications.push.contract.taskAssigned",
       defaultMessage: "You were assigned a Task",
     }),
     icon: SquareCheck,
@@ -252,7 +252,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "matter.task_assigned": {
     generic: defineMessage({
-      id: "notifications.push.matter.task_assigned",
+      id: "notifications.push.matter.taskAssigned",
       defaultMessage: "You were assigned a Task",
     }),
     icon: SquareCheck,
@@ -288,7 +288,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // still reads, through the arm that says only that it changed.
   "contract.status_changed": {
     generic: defineMessage({
-      id: "notifications.push.contract.status_changed",
+      id: "notifications.push.contract.statusChanged",
       defaultMessage: "The status of a Contract changed",
     }),
     icon: GitCommitHorizontal,
@@ -332,7 +332,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "document.version_added": {
     generic: defineMessage({
-      id: "notifications.push.document.version_added",
+      id: "notifications.push.document.versionAdded",
       defaultMessage: "A Document Version was added to a record",
     }),
     icon: Upload,
@@ -364,7 +364,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // three rows of the same sentence.
   "date.key_date_approaching": {
     generic: defineMessage({
-      id: "notifications.push.date.key_date_approaching",
+      id: "notifications.push.date.keyDateApproaching",
       defaultMessage: "A Key date is coming up",
     }),
     icon: CalendarClock,
@@ -376,7 +376,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "date.notice_deadline_approaching": {
     generic: defineMessage({
-      id: "notifications.push.date.notice_deadline_approaching",
+      id: "notifications.push.date.noticeDeadlineApproaching",
       defaultMessage: "A notice deadline is coming up",
     }),
     icon: CalendarClock,
@@ -388,7 +388,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "date.expiry_approaching": {
     generic: defineMessage({
-      id: "notifications.push.date.expiry_approaching",
+      id: "notifications.push.date.expiryApproaching",
       defaultMessage: "A Contract is expiring",
     }),
     icon: CalendarClock,
@@ -400,7 +400,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   },
   "date.obligation_approaching": {
     generic: defineMessage({
-      id: "notifications.push.date.obligation_approaching",
+      id: "notifications.push.date.obligationApproaching",
       defaultMessage: "An Obligation is coming up",
     }),
     icon: CalendarClock,
@@ -442,7 +442,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // were converting to, which `hrefFor` appends as a query.
   "request.conversion_draft_finished": {
     generic: defineMessage({
-      id: "notifications.push.request.conversion_draft_finished",
+      id: "notifications.push.request.conversionDraftFinished",
       defaultMessage: "A Conversion draft finished",
     }),
     icon: Sparkles,
@@ -490,7 +490,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // that it changed.
   "request.status_changed": {
     generic: defineMessage({
-      id: "notifications.push.request.status_changed",
+      id: "notifications.push.request.statusChanged",
       defaultMessage: "The status of your Request changed",
     }),
     icon: GitCommitHorizontal,

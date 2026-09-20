@@ -185,3 +185,31 @@ it("unsubscribes before ending the session", async () => {
   );
   expect(unsubscribe).toHaveBeenCalled();
 });
+
+it("explains a worker registration failure when the browser exposes push APIs", async () => {
+  vi.mocked(navigator.serviceWorker.register).mockRejectedValue(
+    new TypeError("Module workers are unavailable"),
+  );
+  vi.mocked(navigator.serviceWorker.getRegistration).mockResolvedValue(undefined);
+  renderAt("/settings/notifications");
+  const button = await screen.findByRole("button", { name: "Turn on for this browser" });
+  await waitFor(() => expect(button).toBeEnabled());
+  await userEvent.setup().click(button);
+  expect(
+    await screen.findByText(/Device notifications could not start.*Reload.*update your browser/),
+  ).toBeVisible();
+  expect(subscribe).not.toHaveBeenCalled();
+});
+
+it("ends the session when browser push cleanup does not settle", async () => {
+  getSubscription.mockResolvedValue(subscription);
+  unsubscribe.mockImplementation(() => new Promise(() => {}));
+  renderAt("/settings/notifications");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Casey Counsel" }));
+  await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
+  await waitFor(
+    () => expect(writes.some((call) => call.url.pathname === "/api/auth/sign-out")).toBe(true),
+    { timeout: 5000 },
+  );
+});

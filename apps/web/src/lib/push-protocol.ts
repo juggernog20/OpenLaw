@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Wire helpers shared by the notification worker and its tabs (DES-089).
+ * A surface selects an API mount and a bell address; subscription keys stay on that origin.
+ */
 export type NotificationSurface = "staff" | "portal";
 export function notificationMount(surface: NotificationSurface) {
   return surface === "portal" ? "/api/v1/portal/notifications" : "/api/v1/notifications";

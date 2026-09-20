@@ -64,13 +64,14 @@ export function AppShell({
   // Server value first: the loader's /me answer seeds the state, and the
   // effect reconciles the pre-paint mirror with it (#44). Layout effect
   // so a switch repaints in the new theme on the very next frame.
-  useEffect(() => {
-    void registerNotificationWorker().catch(() => {});
-  }, []);
   const [theme, setTheme] = useState<Theme>(user.theme);
   useLayoutEffect(() => {
     applyPreferredTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    void registerNotificationWorker().catch(() => {});
+  }, []);
 
   // The global keyboard contract (DES-010, #45) lives on the shell:
   // pre-login screens have no search input and no overlays to serve.

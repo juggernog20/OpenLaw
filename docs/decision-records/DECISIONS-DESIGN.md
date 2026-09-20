@@ -4990,7 +4990,7 @@ Supersedes the M27 Ownership frame in `designs/entities.pen` (Owners and Owned w
 
 - **Status:** Accepted
 - **Date:** 2026-09-20
-- **Source:** [M38 Device notifications, #962](https://github.com/juggernog20/OpenLaw/issues/962), [staff web slice, #965](https://github.com/juggernog20/OpenLaw/issues/965)
+- **Source:** [M38 Device notifications, #962](https://github.com/juggernog20/OpenLaw/issues/962), [web slice, #965](https://github.com/juggernog20/OpenLaw/issues/965)
 
 ### Context
 
@@ -4998,7 +4998,9 @@ M38 adds device notifications to the bell and email channels. DES-050's grid nee
 
 ### Decision
 
-The staff grid has In-app, Email, then Push. Each switch keeps its group and channel as its accessible name. Push uses the existing ordered immediate-save chain and the card's one saving, saved, or error note. A refused write restores the switch. Dates approaching has In-app and Push; its email remains in Briefing. Knowledge and Briefing remain email-only. Narrow rows stack below the card's container breakpoint, with visible channel labels and wrapping controls.
+The notification rules below come from #962. This addendum records how the interface presents them; it does not introduce a second delivery policy.
+
+The full-platform grid has In-app, Email, then Push. Each switch keeps its group and channel as its accessible name. Push uses the existing ordered immediate-save chain and the card's one saving, saved, or error note. A refused write restores the switch. Dates approaching has In-app and Push; its email remains in Briefing. Knowledge and Briefing remain email-only. Narrow rows stack below the card's container breakpoint, with visible channel labels and wrapping controls.
 
 A Devices card follows the event grid. It lists every registered browser with a browser and platform label, a last-seen time in DES-014's relative or short format, and a Revoke action. The full timestamp is available on the time element. Revoking another browser deletes its subscription on the server. Revoking this browser also unsubscribes its PushManager. Failed reads have a retry action. Failed writes use the card's status note.
 
@@ -5014,7 +5016,7 @@ One grid and one narrator keep the settings and notification text consistent wit
 
 ### Consequences
 
-The shared grid can expose Push per pane. This slice turns it on for staff; the Portal settings integration remains M38/4. The worker already accepts both surfaces. No new design tokens or UI primitives are required.
+The shared grid can expose Push per pane. This slice turns it on for Legal Team Members; the Portal settings integration remains M38/4. The worker already accepts both surfaces. No new design tokens or UI primitives are required.
 
 Browser permission paths follow [Chrome Help](https://support.google.com/chrome/answer/3220216), [Firefox Help](https://support.mozilla.org/en-US/kb/push-notifications-firefox), [Safari Help](https://support.apple.com/guide/safari/customize-website-notifications-sfri40734/mac), and [Edge Help](https://support.microsoft.com/en-gb/edge/manage-website-notifications-in-microsoft-edge).
 
