@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The organization Answer style card (CTR-008 addendum, 2026-09-20):
+ * one of three fixed styles for Contract text Fields, saved on choice.
+ * The radios stay disabled until an AI connector is configured.
+ */
+
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { AI_ANSWER_STYLES, type AiAnswerStyle } from "@openlaw/shared";
 import { answerStyleLabels } from "../lib/ai-answer-style";
