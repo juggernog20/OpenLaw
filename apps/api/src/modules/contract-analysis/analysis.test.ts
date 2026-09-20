@@ -1410,16 +1410,6 @@ for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini
           },
           { runId: run!.id, retryCount: 0, retryLimit: 2 },
         );
-        const settled = await waitForRun(run!.id);
-        expect(settled.state).toBe("ready");
-        expect(settled.outcome!.invalid).toEqual([invalidSlug]);
-        expect(settled.outcome!.written).toContain("effective_date");
-        expect(settled.outcome!.results).toContainEqual({
-          slug: invalidSlug,
-          value: raw,
-          evidence,
-          outcome: "invalid",
-        });
         expect(
           server.prompts.filter((prompt) =>
             prompt.includes("Your previous response could not be used"),
@@ -1432,30 +1422,41 @@ for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini
         expect(read.json().contract.effectiveDate).toBe("2026-09-01");
         expect(read.json().contract.customFields).not.toHaveProperty("governing_law");
         expect(read.json().contract.aiUnverified.effective_date).toMatchObject({ runId: run!.id });
-        const [written] = await harness.db
-          .select()
-          .from(contracts)
-          .where(eq(contracts.id, contract.id));
-        expect(written!.aiUnverified!.effective_date).toMatchObject({ runId: run!.id, evidence });
+        expect(read.statusCode, read.body).toBe(200);
+        expect(read.headers["content-type"]).toContain("application/json");
+        expect(read.json().analysis.latestRun).toMatchObject({
+          id: run!.id,
+          state: "ready",
+          outcome: { invalid: [invalidSlug], written: ["effective_date"] },
+        });
+        expect(read.json().analysis.latestRun.outcome.results).toContainEqual({
+          slug: "effective_date",
+          value: "2026-09-01",
+          evidence,
+          outcome: "written",
+        });
         expect(read.json().analysis.latestRun.outcome.results).toContainEqual({
           slug: invalidSlug,
           value: raw,
           evidence,
           outcome: "invalid",
         });
-        const [activity] = await harness.db
-          .select()
-          .from(activityLog)
-          .where(
-            and(
-              eq(activityLog.entityId, contract.id),
-              eq(activityLog.action, "contract.analysis_completed"),
-            ),
-          );
-        expect(activity!.payload).toMatchObject({
-          invalid: [invalidSlug],
-          written: expect.arrayContaining(["effective_date"]),
+        const activity = await harness.app.inject({
+          url: "/api/v1/activity",
+          query: { entityType: "contract", entityId: contract.id },
+          cookies: memberCookies,
         });
+        expect(activity.statusCode, activity.body).toBe(200);
+        expect(activity.headers["content-type"]).toContain("application/json");
+        expect(activity.json().entries).toContainEqual(
+          expect.objectContaining({
+            action: "contract.analysis_completed",
+            payload: expect.objectContaining({
+              invalid: [invalidSlug],
+              written: ["effective_date"],
+            }),
+          }),
+        );
       } finally {
         await server.stop();
       }

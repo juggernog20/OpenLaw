@@ -113,6 +113,9 @@ it.each([
   "null",
   "[]",
   JSON.stringify([VALID]),
+  `Result: ${JSON.stringify([VALID])}`,
+  `Result: ${JSON.stringify([VALID])} End of result.`,
+  `\`\`\`json\n${JSON.stringify([VALID])}\n\`\`\``,
   JSON.stringify({ ...VALID, extra: { value: true } }),
   JSON.stringify({
     consent: { value: "yes", citations: [{ sourceId: "invented", quote: "Quote" }] },
@@ -125,6 +128,14 @@ it.each([
     AiResponseError,
   );
   expect(complete).toHaveBeenCalledTimes(2);
+});
+
+it("accepts an object surrounded by prose", async () => {
+  const complete = vi.fn(async () => `Result: ${JSON.stringify(VALID)} End of result.`);
+  await expect(extractStructured(SOURCES, TARGETS, complete)).resolves.toEqual([
+    { slug: "consent", ...VALID.consent },
+  ]);
+  expect(complete).toHaveBeenCalledOnce();
 });
 
 it("accepts a value corrected by the repair without an invalid marker", async () => {

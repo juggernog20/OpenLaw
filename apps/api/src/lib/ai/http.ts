@@ -322,8 +322,10 @@ export function extractionObject(reply: string): Record<string, unknown> {
       parsed = JSON.parse(candidate.trim());
     } catch (error) {
       if (fenced !== undefined) throw error;
-      // Preserve support for prose around an object, but never unwrap a valid JSON array.
-      parsed = JSON.parse(candidate.slice(candidate.indexOf("{"), candidate.lastIndexOf("}") + 1));
+      // Keep the outer container when prose surrounds JSON, including an invalid array reply.
+      const start = candidate.search(/[[{]/);
+      const end = candidate.lastIndexOf(candidate[start] === "[" ? "]" : "}");
+      parsed = JSON.parse(candidate.slice(start, end + 1));
     }
   } catch (error) {
     throw new AiResponseError("The provider reply did not contain one JSON object.", {
