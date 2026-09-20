@@ -468,6 +468,9 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // envelope leave one job rather than two.
       await boss.send(JOB_QUEUES.executedCopyFetch, job, { singletonKey: envelopeId });
     },
+    async requestNotificationPush(notificationId: string): Promise<void> {
+      log.info({ notificationId }, "notification push delivery is not configured yet");
+    },
     async requestNotificationEmail(notificationId: string): Promise<void> {
       const job: NotificationEmailJob = { notificationId };
       // The notification row is the collapsing key, for the version's

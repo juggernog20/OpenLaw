@@ -432,6 +432,7 @@ describe("automatic Contract analysis", () => {
       requestDocumentComparison: async () => {},
       requestExecutedCopyFetch: async () => {},
       requestNotificationEmail: async () => {},
+      requestNotificationPush: async () => {},
       requestContractAnalysis: async (contractId, runId) => {
         queued.push({ contractId, runId });
         return true;
@@ -492,6 +493,7 @@ describe("automatic Contract analysis", () => {
           requestDocumentComparison: async () => {},
           requestExecutedCopyFetch: async () => {},
           requestNotificationEmail: async () => {},
+          requestNotificationPush: async () => {},
           requestContractAnalysis: async () => {
             queueAsks += 1;
             return true;
@@ -548,6 +550,7 @@ describe("automatic Contract analysis", () => {
       requestDocumentComparison: async () => {},
       requestExecutedCopyFetch: async () => {},
       requestNotificationEmail: async () => {},
+      requestNotificationPush: async () => {},
       requestContractAnalysis: async (_contractId, runId) => {
         queued.push(runId);
         return true;

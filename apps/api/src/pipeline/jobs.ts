@@ -245,6 +245,7 @@ export interface JobQueue {
    * scheduled round re-asks for every row still owed and unsent.
    */
   requestNotificationEmail(notificationId: string): Promise<void>;
+  requestNotificationPush(notificationId: string): Promise<void>;
 
   /**
    * Queues one durable analysis run under the Contract's singleton key.
@@ -317,6 +318,7 @@ export function createUnconfiguredJobQueue(): JobQueue {
     requestDocumentComparison: refuse,
     requestExecutedCopyFetch: refuse,
     requestNotificationEmail: refuse,
+    requestNotificationPush: refuse,
     requestContractAnalysis: refuse,
     requestConversionDraft: refuse,
   };

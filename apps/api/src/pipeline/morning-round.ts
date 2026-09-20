@@ -1152,6 +1152,7 @@ async function ensureBriefingReady(
       entityId: person.id,
       payload: { localDate: person.today },
       emailOwed: false,
+      pushOwed: false,
       reminderDate: person.today,
       reminderOffsetDays: 0,
       createdAt: now,

@@ -315,6 +315,7 @@ describe("the finished daily briefing", () => {
         eventType: "briefing.ready",
         payload: { localDate: today },
         emailOwed: false,
+        pushOwed: false,
       });
     }
     expect(await readyRows(idOf(EMPTY_CONTRIBUTOR))).toEqual([]);
