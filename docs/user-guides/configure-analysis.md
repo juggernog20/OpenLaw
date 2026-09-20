@@ -4,7 +4,7 @@ Connect your chosen AI provider and describe the Contract values it should extra
 
 ## Before you start
 
-Use an Administrator account and open **Settings → Organization → AI analysis**. This is its own Organization destination. Prepare a provider API key, an available model, and any endpoint your provider requires. The operator must allow both the app and its worker to reach the provider. A subscription to a provider's chat application is not itself an API key.
+Use an Administrator account and open **Settings → Organization → AI analysis**. This is its own Organization destination. Prepare a provider API key unless a Saved key is already on file for that provider, an available model, and any endpoint your provider requires. The operator must allow both the app and its worker to reach the provider. A subscription to a provider's chat application is not itself an API key.
 
 Use a disposable provider account and a small fictional Contract for your initial test. Confirm your organization's rules for sending Contract text to that provider before enabling it on a populated install. A new connector is enabled when saved. An Analysis run can start automatically when a primary Document's target text becomes ready or a ready Version becomes its executed copy; it is not limited to someone selecting **Run analysis**.
 
