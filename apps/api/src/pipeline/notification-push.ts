@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Delivers owed device pushes through the TECH-007 worker queue.
+ * NOT-001's bell row owns the debt; its live visibility predicate selects the bell.
+ * The payload carries only the row id and that bell's name.
+ */
 import {
   and,
   eq,

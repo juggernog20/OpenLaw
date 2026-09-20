@@ -796,7 +796,13 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       );
       const resolveVapid =
         handlers.resolveVapid ?? createVapidResolver(handlers.db, {}, handlers.baseUrl);
-      await resolveVapid();
+      // A broken push identity must not stop the other queues.
+      await resolveVapid().catch((error: unknown) => {
+        log.error(
+          queueErrorFields(error),
+          "the VAPID pair could not be resolved at worker startup",
+        );
+      });
       await work(
         JOB_QUEUES.notificationPush,
         oneAtATime,

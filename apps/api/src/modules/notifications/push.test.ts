@@ -475,3 +475,55 @@ it("concurrent first starts generate one pair, and env pins leave an empty datab
     });
   }
 });
+
+it("keeps the email worker running when the stored push key is unreadable", async () => {
+  const raw = await harness.db.execute<{ private: string }>(
+    sql`select vapid_private_key as private from org_settings`,
+  );
+  const [contract] = await harness.db.select().from(contracts).where(eq(contracts.id, contractId));
+  const row = await notification({
+    pushOwed: false,
+    emailOwed: true,
+    payload: { contractTitle: contract!.title, contractNumber: contract!.number },
+  });
+  const errors: string[] = [];
+  let worker: Awaited<ReturnType<typeof startPipeline>> | undefined;
+  try {
+    await harness.db.execute(
+      sql`update org_settings set vapid_private_key = 'openlaw:v1:unreadable'`,
+    );
+    worker = await startPipeline({
+      connectionString: harness.databaseUrl,
+      log: {
+        ...log,
+        error: (_fields, message) => {
+          errors.push(message);
+        },
+      },
+      handlers: {
+        db: harness.db,
+        storage: harness.storage,
+        docEngine: harness.docEngine,
+        resolveSigningProvider: harness.resolveSigningProvider,
+        resolveAiProvider: harness.resolveAiProvider,
+        resolveMailer: harness.resolveMailer,
+        baseUrl: "https://openlaw.example",
+        log,
+      },
+    });
+    expect(errors).toContain("the VAPID pair could not be resolved at worker startup");
+    await harness.pipeline.requestNotificationEmail(row.id);
+    await expect
+      .poll(async () => (await read(row.id)).emailedAt, { timeout: 15_000 })
+      .not.toBeNull();
+    const stored = await harness.db.execute<{ private: string }>(
+      sql`select vapid_private_key as private from org_settings`,
+    );
+    expect(stored.rows[0]!.private).toBe("openlaw:v1:unreadable");
+  } finally {
+    await worker?.stop();
+    await harness.db.execute(
+      sql`update org_settings set vapid_private_key = ${raw.rows[0]!.private}`,
+    );
+  }
+});

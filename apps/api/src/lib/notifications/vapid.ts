@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The install's Web Push identity, pinned by env or generated once on org settings.
+ * TECH-022 seals the private key and preserves unreadable stored credentials.
+ */
 import { eq, orgSettings, sql, type Db } from "@openlaw/db";
 import webPush from "web-push";
 

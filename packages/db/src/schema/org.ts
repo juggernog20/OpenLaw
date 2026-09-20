@@ -117,7 +117,9 @@ export const orgSettings = pgTable(
     smtpUrl: encryptedText("smtp_url"),
     /** From-address paired with smtpUrl — the SMTP_FROM shape. */
     smtpFrom: text("smtp_from"),
+    /** SQL NULL means no stored pair. The resolver creates both keys together. */
     vapidPublicKey: text("vapid_public_key"),
+    /** SQL NULL accompanies an absent public key; generated pairs are sealed under TECH-022. */
     vapidPrivateKey: encryptedText("vapid_private_key"),
     /** Startup settings, including write-only object-store credentials. */
     advancedSettings: encryptedText("advanced_settings"),
