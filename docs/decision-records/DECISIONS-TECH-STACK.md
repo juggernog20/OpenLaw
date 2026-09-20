@@ -1551,6 +1551,77 @@ One `onRequest` hook on the root context, registered before any route so no modu
 
 `apps/api/src/origin-check.test.ts` holds the rule, container-free. The web bundle is served same-origin (TECH-017) and its client uses `window.location.origin`, so no fetch changes. In development Vite proxies `/api` and sets `Origin` to the API's own origin, which passes.
 
+## TECH-034: Web Push with VAPID and a service worker without offline caching
+
+- **Status:** Accepted
+- **Date:** 2026-09-20
+- **Origin:** M38, [#962](https://github.com/juggernog20/OpenLaw/issues/962)
+
+### Context
+
+NOT-010 adds device notifications to the staff app and the Portal. A self-hosted install
+needs one stable Web Push identity, delivery outside an open tab, and authenticated reads
+of notification content. It does not need an offline copy of the application or records.
+
+### Decision
+
+Use the `web-push` package with VAPID behind the `notification.push` queue. The Notifier
+requests a wake-up after commit. The handler reads the bell row, checks its current
+audience and live session-bound subscriptions, and sends `{ notificationId, surface }`.
+The encrypted body carries no record content. Sends use a one-day TTL, normal urgency
+and a bounded socket timeout. The queue uses the short retry policy, honours a relay's
+Retry-After on 429, prunes 404/410 subscriptions, and settles exhausted delivery as skipped.
+The morning round recovers lost wake-ups from the bell row's Push debt, including reminders.
+
+Generate a VAPID pair on first use under the org-settings row lock. Keep the public key
+in org settings and seal the private key through `encryptedText` with
+`OPENLAW_SECRET_KEY`, following TECH-022. An unreadable or incomplete stored pair is
+preserved for recovery; it is never silently replaced. The public key remains readable
+when a stored private key cannot be opened, so the preferences pane can still load.
+
+`VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` optionally pin the whole pair over the stored
+values. They must be set together, and the API and worker must use the same pair across
+all replicas. Keep the pair stable while browsers remain subscribed; replacing it requires
+browser re-enrolment. The subject is `mailto:` the effective SMTP From address when
+available, otherwise `BASE_URL`. The public key is returned with notification preferences;
+the private key never goes to a browser. `.env.example` documents both pins, and Compose
+passes them to the API and worker.
+
+Build one hand-written service worker as a second Vite entry, served at `/sw.js` with
+scope `/`. The signed-in staff and Portal shells register it. It shares the bell narration
+through a FormatJS intl instance. On Push it reads the item and the record-name preference
+from the same origin with the session cookie and `cache: "no-store"`. It suppresses read
+items and focused-window alerts, and follows NOT-010's generic fallback when a read fails.
+Notification clicks use the existing read route, then focus and navigate a window on the
+correct surface or open one. Read messages from tabs close matching OS notifications.
+Subscription changes renew the browser subscription and save its current session binding.
+Sign-out starts browser unsubscription alongside session deletion, so browser cleanup
+cannot block session revocation.
+
+The worker has no fetch handler, offline cache, precache or Workbox dependency. A linked
+`manifest.webmanifest` supplies the app name, standalone display, theme colour and icons.
+The manifest enables installation on supported devices, including the Home Screen route
+needed for device notifications on iPhone and iPad; it does not make OpenLaw work offline.
+
+### Rationale and alternatives considered
+
+- A vendor-specific messaging SDK would add a hosted account and another integration to
+  each install. Standard Web Push uses the browser's own push service and one local identity.
+- An environment-only key pair would add a required setup step. Generating a sealed pair
+  makes the default install work; the optional pins let operators supply a stable identity.
+- An offline worker or Workbox would introduce a second data lifetime for confidential
+  records. The worker only wakes, reads through the existing API and displays a prompt.
+
+### Consequences
+
+Production device notifications need a secure browser context. Deployers retain the
+TECH-017 HTTPS reverse proxy setup. Backup and recovery must preserve the sealing key
+and stored VAPID pair, or the configured environment pair. No additional server service
+is required. Handler tests cover delivery, retries and the wall; worker tests cover
+display and click behaviour. Journey `59-m38-device-notifications.spec.ts` runs against
+built Compose images with only `Notification` and `PushManager` stubbed. It checks browser
+enrolment and preferences without relying on an external push service or an OS alert.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                    |
@@ -1588,3 +1659,4 @@ One `onRequest` hook on the root context, registered before any route so no modu
 | TECH-031 | First-run setup demands a bootstrap token from the log                        | Accepted                  |
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                  |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted                  |
+| TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted                  |
