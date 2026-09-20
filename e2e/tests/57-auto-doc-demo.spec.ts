@@ -393,10 +393,19 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     await expect(row).toBeVisible();
     await row.getByRole("button", { name: /^Assign / }).click();
     await chooseAssignee(lawyer.getByRole("dialog"), lawyerName);
+    // The open dialog hides the table from the accessibility tree, so the
+    // row count reads zero before the assignment has committed. Wait for
+    // the assign response first, as the generation steps wait for theirs.
+    const assignResponse = lawyer.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith(`/inbox/unassigned-contracts/${secondContract.number}/assign`),
+    );
     await lawyer
       .getByRole("dialog")
       .getByRole("button", { name: "Save assignment", exact: true })
       .click();
+    expect((await assignResponse).status()).toBe(200);
     await expect(row).toHaveCount(0);
     expect(
       (await (await lawyer.request.get(`/api/v1/contracts/${secondContract.number}`)).json())

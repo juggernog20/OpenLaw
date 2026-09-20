@@ -8,6 +8,7 @@
 
 import { redirect, useNavigate } from "react-router";
 
+import { unsubscribeDevice } from "./device-notifications";
 import { api } from "./api";
 import { authClient } from "./auth-client";
 import { configureFormatting } from "./format";
@@ -78,12 +79,32 @@ export async function requireUser(
 
 /**
  * Returns a sign-out callback for the shell. Ends the better-auth
- * session, then replaces the current history entry with `to`.
+ * session, unsubscribes this browser from device notifications
+ * (DES-089), then replaces the current history entry with `to`.
  */
 export function useSignOut(to: string): () => Promise<void> {
   const navigate = useNavigate();
   return async () => {
-    await authClient.signOut();
+    // The session request goes out in the click's own task. Awaiting a
+    // browser API first moves it to a later task, and a navigation that
+    // lands in between leaves the person signed in. The browser
+    // unsubscribe needs no session, so the two run side by side.
+    const ended = authClient.signOut();
+    ended.catch(() => {});
+    let cleanupTimer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        unsubscribeDevice(),
+        new Promise<void>((resolve) => {
+          cleanupTimer = setTimeout(resolve, 3_000);
+        }),
+      ]);
+    } catch {
+      /* Session deletion also revokes server delivery. */
+    } finally {
+      clearTimeout(cleanupTimer);
+    }
+    await ended;
     void navigate(to, { replace: true });
   };
 }

@@ -1300,6 +1300,41 @@ describe("the sentences a reader gets", () => {
     ).toBe("Nadia Counsel turned emails on for Intake in their briefing");
   });
 
+  it("names the push channel beside the other two", () => {
+    expect(
+      narrate("user.notification_preference_changed", {
+        eventGroup: "dates_approaching",
+        channel: "push",
+        enabled: false,
+      }).sentence,
+    ).toBe("Nadia Counsel turned push off for approaching dates");
+  });
+
+  it("narrates a browser turned on or off for push without its endpoint", () => {
+    const on = narrate("user.notification_preference_changed", {
+      channel: "push",
+      subscriptionId: "sub-1",
+      enabled: true,
+    });
+    expect(on.sentence).toBe("Nadia Counsel turned push on for a browser");
+    expect(
+      narrate("user.notification_preference_changed", {
+        channel: "push",
+        subscriptionId: "sub-1",
+        enabled: false,
+      }).sentence,
+    ).toBe("Nadia Counsel turned push off for a browser");
+  });
+
+  it("narrates the record-names-on-devices switch in both directions", () => {
+    expect(
+      narrate("user.notification_preference_changed", { showRecordNamesOnDevices: false }).sentence,
+    ).toBe("Nadia Counsel chose to hide record names on their devices");
+    expect(
+      narrate("user.notification_preference_changed", { showRecordNamesOnDevices: true }).sentence,
+    ).toBe("Nadia Counsel chose to show record names on their devices");
+  });
+
   it("narrates both kinds behind a version-kind correction", () => {
     const narration = narrate(
       "document.version_kind_changed",

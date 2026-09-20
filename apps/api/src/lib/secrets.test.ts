@@ -240,6 +240,7 @@ describe("rotating the key", () => {
     expect(report.unreadable).toEqual({});
     expect(report.resealed.private_key).toBe(1);
     expect(report.resealed.api_key).toBe(1);
+    expect(report.resealed.vapid_private_key).toBe(1);
 
     // And the boot after, with the old variable removed.
     useSecretKeys(readSecretKeys({ [SECRET_KEY_VARIABLE]: OTHER_KEY }));

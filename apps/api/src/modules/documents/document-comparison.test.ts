@@ -530,6 +530,7 @@ describe("a Word comparison", () => {
       },
       requestExecutedCopyFetch: async () => {},
       requestNotificationEmail: async () => {},
+      requestNotificationPush: async () => {},
       requestContractAnalysis: async () => false,
     };
     const detached = await buildApp(

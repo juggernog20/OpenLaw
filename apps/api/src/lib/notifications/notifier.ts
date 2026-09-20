@@ -25,7 +25,7 @@
  * 4. **Write the bell rows and publish their prompts inside the caller's
  *    transaction.** A mutation that rolls back tells nobody anything —
  *    the notification and the thing it is about are one act.
- * 5. **Queue the email work after commit**, and never before. The queue
+ * 5. **Queue email and push work after commit**, and never before. The queue
  *    is a different system with a different availability, and a mutation
  *    must not fail because it is down.
  *
@@ -103,7 +103,7 @@ export interface NotifierLogger {
 
 export interface NotifierDeps {
   db: Db;
-  /** The pipeline, for the immediate-email wake-up. Asked after the
+  /** The pipeline, for immediate email and push wake-ups. Asked after the
    * commit and never inside it. */
   jobs: JobQueue;
   log: NotifierLogger;
@@ -522,7 +522,7 @@ export interface Notifier {
    * one transaction.
    *
    * The bell rows go inside it, so a rolled-back mutation leaves none.
-   * The email wake-ups go out **after** it commits, where a queue that
+   * The channel wake-ups go out **after** it commits, where a queue that
    * cannot be reached costs a delay rather than the mutation — and a
    * failure to reach it is logged, never raised.
    *
@@ -793,10 +793,11 @@ export interface Notifier {
  * is Drizzle's and this module has no business writing to it. The entry
  * goes when the transaction does.
  */
-const collected = new WeakMap<Transaction, string[]>();
+type WakeUp = { notificationId: string; channel: "email" | "push" };
+const collected = new WeakMap<Transaction, WakeUp[]>();
 
 /** The collector for a transaction the type says is a notifying one. */
-function wakeUpsOf(tx: NotifyingTransaction): string[] {
+function wakeUpsOf(tx: NotifyingTransaction): WakeUp[] {
   const wakeUps = collected.get(tx);
   if (!wakeUps) {
     // Unreachable through the type: only `notifying` mints the brand,
@@ -957,6 +958,8 @@ async function fanOut(
         // in the morning round (NOT-008), not by this event group's old
         // email answer. Immediate events still use the group answer.
         emailOwed: timing !== "none" && (timing === "digest" || choice.email),
+        // The summary announces a briefing that already left; its dates push separately.
+        pushOwed: eventType !== "briefing.ready" && choice.push,
         // Both halves or neither — the table's own check. A reminder
         // that carried one of them would be a row the unique index
         // cannot hold.
@@ -977,6 +980,7 @@ async function fanOut(
     id: notifications.id,
     userId: notifications.userId,
     emailOwed: notifications.emailOwed,
+    pushOwed: notifications.pushOwed,
   });
 
   // The prompt carries no count and no item. It only tells the named
@@ -990,12 +994,13 @@ async function fanOut(
     written.map((row) => ({ kind: "bell", userId: row.userId })),
   );
 
-  // 5. The wake-ups, collected for after the commit — only for the
-  // rows whose email leaves at once. A digest row owes its email to the
-  // scheduled round, which reads the rows rather than the queue.
-  if (timing !== "immediate") return written.length;
+  // 5. Push wakes immediately, including when email waits for the digest.
   const wakeUps = wakeUpsOf(tx);
-  for (const row of written) if (row.emailOwed) wakeUps.push(row.id);
+  for (const row of written) {
+    if (timing === "immediate" && row.emailOwed)
+      wakeUps.push({ notificationId: row.id, channel: "email" });
+    if (row.pushOwed) wakeUps.push({ notificationId: row.id, channel: "push" });
+  }
   return written.length;
 }
 
@@ -1388,7 +1393,7 @@ function dateReminder(
 export function createNotifier(deps: NotifierDeps): Notifier {
   return {
     async notifying<T>(work: (tx: NotifyingTransaction) => Promise<T>): Promise<T> {
-      const wakeUps: string[] = [];
+      const wakeUps: WakeUp[] = [];
       const result = await deps.db.transaction(async (tx) => {
         const notifying = tx as NotifyingTransaction;
         collected.set(tx, wakeUps);
@@ -1410,16 +1415,20 @@ export function createNotifier(deps: NotifierDeps): Notifier {
       // would put fifty bounds end to end in front of a response that
       // has already been decided.
       await Promise.all(
-        wakeUps.map(async (notificationId) => {
+        wakeUps.map(async ({ notificationId, channel }) => {
           try {
-            await boundedQueueAsk(deps.jobs.requestNotificationEmail(notificationId));
+            await boundedQueueAsk(
+              channel === "email"
+                ? deps.jobs.requestNotificationEmail(notificationId)
+                : deps.jobs.requestNotificationPush(notificationId),
+            );
           } catch (error) {
             // Logged, never raised. The mutation has committed and the
-            // row says the email is still owed, so the worst this costs
+            // row says delivery is still owed, so the worst this costs
             // is the delay until the round that re-asks from the rows.
             deps.log.error(
-              { err: error, notificationId },
-              "could not ask the pipeline to send a notification email",
+              { err: error, notificationId, channel },
+              "could not ask the pipeline to send a notification",
             );
           }
         }),

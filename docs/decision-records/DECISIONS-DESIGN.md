@@ -4990,6 +4990,46 @@ Supersedes the M27 Ownership frame in `designs/entities.pen` (Owners and Owned w
 
 `share-register-tab.tsx` draws the five sections in the recorded order. The timeline places one tick per entry date proportionally between the first date and today, labels a tick only when it sits at least 7% of the rail from the last label, and marks the chosen date with the accent tick; prev and next step between ticks, the date button is the DES-048 picker, and Reset to today is a secondary button that is disabled on today. `?asOf=` drives the register, the dimming and the reconciliation line. The Register of members shows one row per holder per class, treasury per class, and a total row per class carrying the class terms; there is no Add holder control. The entries card mounts `RecordFilterBar` with Class, Entry, Holder and Effective date, state in the tab's search params, filtering the loaded entries on the client. Record entry and Share classes are the DES-017 dialogs; a refused write shows the API's problem detail inside the dialog. Export register and Export are same-origin download links to the CSV routes. The Holdings card marks a projected row "From register", disables its controls, and links to the register. Hand-typed owner Holdings that predate a register, and that the register does not name, list as "Declared owners not in the register" in the same card; projected rows never list there. An Entity with no share class and no entry shows only the empty state and the Holdings card, without the timeline or the reconciliation line.
 
+## DES-089: Device notifications on the preferences pane, addendum to DES-050
+
+- **Status:** Accepted
+- **Date:** 2026-09-20
+- **Source:** [M38 Device notifications, #962](https://github.com/juggernog20/OpenLaw/issues/962), [web slice, #965](https://github.com/juggernog20/OpenLaw/issues/965)
+
+### Context
+
+M38 adds device notifications to the bell and email channels. DES-050's grid needs a third channel and a place to manage browsers. The browser owns permission, so a saved Push preference alone cannot turn delivery on.
+
+### Decision
+
+The notification rules below come from #962. This addendum records how the interface presents them; it does not introduce a second delivery policy.
+
+The full-platform grid has In-app, Email, then Push. Each switch keeps its group and channel as its accessible name. Push uses the existing ordered immediate-save chain and the card's one saving, saved, or error note. A refused write restores the switch. Dates approaching has In-app and Push; its email remains in Briefing. Knowledge and Briefing remain email-only. Narrow rows stack below the card's container breakpoint, with visible channel labels and wrapping controls.
+
+A Devices card follows the event grid. It lists every registered browser with a browser and platform label, a last-seen time in DES-014's relative or short format, and a Revoke action. The full timestamp is available on the time element. Revoking another browser deletes its subscription on the server. Revoking this browser also unsubscribes its PushManager. Failed reads have a retry action. Failed writes use the card's status note.
+
+"Turn on for this browser" requests browser permission only on click. A browser already turned on says so. A blocked permission shows the browser's own settings path to allow the site. An unsupported browser gets an explanation; iPhone and iPad users are told to open OpenLaw from their Home Screen. The document links a minimal standalone manifest with the existing scale mark as its icon.
+
+"Show record names on devices" is one immediate-save switch, default on. Off, every event uses a generic sentence with no payload values. The worker also uses that sentence if it cannot read the preference. A successful row read uses the same narrator and surface as the bell, including its record section link. A failed row read uses "You have a new notification" and opens that surface's bell. Read rows and focused app windows produce no OS notification.
+
+A click marks the row read and reuses a window of the same surface, or opens one. When a tab marks rows read it sends their ids to the worker, which closes their OS notifications. A live bell refresh rechecks displayed notifications, so reads from another device can close them too. Sign-out unsubscribes this browser while the session request is in flight; the session request never waits on a browser API, so a navigation that lands during sign-out cannot leave the person signed in.
+
+### Rationale and alternatives
+
+One grid and one narrator keep the settings and notification text consistent with the bell. A permission prompt at page load would interrupt people who have not asked to turn notifications on. A second OS wording catalog for named records would let the bell and the device disagree. An offline cache is outside this feature; the worker registers from the signed-in shell and caches nothing.
+
+### Consequences
+
+The shared grid can expose Push per pane. This slice turns it on for Legal Team Members; the Portal settings integration remains M38/4. The worker already accepts both surfaces. No new design tokens or UI primitives are required.
+
+Browser permission paths follow [Chrome Help](https://support.google.com/chrome/answer/3220216), [Firefox Help](https://support.mozilla.org/en-US/kb/push-notifications-firefox), [Safari Help](https://support.apple.com/guide/safari/customize-website-notifications-sfri40734/mac), and [Edge Help](https://support.microsoft.com/en-gb/edge/manage-website-notifications-in-microsoft-edge).
+
+### Built addendum (2026-09-20, M38/4, [#966](https://github.com/juggernog20/OpenLaw/issues/966))
+
+The Portal settings pane draws the Push column for its four groups and the same Devices card, on the Portal mount (`/api/v1/portal/notifications`). The card fills the Portal column rather than the settings-card width, so it lines up with the preferences card above it. The Portal shell registers the same worker.
+
+Each signed-in shell links its own manifest, in place of the one the document linked above. The staff shell links `/manifest.webmanifest` (`id`, `start_url` and `scope` at `/`). The Portal shell links `/portal.webmanifest` (`id`, `start_url` and `scope` at `/portal`), so a Home Screen install made from the Portal opens on the Portal, and Portal sign-in at `/portal/login` stays inside the installed app. The document itself links no manifest, so sign-in pages are not installable. The worker's scope stays `/` for both.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
@@ -5082,6 +5122,7 @@ Supersedes the M27 Ownership frame in `designs/entities.pen` (Owners and Owned w
 | DES-086 | File generated output from history or the generation form                                                                                                            | Accepted                                                                                                   |
 | DES-087 | The Auto-Doc record is a doc builder: the template beside its form, inside a four-section record page                                                                | Accepted                                                                                                   |
 | DES-088 | The Ownership tab is a share register read as of a date                                                                                                              | Accepted                                                                                                   |
+| DES-089 | Device notifications on the preferences pane, addendum to DES-050                                                                                                    | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 

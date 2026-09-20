@@ -142,6 +142,8 @@ Organization-wide settings. Exactly one row, seeded by the migration that create
 | `onboarding_reviewed_types_at` | timestamptz | Nullable; the first Administrator acknowledgement of the seeded lists in Review (**SET-004**, #700). One-way and idempotent; skipping Review leaves it NULL. Landed in migration `0090_onboarding_reviewed_types.sql`; wizard Finish and the checklist action write the same mark. |
 | `smtp_url`                     | text        | app-saved SMTP relay URL, credentials inline (**TECH-011**). **Write-only** through the API and **encrypted at rest** (**TECH-022**); ignored entirely while `SMTP_URL` pins the environment                                                                                       |
 | `smtp_from`                    | text        | the from-address paired with `smtp_url`                                                                                                                                                                                                                                            |
+| `vapid_public_key`             | text        | Web Push public key, generated on first run unless env pins the pair                                                                                                                                                                                                               |
+| `vapid_private_key`            | text        | Web Push private key, sealed through `encryptedText` under TECH-022                                                                                                                                                                                                                |
 | `created_at`, `updated_at`     | timestamptz |                                                                                                                                                                                                                                                                                    |
 
 No `archived_at`: the row is neither creatable nor deletable, only edited.
@@ -211,7 +213,7 @@ The one AI connector for this install: the singleton provider configuration for 
 | `created_at`, `updated_at` | timestamptz |                                                                                                                            |
 
 Landed in M31/1, migration `0085_loud_scourge`. No `archived_at`: the singleton is disabled or removed.
-Removing the connector retains all Saved keys. Migration `0154_saved-ai-keys` moves the existing sealed key to `ai_saved_keys` and sets `saved_key_id` before dropping `api_key`.
+Removing the connector retains all Saved keys. Migration `0155_saved-ai-keys` moves the existing sealed key to `ai_saved_keys` and sets `saved_key_id` before dropping `api_key`.
 
 ### `ai_saved_keys`
 

@@ -2525,6 +2525,10 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // table holds overrides, so the value before a first save is a
   // default read out of application code and not a stored fact the
   // writer could have reported.
+  //
+  // Three payload shapes share the action (M38): a channel choice for
+  // an event group, one browser turned on or off for push, and the
+  // "show record names on devices" switch. `kind` picks the sentence.
   "user.notification_preference_changed": {
     icon: Bell,
     message: defineMessage({
@@ -2535,7 +2539,12 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       // echo the slug, because the log is append-only and a group this
       // build no longer has is still in a payload.
       defaultMessage:
-        "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} " +
+        "{kind, select, " +
+        "browser {{actor} turned push {state, select, on {on} off {off} other {{state}}} for a browser} " +
+        "devices {{actor} {state, select, on {chose to show} off {chose to hide} " +
+        "other {changed whether to show}} record names on their devices} " +
+        "other {{actor} turned " +
+        "{channel, select, in_app {bell items} email {emails} push {push} other {{channel}}} " +
         "{state, select, on {on} off {off} other {{state}}} for " +
         "{group, select, assigned_to_you {direct asks} " +
         "activity_on_your_records {activity on their records} " +
@@ -2546,9 +2555,15 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         "briefing_tasks {Tasks in their briefing} " +
         "briefing_dates {dates in their briefing} " +
         "briefing_obligations {obligations in their briefing} " +
-        "briefing_intake {Intake in their briefing} other {{group}}}",
+        "briefing_intake {Intake in their briefing} other {{group}}}}}",
     }),
     values: (intl, payload) => ({
+      kind:
+        "subscriptionId" in payload
+          ? "browser"
+          : "showRecordNamesOnDevices" in payload
+            ? "devices"
+            : "group",
       // Their own fallbacks rather than {@link named}'s, because that
       // one is a person's — "turned someone off for someone" is not a
       // sentence. Either fallback lands in the select's `other` arm.
@@ -2570,15 +2585,17 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       // "turned emails off" about a person who turned them on is a
       // sentence the append-only log can never take back. Saying which
       // way is unknown costs one clause; guessing costs the record.
-      state:
-        typeof payload.enabled === "boolean"
-          ? payload.enabled
+      state: ((direction) =>
+        typeof direction === "boolean"
+          ? direction
             ? "on"
             : "off"
           : intl.formatMessage({
               id: "activity.notificationPreference.unknownState",
               defaultMessage: "on or off",
-            }),
+            }))(
+        "showRecordNamesOnDevices" in payload ? payload.showRecordNamesOnDevices : payload.enabled,
+      ),
     }),
   },
   "user.display_name_changed": {

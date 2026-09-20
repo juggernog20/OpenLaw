@@ -107,6 +107,7 @@ export const JOB_QUEUES = {
    * making the audience decision twice.
    */
   notificationEmail: "notification.email",
+  notificationPush: "notification.push",
   /**
    * The morning round (M18/6, NOT-003, NOT-004): the date reminders and
    * the daily digest.
@@ -245,6 +246,7 @@ export interface JobQueue {
    * scheduled round re-asks for every row still owed and unsent.
    */
   requestNotificationEmail(notificationId: string): Promise<void>;
+  requestNotificationPush(notificationId: string): Promise<void>;
 
   /**
    * Queues one durable analysis run under the Contract's singleton key.
@@ -317,7 +319,12 @@ export function createUnconfiguredJobQueue(): JobQueue {
     requestDocumentComparison: refuse,
     requestExecutedCopyFetch: refuse,
     requestNotificationEmail: refuse,
+    requestNotificationPush: refuse,
     requestContractAnalysis: refuse,
     requestConversionDraft: refuse,
   };
+}
+
+export interface NotificationPushJob {
+  notificationId: string;
 }
