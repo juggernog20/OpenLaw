@@ -199,16 +199,21 @@ Source: **CTR-008**, **TECH-012**, **TECH-022**, **SET-007**
 
 The one AI connector for this install: the singleton provider configuration for Contract analysis. A unique index on constant `true` makes the singleton rule a database fact. It is configured at runtime in Settings → Organization → AI analysis and resolved live for both the API's Test connection call and every worker analysis run. There is no environment variable for the AI connector; the row is the only source.
 
-| Column                     | Type        | Notes                                                                                                                                                   |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                       | UUID        | PK                                                                                                                                                      |
-| `preset`                   | text (enum) | `anthropic` \| `openai` \| `azure_openai` \| `gemini` \| `openrouter` \| `ollama` \| `custom`                                                           |
-| `protocol`                 | text (enum) | `anthropic_messages` \| `openai_chat_completions` \| `gemini`; a custom endpoint still chooses one supported wire protocol                              |
-| `base_url`                 | text        | not null; preset-supplied or Administrator-supplied endpoint                                                                                            |
-| `api_key`                  | text        | nullable for keyless local endpoints; write-only through the API and encrypted at rest with `OPENLAW_SECRET_KEY` through `encryptedText` (**TECH-022**) |
-| `model`                    | text        | not null; always editable, including for a preset                                                                                                       |
-| `disabled_at`              | timestamptz | nullable; a disabled row resolves as no connector without deleting its configuration                                                                    |
-| `created_at`, `updated_at` | timestamptz |                                                                                                                                                         |
+| Column                         | Type        | Notes                                                                                                                                                                                 |
+| ------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                           | UUID        | PK                                                                                                                                                                                    |
+| `preset`                       | text (enum) | `anthropic` \| `openai` \| `azure_openai` \| `gemini` \| `openrouter` \| `ollama` \| `custom`                                                                                         |
+| `protocol`                     | text (enum) | `anthropic_messages` \| `openai_chat_completions` \| `gemini`; a custom endpoint still chooses one supported wire protocol                                                            |
+| `base_url`                     | text        | not null; preset-supplied or Administrator-supplied endpoint                                                                                                                          |
+| `api_key`                      | text        | nullable for keyless local endpoints; write-only through the API and encrypted at rest with `OPENLAW_SECRET_KEY` through `encryptedText` (**TECH-022**)                               |
+| `model`                        | text        | not null; always editable, including for a preset                                                                                                                                     |
+| `answer_style`                 | text (enum) | not null, default `sentence`; `few_words` \| `sentence` \| `full_clause`, checked by the database; organization Answer style for Contract text Fields, migration `0153` (**CTR-008**) |
+| `max_output_tokens`            | integer     | not null, default 32768; checked between 1024 and 262144; output budget per provider request                                                                                          |
+| `contract_conversion_analysis` | boolean     | not null, default false; automatically analyze eligible Request context after Contract conversion                                                                                     |
+| `contract_preparation`         | boolean     | not null, default false; prepare Contract Conversion drafts (**INT-008**)                                                                                                             |
+| `matter_preparation`           | boolean     | not null, default false; prepare Matter Conversion drafts (**INT-008**)                                                                                                               |
+| `disabled_at`                  | timestamptz | nullable; a disabled row resolves as no connector without deleting its configuration                                                                                                  |
+| `created_at`, `updated_at`     | timestamptz |                                                                                                                                                                                       |
 
 Landed in M31/1, migration `0085_loud_scourge`. No `archived_at`: the singleton is disabled or removed.
 
