@@ -36,6 +36,36 @@ export type AiPreset = (typeof AI_PRESETS)[number];
 export const AI_PROTOCOLS = ["anthropic_messages", "openai_chat_completions", "gemini"] as const;
 export type AiProtocol = (typeof AI_PROTOCOLS)[number];
 
+/** Write-only Saved keys, retained when the connector is removed. */
+export const aiSavedKeys = pgTable(
+  "ai_saved_keys",
+  {
+    id: uuidPk(),
+    preset: text("preset", { enum: AI_PRESETS }).notNull(),
+    protocol: text("protocol", { enum: AI_PROTOCOLS }).notNull(),
+    baseUrl: text("base_url").notNull(),
+    apiKey: encryptedText("api_key").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("ai_saved_keys_destination_unique").on(table.preset, table.protocol, table.baseUrl),
+    check(
+      "ai_saved_keys_preset_check",
+      sql`${table.preset} in ('anthropic', 'openai', 'azure_openai', 'gemini', 'openrouter', 'groq', 'ollama', 'custom')`,
+    ),
+    check(
+      "ai_saved_keys_protocol_check",
+      sql`${table.protocol} in ('anthropic_messages', 'openai_chat_completions', 'gemini')`,
+    ),
+  ],
+);
+
+export type AiSavedKey = typeof aiSavedKeys.$inferSelect;
+
 export const aiConnector = pgTable(
   "ai_connector",
   {
@@ -43,8 +73,8 @@ export const aiConnector = pgTable(
     preset: text("preset", { enum: AI_PRESETS }).notNull(),
     protocol: text("protocol", { enum: AI_PROTOCOLS }).notNull(),
     baseUrl: text("base_url").notNull(),
-    /** Write-only through the API and sealed under TECH-022. Ollama may leave it NULL. */
-    apiKey: encryptedText("api_key"),
+    /** The Saved key the connector sends; NULL means it sends none, as for keyless Ollama. */
+    savedKeyId: text("saved_key_id").references(() => aiSavedKeys.id, { onDelete: "restrict" }),
     model: text("model").notNull(),
     maxOutputTokens: integer("max_output_tokens").notNull().default(32768),
     contractConversionAnalysis: boolean("contract_conversion_analysis").notNull().default(false),

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { aiConnector, isNull, type Db } from "@openlaw/db";
+import { aiConnector, aiSavedKeys, eq, isNull, type Db } from "@openlaw/db";
+import { normalizeAiBaseUrl } from "@openlaw/shared";
 import { createAiProvider } from "./index.js";
 import type { AiProvider, AiProviderConfig } from "./provider.js";
 
@@ -14,21 +15,31 @@ export function createAiResolver(
 ): AiResolver {
   let cached: { key: string; driver: AiProvider } | null = null;
   return async () => {
-    const [row] = await db
-      .select()
+    const [joined] = await db
+      .select({ connector: aiConnector, savedKey: aiSavedKeys })
       .from(aiConnector)
+      .leftJoin(aiSavedKeys, eq(aiConnector.savedKeyId, aiSavedKeys.id))
       .where(isNull(aiConnector.disabledAt))
       .limit(1);
-    if (!row) {
+    if (!joined) {
       cached = null;
       return null;
     }
+    const { connector: row, savedKey } = joined;
+    const baseUrl = normalizeAiBaseUrl(row.baseUrl);
+    const apiKey =
+      savedKey &&
+      savedKey.preset === row.preset &&
+      savedKey.protocol === row.protocol &&
+      normalizeAiBaseUrl(savedKey.baseUrl) === baseUrl
+        ? savedKey.apiKey || null
+        : null;
     const key = JSON.stringify([
       row.id,
       row.preset,
       row.protocol,
-      row.baseUrl,
-      row.apiKey,
+      baseUrl,
+      apiKey,
       row.model,
       row.maxOutputTokens,
       row.updatedAt.toISOString(),
@@ -37,8 +48,8 @@ export function createAiResolver(
     const driver = buildDriver({
       preset: row.preset,
       protocol: row.protocol,
-      baseUrl: row.baseUrl,
-      apiKey: row.apiKey,
+      baseUrl,
+      apiKey,
       model: row.model,
       maxOutputTokens: row.maxOutputTokens,
     });

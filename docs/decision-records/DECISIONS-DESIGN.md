@@ -4448,6 +4448,10 @@ The reader carries the popover so nothing is lost by skipping it, and it stacks 
 
 The purple gradient frames the control that holds the value and nothing else: the input, select or textarea, the read-only value text when the record is frozen, or the unverified deadline's date cell on the Key dates card. It never frames the label, the Unverified pill, the confirm row, or a whole card. The Contract record's Title, Contract type, Priority and Description, and every Matter record value, were framing the whole field block; the Convert dialog already framed the control alone. `apps/web/src/components/ui/ai-field.tsx` is unchanged; the Matter field components take an `aiGenerated` flag and place the frame themselves.
 
+### Amendment (2026-09-20, [#982](https://github.com/juggernog20/OpenLaw/issues/982))
+
+The Provider card's API key field carries the **Key saved** / **Key in use** pill and **Forget key** for a key the connector does not reference; the Provider select carries the **(key saved)** suffix, with no new token.
+
 ## DES-071: A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)
 
 - **Status:** Accepted

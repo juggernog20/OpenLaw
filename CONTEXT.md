@@ -381,8 +381,12 @@ An actor-scoped, editable proposal prepared from a Request before a person submi
 _Avoid_: Analysis run (for a before-creation proposal), preparation run
 
 **AI connector**:
-The singleton provider configuration for Contract analysis and opted-in Conversion drafts, saved in Settings → Organization → AI analysis, a section of its own. It chooses a preset or custom endpoint, one supported protocol, a base URL, model, and write-only API key. The API resolves it for Test connection and the worker resolves it for every Analysis run and Conversion draft, so changes apply without a restart; the key is encrypted under `OPENLAW_SECRET_KEY` [CTR-008, TECH-012, SET-008].
+The singleton provider configuration for Contract analysis and opted-in Conversion drafts, saved in Settings → Organization → AI analysis, a section of its own. It chooses a preset or custom endpoint, one supported protocol, a base URL, and a model. It references the Saved key it uses; keyless Ollama needs none. The API resolves the connector for Test connection and the worker resolves it for every Analysis run and Conversion draft, so changes apply without a restart [CTR-008, TECH-012, SET-008].
 _Avoid_: AI integration, provider environment variable, model settings
+
+**Saved key**:
+A write-only API key kept for one AI provider destination, defined by preset, protocol, and normalized base URL. Each destination has at most one, encrypted under `OPENLAW_SECRET_KEY` and reused only there. A blank save or Load models uses the pending destination's Saved key; saving a pasted key replaces that destination's value. Saved keys survive provider changes and connector removal. Only **Forget key** deletes one, and only while the connector does not reference it. The pane and onboarding step show **Key saved**, or **Key in use** for the referenced key, and mark providers with a Saved key as "(key saved)" [TECH-012, TECH-022, SET-008].
+_Avoid_: cached key, connector key slot
 
 **Manual hand-off**:
 Signing a Contract outside OpenLaw and filing the result by hand: set the status, sign anywhere, upload the executed PDF, pin it, mark active. It is the zero-config path CTR-013 promises stays sufficient, and no part of it is coupled to a signing connector [CTR-013, CTR-014].

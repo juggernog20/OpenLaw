@@ -66,7 +66,7 @@
     "defaultMessage": "{preset, select, anthropic {Anthropic} openai {OpenAI} azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} groq {Groq} ollama {Ollama} custom {Custom endpoint} other {{preset}}}"
   },
   "activity.aiConnector.removed": {
-    "defaultMessage": "{actor} removed the AI connector {provider} and its API key"
+    "defaultMessage": "{actor} removed the AI connector {provider}"
   },
   "activity.aiConnector.updated": {
     "defaultMessage": "{actor} changed the AI connector {provider}"
@@ -76,6 +76,12 @@
   },
   "activity.aiFieldPrompt.updated": {
     "defaultMessage": "{actor} changed the AI prompt for {target}"
+  },
+  "activity.aiSavedKey.forgotten": {
+    "defaultMessage": "{actor} forgot the Saved key for {provider} at {baseUrl}"
+  },
+  "activity.aiSavedKey.stored": {
+    "defaultMessage": "{actor} stored a Saved key for {provider} at {baseUrl}"
   },
   "activity.applet": {
     "defaultMessage": "History"
@@ -8463,7 +8469,7 @@
     "defaultMessage": "API key"
   },
   "settings.aiAnalysis.apiKey.keep": {
-    "defaultMessage": "Leave blank to keep the current key. Paste a new one to rotate."
+    "defaultMessage": "Leave blank to use the saved key. Paste a new one to rotate it."
   },
   "settings.aiAnalysis.apiKey.optional": {
     "defaultMessage": "Ollama does not require an API key."
@@ -8501,8 +8507,26 @@
   "settings.aiAnalysis.enabled.on": {
     "defaultMessage": "Turn this off to disable AI analysis without deleting the connector."
   },
+  "settings.aiAnalysis.forgetBody": {
+    "defaultMessage": "Forget the Saved key for {provider} at {baseUrl}? Paste it again if you want to use it later."
+  },
+  "settings.aiAnalysis.forgetFailed": {
+    "defaultMessage": "The Saved key could not be forgotten. Try again."
+  },
+  "settings.aiAnalysis.forgetKey": {
+    "defaultMessage": "Forget key"
+  },
+  "settings.aiAnalysis.forgetTitle": {
+    "defaultMessage": "Forget the Saved key"
+  },
   "settings.aiAnalysis.intro": {
     "defaultMessage": "Connect your AI provider for Contract analysis and AI-assisted Request conversion. Relevant document text, Request answers, and conversations are sent to the provider when an AI task runs."
+  },
+  "settings.aiAnalysis.keyInUse": {
+    "defaultMessage": "Key in use"
+  },
+  "settings.aiAnalysis.keySaved": {
+    "defaultMessage": "Key saved"
   },
   "settings.aiAnalysis.model": {
     "defaultMessage": "Model"
@@ -8657,6 +8681,9 @@
   "settings.aiAnalysis.provider.groq": {
     "defaultMessage": "Groq"
   },
+  "settings.aiAnalysis.provider.keySaved": {
+    "defaultMessage": "{provider} (key saved)"
+  },
   "settings.aiAnalysis.provider.ollama": {
     "defaultMessage": "Ollama"
   },
@@ -8673,7 +8700,7 @@
     "defaultMessage": "Remove connector"
   },
   "settings.aiAnalysis.removeBody": {
-    "defaultMessage": "The API key is deleted with the connector. Reconnecting means entering it again."
+    "defaultMessage": "Saved keys stay on file. You can use them when you reconnect, or use Forget key to delete them."
   },
   "settings.aiAnalysis.removeConfirm": {
     "defaultMessage": "Remove connector"

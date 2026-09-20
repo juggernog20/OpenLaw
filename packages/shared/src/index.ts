@@ -646,3 +646,5 @@ export {
 export function isOpenRequestStatus(status: string): status is "new" | "read" {
   return status === "new" || status === "read";
 }
+
+export { normalizeAiBaseUrl } from "./ai-destination.js";

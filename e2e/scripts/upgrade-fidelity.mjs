@@ -712,6 +712,15 @@ async function seed() {
   });
   const connector = (await get("/api/v1/signing-connectors/docusign")).connector;
 
+  // Seed through the baseline API so the upgrade must move a real sealed key.
+  await put("/api/v1/ai-connector", {
+    preset: "openai",
+    model: "upgrade-fidelity-model",
+    apiKey: "upgrade-fidelity-ai-fixture-key",
+  });
+  const aiConnector = (await get("/api/v1/ai-connector")).connector;
+  check(aiConnector.configured && aiConnector.hasApiKey, "the baseline did not save the AI key");
+
   // The feed of the busiest seeded record. Entries are appended and
   // never removed, so its length is a floor the upgrade must not go
   // under.
@@ -720,6 +729,12 @@ async function seed() {
   );
 
   return {
+    aiConnector: {
+      preset: aiConnector.preset,
+      protocol: aiConnector.protocol,
+      baseUrl: aiConnector.baseUrl,
+      model: aiConnector.model,
+    },
     baseUrl: BASE_URL,
     admin: { email: ADMIN.email },
     users: invited,
@@ -900,6 +915,18 @@ async function verify(fingerprint) {
   await signInAdmin();
   const me = await get("/api/v1/me");
   check(me.user.email === ADMIN.email, `signed in as ${me.user.email}, seeded ${ADMIN.email}`);
+
+  const aiConnector = (await get("/api/v1/ai-connector")).connector;
+  check(aiConnector.configured, "the AI connector is no longer configured after the upgrade");
+  check(aiConnector.hasApiKey, "the AI connector lost its key across the upgrade");
+  same(aiConnector.preset, fingerprint.aiConnector.preset, "AI connector preset");
+  same(aiConnector.model, fingerprint.aiConnector.model, "AI connector model");
+  same(aiConnector.savedKeys.length, 1, "Saved key count after the upgrade");
+  const [savedKey] = aiConnector.savedKeys;
+  same(savedKey.preset, fingerprint.aiConnector.preset, "Saved key preset");
+  same(savedKey.protocol, fingerprint.aiConnector.protocol, "Saved key protocol");
+  same(savedKey.baseUrl, fingerprint.aiConnector.baseUrl, "Saved key base URL");
+  same(savedKey.inUse, true, "migrated Saved key in use");
 
   const { general } = await get("/api/v1/org/general");
   same(general.name, fingerprint.org.name, "org name");
@@ -1284,7 +1311,7 @@ if (command === "seed") {
     `seeded ${fingerprint.contracts.length} Contracts, ${fingerprint.matters.length} Matters, ` +
       `${fingerprint.documents.list.length + 1} Documents, ` +
       `${fingerprint.externalLinks.length} external deflection links, ` +
-      `${fingerprint.users.length} invited users and one signing connector; fingerprint written to ${out}`,
+      `${fingerprint.users.length} invited users, one signing connector and one AI connector; fingerprint written to ${out}`,
   );
 } else if (command === "verify") {
   const from = argument("--in") ?? "upgrade-fingerprint.json";
