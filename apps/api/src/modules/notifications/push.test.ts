@@ -12,6 +12,7 @@ import {
   contracts,
   contractTeam,
   eq,
+  inArray,
   notifications,
   orgSettings,
   requests,
@@ -586,22 +587,75 @@ it("pushes Requester events to a Business User enrolled through the Portal, with
       urgency: "medium",
     })
     .returning();
-  const event = { requestId: request!.id, actorId: userId, actorName: "Legal" };
-  await harness.app.notifier.notifying(async (tx) => {
-    await harness.app.notifier.requestStatusChanged(tx, { ...event, from: "new", to: "resolved" });
-    await harness.app.notifier.requestDeclined(tx, { ...event, reason: "Please ask Procurement." });
-    await harness.app.notifier.requestReplied(tx, {
-      ...event,
-      commentId: crypto.randomUUID(),
+  const colleague = {
+    ...person,
+    email: "portal-push-legal@example.com",
+    displayName: "Legal colleague",
+  };
+  const legal = await provisionUser(harness.app.auth, colleague);
+  await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, legal.id));
+  const legalCookies = await signInCookies(harness.app, colleague.email, colleague.password);
+  const assigned = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/requests/${request!.number}/assignee`,
+    cookies: legalCookies,
+    payload: { assigneeId: userId },
+  });
+  expect(assigned.statusCode, assigned.body).toBe(200);
+  expect(assigned.headers["content-type"]).toContain("application/json");
+  expect(assigned.json().request.assignee).toMatchObject({ id: userId });
+  const replied = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/comments",
+    cookies,
+    payload: {
+      entityType: "request",
+      entityId: request!.id,
+      body: "Legal is reviewing this.",
       visibility: "full_thread",
-    });
-    await harness.app.notifier.requestAssigned(tx, { ...event, actorId: null, assigneeId: userId });
+    },
+  });
+  expect(replied.statusCode, replied.body).toBe(201);
+  expect(replied.headers["content-type"]).toContain("application/json");
+  expect(replied.json().comment).toMatchObject({
+    body: "Legal is reviewing this.",
+    visibility: "full_thread",
+  });
+  const resolved = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${request!.number}/resolve`,
+    cookies,
+    payload: { reply: "The existing terms cover this." },
+  });
+  expect(resolved.statusCode, resolved.body).toBe(200);
+  expect(resolved.headers["content-type"]).toContain("application/json");
+  expect(resolved.json().request.status).toBe("resolved");
+  const [other] = await harness.db
+    .insert(requests)
+    .values({
+      requestTypeId: type!.id,
+      requesterId: requester.id,
+      title: "Review another Portal NDA",
+      urgency: "medium",
+    })
+    .returning();
+  const declined = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${other!.number}/decline`,
+    cookies,
+    payload: { reason: "Please ask Procurement." },
+  });
+  expect(declined.statusCode, declined.body).toBe(200);
+  expect(declined.headers["content-type"]).toContain("application/json");
+  expect(declined.json().request).toMatchObject({
+    status: "declined",
+    declinedReason: "Please ask Procurement.",
   });
   const rows = await harness.db
     .select()
     .from(notifications)
-    .where(eq(notifications.entityId, request!.id));
-  expect(rows).toHaveLength(4);
+    .where(inArray(notifications.entityId, [request!.id, other!.id]));
+  expect(rows).toHaveLength(5);
   for (const row of rows) {
     const assigned = row.eventType === "request.assigned";
     expect(row.userId).toBe(assigned ? userId : requester.id);
@@ -617,17 +671,19 @@ it("pushes Requester events to a Business User enrolled through the Portal, with
       cookies: portalCookies,
     });
     expect(portalRead.statusCode, portalRead.body).toBe(assigned ? 404 : 200);
-    if (!assigned)
+    if (!assigned) {
+      const source = row.entityId === request!.id ? request! : other!;
       expect(portalRead.json().payload).toMatchObject({
-        requestNumber: request!.number,
-        requestTitle: request!.title,
+        requestNumber: source.number,
+        requestTitle: source.title,
       });
+    }
   }
   expect(
     rows
       .filter((row) => row.userId === requester.id)
       .map((row) => row.eventType)
       .sort(),
-  ).toEqual(["request.declined", "request.replied", "request.status_changed"]);
-  expect(received).toHaveLength(4);
+  ).toEqual(["request.declined", "request.replied", "request.replied", "request.status_changed"]);
+  expect(received).toHaveLength(5);
 });
