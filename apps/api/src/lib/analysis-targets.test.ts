@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { contractTypes, contractTypeFields, fields } from "@openlaw/db";
+import { startHarness, type TestHarness } from "../testing/harness.js";
+import { buildAnalysisTargets } from "./analysis-targets.js";
 import { AI_PROMPTS, CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 
 describe("the core contract analysis targets", () => {
@@ -44,4 +47,49 @@ it("keeps all twelve defaults about meaning only", () => {
     "Extract the Contract value.",
     "Extract the full legal name of the primary Counterparty.",
   ]);
+});
+
+describe("the Contract analysis target list", () => {
+  let harness: TestHarness;
+
+  beforeAll(async () => {
+    harness = await startHarness();
+  });
+
+  afterAll(async () => {
+    await harness.stop();
+  });
+
+  it("skips attached user and entity Fields with or without saved prompts", async () => {
+    const [type] = await harness.db
+      .insert(contractTypes)
+      .values({
+        slug: "reference_targets",
+        displayName: "Reference targets",
+        displayOrder: 0,
+      })
+      .returning();
+    for (const fieldType of ["user", "entity", "text"] as const) {
+      for (const aiPrompt of [null, "Extract the named party."]) {
+        const [field] = await harness.db
+          .insert(fields)
+          .values({
+            slug: `${fieldType}_${aiPrompt ? "prompted" : "unprompted"}`,
+            displayName: `${fieldType} reference`,
+            moduleScope: "contract",
+            fieldType,
+            fieldTag: "business",
+            aiPrompt,
+          })
+          .returning();
+        await harness.db
+          .insert(contractTypeFields)
+          .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 0 });
+      }
+    }
+    expect((await buildAnalysisTargets(harness.db, type!.id)).map(({ slug }) => slug)).toEqual([
+      ...CORE_ANALYSIS_TARGETS.map(({ slug }) => slug),
+      "text_prompted",
+    ]);
+  });
 });

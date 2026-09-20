@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { useState, type ComponentProps } from "react";
+import { isReferenceFieldType } from "@openlaw/shared";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
@@ -98,8 +99,9 @@ export function FieldEditorDialog({
   const [error, setError] = useState<string | null>(null);
 
   const isSelect = draft.fieldType !== "" && SELECT_TYPES.has(draft.fieldType);
-  // The prompt rides on contract-scoped fields only (CTR-008/CTR-016).
-  const promptable = module === "contract";
+  // The prompt rides on contract-scoped fields only (CTR-008/CTR-016), and
+  // never on a user or Entity Field: Analysis cannot pick a row id (#959).
+  const promptable = module === "contract" && !isReferenceFieldType(draft.fieldType);
 
   const set = <K extends keyof EditorDraft>(key: K, value: EditorDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));

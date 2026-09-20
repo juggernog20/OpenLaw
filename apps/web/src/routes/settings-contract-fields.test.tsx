@@ -301,6 +301,38 @@ describe("create (the field-editor dialog)", () => {
     );
   });
 
+  it.each(["user", "entity"])(
+    "hides and omits the prompt after selecting %s",
+    async (fieldType) => {
+      const calls = newCalls();
+      stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
+      renderAt("/settings/contracts/fields");
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Add field" }));
+      const dialog = await screen.findByRole("dialog", { name: "Add field" });
+      await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Internal reference");
+      const type = within(dialog).getByRole("combobox", { name: "Type" });
+      await user.selectOptions(type, "text");
+      await user.type(
+        within(dialog).getByRole("textbox", { name: "AI prompt" }),
+        "Find the party.",
+      );
+      await user.selectOptions(type, fieldType);
+      expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
+      await user.click(within(dialog).getByRole("button", { name: "Add field" }));
+      await waitFor(() =>
+        expect(calls.creates).toEqual([
+          {
+            displayName: "Internal reference",
+            moduleScope: "contract",
+            fieldType,
+            fieldTag: "business",
+          },
+        ]),
+      );
+    },
+  );
+
   it("refuses to create without a type or without options on a select", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
@@ -328,6 +360,37 @@ describe("create (the field-editor dialog)", () => {
 });
 
 describe("edit (type immutable; prompt edits)", () => {
+  it.each(["user", "entity"])(
+    "edits a legacy %s Field without showing or sending its prompt",
+    async (fieldType) => {
+      const calls = newCalls();
+      const row = { ...seededFields()[0]!, fieldType, aiPrompt: " Old saved prompt. " };
+      stubApi({ signedIn: ADMIN, extra: fieldsApi(calls, [row]) });
+      renderAt("/settings/contracts/fields");
+      await screen.findByText("Governing law");
+      // The catalog row shows no sparkle either: the saved prompt is dead.
+      const first = within(fieldList()).getAllByRole("listitem")[0]!;
+      expect(
+        within(first).queryByRole("img", { name: /AI extraction prompt/ }),
+      ).not.toBeInTheDocument();
+      expect(within(first).getByText("No AI prompt")).toBeInTheDocument();
+      const user = userEvent.setup();
+      await user.click(within(first).getByRole("button", { name: "Edit Governing law" }));
+      const dialog = await screen.findByRole("dialog", { name: "Edit Governing law" });
+      expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
+      await user.type(
+        within(dialog).getByRole("textbox", { name: "Description" }),
+        "An internal reference.",
+      );
+      await user.click(within(dialog).getByRole("button", { name: "Save" }));
+      await waitFor(() =>
+        expect(calls.patches).toEqual([
+          { id: row.id, body: { description: "An internal reference." } },
+        ]),
+      );
+    },
+  );
+
   it("locks the type and patches the prompt", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });

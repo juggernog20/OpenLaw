@@ -54,11 +54,11 @@ Prompt changes affect subsequent Analysis runs and Conversion drafts. They do no
 ## Add a catalog Field to Analysis
 
 1. Follow **Contracts → Fields** from the **Contract analysis prompts** card, or open that Settings destination directly.
-2. Create or edit a Field whose **Scope** is Contract. Enter its **AI prompt** to describe the value to extract, then save the Field. Use [Fields and Type configuration](types-statuses-fields.md) for the catalog controls.
+2. Create or edit a Contract Field with a type other than User or Entity. Enter its **AI prompt** to describe the value to extract, then save the Field. Use [Fields and Type configuration](types-statuses-fields.md) for the catalog controls.
 3. Attach the active Field to the Contract Type used by your test Contract.
 4. Run Analysis on that Contract and check the Field's result and its saved value.
 
-Only active Contract-scoped Fields attached to that Contract Type and carrying an AI prompt are included. Removing a Field's prompt stops including it in future runs; it does not erase an existing value.
+Only active Contract-scoped Fields attached to that Contract Type and carrying an AI prompt are included. User and Entity Fields are excluded, even if they have an old saved prompt. Their editor has no AI prompt box because Analysis cannot select an internal user or Entity. Removing a Field's prompt stops including it in future runs; it does not erase an existing value.
 
 ## Understand the data sent
 
