@@ -297,14 +297,14 @@ unavailable or the model is missing. Azure uses the deployment name from your Az
 Save the connector and use **Test connection** to check the choice; listing alone does not prove
 that a model supports Contract analysis. Each destination, defined by preset, protocol, and
 normalized base URL, keeps one Saved key. **Key saved** means a blank save or Load models can use
-that destination's key. **Key in use** identifies the connector's referenced key, even while
-disabled. Saving a pasted key replaces only the destination's key. Only **Forget key** deletes
+that destination's key. **Key in use** identifies the connector's referenced key, even while the
+connector is turned off. Saving a pasted key replaces only the destination's key. Only **Forget key** deletes
 a Saved key the connector does not reference. Provider changes and **Remove connector** leave
 Saved keys on file.
 
 The **worker makes the provider calls for Contract extraction**. The **API loads model lists and makes the Test connection call** when an Administrator presses the corresponding button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for model discovery and the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
 
-Saved keys are write-only after save and encrypted at rest under `OPENLAW_SECRET_KEY`. The app and worker must therefore receive the same encryption key, just as they do for the signing connector. Losing it does not damage Contracts or Analysis runs, but Saved keys cannot be read until the old encryption key is restored or an Administrator replaces each affected destination's key. Unreadable Saved keys stay in the database for recovery.
+Saved keys are write-only after save and encrypted at rest under `OPENLAW_SECRET_KEY`. The app and worker must therefore receive the same encryption key, just as they do for the signing connector. Losing it does not damage Contracts or Analysis runs, but Saved keys cannot be read until the old encryption key is restored or an Administrator replaces each affected destination's key. Unreadable Saved keys stay in the database for recovery; the pane shows no **Key saved** pill and no **Forget key** for them until the encryption key is restored or a new key is pasted for that destination.
 
 ## Email
 

@@ -381,7 +381,7 @@ An actor-scoped, editable proposal prepared from a Request before a person submi
 _Avoid_: Analysis run (for a before-creation proposal), preparation run
 
 **AI connector**:
-The singleton provider configuration for Contract analysis and opted-in Conversion drafts, saved in Settings → Organization → AI analysis, a section of its own. It chooses a preset or custom endpoint, one supported protocol, a base URL, and model, and references the Saved key it uses. Keyless Ollama needs no Saved key. The API resolves the connector for Test connection and the worker resolves it for every Analysis run and Conversion draft, so changes apply without a restart [CTR-008, TECH-012, SET-008].
+The singleton provider configuration for Contract analysis and opted-in Conversion drafts, saved in Settings → Organization → AI analysis, a section of its own. It chooses a preset or custom endpoint, one supported protocol, a base URL, and a model. It references the Saved key it uses; keyless Ollama needs none. The API resolves the connector for Test connection and the worker resolves it for every Analysis run and Conversion draft, so changes apply without a restart [CTR-008, TECH-012, SET-008].
 _Avoid_: AI integration, provider environment variable, model settings
 
 **Saved key**:
