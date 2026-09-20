@@ -40,6 +40,29 @@ globalThis.ResizeObserver ??= class {
 // layout-free tree could not perform anyway.
 Element.prototype.scrollIntoView ??= () => {};
 
+// jsdom 30.1 keeps the Document as the focused area once a focused element
+// is removed, and the next focus() call then fires blur and focusout at the
+// Window with the newly focused element as relatedTarget (jsdom/jsdom#4347).
+// A browser never does that: the Document sits in both the old and the new
+// focus chain, so a focus move inside the page is invisible to the Window.
+// Radix Menu and Select close on a Window blur, because that means the user
+// left the page, so every dropdown opened after cleanup() had unmounted a
+// focused control closed itself on the spot. Swallow the synthetic pair
+// before Radix sees it. A genuine Window blur carries no relatedTarget and
+// still goes through. Vitest hands tests Node's global as `window`, so the
+// Window is recognised as the one focus target that is not a DOM node.
+for (const type of ["blur", "focusout"] as const) {
+  window.addEventListener(
+    type,
+    (event) => {
+      if (!(event.target instanceof Node) && (event as FocusEvent).relatedTarget !== null) {
+        event.stopImmediatePropagation();
+      }
+    },
+    true,
+  );
+}
+
 // jsdom has no EventSource. Most route suites only need the authenticated
 // shell to own a quiet connection; live-surface suites replace this with
 // the controllable double from testing/helpers.

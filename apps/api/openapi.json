@@ -4598,6 +4598,7 @@
                                 "azure_openai",
                                 "gemini",
                                 "openrouter",
+                                "groq",
                                 "ollama",
                                 "custom"
                               ]
@@ -4688,6 +4689,7 @@
                               "azure_openai",
                               "gemini",
                               "openrouter",
+                              "groq",
                               "ollama",
                               "custom"
                             ]
@@ -4805,6 +4807,7 @@
                                 "azure_openai",
                                 "gemini",
                                 "openrouter",
+                                "groq",
                                 "ollama",
                                 "custom"
                               ]
@@ -4895,6 +4898,7 @@
                               "azure_openai",
                               "gemini",
                               "openrouter",
+                              "groq",
                               "ollama",
                               "custom"
                             ]
@@ -4969,6 +4973,7 @@
                       "azure_openai",
                       "gemini",
                       "openrouter",
+                      "groq",
                       "ollama",
                       "custom"
                     ]
@@ -5045,6 +5050,7 @@
                                 "azure_openai",
                                 "gemini",
                                 "openrouter",
+                                "groq",
                                 "ollama",
                                 "custom"
                               ]
@@ -5135,6 +5141,7 @@
                               "azure_openai",
                               "gemini",
                               "openrouter",
+                              "groq",
                               "ollama",
                               "custom"
                             ]
@@ -5234,6 +5241,7 @@
                                 "azure_openai",
                                 "gemini",
                                 "openrouter",
+                                "groq",
                                 "ollama",
                                 "custom"
                               ]
@@ -5324,6 +5332,7 @@
                               "azure_openai",
                               "gemini",
                               "openrouter",
+                              "groq",
                               "ollama",
                               "custom"
                             ]
@@ -5447,6 +5456,7 @@
                                 "azure_openai",
                                 "gemini",
                                 "openrouter",
+                                "groq",
                                 "ollama",
                                 "custom"
                               ]
@@ -5537,6 +5547,7 @@
                               "azure_openai",
                               "gemini",
                               "openrouter",
+                              "groq",
                               "ollama",
                               "custom"
                             ]
@@ -5613,6 +5624,7 @@
                       "azure_openai",
                       "gemini",
                       "openrouter",
+                      "groq",
                       "ollama",
                       "custom"
                     ]
@@ -5764,6 +5776,7 @@
                                 "azure_openai",
                                 "gemini",
                                 "openrouter",
+                                "groq",
                                 "ollama",
                                 "custom"
                               ]
@@ -5854,6 +5867,7 @@
                               "azure_openai",
                               "gemini",
                               "openrouter",
+                              "groq",
                               "ollama",
                               "custom"
                             ]
@@ -5955,6 +5969,7 @@
                                 "azure_openai",
                                 "gemini",
                                 "openrouter",
+                                "groq",
                                 "ollama",
                                 "custom"
                               ]
@@ -6045,6 +6060,7 @@
                               "azure_openai",
                               "gemini",
                               "openrouter",
+                              "groq",
                               "ollama",
                               "custom"
                             ]
@@ -48007,6 +48023,7 @@
                                     "azure_openai",
                                     "gemini",
                                     "openrouter",
+                                    "groq",
                                     "ollama",
                                     "custom"
                                   ]
@@ -54007,6 +54024,7 @@
                             "azure_openai",
                             "gemini",
                             "openrouter",
+                            "groq",
                             "ollama",
                             "custom"
                           ]
@@ -54235,6 +54253,7 @@
                             "azure_openai",
                             "gemini",
                             "openrouter",
+                            "groq",
                             "ollama",
                             "custom"
                           ]
@@ -54456,6 +54475,7 @@
                             "azure_openai",
                             "gemini",
                             "openrouter",
+                            "groq",
                             "ollama",
                             "custom"
                           ]

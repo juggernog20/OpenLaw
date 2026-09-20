@@ -9498,6 +9498,7 @@ export interface operations {
                     | "azure_openai"
                     | "gemini"
                     | "openrouter"
+                    | "groq"
                     | "ollama"
                     | "custom"
                   )
@@ -9518,6 +9519,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               label: string;
@@ -9554,7 +9556,14 @@ export interface operations {
         "application/json": {
           /** @enum {string} */
           preset:
-            "anthropic" | "openai" | "azure_openai" | "gemini" | "openrouter" | "ollama" | "custom";
+            | "anthropic"
+            | "openai"
+            | "azure_openai"
+            | "gemini"
+            | "openrouter"
+            | "groq"
+            | "ollama"
+            | "custom";
           /** @enum {string} */
           protocol?: "anthropic_messages" | "openai_chat_completions" | "gemini";
           baseUrl?: string;
@@ -9589,6 +9598,7 @@ export interface operations {
                     | "azure_openai"
                     | "gemini"
                     | "openrouter"
+                    | "groq"
                     | "ollama"
                     | "custom"
                   )
@@ -9609,6 +9619,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               label: string;
@@ -9664,6 +9675,7 @@ export interface operations {
                     | "azure_openai"
                     | "gemini"
                     | "openrouter"
+                    | "groq"
                     | "ollama"
                     | "custom"
                   )
@@ -9684,6 +9696,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               label: string;
@@ -9746,6 +9759,7 @@ export interface operations {
                     | "azure_openai"
                     | "gemini"
                     | "openrouter"
+                    | "groq"
                     | "ollama"
                     | "custom"
                   )
@@ -9766,6 +9780,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               label: string;
@@ -9829,6 +9844,7 @@ export interface operations {
                     | "azure_openai"
                     | "gemini"
                     | "openrouter"
+                    | "groq"
                     | "ollama"
                     | "custom"
                   )
@@ -9849,6 +9865,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               label: string;
@@ -9885,7 +9902,14 @@ export interface operations {
         "application/json": {
           /** @enum {string} */
           preset:
-            "anthropic" | "openai" | "azure_openai" | "gemini" | "openrouter" | "ollama" | "custom";
+            | "anthropic"
+            | "openai"
+            | "azure_openai"
+            | "gemini"
+            | "openrouter"
+            | "groq"
+            | "ollama"
+            | "custom";
           /** @enum {string} */
           protocol?: "anthropic_messages" | "openai_chat_completions" | "gemini";
           baseUrl?: string;
@@ -9983,6 +10007,7 @@ export interface operations {
                     | "azure_openai"
                     | "gemini"
                     | "openrouter"
+                    | "groq"
                     | "ollama"
                     | "custom"
                   )
@@ -10003,6 +10028,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               label: string;
@@ -10058,6 +10084,7 @@ export interface operations {
                     | "azure_openai"
                     | "gemini"
                     | "openrouter"
+                    | "groq"
                     | "ollama"
                     | "custom"
                   )
@@ -10078,6 +10105,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               label: string;
@@ -24605,6 +24633,7 @@ export interface operations {
                   | "azure_openai"
                   | "gemini"
                   | "openrouter"
+                  | "groq"
                   | "ollama"
                   | "custom";
                 model: string;
@@ -26226,6 +26255,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               model: string;
@@ -26299,6 +26329,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               model: string;
@@ -26372,6 +26403,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               model: string;

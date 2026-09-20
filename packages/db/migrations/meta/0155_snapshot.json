@@ -1,6 +1,6 @@
 {
-  "id": "8d285158-ddd7-489d-bad3-31463b899269",
-  "prevId": "c92e8d18-0ddd-4f4e-a7bd-1b1c0a128cc1",
+  "id": "d3500689-683a-4c14-8391-fa7fb8a24550",
+  "prevId": "8d285158-ddd7-489d-bad3-31463b899269",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -8716,6 +8716,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "ai_answer_style": {
+          "name": "ai_answer_style",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "is_system_default": {
           "name": "is_system_default",
           "type": "boolean",
@@ -8781,6 +8787,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "fields_ai_answer_style_check": {
+          "name": "fields_ai_answer_style_check",
+          "value": "\"fields\".\"ai_answer_style\" is null or (\"fields\".\"module_scope\" = 'contract' and \"fields\".\"field_type\" in ('text', 'long_text') and \"fields\".\"ai_answer_style\" in ('few_words', 'sentence', 'full_clause') and (\"fields\".\"ai_answer_style\" <> 'full_clause' or \"fields\".\"field_type\" = 'long_text'))"
+        },
         "fields_module_scope_check": {
           "name": "fields_module_scope_check",
           "value": "\"fields\".\"module_scope\" in ('matter', 'contract', 'entity')"

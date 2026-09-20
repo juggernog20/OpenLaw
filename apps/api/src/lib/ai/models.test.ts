@@ -15,7 +15,7 @@ function replies(...bodies: unknown[]) {
   return fetcher;
 }
 
-function config(preset: "anthropic" | "openai" | "gemini" | "openrouter" | "ollama") {
+function config(preset: "anthropic" | "openai" | "gemini" | "openrouter" | "ollama" | "groq") {
   const definition = AI_PRESET_DEFINITIONS[preset];
   return { ...definition, baseUrl: definition.baseUrl!, apiKey: "test-provider-key" };
 }
@@ -107,6 +107,60 @@ describe("provider model discovery", () => {
     expect((await listAiModels(config("openrouter"))).models).toEqual([
       { id: "vendor/chat", label: "Vendor Chat" },
     ]);
+  });
+
+  const groqModels = [
+    { id: "llama-3.3-70b-versatile", active: true },
+    { id: "llama-3.1-8b-instant", active: false },
+    { id: "whisper-large-v3", active: true },
+    { id: "playai-tts", active: true },
+    { id: "canopylabs/orpheus-v1-english", active: true },
+    { id: "meta-llama/llama-guard-4-12b", active: true },
+  ];
+
+  it("lists only active Groq chat models, labelled by ID, in one authenticated request", async () => {
+    const fetcher = replies({ data: groqModels });
+    expect(await listAiModels(config("groq"))).toEqual({
+      models: [{ id: "llama-3.3-70b-versatile", label: "llama-3.3-70b-versatile" }],
+      truncated: false,
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(String(fetcher.mock.calls[0]![0])).toBe("https://api.groq.com/openai/v1/models");
+    expect(fetcher.mock.calls[0]![1]).toMatchObject({
+      method: "GET",
+      redirect: "error",
+      headers: { authorization: "Bearer test-provider-key" },
+    });
+  });
+
+  it.each(["openai", "custom"] as const)("does not apply Groq filters to %s", async (preset) => {
+    replies({ data: groqModels });
+    const result = await listAiModels({ ...config("openai"), preset });
+    expect(result.models).toHaveLength(groqModels.length);
+    expect(result.models).toEqual(
+      expect.arrayContaining(groqModels.map(({ id }) => ({ id, label: id }))),
+    );
+  });
+
+  it("keeps Groq models without an active flag and always uses their ID as the label", async () => {
+    replies({ data: [{ id: "openai/gpt-oss-120b", name: "Name", display_name: "Display name" }] });
+    expect((await listAiModels(config("groq"))).models).toEqual([
+      { id: "openai/gpt-oss-120b", label: "openai/gpt-oss-120b" },
+    ]);
+  });
+
+  it("ignores pagination metadata on Groq's flat list", async () => {
+    const fetcher = replies({
+      data: [{ id: "chat-model" }],
+      has_more: true,
+      last_id: "chat-model",
+      nextPageToken: "page-2",
+    });
+    expect(await listAiModels(config("groq"))).toEqual({
+      models: [{ id: "chat-model", label: "chat-model" }],
+      truncated: false,
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
   it("replaces a custom inference path while retaining its query", async () => {

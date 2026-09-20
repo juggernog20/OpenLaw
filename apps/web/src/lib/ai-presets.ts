@@ -29,6 +29,7 @@ export const AI_PRESET_MESSAGES: Readonly<Record<AiPreset, MessageDescriptor>> =
   azure_openai: { id: "settings.aiAnalysis.provider.azureOpenAi", defaultMessage: "Azure OpenAI" },
   gemini: { id: "settings.aiAnalysis.provider.gemini", defaultMessage: "Gemini" },
   openrouter: { id: "settings.aiAnalysis.provider.openRouter", defaultMessage: "OpenRouter" },
+  groq: { id: "settings.aiAnalysis.provider.groq", defaultMessage: "Groq" },
   ollama: { id: "settings.aiAnalysis.provider.ollama", defaultMessage: "Ollama" },
   custom: { id: "settings.aiAnalysis.provider.custom", defaultMessage: "Custom endpoint" },
 });
