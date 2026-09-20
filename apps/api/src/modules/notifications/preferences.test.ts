@@ -93,6 +93,7 @@ interface BellItem {
 interface GroupPreference {
   eventGroup: string;
   inApp: boolean;
+  push: boolean;
   email: boolean;
 }
 
@@ -161,7 +162,7 @@ const groupIn = (groups: GroupPreference[], group: string): GroupPreference => {
 function saveToggle(
   fixture: { email: string },
   eventGroup: string,
-  channel: "in_app" | "email",
+  channel: "in_app" | "email" | "push",
   enabled: boolean,
 ) {
   return harness.app.inject({
@@ -176,7 +177,7 @@ function saveToggle(
 async function toggle(
   fixture: { email: string },
   eventGroup: string,
-  channel: "in_app" | "email",
+  channel: "in_app" | "email" | "push",
   enabled: boolean,
 ): Promise<GroupPreference[]> {
   const res = await saveToggle(fixture, eventGroup, channel, enabled);
@@ -353,6 +354,14 @@ describe("the grid the pane draws", () => {
 
   it("answers every group with its defaults before anybody has an opinion", async () => {
     const groups = await preferences(BYSTANDER);
+    expect(groups.map(({ eventGroup, push }) => ({ eventGroup, push }))).toEqual([
+      { eventGroup: "assigned_to_you", push: true },
+      { eventGroup: "activity_on_your_records", push: false },
+      { eventGroup: "dates_approaching", push: true },
+      { eventGroup: "new_requests", push: false },
+      { eventGroup: "knowledge", push: false },
+      { eventGroup: "requester_events", push: true },
+    ]);
     // The table holds overrides, so a person who has never opened the
     // pane has no rows at all — and still gets a complete answer.
     expect(groups.map((row) => row.eventGroup)).toEqual([
@@ -609,4 +618,26 @@ describe("the activity log (DD-017)", () => {
 
     await toggle(BYSTANDER, "activity_on_your_records", "email", false);
   });
+});
+
+it("honours push overrides independently of email and removes a restored default", async () => {
+  for (const enabled of [false, true]) {
+    const groups = await toggle(TARGET, "assigned_to_you", "push", enabled);
+    expect(groupIn(groups, "assigned_to_you").push).toBe(enabled);
+    const contract = await newContract(`Push preference ${enabled}`);
+    await askToApprove(contract.number, idOf(TARGET));
+    expect((await rowsFor(TARGET, contract))[0]!.pushOwed).toBe(enabled);
+  }
+  const overrides = await harness.db
+    .select()
+    .from(notificationPreferences)
+    .where(
+      and(
+        eq(notificationPreferences.userId, idOf(TARGET)),
+        eq(notificationPreferences.eventGroup, "assigned_to_you"),
+        eq(notificationPreferences.channel, "push"),
+      ),
+    );
+  expect(overrides).toEqual([]);
+  expect((await saveToggle(TARGET, "briefing.dates", "push", true)).statusCode).toBe(400);
 });

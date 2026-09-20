@@ -55,7 +55,8 @@ export type BriefingChoices = Readonly<Record<BriefingPreferenceGroup, boolean>>
  */
 function apply(choice: ChannelChoice, channel: NotificationChannel, enabled: boolean): void {
   if (channel === "in_app") choice.inApp = enabled;
-  else choice.email = enabled;
+  else if (channel === "email") choice.email = enabled;
+  else choice.push = enabled;
 }
 
 /**
@@ -210,7 +211,7 @@ export async function saveChannelChoice(
   channel: NotificationChannel,
   enabled: boolean,
 ): Promise<void> {
-  const isDefault = defaultChoice(eventGroup)[channel === "in_app" ? "inApp" : "email"] === enabled;
+  const isDefault = defaultChoice(eventGroup)[channel === "in_app" ? "inApp" : channel] === enabled;
   const naturalKey = and(
     eq(notificationPreferences.userId, userId),
     eq(notificationPreferences.eventGroup, eventGroup),

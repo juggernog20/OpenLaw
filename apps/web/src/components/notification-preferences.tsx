@@ -435,6 +435,7 @@ export function NotificationSwitchGrid({
       eventGroup: group,
       inApp: true,
       email: false,
+      push: false,
     };
 
   return (

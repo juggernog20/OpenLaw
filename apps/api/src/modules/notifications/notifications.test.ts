@@ -37,7 +37,7 @@
  * **The reads are the signed-in person's, and they page.**
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { and, contracts, desc, eq, notifications, users, type Notification } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { buildApp } from "../../app.js";
@@ -344,6 +344,7 @@ describe("an approval request reaches its approver", () => {
     });
     const row = (await rowsFor(APPROVER)).find((r) => r.entityId === contract.id);
     expect(row!.emailOwed).toBe(true);
+    expect(row!.pushOwed).toBe(true);
     expect(row!.emailSkippedAt).toBeNull();
   });
 
@@ -421,6 +422,7 @@ describe("the mutation never depends on the channels", () => {
       // Owed, and nobody has answered for it: exactly the state the
       // scheduled round re-asks from.
       expect(row!.emailOwed).toBe(true);
+      expect(row!.pushOwed).toBe(true);
       expect(row!.emailedAt).toBeNull();
       expect(row!.emailSkippedAt).toBeNull();
     } finally {
@@ -452,7 +454,12 @@ describe("the wall has no cracks", () => {
     const beforeCount = await unread(OUTSIDER);
     expect(beforeCount).toBeGreaterThanOrEqual(1);
 
+    const item = beforeList.notifications.find((row) => row.entityId === contract.id)!;
+    const get = () =>
+      harness.app.inject({ url: `/api/v1/notifications/${item.id}`, cookies: as(OUTSIDER) });
+    expect((await get()).json()).toMatchObject({ id: item.id, entityId: contract.id });
     await wallOff(contract.id);
+    expect((await get()).statusCode).toBe(404);
 
     // The row is still in the table; the reads simply stop answering
     // with it. Silently — no gap, no tombstone, and no number that says
@@ -671,6 +678,7 @@ describe("an unconfigured relay", () => {
       // nothing is hidden.
       expect(row!.readAt).toBeNull();
       expect(row!.emailOwed).toBe(true);
+      expect(row!.pushOwed).toBe(true);
       expect(row!.emailedAt).toBeNull();
       const page = await bell(APPROVER);
       expect(page.notifications.map((r) => r.entityId)).toContain(contract.id);
@@ -706,4 +714,61 @@ describe("an unconfigured relay", () => {
       harness.smtpEnv = previous;
     }
   });
+});
+
+it("collects committed push wake-ups for immediate and digest rows, once per reminder", async () => {
+  const contract = await newContract("Push wake-ups");
+  const email = vi.fn(async () => {});
+  const push = vi.fn(async (id: string) => {
+    const [committed] = await harness.db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, id));
+    expect(committed?.pushOwed).toBe(true);
+  });
+  const logError = vi.fn();
+  const notifier = createNotifier({
+    db: harness.db,
+    jobs: { ...harness.pipeline, requestNotificationEmail: email, requestNotificationPush: push },
+    log: { error: logError },
+  });
+  const reminder = {
+    contractId: contract.id,
+    contractNumber: contract.number,
+    contractTitle: contract.title,
+    reminderDate: "2026-10-01",
+    offsetDays: 7,
+    userIds: [idOf(APPROVER)],
+    keyDateId: "push-date",
+    label: "Renewal",
+  };
+  await notifier.notifying(async (tx) => {
+    await notifier.keyDateApproaching(tx, reminder);
+    expect(push).not.toHaveBeenCalled();
+    expect(email).not.toHaveBeenCalled();
+  });
+  expect(push).toHaveBeenCalledTimes(1);
+  expect(email).not.toHaveBeenCalled();
+  await notifier.notifying((tx) => notifier.keyDateApproaching(tx, reminder));
+  expect(push).toHaveBeenCalledTimes(1);
+  await notifier.notifying((tx) =>
+    notifier.ownerAssigned(tx, {
+      contractId: contract.id,
+      contractNumber: contract.number,
+      contractTitle: contract.title,
+      actorId: idOf(MEMBER),
+      actorName: MEMBER.displayName,
+      ownerId: idOf(APPROVER),
+    }),
+  );
+  expect(push).toHaveBeenCalledTimes(2);
+  expect(email).toHaveBeenCalledTimes(1);
+  await expect(
+    notifier.notifying(async (tx) => {
+      await notifier.keyDateApproaching(tx, { ...reminder, offsetDays: 1 });
+      throw new Error("rollback push");
+    }),
+  ).rejects.toThrow("rollback push");
+  expect(push).toHaveBeenCalledTimes(2);
+  expect(logError).not.toHaveBeenCalled();
 });

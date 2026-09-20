@@ -6937,6 +6937,54 @@ export interface paths {
     patch: operations["updateSavedView"];
     trace?: never;
   };
+  "/api/v1/notifications/subscriptions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["staffListPushSubscriptions"];
+    put?: never;
+    post: operations["staffSavePushSubscription"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/subscriptions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["staffDeletePushSubscription"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["staffGetNotification"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/notifications": {
     parameters: {
       query?: never;
@@ -7021,6 +7069,54 @@ export interface paths {
     head?: never;
     /** Save one channel's answer for an event group or one email-only briefing section, for the signed-in person (NOT-001). One pair per request, because a toggle is what the pane saves and it saves the moment it is flipped (SET-003 immediate apply). The write lands in `notification_preferences` as an override, so the very next event honours it with no other wiring — and turning email off leaves the group's bell items flowing, which is the point of the two channels being separate rows. A save back to the group's own default **removes** the override rather than storing one that agrees with it: the table holds disagreements, and the effective answer is identical either way. Recorded in the activity log like every settings mutation. Answers the whole grid back, so the pane can never drift from what the fan-out will honour */
     patch: operations["updateMyNotificationPreferences"];
+    trace?: never;
+  };
+  "/api/v1/portal/notifications/subscriptions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["portalListPushSubscriptions"];
+    put?: never;
+    post: operations["portalSavePushSubscription"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/notifications/subscriptions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["portalDeletePushSubscription"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/notifications/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["portalGetNotification"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/portal/notifications": {
@@ -39068,6 +39164,168 @@ export interface operations {
       };
     };
   };
+  staffListPushSubscriptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            subscriptions: {
+              id: string;
+              endpoint: string;
+              userAgent: string;
+              currentSession: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              lastSeenAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  staffSavePushSubscription: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: uri */
+          endpoint: string;
+          keys: {
+            p256dh: string;
+            auth: string;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            subscription: {
+              id: string;
+              endpoint: string;
+              userAgent: string;
+              currentSession: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              lastSeenAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  staffDeletePushSubscription: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  staffGetNotification: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            eventType: string;
+            entityType: string;
+            entityId: string;
+            payload: {
+              [key: string]: unknown;
+            };
+            readAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listNotifications: {
     parameters: {
       query?: {
@@ -39228,6 +39486,7 @@ export interface operations {
         };
         content: {
           "application/json": {
+            showRecordNamesOnDevices: boolean;
             groups: {
               /** @enum {string} */
               eventGroup:
@@ -39238,6 +39497,7 @@ export interface operations {
                 | "knowledge"
                 | "requester_events";
               inApp: boolean;
+              push: boolean;
               email: boolean;
             }[];
             briefing: {
@@ -39275,6 +39535,9 @@ export interface operations {
       content: {
         "application/json":
           | {
+              showRecordNamesOnDevices: boolean;
+            }
+          | {
               /** @enum {string} */
               eventGroup:
                 | "assigned_to_you"
@@ -39284,7 +39547,7 @@ export interface operations {
                 | "knowledge"
                 | "requester_events";
               /** @enum {string} */
-              channel: "in_app" | "email";
+              channel: "in_app" | "email" | "push";
               enabled: boolean;
             }
           | {
@@ -39309,6 +39572,7 @@ export interface operations {
         };
         content: {
           "application/json": {
+            showRecordNamesOnDevices: boolean;
             groups: {
               /** @enum {string} */
               eventGroup:
@@ -39319,6 +39583,7 @@ export interface operations {
                 | "knowledge"
                 | "requester_events";
               inApp: boolean;
+              push: boolean;
               email: boolean;
             }[];
             briefing: {
@@ -39331,6 +39596,168 @@ export interface operations {
                 | "briefing.intake";
               email: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  portalListPushSubscriptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            subscriptions: {
+              id: string;
+              endpoint: string;
+              userAgent: string;
+              currentSession: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              lastSeenAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  portalSavePushSubscription: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: uri */
+          endpoint: string;
+          keys: {
+            p256dh: string;
+            auth: string;
+          };
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            subscription: {
+              id: string;
+              endpoint: string;
+              userAgent: string;
+              currentSession: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              lastSeenAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  portalDeletePushSubscription: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  portalGetNotification: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            eventType: string;
+            entityType: string;
+            entityId: string;
+            payload: {
+              [key: string]: unknown;
+            };
+            readAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
           };
         };
       };

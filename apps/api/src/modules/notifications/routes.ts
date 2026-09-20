@@ -7,7 +7,7 @@
  * **There are two bells and one of everything else.** NOT-001 puts one
  * notification system on two rendering surfaces: the staff notification
  * centre at `/notifications`, and the portal bell at
- * `/portal/notifications`. They are the same four routes registered
+ * `/portal/notifications`. They are the same routes registered
  * twice — one implementation, one read model, one paging rule — and what
  * differs between the mounts is which rows they may answer with
  * (`NotificationSurface`). A second mount rather than a parameter on one,
@@ -21,8 +21,8 @@
  * surface's business. NOT-008's email-only section preferences travel
  * in the same envelope, but remain a separate vocabulary.
  *
- * Two reads and two writes for each bell, and a read/write pair for the
- * preferences behind them. **The list** is this person's items, newest
+ * Each bell includes a single-item read and browser subscription routes.
+ * Preferences are shared between the bells. **The list** is this person's items, newest
  * first, paged. **The count** is their unread badge, which NOT-005 caps
  * at "9+" for display — the cap is the badge's, not the number's, so
  * this answers the count and the surface decides how to draw it.
@@ -49,7 +49,7 @@
  * person's item is not refused, because a refusal would answer the
  * question "does this id exist"; it simply matches nothing.
  *
- * **All four re-apply the surface's own reach predicate** (DD-014,
+ * **Every bell read re-applies the surface's own reach predicate** (DD-014,
  * DD-013, M10). On the staff mount that is the confidentiality wall: an
  * item written while a record was open is an item about a record that
  * may since have been walled off, and the answer is M10's: it leaves the
@@ -90,6 +90,8 @@ import {
   inArray,
   isNull,
   notifications,
+  pushSubscriptions,
+  users,
   NOTIFICATION_CHANNELS,
   NOTIFICATION_EVENT_GROUPS,
   sql,
@@ -105,7 +107,7 @@ import {
   saveBriefingChoice,
   saveChannelChoice,
 } from "../../lib/notifications/preferences.js";
-import { problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse } from "../../lib/problem.js";
 
 /**
  * How many items one request answers. A server constant rather than a
@@ -118,6 +120,23 @@ const PAGE_SIZE = 25;
 /** One item's id, as a cursor. Bounded rather than shaped, like every
  * id in this API. */
 const RecordIdSchema = z.string().min(1).max(64);
+
+const SubscriptionSchema = z.object({
+  id: z.string(),
+  endpoint: z.string(),
+  userAgent: z.string(),
+  currentSession: z.boolean(),
+  createdAt: z.iso.datetime({ offset: true }),
+  lastSeenAt: z.iso.datetime({ offset: true }),
+});
+
+async function recordNamesChoice(db: Executor, userId: string): Promise<boolean> {
+  const [user] = await db
+    .select({ enabled: users.showRecordNamesOnDevices })
+    .from(users)
+    .where(eq(users.id, userId));
+  return user!.enabled;
+}
 
 const UnreadEnvelope = z.object({ unread: z.number().int().nonnegative() });
 
@@ -191,6 +210,7 @@ const NotificationSchema = z.object({
 const PreferenceSchema = z.object({
   eventGroup: z.enum(NOTIFICATION_EVENT_GROUPS),
   inApp: z.boolean(),
+  push: z.boolean(),
   email: z.boolean(),
 });
 
@@ -203,13 +223,14 @@ const BriefingPreferenceSchema = z.object({
  * The read and the write answer the same envelope, so a save needs no
  * second request to be sure of what it left behind. */
 const PreferencesEnvelope = z.object({
+  showRecordNamesOnDevices: z.boolean(),
   groups: z.array(PreferenceSchema),
   briefing: z.array(BriefingPreferenceSchema),
 });
 
 /**
  * One bell, as a mount: where it sits, which rows it may answer with,
- * and what its four routes are called.
+ * and what its feed routes are called.
  *
  * The two mounts below are the whole of the difference between the staff
  * notification centre and the portal bell. Everything else — the paging,
@@ -318,6 +339,172 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
   const requireReader =
     surface === "portal" ? requireAuth : requireRole("administrator", "legal_team_member");
   return async (app) => {
+    const subscriptionView = (row: typeof pushSubscriptions.$inferSelect, sessionId: string) => ({
+      id: row.id,
+      endpoint: row.endpoint,
+      userAgent: row.userAgent,
+      currentSession: row.sessionId === sessionId,
+      createdAt: row.createdAt.toISOString(),
+      lastSeenAt: row.lastSeenAt.toISOString(),
+    });
+
+    app.get(
+      `${mount.path}/subscriptions`,
+      {
+        preHandler: requireReader,
+        schema: {
+          operationId: `${surface}ListPushSubscriptions`,
+          tags: ["notifications"],
+          response: {
+            200: z.object({ subscriptions: z.array(SubscriptionSchema) }),
+            default: problemResponse,
+          },
+        },
+      },
+      async (request) => {
+        const rows = await app.db
+          .select()
+          .from(pushSubscriptions)
+          .where(eq(pushSubscriptions.userId, request.user.id))
+          .orderBy(desc(pushSubscriptions.lastSeenAt), desc(pushSubscriptions.id));
+        return { subscriptions: rows.map((row) => subscriptionView(row, request.session.id)) };
+      },
+    );
+
+    app.post(
+      `${mount.path}/subscriptions`,
+      {
+        preHandler: requireReader,
+        schema: {
+          operationId: `${surface}SavePushSubscription`,
+          tags: ["notifications"],
+          body: z.strictObject({
+            endpoint: z.url({ protocol: /^https$/ }).max(2048),
+            keys: z.strictObject({
+              p256dh: z.string().regex(/^[A-Za-z0-9_-]{87}=?$/),
+              auth: z.string().regex(/^[A-Za-z0-9_-]{22}(==)?$/),
+            }),
+          }),
+          response: {
+            200: z.object({ subscription: SubscriptionSchema }),
+            default: problemResponse,
+          },
+        },
+      },
+      async (request) =>
+        app.db.transaction(async (tx) => {
+          // Serialize registrations for this user so concurrent requests cannot exceed the cap.
+          await tx
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, request.user.id))
+            .for("update");
+          const [existing] = await tx
+            .select()
+            .from(pushSubscriptions)
+            .where(eq(pushSubscriptions.endpoint, request.body.endpoint));
+          const [total] = await tx
+            .select({ count: count() })
+            .from(pushSubscriptions)
+            .where(eq(pushSubscriptions.userId, request.user.id));
+          if (existing?.userId !== request.user.id && total!.count >= 10) {
+            throw httpError(
+              409,
+              "You can register up to ten browsers. Remove one before adding another.",
+            );
+          }
+          const binding = {
+            userId: request.user.id,
+            sessionId: request.session.id,
+            p256dh: request.body.keys.p256dh,
+            auth: request.body.keys.auth,
+            userAgent: (request.headers["user-agent"] ?? "Unknown browser").slice(0, 512),
+            lastSeenAt: new Date(),
+          };
+          const [row] = await tx
+            .insert(pushSubscriptions)
+            .values({ endpoint: request.body.endpoint, ...binding })
+            .onConflictDoUpdate({ target: pushSubscriptions.endpoint, set: binding })
+            .returning();
+          await recordActivity(tx, {
+            entityType: "user",
+            entityId: request.user.id,
+            actorId: request.user.id,
+            action: "user.notification_preference_changed",
+            visibility: "admin_only",
+            payload: { channel: "push", subscriptionId: row!.id, enabled: true },
+          });
+          return { subscription: subscriptionView(row!, request.session.id) };
+        }),
+    );
+
+    app.delete(
+      `${mount.path}/subscriptions/:id`,
+      {
+        preHandler: requireReader,
+        schema: {
+          operationId: `${surface}DeletePushSubscription`,
+          tags: ["notifications"],
+          params: z.object({ id: RecordIdSchema }),
+          response: { 204: z.null(), default: problemResponse },
+        },
+      },
+      async (request, reply) => {
+        await app.db.transaction(async (tx) => {
+          const [row] = await tx
+            .delete(pushSubscriptions)
+            .where(
+              and(
+                eq(pushSubscriptions.id, request.params.id),
+                eq(pushSubscriptions.userId, request.user.id),
+              ),
+            )
+            .returning({ id: pushSubscriptions.id });
+          if (!row) throw httpError(404, "Subscription not found.");
+          await recordActivity(tx, {
+            entityType: "user",
+            entityId: request.user.id,
+            actorId: request.user.id,
+            action: "user.notification_preference_changed",
+            visibility: "admin_only",
+            payload: { channel: "push", subscriptionId: row.id, enabled: false },
+          });
+        });
+        return reply.code(204).send(null);
+      },
+    );
+
+    app.get(
+      `${mount.path}/:id`,
+      {
+        preHandler: requireReader,
+        schema: {
+          operationId: `${surface}GetNotification`,
+          tags: ["notifications"],
+          params: z.object({ id: RecordIdSchema }),
+          response: { 200: NotificationSchema, default: problemResponse },
+        },
+      },
+      async (request) => {
+        const [row] = await app.db
+          .select()
+          .from(notifications)
+          .where(
+            and(
+              eq(notifications.id, request.params.id),
+              eq(notifications.userId, request.user.id),
+              notificationScope(app.db, request.user, surface),
+            ),
+          );
+        if (!row) throw httpError(404, "Notification not found.");
+        return {
+          ...row,
+          readAt: row.readAt?.toISOString() ?? null,
+          createdAt: row.createdAt.toISOString(),
+        };
+      },
+    );
+
     app.get(
       mount.path,
       {
@@ -526,7 +713,11 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         myChannelChoices(app.db, request.user.id),
         myBriefingChoices(app.db, request.user.id),
       ]);
-      return { groups, briefing };
+      return {
+        groups,
+        briefing,
+        showRecordNamesOnDevices: await recordNamesChoice(app.db, request.user.id),
+      };
     },
   );
 
@@ -554,6 +745,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           "drift from what the fan-out will honour",
         tags: ["notifications"],
         body: z.union([
+          z.strictObject({ showRecordNamesOnDevices: z.boolean() }),
           z.strictObject({
             eventGroup: z.enum(NOTIFICATION_EVENT_GROUPS),
             channel: z.enum(NOTIFICATION_CHANNELS),
@@ -574,18 +766,26 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       // grid is read back on the same snapshot, so the answer is what
       // the write actually left behind.
       await app.db.transaction(async (tx) => {
-        const { eventGroup, channel, enabled } = request.body;
-        const briefingGroup = BRIEFING_PREFERENCE_GROUPS.find(
-          (candidate) => candidate === eventGroup,
-        );
-        if (briefingGroup) {
-          await saveBriefingChoice(tx, request.user.id, briefingGroup, enabled);
+        if ("showRecordNamesOnDevices" in request.body) {
+          await tx
+            .update(users)
+            .set({ showRecordNamesOnDevices: request.body.showRecordNamesOnDevices })
+            .where(eq(users.id, request.user.id));
         } else {
-          const notificationGroup = NOTIFICATION_EVENT_GROUPS.find(
+          const { eventGroup, channel, enabled } = request.body;
+          const briefingGroup = BRIEFING_PREFERENCE_GROUPS.find(
             (candidate) => candidate === eventGroup,
           );
-          if (!notificationGroup) throw new Error("The notification preference group is invalid.");
-          await saveChannelChoice(tx, request.user.id, notificationGroup, channel, enabled);
+          if (briefingGroup) {
+            await saveBriefingChoice(tx, request.user.id, briefingGroup, enabled);
+          } else {
+            const notificationGroup = NOTIFICATION_EVENT_GROUPS.find(
+              (candidate) => candidate === eventGroup,
+            );
+            if (!notificationGroup)
+              throw new Error("The notification preference group is invalid.");
+            await saveChannelChoice(tx, request.user.id, notificationGroup, channel, enabled);
+          }
         }
         // Narrated on every write, not only on a change of effect. The
         // table records that somebody expressed an opinion, and
@@ -599,13 +799,17 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "user.notification_preference_changed",
           visibility: "admin_only",
-          payload: { eventGroup, channel, enabled },
+          payload: request.body,
         });
         const [groups, briefing] = await Promise.all([
           myChannelChoices(tx, request.user.id),
           myBriefingChoices(tx, request.user.id),
         ]);
-        return { groups, briefing };
+        return {
+          groups,
+          briefing,
+          showRecordNamesOnDevices: await recordNamesChoice(tx, request.user.id),
+        };
       }),
   );
 };
