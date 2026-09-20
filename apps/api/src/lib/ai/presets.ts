@@ -68,6 +68,15 @@ export const AI_PRESET_DEFINITIONS: Readonly<Record<AiPreset, AiPresetDefinition
     requiresApiKey: true,
     requiresBaseUrl: false,
   },
+  groq: {
+    preset: "groq",
+    label: "Groq",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.groq.com/openai/v1",
+    defaultModel: "openai/gpt-oss-120b",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
   ollama: {
     preset: "ollama",
     label: "Ollama",

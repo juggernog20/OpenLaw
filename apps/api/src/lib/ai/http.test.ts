@@ -175,6 +175,82 @@ describe("AI provider HTTP bounds", () => {
     );
   });
 
+  it.each(
+    ["json_schema", "response_format"].flatMap((field) =>
+      ["not supported", "unsupported", "not available", "only available on supported models"].map(
+        (phrase) => `${field} is ${phrase}`,
+      ),
+    ),
+  )("recognizes Groq's output-format refusal: %s", async (message) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(Response.json({ error: { message } }, { status: 400 })),
+    );
+    await expect(postJson(new URL("https://provider.test"), {}, {}, 1000)).rejects.toMatchObject({
+      upstream: { unsupportedField: "response_format" },
+    });
+  });
+
+  it.each(["responseJsonSchema", "response_json_schema"])(
+    "keeps Gemini's %s refusal its own field beside Groq's json_schema wording",
+    async (field) => {
+      const message = `${field} is not supported by this model`;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(Response.json({ error: { message } }, { status: 400 })),
+      );
+      await expect(postJson(new URL("https://provider.test"), {}, {}, 1000)).rejects.toMatchObject({
+        upstream: { unsupportedField: "responseJsonSchema" },
+      });
+    },
+  );
+
+  it.each([
+    { message: "Generated JSON does not match the expected schema. Please adjust your prompt." },
+    { message: "Generation failed.", code: "json_validate_failed" },
+    {
+      message: `${"The request could not be completed. ".repeat(7)}Generated JSON does not match the expected schema.`,
+    },
+    { message: "The request could not be completed. ".repeat(7), code: "json_validate_failed" },
+  ])("reads JSON validation failure before cutting the log summary: %j", async (error) => {
+    for (const failed_generation of [
+      "Private Contract output",
+      "Private Contract output".repeat(50),
+    ]) {
+      const body = { error: { ...error, failed_generation } };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(Response.json(body, { status: 400, statusText: "Bad Request" })),
+      );
+      await expect(postJson(new URL("https://provider.test"), {}, {}, 1000)).rejects.toMatchObject({
+        name: "AiConfigError",
+        upstream: {
+          status: 400,
+          jsonValidationFailed: true,
+          summary: JSON.stringify(body).length > 500 ? "Bad Request" : error.message.slice(0, 200),
+        },
+      });
+    }
+  });
+
+  it.each([
+    { message: "Invalid model id." },
+    { message: "Invalid schema for response_format: missing required property." },
+    {
+      message: "Invalid model id.",
+      failed_generation:
+        'Generated JSON does not match the expected schema. {"code":"json_validate_failed"}',
+    },
+  ])("does not mistake a configuration refusal for a generation failure: %j", async (error) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ error }, { status: 400 })));
+    await expect(postJson(new URL("https://provider.test"), {}, {}, 1000)).rejects.toEqual(
+      expect.objectContaining({
+        name: "AiConfigError",
+        upstream: { status: 400, summary: error.message },
+      }),
+    );
+  });
+
   it("does not follow a redirect with the API key", async () => {
     const paths: string[] = [];
     const server = createServer((request, response) => {

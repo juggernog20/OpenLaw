@@ -63,7 +63,7 @@
     "defaultMessage": "{actor} turned on the AI connector {provider}"
   },
   "activity.aiConnector.preset": {
-    "defaultMessage": "{preset, select, anthropic {Anthropic} openai {OpenAI} azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} ollama {Ollama} custom {Custom endpoint} other {{preset}}}"
+    "defaultMessage": "{preset, select, anthropic {Anthropic} openai {OpenAI} azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} groq {Groq} ollama {Ollama} custom {Custom endpoint} other {{preset}}}"
   },
   "activity.aiConnector.removed": {
     "defaultMessage": "{actor} removed the AI connector {provider} and its API key"
@@ -8444,6 +8444,9 @@
   "settings.aiAnalysis.models.failed": {
     "defaultMessage": "Models could not be loaded. Try again or enter the model ID manually."
   },
+  "settings.aiAnalysis.models.groq": {
+    "defaultMessage": "Groq models are filtered by model family. Use Test connection to check the selected model."
+  },
   "settings.aiAnalysis.models.load": {
     "defaultMessage": "Load models"
   },
@@ -8572,6 +8575,9 @@
   },
   "settings.aiAnalysis.provider.gemini": {
     "defaultMessage": "Gemini"
+  },
+  "settings.aiAnalysis.provider.groq": {
+    "defaultMessage": "Groq"
   },
   "settings.aiAnalysis.provider.ollama": {
     "defaultMessage": "Ollama"
