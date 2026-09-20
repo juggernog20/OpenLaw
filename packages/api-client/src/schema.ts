@@ -10137,6 +10137,7 @@ export interface operations {
               group: "conversion" | "analysis";
               prompt: string;
               defaultPrompt: string;
+              formatSentence: string;
               overridden: boolean;
             }[];
           };
@@ -10208,6 +10209,7 @@ export interface operations {
               group: "conversion" | "analysis";
               prompt: string;
               defaultPrompt: string;
+              formatSentence: string;
               overridden: boolean;
             };
           };

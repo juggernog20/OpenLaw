@@ -12,6 +12,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { aiFieldPrompts, eq, inArray } from "@openlaw/db";
 import { AI_PROMPT_GROUPS, AI_PROMPT_SLUGS, AI_PROMPTS, type AiPromptSlug } from "@openlaw/shared";
+import { formatSentence } from "../../lib/ai/format-sentence.js";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { problemResponse } from "../../lib/problem.js";
@@ -26,6 +27,7 @@ const PromptSchema = z.object({
   group: z.enum(AI_PROMPT_GROUPS),
   prompt: z.string(),
   defaultPrompt: z.string(),
+  formatSentence: z.string(),
   overridden: z.boolean(),
 });
 const PromptEnvelope = z.object({ prompt: PromptSchema });
@@ -41,6 +43,7 @@ function effectivePrompt(target: AiPrompt, override?: AiFieldPrompt) {
     group: target.group,
     prompt: override?.prompt ?? target.defaultPrompt,
     defaultPrompt: target.defaultPrompt,
+    formatSentence: formatSentence(target),
     overridden: override !== undefined,
   };
 }

@@ -19,6 +19,7 @@ import type { AiExtraction } from "../../lib/ai/provider.js";
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
 import { dispositionScaffold, type DispositionScaffold } from "../../testing/disposition.js";
 import { handleConversionDraft } from "../../pipeline/conversion-draft.js";
+import { formatSentence } from "../../lib/ai/format-sentence.js";
 import { extractionPrompt } from "../../lib/ai/http.js";
 import { conversionContext } from "../../lib/conversion-draft.js";
 
@@ -116,9 +117,26 @@ it("includes field AI prompts and types in preparation and invalidates drafts af
     const context = await conversionContext(harness.db, row.id, typeId, false, "matter");
     expect(context.answerStyle).toBe(answerStyle);
     const prompt = extractionPrompt(context.sources, context.targets, context.answerStyle);
+    const consent = context.targets.find((target) => target.slug === "field:preparation_consent")!;
+    expect(consent.prompt).toBe(
+      "Consent: Whether consent is required. Only consider the express assignment provision.",
+    );
+    const analysisLine = extractionPrompt(
+      "Source",
+      [{ ...consent, slug: "preparation_consent" }],
+      answerStyle,
+    )
+      .split("\n")
+      .find((line) => line.startsWith("- preparation_consent:"))!;
+    expect(prompt).toContain(
+      analysisLine.replace("- preparation_consent:", "- field:preparation_consent:"),
+    );
+    expect(prompt).toContain(
+      "Only consider the express assignment provision. Return true or false.\n",
+    );
     for (const slug of ["title", "description"]) {
       const target = context.targets.find((target) => target.slug === slug)!;
-      expect(prompt).toContain(`- ${slug}: ${target.prompt}\n`);
+      expect(prompt).toContain(`- ${slug}: ${target.prompt} ${formatSentence(target)}\n`);
     }
   }
 

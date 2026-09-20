@@ -8501,6 +8501,9 @@
   "settings.aiAnalysis.prompts.conversion.title": {
     "defaultMessage": "Title"
   },
+  "settings.aiAnalysis.prompts.formatHint": {
+    "defaultMessage": "The greyed sentence is fixed by the Field's type."
+  },
   "settings.aiAnalysis.prompts.group.analysis": {
     "defaultMessage": "Contract analysis prompts"
   },

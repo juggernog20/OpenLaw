@@ -96,6 +96,7 @@ const DEFAULT_PROMPTS = AI_PROMPTS.map(({ slug, group, defaultPrompt }) => ({
   group,
   prompt: defaultPrompt,
   defaultPrompt,
+  formatSentence: "Return a short text.",
   overridden: false,
 })) satisfies PromptResponse["prompts"];
 
@@ -320,6 +321,26 @@ describe("the AI analysis connector pane (#662)", () => {
 });
 
 describe("the prompt cards (#665)", () => {
+  it("shows each fixed format beneath its textarea in both prompt cards", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi() });
+    renderAt("/settings/ai-analysis");
+    for (const name of ["Matter and Contract conversion prompts", "Contract analysis prompts"]) {
+      await openCard(user, name);
+      const card = screen.getByRole("region", { name });
+      expect(
+        within(card).getByText("The greyed sentence is fixed by the Field's type."),
+      ).toBeVisible();
+      for (const input of within(card).getAllByRole("textbox")) {
+        expect(input).toHaveAccessibleDescription("Return a short text.");
+        const sentence = document.getElementById(input.getAttribute("aria-describedby")!)!;
+        expect(sentence).toHaveClass("text-muted");
+        expect(sentence.tagName).toBe("P");
+        expect(input.nextElementSibling).toBe(sentence);
+      }
+    }
+  });
+
   it("edits one prompt in place and trims it on commit", async () => {
     const user = userEvent.setup();
     const promptSaves: unknown[] = [];

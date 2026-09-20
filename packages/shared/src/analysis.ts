@@ -27,34 +27,32 @@ export type CoreAnalysisTargetType = (typeof CORE_ANALYSIS_TARGET_TYPES)[number]
 export const CORE_ANALYSIS_TARGETS = [
   {
     slug: "term_type",
-    defaultPrompt:
-      'Extract the Contract term type. Return exactly "fixed" for a fixed term, "auto_renew" for automatic renewal, or "evergreen" for an indefinite term.',
+    defaultPrompt: "Extract the Contract term type.",
     type: "term_type",
   },
   {
     slug: "effective_date",
-    defaultPrompt: "Extract the Contract's effective date as YYYY-MM-DD.",
+    defaultPrompt: "Extract the Contract's effective date.",
     type: "date",
   },
   {
     slug: "expiry_date",
-    defaultPrompt: "Extract the Contract's expiry or end date as YYYY-MM-DD.",
+    defaultPrompt: "Extract the Contract's expiry or end date.",
     type: "date",
   },
   {
     slug: "renewal_period_months",
-    defaultPrompt: "Extract the length of each automatic renewal period as a number of months.",
+    defaultPrompt: "Extract the length of each automatic renewal period.",
     type: "integer",
   },
   {
     slug: "notice_period_days",
-    defaultPrompt: "Extract the notice period for non-renewal or termination as a number of days.",
+    defaultPrompt: "Extract the notice period for non-renewal or termination.",
     type: "integer",
   },
   {
     slug: "value",
-    defaultPrompt:
-      "Extract the Contract value as an object with integer minor-unit amount, ISO 4217 currency, and cadence one_time, monthly, or annually.",
+    defaultPrompt: "Extract the Contract value.",
     type: "value",
   },
   {
@@ -88,28 +86,37 @@ export type AiAnswerStyle = (typeof AI_ANSWER_STYLES)[number];
 export const CONVERSION_PROMPTS = [
   {
     slug: "conversion.title",
-    defaultPrompt: "Propose a concise opening {module} title, at most 200 characters.",
+    type: "text",
+    defaultPrompt: "Propose a concise opening {module} title.",
   },
   {
     slug: "conversion.description",
+    type: "long_text",
     defaultPrompt:
-      "Synthesize a useful {module} Overview description from the supported facts, at most 10000 characters. Cite all supporting passages. No legal risk assessment.",
+      "Synthesize a useful {module} Overview description from the supported facts. Cite all supporting passages. No legal risk assessment.",
   },
   {
     slug: "conversion.priority",
-    defaultPrompt: "Propose priority: low, medium, high, critical. Request urgency is the default.",
+    type: "single_select",
+    options: ["low", "medium", "high", "critical"],
+    defaultPrompt: "Propose priority. Request urgency is the default.",
   },
   {
     slug: "conversion.needed_by",
-    defaultPrompt:
-      "Extract the explicitly stated Needed by date as YYYY-MM-DD. Do not guess missing date parts.",
+    type: "date",
+    defaultPrompt: "Extract the explicitly stated Needed by date. Do not guess missing date parts.",
   },
   {
     slug: "conversion.counterparty",
-    defaultPrompt:
-      "Extract the explicitly named Counterparty legal name, at most 200 characters. Never invent a name.",
+    type: "counterparty",
+    defaultPrompt: "Extract the explicitly named Counterparty legal name. Never invent a name.",
   },
-] as const satisfies readonly { slug: string; defaultPrompt: string }[];
+] as const satisfies readonly {
+  slug: string;
+  defaultPrompt: string;
+  type: CoreAnalysisTargetType | "text" | "long_text" | "single_select";
+  options?: readonly string[];
+}[];
 
 /** The two sections of the Prompts card, in the order it draws them. */
 export const AI_PROMPT_GROUPS = ["conversion", "analysis"] as const;
@@ -125,11 +132,12 @@ export const AI_PROMPTS: readonly {
   slug: AiPromptSlug;
   group: AiPromptGroup;
   defaultPrompt: string;
+  type: CoreAnalysisTargetType | "text" | "long_text" | "single_select";
+  options?: readonly string[];
 }[] = [
   ...CONVERSION_PROMPTS.map((prompt) => ({ ...prompt, group: "conversion" as const })),
-  ...CORE_ANALYSIS_TARGETS.map(({ slug, defaultPrompt }) => ({
-    slug,
-    defaultPrompt,
+  ...CORE_ANALYSIS_TARGETS.map((target) => ({
+    ...target,
     group: "analysis" as const,
   })),
 ];

@@ -318,7 +318,7 @@ export async function conversionContext(
         slug: `field:${f.slug}`,
         type: f.fieldType,
         options: f.options,
-        prompt: `${f.displayName}: ${f.fieldType}. ${f.options ? `Allowed options: ${JSON.stringify(f.options)}.` : ""} ${f.description ?? ""} ${promptById.get(f.fieldId) ?? ""}`,
+        prompt: `${f.displayName}: ${f.description ?? ""} ${promptById.get(f.fieldId) ?? ""}`,
       })),
   ];
   let promptCharacters = 0;
