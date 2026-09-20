@@ -23,6 +23,17 @@ export const CORE_ANALYSIS_TARGET_TYPES = [
 ] as const;
 export type CoreAnalysisTargetType = (typeof CORE_ANALYSIS_TARGET_TYPES)[number];
 
+/**
+ * Field types whose value is an internal row id: a user or an Entity. Paper
+ * never names one, so Analysis and Conversion never ask the model for them
+ * and the Field editor offers no AI prompt for them (#959).
+ */
+export const REFERENCE_FIELD_TYPES = ["user", "entity"] as const;
+export type ReferenceFieldType = (typeof REFERENCE_FIELD_TYPES)[number];
+export function isReferenceFieldType(type: string): type is ReferenceFieldType {
+  return (REFERENCE_FIELD_TYPES as readonly string[]).includes(type);
+}
+
 /** CTR-008's built-in field schema. Prompt overrides live in the database. */
 export const CORE_ANALYSIS_TARGETS = [
   {

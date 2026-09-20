@@ -39,7 +39,7 @@ import {
   type Field,
   type Transaction,
 } from "@openlaw/db";
-import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
+import { CORE_ANALYSIS_TARGETS, isReferenceFieldType } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -297,7 +297,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       const displayName = request.body.displayName.trim();
       const description = request.body.description?.trim() || null;
       const aiPrompt = request.body.aiPrompt?.trim() || null;
-      if (request.body.aiPrompt !== undefined && (fieldType === "user" || fieldType === "entity")) {
+      if (request.body.aiPrompt !== undefined && isReferenceFieldType(fieldType)) {
         throw httpError(422, `Fields of type ${fieldType} cannot be analysed.`);
       }
       const options = checkOptions(fieldType, request.body.options);
@@ -406,7 +406,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           wants("options", checkOptions(target.fieldType, body.options));
         }
         if (body.aiPrompt !== undefined) {
-          if (target.fieldType === "user" || target.fieldType === "entity") {
+          if (isReferenceFieldType(target.fieldType)) {
             throw httpError(422, `Fields of type ${target.fieldType} cannot be analysed.`);
           }
           const aiPrompt = body.aiPrompt?.trim() || null;

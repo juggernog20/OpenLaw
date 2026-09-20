@@ -17,7 +17,11 @@ import {
   type Executor,
   type FieldType,
 } from "@openlaw/db";
-import { CORE_ANALYSIS_TARGETS, type CoreAnalysisTargetType } from "@openlaw/shared";
+import {
+  CORE_ANALYSIS_TARGETS,
+  isReferenceFieldType,
+  type CoreAnalysisTargetType,
+} from "@openlaw/shared";
 import type { AiExtractionTarget } from "./ai/provider.js";
 import { readAiPrompts } from "./ai-prompts.js";
 
@@ -56,10 +60,11 @@ export async function buildAnalysisTargets(
   // New Fields cannot take a core slug (the catalog reserves them), but a
   // Field created before M31 may already hold one. The core target owns
   // the slug in the outcome and the unverified map, so such a Field is
-  // left out rather than written twice under one key.
+  // left out rather than written twice under one key. A user or Entity
+  // Field is skipped even when it still carries a prompt saved before #959.
   const coreSlugs = new Set<string>(CORE_ANALYSIS_TARGETS.map((target) => target.slug));
   const catalog = attached.filter(
-    (field) => field.type !== "user" && field.type !== "entity" && !coreSlugs.has(field.slug),
+    (field) => !isReferenceFieldType(field.type) && !coreSlugs.has(field.slug),
   );
   return [
     ...CORE_ANALYSIS_TARGETS.map((target) => ({

@@ -367,8 +367,15 @@ describe("edit (type immutable; prompt edits)", () => {
       const row = { ...seededFields()[0]!, fieldType, aiPrompt: " Old saved prompt. " };
       stubApi({ signedIn: ADMIN, extra: fieldsApi(calls, [row]) });
       renderAt("/settings/contracts/fields");
+      await screen.findByText("Governing law");
+      // The catalog row shows no sparkle either: the saved prompt is dead.
+      const first = within(fieldList()).getAllByRole("listitem")[0]!;
+      expect(
+        within(first).queryByRole("img", { name: /AI extraction prompt/ }),
+      ).not.toBeInTheDocument();
+      expect(within(first).getByText("No AI prompt")).toBeInTheDocument();
       const user = userEvent.setup();
-      await user.click(await screen.findByRole("button", { name: "Edit Governing law" }));
+      await user.click(within(first).getByRole("button", { name: "Edit Governing law" }));
       const dialog = await screen.findByRole("dialog", { name: "Edit Governing law" });
       expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
       await user.type(

@@ -25,6 +25,7 @@ import {
 import {
   MAX_COUNTERPARTY_NAME_LENGTH,
   INTAKE_CARRY_SLUGS,
+  isReferenceFieldType,
   sameConversionValue,
   type ConversionPromptSlug,
   type ConversionSuggestion,
@@ -119,7 +120,7 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
         label: `${field.displayName} (${field.fieldType})`,
         text: typeof value === "string" ? value : JSON.stringify(value),
       },
-      field.fieldTag === "legal" || field.fieldType === "entity" || field.fieldType === "user",
+      field.fieldTag === "legal" || isReferenceFieldType(field.fieldType),
     );
   }
   const threadId = row.convertedMatterId ?? row.convertedContractId ?? row.id;
@@ -313,7 +314,7 @@ export async function conversionContext(
         ]
       : []),
     ...fields
-      .filter((f) => f.fieldType !== "user" && f.fieldType !== "entity")
+      .filter((f) => !isReferenceFieldType(f.fieldType))
       .map((f) => ({
         slug: `field:${f.slug}`,
         type: f.fieldType,
@@ -431,7 +432,7 @@ export function checkedSuggestion(
     value = result.success ? result.data : null;
   } else {
     const field = context.fields.find((f) => `field:${f.slug}` === answer.slug);
-    if (field && field.fieldType !== "user" && field.fieldType !== "entity") {
+    if (field && !isReferenceFieldType(field.fieldType)) {
       const parsed = CustomFieldValueSchema.safeParse(raw);
       if (parsed.success)
         try {
