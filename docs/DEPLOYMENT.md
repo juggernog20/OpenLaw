@@ -562,3 +562,11 @@ reachability or executed-copy filing. Complete a test Envelope and check its Sig
 status and Executed copy. For Polling, allow the next reconciliation check to run.
 A provider outage or stopped worker can delay completion beyond the normal interval.
 Both modes use the same completion and executed-copy filing paths.
+
+### Device notification keys
+
+The first API or worker start generates a VAPID pair on `org_settings`. The private key is sealed with `OPENLAW_SECRET_KEY` and follows the same rotation process as other stored credentials. Keep the pair stable while browsers remain subscribed.
+
+To supply a pair yourself, set both `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in `.env`. These values take precedence over the stored pair in both services. Setting only one refuses startup. The public key is returned with notification preferences. The private key is never returned through the API.
+
+Push uses the SMTP from address as its `mailto:` contact, or `BASE_URL` when no from address is set.

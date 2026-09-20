@@ -52,6 +52,12 @@ describe("Portal approvals", () => {
       "Facilities{Enter}",
     );
     await waitFor(() => expect(queries.at(-1)?.searchParams.get("q")).toBe("Facilities"));
+    await waitFor(() =>
+      expect(screen.getByRole("link", { name: "Completed" })).toHaveAttribute(
+        "href",
+        expect.stringContaining("q=Facilities"),
+      ),
+    );
     await user.click(screen.getByRole("link", { name: "Completed" }));
     await waitFor(() => expect(queries.at(-1)?.searchParams.get("status")).toBe("completed"));
     expect(queries.at(-1)?.searchParams.get("q")).toBe("Facilities");

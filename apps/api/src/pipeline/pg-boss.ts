@@ -22,6 +22,8 @@
  * one maintainer rather than one per replica.
  */
 
+import { createVapidResolver, type VapidResolver } from "../lib/notifications/vapid.js";
+import { handleNotificationPush, PushDeliveryError } from "./notification-push.js";
 import {
   PgBoss,
   type Db,
@@ -54,6 +56,7 @@ import {
   type ExecutedCopyFetchJob,
   type JobQueue,
   type NotificationEmailJob,
+  type NotificationPushJob,
   type TextExtractionJob,
 } from "./jobs.js";
 import { createConsoleLogger, type LogFields, type PipelineLogger } from "./logger.js";
@@ -184,6 +187,14 @@ export const NOTIFICATION_EMAIL_QUEUE_OPTIONS = {
   retryBackoff: true,
 } as const;
 
+/** Device pushes use the same short delivery budget as immediate email. */
+export const NOTIFICATION_PUSH_QUEUE_OPTIONS = {
+  expireInSeconds: 120,
+  retryLimit: 2,
+  retryDelay: 30,
+  retryBackoff: true,
+} as const;
+
 /** Sectioned extraction can span several calls; row leases recover abandoned preparation. */
 export const CONVERSION_DRAFT_QUEUE_OPTIONS = { retryLimit: 0, expireInSeconds: 3600 };
 
@@ -218,6 +229,7 @@ export interface PipelineHandlers extends DerivationDeps {
    * records the skip rather than waiting for one.
    */
   resolveMailer: MailerResolver;
+  resolveVapid?: VapidResolver;
   /** Where this install answers (BASE_URL), so an emailed notification
    * can deep-link to the record it is about (NOT-005). */
   baseUrl: string;
@@ -469,7 +481,11 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       await boss.send(JOB_QUEUES.executedCopyFetch, job, { singletonKey: envelopeId });
     },
     async requestNotificationPush(notificationId: string): Promise<void> {
-      log.info({ notificationId }, "notification push delivery is not configured yet");
+      // A retry can be deferred beyond the lost-work bound by Retry-After.
+      const pending = await boss.findJobs(JOB_QUEUES.notificationPush, { key: notificationId });
+      if (pending.some((job) => ["created", "retry", "active"].includes(job.state))) return;
+      const job: NotificationPushJob = { notificationId };
+      await boss.send(JOB_QUEUES.notificationPush, job, { singletonKey: notificationId });
     },
     async requestNotificationEmail(notificationId: string): Promise<void> {
       const job: NotificationEmailJob = { notificationId };
@@ -565,6 +581,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       notify: true,
       ...EXECUTED_COPY_QUEUE_OPTIONS,
     });
+    await boss.createQueue(JOB_QUEUES.notificationPush, {
+      policy: "short",
+      notify: true,
+      ...NOTIFICATION_PUSH_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.notificationPush, NOTIFICATION_PUSH_QUEUE_OPTIONS);
     await boss.createQueue(JOB_QUEUES.notificationEmail, {
       policy: "short",
       notify: true,
@@ -772,6 +794,64 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
+      const resolveVapid =
+        handlers.resolveVapid ?? createVapidResolver(handlers.db, {}, handlers.baseUrl);
+      await resolveVapid();
+      await work(
+        JOB_QUEUES.notificationPush,
+        oneAtATime,
+        async (jobs: JobWithMetadata<NotificationPushJob>[]) => {
+          for (const job of jobs) {
+            try {
+              await handleNotificationPush(
+                { db: handlers.db, resolveVapid, log },
+                {
+                  notificationId: job.data.notificationId,
+                  retryCount: job.retryCount,
+                  retryLimit: job.retryLimit,
+                },
+              );
+            } catch (error) {
+              if (!(error instanceof PushDeliveryError) || error.retryAfterSeconds === undefined)
+                throw error;
+              // Fail and defer the same job atomically, preserving pg-boss's retry budget.
+              const client = await handlers.db.$client.connect();
+              try {
+                await client.query("BEGIN");
+                const db: Db = { executeSql: (text, values) => client.query(text, values) };
+                await boss.fail(
+                  JOB_QUEUES.notificationPush,
+                  job.id,
+                  { message: error.message },
+                  { db },
+                );
+                const [retry] = await boss.findJobs(JOB_QUEUES.notificationPush, {
+                  id: job.id,
+                  db,
+                });
+                if (retry?.state === "retry") {
+                  await boss.update(JOB_QUEUES.notificationPush, undefined, {
+                    id: job.id,
+                    startAfter: new Date(
+                      Math.max(
+                        retry.startAfter.getTime(),
+                        Date.now() + error.retryAfterSeconds * 1000,
+                      ),
+                    ),
+                    db,
+                  });
+                }
+                await client.query("COMMIT");
+              } catch (failure) {
+                await client.query("ROLLBACK");
+                throw failure;
+              } finally {
+                client.release();
+              }
+            }
+          }
+        },
+      );
       await work(
         JOB_QUEUES.notificationEmail,
         oneAtATime,
@@ -912,6 +992,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.documentComparison,
             JOB_QUEUES.executedCopyFetch,
             JOB_QUEUES.notificationEmail,
+            JOB_QUEUES.notificationPush,
             JOB_QUEUES.backfillSweep,
             JOB_QUEUES.reconciliationSweep,
             JOB_QUEUES.morningRound,

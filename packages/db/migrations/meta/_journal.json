@@ -1079,6 +1079,13 @@
       "when": 1789897565057,
       "tag": "0153_push-channel",
       "breakpoints": true
+    },
+    {
+      "idx": 154,
+      "version": "7",
+      "when": 1789901922457,
+      "tag": "0154_vapid_keys",
+      "breakpoints": true
     }
   ]
 }

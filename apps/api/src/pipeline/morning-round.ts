@@ -243,6 +243,7 @@ export interface MorningRoundSummary {
   /** Owed-and-unsent immediate emails whose wake-up was asked for
    * again. */
   reasked: number;
+  pushesReasked: number;
   /** Whether the round stopped before it reached the end. */
   stopped: boolean;
 }
@@ -331,6 +332,7 @@ export async function runMorningRound(
     digests: 0,
     skipped: 0,
     reasked: 0,
+    pushesReasked: 0,
     stopped: false,
   };
 
@@ -382,6 +384,7 @@ export async function runMorningRound(
   // Last, and unconditionally: it is nobody's morning at most ticks, and
   // a message whose wake-up was lost is owed whatever the hour is.
   summary.reasked = await reaskLostEmails(deps, jobs, now);
+  summary.pushesReasked = await reaskLostPushes(deps, jobs, now);
   return summary;
 }
 
@@ -1299,6 +1302,47 @@ async function reaskLostEmails(deps: MorningRoundDeps, jobs: JobQueue, now: Date
         deps.log.warn(
           { notificationId: row.id, reason: reasonOf(error) },
           "the morning round could not ask the pipeline to send an owed notification email",
+        );
+      }
+      // A queue refusing several asks in a row is down, not busy. Every
+      // row is still owed, so the next round asks again.
+      if (refused >= LOST_EMAIL_REFUSAL_LIMIT) return asked;
+    }
+  }
+  return asked;
+}
+
+// Reminder pushes leave at write time, so they take part in this recovery too.
+async function reaskLostPushes(deps: MorningRoundDeps, jobs: JobQueue, now: Date): Promise<number> {
+  const lost = await deps.db
+    .select({ id: notifications.id })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.pushOwed, true),
+        isNull(notifications.pushedAt),
+        isNull(notifications.pushSkippedAt),
+        lt(notifications.createdAt, new Date(now.getTime() - LOST_EMAIL_REASK_AFTER_MS)),
+      ),
+    )
+    .orderBy(asc(notifications.createdAt), asc(notifications.id))
+    .limit(LOST_EMAIL_PAGE_SIZE);
+
+  let asked = 0;
+  let refused = 0;
+  let reported = false;
+  for (const row of lost) {
+    try {
+      await boundedQueueAsk(jobs.requestNotificationPush(row.id));
+      asked += 1;
+      refused = 0;
+    } catch (error) {
+      refused += 1;
+      if (!reported) {
+        reported = true;
+        deps.log.warn(
+          { notificationId: row.id, reason: reasonOf(error) },
+          "the morning round could not ask the pipeline to send an owed notification push",
         );
       }
       // A queue refusing several asks in a row is down, not busy. Every

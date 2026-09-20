@@ -122,3 +122,5 @@ export {
   resolveAdvancedSettings,
   startRuntimeHeartbeat,
 } from "../modules/advanced-settings/config.js";
+
+export { createVapidResolver, type VapidResolver } from "../lib/notifications/vapid.js";

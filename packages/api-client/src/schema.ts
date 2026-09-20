@@ -39486,6 +39486,7 @@ export interface operations {
         };
         content: {
           "application/json": {
+            vapidPublicKey: string;
             showRecordNamesOnDevices: boolean;
             groups: {
               /** @enum {string} */
@@ -39572,6 +39573,7 @@ export interface operations {
         };
         content: {
           "application/json": {
+            vapidPublicKey: string;
             showRecordNamesOnDevices: boolean;
             groups: {
               /** @enum {string} */

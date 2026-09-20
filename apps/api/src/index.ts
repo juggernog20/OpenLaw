@@ -6,6 +6,7 @@
  * builds the app (see app.ts), and listens.
  */
 
+import { createVapidResolver } from "./lib/notifications/vapid.js";
 import {
   resolveAdvancedSettings,
   startRuntimeHeartbeat,
@@ -296,6 +297,18 @@ const jobs = await startPipeline({ connectionString: databaseUrl });
 const notifier = createNotifier({ db, jobs, log: createConsoleLogger() });
 const eventHub = createPostgresEventHub({ db, log: createConsoleLogger() });
 
+const resolveVapid = createVapidResolver(
+  db,
+  {
+    publicKey: process.env.VAPID_PUBLIC_KEY,
+    privateKey: process.env.VAPID_PRIVATE_KEY,
+    smtpFrom: process.env.SMTP_FROM,
+    smtpUrl: process.env.SMTP_URL,
+  },
+  runtimeEnv.BASE_URL || "http://localhost:3000",
+);
+await resolveVapid();
+
 const app = await buildApp(
   {
     db,
@@ -314,6 +327,7 @@ const app = await buildApp(
     },
     advancedRuntime,
     resolveMailer,
+    resolveVapid,
     storage,
     docEngine,
     jobs,

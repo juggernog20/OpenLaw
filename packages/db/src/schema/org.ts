@@ -117,6 +117,8 @@ export const orgSettings = pgTable(
     smtpUrl: encryptedText("smtp_url"),
     /** From-address paired with smtpUrl — the SMTP_FROM shape. */
     smtpFrom: text("smtp_from"),
+    vapidPublicKey: text("vapid_public_key"),
+    vapidPrivateKey: encryptedText("vapid_private_key"),
     /** Startup settings, including write-only object-store credentials. */
     advancedSettings: encryptedText("advanced_settings"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

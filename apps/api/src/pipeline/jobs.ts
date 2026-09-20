@@ -107,6 +107,7 @@ export const JOB_QUEUES = {
    * making the audience decision twice.
    */
   notificationEmail: "notification.email",
+  notificationPush: "notification.push",
   /**
    * The morning round (M18/6, NOT-003, NOT-004): the date reminders and
    * the daily digest.
@@ -322,4 +323,8 @@ export function createUnconfiguredJobQueue(): JobQueue {
     requestContractAnalysis: refuse,
     requestConversionDraft: refuse,
   };
+}
+
+export interface NotificationPushJob {
+  notificationId: string;
 }
