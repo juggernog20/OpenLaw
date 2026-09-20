@@ -191,6 +191,20 @@ describe("AI provider HTTP bounds", () => {
     });
   });
 
+  it.each(["responseJsonSchema", "response_json_schema"])(
+    "keeps Gemini's %s refusal its own field beside Groq's json_schema wording",
+    async (field) => {
+      const message = `${field} is not supported by this model`;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(Response.json({ error: { message } }, { status: 400 })),
+      );
+      await expect(postJson(new URL("https://provider.test"), {}, {}, 1000)).rejects.toMatchObject({
+        upstream: { unsupportedField: "responseJsonSchema" },
+      });
+    },
+  );
+
   it.each([
     { message: "Generated JSON does not match the expected schema. Please adjust your prompt." },
     { message: "Generation failed.", code: "json_validate_failed" },

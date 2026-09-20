@@ -94,7 +94,9 @@ function unsupportedFieldIn(text: string): AiUnsupportedField | undefined {
       candidate === "responseJsonSchema"
         ? "response_?json_?schema"
         : candidate === "response_format"
-          ? "(?:response_format|json_schema)"
+          ? // Groq names the format, not the field. The boundary keeps
+            // Gemini's snake-case `response_json_schema` its own field.
+            "(?:response_format|\\bjson_schema)"
           : candidate;
     const escaped = new RegExp(
       `(?:${name}[^.\n]{0,100}(?:not supported|unsupported|not available|only available on)|(?:unknown|unrecognized|unsupported|unexpected) (?:field|parameter|name|argument)[^a-z_]{0,10}${name})`,
