@@ -89,6 +89,7 @@ describe("the AI connector role gate", () => {
   it("refuses every operation to anonymous and non-Administrator callers", async () => {
     const requests = [
       { method: "GET" as const, url: URL },
+      { method: "PATCH" as const, url: URL, payload: { answerStyle: "few_words" } },
       { method: "PUT" as const, url: URL, payload: { preset: "ollama", model: "llama3.2" } },
       { method: "POST" as const, url: `${URL}/test` },
       { method: "POST" as const, url: `${URL}/models`, payload: { preset: "ollama" } },
@@ -137,10 +138,9 @@ describe("the core Field prompts", () => {
         overridden: false,
       })),
     );
-    // The three sections, in the order the card draws them, with the
-    // seven core targets still last and still all present.
+    // The core targets still follow the Conversion draft targets.
     const groups = response.json().prompts.map((prompt: { group: string }) => prompt.group);
-    expect([...new Set(groups)]).toEqual(["rules", "conversion", "analysis"]);
+    expect([...new Set(groups)]).toEqual(["conversion", "analysis"]);
     expect(
       response
         .json()
@@ -149,20 +149,25 @@ describe("the core Field prompts", () => {
     ).toEqual(CORE_ANALYSIS_TARGETS.map((target) => target.slug));
   });
 
-  it("saves a shared rule and a conversion prompt under their own slugs", async () => {
-    const rule = await harness.app.inject({
-      method: "PUT",
-      url: PROMPTS_URL,
-      cookies: adminCookies,
-      payload: { slug: "rules.text_answers", prompt: "Answer text fields in one sentence." },
-    });
-    expect(rule.statusCode, rule.body).toBe(200);
-    expect(rule.json().prompt).toMatchObject({
-      slug: "rules.text_answers",
-      group: "rules",
-      prompt: "Answer text fields in one sentence.",
-      overridden: true,
-    });
+  it("refuses retired rule slugs and still saves conversion prompts", async () => {
+    for (const slug of [
+      "rules.evidence",
+      "rules.justification",
+      "rules.unsupported",
+      "rules.text_answers",
+      "rules.scope",
+      "rules.future",
+    ]) {
+      for (const prompt of ["Override", null]) {
+        const rule = await harness.app.inject({
+          method: "PUT",
+          url: PROMPTS_URL,
+          cookies: adminCookies,
+          payload: { slug, prompt },
+        });
+        expect(rule.statusCode, rule.body).toBe(400);
+      }
+    }
     const conversion = await harness.app.inject({
       method: "PUT",
       url: PROMPTS_URL,
@@ -176,11 +181,10 @@ describe("the core Field prompts", () => {
       overridden: true,
     });
     const book = await readAiPrompts(harness.db);
-    expect(book.rules).toContain("Answer text fields in one sentence.");
     expect(conversionPrompt(book, "conversion.title", "Contract")).toBe(
       "Propose a short Contract title.",
     );
-    for (const slug of ["rules.text_answers", "conversion.title"] as const) {
+    for (const slug of ["conversion.title"] as const) {
       const reset = await harness.app.inject({
         method: "PUT",
         url: PROMPTS_URL,
@@ -641,4 +645,49 @@ describe("output token limits", () => {
       expect(response.statusCode, response.body).toBe(400);
     }
   });
+});
+
+it("saves the answer style, preserves it on provider edits, and audits only a change", async () => {
+  expect(
+    (await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies })).json().connector
+      .answerStyle,
+  ).toBe("sentence");
+  await save({ preset: "ollama", model: "llama3.2" });
+  for (const answerStyle of ["few_words", "sentence", "full_clause"] as const) {
+    const before = (await auditRows(harness.db)).length;
+    for (let repeat = 0; repeat < 2; repeat++) {
+      const response = await harness.app.inject({
+        method: "PATCH",
+        url: URL,
+        cookies: adminCookies,
+        payload: { answerStyle },
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      expect(response.json().connector.answerStyle).toBe(answerStyle);
+    }
+    const rows = await auditRows(harness.db);
+    expect(rows).toHaveLength(before + 1);
+    expect(rows.at(-1)).toMatchObject({
+      action: "ai_connector.updated",
+      visibility: "admin_only",
+      payload: { field: "answerStyle", new: answerStyle },
+    });
+  }
+  expect((await save({ preset: "ollama", model: "llama3.2" })).json().connector.answerStyle).toBe(
+    "full_clause",
+  );
+  expect(
+    (await save({ preset: "ollama", model: "llama3.2", answerStyle: "few_words" })).json().connector
+      .answerStyle,
+  ).toBe("few_words");
+  expect(
+    (
+      await harness.app.inject({
+        method: "PATCH",
+        url: URL,
+        cookies: adminCookies,
+        payload: { answerStyle: "invalid" },
+      })
+    ).statusCode,
+  ).toBe(400);
 });

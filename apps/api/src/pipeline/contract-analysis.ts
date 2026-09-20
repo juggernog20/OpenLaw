@@ -746,7 +746,7 @@ export async function handleContractAnalysis(
       const truncated = targetText.text.length > AI_ANALYSIS_CHARACTER_BUDGET;
       const sentText = targetText.text.slice(0, AI_ANALYSIS_CHARACTER_BUDGET);
       const targets = await buildAnalysisTargets(tx, targetText.contractTypeId);
-      const { rules } = await readAiPrompts(tx);
+      const { answerStyle } = await readAiPrompts(tx);
       const milestoneTarget = await keyDatesExtractionTarget(tx, contract.id);
       await tx
         .update(contractAnalysisRuns)
@@ -758,9 +758,10 @@ export async function handleContractAnalysis(
           startedAt: run.startedAt ?? new Date(),
         })
         .where(eq(contractAnalysisRuns.id, run.id));
-      return { provider, targetText, truncated, sentText, targets, rules, milestoneTarget };
+      return { provider, targetText, truncated, sentText, targets, answerStyle, milestoneTarget };
     });
-    const { provider, targetText, truncated, sentText, targets, rules, milestoneTarget } = prepared;
+    const { provider, targetText, truncated, sentText, targets, answerStyle, milestoneTarget } =
+      prepared;
     const extractions = await provider.extract(
       [
         {
@@ -772,7 +773,7 @@ export async function handleContractAnalysis(
         },
       ],
       [...targets, milestoneTarget],
-      { rules },
+      { answerStyle },
     );
     await applyAnswers(
       deps,
@@ -881,7 +882,7 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
       provider,
       context.sources,
       [...targets, milestoneTarget],
-      { rules: context.rules },
+      { answerStyle: context.answerStyle },
     );
     const suggestions: Record<string, ConversionSuggestion> = {};
     const checked: AiExtraction[] = [];

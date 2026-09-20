@@ -735,7 +735,8 @@ export interface paths {
     delete: operations["deleteAiConnector"];
     options?: never;
     head?: never;
-    patch?: never;
+    /** Set the Organization default answer style */
+    patch: operations["updateAiAnswerStyle"];
     trace?: never;
   };
   "/api/v1/ai-connector/workflows": {
@@ -830,7 +831,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Read the effective and default text of every editable prompt: the shared extraction rules, the Conversion draft's built-in targets, and the seven core analysis targets */
+    /** Read the effective and default text of every editable prompt: the Conversion draft's built-in targets, and the seven core analysis targets */
     get: operations["listAiFieldPrompts"];
     /** Save or reset one prompt by slug; null or blank resets it to the default */
     put: operations["saveAiFieldPrompt"];
@@ -9486,6 +9487,8 @@ export interface operations {
               matterPreparation: boolean;
               contractPreparation: boolean;
               contractConversionAnalysis: boolean;
+              /** @enum {string} */
+              answerStyle: "few_words" | "sentence" | "full_clause";
               configured: boolean;
               enabled: boolean;
               preset:
@@ -9556,6 +9559,8 @@ export interface operations {
           protocol?: "anthropic_messages" | "openai_chat_completions" | "gemini";
           baseUrl?: string;
           apiKey?: string;
+          /** @enum {string} */
+          answerStyle?: "few_words" | "sentence" | "full_clause";
           model: string;
           maxOutputTokens?: number;
         };
@@ -9573,6 +9578,8 @@ export interface operations {
               matterPreparation: boolean;
               contractPreparation: boolean;
               contractConversionAnalysis: boolean;
+              /** @enum {string} */
+              answerStyle: "few_words" | "sentence" | "full_clause";
               configured: boolean;
               enabled: boolean;
               preset:
@@ -9646,6 +9653,90 @@ export interface operations {
               matterPreparation: boolean;
               contractPreparation: boolean;
               contractConversionAnalysis: boolean;
+              /** @enum {string} */
+              answerStyle: "few_words" | "sentence" | "full_clause";
+              configured: boolean;
+              enabled: boolean;
+              preset:
+                | (
+                    | "anthropic"
+                    | "openai"
+                    | "azure_openai"
+                    | "gemini"
+                    | "openrouter"
+                    | "ollama"
+                    | "custom"
+                  )
+                | null;
+              protocol: ("anthropic_messages" | "openai_chat_completions" | "gemini") | null;
+              baseUrl: string | null;
+              hasApiKey: boolean;
+              model: string | null;
+              maxOutputTokens: number;
+              disabledAt: string | null;
+              updatedAt: string | null;
+            };
+            presets: {
+              /** @enum {string} */
+              preset:
+                | "anthropic"
+                | "openai"
+                | "azure_openai"
+                | "gemini"
+                | "openrouter"
+                | "ollama"
+                | "custom";
+              label: string;
+              /** @enum {string} */
+              protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
+              baseUrl: string | null;
+              defaultModel: string;
+              requiresApiKey: boolean;
+              requiresBaseUrl: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateAiAnswerStyle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          answerStyle: "few_words" | "sentence" | "full_clause";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              matterPreparation: boolean;
+              contractPreparation: boolean;
+              contractConversionAnalysis: boolean;
+              /** @enum {string} */
+              answerStyle: "few_words" | "sentence" | "full_clause";
               configured: boolean;
               enabled: boolean;
               preset:
@@ -9727,6 +9818,8 @@ export interface operations {
               matterPreparation: boolean;
               contractPreparation: boolean;
               contractConversionAnalysis: boolean;
+              /** @enum {string} */
+              answerStyle: "few_words" | "sentence" | "full_clause";
               configured: boolean;
               enabled: boolean;
               preset:
@@ -9879,6 +9972,8 @@ export interface operations {
               matterPreparation: boolean;
               contractPreparation: boolean;
               contractConversionAnalysis: boolean;
+              /** @enum {string} */
+              answerStyle: "few_words" | "sentence" | "full_clause";
               configured: boolean;
               enabled: boolean;
               preset:
@@ -9952,6 +10047,8 @@ export interface operations {
               matterPreparation: boolean;
               contractPreparation: boolean;
               contractConversionAnalysis: boolean;
+              /** @enum {string} */
+              answerStyle: "few_words" | "sentence" | "full_clause";
               configured: boolean;
               enabled: boolean;
               preset:
@@ -10024,11 +10121,6 @@ export interface operations {
             prompts: {
               /** @enum {string} */
               slug:
-                | "rules.evidence"
-                | "rules.justification"
-                | "rules.unsupported"
-                | "rules.text_answers"
-                | "rules.scope"
                 | "conversion.title"
                 | "conversion.description"
                 | "conversion.priority"
@@ -10042,7 +10134,7 @@ export interface operations {
                 | "value"
                 | "counterparty";
               /** @enum {string} */
-              group: "rules" | "conversion" | "analysis";
+              group: "conversion" | "analysis";
               prompt: string;
               defaultPrompt: string;
               overridden: boolean;
@@ -10073,11 +10165,6 @@ export interface operations {
         "application/json": {
           /** @enum {string} */
           slug:
-            | "rules.evidence"
-            | "rules.justification"
-            | "rules.unsupported"
-            | "rules.text_answers"
-            | "rules.scope"
             | "conversion.title"
             | "conversion.description"
             | "conversion.priority"
@@ -10105,11 +10192,6 @@ export interface operations {
             prompt: {
               /** @enum {string} */
               slug:
-                | "rules.evidence"
-                | "rules.justification"
-                | "rules.unsupported"
-                | "rules.text_answers"
-                | "rules.scope"
                 | "conversion.title"
                 | "conversion.description"
                 | "conversion.priority"
@@ -10123,7 +10205,7 @@ export interface operations {
                 | "value"
                 | "counterparty";
               /** @enum {string} */
-              group: "rules" | "conversion" | "analysis";
+              group: "conversion" | "analysis";
               prompt: string;
               defaultPrompt: string;
               overridden: boolean;

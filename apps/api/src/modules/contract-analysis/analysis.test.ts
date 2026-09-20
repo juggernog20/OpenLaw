@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { createServer } from "node:http";
+import { once } from "node:events";
+import { createAiResolver } from "../../lib/ai/resolver.js";
+import { createAiProvider } from "../../lib/ai/index.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
@@ -1254,4 +1258,116 @@ describe("Contract milestone extraction", () => {
       ).toContain("Price review");
     },
   );
+});
+
+it("sends each saved answer style through a real Analysis run to the provider", async () => {
+  const prompts: string[] = [];
+  const server = createServer(async (request, response) => {
+    const chunks: Buffer[] = [];
+    for await (const chunk of request) chunks.push(Buffer.from(chunk));
+    const body = JSON.parse(Buffer.concat(chunks).toString()) as {
+      messages: { content: string }[];
+      response_format: { json_schema: { schema: { properties: Record<string, unknown> } } };
+    };
+    prompts.push(body.messages.map((message) => message.content).join("\n"));
+    const content = JSON.stringify(
+      Object.fromEntries(
+        Object.keys(body.response_format.json_schema.schema.properties).map((slug) => [
+          slug,
+          { value: null },
+        ]),
+      ),
+    );
+    response.setHeader("content-type", "application/json");
+    response.end(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content } }] }));
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  try {
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Missing server port");
+    const [longField] = await harness.db
+      .insert(fields)
+      .values({
+        slug: "style_clause",
+        displayName: "Style clause",
+        moduleScope: "contract",
+        fieldType: "long_text",
+        fieldTag: "legal",
+        aiPrompt: "Extract the clause.",
+      })
+      .returning();
+    await harness.db
+      .insert(contractTypeFields)
+      .values({ typeId: ndaTypeId, fieldId: longField!.id, displayOrder: 10 });
+    const resolveAiProvider = createAiResolver(harness.db, createAiProvider);
+    for (const [answerStyle, sentence] of [
+      ["few_words", "Answer in a few words that name the position, at most 80 characters."],
+      [
+        "sentence",
+        "Answer in one or two short sentences that state the position, at most 200 characters.",
+      ],
+      ["full_clause", "Quote the provision verbatim."],
+    ] as const) {
+      const saved = await harness.app.inject({
+        method: "PUT",
+        url: "/api/v1/ai-connector",
+        cookies: adminCookies,
+        payload: {
+          preset: "custom",
+          protocol: "openai_chat_completions",
+          baseUrl: `http://127.0.0.1:${address.port}/v1`,
+          model: "style-test",
+          apiKey: FAKE_VALID_AI_KEY,
+          answerStyle,
+        },
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
+      const contract = await newContract(`Answer style ${answerStyle}`);
+      const paper = await addPaper(contract, [
+        "Neither party may assign other than to affiliates.",
+      ]);
+      const [run] = await harness.db
+        .insert(contractAnalysisRuns)
+        .values({
+          contractId: contract.id,
+          versionId: paper.versions[0]!.id,
+          trigger: "manual",
+          requestedBy: memberId,
+          preset: "custom",
+          model: "style-test",
+        })
+        .returning();
+      prompts.length = 0;
+      await handleContractAnalysis(
+        {
+          db: harness.db,
+          resolveAiProvider,
+          log: { info: () => {}, warn: () => {}, error: () => {} },
+        },
+        { runId: run!.id, retryCount: 0, retryLimit: 2 },
+      );
+      expect((await waitForRun(run!.id)).state).toBe("ready");
+      expect(prompts.join("\n")).toContain(`- style_clause: Extract the clause. ${sentence}\n`);
+      const shortLine = prompts
+        .join("\n")
+        .split("\n")
+        .find((line) => line.startsWith("- governing_law:"));
+      expect(shortLine).toBeDefined();
+      expect(shortLine).toMatch(
+        new RegExp(
+          (answerStyle === "full_clause"
+            ? "Answer in one or two short sentences that state the position, at most 200 characters."
+            : sentence
+          ).replaceAll(".", "\\.") + "$",
+        ),
+      );
+    }
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
+    await configureConnector();
+  }
 });

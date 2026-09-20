@@ -8,6 +8,7 @@
  * A unique index on a constant makes the singleton rule a database fact.
  */
 
+import { AI_ANSWER_STYLES } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -45,6 +46,7 @@ export const aiConnector = pgTable(
     /** Write-only through the API and sealed under TECH-022. Ollama may leave it NULL. */
     apiKey: encryptedText("api_key"),
     model: text("model").notNull(),
+    answerStyle: text("answer_style", { enum: AI_ANSWER_STYLES }).notNull().default("sentence"),
     maxOutputTokens: integer("max_output_tokens").notNull().default(32768),
     contractConversionAnalysis: boolean("contract_conversion_analysis").notNull().default(false),
     contractPreparation: boolean("contract_preparation").notNull().default(false),
@@ -57,6 +59,10 @@ export const aiConnector = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    check(
+      "ai_connector_answer_style_check",
+      sql`${table.answerStyle} in ('few_words', 'sentence', 'full_clause')`,
+    ),
     check(
       "ai_connector_output_tokens_check",
       sql`${table.maxOutputTokens} between 1024 and 262144`,

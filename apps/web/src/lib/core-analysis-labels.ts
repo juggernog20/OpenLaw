@@ -11,7 +11,6 @@ import { defineMessage, type MessageDescriptor } from "react-intl";
 import type {
   AiPromptGroup,
   AiPromptSlug,
-  AiRulePromptSlug,
   ConversionPromptSlug,
   CoreAnalysisSlug,
 } from "@openlaw/shared";
@@ -37,30 +36,6 @@ export const CORE_ANALYSIS_LABELS: Readonly<Record<CoreAnalysisSlug, MessageDesc
   counterparty: defineMessage({
     id: "contracts.analysis.counterparty",
     defaultMessage: "Counterparty",
-  }),
-};
-
-/** The names of the shared rule paragraphs on the Prompts card. */
-export const AI_RULE_LABELS: Readonly<Record<AiRulePromptSlug, MessageDescriptor>> = {
-  "rules.evidence": defineMessage({
-    id: "settings.aiAnalysis.prompts.rules.evidence",
-    defaultMessage: "Corrections and conflicts",
-  }),
-  "rules.justification": defineMessage({
-    id: "settings.aiAnalysis.prompts.rules.justification",
-    defaultMessage: "Justification",
-  }),
-  "rules.unsupported": defineMessage({
-    id: "settings.aiAnalysis.prompts.rules.unsupported",
-    defaultMessage: "Missing and unsupported values",
-  }),
-  "rules.text_answers": defineMessage({
-    id: "settings.aiAnalysis.prompts.rules.textAnswers",
-    defaultMessage: "Text answers",
-  }),
-  "rules.scope": defineMessage({
-    id: "settings.aiAnalysis.prompts.rules.scope",
-    defaultMessage: "Scope of the sources",
   }),
 };
 
@@ -90,17 +65,12 @@ export const CONVERSION_PROMPT_LABELS: Readonly<Record<ConversionPromptSlug, Mes
 
 /** Every editable prompt's name, keyed by slug. */
 export const AI_PROMPT_LABELS: Readonly<Record<AiPromptSlug, MessageDescriptor>> = {
-  ...AI_RULE_LABELS,
   ...CONVERSION_PROMPT_LABELS,
   ...CORE_ANALYSIS_LABELS,
 };
 
-/** The three sections of the Prompts card. */
+/** The two sections of the Prompts card. */
 export const AI_PROMPT_GROUP_LABELS: Readonly<Record<AiPromptGroup, MessageDescriptor>> = {
-  rules: defineMessage({
-    id: "settings.aiAnalysis.prompts.group.rules",
-    defaultMessage: "System prompts",
-  }),
   conversion: defineMessage({
     id: "settings.aiAnalysis.prompts.group.conversion",
     defaultMessage: "Matter and Contract conversion prompts",

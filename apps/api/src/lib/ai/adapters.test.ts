@@ -410,18 +410,51 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
   });
 }
 
-it("carries the supplied rule paragraphs in place of the built-in ones, and keeps the format lines", () => {
-  const targets = [{ slug: "term_type", prompt: "Extract term" }];
-  const prompt = extractionPrompt("A fixed term", targets, ["Answer in one sentence."]);
-  expect(prompt).toContain("Answer in one sentence.");
-  expect(prompt).not.toContain("Use null when a value is missing");
-  expect(prompt).toContain("Return one JSON object keyed by the exact slug.");
-  expect(prompt).toContain("- term_type: Extract term");
-  // No rules read means the built-in text, in the built-in order.
-  const fallback = extractionPrompt("A fixed term", targets);
-  const indexes = DEFAULT_EXTRACTION_RULES.map((rule) => fallback.indexOf(rule));
+it("keeps the four code-owned rule paragraphs in order", () => {
+  const prompt = extractionPrompt("A fixed term", [{ slug: "term_type", prompt: "Extract term" }]);
+  expect(DEFAULT_EXTRACTION_RULES).toHaveLength(4);
+  const indexes = DEFAULT_EXTRACTION_RULES.map((rule) => prompt.indexOf(rule));
   expect(indexes.every((index) => index >= 0)).toBe(true);
   expect([...indexes].sort((a, b) => a - b)).toEqual(indexes);
+  expect(prompt).not.toContain("Example answers:");
+  expect(prompt).toContain(
+    "The citations carry the wording unless the answer style asks for the full clause.",
+  );
+});
+
+it.each([
+  ["few_words", "Answer in a few words that name the position, at most 80 characters."],
+  [
+    "sentence",
+    "Answer in one or two short sentences that state the position, at most 200 characters.",
+  ],
+  ["full_clause", "Quote the provision verbatim."],
+] as const)("adds the %s style to every text target", (answerStyle, sentence) => {
+  const prompt = extractionPrompt(
+    "A fixed term",
+    [
+      { slug: "short", type: "text", prompt: "Extract short." },
+      { slug: "long", type: "long_text", prompt: "Extract long." },
+      { slug: "date", type: "date", prompt: "Extract date." },
+      { slug: "title", type: "text", prompt: "Propose a title.", omitAnswerStyle: true },
+      {
+        slug: "description",
+        type: "long_text",
+        prompt: "Propose a description.",
+        omitAnswerStyle: true,
+      },
+    ],
+    answerStyle,
+  );
+  const shortStyle =
+    answerStyle === "full_clause"
+      ? "Answer in one or two short sentences that state the position, at most 200 characters."
+      : sentence;
+  expect(prompt).toContain(`- short: Extract short. ${shortStyle}\n`);
+  expect(prompt).toContain(`- long: Extract long. ${sentence}\n`);
+  expect(prompt).toContain("- date: Extract date.\n");
+  expect(prompt).toContain("- title: Propose a title.\n");
+  expect(prompt).toContain("- description: Propose a description.\n");
 });
 
 it("does not request source IDs from legacy unaddressed text", () => {

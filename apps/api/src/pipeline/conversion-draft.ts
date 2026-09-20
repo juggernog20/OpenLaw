@@ -188,7 +188,7 @@ export async function handleConversionDraft(deps: ConversionDraftDeps, id: strin
     const provider = await deps.resolveAiProvider();
     if (!provider) throw new Error("disabled");
     const answers = await extractCompleteSources(provider, context.sources, context.targets, {
-      rules: context.rules,
+      answerStyle: context.answerStyle,
     });
     const suggestions: Record<string, ConversionSuggestion> = {};
     const conflicts: Record<string, ConversionSuggestion> = {};

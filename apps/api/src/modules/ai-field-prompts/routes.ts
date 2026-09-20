@@ -3,8 +3,7 @@
 /**
  * Administrator-only prompt overrides (CTR-008, M31/5; widened on
  * 2026-09-19). One route serves the whole editable catalog in
- * `@openlaw/shared`: the shared rule paragraphs every extraction
- * carries, the Conversion draft's built-in targets, and the seven core
+ * `@openlaw/shared`: the Conversion draft's built-in targets and the seven core
  * analysis targets. The table stores an override per slug and nothing
  * else, so a reset is a delete and absence is the default.
  */
@@ -54,7 +53,7 @@ export const aiFieldPromptRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listAiFieldPrompts",
         summary:
-          "Read the effective and default text of every editable prompt: the shared extraction rules, the Conversion draft's built-in targets, and the seven core analysis targets",
+          "Read the effective and default text of every editable prompt: the Conversion draft's built-in targets, and the seven core analysis targets",
         tags: ["ai-field-prompts"],
         response: { 200: PromptListEnvelope, default: problemResponse },
       },

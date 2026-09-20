@@ -19,6 +19,7 @@ import type { AiExtraction } from "../../lib/ai/provider.js";
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
 import { dispositionScaffold, type DispositionScaffold } from "../../testing/disposition.js";
 import { handleConversionDraft } from "../../pipeline/conversion-draft.js";
+import { extractionPrompt } from "../../lib/ai/http.js";
 import { conversionContext } from "../../lib/conversion-draft.js";
 
 let harness: TestHarness;
@@ -110,6 +111,17 @@ it("includes field AI prompts and types in preparation and invalidates drafts af
     }),
   );
   expect(before.fields.find((entry) => entry.fieldId === field!.id)).not.toHaveProperty("aiPrompt");
+  for (const answerStyle of ["few_words", "sentence", "full_clause"] as const) {
+    await harness.db.update(aiConnector).set({ answerStyle });
+    const context = await conversionContext(harness.db, row.id, typeId, false, "matter");
+    expect(context.answerStyle).toBe(answerStyle);
+    const prompt = extractionPrompt(context.sources, context.targets, context.answerStyle);
+    for (const slug of ["title", "description"]) {
+      const target = context.targets.find((target) => target.slug === slug)!;
+      expect(prompt).toContain(`- ${slug}: ${target.prompt}\n`);
+    }
+  }
+
   await harness.db
     .update(fields)
     .set({ aiPrompt: "Check the subcontracting provision instead." })

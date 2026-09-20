@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The prompt cards (DES-070; CTR-008, M31/5; split on 2026-09-19): one
- * collapsible settings card per prompt group, each on DES-054's
- * disclosure header and closed on arrival. System prompts hold the
- * shared rules every AI run carries; Matter and Contract conversion
- * prompts hold the Conversion draft's built-in targets; Contract analysis prompts hold
- * the seven core targets. Each row saves on its own and resets to the
- * built-in text on its own; a change reaches the next run.
- */
+/** Editable Conversion draft and Contract analysis prompts. */
 
 import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { useState, type KeyboardEvent } from "react";
@@ -137,13 +129,6 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
 /** What each card is for, said once under its header. */
 function GroupHint({ group }: { group: AiPromptGroup }) {
   switch (group) {
-    case "rules":
-      return (
-        <FormattedMessage
-          id="settings.aiAnalysis.prompts.group.rulesHint"
-          defaultMessage="Sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list."
-        />
-      );
     case "conversion":
       return (
         <FormattedMessage

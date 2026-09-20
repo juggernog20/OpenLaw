@@ -1168,6 +1168,7 @@ type AiConnectorPayloads = {
           | "baseUrl"
           | "model"
           | "maxOutputTokens"
+          | "answerStyle"
           | "matterPreparation"
           | "contractPreparation"
           | "contractConversionAnalysis";
