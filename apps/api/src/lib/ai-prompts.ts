@@ -1,34 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The effective prompts for one AI run (CTR-008, 2026-09-19 addendum).
- *
- * `ai_field_prompts` stores an override per slug and nothing else, so
- * the default lives with the canonical list in `@openlaw/shared` and
- * absence means the default. One read answers every slug for one run:
- * the shared rule paragraphs the extraction prompt carries, the
- * Conversion draft's built-in targets, and the seven core analysis
- * targets. Nothing is cached, so the next run reads a saved prompt with
- * no restart.
- */
+/** Read editable prompts and the Organization answer style for each run. */
 
-import { aiFieldPrompts, type Executor } from "@openlaw/db";
-import { AI_PROMPTS, AI_RULE_PROMPTS, type AiPromptSlug } from "@openlaw/shared";
+import { aiConnector, aiFieldPrompts, type Executor } from "@openlaw/db";
+import { AI_PROMPTS, type AiAnswerStyle, type AiPromptSlug } from "@openlaw/shared";
 
 export interface AiPromptBook {
   /** The effective text under one slug: the override, else the default. */
   prompt(slug: AiPromptSlug): string;
-  /** The shared rule paragraphs, in the order the prompt carries them. */
-  readonly rules: readonly string[];
+  readonly answerStyle: AiAnswerStyle;
 }
 
 const DEFAULTS = new Map(AI_PROMPTS.map((prompt) => [prompt.slug, prompt.defaultPrompt]));
 
 export async function readAiPrompts(db: Executor): Promise<AiPromptBook> {
-  const rows = await db.select().from(aiFieldPrompts);
+  const [rows, [connector]] = await Promise.all([
+    db.select().from(aiFieldPrompts),
+    db.select({ answerStyle: aiConnector.answerStyle }).from(aiConnector).limit(1),
+  ]);
   const overrides = new Map(rows.map((row) => [row.slug, row.prompt]));
   const prompt = (slug: AiPromptSlug) => overrides.get(slug) ?? DEFAULTS.get(slug)!;
-  return { prompt, rules: AI_RULE_PROMPTS.map((rule) => prompt(rule.slug)) };
+  return { prompt, answerStyle: connector?.answerStyle ?? "sentence" };
 }
 
 /** A Conversion draft prompt with `{module}` said as Matter or Contract. */

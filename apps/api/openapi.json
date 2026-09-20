@@ -4578,6 +4578,10 @@
                         "contractConversionAnalysis": {
                           "type": "boolean"
                         },
+                        "answerStyle": {
+                          "type": "string",
+                          "enum": ["few_words", "sentence", "full_clause"]
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -4657,6 +4661,214 @@
                         "matterPreparation",
                         "contractPreparation",
                         "contractConversionAnalysis",
+                        "answerStyle",
+                        "configured",
+                        "enabled",
+                        "preset",
+                        "protocol",
+                        "baseUrl",
+                        "hasApiKey",
+                        "model",
+                        "maxOutputTokens",
+                        "disabledAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "presets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "preset": {
+                            "type": "string",
+                            "enum": [
+                              "anthropic",
+                              "openai",
+                              "azure_openai",
+                              "gemini",
+                              "openrouter",
+                              "ollama",
+                              "custom"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "protocol": {
+                            "type": "string",
+                            "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                          },
+                          "baseUrl": {
+                            "type": ["string", "null"]
+                          },
+                          "defaultModel": {
+                            "type": "string"
+                          },
+                          "requiresApiKey": {
+                            "type": "boolean"
+                          },
+                          "requiresBaseUrl": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "preset",
+                          "label",
+                          "protocol",
+                          "baseUrl",
+                          "defaultModel",
+                          "requiresApiKey",
+                          "requiresBaseUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["connector", "presets"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateAiAnswerStyle",
+        "summary": "Set the Organization default answer style",
+        "tags": ["ai-connector"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "answerStyle": {
+                    "type": "string",
+                    "enum": ["few_words", "sentence", "full_clause"]
+                  }
+                },
+                "required": ["answerStyle"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "matterPreparation": {
+                          "type": "boolean"
+                        },
+                        "contractPreparation": {
+                          "type": "boolean"
+                        },
+                        "contractConversionAnalysis": {
+                          "type": "boolean"
+                        },
+                        "answerStyle": {
+                          "type": "string",
+                          "enum": ["few_words", "sentence", "full_clause"]
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "preset": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "anthropic",
+                                "openai",
+                                "azure_openai",
+                                "gemini",
+                                "openrouter",
+                                "ollama",
+                                "custom"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "protocol": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "baseUrl": {
+                          "type": ["string", "null"]
+                        },
+                        "hasApiKey": {
+                          "type": "boolean"
+                        },
+                        "model": {
+                          "type": ["string", "null"]
+                        },
+                        "maxOutputTokens": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "matterPreparation",
+                        "contractPreparation",
+                        "contractConversionAnalysis",
+                        "answerStyle",
                         "configured",
                         "enabled",
                         "preset",
@@ -4773,6 +4985,10 @@
                     "type": "string",
                     "maxLength": 20000
                   },
+                  "answerStyle": {
+                    "type": "string",
+                    "enum": ["few_words", "sentence", "full_clause"]
+                  },
                   "model": {
                     "type": "string",
                     "minLength": 1,
@@ -4808,6 +5024,10 @@
                         },
                         "contractConversionAnalysis": {
                           "type": "boolean"
+                        },
+                        "answerStyle": {
+                          "type": "string",
+                          "enum": ["few_words", "sentence", "full_clause"]
                         },
                         "configured": {
                           "type": "boolean"
@@ -4888,6 +5108,7 @@
                         "matterPreparation",
                         "contractPreparation",
                         "contractConversionAnalysis",
+                        "answerStyle",
                         "configured",
                         "enabled",
                         "preset",
@@ -4993,6 +5214,10 @@
                         "contractConversionAnalysis": {
                           "type": "boolean"
                         },
+                        "answerStyle": {
+                          "type": "string",
+                          "enum": ["few_words", "sentence", "full_clause"]
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -5072,6 +5297,7 @@
                         "matterPreparation",
                         "contractPreparation",
                         "contractConversionAnalysis",
+                        "answerStyle",
                         "configured",
                         "enabled",
                         "preset",
@@ -5201,6 +5427,10 @@
                         "contractConversionAnalysis": {
                           "type": "boolean"
                         },
+                        "answerStyle": {
+                          "type": "string",
+                          "enum": ["few_words", "sentence", "full_clause"]
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -5280,6 +5510,7 @@
                         "matterPreparation",
                         "contractPreparation",
                         "contractConversionAnalysis",
+                        "answerStyle",
                         "configured",
                         "enabled",
                         "preset",
@@ -5513,6 +5744,10 @@
                         "contractConversionAnalysis": {
                           "type": "boolean"
                         },
+                        "answerStyle": {
+                          "type": "string",
+                          "enum": ["few_words", "sentence", "full_clause"]
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -5592,6 +5827,7 @@
                         "matterPreparation",
                         "contractPreparation",
                         "contractConversionAnalysis",
+                        "answerStyle",
                         "configured",
                         "enabled",
                         "preset",
@@ -5699,6 +5935,10 @@
                         "contractConversionAnalysis": {
                           "type": "boolean"
                         },
+                        "answerStyle": {
+                          "type": "string",
+                          "enum": ["few_words", "sentence", "full_clause"]
+                        },
                         "configured": {
                           "type": "boolean"
                         },
@@ -5778,6 +6018,7 @@
                         "matterPreparation",
                         "contractPreparation",
                         "contractConversionAnalysis",
+                        "answerStyle",
                         "configured",
                         "enabled",
                         "preset",
@@ -5863,7 +6104,7 @@
     "/api/v1/ai-field-prompts": {
       "get": {
         "operationId": "listAiFieldPrompts",
-        "summary": "Read the effective and default text of every editable prompt: the shared extraction rules, the Conversion draft's built-in targets, and the seven core analysis targets",
+        "summary": "Read the effective and default text of every editable prompt: the Conversion draft's built-in targets, and the seven core analysis targets",
         "tags": ["ai-field-prompts"],
         "responses": {
           "200": {
@@ -5881,11 +6122,6 @@
                           "slug": {
                             "type": "string",
                             "enum": [
-                              "rules.evidence",
-                              "rules.justification",
-                              "rules.unsupported",
-                              "rules.text_answers",
-                              "rules.scope",
                               "conversion.title",
                               "conversion.description",
                               "conversion.priority",
@@ -5902,7 +6138,7 @@
                           },
                           "group": {
                             "type": "string",
-                            "enum": ["rules", "conversion", "analysis"]
+                            "enum": ["conversion", "analysis"]
                           },
                           "prompt": {
                             "type": "string"
@@ -5951,11 +6187,6 @@
                   "slug": {
                     "type": "string",
                     "enum": [
-                      "rules.evidence",
-                      "rules.justification",
-                      "rules.unsupported",
-                      "rules.text_answers",
-                      "rules.scope",
                       "conversion.title",
                       "conversion.description",
                       "conversion.priority",
@@ -6001,11 +6232,6 @@
                         "slug": {
                           "type": "string",
                           "enum": [
-                            "rules.evidence",
-                            "rules.justification",
-                            "rules.unsupported",
-                            "rules.text_answers",
-                            "rules.scope",
                             "conversion.title",
                             "conversion.description",
                             "conversion.priority",
@@ -6022,7 +6248,7 @@
                         },
                         "group": {
                           "type": "string",
-                          "enum": ["rules", "conversion", "analysis"]
+                          "enum": ["conversion", "analysis"]
                         },
                         "prompt": {
                           "type": "string"

@@ -170,14 +170,16 @@ async function configureConnector(page: Page, stub: OpenAiStub, testInfo: TestIn
   expect(tested.status(), await tested.text()).toBe(200);
   await expect(page.getByText("Connection successful.")).toBeVisible();
   for (const card of [
-    "System prompts",
+    "Answer style",
     "Matter and Contract conversion prompts",
     "Contract analysis prompts",
   ]) {
     await expect(page.getByRole("button", { name: card, expanded: false })).toBeVisible();
   }
-  await page.getByRole("button", { name: "System prompts", expanded: false }).click();
-  await expect(page.getByLabel("Text answers prompt")).toBeVisible();
+  await page.getByRole("button", { name: "Answer style", expanded: false }).click();
+  await expect(
+    page.getByRole("radio", { name: "1-2 sentence summary", exact: true }),
+  ).toBeVisible();
   expect(await reportAxeViolations(page, testInfo, "M31 AI analysis settings")).toEqual([]);
 }
 

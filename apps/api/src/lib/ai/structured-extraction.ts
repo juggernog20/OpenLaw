@@ -212,7 +212,7 @@ export async function extractStructured(
   async function extractBatch(batch: AiExtractionTarget[]) {
     const batchDeadline = Math.min(deadline, Date.now() + EXTRACTION_BOUND.timeoutMs);
     const schema = extractionSchema(batch, sources);
-    const prompt = `${extractionPrompt(sources, batch, options.rules)}\n\nResponse JSON Schema (all requested fields must be present; use value: null, empty metadata strings, citations: [], and conflict: false when unsupported):\n${JSON.stringify(schema)}`;
+    const prompt = `${extractionPrompt(sources, batch, options.answerStyle)}\n\nResponse JSON Schema (all requested fields must be present; use value: null, empty metadata strings, citations: [], and conflict: false when unsupported):\n${JSON.stringify(schema)}`;
     let correction = "";
     for (let attempt = 0; attempt < 2; attempt++) {
       const bound = remainingCallBound(

@@ -278,6 +278,7 @@ export async function conversionContext(
       slug: "title",
       type: "text",
       prompt: said("conversion.title"),
+      omitAnswerStyle: true,
     },
     {
       slug: `${targetModule}_type`,
@@ -289,6 +290,7 @@ export async function conversionContext(
       slug: "description",
       type: "long_text",
       prompt: said("conversion.description"),
+      omitAnswerStyle: true,
     },
     {
       slug: "priority",
@@ -333,7 +335,7 @@ export async function conversionContext(
     fields,
     types,
     targets,
-    rules: book.rules,
+    answerStyle: book.answerStyle,
     snapshot: hash([
       "complete-sources-v2",
       targetModule,

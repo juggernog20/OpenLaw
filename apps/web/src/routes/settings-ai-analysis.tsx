@@ -19,6 +19,7 @@ import {
 import type { paths } from "@openlaw/api-client";
 import { canReuseAiKey } from "../lib/ai-connector-config";
 import { AiModelSelector } from "../components/ai-model-selector";
+import { AiAnswerStyleCard } from "../components/ai-answer-style-card";
 import { AiPromptCards } from "../components/ai-prompt-cards";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
@@ -593,6 +594,11 @@ export function SettingsAiAnalysisPage() {
           <StatusNote status={status.workflow} detail={detail.workflow} />
         </SettingsCard>
       )}
+      <AiAnswerStyleCard
+        value={connector.answerStyle}
+        configured={connector.configured}
+        onSaved={(answerStyle) => setConnector((current) => ({ ...current, answerStyle }))}
+      />
       <AiPromptCards initialPrompts={loaded.prompts} />
       {confirmingRemove && (
         <Dialog open onOpenChange={(open) => !open && setConfirmingRemove(false)}>

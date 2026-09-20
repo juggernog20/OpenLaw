@@ -7,13 +7,10 @@
 
 import type { AiPreset, AiProtocol, FieldType } from "@openlaw/db";
 
-/**
- * What one extraction carries beside its targets. `rules` are the
- * effective shared rule paragraphs (CTR-008, 2026-09-19); a caller that
- * read none lets the prompt fall back to the built-in text.
- */
+import type { AiAnswerStyle } from "@openlaw/shared";
+
 export interface AiExtractionOptions {
-  rules?: readonly string[];
+  answerStyle?: AiAnswerStyle;
 }
 
 /** One field the provider should extract from the contract text. */
@@ -22,6 +19,8 @@ export interface AiExtractionTarget {
   prompt: string;
   type?: FieldType | "term_type" | "integer" | "value" | "counterparty" | "key_dates";
   options?: readonly string[] | null;
+  /** Conversion title and description keep their own length and wording instructions. */
+  omitAnswerStyle?: boolean;
 }
 
 export interface AiSource {

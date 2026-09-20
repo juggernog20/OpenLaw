@@ -125,6 +125,7 @@ function isPromptSaveRequest(value: unknown): value is PromptSaveRequest {
 
 function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse["connector"] {
   return {
+    answerStyle: "sentence",
     matterPreparation: false,
     contractPreparation: false,
     contractConversionAnalysis: false,
@@ -144,6 +145,7 @@ function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse
 
 function unconfigured(): AiResponse["connector"] {
   return connector({
+    answerStyle: "sentence",
     matterPreparation: false,
     contractPreparation: false,
     contractConversionAnalysis: false,
@@ -172,6 +174,13 @@ function connectorApi(
   let prompts = options.prompts ?? DEFAULT_PROMPTS;
   return (call: StubCall) => {
     if (call.url.pathname === "/api/v1/ai-connector") {
+      if (call.method === "PATCH") {
+        saves.push(call.body);
+        stored = {
+          ...stored,
+          ...(call.body as { answerStyle: AiResponse["connector"]["answerStyle"] }),
+        };
+      }
       if (call.method === "PUT") {
         saves.push(call.body);
         if (!isAiSaveRequest(call.body)) throw new Error("Unexpected AI connector save body");
@@ -402,7 +411,7 @@ describe("the prompt cards (#665)", () => {
 
     const provider = await screen.findByRole("heading", { level: 2, name: "Provider" });
     const names = [
-      "System prompts",
+      "Answer style",
       "Matter and Contract conversion prompts",
       "Contract analysis prompts",
     ];
@@ -424,44 +433,59 @@ describe("the prompt cards (#665)", () => {
       "href",
       "/settings/contracts/fields",
     );
-    await openCard(user, "System prompts");
+    await openCard(user, "Answer style");
     expect(screen.getAllByRole("link", { name: "Contracts → Fields" })).toHaveLength(1);
   });
 
-  it("holds the shared rules and the conversion targets in their own cards, and saves one rule", async () => {
+  it("saves the answer style on choice and announces the saved state", async () => {
     const user = userEvent.setup();
-    const promptSaves: unknown[] = [];
-    stubApi({ signedIn: ADMIN, extra: connectorApi({ promptSaves }) });
+    const saves: unknown[] = [];
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, saves) });
     renderAt("/settings/ai-analysis");
-    await openCard(user, "System prompts");
+    await openCard(user, "Answer style");
+    const card = screen.getByRole("region", { name: "Answer style" });
+    expect(within(card).getByRole("radio", { name: "1-2 sentence summary" })).toBeChecked();
+    for (const name of ["Few word summary", "Full clause text", "1-2 sentence summary"]) {
+      await user.click(within(card).getByRole("radio", { name }));
+      await waitFor(() =>
+        expect(within(card).getByText("Saved").closest("[aria-live]")).toHaveAttribute(
+          "aria-live",
+          "polite",
+        ),
+      );
+      expect(within(card).getByRole("radio", { name })).toBeChecked();
+    }
+    expect(saves).toEqual([
+      { answerStyle: "few_words" },
+      { answerStyle: "full_clause" },
+      { answerStyle: "sentence" },
+    ]);
+    expect(screen.queryByRole("heading", { name: "System prompts" })).not.toBeInTheDocument();
     await openCard(user, "Matter and Contract conversion prompts");
-    await openCard(user, "Contract analysis prompts");
-
-    const rules = screen.getByRole("region", { name: "System prompts" });
-    const conversion = screen.getByRole("region", {
-      name: "Matter and Contract conversion prompts",
-    });
-    const analysis = screen.getByRole("region", { name: "Contract analysis prompts" });
-    expect(within(rules).getAllByRole("textbox")).toHaveLength(5);
-    expect(within(conversion).getAllByRole("textbox")).toHaveLength(5);
-    expect(within(analysis).getAllByRole("textbox")).toHaveLength(7);
-    expect(within(conversion).getByText("{module}")).toBeInTheDocument();
-
-    const input = within(rules).getByLabelText("Text answers prompt");
-    expect(input).toHaveValue(
-      AI_PROMPTS.find((prompt) => prompt.slug === "rules.text_answers")!.defaultPrompt,
-    );
-    await user.clear(input);
-    await user.type(input, "Answer text fields in one sentence.");
-    await user.tab();
-    await waitFor(() =>
-      expect(promptSaves).toEqual([
-        { slug: "rules.text_answers", prompt: "Answer text fields in one sentence." },
-      ]),
-    );
     expect(
-      await screen.findByRole("button", { name: "Reset Text answers to default" }),
-    ).toBeInTheDocument();
+      within(
+        screen.getByRole("region", { name: "Matter and Contract conversion prompts" }),
+      ).getAllByRole("textbox"),
+    ).toHaveLength(5);
+  });
+
+  it("keeps the saved choice and announces a refused style change", async () => {
+    const user = userEvent.setup();
+    const fallback = connectorApi();
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.method === "PATCH" && call.url.pathname === "/api/v1/ai-connector"
+          ? problem(500, "Could not save style")
+          : fallback(call),
+    });
+    renderAt("/settings/ai-analysis");
+    await openCard(user, "Answer style");
+    await user.click(screen.getByRole("radio", { name: "Full clause text" }));
+    await waitFor(() =>
+      expect(screen.getByRole("radio", { name: "1-2 sentence summary" })).toBeChecked(),
+    );
+    expect(await screen.findByText("Could not save style")).toBeInTheDocument();
   });
 });
 
