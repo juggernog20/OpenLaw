@@ -37,6 +37,8 @@ export interface AiSource {
 export interface AiExtraction {
   slug: string;
   value: unknown;
+  /** The value still failed its schema after the repair attempt. Set locally, never by the provider. */
+  invalid?: boolean;
   evidence?: string;
   sourceId?: string;
   citations?: { sourceId: string; quote: string }[];

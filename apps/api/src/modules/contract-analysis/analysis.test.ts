@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { startAiResponseServer } from "../../testing/ai-response-server.js";
 import { createServer } from "node:http";
 import { once } from "node:events";
 import { createAiResolver } from "../../lib/ai/resolver.js";
@@ -1370,3 +1371,94 @@ it("sends each saved answer style through a real Analysis run to the provider", 
     await configureConnector();
   }
 });
+
+for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini"] as const) {
+  it.each(["governing_law", KEY_DATES_TARGET])(
+    `${protocol} completes a run with invalid %s and keeps its evidence for review`,
+    async (invalidSlug) => {
+      const contract = await newContract(`Invalid answer ${protocol}`);
+      const evidence = "The governing law is England. Effective on 2026-09-01.";
+      const paper = await addPaper(contract, [evidence]);
+      // The writer could trim this to a valid value; the schema failure must still win.
+      const raw = "England" + " ".repeat(501);
+      const server = await startAiResponseServer(protocol, (slug) =>
+        slug === invalidSlug || slug === "effective_date"
+          ? {
+              value: slug === invalidSlug ? raw : "2026-09-01",
+              evidence,
+              sourceId: paper.versions[0]!.id,
+            }
+          : { value: null },
+      );
+      try {
+        const [run] = await harness.db
+          .insert(contractAnalysisRuns)
+          .values({
+            contractId: contract.id,
+            versionId: paper.versions[0]!.id,
+            trigger: "manual",
+            requestedBy: memberId,
+            preset: "custom",
+            model: server.provider.model,
+          })
+          .returning();
+        await handleContractAnalysis(
+          {
+            db: harness.db,
+            resolveAiProvider: async () => server.provider,
+            log: { info: () => {}, warn: () => {}, error: () => {} },
+          },
+          { runId: run!.id, retryCount: 0, retryLimit: 2 },
+        );
+        const settled = await waitForRun(run!.id);
+        expect(settled.state).toBe("ready");
+        expect(settled.outcome!.invalid).toEqual([invalidSlug]);
+        expect(settled.outcome!.written).toContain("effective_date");
+        expect(settled.outcome!.results).toContainEqual({
+          slug: invalidSlug,
+          value: raw,
+          evidence,
+          outcome: "invalid",
+        });
+        expect(
+          server.prompts.filter((prompt) =>
+            prompt.includes("Your previous response could not be used"),
+          ),
+        ).toHaveLength(1);
+        const read = await harness.app.inject({
+          url: `/api/v1/contracts/${contract.number}`,
+          cookies: memberCookies,
+        });
+        expect(read.json().contract.effectiveDate).toBe("2026-09-01");
+        expect(read.json().contract.customFields).not.toHaveProperty("governing_law");
+        expect(read.json().contract.aiUnverified.effective_date).toMatchObject({ runId: run!.id });
+        const [written] = await harness.db
+          .select()
+          .from(contracts)
+          .where(eq(contracts.id, contract.id));
+        expect(written!.aiUnverified!.effective_date).toMatchObject({ runId: run!.id, evidence });
+        expect(read.json().analysis.latestRun.outcome.results).toContainEqual({
+          slug: invalidSlug,
+          value: raw,
+          evidence,
+          outcome: "invalid",
+        });
+        const [activity] = await harness.db
+          .select()
+          .from(activityLog)
+          .where(
+            and(
+              eq(activityLog.entityId, contract.id),
+              eq(activityLog.action, "contract.analysis_completed"),
+            ),
+          );
+        expect(activity!.payload).toMatchObject({
+          invalid: [invalidSlug],
+          written: expect.arrayContaining(["effective_date"]),
+        });
+      } finally {
+        await server.stop();
+      }
+    },
+  );
+}

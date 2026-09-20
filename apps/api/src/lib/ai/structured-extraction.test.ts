@@ -79,6 +79,64 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+it("repairs ten text targets once and preserves the one invalid value and its evidence", async () => {
+  const targets: AiExtractionTarget[] = Array.from({ length: 10 }, (_, index) => ({
+    slug: `field_${index}`,
+    type: "text",
+    prompt: "Extract the position.",
+  }));
+  const entries = Object.fromEntries(
+    targets.map(({ slug }, index) => [
+      slug,
+      {
+        value: index === 4 ? "x".repeat(501) : "Consent required",
+        sourceId: "document:1",
+        evidence: "Consent is required.",
+        citations: [{ sourceId: "document:1", quote: "Consent is required." }],
+      },
+    ]),
+  );
+  const complete = vi.fn<(prompt: string) => Promise<string>>(async () => JSON.stringify(entries));
+  const answers = await extractStructured(SOURCES, targets, complete);
+  expect(complete).toHaveBeenCalledTimes(2);
+  expect(complete.mock.calls[1]?.[0]).toContain('"field":"field_4"');
+  expect(answers).toEqual(
+    targets.map(({ slug }) => ({
+      slug,
+      ...entries[slug],
+      ...(slug === "field_4" ? { invalid: true } : {}),
+    })),
+  );
+});
+
+it.each([
+  "null",
+  "[]",
+  JSON.stringify([VALID]),
+  JSON.stringify({ ...VALID, extra: { value: true } }),
+  JSON.stringify({
+    consent: { value: "yes", citations: [{ sourceId: "invented", quote: "Quote" }] },
+  }),
+  JSON.stringify({ consent: { evidence: "Consent is required." } }),
+  JSON.stringify({ consent: { value: true, invalid: true } }),
+])("still fails the batch after repairing a malformed reply: %s", async (reply) => {
+  const complete = vi.fn(async () => reply);
+  await expect(extractStructured(SOURCES, TARGETS, complete)).rejects.toBeInstanceOf(
+    AiResponseError,
+  );
+  expect(complete).toHaveBeenCalledTimes(2);
+});
+
+it("accepts a value corrected by the repair without an invalid marker", async () => {
+  const complete = vi
+    .fn()
+    .mockResolvedValueOnce(JSON.stringify({ consent: { value: "yes" } }))
+    .mockResolvedValueOnce(JSON.stringify(VALID));
+  await expect(extractStructured(SOURCES, TARGETS, complete)).resolves.toEqual([
+    { slug: "consent", ...VALID.consent },
+  ]);
+});
+
 it("splits large schemas while preserving every target in order", async () => {
   const targets = Array.from({ length: 29 }, (_, index) => ({
     slug: `field_${index}`,

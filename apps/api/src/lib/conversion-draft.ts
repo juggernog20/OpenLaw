@@ -401,6 +401,7 @@ export function checkedSuggestion(
   answer: AiExtraction,
   context: Awaited<ReturnType<typeof conversionContext>>,
 ): ConversionSuggestion | null {
+  if (answer.invalid) return null;
   const checked = checkedCitations(answer, context.sources);
   if (!checked) return null;
   const raw = answer.value;

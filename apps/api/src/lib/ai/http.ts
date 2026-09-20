@@ -315,10 +315,16 @@ export function extractionPrompt(
 
 export function extractionObject(reply: string): Record<string, unknown> {
   const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(reply)?.[1];
-  const candidate = fenced ?? reply.slice(reply.indexOf("{"), reply.lastIndexOf("}") + 1);
+  const candidate = fenced ?? reply;
   let parsed: unknown;
   try {
-    parsed = JSON.parse(candidate.trim());
+    try {
+      parsed = JSON.parse(candidate.trim());
+    } catch (error) {
+      if (fenced !== undefined) throw error;
+      // Preserve support for prose around an object, but never unwrap a valid JSON array.
+      parsed = JSON.parse(candidate.slice(candidate.indexOf("{"), candidate.lastIndexOf("}") + 1));
+    }
   } catch (error) {
     throw new AiResponseError("The provider reply did not contain one JSON object.", {
       cause: error,
