@@ -17,6 +17,7 @@
  * answered and it addresses the mount that belongs to it.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -293,12 +294,12 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
 /** The grid the API answers, with the model's defaults. Every group,
  * because the model is the model — the pane draws one of them. */
 const DEFAULTS = [
-  { eventGroup: "assigned_to_you", inApp: true, email: true },
-  { eventGroup: "activity_on_your_records", inApp: true, email: false },
-  { eventGroup: "dates_approaching", inApp: true, email: true },
-  { eventGroup: "new_requests", inApp: true, email: false },
-  { eventGroup: "knowledge", inApp: true, email: true },
-  { eventGroup: "requester_events", inApp: true, email: true },
+  { eventGroup: "assigned_to_you", inApp: true, push: true, email: true },
+  { eventGroup: "activity_on_your_records", inApp: true, push: true, email: false },
+  { eventGroup: "dates_approaching", inApp: true, push: true, email: true },
+  { eventGroup: "new_requests", inApp: true, push: true, email: false },
+  { eventGroup: "knowledge", inApp: true, push: true, email: true },
+  { eventGroup: "requester_events", inApp: true, push: true, email: true },
 ];
 
 /** Answers the pane's read and captures its writes, the way the real
@@ -313,11 +314,16 @@ function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
       if (failWith) return failWith;
       groups = groups.map((row) =>
         row.eventGroup === body.eventGroup
-          ? { ...row, [body.channel === "in_app" ? "inApp" : "email"]: body.enabled }
+          ? { ...row, [body.channel === "in_app" ? "inApp" : body.channel]: body.enabled }
           : row,
       );
     }
-    return json(200, { groups });
+    return json(200, {
+      groups,
+      briefing: [],
+      vapidPublicKey: "AQID",
+      showRecordNamesOnDevices: true,
+    });
   };
 }
 
@@ -350,7 +356,16 @@ describe("the portal notification settings (NOT-001)", () => {
     expect(screen.getByRole("switch", { name: "Request updates Email" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "Dates approaching In-app" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "Dates approaching Email" })).toBeChecked();
-    expect(screen.getAllByRole("switch")).toHaveLength(8);
+    for (const group of [
+      "Request updates",
+      "Assigned to you",
+      "Activity on your records",
+      "Dates approaching",
+    ]) {
+      expect(screen.getByRole("switch", { name: `${group} Push` })).toBeChecked();
+    }
+    expect(screen.getByRole("heading", { name: "Devices" })).toBeVisible();
+    expect(screen.getAllByRole("switch")).toHaveLength(13);
   });
 
   it("omits staff-only event groups", async () => {
@@ -381,6 +396,35 @@ describe("the portal notification settings (NOT-001)", () => {
     // The bell for the same group is untouched — opting out of the mail
     // is not opting out of the portal.
     expect(screen.getByRole("switch", { name: "Request updates In-app" })).toBeChecked();
+  });
+
+  it("saves a Push flip and restores it when refused", async () => {
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn: REQUESTER,
+      extra: capturePreferenceWrites(writes, problem(500, "The change could not be saved.")),
+    });
+    renderAt("/portal/settings");
+    await userEvent
+      .setup()
+      .click(await screen.findByRole("switch", { name: "Request updates Push" }));
+    expect(await screen.findByText("The change could not be saved.")).toBeVisible();
+    expect(writes).toEqual([{ eventGroup: "requester_events", channel: "push", enabled: false }]);
+    expect(screen.getByRole("switch", { name: "Request updates Push" })).toBeChecked();
+  });
+
+  it("saves Push independently of In-app and Email", async () => {
+    const writes: unknown[] = [];
+    stubApi({ signedIn: REQUESTER, extra: capturePreferenceWrites(writes) });
+    renderAt("/portal/settings");
+    await userEvent
+      .setup()
+      .click(await screen.findByRole("switch", { name: "Request updates Push" }));
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(writes).toEqual([{ eventGroup: "requester_events", channel: "push", enabled: false }]);
+    expect(screen.getByRole("switch", { name: "Request updates Push" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Request updates In-app" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Request updates Email" })).toBeChecked();
   });
 
   it("sends the flip back the other way when the switch is returned", async () => {
@@ -427,4 +471,48 @@ describe("the portal notification settings (NOT-001)", () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe("/portal/login"));
   });
+});
+
+it("links one standalone Portal manifest whose install starts on the Portal", async () => {
+  portalBellApi({ unread: 0 });
+  renderAt("/portal");
+  await bell("none unread");
+  const links = document.head.querySelectorAll('link[rel="manifest"]');
+  expect(links).toHaveLength(1);
+  const href = links[0]!.getAttribute("href");
+  expect(href).toBe("/portal.webmanifest");
+  const manifest = JSON.parse(readFileSync(`public${href}`, "utf8"));
+  expect(manifest).toMatchObject({
+    id: "/portal",
+    start_url: "/portal",
+    scope: "/portal",
+    display: "standalone",
+  });
+  expect(manifest.icons).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ sizes: "192x192" }),
+      expect.objectContaining({ sizes: "512x512" }),
+    ]),
+  );
+});
+
+it("switches the manifest when a Member+ moves between Portal and staff settings", async () => {
+  stubApi({
+    signedIn: { ...REQUESTER, role: "legal_team_member" },
+    extra: capturePreferenceWrites([]),
+  });
+  const { router } = renderAt("/portal/settings");
+  await screen.findByRole("heading", { name: "Notification settings" });
+  expect(document.head.querySelectorAll('link[rel="manifest"]')).toHaveLength(1);
+  expect(document.head.querySelector('link[rel="manifest"]')).toHaveAttribute(
+    "href",
+    "/portal.webmanifest",
+  );
+  await router.navigate("/settings/notifications");
+  await screen.findByRole("heading", { name: "Notification preferences" });
+  expect(document.head.querySelectorAll('link[rel="manifest"]')).toHaveLength(1);
+  expect(document.head.querySelector('link[rel="manifest"]')).toHaveAttribute(
+    "href",
+    "/manifest.webmanifest",
+  );
 });

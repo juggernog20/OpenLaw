@@ -2,8 +2,9 @@
 
 /** The Portal shell holds Requests, Contracts and Matters, plus the shared session controls. */
 
+import { registerNotificationWorker } from "../../lib/device-notifications";
 import { HelpLink } from "../documentation/help-link";
-import { type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Settings } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -50,6 +51,9 @@ export function PortalShell({
   children: ReactNode;
 }>) {
   const intl = useIntl();
+  useEffect(() => {
+    void registerNotificationWorker().catch(() => {});
+  }, []);
   // The portal is the second authenticated shell over the same tab-wide
   // channel. Consumers subscribe to the module and never open a stream.
   useRetainedLiveEvents(recordScope);
@@ -65,6 +69,7 @@ export function PortalShell({
 
   return (
     <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">
+      <link rel="manifest" href="/portal.webmanifest" />
       <SkipLink />
       <header className="flex h-(--height-header) shrink-0 items-center justify-between gap-2 border-b border-border-default bg-raised px-4 sm:gap-4 sm:px-page-x">
         <Link

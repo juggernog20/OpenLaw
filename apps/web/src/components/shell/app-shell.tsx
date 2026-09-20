@@ -107,6 +107,7 @@ export function AppShell({
           before they arrive. `overflow-hidden` is what makes the chrome
           fixed. There is no document scroll left for it to ride. */}
       <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">
+        <link rel="manifest" href="/manifest.webmanifest" />
         <SkipLink />
         <AppHeader user={user} onSignOut={onSignOut} />
         <TopNav role={user.role} />

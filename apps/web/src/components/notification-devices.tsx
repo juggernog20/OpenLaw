@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import type { NotificationSurface } from "../lib/push-protocol";
 import { problem } from "../lib/problem";
 import {
   enrolDevice,
@@ -85,7 +86,8 @@ function UnblockNote() {
 export function NotificationDevices({
   vapidPublicKey,
   showRecordNames,
-}: Readonly<{ vapidPublicKey: string; showRecordNames: boolean }>) {
+  surface = "staff",
+}: Readonly<{ vapidPublicKey: string; showRecordNames: boolean; surface?: NotificationSurface }>) {
   const intl = useIntl();
   const supported = supportsDeviceNotifications();
   const [permission, setPermission] = useState(supported ? Notification.permission : "default");
@@ -99,7 +101,11 @@ export function NotificationDevices({
   const load = useCallback(
     () =>
       api
-        .GET("/api/v1/notifications/subscriptions")
+        .GET(
+          surface === "portal"
+            ? "/api/v1/portal/notifications/subscriptions"
+            : "/api/v1/notifications/subscriptions",
+        )
         .then((result) => {
           if (!result.data) throw new Error();
           setLoadFailed(false);
@@ -107,7 +113,7 @@ export function NotificationDevices({
           setLoaded(true);
         })
         .catch(() => setLoadFailed(true)),
-    [],
+    [surface],
   );
   useEffect(() => {
     void load();
@@ -152,7 +158,7 @@ export function NotificationDevices({
       const next = await Notification.requestPermission();
       setPermission(next);
       if (next !== "granted") return false;
-      const device = await enrolDevice(vapidPublicKey, "staff");
+      const device = await enrolDevice(vapidPublicKey, surface);
       setEndpoint(device.endpoint);
       setDevices((current) => [device, ...current.filter((row) => row.id !== device.id)]);
       setLoaded(true);
@@ -161,9 +167,14 @@ export function NotificationDevices({
   async function revoke(device: Device) {
     await save(async () => {
       // Revoke server delivery even if the browser has already lost the subscription.
-      const result = await api.DELETE("/api/v1/notifications/subscriptions/{id}", {
-        params: { path: { id: device.id } },
-      });
+      const result = await api.DELETE(
+        surface === "portal"
+          ? "/api/v1/portal/notifications/subscriptions/{id}"
+          : "/api/v1/notifications/subscriptions/{id}",
+        {
+          params: { path: { id: device.id } },
+        },
+      );
       if (!result.response.ok) throw new Error((await problem(result)).detail);
       setDevices((current) => current.filter((row) => row.id !== device.id));
       if (supported) {
