@@ -32,7 +32,7 @@ export function createAiResolver(
       savedKey.preset === row.preset &&
       savedKey.protocol === row.protocol &&
       normalizeAiBaseUrl(savedKey.baseUrl) === baseUrl
-        ? savedKey.apiKey
+        ? savedKey.apiKey || null
         : null;
     const key = JSON.stringify([
       row.id,

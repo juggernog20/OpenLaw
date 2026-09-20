@@ -215,7 +215,7 @@ Removing the connector retains all Saved keys. Migration `0154_saved-ai-keys` mo
 
 ### `ai_saved_keys`
 
-Source: **CTR-008**, **TECH-022**, **SET-008**, #980
+Source: **CTR-008**, **TECH-022**, [SET-008], #980
 
 One Saved key per AI provider destination: preset, protocol, and normalized base URL. A unique index on those columns backs the API's destination lookup. New rows store the normalized URL: drop the fragment, strip one trailing path slash, and sort the query. Migrated rows retain their original URL spelling; the lookup normalizes both sides. The connector and its referenced Saved key are read in one query before resolving the driver.
 
@@ -228,7 +228,7 @@ One Saved key per AI provider destination: preset, protocol, and normalized base
 | `api_key`                  | text        | not null; write-only, sealed by `encryptedText` under `OPENLAW_SECRET_KEY`; included in boot rewrap |
 | `created_at`, `updated_at` | timestamptz | creation and last key change; boot rewrap preserves timestamps                                      |
 
-The API exposes only `id`, `preset`, `protocol`, normalized `baseUrl`, `inUse`, and `updatedAt` in `connector.savedKeys`. A pasted key replaces only its destination's row and records `ai_saved_key.stored` with the destination and a `replaced` flag. Blank saves and Load models use the matching Saved key. Ollama can use a null reference or a pasted Saved key.
+The API exposes only `id`, `preset`, `protocol`, normalized `baseUrl`, `inUse`, `hasApiKey`, and `updatedAt` in `connector.savedKeys`. `hasApiKey` is false when the seal cannot be opened; the row remains listed, but cannot be offered for reuse. A pasted replacement repairs the same row. A pasted key replaces only its destination's row and records `ai_saved_key.stored` with the destination and a `replaced` flag. Blank saves and Load models use the matching Saved key. Ollama can use a null reference or a pasted Saved key.
 
 ---
 

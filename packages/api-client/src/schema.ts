@@ -9519,6 +9519,7 @@ export interface operations {
                 protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
                 baseUrl: string;
                 inUse: boolean;
+                hasApiKey: boolean;
                 /** Format: date-time */
                 updatedAt: string;
               }[];
@@ -9634,6 +9635,7 @@ export interface operations {
                 protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
                 baseUrl: string;
                 inUse: boolean;
+                hasApiKey: boolean;
                 /** Format: date-time */
                 updatedAt: string;
               }[];
@@ -9728,6 +9730,7 @@ export interface operations {
                 protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
                 baseUrl: string;
                 inUse: boolean;
+                hasApiKey: boolean;
                 /** Format: date-time */
                 updatedAt: string;
               }[];
@@ -9830,6 +9833,7 @@ export interface operations {
                 protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
                 baseUrl: string;
                 inUse: boolean;
+                hasApiKey: boolean;
                 /** Format: date-time */
                 updatedAt: string;
               }[];
@@ -10010,6 +10014,7 @@ export interface operations {
                 protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
                 baseUrl: string;
                 inUse: boolean;
+                hasApiKey: boolean;
                 /** Format: date-time */
                 updatedAt: string;
               }[];
@@ -10104,6 +10109,7 @@ export interface operations {
                 protocol: "anthropic_messages" | "openai_chat_completions" | "gemini";
                 baseUrl: string;
                 inUse: boolean;
+                hasApiKey: boolean;
                 /** Format: date-time */
                 updatedAt: string;
               }[];

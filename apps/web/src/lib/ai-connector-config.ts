@@ -15,6 +15,7 @@ export function findSavedAiKey(
     const normalized = normalizeAiBaseUrl(baseUrl);
     return savedKeys.find(
       (key) =>
+        key.hasApiKey &&
         key.preset === preset &&
         key.protocol === protocol &&
         normalizeAiBaseUrl(key.baseUrl) === normalized,

@@ -60,6 +60,7 @@ const SavedKeySchema = z.object({
   protocol: z.enum(AI_PROTOCOLS),
   baseUrl: z.string(),
   inUse: z.boolean(),
+  hasApiKey: z.boolean(),
   updatedAt: z.iso.datetime(),
 });
 
@@ -109,6 +110,7 @@ function readConnector(
     protocol: key.protocol,
     baseUrl: normalizeAiBaseUrl(key.baseUrl),
     inUse: row?.savedKeyId === key.id,
+    hasApiKey: !!key.apiKey,
     updatedAt: key.updatedAt.toISOString(),
   }));
   if (!row) {
@@ -410,7 +412,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           "Enter the deployment name from Azure manually. This endpoint does not list deployments.",
         );
       const apiKey =
-        pasted(request.body.apiKey) ?? (await findSavedAiKey(app.db, config))?.apiKey ?? null;
+        pasted(request.body.apiKey) ?? ((await findSavedAiKey(app.db, config))?.apiKey || null);
       if (AI_PRESET_DEFINITIONS[config.preset].requiresApiKey && !apiKey)
         throw httpError(400, "Paste the API key for this provider and endpoint to load models.");
       try {

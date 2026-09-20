@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Finds Saved keys by destination, including legacy URL spellings (SET-008). */
+
 import { aiSavedKeys, and, eq, type Executor, type AiPreset, type AiProtocol } from "@openlaw/db";
 import { normalizeAiBaseUrl } from "@openlaw/shared";
 

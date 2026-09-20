@@ -222,8 +222,8 @@ role and requester scope are unchanged.
 The Provider card uses a searchable model list with **Load models** and **Refresh models**.
 The Administrator can load choices before saving. An explicit manual entry control supports
 private model IDs and failed discovery. Azure keeps deployment-name entry. The selected model
-survives refresh, including when it is missing from the returned list. A changed provider or
-endpoint requires a new API key. Loading models makes no settings change; saving the selected
+survives refresh, including when it is missing from the returned list. ~~A changed provider or
+endpoint requires a new API key.~~ Superseded by the 2026-09-20 addendum below. Loading models makes no settings change; saving the selected
 model uses the existing connector save and Activity path.
 
 ### Addendum, 2026-09-20, #980

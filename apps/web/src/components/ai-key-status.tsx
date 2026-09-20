@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Distinguishes an available Saved key from the connector's referenced key (SET-008). */
+
 import { FormattedMessage } from "react-intl";
 
 export function AiKeyStatus({ inUse }: Readonly<{ inUse: boolean }>) {

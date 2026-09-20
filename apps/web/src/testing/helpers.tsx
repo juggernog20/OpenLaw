@@ -355,6 +355,7 @@ export interface ApiState {
       preset: AiPreset;
       protocol: AiProtocol;
       baseUrl: string;
+      hasApiKey: boolean;
       inUse: boolean;
       updatedAt: string;
     }[];
@@ -863,6 +864,7 @@ export function stubApi(state: ApiState) {
                     preset: saved.preset,
                     protocol: saved.protocol,
                     baseUrl: saved.baseUrl,
+                    hasApiKey: true,
                     inUse: true,
                     updatedAt: "2026-08-16T09:00:00.000Z",
                   },

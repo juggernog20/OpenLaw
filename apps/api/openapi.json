@@ -4652,6 +4652,9 @@
                               "inUse": {
                                 "type": "boolean"
                               },
+                              "hasApiKey": {
+                                "type": "boolean"
+                              },
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time",
@@ -4664,6 +4667,7 @@
                               "protocol",
                               "baseUrl",
                               "inUse",
+                              "hasApiKey",
                               "updatedAt"
                             ],
                             "additionalProperties": false
@@ -4935,6 +4939,9 @@
                               "inUse": {
                                 "type": "boolean"
                               },
+                              "hasApiKey": {
+                                "type": "boolean"
+                              },
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time",
@@ -4947,6 +4954,7 @@
                               "protocol",
                               "baseUrl",
                               "inUse",
+                              "hasApiKey",
                               "updatedAt"
                             ],
                             "additionalProperties": false
@@ -5170,6 +5178,9 @@
                               "inUse": {
                                 "type": "boolean"
                               },
+                              "hasApiKey": {
+                                "type": "boolean"
+                              },
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time",
@@ -5182,6 +5193,7 @@
                               "protocol",
                               "baseUrl",
                               "inUse",
+                              "hasApiKey",
                               "updatedAt"
                             ],
                             "additionalProperties": false
@@ -5429,6 +5441,9 @@
                               "inUse": {
                                 "type": "boolean"
                               },
+                              "hasApiKey": {
+                                "type": "boolean"
+                              },
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time",
@@ -5441,6 +5456,7 @@
                               "protocol",
                               "baseUrl",
                               "inUse",
+                              "hasApiKey",
                               "updatedAt"
                             ],
                             "additionalProperties": false
@@ -5793,6 +5809,9 @@
                               "inUse": {
                                 "type": "boolean"
                               },
+                              "hasApiKey": {
+                                "type": "boolean"
+                              },
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time",
@@ -5805,6 +5824,7 @@
                               "protocol",
                               "baseUrl",
                               "inUse",
+                              "hasApiKey",
                               "updatedAt"
                             ],
                             "additionalProperties": false
@@ -6030,6 +6050,9 @@
                               "inUse": {
                                 "type": "boolean"
                               },
+                              "hasApiKey": {
+                                "type": "boolean"
+                              },
                               "updatedAt": {
                                 "type": "string",
                                 "format": "date-time",
@@ -6042,6 +6065,7 @@
                               "protocol",
                               "baseUrl",
                               "inUse",
+                              "hasApiKey",
                               "updatedAt"
                             ],
                             "additionalProperties": false

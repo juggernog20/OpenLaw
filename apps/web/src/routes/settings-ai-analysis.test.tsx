@@ -164,6 +164,7 @@ function connector(overrides: Partial<AiResponse["connector"]> = {}): AiResponse
         preset: row.preset,
         protocol: row.protocol,
         baseUrl: row.baseUrl,
+        hasApiKey: true,
         inUse: true,
         updatedAt: row.updatedAt,
       },
@@ -215,6 +216,7 @@ function connectorApi(
           inUse:
             key.preset === option.preset && key.protocol === protocol && key.baseUrl === baseUrl,
         }));
+        if (body.apiKey) keys = keys.map((key) => (key.inUse ? { ...key, hasApiKey: true } : key));
         if (body.apiKey && !keys.some((key) => key.inUse) && baseUrl) {
           keys = [
             ...keys,
@@ -223,12 +225,13 @@ function connectorApi(
               preset: option.preset,
               protocol,
               baseUrl,
+              hasApiKey: true,
               inUse: true,
               updatedAt: "2026-09-02T12:00:00.000Z",
             },
           ];
         }
-        if (option.requiresApiKey && !keys.some((key) => key.inUse))
+        if (option.requiresApiKey && !keys.some((key) => key.inUse && key.hasApiKey))
           return problem(400, "Paste the API key for this provider.");
         stored = connector({
           savedKeys: keys,
@@ -237,7 +240,7 @@ function connectorApi(
           baseUrl: body.baseUrl ?? option.baseUrl,
           model: body.model,
           maxOutputTokens: body.maxOutputTokens ?? stored.maxOutputTokens,
-          hasApiKey: keys.some((key) => key.inUse),
+          hasApiKey: keys.some((key) => key.inUse && key.hasApiKey),
           enabled: stored.configured ? stored.enabled : true,
           disabledAt: stored.disabledAt,
         });
@@ -352,6 +355,20 @@ describe("the AI analysis connector pane (#662)", () => {
     },
   );
 
+  it("requires a replacement when the destination's Saved key cannot be read", async () => {
+    const user = userEvent.setup();
+    const saved = connector();
+    saved.hasApiKey = false;
+    saved.savedKeys[0]!.hasApiKey = false;
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: saved }) });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
+    expect(screen.queryByText("Key in use")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("API key")).toBeRequired();
+    expect(screen.getByRole("button", { name: "Load models" })).toBeDisabled();
+  });
+
   it("shows Saved keys by pending destination and saves a different provider with a blank key", async () => {
     const user = userEvent.setup();
     const saves: unknown[] = [];
@@ -361,6 +378,7 @@ describe("the AI analysis connector pane (#662)", () => {
       preset: "groq",
       protocol: "openai_chat_completions",
       baseUrl: "https://api.groq.com/openai/v1",
+      hasApiKey: true,
       inUse: false,
       updatedAt: "2026-09-02T12:00:00.000Z",
     });

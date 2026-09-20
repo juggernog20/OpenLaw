@@ -295,6 +295,39 @@ describe("the core Field prompts", () => {
 });
 
 describe("saving and reading", () => {
+  it("keeps an unreadable Saved key listed, refuses reuse, and repairs the same row on paste", async () => {
+    const initial = await save({ preset: "openai", model: "one", apiKey: FAKE_VALID_AI_KEY });
+    const id = initial.json().connector.savedKeys[0].id;
+    await harness.db.execute(
+      sql`update ai_saved_keys set api_key = 'openlaw:v1:unreadable-fixture'`,
+    );
+    const read = await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies });
+    expect(read.json().connector).toMatchObject({
+      hasApiKey: false,
+      savedKeys: [{ id, hasApiKey: false, inUse: true }],
+    });
+    const build = vi.fn(createFakeAiProvider);
+    await createAiResolver(harness.db, build)();
+    expect(build.mock.calls[0]?.[0]?.apiKey).toBeNull();
+    expect((await save({ preset: "openai", model: "one" })).statusCode).toBe(400);
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const models = await harness.app.inject({
+      method: "POST",
+      url: `${URL}/models`,
+      cookies: adminCookies,
+      payload: { preset: "openai" },
+    });
+    expect(models.statusCode).toBe(400);
+    expect(fetcher).not.toHaveBeenCalled();
+    const repaired = await save({ preset: "openai", model: "one", apiKey: FAKE_VALID_AI_KEY });
+    expect(repaired.statusCode, repaired.body).toBe(200);
+    expect(repaired.json().connector.savedKeys).toEqual([
+      expect.objectContaining({ id, hasApiKey: true }),
+    ]);
+    expect(await harness.db.select().from(aiSavedKeys)).toHaveLength(1);
+  });
+
   it("rotates only the destination's Saved key and rebuilds a driver when that key changes", async () => {
     await save({ preset: "openai", model: "one", apiKey: FAKE_VALID_AI_KEY });
     await save({ preset: "groq", model: "two", apiKey: "groq-test-key" });
