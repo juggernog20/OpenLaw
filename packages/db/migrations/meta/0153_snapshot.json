@@ -1,5 +1,5 @@
 {
-  "id": "8d285158-ddd7-489d-bad3-31463b899269",
+  "id": "c92e8d18-0ddd-4f4e-a7bd-1b1c0a128cc1",
   "prevId": "b44e0dfb-abbd-4442-93a2-b738a705e5cf",
   "version": "7",
   "dialect": "postgresql",
@@ -223,13 +223,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "answer_style": {
-          "name": "answer_style",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'sentence'"
-        },
         "max_output_tokens": {
           "name": "max_output_tokens",
           "type": "integer",
@@ -301,17 +294,13 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "ai_connector_answer_style_check": {
-          "name": "ai_connector_answer_style_check",
-          "value": "\"ai_connector\".\"answer_style\" in ('few_words', 'sentence', 'full_clause')"
-        },
         "ai_connector_output_tokens_check": {
           "name": "ai_connector_output_tokens_check",
           "value": "\"ai_connector\".\"max_output_tokens\" between 1024 and 262144"
         },
         "ai_connector_preset_check": {
           "name": "ai_connector_preset_check",
-          "value": "\"ai_connector\".\"preset\" in ('anthropic', 'openai', 'azure_openai', 'gemini', 'openrouter', 'ollama', 'custom')"
+          "value": "\"ai_connector\".\"preset\" in ('anthropic', 'openai', 'azure_openai', 'gemini', 'openrouter', 'groq', 'ollama', 'custom')"
         },
         "ai_connector_protocol_check": {
           "name": "ai_connector_protocol_check",

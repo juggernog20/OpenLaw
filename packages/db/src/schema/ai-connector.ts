@@ -28,6 +28,7 @@ export const AI_PRESETS = [
   "azure_openai",
   "gemini",
   "openrouter",
+  "groq",
   "ollama",
   "custom",
 ] as const;
@@ -70,7 +71,7 @@ export const aiConnector = pgTable(
     uniqueIndex("ai_connector_singleton").on(sql`(true)`),
     check(
       "ai_connector_preset_check",
-      sql`${table.preset} in ('anthropic', 'openai', 'azure_openai', 'gemini', 'openrouter', 'ollama', 'custom')`,
+      sql`${table.preset} in ('anthropic', 'openai', 'azure_openai', 'gemini', 'openrouter', 'groq', 'ollama', 'custom')`,
     ),
     check(
       "ai_connector_protocol_check",

@@ -1028,6 +1028,25 @@ function aiWizardExtra(calls: AiCalls, save?: () => Response) {
 }
 
 describe("welcome wizard AI analysis step (#699)", () => {
+  it("offers Groq with its prefilled model and saves without a Base URL", async () => {
+    const user = userEvent.setup();
+    const calls: AiCalls = { saves: [], completed: 0 };
+    stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: aiWizardExtra(calls) });
+    renderAt("/welcome");
+    await goToAiAnalysisStep(user);
+    expect(screen.getByRole("option", { name: "Groq" })).toHaveValue("groq");
+    await user.selectOptions(screen.getByLabelText("Provider"), "groq");
+    expect(screen.getByLabelText("Model")).toHaveValue("openai/gpt-oss-120b");
+    expect(screen.queryByLabelText("Protocol")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Base URL")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("API key"), "groq-test-key");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+    expect(calls.saves).toEqual([
+      { preset: "groq", model: "openai/gpt-oss-120b", apiKey: "groq-test-key" },
+    ]);
+  });
+
   it("comes after e-signature and says what an install without a connector does", async () => {
     const calls: AiCalls = { saves: [], completed: 0 };
     stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: aiWizardExtra(calls) });

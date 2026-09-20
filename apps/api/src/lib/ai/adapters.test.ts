@@ -29,8 +29,9 @@ interface CapturedRequest {
   body: Record<string, unknown>;
 }
 
-/** Names the request field a stricter model refuses, in OpenAI's own words. */
-type Refusal = (body: Record<string, unknown>) => string | null;
+type Refusal = (
+  body: Record<string, unknown>,
+) => string | { message: string; code: string; failed_generation?: string } | null;
 
 async function startServer(
   protocol: Protocol,
@@ -65,7 +66,14 @@ async function startServer(
     const refusal = refuse(body);
     if (refusal) {
       response.statusCode = 400;
-      response.end(JSON.stringify({ error: { message: refusal, type: "invalid_request_error" } }));
+      response.end(
+        JSON.stringify({
+          error: {
+            ...(typeof refusal === "string" ? { message: refusal } : refusal),
+            type: "invalid_request_error",
+          },
+        }),
+      );
       return;
     }
 
@@ -239,6 +247,123 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
   );
 }
 
+describe("Groq extraction recovery", () => {
+  const targets = [
+    { slug: "term_type", prompt: "Find the term type." },
+    { slug: "effective_date", prompt: "Find the effective date." },
+  ];
+  const text = "This contract has a fixed term.";
+  const expected = [
+    { slug: "term_type", value: "fixed", evidence: "has a fixed term" },
+    { slug: "effective_date", value: "2026-09-01" },
+  ];
+  const schemaFailure =
+    "Generated JSON does not match the expected schema. Please adjust your prompt.";
+  const validationFailures = [
+    schemaFailure,
+    {
+      message: "Generation failed.",
+      code: "json_validate_failed",
+      failed_generation: "Private Contract output",
+    },
+  ];
+
+  function provider(baseUrl: string) {
+    return createOpenAiCompatibleProvider({
+      preset: "groq",
+      protocol: "openai_chat_completions",
+      baseUrl,
+      apiKey: VALID_KEY,
+      model: "llama-3.3-70b-versatile",
+    });
+  }
+
+  it("repeats a refused schema in JSON object mode and keeps it for later extractions", async () => {
+    const server = await startServer("openai", (body) => {
+      const format = body.response_format;
+      return format !== null &&
+        typeof format === "object" &&
+        "type" in format &&
+        format.type === "json_schema"
+        ? "response_format json_schema is only available on supported models"
+        : null;
+    });
+    try {
+      const groq = provider(server.baseUrl);
+      await expect(groq.extract(text, targets)).resolves.toEqual(expected);
+      await expect(groq.extract(text, targets)).resolves.toEqual(expected);
+      expect(server.requests.map(({ body }) => body.response_format)).toEqual([
+        expect.objectContaining({ type: "json_schema" }),
+        { type: "json_object" },
+        { type: "json_object" },
+      ]);
+      expect(server.requests[1]!.body.messages).toEqual(server.requests[0]!.body.messages);
+    } finally {
+      await server.stop();
+    }
+  });
+
+  it.each(validationFailures)(
+    "corrects a schema validation failure without downgrading: %j",
+    async (failure) => {
+      const server = await startServer("openai", (body) =>
+        JSON.stringify(body.messages).includes("Your previous response could not be used")
+          ? null
+          : failure,
+      );
+      try {
+        await expect(provider(server.baseUrl).extract(text, targets)).resolves.toEqual(expected);
+        expect(server.requests).toHaveLength(2);
+        const [first, corrected] = server.requests.map(({ body }) => body);
+        expect(corrected!.response_format).toEqual(first!.response_format);
+        const firstPrompt = (first!.messages as { content: string }[])[0]!.content;
+        const correctedPrompt = (corrected!.messages as { content: string }[])[0]!.content;
+        expect(correctedPrompt).toContain(
+          `${firstPrompt}\nYour previous response could not be used (invalid_shape).`,
+        );
+        expect(correctedPrompt).not.toContain(schemaFailure);
+        expect(correctedPrompt).not.toContain("Private Contract output");
+      } finally {
+        await server.stop();
+      }
+    },
+  );
+
+  it.each(validationFailures)(
+    "ends repeated schema validation failures as response failures: %j",
+    async (failure) => {
+      const server = await startServer("openai", () => failure);
+      try {
+        await expect(provider(server.baseUrl).extract(text, targets)).rejects.toMatchObject({
+          name: "AiResponseError",
+          reason: "invalid_shape",
+          upstream: {
+            status: 400,
+            jsonValidationFailed: true,
+            summary: typeof failure === "string" ? failure : failure.message,
+          },
+        });
+        expect(server.requests).toHaveLength(2);
+      } finally {
+        await server.stop();
+      }
+    },
+  );
+
+  it("keeps an invalid model id a configuration refusal without retrying", async () => {
+    const server = await startServer("openai", () => "Invalid model id.");
+    try {
+      await expect(provider(server.baseUrl).extract(text, targets)).rejects.toMatchObject({
+        name: "AiConfigError",
+        upstream: { status: 400 },
+      });
+      expect(server.requests).toHaveLength(1);
+    } finally {
+      await server.stop();
+    }
+  });
+});
+
 describe("OpenAI-compatible preset authentication", () => {
   let server: Awaited<ReturnType<typeof startServer>>;
 
@@ -275,6 +400,29 @@ describe("OpenAI-compatible preset authentication", () => {
     const request = server.requests.at(-1)!;
     expect(request.headers.authorization).toBe(`Bearer ${VALID_KEY}`);
     expect(request.headers["api-key"]).toBeUndefined();
+  });
+
+  it("uses bearer auth and max_completion_tokens from the first Groq probe and extraction", async () => {
+    const start = server.requests.length;
+    const groq = provider({ preset: "groq", model: "openai/gpt-oss-120b" });
+    await groq.probe();
+    await groq.extract("This contract has a fixed term.", [
+      { slug: "term_type", prompt: "Find the term type." },
+      { slug: "effective_date", prompt: "Find the effective date." },
+    ]);
+    const requests = server.requests.slice(start);
+    expect(requests).toHaveLength(2);
+    for (const request of requests) {
+      expect(request.url).toBe("/chat/completions");
+      expect(request.headers.authorization).toBe(`Bearer ${VALID_KEY}`);
+      expect(request.headers["api-key"]).toBeUndefined();
+      expect(request.body).toMatchObject({
+        model: "openai/gpt-oss-120b",
+        temperature: 0,
+        max_completion_tokens: expect.any(Number),
+      });
+      expect(request.body).not.toHaveProperty("max_tokens");
+    }
   });
 
   it("omits authorization when Ollama has no key", async () => {

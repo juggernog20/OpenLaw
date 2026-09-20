@@ -231,6 +231,14 @@ export function AiModelSelector({
           />
         </p>
       )}
+      {config.preset === "groq" && (
+        <p className="text-xs text-muted">
+          <FormattedMessage
+            id="settings.aiAnalysis.models.groq"
+            defaultMessage="Groq models are filtered by model family. Use Test connection to check the selected model."
+          />
+        </p>
+      )}
       {config.preset === "ollama" && (
         <p className="text-xs text-muted">
           <FormattedMessage

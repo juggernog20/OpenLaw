@@ -545,7 +545,7 @@ Recommended Anthropic-first + OpenAI-compatible second. Blair widened: "a list o
   1. **Anthropic Messages API**
   2. **OpenAI-compatible chat completions** — one adapter covering OpenAI, Azure OpenAI, **OpenRouter**, Ollama/vLLM (local models), Groq, Mistral, Together, and any compatible endpoint
   3. **Google Gemini API**
-- ~~Provider presets live in Settings → Contracts → AI Analysis.~~ _(Placement superseded by **SET-007** (2026-08-16), then by **SET-008** (2026-09-03): the connector is configured in **Settings → Organization → AI analysis**, a section of its own.)_ The presets are Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, and Ollama (local). Each preset pins its protocol and base URL and asks only for a key and model.
+- ~~Provider presets live in Settings → Contracts → AI Analysis.~~ _(Placement superseded by **SET-007** (2026-08-16), then by **SET-008** (2026-09-03): the connector is configured in **Settings → Organization → AI analysis**, a section of its own.)_ The presets are Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, and Ollama (local); Groq joined them on 2026-09-20 (addendum below). Each preset pins its protocol and base URL and asks only for a key and model.
 - **Custom provider**: protocol picker + base URL + API key + model string — any current or future endpoint without a code change.
 - BYO key per CTR-008; no provider configured → AI surfaces hidden. Default model strings maintained per preset (e.g. `claude-sonnet-5` for Anthropic); always user-editable.
 
@@ -596,6 +596,42 @@ Protocol references: [Anthropic models](https://platform.claude.com/docs/en/api/
 [Gemini models](https://ai.google.dev/api/models),
 [OpenRouter models](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties),
 and [Ollama compatibility](https://docs.ollama.com/api/openai-compatibility).
+
+### Addendum, 2026-09-20, Groq preset, #951
+
+Groq is a preset on the OpenAI-compatible chat completions adapter. It pins
+`https://api.groq.com/openai/v1` and uses a Bearer API key. The default model is
+`openai/gpt-oss-120b`, a production model with strict JSON Schema support. A Llama
+model would start Contract extraction without that guarantee. The preset sends
+`max_completion_tokens` from its first call because Groq deprecates `max_tokens`.
+
+[Groq's structured output reference](https://console.groq.com/docs/structured-outputs)
+lists strict schema support for `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, and
+`qwen/qwen3.8-27b`. Other models use JSON object mode. An explicit output-format
+refusal moves the adapter from schema to JSON object mode, then to prompt only
+if needed. It keeps that choice for the provider's lifetime. Local validation
+still applies. A 400 reporting a JSON generation validation failure gets the
+existing correction retry and ends as a response failure if correction fails.
+An invalid key or model remains a configuration refusal.
+
+Qwen's completion limit is 16,384 tokens. An Administrator choosing it must lower
+the connector's output token limit from the 32,768 default to 16,384 or less.
+
+Use a Developer plan. The [free-plan limit](https://console.groq.com/docs/rate-limits)
+for the three strict-schema models is 8K tokens per minute. That cannot fit one
+Contract extraction with OpenLaw's default 32,768-token output allowance plus its
+input, even though a short Test connection can pass. Check the account's limits
+before running Analysis.
+
+Groq's model list has no reliable chat-capability metadata. OpenLaw excludes
+entries marked inactive and IDs with a `whisper`, `tts`, `orpheus`, or `guard`
+segment, separated by a slash, underscore, or hyphen. It keeps unknown future
+IDs and uses the exact ID as the label. This filter removes known speech and
+guard models; Test connection and a fictional Contract extraction still check
+the selected model.
+
+Source record: [Groq models reference](https://console.groq.com/docs/models),
+checked 2026-09-20. Model availability and account limits can change.
 
 ## TECH-013: DocuSign auth — JWT grant (service integration)
 

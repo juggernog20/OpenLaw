@@ -549,8 +549,8 @@ The Contract page revalidates while a run is pending and keeps typed drafts. Ret
 
 ### CTR-008 implementation note, 2026-09-20, M37/6, #961
 
-M37 implements the addendum above. Migration `0153` adds the connector's `answer_style`
-with default `sentence` and deletes saved `rules.*` overrides. Migration `0154` adds
+M37 implements the addendum above. Migration `0154` adds the connector's `answer_style`
+with default `sentence` and deletes saved `rules.*` overrides. Migration `0155` adds
 `fields.ai_answer_style`, nullable for organization inheritance, with database and API
 checks for Contract `text` and `long_text` Fields. Explicit `full_clause` requires
 `long_text`. An inherited `full_clause` falls back to `sentence` for a short text Field.
