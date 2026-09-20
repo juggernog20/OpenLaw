@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { formatSentence } from "./format-sentence.js";
+
 import { type AiAnswerStyle, AI_OUTPUT_TOKEN_DEFAULT } from "@openlaw/shared";
 
 import {
@@ -286,7 +288,7 @@ export function extractionPrompt(
 ): string {
   const fields = targets
     .map((target) => {
-      const line = `- ${target.slug}: ${target.prompt}`;
+      const line = `- ${target.slug}: ${target.prompt} ${formatSentence(target)}`;
       if (target.omitAnswerStyle || (target.type !== "text" && target.type !== "long_text"))
         return line;
       const effective =

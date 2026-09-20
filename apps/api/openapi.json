@@ -6146,11 +6146,21 @@
                           "defaultPrompt": {
                             "type": "string"
                           },
+                          "formatSentence": {
+                            "type": "string"
+                          },
                           "overridden": {
                             "type": "boolean"
                           }
                         },
-                        "required": ["slug", "group", "prompt", "defaultPrompt", "overridden"],
+                        "required": [
+                          "slug",
+                          "group",
+                          "prompt",
+                          "defaultPrompt",
+                          "formatSentence",
+                          "overridden"
+                        ],
                         "additionalProperties": false
                       }
                     }
@@ -6256,11 +6266,21 @@
                         "defaultPrompt": {
                           "type": "string"
                         },
+                        "formatSentence": {
+                          "type": "string"
+                        },
                         "overridden": {
                           "type": "boolean"
                         }
                       },
-                      "required": ["slug", "group", "prompt", "defaultPrompt", "overridden"],
+                      "required": [
+                        "slug",
+                        "group",
+                        "prompt",
+                        "defaultPrompt",
+                        "formatSentence",
+                        "overridden"
+                      ],
                       "additionalProperties": false
                     }
                   },

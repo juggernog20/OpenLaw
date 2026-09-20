@@ -106,6 +106,7 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
       </div>
       <AutoResizeTextarea
         id={inputId}
+        aria-describedby={`${inputId}-format`}
         aria-label={intl.formatMessage(
           {
             id: "settings.aiAnalysis.prompts.inputLabel",
@@ -122,6 +123,9 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
         onKeyDown={onKeyDown}
         className="w-full rounded-button border border-border-default bg-raised px-2 py-1.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
       />
+      <p id={`${inputId}-format`} className="text-sm text-muted">
+        {prompt.formatSentence}
+      </p>
     </li>
   );
 }
@@ -192,6 +196,12 @@ export function AiPromptCards({ initialPrompts }: Readonly<{ initialPrompts: Pro
           >
             <p className="px-4 py-3 text-sm text-muted">
               <GroupHint group={group} />
+            </p>
+            <p className="px-4 pb-3 text-sm text-muted">
+              <FormattedMessage
+                id="settings.aiAnalysis.prompts.formatHint"
+                defaultMessage="The greyed sentence is fixed by the Field's type."
+              />
             </p>
             <ul className="divide-y divide-border-default border-t border-border-default">
               {rows.map((prompt) => (

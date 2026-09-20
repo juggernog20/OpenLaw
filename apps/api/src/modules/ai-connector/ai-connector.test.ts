@@ -5,6 +5,8 @@ import { activityLog, aiConnector, aiFieldPrompts, asc, inArray, sql, type Db } 
 import { createAiResolver } from "../../lib/ai/resolver.js";
 import { conversionPrompt, readAiPrompts } from "../../lib/ai-prompts.js";
 import { createFakeAiProvider } from "../../lib/ai/fake.js";
+import { formatSentence } from "../../lib/ai/format-sentence.js";
+import { extractionPrompt } from "../../lib/ai/http.js";
 import { AI_PROMPTS, CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
 import { FAKE_VALID_AI_KEY } from "../../lib/ai/fake.js";
 import {
@@ -130,11 +132,12 @@ describe("the core Field prompts", () => {
 
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json().prompts).toEqual(
-      AI_PROMPTS.map(({ slug, group, defaultPrompt }) => ({
+      AI_PROMPTS.map(({ slug, group, defaultPrompt, ...target }) => ({
         slug,
         group,
         prompt: defaultPrompt,
         defaultPrompt,
+        formatSentence: formatSentence({ slug, ...target }),
         overridden: false,
       })),
     );
@@ -147,6 +150,34 @@ describe("the core Field prompts", () => {
         .prompts.filter((prompt: { group: string }) => prompt.group === "analysis")
         .map((prompt: { slug: string }) => prompt.slug),
     ).toEqual(CORE_ANALYSIS_TARGETS.map((target) => target.slug));
+  });
+
+  it("keeps a saved override with old format wording unchanged", async () => {
+    const legacy = "Extract the Contract's effective date as YYYY-MM-DD.";
+    const [saved] = await harness.db
+      .insert(aiFieldPrompts)
+      .values({ slug: "effective_date", prompt: legacy })
+      .returning();
+    const response = await harness.app.inject({
+      method: "GET",
+      url: PROMPTS_URL,
+      cookies: adminCookies,
+    });
+    expect(
+      response.json().prompts.find((row: { slug: string }) => row.slug === "effective_date"),
+    ).toMatchObject({
+      prompt: legacy,
+      overridden: true,
+      formatSentence: "Return a date as YYYY-MM-DD.",
+    });
+    const book = await readAiPrompts(harness.db);
+    expect(book.prompt("effective_date")).toBe(legacy);
+    expect(
+      extractionPrompt("Source", [
+        { slug: "effective_date", type: "date", prompt: book.prompt("effective_date") },
+      ]),
+    ).toContain(`- effective_date: ${legacy} Return a date as YYYY-MM-DD.\n`);
+    expect(await harness.db.select().from(aiFieldPrompts)).toEqual([saved]);
   });
 
   it("refuses retired rule slugs and still saves conversion prompts", async () => {
@@ -251,6 +282,7 @@ describe("the core Field prompts", () => {
       group: "analysis",
       prompt: CORE_ANALYSIS_TARGETS[4].defaultPrompt,
       defaultPrompt: CORE_ANALYSIS_TARGETS[4].defaultPrompt,
+      formatSentence: "Return a whole number of days.",
       overridden: false,
     });
     expect(await harness.db.select().from(aiFieldPrompts)).toHaveLength(0);

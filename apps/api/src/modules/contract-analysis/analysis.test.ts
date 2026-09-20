@@ -1348,7 +1348,9 @@ it("sends each saved answer style through a real Analysis run to the provider", 
         { runId: run!.id, retryCount: 0, retryLimit: 2 },
       );
       expect((await waitForRun(run!.id)).state).toBe("ready");
-      expect(prompts.join("\n")).toContain(`- style_clause: Extract the clause. ${sentence}\n`);
+      expect(prompts.join("\n")).toContain(
+        `- style_clause: Extract the clause. Return text up to 10000 characters. ${sentence}\n`,
+      );
       const shortLine = prompts
         .join("\n")
         .split("\n")

@@ -16,8 +16,8 @@ export interface AiProviderContractHarness {
 }
 
 const TARGETS: readonly AiExtractionTarget[] = [
-  { slug: "term_type", prompt: "The contract term type." },
-  { slug: "effective_date", prompt: "The date the contract starts." },
+  { slug: "term_type", type: "term_type", prompt: "The contract term type." },
+  { slug: "effective_date", type: "date", prompt: "The date the contract starts." },
 ];
 
 /** The one behavioral suite every AI provider implementation must pass. */
@@ -55,6 +55,22 @@ export function describeAiProviderContract(
           /^The provider refused the (request with HTTP \d+|API key)\.$/,
         ),
       });
+    });
+
+    it("carries the same Field formats for Conversion draft sources", async () => {
+      await harness!.provider.extract(
+        [
+          {
+            id: "request:1",
+            revision: "1",
+            label: "Request",
+            kind: "request",
+            text: "This Agreement starts on 1 September 2026 and has a fixed term.",
+          },
+        ],
+        TARGETS,
+      );
+      harness!.assertLastExtractionRequest?.();
     });
 
     it("extracts one ordered object keyed by slug, including an answer with no evidence", async () => {
