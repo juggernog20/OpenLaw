@@ -41,6 +41,8 @@ document is the map, not the territory.
 
 ## Where we are
 
+**M37 Answer style is built.** Administrators choose the organization Answer style and override it on Contract text Fields. Prompt cards separate editable extraction instructions from fixed format sentences.
+
 **M38 adds device notifications on the staff app and the Portal.** Push joins In-app and Email,
 with browser enrolment, a Devices list, revocation, and a choice to hide record names. The push
 service carries only a notification ID and its bell surface; the service worker reads the item
@@ -716,6 +718,18 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - [x] CSV exports, the browser journey, plan and record addenda
   - _Decisions:_ ENT-011, DES-088, DES-046 addendum, ENT-001 and ENT-003 amendments
 
+- [x] **M37 — AI Answer style**
+      _Demo:_ An Administrator chooses Few word summary in AI analysis, reads a greyed format
+      sentence in Contract analysis prompts, and sets a long text Field to Full clause text.
+      A short text Field disables that choice with a tooltip; a user Field has no AI prompt box.
+      _Built:_ [#955](https://github.com/juggernog20/OpenLaw/issues/955), tasks #956–#961. The journey is
+      [`60-m37-close.spec.ts`](../e2e/tests/60-m37-close.spec.ts).
+  - [x] Organization Answer style and nullable Contract Field overrides, applied on the next Analysis run
+  - [x] Code-owned shared rules and format sentences; seven Contract analysis and five Conversion draft prompts
+  - [x] Per-target validation preserves valid sibling answers after the existing repair attempt
+  - [x] Reference Fields excluded from Contract analysis; type restrictions in the Field editor
+  - [x] Browser journey, locale drift check, plan and record reconciliation
+  - _Decisions:_ CTR-008 addendum, SET-008, INT-008 addendum, DES-070 amendment
 - [x] **M38 — Device notifications**
       _Demo:_ Close the tab, get assigned a Contract, and see the notification arrive on the desktop;
       click it and land on that Contract with the bell item already read.

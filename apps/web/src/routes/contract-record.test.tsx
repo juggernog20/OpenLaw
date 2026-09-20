@@ -1003,6 +1003,63 @@ describe("the /contracts/:number record page", () => {
       expect(within(card).getByText("Acme Trading LLC")).toBeInTheDocument();
     });
 
+    it("does not list attached reference Fields absent from the run outcome", async () => {
+      const fields = ["user", "entity"].map((fieldType) => ({
+        ...PAYMENT_TERMS,
+        fieldId: `legacy-${fieldType}`,
+        slug: `legacy_${fieldType}`,
+        displayName: `Legacy ${fieldType}`,
+        fieldType,
+        aiPrompt: "Old saved prompt.",
+      }));
+      const api = recordApi(contractRow());
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
+            return json(200, {
+              contract: contractRow(),
+              fields,
+              customFieldRefs: { users: [], entities: [] },
+              team: [],
+              counterparties: [],
+              renewals: [],
+              analysis: {
+                available: true,
+                latestRun: analysisRun({
+                  outcome: {
+                    written: ["effective_date"],
+                    kept: [],
+                    unsupported: [],
+                    invalid: [],
+                    results: [
+                      {
+                        slug: "effective_date",
+                        value: "2026-09-01",
+                        evidence: "Effective on 2026-09-01.",
+                        outcome: "written",
+                      },
+                    ],
+                  },
+                }),
+              },
+            });
+          }
+          return api.handler(call);
+        },
+      });
+      renderAt("/contracts/42/fields");
+      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
+        "section",
+      )!;
+      expect(within(card).getByText("Effective on 2026-09-01.")).toBeInTheDocument();
+      expect(within(card).getAllByRole("listitem")).toHaveLength(1);
+      for (const field of fields) {
+        expect(screen.getByText(field.displayName)).toBeInTheDocument();
+        expect(within(card).queryByText(field.displayName)).not.toBeInTheDocument();
+      }
+    });
+
     it("runs from the card and the overflow menu", async () => {
       const sources = stubEventSource();
       const api = recordApi(contractRow(), undefined, undefined, undefined, {

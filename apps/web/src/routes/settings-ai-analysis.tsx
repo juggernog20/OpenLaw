@@ -20,7 +20,8 @@ import type { paths } from "@openlaw/api-client";
 import { AiSavedKeyControl } from "../components/ai-saved-key-control";
 import { findSavedAiKey } from "../lib/ai-connector-config";
 import { AiModelSelector } from "../components/ai-model-selector";
-import { AiFieldPromptsCard } from "../components/ai-field-prompts-card";
+import { AiAnswerStyleCard } from "../components/ai-answer-style-card";
+import { AiPromptCards } from "../components/ai-prompt-cards";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -604,7 +605,12 @@ export function SettingsAiAnalysisPage() {
           <StatusNote status={status.workflow} detail={detail.workflow} />
         </SettingsCard>
       )}
-      <AiFieldPromptsCard initialPrompts={loaded.prompts} />
+      <AiAnswerStyleCard
+        value={connector.answerStyle}
+        configured={connector.configured}
+        onSaved={(answerStyle) => setConnector((current) => ({ ...current, answerStyle }))}
+      />
+      <AiPromptCards initialPrompts={loaded.prompts} />
       {confirmingRemove && (
         <Dialog open onOpenChange={(open) => !open && setConfirmingRemove(false)}>
           <DialogContent aria-describedby={undefined}>

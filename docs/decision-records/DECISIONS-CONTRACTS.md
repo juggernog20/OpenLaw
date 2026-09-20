@@ -539,13 +539,36 @@ The Contract page revalidates while a run is pending and keeps typed drafts. Ret
 - **Answer style is a setting with three values:** Few word summary, 1-2 sentence summary, Full clause text. The organization default lives on the AI connector row beside its workflow switches and starts at 1-2 sentence summary. An **Answer style** card on Settings → Organization → AI analysis replaces the System prompts card.
 - **Style is a property of the Field.** A `text` or `long_text` Field carries its own answer style, or Organisation default. The Field editor under Contracts → Fields shows the picker beneath the AI prompt for those two types only. Full clause text is shown but not selectable on a `text` Field, with a tooltip that says it needs a long text Field, because a `text` value stops at 500 characters. With Full clause text the value is the same text as the citation.
 - **The Field's effective style is said on its own prompt line.** The old Text answers paragraph is replaced by one sentence per `text` or `long_text` line that states that Field's style, and one shared line that says the citations carry the wording. A style change reaches the next Analysis run; values already written keep their form until a re-run.
-- **Core and conversion prompt rows stay, and edit semantics only.** The editable text is what the model looks for. Code appends the type sentence, the way the conversion draft already prefixes each Field line with its type, and the card shows that sentence greyed beneath the editable text. The styles do not apply to the conversion draft's built-in title and description, which keep their own wording.
+- **Core and conversion prompt rows stay, and edit semantics only.** The editable text is what the model looks for. Code appends the type sentence, the way the conversion draft already prefixes each Field line with its type, and the card shows that sentence greyed beneath the editable text. The styles do not apply to the conversion draft's built-in title and description, which keep their own wording. _Implementation note (M37/3, #957): the sentence is `formatSentence` in `apps/api/src/lib/ai/format-sentence.ts`, derived from the target's type and, for the two integer targets, the title and the counterparty, its slug. `extractionPrompt` appends it to every line, then the style sentence. The twelve defaults and the conversion draft's Field lines carry no format wording of their own any more; the title and counterparty length bounds moved into the sentence. `GET /ai-field-prompts` answers it as `formatSentence` and the two cards show it greyed under each row._
 - **One bad answer no longer sinks the run.** A reply value that fails validation for one target marks that target invalid in the outcome and the rest of the run writes. The one repair attempt stays.
 - **`user` and `entity` Fields leave Contract analysis.** The Field editor hides the AI prompt box for those two types, and the analysis target list skips them, as the conversion draft already does. Paper cannot name an internal row id, so the model was asked for a value that was always written as null.
 
 **Rationale.** The project is open source. An operator who must change an honesty rule edits the source. Everyone else gets a picker that cannot produce an unparseable reply. Per-Field style is the right grain because the style decides how one value reads on every Contract, and per-user style would give two readers of one Contract two answers.
 
 ~~The 2026-09-19 note's `rules.*` rows and its Text answers paragraph~~ are **superseded by this addendum**; its `conversion.*` rows, the one reader, and the fixed format lines stand.
+
+### CTR-008 implementation note, 2026-09-20, M37/6, #961
+
+M37 implements the addendum above. Migration `0156` adds the connector's `answer_style`
+with default `sentence` and deletes saved `rules.*` overrides. The same migration adds
+`fields.ai_answer_style`, nullable for organization inheritance, with database and API
+checks for Contract `text` and `long_text` Fields. Explicit `full_clause` requires
+`long_text`. An inherited `full_clause` falls back to `sentence` for a short text Field.
+The prompt asks for at most 80 characters for Few word summary, at most 200 for
+1-2 sentence summary, and a verbatim provision for Full clause text. Existing values are unchanged.
+
+The target builder reads the effective style for each prompted catalog Field and skips
+`user` and `entity` Fields. The provider validates answers separately after the existing
+repair attempt, so an invalid target does not discard valid siblings. Shared rules and
+format sentences come from code. Saved prompts supply the extraction instructions.
+
+The AI analysis pane has four collapsed cards: Provider, Answer style, Conversion draft
+prompts, and Contract analysis prompts. The Request conversion switches card is not one
+of them. It stays open, sits between Provider and Answer style, and appears once a
+connector is saved. Each prompt shows its fixed format sentence as
+muted, non-editable text. The Contract Field editor supplies the override picker and the
+short-text tooltip, and omits AI prompts for reference Fields. The M37 browser journey
+proves these controls and reads both saved style choices after reopening.
 
 ## CTR-025 — Owning department and Region are built-in Overview attributes
 

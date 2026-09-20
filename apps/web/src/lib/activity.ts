@@ -353,7 +353,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // provider. A key with no arm reads as itself, which is the
       // honest rendering for one this build no longer writes.
       defaultMessage:
-        "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} " +
+        "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} " +
         "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +
@@ -446,6 +446,15 @@ function changeValue(
   }
   // The ramp's labels come from an ICU `select` with an `other` arm, so
   // a level the ramp no longer has still renders rather than throwing.
+  if (key === "answerStyle")
+    return intl.formatMessage(
+      {
+        id: "activity.aiConnector.answerStyle",
+        defaultMessage:
+          "{value, select, few_words {Few word summary} sentence {1-2 sentence summary} full_clause {Full clause text} other {{value}}}",
+      },
+      { value: String(value) },
+    );
   if (key === "priority") return severityLabel(intl, value as SeverityLevel);
   if (key === "risk") return riskLabel(intl, value as SeverityLevel);
   // CTR-006's term type is a stored slug, so the feed says "Evergreen"

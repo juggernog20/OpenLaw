@@ -39,7 +39,7 @@ import {
   type Field,
   type Transaction,
 } from "@openlaw/db";
-import { CORE_ANALYSIS_TARGETS } from "@openlaw/shared";
+import { AI_ANSWER_STYLES, CORE_ANALYSIS_TARGETS, isReferenceFieldType } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -65,6 +65,7 @@ const FieldSchema = z.object({
   options: z.array(z.string()).nullable(),
   fieldTag: FieldTagSchema,
   aiPrompt: z.string().nullable(),
+  aiAnswerStyle: z.enum(AI_ANSWER_STYLES).nullable(),
   builtInKey: z.string().nullable().optional(),
   /** A default Field (SET-004): seeded by a migration, kept by Start
    * blank, and locked against archive in the Fields panes. */
@@ -89,6 +90,23 @@ const OptionsSchema = z.array(z.string().trim().min(1).max(100)).min(1).max(100)
 /** The select types — the only ones that carry an options list. */
 const SELECT_TYPES = new Set<string>(["single_select", "multi_select"]);
 
+function checkAnswerStyle(
+  moduleScope: Field["moduleScope"],
+  fieldType: Field["fieldType"],
+  style: Field["aiAnswerStyle"],
+) {
+  if (style === null) return;
+  if (fieldType !== "text" && fieldType !== "long_text") {
+    throw httpError(422, "Answer style needs a text or long text Field.");
+  }
+  if (style === "full_clause" && fieldType === "text") {
+    throw httpError(422, "Full clause text needs a long text Field.");
+  }
+  if (moduleScope !== "contract") {
+    throw httpError(422, "Answer style needs a contract-scope Field.");
+  }
+}
+
 function toRow(row: Field, inUseCount: number) {
   return {
     id: row.id,
@@ -100,6 +118,7 @@ function toRow(row: Field, inUseCount: number) {
     options: row.options ?? null,
     fieldTag: row.fieldTag,
     aiPrompt: row.aiPrompt,
+    aiAnswerStyle: row.aiAnswerStyle,
     ...(row.builtInKey ? { builtInKey: row.builtInKey } : {}),
     isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
@@ -288,6 +307,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           fieldTag: FieldTagSchema,
           options: OptionsSchema.optional(),
           aiPrompt: AiPromptSchema.optional(),
+          aiAnswerStyle: z.enum(AI_ANSWER_STYLES).nullable().optional(),
         }),
         response: { 201: FieldEnvelope, default: problemResponse },
       },
@@ -297,6 +317,11 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       const displayName = request.body.displayName.trim();
       const description = request.body.description?.trim() || null;
       const aiPrompt = request.body.aiPrompt?.trim() || null;
+      if (request.body.aiPrompt !== undefined && isReferenceFieldType(fieldType)) {
+        throw httpError(422, `Fields of type ${fieldType} cannot be analysed.`);
+      }
+      const aiAnswerStyle = request.body.aiAnswerStyle ?? null;
+      checkAnswerStyle(moduleScope, fieldType, aiAnswerStyle);
       const options = checkOptions(fieldType, request.body.options);
       if (aiPrompt !== null && moduleScope !== "contract") {
         throw httpError(400, "AI prompts live on contract-scoped fields.");
@@ -322,6 +347,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             options,
             fieldTag,
             aiPrompt,
+            aiAnswerStyle,
           })
           .returning();
         await recordActivity(tx, {
@@ -357,6 +383,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           fieldTag: FieldTagSchema.optional(),
           options: OptionsSchema.optional(),
           aiPrompt: AiPromptSchema.nullable().optional(),
+          aiAnswerStyle: z.enum(AI_ANSWER_STYLES).nullable().optional(),
         }),
         response: { 200: FieldEnvelope, default: problemResponse },
       },
@@ -403,11 +430,19 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           wants("options", checkOptions(target.fieldType, body.options));
         }
         if (body.aiPrompt !== undefined) {
+          if (isReferenceFieldType(target.fieldType)) {
+            throw httpError(422, `Fields of type ${target.fieldType} cannot be analysed.`);
+          }
           const aiPrompt = body.aiPrompt?.trim() || null;
           if (aiPrompt !== null && target.moduleScope !== "contract") {
             throw httpError(400, "AI prompts live on contract-scoped fields.");
           }
           wants("aiPrompt", aiPrompt);
+        }
+
+        if (body.aiAnswerStyle !== undefined) {
+          checkAnswerStyle(target.moduleScope, target.fieldType, body.aiAnswerStyle);
+          wants("aiAnswerStyle", body.aiAnswerStyle);
         }
 
         // Nothing changed: answer with the row and write no audit entry.

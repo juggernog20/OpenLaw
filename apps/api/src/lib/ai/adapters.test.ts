@@ -8,7 +8,7 @@ import { createAnthropicProvider } from "./anthropic.js";
 import { createGeminiProvider } from "./gemini.js";
 import { EXTRACTION_BOUND, DEFAULT_EXTRACTION_RULES, extractionPrompt } from "./http.js";
 import { createOpenAiCompatibleProvider } from "./openai-compatible.js";
-import { AiUnavailableError } from "./provider.js";
+import { AiUnavailableError, type AiExtractionTarget } from "./provider.js";
 
 const VALID_KEY = "valid-api-key"; // NOSONAR - inert local-server fixture
 const INVALID_KEY = "wrong-api-key"; // NOSONAR - inert local-server fixture
@@ -115,6 +115,12 @@ function sharedAssertions(protocol: Protocol, request: CapturedRequest | undefin
   const prompt = protocol === "gemini" ? contents?.[0]?.parts[0]?.text : messages?.[0]?.content;
   expect(prompt).toContain("Use null when a value is missing, ambiguous, or unsupported");
   expect(prompt).toContain("Boolean false requires explicit support");
+  expect(prompt).toContain(
+    '- term_type: The contract term type. Return exactly "fixed" for a fixed term, "auto_renew" for automatic renewal, or "evergreen" for an indefinite term.\n',
+  );
+  expect(prompt).toContain(
+    "- effective_date: The date the contract starts. Return a date as YYYY-MM-DD.\n",
+  );
   expect(protocol === "gemini" ? contents : messages).toHaveLength(1);
   expect(protocol === "gemini" ? contents?.[0]?.role : messages?.[0]?.role).toBe("user");
   expect(body).not.toHaveProperty("system");
@@ -186,6 +192,60 @@ async function protocolHarness(protocol: Protocol, extractionReply = FENCED_REPL
 describeAiProviderContract("Anthropic Messages", () => protocolHarness("anthropic"));
 describeAiProviderContract("OpenAI-compatible chat completions", () => protocolHarness("openai"));
 describeAiProviderContract("Gemini", () => protocolHarness("gemini"));
+
+for (const protocol of ["anthropic", "openai", "gemini"] as const) {
+  it.each(["analysis", "conversion"] as const)(
+    `${protocol} sends custom Field formats for %s`,
+    async (flow) => {
+      const targets: AiExtractionTarget[] = [
+        { slug: "summary", type: "long_text", prompt: "Extract the position." },
+        {
+          slug: "jurisdictions",
+          type: "multi_select",
+          options: ["England", "France"],
+          prompt: "Extract jurisdictions.",
+        },
+      ];
+      const harness = await protocolHarness(
+        protocol,
+        JSON.stringify({
+          summary: { value: null },
+          jurisdictions: { value: null },
+        }),
+      );
+      try {
+        await harness.provider.extract(
+          flow === "analysis"
+            ? "Source"
+            : [
+                {
+                  id: "request:1",
+                  revision: "1",
+                  label: "Request",
+                  kind: "request",
+                  text: "Source",
+                },
+              ],
+          targets,
+          { answerStyle: "few_words" },
+        );
+        const body = harness.requests.at(-1)!.body;
+        const prompt =
+          protocol === "gemini"
+            ? (body.contents as { parts: { text: string }[] }[])[0]!.parts[0]!.text
+            : (body.messages as { content: string }[])[0]!.content;
+        expect(prompt).toContain(
+          "- summary: Extract the position. Return text up to 10000 characters. Answer in a few words that name the position, at most 80 characters.\n",
+        );
+        expect(prompt).toContain(
+          '- jurisdictions: Extract jurisdictions. Return an array of the allowed options: ["England","France"].\n',
+        );
+      } finally {
+        await harness.stop();
+      }
+    },
+  );
+}
 
 describe("Groq extraction recovery", () => {
   const targets = [
@@ -558,18 +618,57 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
   });
 }
 
-it("carries the supplied rule paragraphs in place of the built-in ones, and keeps the format lines", () => {
-  const targets = [{ slug: "term_type", prompt: "Extract term" }];
-  const prompt = extractionPrompt("A fixed term", targets, ["Answer in one sentence."]);
-  expect(prompt).toContain("Answer in one sentence.");
-  expect(prompt).not.toContain("Use null when a value is missing");
-  expect(prompt).toContain("Return one JSON object keyed by the exact slug.");
-  expect(prompt).toContain("- term_type: Extract term");
-  // No rules read means the built-in text, in the built-in order.
-  const fallback = extractionPrompt("A fixed term", targets);
-  const indexes = DEFAULT_EXTRACTION_RULES.map((rule) => fallback.indexOf(rule));
+it("keeps the four code-owned rule paragraphs in order", () => {
+  const prompt = extractionPrompt("A fixed term", [{ slug: "term_type", prompt: "Extract term" }]);
+  expect(DEFAULT_EXTRACTION_RULES).toHaveLength(4);
+  const indexes = DEFAULT_EXTRACTION_RULES.map((rule) => prompt.indexOf(rule));
   expect(indexes.every((index) => index >= 0)).toBe(true);
   expect([...indexes].sort((a, b) => a - b)).toEqual(indexes);
+  expect(prompt).not.toContain("Example answers:");
+  expect(prompt).toContain(
+    "The citations carry the wording unless the answer style asks for the full clause.",
+  );
+});
+
+it.each([
+  ["few_words", "Answer in a few words that name the position, at most 80 characters."],
+  [
+    "sentence",
+    "Answer in one or two short sentences that state the position, at most 200 characters.",
+  ],
+  ["full_clause", "Quote the provision verbatim."],
+] as const)("adds the %s style to every text target", (answerStyle, sentence) => {
+  const prompt = extractionPrompt(
+    "A fixed term",
+    [
+      { slug: "short", type: "text", prompt: "Extract short." },
+      { slug: "long", type: "long_text", prompt: "Extract long." },
+      { slug: "date", type: "date", prompt: "Extract date." },
+      { slug: "title", type: "text", prompt: "Propose a title.", omitAnswerStyle: true },
+      {
+        slug: "description",
+        type: "long_text",
+        prompt: "Propose a description.",
+        omitAnswerStyle: true,
+      },
+    ],
+    answerStyle,
+  );
+  const shortStyle =
+    answerStyle === "full_clause"
+      ? "Answer in one or two short sentences that state the position, at most 200 characters."
+      : sentence;
+  expect(prompt).toContain(`- short: Extract short. Return a short text. ${shortStyle}\n`);
+  expect(prompt).toContain(
+    `- long: Extract long. Return text up to 10000 characters. ${sentence}\n`,
+  );
+  expect(prompt).toContain("- date: Extract date. Return a date as YYYY-MM-DD.\n");
+  expect(prompt).toContain(
+    "- title: Propose a title. Return a short text of at most 200 characters.\n",
+  );
+  expect(prompt).toContain(
+    "- description: Propose a description. Return text up to 10000 characters.\n",
+  );
 });
 
 it("does not request source IDs from legacy unaddressed text", () => {
@@ -629,3 +728,29 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
     });
   }
 }
+
+it("uses each Field's style before the organisation default", () => {
+  const prompt = extractionPrompt(
+    "The assignment provision.",
+    [
+      {
+        slug: "clause",
+        type: "long_text",
+        prompt: "Extract clause.",
+        aiAnswerStyle: "full_clause",
+      },
+      { slug: "summary", type: "long_text", prompt: "Extract summary.", aiAnswerStyle: null },
+      { slug: "short", type: "text", prompt: "Extract short.", aiAnswerStyle: "few_words" },
+    ],
+    "sentence",
+  );
+  expect(prompt).toContain(
+    "- clause: Extract clause. Return text up to 10000 characters. Quote the provision verbatim.\n",
+  );
+  expect(prompt).toContain(
+    "- summary: Extract summary. Return text up to 10000 characters. Answer in one or two short sentences that state the position, at most 200 characters.\n",
+  );
+  expect(prompt).toContain(
+    "- short: Extract short. Return a short text. Answer in a few words that name the position, at most 80 characters.\n",
+  );
+});

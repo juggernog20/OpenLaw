@@ -301,6 +301,38 @@ describe("create (the field-editor dialog)", () => {
     );
   });
 
+  it.each(["user", "entity"])(
+    "hides and omits the prompt after selecting %s",
+    async (fieldType) => {
+      const calls = newCalls();
+      stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
+      renderAt("/settings/contracts/fields");
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Add field" }));
+      const dialog = await screen.findByRole("dialog", { name: "Add field" });
+      await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Internal reference");
+      const type = within(dialog).getByRole("combobox", { name: "Type" });
+      await user.selectOptions(type, "text");
+      await user.type(
+        within(dialog).getByRole("textbox", { name: "AI prompt" }),
+        "Find the party.",
+      );
+      await user.selectOptions(type, fieldType);
+      expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
+      await user.click(within(dialog).getByRole("button", { name: "Add field" }));
+      await waitFor(() =>
+        expect(calls.creates).toEqual([
+          {
+            displayName: "Internal reference",
+            moduleScope: "contract",
+            fieldType,
+            fieldTag: "business",
+          },
+        ]),
+      );
+    },
+  );
+
   it("refuses to create without a type or without options on a select", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
@@ -328,6 +360,37 @@ describe("create (the field-editor dialog)", () => {
 });
 
 describe("edit (type immutable; prompt edits)", () => {
+  it.each(["user", "entity"])(
+    "edits a legacy %s Field without showing or sending its prompt",
+    async (fieldType) => {
+      const calls = newCalls();
+      const row = { ...seededFields()[0]!, fieldType, aiPrompt: " Old saved prompt. " };
+      stubApi({ signedIn: ADMIN, extra: fieldsApi(calls, [row]) });
+      renderAt("/settings/contracts/fields");
+      await screen.findByText("Governing law");
+      // The catalog row shows no sparkle either: the saved prompt is dead.
+      const first = within(fieldList()).getAllByRole("listitem")[0]!;
+      expect(
+        within(first).queryByRole("img", { name: /AI extraction prompt/ }),
+      ).not.toBeInTheDocument();
+      expect(within(first).getByText("No AI prompt")).toBeInTheDocument();
+      const user = userEvent.setup();
+      await user.click(within(first).getByRole("button", { name: "Edit Governing law" }));
+      const dialog = await screen.findByRole("dialog", { name: "Edit Governing law" });
+      expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
+      await user.type(
+        within(dialog).getByRole("textbox", { name: "Description" }),
+        "An internal reference.",
+      );
+      await user.click(within(dialog).getByRole("button", { name: "Save" }));
+      await waitFor(() =>
+        expect(calls.patches).toEqual([
+          { id: row.id, body: { description: "An internal reference." } },
+        ]),
+      );
+    },
+  );
+
   it("locks the type and patches the prompt", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
@@ -425,5 +488,91 @@ describe("the archive guard (retention, never reassignment)", () => {
       const items = within(fieldList()).getAllByRole("listitem");
       expect(within(items.at(-1)!).getByText("Our position")).toBeInTheDocument();
     });
+  });
+});
+
+describe("Field answer style", () => {
+  it("names the current default, saves an override, and clears it", async () => {
+    const calls = newCalls();
+    const rows = seededFields();
+    rows[0]!.fieldType = "long_text";
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/ai-connector"
+          ? json(200, { connector: { answerStyle: "few_words" } })
+          : fieldsApi(calls, rows)(call),
+    });
+    const user = userEvent.setup();
+    renderAt("/settings/contracts/fields");
+    await user.click(await screen.findByRole("button", { name: "Edit Governing law" }));
+    const select = screen.getByRole("combobox", { name: "Answer style" });
+    expect(
+      await screen.findByRole("option", { name: "Organisation default (Few word summary)" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Full clause text" })).not.toBeDisabled();
+    await user.selectOptions(select, "full_clause");
+    await user.click(screen.getByRole("button", { name: /^Save$/ }));
+    await waitFor(() =>
+      expect(calls.patches).toEqual([{ id: "f1", body: { aiAnswerStyle: "full_clause" } }]),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await user.click(await screen.findByRole("button", { name: "Edit Governing law" }));
+    expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveValue("full_clause");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "");
+    await user.click(screen.getByRole("button", { name: /^Save$/ }));
+    await waitFor(() =>
+      expect(calls.patches.at(-1)).toEqual({ id: "f1", body: { aiAnswerStyle: null } }),
+    );
+  });
+
+  it("disables Full clause text on text Fields and describes the reason", async () => {
+    stubApi({ signedIn: ADMIN, extra: fieldsApi(newCalls()) });
+    const user = userEvent.setup();
+    renderAt("/settings/contracts/fields");
+    await user.click(await screen.findByRole("button", { name: "Edit Governing law" }));
+    expect(screen.getByRole("option", { name: "Full clause text" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveAccessibleDescription(
+      "Full clause text needs a long text Field.",
+    );
+    await user.click(screen.getByRole("combobox", { name: "Answer style" }));
+    expect(screen.getByRole("tooltip")).toBeVisible();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("omits Answer style for other Field types", async () => {
+    stubApi({ signedIn: ADMIN, extra: fieldsApi(newCalls()) });
+    const user = userEvent.setup();
+    renderAt("/settings/contracts/fields");
+    await user.click(await screen.findByRole("button", { name: "Edit Our position" }));
+    expect(screen.queryByRole("combobox", { name: "Answer style" })).not.toBeInTheDocument();
+  });
+
+  it("clears Full clause text when a new Field changes to text and sends an override on create", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
+    const user = userEvent.setup();
+    renderAt("/settings/contracts/fields");
+    await user.click(await screen.findByRole("button", { name: "Add field" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Assignment clause");
+    const type = within(dialog).getByRole("combobox", { name: "Type" });
+    await user.selectOptions(type, "long_text");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "full_clause");
+    await user.selectOptions(type, "text");
+    expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveValue("");
+    await user.selectOptions(type, "long_text");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "full_clause");
+    await user.click(within(dialog).getByRole("button", { name: "Add field" }));
+    await waitFor(() =>
+      expect(calls.creates[0]).toMatchObject({
+        fieldType: "long_text",
+        aiAnswerStyle: "full_clause",
+      }),
+    );
   });
 });

@@ -10,6 +10,7 @@ import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  AI_ANSWER_STYLES,
   AI_OUTPUT_TOKEN_DEFAULT,
   AI_OUTPUT_TOKEN_MIN,
   AI_OUTPUT_TOKEN_MAX,
@@ -54,6 +55,7 @@ const WorkflowSettingsSchema = z.object({
   contractConversionAnalysis: z.boolean(),
 });
 
+const AnswerStyleSchema = z.object({ answerStyle: z.enum(AI_ANSWER_STYLES) });
 const SavedKeySchema = z.object({
   id: z.string(),
   preset: z.enum(AI_PRESETS),
@@ -65,6 +67,7 @@ const SavedKeySchema = z.object({
 });
 
 const ConnectorSchema = WorkflowSettingsSchema.extend({
+  answerStyle: z.enum(AI_ANSWER_STYLES),
   configured: z.boolean(),
   enabled: z.boolean(),
   preset: z.enum(AI_PRESETS).nullable(),
@@ -91,6 +94,7 @@ const ProviderBodySchema = z.object({
 });
 
 const ConnectorBodySchema = ProviderBodySchema.extend({
+  answerStyle: z.enum(AI_ANSWER_STYLES).optional(),
   model: z.string().trim().min(1).max(300),
   maxOutputTokens: z.number().int().min(AI_OUTPUT_TOKEN_MIN).max(AI_OUTPUT_TOKEN_MAX).optional(),
 });
@@ -119,6 +123,7 @@ function readConnector(
       matterPreparation: false,
       contractPreparation: false,
       contractConversionAnalysis: false,
+      answerStyle: "sentence",
       configured: false,
       enabled: false,
       preset: null,
@@ -135,6 +140,7 @@ function readConnector(
     matterPreparation: row.matterPreparation,
     contractPreparation: row.contractPreparation,
     contractConversionAnalysis: row.contractConversionAnalysis,
+    answerStyle: row.answerStyle,
     configured: true,
     enabled: row.disabledAt === null,
     preset: row.preset,
@@ -227,6 +233,46 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async () => envelope(await stored()),
+  );
+
+  app.patch(
+    "/ai-connector",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "updateAiAnswerStyle",
+        summary: "Set the Organization default answer style",
+        tags: ["ai-connector"],
+        body: AnswerStyleSchema.strict(),
+        response: { 200: ConnectorEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const saved = await app.db.transaction(async (tx) => {
+        const current = await lockedConnector(tx);
+        if (current.answerStyle === request.body.answerStyle) return current;
+        const [row] = await tx
+          .update(aiConnector)
+          .set(request.body)
+          .where(eq(aiConnector.id, current.id))
+          .returning();
+        if (!row) throw httpError(500, "The AI connector could not be updated.");
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "ai_connector.updated",
+          visibility: "admin_only",
+          payload: {
+            preset: current.preset,
+            field: "answerStyle",
+            old: current.answerStyle,
+            new: row.answerStyle,
+          },
+        });
+        return row;
+      });
+      return envelope(saved);
+    },
   );
 
   app.patch(
@@ -330,6 +376,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
             .values({
               ...config,
               savedKeyId: key?.id ?? null,
+              answerStyle: request.body.answerStyle,
               maxOutputTokens: request.body.maxOutputTokens ?? AI_OUTPUT_TOKEN_DEFAULT,
             })
             .returning();
@@ -348,6 +395,9 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           .update(aiConnector)
           .set({
             ...config,
+            ...(request.body.answerStyle === undefined
+              ? {}
+              : { answerStyle: request.body.answerStyle }),
             ...(request.body.maxOutputTokens === undefined
               ? {}
               : { maxOutputTokens: request.body.maxOutputTokens }),
@@ -364,6 +414,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           "baseUrl",
           "model",
           "maxOutputTokens",
+          "answerStyle",
         ] as const) {
           if (current[field] !== row[field]) {
             await recordActivity(tx, {

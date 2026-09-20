@@ -42,28 +42,28 @@ For Ollama, `localhost` means the machine or container running each calling proc
 
 The **Connected** badge means the connector is saved and enabled, even before a successful test. If testing fails, correct the saved configuration and test again. Turning off **Use AI analysis** also disables **Test connection**; turn it on when ready to test. Saving changes to an existing disabled connector leaves it disabled.
 
-## Edit the prompts
+## Choose the answer style and edit prompts
 
-Open the **Prompts** card at the bottom of this page, below **Provider** and, after saving a connector, **Request conversion**. Use its three always-open sections:
+Three closed cards sit at the bottom of this page, below **Provider** and, after saving a connector, **Request conversion**. Select a card's title to open it. Each card opens on its own, and all three start closed on every visit.
 
-- **Rules for every AI run.** Edit the shared paragraphs sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list. Set rules for corrections and conflicts, justification, missing and unsupported values, text answers, and source scope. Use **Text answers** to control answer length: the default asks for one short sentence, such as "Neither party may assign other than to affiliates.", and leaves the provision's wording to the citations.
-- **Request conversion.** Edit the prompts for Title, Description, Priority, Needed by, and Counterparty, proposed alongside the target Type's Fields. Use `{module}` where the prompt should say Matter or Contract when the draft runs.
-- **Contract analysis fields.** Edit prompts for the seven built-in Contract values. For example, ask the notice-period prompt for the number of days stated in the fictional paper.
+- **Answer style.** After saving a connector, choose **Few word summary** for a few words up to 80 characters, **1-2 sentence summary** for one or two short sentences up to 200 characters, or **Full clause text** for the provision quoted verbatim. Each choice saves immediately and shows its save result. The default is **1-2 sentence summary**. Short text Fields use that summary when the Organization default is **Full clause text**, because short text values stop at 500 characters. The Conversion draft's built-in Title and Description keep their own wording.
+- **Matter and Contract conversion prompts.** Edit the prompts for Title, Description, Priority, Needed by, and Counterparty, proposed alongside the target Type's Fields. Use `{module}` where the prompt should say Matter or Contract when the draft runs.
+- **Contract analysis prompts.** Edit prompts for the seven built-in Contract values. For example, ask the notice-period prompt for the number of days stated in the fictional paper.
 
 Press Enter or leave the input to save that prompt, and wait for its save result. Shift+Enter inserts a line break. Press Escape to restore the saved text. Each prompt is required and can contain up to 2,000 characters. If you clear a prompt and leave the input, the saved text comes back. For an overridden prompt, **Reset to default** restores that one built-in prompt.
 
-The output-format instructions are not on the card. They tell the model how to shape its JSON reply and which source ids to cite, and OpenLaw depends on them to read the answer. Field prompts only need to describe what to extract and any field-specific interpretation; they do not need to repeat the shared rules.
+The shared rules for corrections, conflicts, justification, missing values, and source scope are fixed in code. They cannot be edited in Settings. Citations carry the wording unless the answer style asks for the full clause. The output-format instructions are also fixed. They tell the model how to shape its JSON reply and which source ids to cite, and OpenLaw depends on them to read the answer. Field prompts only need to describe what to extract and any field-specific interpretation; they do not need to repeat the shared rules.
 
 Prompt changes affect subsequent Analysis runs and Conversion drafts. They do not rewrite earlier results or confirm an existing **Unverified** value. Rerun deliberately after editing a prompt and review the resulting evidence.
 
 ## Add a catalog Field to Analysis
 
-1. Follow **Contracts → Fields** from the prompt card, or open that Settings destination directly.
-2. Create or edit a Field whose **Scope** is Contract. Enter its **AI prompt** to describe the value to extract, then save the Field. Use [Fields and Type configuration](types-statuses-fields.md) for the catalog controls.
+1. Follow **Contracts → Fields** from the **Contract analysis prompts** card, or open that Settings destination directly.
+2. Create or edit a Contract Field with a type other than User or Entity. Enter its **AI prompt** to describe the value to extract, then save the Field. Use [Fields and Type configuration](types-statuses-fields.md) for the catalog controls.
 3. Attach the active Field to the Contract Type used by your test Contract.
 4. Run Analysis on that Contract and check the Field's result and its saved value.
 
-Only active Contract-scoped Fields attached to that Contract Type and carrying an AI prompt are included. Removing a Field's prompt stops including it in future runs; it does not erase an existing value.
+Only active Contract-scoped Fields attached to that Contract Type and carrying an AI prompt are included. User and Entity Fields are excluded, even if they have an old saved prompt. Their editor has no AI prompt box because Analysis cannot select an internal user or Entity. Removing a Field's prompt stops including it in future runs; it does not erase an existing value.
 
 ## Understand the data sent
 

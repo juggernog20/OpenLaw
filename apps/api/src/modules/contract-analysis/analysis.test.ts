@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { startAiResponseServer } from "../../testing/ai-response-server.js";
+import { createServer } from "node:http";
+import { once } from "node:events";
+import { createAiResolver } from "../../lib/ai/resolver.js";
+import { createAiProvider } from "../../lib/ai/index.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
@@ -10,6 +15,7 @@ import {
   contracts,
   contractTeam,
   contractTypeFields,
+  contractTypes,
   counterparties,
   documentVersions,
   documentVersionText,
@@ -1255,3 +1261,318 @@ describe("Contract milestone extraction", () => {
     },
   );
 });
+
+it("sends each saved answer style through a real Analysis run to the provider", async () => {
+  const prompts: string[] = [];
+  const server = createServer(async (request, response) => {
+    const chunks: Buffer[] = [];
+    for await (const chunk of request) chunks.push(Buffer.from(chunk));
+    const body = JSON.parse(Buffer.concat(chunks).toString()) as {
+      messages: { content: string }[];
+      response_format: { json_schema: { schema: { properties: Record<string, unknown> } } };
+    };
+    prompts.push(body.messages.map((message) => message.content).join("\n"));
+    const content = JSON.stringify(
+      Object.fromEntries(
+        Object.keys(body.response_format.json_schema.schema.properties).map((slug) => [
+          slug,
+          { value: null },
+        ]),
+      ),
+    );
+    response.setHeader("content-type", "application/json");
+    response.end(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content } }] }));
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  try {
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Missing server port");
+    const [longField] = await harness.db
+      .insert(fields)
+      .values({
+        slug: "style_clause",
+        displayName: "Style clause",
+        moduleScope: "contract",
+        fieldType: "long_text",
+        fieldTag: "legal",
+        aiPrompt: "Extract the clause.",
+      })
+      .returning();
+    await harness.db
+      .insert(contractTypeFields)
+      .values({ typeId: ndaTypeId, fieldId: longField!.id, displayOrder: 10 });
+    const [verbatimField] = await harness.db
+      .insert(fields)
+      .values({
+        slug: "verbatim_clause",
+        displayName: "Verbatim clause",
+        moduleScope: "contract",
+        fieldType: "long_text",
+        fieldTag: "legal",
+        aiPrompt: "Extract the provision.",
+        aiAnswerStyle: "full_clause",
+      })
+      .returning();
+    await harness.db
+      .insert(contractTypeFields)
+      .values({ typeId: ndaTypeId, fieldId: verbatimField!.id, displayOrder: 11 });
+    const resolveAiProvider = createAiResolver(harness.db, createAiProvider);
+    for (const [answerStyle, sentence] of [
+      ["few_words", "Answer in a few words that name the position, at most 80 characters."],
+      [
+        "sentence",
+        "Answer in one or two short sentences that state the position, at most 200 characters.",
+      ],
+      ["full_clause", "Quote the provision verbatim."],
+    ] as const) {
+      const saved = await harness.app.inject({
+        method: "PUT",
+        url: "/api/v1/ai-connector",
+        cookies: adminCookies,
+        payload: {
+          preset: "custom",
+          protocol: "openai_chat_completions",
+          baseUrl: `http://127.0.0.1:${address.port}/v1`,
+          model: "style-test",
+          apiKey: FAKE_VALID_AI_KEY,
+          answerStyle,
+        },
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
+      const contract = await newContract(`Answer style ${answerStyle}`);
+      const paper = await addPaper(contract, [
+        "Neither party may assign other than to affiliates.",
+      ]);
+      const [run] = await harness.db
+        .insert(contractAnalysisRuns)
+        .values({
+          contractId: contract.id,
+          versionId: paper.versions[0]!.id,
+          trigger: "manual",
+          requestedBy: memberId,
+          preset: "custom",
+          model: "style-test",
+        })
+        .returning();
+      prompts.length = 0;
+      await handleContractAnalysis(
+        {
+          db: harness.db,
+          resolveAiProvider,
+          log: { info: () => {}, warn: () => {}, error: () => {} },
+        },
+        { runId: run!.id, retryCount: 0, retryLimit: 2 },
+      );
+      expect((await waitForRun(run!.id)).state).toBe("ready");
+      expect(prompts.join("\n")).toContain(
+        `- style_clause: Extract the clause. Return text up to 10000 characters. ${sentence}\n`,
+      );
+      expect(prompts.join("\n")).toContain(
+        "- verbatim_clause: Extract the provision. Return text up to 10000 characters. Quote the provision verbatim.\n",
+      );
+      const shortLine = prompts
+        .join("\n")
+        .split("\n")
+        .find((line) => line.startsWith("- governing_law:"));
+      expect(shortLine).toBeDefined();
+      const shortStyle =
+        answerStyle === "full_clause"
+          ? "Answer in one or two short sentences that state the position, at most 200 characters."
+          : sentence;
+      expect(shortLine?.endsWith(shortStyle)).toBe(true);
+    }
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
+    await configureConnector();
+  }
+});
+
+for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini"] as const) {
+  it.each(["governing_law", KEY_DATES_TARGET])(
+    `${protocol} completes a run with invalid %s and keeps its evidence for review`,
+    async (invalidSlug) => {
+      const contract = await newContract(`Invalid answer ${protocol}`);
+      const evidence = "The governing law is England. Effective on 2026-09-01.";
+      const paper = await addPaper(contract, [evidence]);
+      // The writer could trim this to a valid value; the schema failure must still win.
+      const raw = "England" + " ".repeat(501);
+      const server = await startAiResponseServer(protocol, (slug) =>
+        slug === invalidSlug || slug === "effective_date"
+          ? {
+              value: slug === invalidSlug ? raw : "2026-09-01",
+              evidence,
+              sourceId: paper.versions[0]!.id,
+            }
+          : { value: null },
+      );
+      try {
+        const [run] = await harness.db
+          .insert(contractAnalysisRuns)
+          .values({
+            contractId: contract.id,
+            versionId: paper.versions[0]!.id,
+            trigger: "manual",
+            requestedBy: memberId,
+            preset: "custom",
+            model: server.provider.model,
+          })
+          .returning();
+        await handleContractAnalysis(
+          {
+            db: harness.db,
+            resolveAiProvider: async () => server.provider,
+            log: { info: () => {}, warn: () => {}, error: () => {} },
+          },
+          { runId: run!.id, retryCount: 0, retryLimit: 2 },
+        );
+        expect(
+          server.prompts.filter((prompt) =>
+            prompt.includes("Your previous response could not be used"),
+          ),
+        ).toHaveLength(1);
+        const read = await harness.app.inject({
+          url: `/api/v1/contracts/${contract.number}`,
+          cookies: memberCookies,
+        });
+        expect(read.json().contract.effectiveDate).toBe("2026-09-01");
+        expect(read.json().contract.customFields).not.toHaveProperty("governing_law");
+        expect(read.json().contract.aiUnverified.effective_date).toMatchObject({ runId: run!.id });
+        expect(read.statusCode, read.body).toBe(200);
+        expect(read.headers["content-type"]).toContain("application/json");
+        expect(read.json().analysis.latestRun).toMatchObject({
+          id: run!.id,
+          state: "ready",
+          outcome: { invalid: [invalidSlug], written: ["effective_date"] },
+        });
+        expect(read.json().analysis.latestRun.outcome.results).toContainEqual({
+          slug: "effective_date",
+          value: "2026-09-01",
+          evidence,
+          outcome: "written",
+        });
+        expect(read.json().analysis.latestRun.outcome.results).toContainEqual({
+          slug: invalidSlug,
+          value: raw,
+          evidence,
+          outcome: "invalid",
+        });
+        const activity = await harness.app.inject({
+          url: "/api/v1/activity",
+          query: { entityType: "contract", entityId: contract.id },
+          cookies: memberCookies,
+        });
+        expect(activity.statusCode, activity.body).toBe(200);
+        expect(activity.headers["content-type"]).toContain("application/json");
+        expect(activity.json().entries).toContainEqual(
+          expect.objectContaining({
+            action: "contract.analysis_completed",
+            payload: expect.objectContaining({
+              invalid: [invalidSlug],
+              written: ["effective_date"],
+            }),
+          }),
+        );
+      } finally {
+        await server.stop();
+      }
+    },
+  );
+}
+
+it.each(["openai_chat_completions", "anthropic_messages", "gemini"] as const)(
+  "%s omits legacy reference Fields from the provider request and review outcome",
+  async (protocol) => {
+    const [type] = await harness.db
+      .insert(contractTypes)
+      .values({
+        slug: `references_${protocol}`,
+        displayName: `References ${protocol}`,
+        displayOrder: 0,
+      })
+      .returning();
+    const references = await harness.db
+      .insert(fields)
+      .values(
+        (["user", "entity"] as const).map((fieldType) => ({
+          slug: `legacy_${fieldType}_${protocol}`,
+          displayName: `Legacy ${fieldType}`,
+          moduleScope: "contract" as const,
+          fieldType,
+          fieldTag: "business" as const,
+          aiPrompt: `Extract the legacy ${fieldType} reference.`,
+        })),
+      )
+      .returning();
+    await harness.db.insert(contractTypeFields).values(
+      references.map((field) => ({
+        typeId: type!.id,
+        fieldId: field.id,
+        displayOrder: 0,
+      })),
+    );
+    const contract = await newContract(`Reference Fields ${protocol}`);
+    await harness.db
+      .update(contracts)
+      .set({ contractTypeId: type!.id })
+      .where(eq(contracts.id, contract.id));
+    const paper = await addPaper(contract, ["Effective on 2026-09-01."]);
+    const sentSlugs: string[] = [];
+    const server = await startAiResponseServer(protocol, (slug) => {
+      sentSlugs.push(slug);
+      return slug === "effective_date"
+        ? {
+            value: "2026-09-01",
+            evidence: "Effective on 2026-09-01.",
+            sourceId: paper.versions[0]!.id,
+          }
+        : { value: null };
+    });
+    try {
+      const [run] = await harness.db
+        .insert(contractAnalysisRuns)
+        .values({
+          contractId: contract.id,
+          versionId: paper.versions[0]!.id,
+          trigger: "manual",
+          requestedBy: memberId,
+          preset: "custom",
+          model: server.provider.model,
+        })
+        .returning();
+      await handleContractAnalysis(
+        {
+          db: harness.db,
+          resolveAiProvider: async () => server.provider,
+          log: { info: () => {}, warn: () => {}, error: () => {} },
+        },
+        { runId: run!.id, retryCount: 0, retryLimit: 2 },
+      );
+      expect(sentSlugs).toContain("effective_date");
+      const read = await harness.app.inject({
+        url: `/api/v1/contracts/${contract.number}`,
+        cookies: memberCookies,
+      });
+      expect(read.statusCode, read.body).toBe(200);
+      const { analysis, contract: saved } = read.json();
+      expect(analysis.latestRun).toMatchObject({
+        id: run!.id,
+        state: "ready",
+        outcome: { written: ["effective_date"], invalid: [] },
+      });
+      expect(saved.effectiveDate).toBe("2026-09-01");
+      for (const field of references) {
+        expect(sentSlugs).not.toContain(field.slug);
+        expect(server.prompts.join("\n")).not.toContain(field.slug);
+        expect(server.prompts.join("\n")).not.toContain(field.aiPrompt);
+        expect(JSON.stringify(analysis.latestRun.outcome)).not.toContain(field.slug);
+        expect(saved.customFields).not.toHaveProperty(field.slug);
+      }
+    } finally {
+      await server.stop();
+    }
+  },
+);

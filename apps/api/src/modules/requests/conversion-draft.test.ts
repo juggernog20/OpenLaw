@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { startAiResponseServer } from "../../testing/ai-response-server.js";
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
   aiConnector,
@@ -19,6 +20,8 @@ import type { AiExtraction } from "../../lib/ai/provider.js";
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
 import { dispositionScaffold, type DispositionScaffold } from "../../testing/disposition.js";
 import { handleConversionDraft } from "../../pipeline/conversion-draft.js";
+import { formatSentence } from "../../lib/ai/format-sentence.js";
+import { extractionPrompt } from "../../lib/ai/http.js";
 import { conversionContext } from "../../lib/conversion-draft.js";
 
 let harness: TestHarness;
@@ -110,6 +113,34 @@ it("includes field AI prompts and types in preparation and invalidates drafts af
     }),
   );
   expect(before.fields.find((entry) => entry.fieldId === field!.id)).not.toHaveProperty("aiPrompt");
+  for (const answerStyle of ["few_words", "sentence", "full_clause"] as const) {
+    await harness.db.update(aiConnector).set({ answerStyle });
+    const context = await conversionContext(harness.db, row.id, typeId, false, "matter");
+    expect(context.answerStyle).toBe(answerStyle);
+    const prompt = extractionPrompt(context.sources, context.targets, context.answerStyle);
+    const consent = context.targets.find((target) => target.slug === "field:preparation_consent")!;
+    expect(consent.prompt).toBe(
+      "Consent: Whether consent is required. Only consider the express assignment provision.",
+    );
+    const analysisLine = extractionPrompt(
+      "Source",
+      [{ ...consent, slug: "preparation_consent" }],
+      answerStyle,
+    )
+      .split("\n")
+      .find((line) => line.startsWith("- preparation_consent:"))!;
+    expect(prompt).toContain(
+      analysisLine.replace("- preparation_consent:", "- field:preparation_consent:"),
+    );
+    expect(prompt).toContain(
+      "Only consider the express assignment provision. Return true or false.\n",
+    );
+    for (const slug of ["title", "description"]) {
+      const target = context.targets.find((target) => target.slug === slug)!;
+      expect(prompt).toContain(`- ${slug}: ${target.prompt} ${formatSentence(target)}\n`);
+    }
+  }
+
   await harness.db
     .update(fields)
     .set({ aiPrompt: "Check the subcontracting provision instead." })
@@ -1470,4 +1501,147 @@ it("tells the actor a draft they left finishes, once, and stays silent while the
   expect((await bell()).find((item) => item.entityId === failed.id)?.payload).toMatchObject({
     outcome: "failed",
   });
+});
+
+for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini"] as const) {
+  it.each(["priority", "field:invalid_schema_text"])(
+    `${protocol} leaves invalid %s unproposed and prepares the rest`,
+    async (invalidSlug) => {
+      const [field] = await harness.db
+        .insert(fields)
+        .values({
+          slug: "invalid_schema_text",
+          displayName: "Schema text",
+          fieldType: "text",
+          moduleScope: "matter",
+          fieldTag: "legal",
+          aiPrompt: "Extract text.",
+        })
+        .onConflictDoUpdate({ target: fields.slug, set: { aiPrompt: "Extract text." } })
+        .returning();
+      await harness.db
+        .insert(matterTypeFields)
+        .values({ typeId, fieldId: field!.id, displayOrder: 200 })
+        .onConflictDoNothing();
+      const row = await ask();
+      const server = await startAiResponseServer(protocol, (slug) => ({
+        value:
+          slug === invalidSlug
+            ? slug === "priority"
+              ? ["high"]
+              : "Text" + " ".repeat(501)
+            : slug === "title"
+              ? "Response preparation"
+              : null,
+        sourceId: `request:${row.id}:description`,
+        evidence: "Respond by October 1",
+      }));
+      try {
+        const made = await prepare(row.number);
+        expect(made.statusCode, made.body).toBe(202);
+        const id = made.json().draft.id;
+        await handleConversionDraft(
+          {
+            db: harness.db,
+            storage: harness.storage,
+            docEngine: harness.docEngine,
+            notifier: harness.notifier,
+            resolveAiProvider: async () => server.provider,
+          },
+          id,
+        );
+        const read = await harness.app.inject({
+          url: `/api/v1/requests/${row.number}/conversion-drafts/${id}`,
+          cookies: cast.memberCookies,
+        });
+        expect(read.json().draft.state).toBe("ready");
+        expect(read.json().draft.suggestions.title.value).toBe("Response preparation");
+        expect(read.json().draft.suggestions).not.toHaveProperty(invalidSlug);
+        expect(
+          server.prompts.filter((prompt) =>
+            prompt.includes("Your previous response could not be used"),
+          ),
+        ).toHaveLength(1);
+      } finally {
+        await server.stop();
+      }
+    },
+  );
+}
+
+it("keeps Contract Field style overrides in conversion prompts and freshness checks", async () => {
+  const { contractTypes, contractTypeFields } = await import("@openlaw/db");
+  const [type] = await harness.db.select().from(contractTypes).limit(1);
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "conversion_style",
+      displayName: "Assignment",
+      fieldType: "long_text",
+      moduleScope: "contract",
+      fieldTag: "legal",
+      aiPrompt: "Extract the provision.",
+      aiAnswerStyle: "full_clause",
+    })
+    .returning();
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 100 });
+  const row = await ask();
+  const before = await conversionContext(harness.db, row.id, type!.id, false, "contract");
+  const target = before.targets.find((target) => target.slug === "field:conversion_style")!;
+  expect(extractionPrompt(before.sources, [target], "few_words")).toContain(
+    "- field:conversion_style: Assignment: Extract the provision. Return text up to 10000 characters. Quote the provision verbatim.\n",
+  );
+  await harness.db.update(aiConnector).set({ contractPreparation: true });
+  answers.title = {
+    value: "Prepared Contract",
+    sourceId: `request:${row.id}:title`,
+    evidence: "Original ask",
+  };
+  const created = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${row.number}/conversion-drafts`,
+    cookies: cast.memberCookies,
+    payload: { targetModule: "contract", targetTypeId: type!.id },
+  });
+  expect(created.statusCode, created.body).toBe(202);
+  expect(created.headers["content-type"]).toContain("application/json");
+  const draftId = created.json().draft.id;
+  await handleConversionDraft(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      notifier: harness.notifier,
+      resolveAiProvider: harness.resolveAiProvider,
+    },
+    draftId,
+  );
+  const read = () =>
+    harness.app.inject({
+      url: `/api/v1/requests/${row.number}/conversion-drafts/${draftId}`,
+      cookies: cast.memberCookies,
+    });
+  const ready = await read();
+  expect(ready.statusCode, ready.body).toBe(200);
+  expect(ready.headers["content-type"]).toContain("application/json");
+  expect(ready.json().draft).toMatchObject({
+    state: "ready",
+    suggestions: { title: { value: "Prepared Contract" } },
+  });
+  await harness.db.update(fields).set({ aiAnswerStyle: null }).where(eq(fields.id, field!.id));
+  const stale = await read();
+  expect(stale.statusCode, stale.body).toBe(200);
+  expect(stale.headers["content-type"]).toContain("application/json");
+  expect(stale.json().draft).toMatchObject({
+    state: "failed",
+    suggestions: {},
+    failure: "The sources or settings changed. Retry or continue manually.",
+  });
+  const after = await conversionContext(harness.db, row.id, type!.id, false, "contract");
+  expect(after.snapshot).not.toBe(before.snapshot);
+  expect(
+    after.targets.find((candidate) => candidate.slug === target.slug)?.aiAnswerStyle,
+  ).toBeNull();
 });

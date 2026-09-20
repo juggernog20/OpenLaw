@@ -38,6 +38,9 @@ The Version a Comparison's export appends to the chain, kind `generated_redline`
 One durable reading of a Contract's chosen Document Version, or its eligible original Request context after conversion, against that Contract's current AI target schema. It is triggered automatically or manually, moves from pending to ready or failed, and records the provider model, evidence, and each writer outcome. It is an account of what the extraction did, not a proposal waiting to be accepted [CTR-008, TECH-012].
 _Avoid_: AI job, analysis result, extraction proposal
 
+**Answer style**:
+The form of an AI-extracted text Field value: Few word summary, 1-2 sentence summary, or Full clause text. Contract Fields may override the organization default [CTR-008].
+
 **Knowledge Item**:
 A curated piece of know-how — template, precedent, playbook, or article — distinct from the documents it owns [KNW-001].
 _Avoid_: article, wiki page, resource

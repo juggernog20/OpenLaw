@@ -25,6 +25,7 @@ import {
 import {
   MAX_COUNTERPARTY_NAME_LENGTH,
   INTAKE_CARRY_SLUGS,
+  isReferenceFieldType,
   sameConversionValue,
   type ConversionPromptSlug,
   type ConversionSuggestion,
@@ -119,7 +120,7 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
         label: `${field.displayName} (${field.fieldType})`,
         text: typeof value === "string" ? value : JSON.stringify(value),
       },
-      field.fieldTag === "legal" || field.fieldType === "entity" || field.fieldType === "user",
+      field.fieldTag === "legal" || isReferenceFieldType(field.fieldType),
     );
   }
   const threadId = row.convertedMatterId ?? row.convertedContractId ?? row.id;
@@ -259,7 +260,11 @@ export async function conversionContext(
   const fields = [...new Map(attached.flat().map((field) => [field.slug, field])).values()];
   const fieldPrompts = fields.length
     ? await db
-        .select({ id: catalogFields.id, prompt: catalogFields.aiPrompt })
+        .select({
+          id: catalogFields.id,
+          prompt: catalogFields.aiPrompt,
+          aiAnswerStyle: catalogFields.aiAnswerStyle,
+        })
         .from(catalogFields)
         .where(
           inArray(
@@ -268,7 +273,7 @@ export async function conversionContext(
           ),
         )
     : [];
-  const promptById = new Map(fieldPrompts.map((field) => [field.id, field.prompt]));
+  const promptById = new Map(fieldPrompts.map((field) => [field.id, field]));
   // The built-in targets read the Prompts card's text (CTR-008,
   // 2026-09-19), so an edited prompt reaches the next draft.
   const book = await readAiPrompts(db);
@@ -278,6 +283,7 @@ export async function conversionContext(
       slug: "title",
       type: "text",
       prompt: said("conversion.title"),
+      omitAnswerStyle: true,
     },
     {
       slug: `${targetModule}_type`,
@@ -289,6 +295,7 @@ export async function conversionContext(
       slug: "description",
       type: "long_text",
       prompt: said("conversion.description"),
+      omitAnswerStyle: true,
     },
     {
       slug: "priority",
@@ -311,12 +318,15 @@ export async function conversionContext(
         ]
       : []),
     ...fields
-      .filter((f) => f.fieldType !== "user" && f.fieldType !== "entity")
+      .filter((f) => !isReferenceFieldType(f.fieldType))
       .map((f) => ({
         slug: `field:${f.slug}`,
         type: f.fieldType,
         options: f.options,
-        prompt: `${f.displayName}: ${f.fieldType}. ${f.options ? `Allowed options: ${JSON.stringify(f.options)}.` : ""} ${f.description ?? ""} ${promptById.get(f.fieldId) ?? ""}`,
+        aiAnswerStyle: promptById.get(f.fieldId)?.aiAnswerStyle,
+        prompt: [`${f.displayName}:`, f.description, promptById.get(f.fieldId)?.prompt]
+          .filter(Boolean)
+          .join(" "),
       })),
   ];
   let promptCharacters = 0;
@@ -333,7 +343,7 @@ export async function conversionContext(
     fields,
     types,
     targets,
-    rules: book.rules,
+    answerStyle: book.answerStyle,
     snapshot: hash([
       "complete-sources-v2",
       targetModule,
@@ -397,6 +407,7 @@ export function checkedSuggestion(
   answer: AiExtraction,
   context: Awaited<ReturnType<typeof conversionContext>>,
 ): ConversionSuggestion | null {
+  if (answer.invalid) return null;
   const checked = checkedCitations(answer, context.sources);
   if (!checked) return null;
   const raw = answer.value;
@@ -426,7 +437,7 @@ export function checkedSuggestion(
     value = result.success ? result.data : null;
   } else {
     const field = context.fields.find((f) => `field:${f.slug}` === answer.slug);
-    if (field && field.fieldType !== "user" && field.fieldType !== "entity") {
+    if (field && !isReferenceFieldType(field.fieldType)) {
       const parsed = CustomFieldValueSchema.safeParse(raw);
       if (parsed.success)
         try {

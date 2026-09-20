@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { useState, type ComponentProps } from "react";
+import { useRef, useState, type ComponentProps } from "react";
+import { isReferenceFieldType, type AiAnswerStyle } from "@openlaw/shared";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
@@ -16,6 +17,10 @@ import {
   type ModuleScope,
   type FieldRow,
 } from "../lib/field-catalog";
+import {
+  FieldAnswerStyleSelect,
+  type FieldAnswerStyleSelectHandle,
+} from "./field-answer-style-select";
 import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
@@ -40,6 +45,7 @@ interface EditorDraft {
   tag: Tag;
   optionsText: string;
   aiPrompt: string;
+  aiAnswerStyle: AiAnswerStyle | null;
 }
 
 function draftOf(target: FieldRow | null): EditorDraft {
@@ -51,6 +57,7 @@ function draftOf(target: FieldRow | null): EditorDraft {
       tag: "business",
       optionsText: "",
       aiPrompt: "",
+      aiAnswerStyle: null,
     };
   }
   return {
@@ -60,6 +67,7 @@ function draftOf(target: FieldRow | null): EditorDraft {
     tag: target.fieldTag,
     optionsText: (target.options ?? []).join("\n"),
     aiPrompt: target.aiPrompt ?? "",
+    aiAnswerStyle: target.aiAnswerStyle ?? null,
   };
 }
 
@@ -92,14 +100,19 @@ export function FieldEditorDialog({
   onCloseAutoFocus?: ComponentProps<typeof DialogContent>["onCloseAutoFocus"];
 }>) {
   const intl = useIntl();
+  const answerStyleSelect = useRef<FieldAnswerStyleSelectHandle>(null);
   const [module, setModule] = useState(initialModule);
   const [draft, setDraft] = useState<EditorDraft>(() => draftOf(target));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isSelect = draft.fieldType !== "" && SELECT_TYPES.has(draft.fieldType);
-  // The prompt rides on contract-scoped fields only (CTR-008/CTR-016).
-  const promptable = module === "contract";
+  // The prompt rides on contract-scoped fields only (CTR-008/CTR-016), and
+  // never on a user or Entity Field: Analysis cannot pick a row id (#959).
+  const promptable = module === "contract" && !isReferenceFieldType(draft.fieldType);
+
+  const styleable =
+    module === "contract" && (draft.fieldType === "text" || draft.fieldType === "long_text");
 
   const set = <K extends keyof EditorDraft>(key: K, value: EditorDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
@@ -121,6 +134,7 @@ export function FieldEditorDialog({
           fieldTag: draft.tag,
           options: isSelect ? options : undefined,
           aiPrompt: promptable && draft.aiPrompt.trim() ? draft.aiPrompt.trim() : undefined,
+          aiAnswerStyle: styleable ? (draft.aiAnswerStyle ?? undefined) : undefined,
         },
       })
       .catch(() => undefined);
@@ -153,6 +167,9 @@ export function FieldEditorDialog({
     if (promptable) {
       const aiPrompt = draft.aiPrompt.trim();
       if (aiPrompt !== (existing.aiPrompt ?? "")) body.aiPrompt = aiPrompt || null;
+    }
+    if (styleable && draft.aiAnswerStyle !== (existing.aiAnswerStyle ?? null)) {
+      body.aiAnswerStyle = draft.aiAnswerStyle;
     }
     if (Object.keys(body).length === 0) return true;
 
@@ -227,7 +244,13 @@ export function FieldEditorDialog({
         if (!busy) onOpenChange(open);
       }}
     >
-      <DialogContent aria-describedby={undefined} onCloseAutoFocus={onCloseAutoFocus}>
+      <DialogContent
+        aria-describedby={undefined}
+        onCloseAutoFocus={onCloseAutoFocus}
+        onEscapeKeyDown={(event) => {
+          if (answerStyleSelect.current?.dismissTooltip()) event.preventDefault();
+        }}
+      >
         <DialogTitle>
           {target === null ? (
             <FormattedMessage id="settings.contractFields.addTitle" defaultMessage="Add field" />
@@ -317,7 +340,16 @@ export function FieldEditorDialog({
                   value={draft.fieldType}
                   className={CONTROL_CLASS}
                   onChange={(event) => {
-                    set("fieldType", event.target.value as FieldType | "");
+                    const fieldType = event.target.value as FieldType | "";
+                    setDraft((current) => ({
+                      ...current,
+                      fieldType,
+                      aiAnswerStyle:
+                        fieldType === "long_text" ||
+                        (fieldType === "text" && current.aiAnswerStyle !== "full_clause")
+                          ? current.aiAnswerStyle
+                          : null,
+                    }));
                     // Picking a type answers the pick-a-type refusal.
                     if (event.target.value !== "") setError(null);
                   }}
@@ -415,6 +447,16 @@ export function FieldEditorDialog({
                 />
               </p>
             </div>
+          )}
+          {styleable && (
+            <FieldAnswerStyleSelect
+              ref={answerStyleSelect}
+              value={draft.aiAnswerStyle}
+              onChange={(value) => set("aiAnswerStyle", value)}
+              shortText={draft.fieldType === "text"}
+              disabled={busy}
+              className={CONTROL_CLASS}
+            />
           )}
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">

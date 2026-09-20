@@ -70,6 +70,7 @@ function valueSchema(target: AiExtractionTarget): z.ZodType {
 function responseValidator(
   targets: readonly AiExtractionTarget[],
   sources: string | readonly AiSource[],
+  validateValues = true,
 ) {
   const ids = typeof sources === "string" ? [] : sources.map((source) => source.id);
   const sourceId = ids.length ? z.enum(["", ...new Set(ids)]) : z.string();
@@ -78,7 +79,7 @@ function responseValidator(
       targets.map((target) => [
         target.slug,
         z.strictObject({
-          value: valueSchema(target).nullable(),
+          value: validateValues ? valueSchema(target).nullable() : z.json(),
           evidence: z.string().max(4000).nullish(),
           sourceId: sourceId.nullish(),
           citations: z
@@ -163,6 +164,7 @@ function validateReply(
   reply: string,
   targets: readonly AiExtractionTarget[],
   sources: string | readonly AiSource[],
+  allowInvalidValues: boolean,
 ) {
   const entries = extractionObject(reply);
   for (const entry of Object.values(entries)) {
@@ -177,7 +179,7 @@ function validateReply(
       Object.assign(entry, { value: null });
     }
   }
-  const validated = responseValidator(targets, sources).safeParse(entries);
+  const validated = responseValidator(targets, sources, false).safeParse(entries);
   if (!validated.success) {
     throw new AiResponseError(
       "The provider reply did not match the requested fields or value types.",
@@ -190,7 +192,24 @@ function validateReply(
       },
     );
   }
-  return parseExtractionReply(JSON.stringify(entries), targets);
+  const invalid = new Set<string>();
+  const issues: { field: string; rule: string }[] = [];
+  for (const target of targets) {
+    const entry = validated.data[target.slug]!;
+    const value = valueSchema(target).nullable().safeParse(entry.value);
+    if (!value.success) {
+      invalid.add(target.slug);
+      issues.push({ field: target.slug, rule: value.error.issues[0]!.code });
+    }
+  }
+  if (invalid.size && !allowInvalidValues)
+    throw new AiResponseError("The provider reply contained invalid target values.", {
+      reason: "invalid_shape",
+      issues,
+    });
+  return parseExtractionReply(JSON.stringify(entries), targets).map((answer) =>
+    invalid.has(answer.slug) ? { ...answer, invalid: true } : answer,
+  );
 }
 
 export type StructuredCompletion = (
@@ -212,7 +231,7 @@ export async function extractStructured(
   async function extractBatch(batch: AiExtractionTarget[]) {
     const batchDeadline = Math.min(deadline, Date.now() + EXTRACTION_BOUND.timeoutMs);
     const schema = extractionSchema(batch, sources);
-    const prompt = `${extractionPrompt(sources, batch, options.rules)}\n\nResponse JSON Schema (all requested fields must be present; use value: null, empty metadata strings, citations: [], and conflict: false when unsupported):\n${JSON.stringify(schema)}`;
+    const prompt = `${extractionPrompt(sources, batch, options.answerStyle)}\n\nResponse JSON Schema (all requested fields must be present; use value: null, empty metadata strings, citations: [], and conflict: false when unsupported):\n${JSON.stringify(schema)}`;
     let correction = "";
     for (let attempt = 0; attempt < 2; attempt++) {
       const bound = remainingCallBound(
@@ -220,7 +239,12 @@ export async function extractStructured(
         batchDeadline,
       );
       try {
-        return validateReply(await complete(prompt + correction, bound, schema), batch, sources);
+        return validateReply(
+          await complete(prompt + correction, bound, schema),
+          batch,
+          sources,
+          attempt === 1,
+        );
       } catch (error) {
         if (!(error instanceof AiResponseError) || error.reason === "refused" || attempt === 1)
           throw error;

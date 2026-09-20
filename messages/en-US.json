@@ -53,6 +53,9 @@
   "activity.actor.system": {
     "defaultMessage": "OpenLaw"
   },
+  "activity.aiConnector.answerStyle": {
+    "defaultMessage": "{value, select, few_words {Few word summary} sentence {1-2 sentence summary} full_clause {Full clause text} other {{value}}}"
+  },
   "activity.aiConnector.configured": {
     "defaultMessage": "{actor} connected the AI provider {provider}"
   },
@@ -417,7 +420,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -8465,6 +8468,9 @@
   "settings.advanced.uploadsHelp": {
     "defaultMessage": "The maximum size of an individual uploaded file. Your reverse proxy may enforce a lower limit."
   },
+  "settings.aiAnalysis.answerStyle": {
+    "defaultMessage": "Answer style"
+  },
   "settings.aiAnalysis.apiKey": {
     "defaultMessage": "API key"
   },
@@ -8589,7 +8595,7 @@
     "defaultMessage": "Contracts → Fields"
   },
   "settings.aiAnalysis.prompts.catalogPointer": {
-    "defaultMessage": "Catalog Fields keep their own analysis prompts in {fields}."
+    "defaultMessage": "Custom Fields keep their own analysis prompts in {fields}."
   },
   "settings.aiAnalysis.prompts.conversion.counterparty": {
     "defaultMessage": "Counterparty"
@@ -8606,23 +8612,20 @@
   "settings.aiAnalysis.prompts.conversion.title": {
     "defaultMessage": "Title"
   },
+  "settings.aiAnalysis.prompts.formatHint": {
+    "defaultMessage": "The greyed sentence is fixed by the Field's type."
+  },
   "settings.aiAnalysis.prompts.group.analysis": {
-    "defaultMessage": "Contract analysis fields"
+    "defaultMessage": "Contract analysis prompts"
   },
   "settings.aiAnalysis.prompts.group.analysisHint": {
     "defaultMessage": "The seven built-in Contract values every Analysis run extracts."
   },
   "settings.aiAnalysis.prompts.group.conversion": {
-    "defaultMessage": "Request conversion"
+    "defaultMessage": "Matter and Contract conversion prompts"
   },
   "settings.aiAnalysis.prompts.group.conversionHint": {
     "defaultMessage": "The values every Conversion draft proposes beside the target type's Fields. {placeholder} is replaced with Matter or Contract."
-  },
-  "settings.aiAnalysis.prompts.group.rules": {
-    "defaultMessage": "Rules for every AI run"
-  },
-  "settings.aiAnalysis.prompts.group.rulesHint": {
-    "defaultMessage": "Sent with every Contract analysis and Conversion draft, after the fixed output-format instructions and before the field list."
   },
   "settings.aiAnalysis.prompts.inputLabel": {
     "defaultMessage": "{label} prompt"
@@ -8632,24 +8635,6 @@
   },
   "settings.aiAnalysis.prompts.resetLabel": {
     "defaultMessage": "Reset {label} to default"
-  },
-  "settings.aiAnalysis.prompts.rules.evidence": {
-    "defaultMessage": "Corrections and conflicts"
-  },
-  "settings.aiAnalysis.prompts.rules.justification": {
-    "defaultMessage": "Justification"
-  },
-  "settings.aiAnalysis.prompts.rules.scope": {
-    "defaultMessage": "Scope of the sources"
-  },
-  "settings.aiAnalysis.prompts.rules.textAnswers": {
-    "defaultMessage": "Text answers"
-  },
-  "settings.aiAnalysis.prompts.rules.unsupported": {
-    "defaultMessage": "Missing and unsupported values"
-  },
-  "settings.aiAnalysis.prompts.title": {
-    "defaultMessage": "Prompts"
   },
   "settings.aiAnalysis.protocol": {
     "defaultMessage": "Protocol"
@@ -8710,6 +8695,27 @@
   },
   "settings.aiAnalysis.save": {
     "defaultMessage": "Save connector"
+  },
+  "settings.aiAnalysis.style.configureFirst": {
+    "defaultMessage": "Connect an AI provider to choose an answer style."
+  },
+  "settings.aiAnalysis.style.fewWords": {
+    "defaultMessage": "Few word summary"
+  },
+  "settings.aiAnalysis.style.fewWordsDescription": {
+    "defaultMessage": "A few words that name the position, at most 80 characters."
+  },
+  "settings.aiAnalysis.style.fullClause": {
+    "defaultMessage": "Full clause text"
+  },
+  "settings.aiAnalysis.style.fullClauseDescription": {
+    "defaultMessage": "The provision quoted verbatim; short text Fields use a 1-2 sentence summary."
+  },
+  "settings.aiAnalysis.style.sentence": {
+    "defaultMessage": "1-2 sentence summary"
+  },
+  "settings.aiAnalysis.style.sentenceDescription": {
+    "defaultMessage": "One or two short sentences that state the position, at most 200 characters."
   },
   "settings.aiAnalysis.test": {
     "defaultMessage": "Test connection"
@@ -9011,6 +9017,9 @@
   "settings.contractFields.fieldColumn": {
     "defaultMessage": "Field"
   },
+  "settings.contractFields.fullClauseNeedsLongText": {
+    "defaultMessage": "Full clause text needs a long text Field."
+  },
   "settings.contractFields.hasPrompt": {
     "defaultMessage": "{name} has an AI extraction prompt"
   },
@@ -9038,6 +9047,12 @@
   "settings.contractFields.optionsMissing": {
     "defaultMessage": "Add at least one option, one per line."
   },
+  "settings.contractFields.organisationDefault": {
+    "defaultMessage": "Organisation default"
+  },
+  "settings.contractFields.organisationDefaultStyle": {
+    "defaultMessage": "Organisation default ({style})"
+  },
   "settings.contractFields.pageTitle": {
     "defaultMessage": "Fields"
   },
@@ -9049,6 +9064,9 @@
   },
   "settings.contractFields.restore": {
     "defaultMessage": "Restore {name}"
+  },
+  "settings.contractFields.styleDefaultLoadError": {
+    "defaultMessage": "The current organisation default could not be loaded."
   },
   "settings.contractFields.tagColumn": {
     "defaultMessage": "Tag"

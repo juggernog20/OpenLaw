@@ -335,7 +335,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.analysis"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "create-matter",

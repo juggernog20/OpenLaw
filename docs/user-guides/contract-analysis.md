@@ -12,6 +12,8 @@ The target is the primary Document's executed pin, or its current Document Versi
 
 Analysis can start automatically when the target's text becomes ready or a ready Document Version is marked as the executed copy. To request a run yourself, open **Fields**, find **AI analysis** below the Fields card, and select **Run analysis**. The Contract actions menu also offers **Run analysis** from any section. Wait while it says **Running…**. The card updates when the run finishes, while preserving typed drafts.
 
+User and Entity Fields stay outside Analysis, even if they have an old saved prompt. They do not appear in a new run's results or count towards its outcome. Set those Fields yourself on the Contract.
+
 Read the completion sentence's Version, model, and time. The results show the returned values, their evidence, and what happened to each value:
 
 | Outcome         | What to check                                                                                                                           |

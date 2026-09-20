@@ -30,6 +30,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { History, Pencil, Sparkles, TriangleAlert } from "lucide-react";
+import { isReferenceFieldType } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { problem as readProblem } from "../lib/problem";
 import { requireUser } from "../lib/session";
@@ -267,7 +268,7 @@ function SettingsFieldsPage({
           {tagLabel(intl, row.fieldTag)}
         </span>
         <span className="flex w-16 shrink-0 items-center">
-          {row.aiPrompt ? (
+          {row.aiPrompt && !isReferenceFieldType(row.fieldType) ? (
             <Sparkles
               size={16}
               role="img"

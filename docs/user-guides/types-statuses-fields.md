@@ -40,7 +40,7 @@ Three Contract Fields in the **Custom Fields** list came with the installation: 
 
 Fields belong to the area where you create them: Contracts, Matters, or Entities. A field can be attached to several types within that area. To collect similar information in another area, create a separate field there.
 
-The Field catalog does not have reorder handles. Set order where Fields are attached to a type or form. Contract-scoped Fields may also have an **AI prompt**; [Configure the AI connector and Field prompts](configure-analysis.md) covers that separate setup.
+The Field catalog does not have reorder handles. Set order where Fields are attached to a type or form. Contract-scoped Fields other than User and Entity may also have an **AI prompt**; [Configure the AI connector and Field prompts](configure-analysis.md) covers that separate setup.
 
 ## Attach Fields and set requiredness
 
