@@ -2,6 +2,7 @@
 
 /** CTR-008: code-owned answer formats shared by extraction and the prompt cards. */
 
+import { MAX_CONTRACT_TITLE_LENGTH, MAX_COUNTERPARTY_NAME_LENGTH } from "@openlaw/shared";
 import type { AiExtractionTarget } from "./provider.js";
 
 /** The answer form is fixed by the target schema, independent of its editable prompt. */
@@ -20,7 +21,13 @@ export function formatSentence(
     case "value":
       return 'Return an object with an integer minor-unit amount, an ISO 4217 currency, and cadence "one_time", "monthly", or "annually".';
     case "counterparty":
+      // The counterparty link and the conversion draft both refuse a longer name.
+      return `Return a short text of at most ${String(MAX_COUNTERPARTY_NAME_LENGTH)} characters.`;
     case "text":
+      // The conversion draft's title has no answer style to carry its bound.
+      // The draft sends it as `title`; the card row is `conversion.title`.
+      if (target.slug === "title" || target.slug === "conversion.title")
+        return `Return a short text of at most ${String(MAX_CONTRACT_TITLE_LENGTH)} characters.`;
       return "Return a short text.";
     case "long_text":
       return "Return text up to 10000 characters.";

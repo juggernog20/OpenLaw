@@ -17,7 +17,12 @@ const cases: [Pick<AiExtractionTarget, "slug" | "type" | "options">, string][] =
     { slug: "value", type: "value" },
     'Return an object with an integer minor-unit amount, an ISO 4217 currency, and cadence "one_time", "monthly", or "annually".',
   ],
-  [{ slug: "counterparty", type: "counterparty" }, "Return a short text."],
+  [
+    { slug: "counterparty", type: "counterparty" },
+    "Return a short text of at most 200 characters.",
+  ],
+  [{ slug: "title", type: "text" }, "Return a short text of at most 200 characters."],
+  [{ slug: "conversion.title", type: "text" }, "Return a short text of at most 200 characters."],
   [{ slug: "short", type: "text" }, "Return a short text."],
   [{ slug: "long", type: "long_text" }, "Return text up to 10000 characters."],
   [

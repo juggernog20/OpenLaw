@@ -515,7 +515,9 @@ it.each([
     `- long: Extract long. Return text up to 10000 characters. ${sentence}\n`,
   );
   expect(prompt).toContain("- date: Extract date. Return a date as YYYY-MM-DD.\n");
-  expect(prompt).toContain("- title: Propose a title. Return a short text.\n");
+  expect(prompt).toContain(
+    "- title: Propose a title. Return a short text of at most 200 characters.\n",
+  );
   expect(prompt).toContain(
     "- description: Propose a description. Return text up to 10000 characters.\n",
   );
