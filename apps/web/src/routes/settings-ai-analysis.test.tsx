@@ -72,6 +72,15 @@ const PRESETS = [
     requiresBaseUrl: false,
   },
   {
+    preset: "groq",
+    label: "Groq",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.groq.com/openai/v1",
+    defaultModel: "openai/gpt-oss-120b",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
     preset: "ollama",
     label: "Ollama",
     protocol: "openai_chat_completions",
@@ -184,7 +193,7 @@ function connectorApi(
           model: body.model,
           maxOutputTokens: body.maxOutputTokens ?? stored.maxOutputTokens,
           hasApiKey: stored.hasApiKey || body.apiKey !== undefined,
-          enabled: stored.enabled,
+          enabled: stored.configured ? stored.enabled : true,
           disabledAt: stored.disabledAt,
         });
       }
@@ -264,6 +273,39 @@ describe("the AI analysis connector pane (#662)", () => {
     expect(screen.queryByLabelText("Base URL")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Model")).toHaveValue("gemini-3.6-flash");
   });
+
+  it.each(["openai/gpt-oss-120b", "another-model"])(
+    "saves and tests Groq with model %s and no Base URL control",
+    async (model) => {
+      const user = userEvent.setup();
+      const saves: unknown[] = [];
+      stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, saves) });
+      renderAt("/settings/ai-analysis");
+      await openProvider(user);
+      expect(screen.getByRole("option", { name: "Groq" })).toHaveValue("groq");
+      await user.selectOptions(screen.getByLabelText("Provider"), "groq");
+      expect(screen.getByLabelText("Model")).toHaveValue("openai/gpt-oss-120b");
+      expect(screen.queryByLabelText("Protocol")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Base URL")).not.toBeInTheDocument();
+      if (model !== "openai/gpt-oss-120b") {
+        await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+        await user.clear(screen.getByLabelText("Model"));
+        await user.type(screen.getByLabelText("Model"), model);
+      }
+      await user.type(screen.getByLabelText("API key"), "groq-test-key");
+      await user.click(screen.getByRole("button", { name: "Save connector" }));
+      await waitFor(() =>
+        expect(saves).toEqual([
+          { preset: "groq", model, apiKey: "groq-test-key", maxOutputTokens: 32768 },
+        ]),
+      );
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Test connection" })).toBeEnabled(),
+      );
+      await user.click(screen.getByRole("button", { name: "Test connection" }));
+      expect(await screen.findByText("Connection successful.")).toBeVisible();
+    },
+  );
 
   it("keeps the stored key write-only and omits blank on save", async () => {
     const user = userEvent.setup();
