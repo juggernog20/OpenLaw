@@ -283,7 +283,7 @@ describe("the core Field prompts", () => {
 });
 
 describe("saving and reading", () => {
-  it("reads an unconfigured singleton and the seven server-owned choices", async () => {
+  it("reads an unconfigured singleton and the eight server-owned choices", async () => {
     const res = await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies });
     expect(res.statusCode, res.body).toBe(200);
     expect(res.json().connector).toMatchObject({ configured: false, hasApiKey: false });
@@ -293,9 +293,69 @@ describe("saving and reading", () => {
       "azure_openai",
       "gemini",
       "openrouter",
+      "groq",
       "ollama",
       "custom",
     ]);
+  });
+
+  it("pins Groq settings, reuses its key for a model change, and drops it on a preset change", async () => {
+    const missingKey = await save({ preset: "groq", model: "openai/gpt-oss-120b" });
+    expect(missingKey.statusCode, missingKey.body).toBe(400);
+    expect(missingKey.json().detail).toContain("API key");
+
+    const saved = await save({
+      preset: "groq",
+      protocol: "gemini",
+      baseUrl: "https://attacker.invalid",
+      apiKey: FAKE_VALID_AI_KEY,
+      model: "openai/gpt-oss-120b",
+    });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect(saved.json().connector).toMatchObject({
+      preset: "groq",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://api.groq.com/openai/v1",
+      model: "openai/gpt-oss-120b",
+      hasApiKey: true,
+    });
+    expect(
+      saved.json().presets.find((option: { preset: string }) => option.preset === "groq"),
+    ).toEqual({
+      preset: "groq",
+      label: "Groq",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://api.groq.com/openai/v1",
+      defaultModel: "openai/gpt-oss-120b",
+      requiresApiKey: true,
+      requiresBaseUrl: false,
+    });
+    const updated = await save({ preset: "groq", model: "another-model" });
+    expect(updated.statusCode, updated.body).toBe(200);
+    expect(updated.json().connector).toMatchObject({ model: "another-model", hasApiKey: true });
+    expect((await harness.db.select().from(aiConnector))[0]?.apiKey).toBe(FAKE_VALID_AI_KEY);
+    const probe = await harness.app.inject({
+      method: "POST",
+      url: `${URL}/test`,
+      cookies: adminCookies,
+    });
+    expect(probe.statusCode, probe.body).toBe(200);
+    expect(probe.json()).toEqual({ ok: true });
+    expect(await auditRows(harness.db)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: "ai_connector.configured",
+          payload: expect.objectContaining({ preset: "groq" }),
+        }),
+      ]),
+    );
+
+    const refused = await save({ preset: "openai", model: "gpt-test" });
+    expect(refused.statusCode, refused.body).toBe(400);
+    const changed = await save({ preset: "ollama", model: "llama3.2" });
+    expect(changed.statusCode, changed.body).toBe(200);
+    expect(changed.json().connector.hasApiKey).toBe(false);
+    expect((await harness.db.select().from(aiConnector))[0]?.apiKey).toBeNull();
   });
 
   it("refuses a first non-Ollama save without a key", async () => {

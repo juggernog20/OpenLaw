@@ -217,6 +217,29 @@ describe("OpenAI-compatible preset authentication", () => {
     expect(request.headers["api-key"]).toBeUndefined();
   });
 
+  it("uses bearer auth and max_completion_tokens from the first Groq probe and extraction", async () => {
+    const start = server.requests.length;
+    const groq = provider({ preset: "groq", model: "openai/gpt-oss-120b" });
+    await groq.probe();
+    await groq.extract("This contract has a fixed term.", [
+      { slug: "term_type", prompt: "Find the term type." },
+      { slug: "effective_date", prompt: "Find the effective date." },
+    ]);
+    const requests = server.requests.slice(start);
+    expect(requests).toHaveLength(2);
+    for (const request of requests) {
+      expect(request.url).toBe("/chat/completions");
+      expect(request.headers.authorization).toBe(`Bearer ${VALID_KEY}`);
+      expect(request.headers["api-key"]).toBeUndefined();
+      expect(request.body).toMatchObject({
+        model: "openai/gpt-oss-120b",
+        temperature: 0,
+        max_completion_tokens: expect.any(Number),
+      });
+      expect(request.body).not.toHaveProperty("max_tokens");
+    }
+  });
+
   it("omits authorization when Ollama has no key", async () => {
     await provider({ preset: "ollama", apiKey: null }).probe();
     expect(server.requests.at(-1)!.headers.authorization).toBeUndefined();

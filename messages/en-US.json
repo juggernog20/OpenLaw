@@ -63,7 +63,7 @@
     "defaultMessage": "{actor} turned on the AI connector {provider}"
   },
   "activity.aiConnector.preset": {
-    "defaultMessage": "{preset, select, anthropic {Anthropic} openai {OpenAI} azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} ollama {Ollama} custom {Custom endpoint} other {{preset}}}"
+    "defaultMessage": "{preset, select, anthropic {Anthropic} openai {OpenAI} azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} groq {Groq} ollama {Ollama} custom {Custom endpoint} other {{preset}}}"
   },
   "activity.aiConnector.removed": {
     "defaultMessage": "{actor} removed the AI connector {provider} and its API key"
@@ -8566,6 +8566,9 @@
   },
   "settings.aiAnalysis.provider.gemini": {
     "defaultMessage": "Gemini"
+  },
+  "settings.aiAnalysis.provider.groq": {
+    "defaultMessage": "Groq"
   },
   "settings.aiAnalysis.provider.ollama": {
     "defaultMessage": "Ollama"

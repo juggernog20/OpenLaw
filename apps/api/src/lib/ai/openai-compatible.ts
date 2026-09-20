@@ -16,8 +16,12 @@ import {
 } from "./structured-extraction.js";
 import type { AiPreset } from "@openlaw/db";
 
-/** OpenAI's own hosts. Their current models take `max_completion_tokens` and refuse `max_tokens`. */
-const OPENAI_HOSTED_PRESETS: ReadonlySet<AiPreset> = new Set<AiPreset>(["openai", "azure_openai"]);
+/** Presets that start with `max_completion_tokens` because `max_tokens` is refused or deprecated. */
+const MAX_COMPLETION_TOKENS_PRESETS: ReadonlySet<AiPreset> = new Set<AiPreset>([
+  "openai",
+  "azure_openai",
+  "groq",
+]);
 
 export function createOpenAiCompatibleProvider(config: AiProviderConfig): AiProvider {
   const endpoint =
@@ -37,7 +41,9 @@ export function createOpenAiCompatibleProvider(config: AiProviderConfig): AiProv
   // models refuse both, so a refusal that names the field switches the
   // wire shape and the call is made again without it.
   const wire = {
-    tokenField: OPENAI_HOSTED_PRESETS.has(config.preset) ? "max_completion_tokens" : "max_tokens",
+    tokenField: MAX_COMPLETION_TOKENS_PRESETS.has(config.preset)
+      ? "max_completion_tokens"
+      : "max_tokens",
     temperature: true,
     output: "schema" as "schema" | "json" | "prompt",
   };
