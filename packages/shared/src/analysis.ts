@@ -78,6 +78,9 @@ export const CORE_ANALYSIS_SLUGS = CORE_ANALYSIS_TARGETS.map((target) => target.
 export const AI_ANSWER_STYLES = ["few_words", "sentence", "full_clause"] as const;
 export type AiAnswerStyle = (typeof AI_ANSWER_STYLES)[number];
 
+/** The answer types the twelve catalog prompts can carry; the format sentence is derived from it. */
+export type AiPromptTargetType = CoreAnalysisTargetType | "text" | "long_text" | "single_select";
+
 /**
  * The Conversion draft's built-in targets (INT-008): the values every
  * draft proposes beside the target type's own Fields. `{module}` is
@@ -114,7 +117,7 @@ export const CONVERSION_PROMPTS = [
 ] as const satisfies readonly {
   slug: string;
   defaultPrompt: string;
-  type: CoreAnalysisTargetType | "text" | "long_text" | "single_select";
+  type: AiPromptTargetType;
   options?: readonly string[];
 }[];
 
@@ -132,7 +135,7 @@ export const AI_PROMPTS: readonly {
   slug: AiPromptSlug;
   group: AiPromptGroup;
   defaultPrompt: string;
-  type: CoreAnalysisTargetType | "text" | "long_text" | "single_select";
+  type: AiPromptTargetType;
   options?: readonly string[];
 }[] = [
   ...CONVERSION_PROMPTS.map((prompt) => ({ ...prompt, group: "conversion" as const })),
