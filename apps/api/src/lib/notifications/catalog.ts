@@ -50,6 +50,8 @@ export interface EventGroupPolicy {
   inApp: boolean;
   /** The email default. */
   email: boolean;
+  /** The push default (NOT-010). Only read when in-app is on: no bell
+   * row, no push. */
   push: boolean;
   /** How email leaves, when it leaves at all (NOT-003). */
   emailTiming: EmailTiming;
