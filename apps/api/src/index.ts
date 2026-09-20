@@ -6,6 +6,7 @@
  * builds the app (see app.ts), and listens.
  */
 
+import { createVapidResolver } from "./lib/notifications/vapid.js";
 import {
   resolveAdvancedSettings,
   startRuntimeHeartbeat,
@@ -296,6 +297,26 @@ const jobs = await startPipeline({ connectionString: databaseUrl });
 const notifier = createNotifier({ db, jobs, log: createConsoleLogger() });
 const eventHub = createPostgresEventHub({ db, log: createConsoleLogger() });
 
+const resolveVapid = createVapidResolver(
+  db,
+  {
+    publicKey: process.env.VAPID_PUBLIC_KEY,
+    privateKey: process.env.VAPID_PRIVATE_KEY,
+    smtpFrom: process.env.SMTP_FROM,
+    smtpUrl: process.env.SMTP_URL,
+  },
+  runtimeEnv.BASE_URL || "http://localhost:3000",
+);
+// A first run writes the pair here. An unreadable sealed key is preserved
+// and reported, never a reason to refuse the boot (TECH-022): the public
+// key still answers in the clear, the worker settles pushes skipped, and
+// restoring OPENLAW_SECRET_KEY or pinning the pair by env repairs it.
+await resolveVapid().catch((error: unknown) => {
+  console.error(
+    `Device notifications are off until the VAPID pair can be read: ${error instanceof Error ? error.message : String(error)}`,
+  );
+});
+
 const app = await buildApp(
   {
     db,
@@ -314,6 +335,7 @@ const app = await buildApp(
     },
     advancedRuntime,
     resolveMailer,
+    resolveVapid,
     storage,
     docEngine,
     jobs,

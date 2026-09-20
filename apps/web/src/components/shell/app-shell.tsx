@@ -24,7 +24,8 @@
  * under a fixed activity bar (DES-016).
  */
 
-import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { registerNotificationWorker } from "../../lib/device-notifications";
 import { api } from "../../lib/api";
 import { useRetainedLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { useGlobalKeys } from "../../lib/keyboard";
@@ -68,6 +69,10 @@ export function AppShell({
     applyPreferredTheme(theme);
   }, [theme]);
 
+  useEffect(() => {
+    void registerNotificationWorker().catch(() => {});
+  }, []);
+
   // The global keyboard contract (DES-010, #45) lives on the shell:
   // pre-login screens have no search input and no overlays to serve.
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -102,6 +107,7 @@ export function AppShell({
           before they arrive. `overflow-hidden` is what makes the chrome
           fixed. There is no document scroll left for it to ride. */}
       <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">
+        <link rel="manifest" href="/manifest.webmanifest" />
         <SkipLink />
         <AppHeader user={user} onSignOut={onSignOut} />
         <TopNav role={user.role} />

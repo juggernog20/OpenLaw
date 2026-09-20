@@ -6,8 +6,8 @@
  * A notification is an **ephemeral prompt**, not a history. The activity
  * log (DD-017) is the durable record of what happened on a record; this
  * table is what tells a person that something they care about has
- * happened, once, in the two channels NOT-001 names: the bell in the
- * full platform (and, from M20, in the portal) and email.
+ * happened through the bell, email, and push. Both the full platform and
+ * the Portal use this table.
  *
  * `entity_type` / `entity_id` is the polymorphic pair SCHEMA.md
  * documents as the exception to separate-tables-with-view, so there is
@@ -37,7 +37,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { users } from "./auth.js";
+import { sessions, users } from "./auth.js";
 import { uuidPk } from "./helpers.js";
 
 /**
@@ -95,10 +95,10 @@ export const NOTIFICATION_PREFERENCE_GROUPS = [
 export type NotificationPreferenceGroup = (typeof NOTIFICATION_PREFERENCE_GROUPS)[number];
 
 /**
- * The two channels one system renders on (NOT-001). Fixed for the event
+ * The three channels one system renders on (NOT-001). Fixed for the event
  * group's reason: the fan-out branches on each of them by name.
  */
-export const NOTIFICATION_CHANNELS = ["in_app", "email"] as const;
+export const NOTIFICATION_CHANNELS = ["in_app", "email", "push"] as const;
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 
 /**
@@ -205,6 +205,10 @@ export const notifications = pgTable(
     /** NULL until the notification center has shown it (NOT-005:
      * opening the center marks the visible items read). */
     readAt: timestamp("read_at", { withTimezone: true }),
+    /** Push delivery is owed independently of the email timing. */
+    pushOwed: boolean("push_owed").notNull().default(false),
+    pushedAt: timestamp("pushed_at", { withTimezone: true }),
+    pushSkippedAt: timestamp("push_skipped_at", { withTimezone: true }),
     /**
      * Whether email was owed for this row **at the moment it was
      * written**, decided from the group's default and the person's own
@@ -296,6 +300,14 @@ export const notifications = pgTable(
       "notifications_reminder_pair",
       sql`(${table.reminderDate} is null) = (${table.reminderOffsetDays} is null)`,
     ),
+    check(
+      "notifications_push_outcome",
+      sql`not (${table.pushedAt} is not null and ${table.pushSkippedAt} is not null)`,
+    ),
+    check(
+      "notifications_push_owed",
+      sql`${table.pushOwed} or (${table.pushedAt} is null and ${table.pushSkippedAt} is null)`,
+    ),
     /** An email is sent or given up on, never both. */
     check(
       "notifications_email_outcome",
@@ -360,3 +372,28 @@ export const notificationPreferences = pgTable(
 );
 
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+
+/** A browser subscription ends when its sign-in session is deleted. */
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuidPk(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => sessions.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    userAgent: text("user_agent").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("push_subscriptions_endpoint_unique").on(table.endpoint),
+    index("push_subscriptions_user_idx").on(table.userId),
+    index("push_subscriptions_session_idx").on(table.sessionId),
+  ],
+);

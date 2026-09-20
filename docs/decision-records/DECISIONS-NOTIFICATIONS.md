@@ -80,6 +80,16 @@ The index reads the Key date ID already held in each reminder's payload. Upgradi
 existing notification rows and their delivery state. Events other than Key dates keep
 their existing record-based identity. No historical reminder is recreated by migration.
 
+### Addendum, 2026-09-20, M38: Push is the third channel
+
+NOT-010 adds Push beside In-app and Email on both the staff app and the Portal. The
+Notifier still resolves the audience and applies the wall and preferences in the same
+transaction. It records `push_owed` beside `email_owed`, then requests each channel's
+delivery after commit. In-app off suppresses both outbound channels for that group.
+Email remains the Requester's reach-out channel; Push adds delivery to enrolled browsers.
+The push body names only the notification ID and its bell surface. Content is read from
+that surface through the current session and the same wall as the bell.
+
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
 - **Status** — Accepted
@@ -357,6 +367,18 @@ Ten of twenty testers, across Member+, Contributors, and Business Users, reporte
 
 **The text of a status-change item names the new status.** "The status of your request R-12 changed" told four testers nothing; the item now says what it changed to, in the requester-facing vocabulary the INT-003 M20/10 addendum chose. This is copy on an existing payload, not a new event.
 
+### Addendum, 2026-09-20, M38: opening a device notification reads the bell item
+
+A Push notification click uses the existing read route for its staff or Portal bell,
+then opens the same deep link as the bell item. It reuses a window on that surface when
+possible. Receiving or displaying a Push does not mark the item read. An already-read
+item or a focused OpenLaw window suppresses the OS notification. Bell item reads and
+Mark all read also close matching OS notifications through the service worker.
+
+The notification ID is the OS tag, with `renotify` off, so a repeated delivery replaces
+the same visible notification without another alert. The 9+ badge and the 2026-09-09
+amendment remain in force on both bells.
+
 ## NOT-006 — The morning digest's anatomy and its delivery rules
 
 - **Status:** Accepted; **amended by NOT-008** (the daily briefing replaces the date-only digest and extends the anatomy)
@@ -455,6 +477,21 @@ Tightening pg-boss's policy so one row cannot be handed to two handlers at once 
 No code change. The immediate queue's `batchSize: 1` and `short` retry policy stay as they are. The morning round's re-ask deliberately excludes digest rows (`reminder_date IS NULL`), so this question is about immediate mail only. If the duplicate rate under multi-replica deploys becomes a real complaint, the lease option is the path forward.
 
 ---
+
+### Addendum, 2026-09-20, M38: Push uses the same delivery trade
+
+Push also sends before settling its bell row. `push_owed`, `pushed_at` and
+`push_skipped_at` record its independent delivery state; the two settlement stamps
+cannot both be set. A duplicate wake-up after settlement does nothing, but concurrent
+workers or a failure after sending can deliver twice. Retrying a partly successful
+send can also repeat delivery to a browser that already accepted it. NOT-010's OS tag
+limits repeated alerts; it does not make transport exactly-once.
+
+The morning round re-asks every unsettled row that owes Push, including date reminders.
+Their Push is immediate even though their email joins the briefing. A 404 or 410 from
+the push service deletes the dead subscription. A 429 honours Retry-After through the
+queue retry. Exhausted attempts settle as skipped, as do rows with no live subscription
+or no remaining audience reach. Push failure does not prevent email delivery.
 
 ## NOT-008 — The daily briefing: one cross-module morning email replaces the date digest
 
@@ -569,16 +606,92 @@ ADO-007 delivers the generated files to the Business User on screen and by email
 
 Three keys in `catalog.ts`; Activity's `contract.team_added` stays the narration. Portal notification settings show the `assigned_to_you` group for Business Users, which they already can.
 
+## NOT-010 — Push as the third channel, with session-bound devices and record-name privacy
+
+- **Status:** Accepted
+- **Date:** 2026-09-20
+- **Origin:** M38, [#962](https://github.com/juggernog20/OpenLaw/issues/962)
+
+### Context
+
+The bell reaches a person while OpenLaw is open. Email reaches them outside the app,
+but an immediate ask can wait in an inbox. Staff and Business Users need an optional device
+notification without sending record content through a browser vendor's push service.
+
+### Decision
+
+Push is the third channel of the existing notification system. The staff Notifications
+pane and Portal notification settings share the third switch column and Devices card
+specified by DES-089. Browser permission is requested only when the person presses
+"Turn on for this browser". Unsupported browsers and blocked permission receive guidance.
+
+Each subscription belongs to a person and their current session. Deleting the session,
+including sign-out or Administrator revocation, deletes its subscriptions. Delivery
+excludes expired sessions. Enrolling an existing endpoint rewrites both its user and
+session binding so a shared browser cannot keep the previous person's subscription.
+Each person can have at most ten subscriptions. Devices lists the browser, platform and
+last-seen time, with immediate revoke; revoking this browser also unsubscribes it locally.
+
+The encrypted Web Push body contains only `{ notificationId, surface }`, where `surface`
+is `staff` or `portal`. It contains no record title, comment, document or other content.
+The delivery handler applies the bell's current audience predicate. The service worker
+then fetches the single item from that bell's same-origin API with the session cookie,
+which applies the wall again. A 403 or 404 read produces no OS notification or bell link,
+so a person removed from a Confidential record sees nothing even if its prompt was already
+in flight. An expired session or a transient read failure produces only "You have a new
+notification" and a link to the appropriate bell.
+
+Push defaults follow the existing event groups:
+
+| Event group                                              | Push default                                     |
+| -------------------------------------------------------- | ------------------------------------------------ |
+| Assigned to you                                          | On                                               |
+| Activity on your records                                 | Off                                              |
+| Dates approaching                                        | On, immediately when the reminder row is written |
+| New requests                                             | Off                                              |
+| Requester events, shown as Request updates in the Portal | On                                               |
+| Knowledge                                                | Off; the pane keeps Knowledge email-only         |
+
+Preferences remain overrides over application defaults. A group with In-app off produces
+neither email nor Push. Email timing does not delay Push. Briefing section preferences
+remain email-only, and `briefing.ready` owes no Push because the individual reminders
+already supply it.
+
+"Show record names on devices" is one per-user switch, on by default, shared across
+devices and both panes. The worker reads it at display time. When on, OS text uses the
+bell's narration. When off, it uses the event's generic sentence without record names.
+An unreadable preference also hides names. Device enrolment, revoke and changes to this
+switch write `user.notification_preference_changed` Activity entries.
+
+### Rationale and alternatives considered
+
+- Sending ready-made notification text through the push service would disclose record
+  content and prevent the wall from being checked when the browser displays it. A prompt
+  followed by an authenticated read preserves that check.
+- Binding only to the person would let an old browser keep receiving their notifications
+  after sign-out. Session binding gives offboarding the same boundary as app access.
+- Always showing names would expose them on shared screens. Always hiding names would
+  remove useful context from private devices. The explicit switch lets the person choose.
+
+### Consequences
+
+The notification row records the Push debt and settlement independently of email, under
+NOT-007's delivery trade. NOT-005's read and click rules apply to OS notifications too.
+TECH-034 records Web Push, VAPID and the service worker. Native apps, offline operation,
+notification sounds, grouped summaries, rich actions, and Slack or Teams delivery remain
+out of scope.
+
 ## Index of decisions
 
-| #       | Decision                                                           | Status                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| NOT-001 | One system, two surfaces: bell + email for staff and portal users  | Accepted; the portal surface built and its read rule added by the M20/8 and M20/9 addenda; the absent Administrator override recorded by the M20/10 addendum                                                                                                                                                                                                                                            |
-| NOT-002 | Event catalog: five groups, defaults by interruptiveness           | Accepted; group 5's four events added by M20/8 addendum; group 4's first event and its opt-in email by the M21/4 addendum; group 1's `request` arm by the M21/5 addendum; the reply promise following a conversion onto the record by the M21/11 addendum; the side default and the archived-Request arm by the M21/12 addendum; the finished Conversion draft joins group 4 by the 2026-09-19 addendum |
-| NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted; the M29 close records the built cross-module briefing amendment                                                                                                                                                                                                                                                                                                                               |
-| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted; per-date lead times and recipients added by the 2026-09-09 focus-group addendum                                                                                                                                                                                                                                                                                                               |
-| NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted; read-on-open withdrawn by the 2026-09-09 amendment, an item is read when opened                                                                                                                                                                                                                                                                                                               |
-| NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted; the M29 close records the built six-section anatomy amendment                                                                                                                                                                                                                                                                                                                                 |
-| NOT-007 | Email delivery is at-least-once; duplicate accepted over drop      | Accepted                                                                                                                                                                                                                                                                                                                                                                                                |
-| NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted; Knowledge built in M28/6 and the six-section briefing completed in M29/7                                                                                                                                                                                                                                                                                                                      |
-| NOT-009 | Team adds and Generations are events                               | Accepted                                                                                                                                                                                                                                                                                                                                                                                                |
+| #       | Decision                                                                 | Status                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NOT-001 | One system, two surfaces: bell + email for staff and portal users        | Accepted; the portal surface built and its read rule added by the M20/8 and M20/9 addenda; the absent Administrator override recorded by the M20/10 addendum; Push added as the third channel by the M38 addendum                                                                                                                                                                                       |
+| NOT-002 | Event catalog: five groups, defaults by interruptiveness                 | Accepted; group 5's four events added by M20/8 addendum; group 4's first event and its opt-in email by the M21/4 addendum; group 1's `request` arm by the M21/5 addendum; the reply promise following a conversion onto the record by the M21/11 addendum; the side default and the archived-Request arm by the M21/12 addendum; the finished Conversion draft joins group 4 by the 2026-09-19 addendum |
+| NOT-003 | Timing: direct events immediate; date reminders in a daily digest        | Accepted; the M29 close records the built cross-module briefing amendment                                                                                                                                                                                                                                                                                                                               |
+| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0            | Accepted; per-date lead times and recipients added by the 2026-09-09 focus-group addendum                                                                                                                                                                                                                                                                                                               |
+| NOT-005 | Badge: unread count, 9+ cap, read-on-open                                | Accepted; read-on-open withdrawn by the 2026-09-09 amendment, an item is read when opened; OS notification click, read and close rules added by the M38 addendum                                                                                                                                                                                                                                        |
+| NOT-006 | The morning digest's anatomy and its delivery rules                      | Accepted; the M29 close records the built six-section anatomy amendment                                                                                                                                                                                                                                                                                                                                 |
+| NOT-007 | Email delivery is at-least-once; duplicate accepted over drop            | Accepted; Push placed under the same trade by the M38 addendum                                                                                                                                                                                                                                                                                                                                          |
+| NOT-008 | The daily briefing: cross-module morning email replaces the digest       | Accepted; Knowledge built in M28/6 and the six-section briefing completed in M29/7                                                                                                                                                                                                                                                                                                                      |
+| NOT-009 | Team adds and Generations are events                                     | Accepted                                                                                                                                                                                                                                                                                                                                                                                                |
+| NOT-010 | Push as the third channel, session-bound devices and record-name privacy | Accepted                                                                                                                                                                                                                                                                                                                                                                                                |

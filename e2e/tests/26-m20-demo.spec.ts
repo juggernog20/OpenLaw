@@ -524,13 +524,23 @@ test.describe.serial("M20 demo path", () => {
 
       // ---- And the portal's other destination ----
       //
-      // The Portal draws Request updates, Mentions, and Activity on your
-      // records (DD-023): three groups, two channels each. Staff-only
-      // groups and the Briefing stay outside the Portal.
+      // The Portal draws Request updates, Assigned to you, Activity on
+      // your records and Dates approaching (DD-023): four groups, three
+      // channels each. Staff-only groups and the Briefing stay outside
+      // the Portal. Push follows the interruptive groups (NOT-010), so
+      // Activity on your records is the one Portal group whose Push
+      // switch starts off.
       await portal.getByRole("link", { name: "Notification settings" }).click();
       await expect(portal).toHaveURL(/\/portal\/settings$/);
       const prefs = portal.getByRole("region", { name: "How we tell you about your work" });
-      await expect(prefs.getByRole("switch")).toHaveCount(8);
+      await expect(prefs.getByRole("switch")).toHaveCount(12);
+      for (const group of ["Request updates", "Assigned to you", "Dates approaching"]) {
+        await expect(prefs.getByRole("switch", { name: `${group} Push` })).toBeChecked();
+      }
+      await expect(
+        prefs.getByRole("switch", { name: "Activity on your records Push" }),
+      ).not.toBeChecked();
+      await expect(portal.getByRole("heading", { name: "Devices" })).toBeVisible();
       await expect(prefs.getByRole("switch", { name: "Request updates Email" })).toBeChecked();
     } catch (error) {
       // A cleanup that throws here would replace the failure that caused

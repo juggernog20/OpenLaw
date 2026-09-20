@@ -14,7 +14,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { BriefingPreference } from "../components/notification-preferences";
+import type { BriefingPreference, GroupPreference } from "../components/notification-preferences";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -26,13 +26,13 @@ const MEMBER = {
 
 /** The grid the API answers, with NOT-002's defaults. */
 const DEFAULTS = [
-  { eventGroup: "assigned_to_you", inApp: true, email: true },
-  { eventGroup: "activity_on_your_records", inApp: true, email: false },
-  { eventGroup: "dates_approaching", inApp: true, email: true },
-  { eventGroup: "new_requests", inApp: true, email: false },
-  { eventGroup: "knowledge", inApp: true, email: true },
-  { eventGroup: "requester_events", inApp: true, email: true },
-];
+  { eventGroup: "assigned_to_you", inApp: true, email: true, push: true },
+  { eventGroup: "activity_on_your_records", inApp: true, email: false, push: false },
+  { eventGroup: "dates_approaching", inApp: true, email: true, push: true },
+  { eventGroup: "new_requests", inApp: true, email: false, push: false },
+  { eventGroup: "knowledge", inApp: true, email: true, push: false },
+  { eventGroup: "requester_events", inApp: true, email: true, push: true },
+] satisfies GroupPreference[];
 
 const BRIEFING_DEFAULTS = [
   { eventGroup: "briefing.approvals", email: true },
@@ -48,6 +48,8 @@ function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
   let groups = DEFAULTS.map((row) => ({ ...row }));
   let briefing: BriefingPreference[] = BRIEFING_DEFAULTS.map((row) => ({ ...row }));
   return (call: StubCall) => {
+    if (call.url.pathname === "/api/v1/notifications/subscriptions")
+      return json(200, { subscriptions: [] });
     if (call.url.pathname !== "/api/v1/me/notification-preferences") return undefined;
     if (call.method === "PATCH") {
       const body = call.body as { eventGroup: string; channel: string; enabled: boolean };
@@ -55,14 +57,14 @@ function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
       if (failWith) return failWith;
       groups = groups.map((row) =>
         row.eventGroup === body.eventGroup
-          ? { ...row, [body.channel === "in_app" ? "inApp" : "email"]: body.enabled }
+          ? { ...row, [body.channel === "in_app" ? "inApp" : body.channel]: body.enabled }
           : row,
       );
       briefing = briefing.map((row) =>
         row.eventGroup === body.eventGroup ? { ...row, email: body.enabled } : row,
       );
     }
-    return json(200, { groups, briefing });
+    return json(200, { groups, briefing, vapidPublicKey: "AQID", showRecordNamesOnDevices: true });
   };
 }
 
@@ -121,9 +123,8 @@ describe("Personal · Notifications (#320)", () => {
     // Named by its visible label — M20/9 gave the row real copy, and a
     // regex on the model's name would go on passing if the pane drew it.
     expect(screen.queryByText("Request updates")).not.toBeInTheDocument();
-    // Four event groups have two channels. Knowledge has one briefing
-    // switch because publishing never makes a bell event.
-    expect(screen.getAllByRole("switch")).toHaveLength(13);
+    // Four event groups gain Push. Record names is one device preference.
+    expect(screen.getAllByRole("switch")).toHaveLength(18);
   });
 
   it("draws a separate email-only Briefing group and saves its rows", async () => {
@@ -171,6 +172,31 @@ describe("Personal · Notifications (#320)", () => {
     expect(screen.getByRole("switch", { name: "Assigned to you In-app" })).toBeChecked();
   });
 
+  it("saves a Push flip through the same immediate-save status (DES-089)", async () => {
+    const user = userEvent.setup();
+    const writes: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: capturePreferenceWrites(writes) });
+    renderAt("/settings/notifications");
+
+    const push = await screen.findByRole("switch", { name: "Assigned to you Push" });
+    expect(push).toBeChecked();
+    await user.click(push);
+
+    await waitFor(() =>
+      expect(writes).toEqual([{ eventGroup: "assigned_to_you", channel: "push", enabled: false }]),
+    );
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(screen.getByRole("switch", { name: "Assigned to you Push" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Assigned to you In-app" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Assigned to you Email" })).toBeChecked();
+    // Dates approaching has Push but no Email; Knowledge has neither.
+    expect(screen.getByRole("switch", { name: "Dates approaching Push" })).toBeVisible();
+    expect(
+      screen.queryByRole("switch", { name: "Dates approaching Email" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Knowledge items Push" })).not.toBeInTheDocument();
+  });
+
   it("sends two quick flips in order, so the slower reply cannot undo the faster press", async () => {
     const user = userEvent.setup();
     const writes: unknown[] = [];
@@ -179,13 +205,15 @@ describe("Personal · Notifications (#320)", () => {
     stubApi({
       signedIn: MEMBER,
       extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/notifications/subscriptions")
+          return json(200, { subscriptions: [] });
         if (call.url.pathname !== "/api/v1/me/notification-preferences") return undefined;
         if (call.method !== "PATCH") return json(200, { groups, briefing: BRIEFING_DEFAULTS });
         const body = call.body as { eventGroup: string; channel: string; enabled: boolean };
         writes.push(body);
         groups = groups.map((row) =>
           row.eventGroup === body.eventGroup
-            ? { ...row, [body.channel === "in_app" ? "inApp" : "email"]: body.enabled }
+            ? { ...row, [body.channel === "in_app" ? "inApp" : body.channel]: body.enabled }
             : row,
         );
         // Every reply is held open, so the test decides when each one
@@ -246,4 +274,19 @@ describe("Personal · Notifications (#320)", () => {
       expect(screen.getByRole("switch", { name: "Assigned to you Email" })).toBeChecked(),
     );
   });
+});
+
+it("saves Push through the grid status and keeps Briefing email-only", async () => {
+  const writes: unknown[] = [];
+  stubApi({ signedIn: MEMBER, extra: capturePreferenceWrites(writes) });
+  renderAt("/settings/notifications");
+  await userEvent
+    .setup()
+    .click(await screen.findByRole("switch", { name: "Assigned to you Push" }));
+  expect(await screen.findByText("Saved")).toBeVisible();
+  expect(writes).toEqual([{ eventGroup: "assigned_to_you", channel: "push", enabled: false }]);
+  expect(screen.getByRole("switch", { name: "Assigned to you Push" })).not.toBeChecked();
+  expect(screen.getByRole("switch", { name: "Dates approaching Push" })).toBeChecked();
+  expect(screen.queryByRole("switch", { name: "Knowledge items Push" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("switch", { name: "Approvals Push" })).not.toBeInTheDocument();
 });

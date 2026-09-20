@@ -26,6 +26,7 @@ import {
   type EventGroup,
 } from "../components/notification-preferences";
 import { SettingsCard } from "../components/settings-card";
+import { NotificationDevices } from "../components/notification-devices";
 import { StatusNote } from "../components/status-note";
 
 export async function settingsNotificationsLoader() {
@@ -34,7 +35,7 @@ export async function settingsNotificationsLoader() {
   // A failed read must fail the pane. Drawing the catalog's defaults off
   // a network error would show somebody a grid that is not theirs.
   if (!data) throw new Error("The notification preferences could not be read.");
-  return { groups: data.groups, briefing: data.briefing };
+  return data;
 }
 
 /**
@@ -85,12 +86,17 @@ export function SettingsNotificationsPage() {
         flush
       >
         <NotificationSwitchGrid
+          push
           order={STAFF_GROUPS}
           state={state}
           emailOnlyGroups={["knowledge"]}
           inAppOnlyGroups={["dates_approaching"]}
         />
       </SettingsCard>
+      <NotificationDevices
+        vapidPublicKey={loaded.vapidPublicKey}
+        showRecordNames={loaded.showRecordNamesOnDevices}
+      />
       <SettingsCard
         title={
           <FormattedMessage id="settings.notifications.briefing.title" defaultMessage="Briefing" />
