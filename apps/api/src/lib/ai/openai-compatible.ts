@@ -8,7 +8,12 @@ import {
   stringAt,
   type AiCallBound,
 } from "./http.js";
-import { AiConfigError, type AiProvider, type AiProviderConfig } from "./provider.js";
+import {
+  AiConfigError,
+  AiResponseError,
+  type AiProvider,
+  type AiProviderConfig,
+} from "./provider.js";
 import {
   checkCompletionReason,
   extractStructured,
@@ -116,6 +121,19 @@ export function createOpenAiCompatibleProvider(config: AiProviderConfig): AiProv
       try {
         return await send(prompt, remainingCallBound(bound, deadline), schema);
       } catch (error) {
+        if (
+          error instanceof AiConfigError &&
+          error.upstream?.status === 400 &&
+          error.upstream.jsonValidationFailed
+        ) {
+          throw new AiResponseError(
+            "The provider generated a reply that did not match the schema.",
+            {
+              reason: "invalid_shape",
+              upstream: error.upstream,
+            },
+          );
+        }
         if (!relearn(error, schema !== undefined, sent)) throw error;
       }
     }

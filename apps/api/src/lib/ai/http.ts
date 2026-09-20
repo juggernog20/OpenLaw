@@ -90,9 +90,14 @@ function unsupportedFieldIn(text: string): AiUnsupportedField | undefined {
   // Match an explicit capability refusal, never a malformed schema or an unrelated 4xx.
   if (/invalid schema|schema[^.]*?(?:missing|required)/i.test(text)) return undefined;
   for (const candidate of ["response_format", "output_config", "responseJsonSchema"] as const) {
-    const name = candidate === "responseJsonSchema" ? "response_?json_?schema" : candidate;
+    const name =
+      candidate === "responseJsonSchema"
+        ? "response_?json_?schema"
+        : candidate === "response_format"
+          ? "(?:response_format|json_schema)"
+          : candidate;
     const escaped = new RegExp(
-      `(?:${name}[^.\n]{0,100}(?:not supported|unsupported|not available)|(?:unknown|unrecognized|unsupported|unexpected) (?:field|parameter|name|argument)[^a-z_]{0,10}${name})`,
+      `(?:${name}[^.\n]{0,100}(?:not supported|unsupported|not available|only available on)|(?:unknown|unrecognized|unsupported|unexpected) (?:field|parameter|name|argument)[^a-z_]{0,10}${name})`,
       "i",
     );
     if (escaped.test(text)) return candidate;
@@ -110,8 +115,8 @@ type Refusal = Omit<AiUpstreamRefusal, "status">;
  * and an HTML error page says nothing useful in Settings. The
  * provider's own reason is picked out of JSON when it is JSON, header
  * values are blanked, and the rest is cut to one line. The unsupported
- * field is read from the whole bounded body before that cut, so a
- * long refusal still names the field an adapter can drop.
+ * field and JSON validation failure are read from the whole bounded
+ * body before that cut, so an adapter can act on a long refusal.
  */
 async function readRefusal(
   response: Response,
@@ -122,15 +127,24 @@ async function readRefusal(
   if (!reply) return { summary: fallback };
   const raw = reply.raw;
   let text = raw;
+  let code = /"code"\s*:\s*"(json_validate_failed)"/.exec(raw)?.[1];
   if (!reply.truncated) {
     try {
-      text = nestedReason(JSON.parse(raw)) ?? raw;
+      const body: unknown = JSON.parse(raw);
+      text = nestedReason(body) ?? raw;
+      code = stringAt(body, ["error", "code"]) || stringAt(body, ["code"]);
     } catch {
       // A plain-text refusal is summarised as it is.
     }
   }
   const unsupportedField = unsupportedFieldIn(text);
-  const structured = unsupportedField ? { unsupportedField } : {};
+  const jsonValidationFailed =
+    code === "json_validate_failed" ||
+    /Generated JSON does not match the expected schema/i.test(text);
+  const structured = {
+    ...(unsupportedField ? { unsupportedField } : {}),
+    ...(jsonValidationFailed ? { jsonValidationFailed: true } : {}),
+  };
   if (reply.truncated) return { summary: fallback, ...structured };
   // Each token of a header value, so `Bearer <key>` blanks the key on its own.
   for (const value of Object.values(headers)) {
