@@ -105,17 +105,7 @@ export function requestStatusLabel(intl: IntlShape, status: RequestStatus): stri
  * before a requester reads it, and `requestStatusLabel` is the same
  * translation for a triager.
  */
-export function requesterStatusLabel(intl: IntlShape, status: RequestStatus): string {
-  return intl.formatMessage(
-    {
-      id: "requests.requesterStatusLabel",
-      defaultMessage:
-        "{status, select, new {Open} read {Read} converted {In progress} resolved {Resolved} " +
-        "declined {Declined} other {Unknown}}",
-    },
-    { status },
-  );
-}
+export { requesterStatusLabel } from "./requester-status";
 
 /** The whole staff request detail read (#414): the envelope, the
  * fields that name the collected values, the rows those values point

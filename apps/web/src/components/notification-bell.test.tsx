@@ -23,7 +23,7 @@
  * a row out.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BellItem } from "../lib/notifications";
@@ -1043,4 +1043,97 @@ it.each([
     name: new RegExp(`Bao Business generated.*Supplier contract.*Supplier NDA.*${ending}`),
   });
   expect(link).toHaveAttribute("href", "/contracts/41");
+});
+
+it("opens the bell from the device fallback address", async () => {
+  bellApi({ unread: 1, pages: { first: { notifications: [item(1)], nextCursor: null } } });
+  renderAt("/?notifications=1");
+  expect(
+    await screen.findByRole("link", { name: /Nadia Counsel asked you to approve Acme MSA 1/ }),
+  ).toBeVisible();
+});
+
+it("sends the read id to the worker after opening a row", async () => {
+  const postMessage = vi.fn();
+  vi.stubGlobal("navigator", {
+    ...navigator,
+    serviceWorker: { getRegistration: vi.fn(async () => ({ active: { postMessage } })) },
+  });
+  bellApi({ unread: 1, pages: { first: { notifications: [item(1)], nextCursor: null } } });
+  renderAt("/");
+  const user = userEvent.setup();
+  await user.click(await bell("1 unread"));
+  await user.click(
+    await screen.findByRole("link", { name: /Nadia Counsel asked you to approve Acme MSA 1/ }),
+  );
+  await waitFor(() =>
+    expect(postMessage).toHaveBeenCalledWith({ type: "notifications-read", ids: ["n1"] }),
+  );
+});
+
+it("does not send a read receipt when the write is refused", async () => {
+  const postMessage = vi.fn();
+  vi.stubGlobal("navigator", {
+    ...navigator,
+    serviceWorker: { getRegistration: vi.fn(async () => ({ active: { postMessage } })) },
+  });
+  bellApi({
+    unread: 1,
+    failWrites: true,
+    pages: { first: { notifications: [item(1)], nextCursor: null } },
+  });
+  renderAt("/");
+  const user = userEvent.setup();
+  await user.click(await bell("1 unread"));
+  await user.click(
+    await screen.findByRole("link", { name: /Nadia Counsel asked you to approve Acme MSA 1/ }),
+  );
+  expect(postMessage).not.toHaveBeenCalled();
+});
+
+it("closes read OS items beyond the loaded page after Mark all read", async () => {
+  const postMessage = vi.fn();
+  vi.stubGlobal("navigator", {
+    ...navigator,
+    serviceWorker: {
+      getRegistration: vi.fn(async () => ({
+        active: { postMessage },
+        getNotifications: vi.fn(async () => [
+          { tag: "n1", data: { surface: "staff" } },
+          { tag: "n99", data: { surface: "staff" } },
+          { tag: "n100", data: { surface: "staff" } },
+          { tag: "portal", data: { surface: "portal" } },
+        ]),
+      })),
+    },
+  });
+  let read = false;
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/notifications/unread-count")
+        return json(200, { unread: read ? 1 : 3 });
+      if (call.url.pathname === "/api/v1/notifications")
+        return json(200, { notifications: [item(1)], nextCursor: null });
+      if (call.url.pathname === "/api/v1/notifications/read-all") {
+        read = true;
+        return json(200, { unread: 1 });
+      }
+      if (/\/notifications\/n\d+$/.test(call.url.pathname))
+        return json(
+          200,
+          item(Number(call.url.pathname.split("n").at(-1)), {
+            readAt: read && !call.url.pathname.endsWith("100") ? "2026-09-20T10:00:00Z" : null,
+          }),
+        );
+      return undefined;
+    },
+  });
+  renderAt("/");
+  const user = userEvent.setup();
+  await user.click(await bell("3 unread"));
+  await user.click(await screen.findByRole("button", { name: "Mark all read" }));
+  await waitFor(() =>
+    expect(postMessage).toHaveBeenCalledWith({ type: "notifications-read", ids: ["n1", "n99"] }),
+  );
 });

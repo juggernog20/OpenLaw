@@ -76,7 +76,8 @@ import {
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { REQUEST_OUTCOMES } from "@openlaw/shared";
-import { requesterStatusLabel, type RequestStatus } from "./requests";
+import { requesterStatusLabel } from "./requester-status";
+import type { RequestStatus } from "./requests";
 
 /**
  * The staff list's own response, which the portal list's matches
@@ -133,6 +134,7 @@ function wholeNumber(payload: Payload, key: string): number | null {
 interface Arm {
   icon: LucideIcon;
   message: MessageDescriptor;
+  generic: MessageDescriptor;
   /**
    * The record section this event belongs to, appended to the record's
    * own address. Empty means the record's overview, which is what the
@@ -174,6 +176,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // Group 1 — done *to* you. Every sentence here says "you", because
   // that is what puts the event in this group (NOT-002).
   "approval.requested": {
+    generic: defineMessage({
+      id: "notifications.push.approval.requested",
+      defaultMessage: "You were asked to approve a Contract",
+    }),
     icon: Stamp,
     section: "approvals",
     message: defineMessage({
@@ -184,6 +190,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "contract.team_added": {
+    generic: defineMessage({
+      id: "notifications.push.contract.team_added",
+      defaultMessage: "You were added to a Contract team",
+    }),
     icon: UserPlus,
     message: defineMessage({
       id: "notifications.contract.teamAdded",
@@ -192,6 +202,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "contract.generated": {
+    generic: defineMessage({
+      id: "notifications.push.contract.generated",
+      defaultMessage: "A Contract was generated and you are its Legal Owner",
+    }),
     icon: UserPlus,
     message: defineMessage({
       id: "notifications.contract.generated",
@@ -199,6 +213,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "contract.generated_unassigned": {
+    generic: defineMessage({
+      id: "notifications.push.contract.generated_unassigned",
+      defaultMessage: "A generated Contract needs a Legal Owner",
+    }),
     icon: UserPlus,
     message: defineMessage({
       id: "notifications.contract.generatedUnassigned",
@@ -206,6 +224,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "contract.owner_assigned": {
+    generic: defineMessage({
+      id: "notifications.push.contract.owner_assigned",
+      defaultMessage: "You were assigned a Contract",
+    }),
     icon: UserPlus,
     message: defineMessage({
       id: "notifications.contract.ownerAssigned",
@@ -215,6 +237,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "contract.task_assigned": {
+    generic: defineMessage({
+      id: "notifications.push.contract.task_assigned",
+      defaultMessage: "You were assigned a Task",
+    }),
     icon: SquareCheck,
     section: "tasks",
     message: defineMessage({
@@ -225,6 +251,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "matter.task_assigned": {
+    generic: defineMessage({
+      id: "notifications.push.matter.task_assigned",
+      defaultMessage: "You were assigned a Task",
+    }),
     icon: SquareCheck,
     section: "tasks",
     message: defineMessage({
@@ -239,6 +269,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // staff detail: a mention on a Request is a mention of a triager, and
   // the Requester is never mention-notified at all.
   "comment.mentioned": {
+    generic: defineMessage({
+      id: "notifications.push.comment.mentioned",
+      defaultMessage: "You were mentioned on a record",
+    }),
     icon: AtSign,
     staffSide: true,
     message: defineMessage({
@@ -253,6 +287,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // 2026-09-09 amendment). A row written before `to` was snapshotted
   // still reads, through the arm that says only that it changed.
   "contract.status_changed": {
+    generic: defineMessage({
+      id: "notifications.push.contract.status_changed",
+      defaultMessage: "The status of a Contract changed",
+    }),
     icon: GitCommitHorizontal,
     message: defineMessage({
       id: "notifications.contract.statusChanged",
@@ -266,6 +304,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "comment.posted": {
+    generic: defineMessage({
+      id: "notifications.push.comment.posted",
+      defaultMessage: "A comment was posted on a record",
+    }),
     icon: MessageSquare,
     message: defineMessage({
       id: "notifications.comment.posted",
@@ -275,6 +317,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "document.added": {
+    generic: defineMessage({
+      id: "notifications.push.document.added",
+      defaultMessage: "A Document was added to a record",
+    }),
     icon: FilePlus2,
     section: "documents",
     message: defineMessage({
@@ -285,6 +331,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "document.version_added": {
+    generic: defineMessage({
+      id: "notifications.push.document.version_added",
+      defaultMessage: "A Document Version was added to a record",
+    }),
     icon: Upload,
     section: "documents",
     message: defineMessage({
@@ -297,6 +347,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // The provider ends an envelope as often as a person does (CTR-013),
   // so this one names no actor at all rather than selecting on one.
   "envelope.ended": {
+    generic: defineMessage({
+      id: "notifications.push.envelope.ended",
+      defaultMessage: "Signing ended on a Contract",
+    }),
     icon: PenLine,
     message: defineMessage({
       id: "notifications.envelope.ended",
@@ -309,6 +363,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // Without the name, a record with three deadlines due on Monday draws
   // three rows of the same sentence.
   "date.key_date_approaching": {
+    generic: defineMessage({
+      id: "notifications.push.date.key_date_approaching",
+      defaultMessage: "A Key date is coming up",
+    }),
     icon: CalendarClock,
     section: "key-dates",
     message: defineMessage({
@@ -317,6 +375,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "date.notice_deadline_approaching": {
+    generic: defineMessage({
+      id: "notifications.push.date.notice_deadline_approaching",
+      defaultMessage: "A notice deadline is coming up",
+    }),
     icon: CalendarClock,
     section: "key-dates",
     message: defineMessage({
@@ -325,6 +387,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "date.expiry_approaching": {
+    generic: defineMessage({
+      id: "notifications.push.date.expiry_approaching",
+      defaultMessage: "A Contract is expiring",
+    }),
     icon: CalendarClock,
     section: "key-dates",
     message: defineMessage({
@@ -333,6 +399,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "date.obligation_approaching": {
+    generic: defineMessage({
+      id: "notifications.push.date.obligation_approaching",
+      defaultMessage: "An Obligation is coming up",
+    }),
     icon: CalendarClock,
     section: "obligations",
     message: defineMessage({
@@ -341,6 +411,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "briefing.ready": {
+    generic: defineMessage({
+      id: "notifications.push.briefing.ready",
+      defaultMessage: "Your daily briefing is ready",
+    }),
     icon: CalendarDays,
     message: defineMessage({
       id: "notifications.briefing.ready",
@@ -352,6 +426,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // staff detail rather than the portal: the reader is a triager, and
   // the Request is work rather than news about their own ask.
   "request.assigned": {
+    generic: defineMessage({
+      id: "notifications.push.request.assigned",
+      defaultMessage: "You were assigned to triage a Request",
+    }),
     icon: Inbox,
     staffSide: true,
     message: defineMessage({
@@ -363,6 +441,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // finished (INT-008). It reopens the Convert dialog for the module they
   // were converting to, which `hrefFor` appends as a query.
   "request.conversion_draft_finished": {
+    generic: defineMessage({
+      id: "notifications.push.request.conversion_draft_finished",
+      defaultMessage: "A Conversion draft finished",
+    }),
     icon: Sparkles,
     staffSide: true,
     message: defineMessage({
@@ -373,6 +455,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
   },
   "request.submitted": {
+    generic: defineMessage({
+      id: "notifications.push.request.submitted",
+      defaultMessage: "A new Request arrived",
+    }),
     icon: Inbox,
     staffSide: true,
     message: defineMessage({
@@ -388,6 +474,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // section: a Request has one page and it is the whole of what a
   // requester can open.
   "request.created": {
+    generic: defineMessage({
+      id: "notifications.push.request.created",
+      defaultMessage: "Legal has received your Request",
+    }),
     icon: Inbox,
     message: defineMessage({
       id: "notifications.request.created",
@@ -399,6 +489,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // A row whose `to` this build cannot name falls back to saying only
   // that it changed.
   "request.status_changed": {
+    generic: defineMessage({
+      id: "notifications.push.request.status_changed",
+      defaultMessage: "The status of your Request changed",
+    }),
     icon: GitCommitHorizontal,
     message: defineMessage({
       id: "notifications.request.statusChanged",
@@ -410,6 +504,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // The one arm here with an actor: a reply is somebody's act, and the
   // requester's own replies never reach them (M20/8).
   "request.replied": {
+    generic: defineMessage({
+      id: "notifications.push.request.replied",
+      defaultMessage: "Legal replied on your Request",
+    }),
     icon: MessageSquare,
     message: defineMessage({
       id: "notifications.request.replied",
@@ -421,6 +519,10 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // The reason itself stays on the Request (INT-006). The item says "no"
   // arrived and points at where the why is written.
   "request.declined": {
+    generic: defineMessage({
+      id: "notifications.push.request.declined",
+      defaultMessage: "Legal declined your Request",
+    }),
     icon: CircleX,
     message: defineMessage({
       id: "notifications.request.declined",
@@ -658,4 +760,14 @@ export function narrateNotification(
     }),
     href,
   };
+}
+
+/** Device copy with no payload values, including names, labels and status text. */
+export function genericNotification(intl: IntlShape, eventType: string): string {
+  return intl.formatMessage(
+    armFor(eventType)?.generic ?? {
+      id: "notifications.push.new",
+      defaultMessage: "You have a new notification",
+    },
+  );
 }

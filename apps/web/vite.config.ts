@@ -25,7 +25,16 @@ export default defineConfig({
   // --isolated` runs a second instance on a block of its own, and a
   // proxy still pointing at 3000 would drive the first instance's API
   // from the second instance's screens. Unset means the usual pair.
+  build: {
+    rolldownOptions: {
+      input: { app: "index.html", sw: "src/sw.ts" },
+      output: {
+        entryFileNames: (chunk) => (chunk.name === "sw" ? "sw.js" : "assets/[name]-[hash].js"),
+      },
+    },
+  },
   server: {
+    headers: { "Service-Worker-Allowed": "/" },
     port: webPort,
     // Vite's fallback is the next free port, which would put the app
     // somewhere the dev loop did not announce and did not reserve.

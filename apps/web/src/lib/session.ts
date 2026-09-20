@@ -8,6 +8,7 @@
 
 import { redirect, useNavigate } from "react-router";
 
+import { unsubscribeDevice } from "./device-notifications";
 import { api } from "./api";
 import { authClient } from "./auth-client";
 import { configureFormatting } from "./format";
@@ -83,6 +84,11 @@ export async function requireUser(
 export function useSignOut(to: string): () => Promise<void> {
   const navigate = useNavigate();
   return async () => {
+    try {
+      await unsubscribeDevice();
+    } catch {
+      /* Session deletion also revokes server delivery. */
+    }
     await authClient.signOut();
     void navigate(to, { replace: true });
   };

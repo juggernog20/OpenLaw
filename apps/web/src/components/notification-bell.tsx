@@ -56,6 +56,7 @@ import { useCallback, useEffect, useRef, useState, type Ref } from "react";
 import { Bell } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
+import { closeReadNotifications, closeAllReadNotifications } from "../lib/device-notifications";
 import { api } from "../lib/api";
 import { subscribeLiveEvents } from "../lib/events";
 import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
@@ -192,6 +193,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
           : api.POST("/api/v1/notifications/read", { body: { ids } })
       ).catch(() => ({ data: undefined }));
       if (!data) return;
+      void closeReadNotifications(ids);
       setUnread(data.unread);
       const readAt = new Date().toISOString();
       setItems(
@@ -262,12 +264,13 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     () =>
       subscribeLiveEvents((event) => {
         if (event.kind !== "bell" && event.kind !== "open") return;
+        void closeAllReadNotifications(surface);
         void (async () => {
           await readCount();
           if (openNow.current) await loadPage(null, "live");
         })();
       }),
-    [loadPage, readCount],
+    [loadPage, readCount, surface],
   );
 
   // Opening is what draws the centre. Every open re-reads the list: a
@@ -284,6 +287,17 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     },
     [loadPage],
   );
+
+  const openedFromPush = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      new URLSearchParams(location.search).get("notifications") !== "1" ||
+      openedFromPush.current === location.key
+    )
+      return;
+    openedFromPush.current = location.key;
+    onOpenChange(true);
+  }, [location.key, location.search, onOpenChange]);
 
   // DES-031 clause 4: focus lands on the first row of the page just
   // brought, so a keyboard reader is told the list grew and a screen
@@ -323,6 +337,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
         : api.POST("/api/v1/notifications/read-all")
     ).catch(() => ({ data: undefined }));
     if (!data) return;
+    void closeAllReadNotifications(surface);
     setUnread(data.unread);
     const readAt = new Date().toISOString();
     setItems(

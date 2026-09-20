@@ -24,7 +24,8 @@
  * under a fixed activity bar (DES-016).
  */
 
-import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { registerNotificationWorker } from "../../lib/device-notifications";
 import { api } from "../../lib/api";
 import { useRetainedLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { useGlobalKeys } from "../../lib/keyboard";
@@ -63,6 +64,9 @@ export function AppShell({
   // Server value first: the loader's /me answer seeds the state, and the
   // effect reconciles the pre-paint mirror with it (#44). Layout effect
   // so a switch repaints in the new theme on the very next frame.
+  useEffect(() => {
+    void registerNotificationWorker().catch(() => {});
+  }, []);
   const [theme, setTheme] = useState<Theme>(user.theme);
   useLayoutEffect(() => {
     applyPreferredTheme(theme);
