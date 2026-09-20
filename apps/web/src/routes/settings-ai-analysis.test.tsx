@@ -483,6 +483,64 @@ describe("the Field prompts card (#665)", () => {
 });
 
 describe("the provider model selector", () => {
+  it("shows the model-family hint only for Groq", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi() });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    const hint =
+      "Groq models are filtered by model family. Use Test connection to check the selected model.";
+    for (const { preset } of PRESETS) {
+      await user.selectOptions(screen.getByLabelText("Provider"), preset);
+      if (preset === "groq") expect(screen.getByText(hint)).toBeVisible();
+      else expect(screen.queryByText(hint)).not.toBeInTheDocument();
+    }
+  });
+
+  it.each(["openrouter", "groq"] as const)(
+    "keeps the stored %s selection when refresh omits it and saves an unlisted manual ID",
+    async (preset) => {
+      const user = userEvent.setup();
+      const saves: unknown[] = [];
+      const calls: unknown[] = [];
+      const model = "vendor/saved-chat";
+      const definition = PRESETS.find((option) => option.preset === preset)!;
+      stubApi({
+        signedIn: ADMIN,
+        extra: connectorApi(
+          {
+            connector: connector({ preset, baseUrl: definition.baseUrl, model }),
+            models: (call) => {
+              calls.push(call.body);
+              return json(200, {
+                models: calls.length === 1 ? [{ id: model, label: model }] : [],
+                truncated: false,
+              });
+            },
+          },
+          saves,
+        ),
+      });
+      renderAt("/settings/ai-analysis");
+      await openProvider(user);
+      await user.click(screen.getByRole("button", { name: "Load models" }));
+      await user.click(await screen.findByRole("button", { name: "Refresh models" }));
+      expect(await screen.findByText(/selected model was not returned/)).toBeVisible();
+      expect(screen.getByRole("combobox", { name: "Model" })).toHaveValue(model);
+      expect(calls).toEqual([
+        { preset, protocol: definition.protocol, baseUrl: definition.baseUrl },
+        { preset, protocol: definition.protocol, baseUrl: definition.baseUrl },
+      ]);
+      await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+      await user.clear(screen.getByRole("textbox", { name: "Model" }));
+      await user.type(screen.getByRole("textbox", { name: "Model" }), "unlisted-chat-model");
+      await user.click(screen.getByRole("button", { name: "Save connector" }));
+      await waitFor(() =>
+        expect(saves).toEqual([{ preset, model: "unlisted-chat-model", maxOutputTokens: 32768 }]),
+      );
+    },
+  );
+
   it("searches display names, saves the exact ID and preserves selection on refresh", async () => {
     const user = userEvent.setup();
     const saves: unknown[] = [];

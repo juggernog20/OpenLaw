@@ -128,9 +128,19 @@ export async function listAiModels(
       if (typeof rawId !== "string" || !rawId.trim() || rawId.length > 300) invalid();
       const id = config.protocol === "gemini" ? rawId.replace(/^models\//, "") : rawId;
       if (!id || id.trim() !== id) invalid();
+      // Groq mixes chat, speech and safety models without capability metadata.
+      if (
+        config.preset === "groq" &&
+        (entry.active === false || /(?:^|[/_-])(whisper|tts|orpheus|guard)(?:[/_-]|$)/i.test(id))
+      )
+        continue;
       // Gemini repeats the prefixed resource path in `name`; only `displayName` reads well.
       const name =
-        config.protocol === "gemini" ? entry.displayName : (entry.display_name ?? entry.name);
+        config.preset === "groq"
+          ? id
+          : config.protocol === "gemini"
+            ? entry.displayName
+            : (entry.display_name ?? entry.name);
       const label = typeof name === "string" && name.trim() ? name.trim().slice(0, 300) : id;
       if (!found.has(id) && found.size >= MAX_MODELS) {
         truncated = true;
@@ -138,7 +148,7 @@ export async function listAiModels(
       }
       found.set(id, { id, label });
     }
-    if (truncated) break;
+    if (truncated || config.preset === "groq") break;
     const cursor =
       config.protocol === "gemini"
         ? body.nextPageToken
