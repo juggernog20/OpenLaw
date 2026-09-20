@@ -24,6 +24,8 @@ x-openlaw-environment: &openlaw-environment
   # Unset in .env = the bundled Postgres below; set it there for
   # external/managed Postgres (TECH-004 — both equally supported).
   DATABASE_URL: ${DATABASE_URL:-postgres://openlaw:openlaw@postgres:5432/openlaw}
+  VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+  VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
   # The key the stored credentials are encrypted with (TECH-022): the
   # DocuSign private key, the Connect secret, the SMTP relay URL and the
   # SSO client secret. It is here rather than beside AUTH_SECRET because

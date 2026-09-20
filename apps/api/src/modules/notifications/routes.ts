@@ -223,6 +223,7 @@ const BriefingPreferenceSchema = z.object({
  * The read and the write answer the same envelope, so a save needs no
  * second request to be sure of what it left behind. */
 const PreferencesEnvelope = z.object({
+  vapidPublicKey: z.string(),
   showRecordNamesOnDevices: z.boolean(),
   groups: z.array(PreferenceSchema),
   briefing: z.array(BriefingPreferenceSchema),
@@ -716,6 +717,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         groups,
         briefing,
+        vapidPublicKey: await app.resolveVapid.publicKey(),
         showRecordNamesOnDevices: await recordNamesChoice(app.db, request.user.id),
       };
     },
@@ -800,6 +802,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         return {
           groups,
           briefing,
+          vapidPublicKey: await app.resolveVapid.publicKey(),
           showRecordNamesOnDevices: await recordNamesChoice(tx, request.user.id),
         };
       }),

@@ -90538,6 +90538,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "vapidPublicKey": {
+                      "type": "string"
+                    },
                     "showRecordNamesOnDevices": {
                       "type": "boolean"
                     },
@@ -90595,7 +90598,7 @@
                       }
                     }
                   },
-                  "required": ["showRecordNamesOnDevices", "groups", "briefing"],
+                  "required": ["vapidPublicKey", "showRecordNamesOnDevices", "groups", "briefing"],
                   "additionalProperties": false
                 }
               }
@@ -90695,6 +90698,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "vapidPublicKey": {
+                      "type": "string"
+                    },
                     "showRecordNamesOnDevices": {
                       "type": "boolean"
                     },
@@ -90752,7 +90758,7 @@
                       }
                     }
                   },
-                  "required": ["showRecordNamesOnDevices", "groups", "briefing"],
+                  "required": ["vapidPublicKey", "showRecordNamesOnDevices", "groups", "briefing"],
                   "additionalProperties": false
                 }
               }

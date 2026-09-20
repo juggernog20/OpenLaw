@@ -54,6 +54,7 @@ const RoundSummary = z.object({
   reminders: z.number().int().nonnegative(),
   digests: z.number().int().nonnegative(),
   skipped: z.number().int().nonnegative(),
+  pushesReasked: z.number().int().nonnegative(),
   reasked: z.number().int().nonnegative(),
   stopped: z.boolean(),
 }) satisfies z.ZodType<MorningRoundSummary>;
