@@ -2,6 +2,7 @@
 
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { AI_ANSWER_STYLES, type AiAnswerStyle } from "@openlaw/shared";
+import { answerStyleLabels } from "../lib/ai-answer-style";
 import { api } from "../lib/api";
 import { useFieldCommit } from "../lib/field-commit";
 import { SettingsCard } from "./settings-card";
@@ -9,30 +10,18 @@ import { StatusNote } from "./status-note";
 
 const OPTIONS = {
   few_words: {
-    label: defineMessage({
-      id: "settings.aiAnalysis.style.fewWords",
-      defaultMessage: "Few word summary",
-    }),
     description: defineMessage({
       id: "settings.aiAnalysis.style.fewWordsDescription",
       defaultMessage: "A few words that name the position, at most 80 characters.",
     }),
   },
   sentence: {
-    label: defineMessage({
-      id: "settings.aiAnalysis.style.sentence",
-      defaultMessage: "1-2 sentence summary",
-    }),
     description: defineMessage({
       id: "settings.aiAnalysis.style.sentenceDescription",
       defaultMessage: "One or two short sentences that state the position, at most 200 characters.",
     }),
   },
   full_clause: {
-    label: defineMessage({
-      id: "settings.aiAnalysis.style.fullClause",
-      defaultMessage: "Full clause text",
-    }),
     description: defineMessage({
       id: "settings.aiAnalysis.style.fullClauseDescription",
       defaultMessage:
@@ -88,7 +77,7 @@ export function AiAnswerStyleCard({
             />
             <div>
               <label htmlFor={`answer-style-${style}`} className="text-sm font-medium">
-                {intl.formatMessage(OPTIONS[style].label)}
+                {intl.formatMessage(answerStyleLabels[style])}
               </label>
               <p id={`answer-style-${style}-description`} className="text-sm text-muted">
                 {intl.formatMessage(OPTIONS[style].description)}

@@ -490,3 +490,79 @@ describe("the archive guard (retention, never reassignment)", () => {
     });
   });
 });
+
+describe("Field answer style", () => {
+  it("names the current default, saves an override, and clears it", async () => {
+    const calls = newCalls();
+    const rows = seededFields();
+    rows[0]!.fieldType = "long_text";
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/ai-connector"
+          ? json(200, { connector: { answerStyle: "few_words" } })
+          : fieldsApi(calls, rows)(call),
+    });
+    const user = userEvent.setup();
+    renderAt("/settings/contracts/fields");
+    await user.click(await screen.findByRole("button", { name: "Edit Governing law" }));
+    const select = screen.getByRole("combobox", { name: "Answer style" });
+    expect(
+      await screen.findByRole("option", { name: "Organisation default (Few word summary)" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Full clause text" })).not.toBeDisabled();
+    await user.selectOptions(select, "full_clause");
+    await user.click(screen.getByRole("button", { name: /^Save$/ }));
+    expect(calls.patches).toEqual([{ id: "f1", body: { aiAnswerStyle: "full_clause" } }]);
+    await user.click(screen.getByRole("button", { name: "Edit Governing law" }));
+    expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveValue("full_clause");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "");
+    await user.click(screen.getByRole("button", { name: /^Save$/ }));
+    expect(calls.patches.at(-1)).toEqual({ id: "f1", body: { aiAnswerStyle: null } });
+  });
+
+  it("disables Full clause text on text Fields and describes the reason", async () => {
+    stubApi({ signedIn: ADMIN, extra: fieldsApi(newCalls()) });
+    const user = userEvent.setup();
+    renderAt("/settings/contracts/fields");
+    await user.click(await screen.findByRole("button", { name: "Edit Governing law" }));
+    expect(screen.getByRole("option", { name: "Full clause text" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveAccessibleDescription(
+      "Full clause text needs a long text Field.",
+    );
+    await user.click(screen.getByRole("combobox", { name: "Answer style" }));
+    expect(screen.getByRole("tooltip")).toBeVisible();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("omits Answer style for other Field types", async () => {
+    stubApi({ signedIn: ADMIN, extra: fieldsApi(newCalls()) });
+    const user = userEvent.setup();
+    renderAt("/settings/contracts/fields");
+    await user.click(await screen.findByRole("button", { name: "Edit Our position" }));
+    expect(screen.queryByRole("combobox", { name: "Answer style" })).not.toBeInTheDocument();
+  });
+});
+
+it("clears Full clause text when a new Field changes to text and sends an override on create", async () => {
+  const calls = newCalls();
+  stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
+  const user = userEvent.setup();
+  renderAt("/settings/contracts/fields");
+  await user.click(await screen.findByRole("button", { name: "Add field" }));
+  const dialog = screen.getByRole("dialog");
+  await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Assignment clause");
+  const type = within(dialog).getByRole("combobox", { name: "Type" });
+  await user.selectOptions(type, "long_text");
+  await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "full_clause");
+  await user.selectOptions(type, "text");
+  expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveValue("");
+  await user.selectOptions(type, "long_text");
+  await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "full_clause");
+  await user.click(within(dialog).getByRole("button", { name: "Add field" }));
+  expect(calls.creates[0]).toMatchObject({ fieldType: "long_text", aiAnswerStyle: "full_clause" });
+});

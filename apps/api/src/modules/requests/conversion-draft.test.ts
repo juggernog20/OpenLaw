@@ -1568,3 +1568,35 @@ for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini
     },
   );
 }
+
+it("keeps Contract Field style overrides in conversion prompts and freshness checks", async () => {
+  const { contractTypes, contractTypeFields } = await import("@openlaw/db");
+  const [type] = await harness.db.select().from(contractTypes).limit(1);
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "conversion_style",
+      displayName: "Assignment",
+      fieldType: "long_text",
+      moduleScope: "contract",
+      fieldTag: "legal",
+      aiPrompt: "Extract the provision.",
+      aiAnswerStyle: "full_clause",
+    })
+    .returning();
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 100 });
+  const row = await ask();
+  const before = await conversionContext(harness.db, row.id, type!.id, false, "contract");
+  const target = before.targets.find((target) => target.slug === "field:conversion_style")!;
+  expect(extractionPrompt(before.sources, [target], "few_words")).toContain(
+    "- field:conversion_style: Assignment: Extract the provision. Return text up to 10000 characters. Quote the provision verbatim.\n",
+  );
+  await harness.db.update(fields).set({ aiAnswerStyle: null }).where(eq(fields.id, field!.id));
+  const after = await conversionContext(harness.db, row.id, type!.id, false, "contract");
+  expect(after.snapshot).not.toBe(before.snapshot);
+  expect(
+    after.targets.find((candidate) => candidate.slug === target.slug)?.aiAnswerStyle,
+  ).toBeNull();
+});

@@ -60,6 +60,7 @@ interface FieldRow {
   options: string[] | null;
   fieldTag: string;
   aiPrompt: string | null;
+  aiAnswerStyle: string | null;
   isSystemDefault: boolean;
   archivedAt: string | null;
   inUseCount: number;
@@ -637,4 +638,89 @@ it("rejects the removed scope and refuses changing a field's module", async () =
     payload: { moduleScope: "matter" },
   });
   expect(moved.statusCode).toBe(404);
+});
+
+describe("per-Field answer style", () => {
+  it("creates, lists, changes, and clears an override without changing it on unrelated edits", async () => {
+    const field = await createdField({
+      displayName: "Style override",
+      moduleScope: "contract",
+      fieldType: "long_text",
+      fieldTag: "legal",
+      aiAnswerStyle: "full_clause",
+    });
+    expect(field.aiAnswerStyle).toBe("full_clause");
+    expect((await listFields()).find((row) => row.id === field.id)?.aiAnswerStyle).toBe(
+      "full_clause",
+    );
+    for (const [patch, expected] of [
+      [{ description: "Other edit" }, "full_clause"],
+      [{ aiAnswerStyle: "few_words" }, "few_words"],
+      [{ aiAnswerStyle: "sentence" }, "sentence"],
+      [{ aiAnswerStyle: null }, null],
+    ] as const) {
+      const response = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/fields/${field.id}`,
+        cookies: adminCookies,
+        payload: patch,
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      expect(response.json().field.aiAnswerStyle).toBe(expected);
+    }
+    expect(
+      (
+        await createdField({
+          displayName: "Default style",
+          moduleScope: "contract",
+          fieldType: "text",
+          fieldTag: "legal",
+        })
+      ).aiAnswerStyle,
+    ).toBeNull();
+  });
+
+  it.each([
+    ["contract", "text", "full_clause", "Full clause text needs a long text Field."],
+    ...[
+      "number",
+      "currency",
+      "date",
+      "boolean",
+      "single_select",
+      "multi_select",
+      "user",
+      "entity",
+    ].map((type) => [
+      "contract",
+      type,
+      "sentence",
+      "Answer style needs a text or long text Field.",
+    ]),
+    ["matter", "long_text", "sentence", "Answer style needs a contract-scope Field."],
+    ["entity", "text", "few_words", "Answer style needs a contract-scope Field."],
+  ])(
+    "refuses %s %s style %s on create and patch",
+    async (moduleScope, fieldType, aiAnswerStyle, detail) => {
+      const body = {
+        displayName: `Invalid style ${moduleScope} ${fieldType}`,
+        moduleScope,
+        fieldType,
+        fieldTag: "legal",
+        ...(["single_select", "multi_select"].includes(fieldType!) ? { options: ["One"] } : {}),
+      };
+      const created = await createField({ ...body, aiAnswerStyle });
+      expect(created.statusCode, created.body).toBe(422);
+      expect(created.json()).toMatchObject({ status: 422, detail });
+      const field = await createdField(body);
+      const patched = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/fields/${field.id}`,
+        cookies: adminCookies,
+        payload: { aiAnswerStyle },
+      });
+      expect(patched.statusCode, patched.body).toBe(422);
+      expect(patched.json()).toMatchObject({ status: 422, detail });
+    },
+  );
 });

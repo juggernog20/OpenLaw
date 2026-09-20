@@ -38599,6 +38599,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
               builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -38648,6 +38649,7 @@ export interface operations {
           fieldTag: "business" | "legal";
           options?: string[];
           aiPrompt?: string;
+          aiAnswerStyle?: ("few_words" | "sentence" | "full_clause") | null;
         };
       };
     };
@@ -38682,6 +38684,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
               builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -38719,6 +38722,7 @@ export interface operations {
           fieldTag?: "business" | "legal";
           options?: string[];
           aiPrompt?: string | null;
+          aiAnswerStyle?: ("few_words" | "sentence" | "full_clause") | null;
         };
       };
     };
@@ -38753,6 +38757,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
               builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -38813,6 +38818,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
               builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -38873,6 +38879,7 @@ export interface operations {
               /** @enum {string} */
               fieldTag: "business" | "legal";
               aiPrompt: string | null;
+              aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
               builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;

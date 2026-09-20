@@ -260,7 +260,11 @@ export async function conversionContext(
   const fields = [...new Map(attached.flat().map((field) => [field.slug, field])).values()];
   const fieldPrompts = fields.length
     ? await db
-        .select({ id: catalogFields.id, prompt: catalogFields.aiPrompt })
+        .select({
+          id: catalogFields.id,
+          prompt: catalogFields.aiPrompt,
+          aiAnswerStyle: catalogFields.aiAnswerStyle,
+        })
         .from(catalogFields)
         .where(
           inArray(
@@ -269,7 +273,7 @@ export async function conversionContext(
           ),
         )
     : [];
-  const promptById = new Map(fieldPrompts.map((field) => [field.id, field.prompt]));
+  const promptById = new Map(fieldPrompts.map((field) => [field.id, field]));
   // The built-in targets read the Prompts card's text (CTR-008,
   // 2026-09-19), so an edited prompt reaches the next draft.
   const book = await readAiPrompts(db);
@@ -319,7 +323,8 @@ export async function conversionContext(
         slug: `field:${f.slug}`,
         type: f.fieldType,
         options: f.options,
-        prompt: [`${f.displayName}:`, f.description, promptById.get(f.fieldId)]
+        aiAnswerStyle: promptById.get(f.fieldId)?.aiAnswerStyle,
+        prompt: [`${f.displayName}:`, f.description, promptById.get(f.fieldId)?.prompt]
           .filter(Boolean)
           .join(" "),
       })),

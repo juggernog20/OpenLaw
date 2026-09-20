@@ -291,8 +291,8 @@ export function extractionPrompt(
       const line = `- ${target.slug}: ${target.prompt} ${formatSentence(target)}`;
       if (target.omitAnswerStyle || (target.type !== "text" && target.type !== "long_text"))
         return line;
-      const effective =
-        target.type === "text" && answerStyle === "full_clause" ? "sentence" : answerStyle;
+      const style = target.aiAnswerStyle ?? answerStyle;
+      const effective = target.type === "text" && style === "full_clause" ? "sentence" : style;
       return `${line} ${ANSWER_STYLE_SENTENCES[effective]}`;
     })
     .join("\n");

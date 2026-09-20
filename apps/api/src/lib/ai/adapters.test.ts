@@ -580,3 +580,29 @@ for (const protocol of ["anthropic", "openai", "gemini"] as const) {
     });
   }
 }
+
+it("uses each Field's style before the organisation default", () => {
+  const prompt = extractionPrompt(
+    "The assignment provision.",
+    [
+      {
+        slug: "clause",
+        type: "long_text",
+        prompt: "Extract clause.",
+        aiAnswerStyle: "full_clause",
+      },
+      { slug: "summary", type: "long_text", prompt: "Extract summary.", aiAnswerStyle: null },
+      { slug: "short", type: "text", prompt: "Extract short.", aiAnswerStyle: "few_words" },
+    ],
+    "sentence",
+  );
+  expect(prompt).toContain(
+    "- clause: Extract clause. Return text up to 10000 characters. Quote the provision verbatim.\n",
+  );
+  expect(prompt).toContain(
+    "- summary: Extract summary. Return text up to 10000 characters. Answer in one or two short sentences that state the position, at most 200 characters.\n",
+  );
+  expect(prompt).toContain(
+    "- short: Extract short. Return a short text. Answer in a few words that name the position, at most 80 characters.\n",
+  );
+});

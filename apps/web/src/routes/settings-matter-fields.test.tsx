@@ -78,6 +78,9 @@ describe("the Matters Fields pane", () => {
     expect(within(dialog).queryByRole("textbox", { name: "AI prompt" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Business unit");
     await user.selectOptions(within(dialog).getByRole("combobox", { name: "Type" }), "text");
+    expect(
+      within(dialog).queryByRole("combobox", { name: "Answer style" }),
+    ).not.toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Add field" }));
     await waitFor(() =>
       expect(creates).toEqual([

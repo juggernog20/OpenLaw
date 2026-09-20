@@ -88659,6 +88659,17 @@
                           "aiPrompt": {
                             "type": ["string", "null"]
                           },
+                          "aiAnswerStyle": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": ["few_words", "sentence", "full_clause"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "builtInKey": {
                             "type": ["string", "null"]
                           },
@@ -88693,6 +88704,7 @@
                           "options",
                           "fieldTag",
                           "aiPrompt",
+                          "aiAnswerStyle",
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount"
@@ -88775,6 +88787,17 @@
                   "aiPrompt": {
                     "type": "string",
                     "maxLength": 2000
+                  },
+                  "aiAnswerStyle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["few_words", "sentence", "full_clause"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": ["displayName", "moduleScope", "fieldType", "fieldTag"]
@@ -88844,6 +88867,17 @@
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
+                        "aiAnswerStyle": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["few_words", "sentence", "full_clause"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "builtInKey": {
                           "type": ["string", "null"]
                         },
@@ -88878,6 +88912,7 @@
                         "options",
                         "fieldTag",
                         "aiPrompt",
+                        "aiAnswerStyle",
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount"
@@ -88951,6 +88986,17 @@
                       {
                         "type": "string",
                         "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "aiAnswerStyle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["few_words", "sentence", "full_clause"]
                       },
                       {
                         "type": "null"
@@ -89035,6 +89081,17 @@
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
+                        "aiAnswerStyle": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["few_words", "sentence", "full_clause"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "builtInKey": {
                           "type": ["string", "null"]
                         },
@@ -89069,6 +89126,7 @@
                         "options",
                         "fieldTag",
                         "aiPrompt",
+                        "aiAnswerStyle",
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount"
@@ -89172,6 +89230,17 @@
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
+                        "aiAnswerStyle": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["few_words", "sentence", "full_clause"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "builtInKey": {
                           "type": ["string", "null"]
                         },
@@ -89206,6 +89275,7 @@
                         "options",
                         "fieldTag",
                         "aiPrompt",
+                        "aiAnswerStyle",
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount"
@@ -89309,6 +89379,17 @@
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
+                        "aiAnswerStyle": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["few_words", "sentence", "full_clause"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "builtInKey": {
                           "type": ["string", "null"]
                         },
@@ -89343,6 +89424,7 @@
                         "options",
                         "fieldTag",
                         "aiPrompt",
+                        "aiAnswerStyle",
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount"

@@ -8900,6 +8900,9 @@
   "settings.contractFields.fieldColumn": {
     "defaultMessage": "Field"
   },
+  "settings.contractFields.fullClauseNeedsLongText": {
+    "defaultMessage": "Full clause text needs a long text Field."
+  },
   "settings.contractFields.hasPrompt": {
     "defaultMessage": "{name} has an AI extraction prompt"
   },
@@ -8927,6 +8930,12 @@
   "settings.contractFields.optionsMissing": {
     "defaultMessage": "Add at least one option, one per line."
   },
+  "settings.contractFields.organisationDefault": {
+    "defaultMessage": "Organisation default"
+  },
+  "settings.contractFields.organisationDefaultStyle": {
+    "defaultMessage": "Organisation default ({style})"
+  },
   "settings.contractFields.pageTitle": {
     "defaultMessage": "Fields"
   },
@@ -8938,6 +8947,9 @@
   },
   "settings.contractFields.restore": {
     "defaultMessage": "Restore {name}"
+  },
+  "settings.contractFields.styleDefaultLoadError": {
+    "defaultMessage": "The current organisation default could not be loaded."
   },
   "settings.contractFields.tagColumn": {
     "defaultMessage": "Tag"

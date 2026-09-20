@@ -1302,6 +1302,21 @@ it("sends each saved answer style through a real Analysis run to the provider", 
     await harness.db
       .insert(contractTypeFields)
       .values({ typeId: ndaTypeId, fieldId: longField!.id, displayOrder: 10 });
+    const [verbatimField] = await harness.db
+      .insert(fields)
+      .values({
+        slug: "verbatim_clause",
+        displayName: "Verbatim clause",
+        moduleScope: "contract",
+        fieldType: "long_text",
+        fieldTag: "legal",
+        aiPrompt: "Extract the provision.",
+        aiAnswerStyle: "full_clause",
+      })
+      .returning();
+    await harness.db
+      .insert(contractTypeFields)
+      .values({ typeId: ndaTypeId, fieldId: verbatimField!.id, displayOrder: 11 });
     const resolveAiProvider = createAiResolver(harness.db, createAiProvider);
     for (const [answerStyle, sentence] of [
       ["few_words", "Answer in a few words that name the position, at most 80 characters."],
@@ -1352,6 +1367,9 @@ it("sends each saved answer style through a real Analysis run to the provider", 
       expect((await waitForRun(run!.id)).state).toBe("ready");
       expect(prompts.join("\n")).toContain(
         `- style_clause: Extract the clause. Return text up to 10000 characters. ${sentence}\n`,
+      );
+      expect(prompts.join("\n")).toContain(
+        "- verbatim_clause: Extract the provision. Return text up to 10000 characters. Quote the provision verbatim.\n",
       );
       const shortLine = prompts
         .join("\n")
