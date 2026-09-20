@@ -184,7 +184,7 @@ const BRIEFING_COPY: Record<
   },
 };
 
-/** The two channels, in the frame's column order. */
+/** Channel order from DES-050 and DES-089. */
 const CHANNELS = [
   {
     id: "in_app",
@@ -195,6 +195,11 @@ const CHANNELS = [
     id: "email",
     key: "email",
     label: defineMessage({ id: "settings.notifications.channel.email", defaultMessage: "Email" }),
+  },
+  {
+    id: "push",
+    key: "push",
+    label: defineMessage({ id: "settings.notifications.channel.push", defaultMessage: "Push" }),
   },
 ] as const;
 
@@ -414,16 +419,19 @@ export function NotificationSwitchGrid({
   emailOnlyGroups = [],
   inAppOnlyGroups = [],
   copy = GROUP_COPY,
+  push = false,
 }: Readonly<{
   /** Which groups this pane draws, in the order it draws them. */
   order: readonly EventGroup[];
   copy?: typeof GROUP_COPY;
   state: PreferenceState;
+  push?: boolean;
   /** Briefing sections that have no per-publication bell channel. */
   emailOnlyGroups?: readonly EventGroup[];
   /** Event groups whose email is controlled by the Briefing card. */
   inAppOnlyGroups?: readonly EventGroup[];
 }>) {
+  const channels = push ? CHANNELS : CHANNELS.filter((channel) => channel.id !== "push");
   const choiceOf = (group: EventGroup): GroupPreference =>
     // The API answers every group, so the fallback is unreachable. It is
     // deliberately **not** a restatement of the group's catalogue
@@ -452,7 +460,7 @@ export function NotificationSwitchGrid({
         <span className="flex-1 px-4 text-xs font-semibold text-muted">
           <FormattedMessage id="settings.notifications.column.group" defaultMessage="Event group" />
         </span>
-        {CHANNELS.map((channel) => (
+        {channels.map((channel) => (
           <span key={channel.id} className="w-22.5 text-xs font-semibold text-muted">
             <FormattedMessage {...channel.label} />
           </span>
@@ -478,9 +486,9 @@ export function NotificationSwitchGrid({
                 <FormattedMessage {...copy[group].detail} />
               </span>
             </div>
-            <div className="flex gap-6 @lg/prefs:gap-0">
-              {CHANNELS.map((channel) =>
-                (emailOnly && channel.id === "in_app") || (inAppOnly && channel.id === "email") ? (
+            <div className="flex flex-wrap gap-4 @lg/prefs:flex-nowrap @lg/prefs:gap-0">
+              {channels.map((channel) =>
+                (emailOnly && channel.id !== "email") || (inAppOnly && channel.id === "email") ? (
                   <span
                     key={channel.id}
                     aria-hidden="true"

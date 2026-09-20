@@ -24,7 +24,8 @@
  * under a fixed activity bar (DES-016).
  */
 
-import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { registerNotificationWorker } from "../../lib/device-notifications";
 import { api } from "../../lib/api";
 import { useRetainedLiveEvents, type LiveEventRecordScope } from "../../lib/events";
 import { useGlobalKeys } from "../../lib/keyboard";
@@ -67,6 +68,10 @@ export function AppShell({
   useLayoutEffect(() => {
     applyPreferredTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    void registerNotificationWorker().catch(() => {});
+  }, []);
 
   // The global keyboard contract (DES-010, #45) lives on the shell:
   // pre-login screens have no search input and no overlays to serve.
