@@ -83,13 +83,10 @@ async function migrateThrough(db: Db, entries: JournalEntry[], tag: string): Pro
   const { readFileSync } = await import("node:fs");
   const { join } = await import("node:path");
   for (const entry of entries) {
-    await db.execute(
-      sql.raw(
-        readFileSync(join(MIGRATIONS, `${entry.tag}.sql`), "utf8")
-          .split("--> statement-breakpoint")
-          .join(";"),
-      ),
-    );
+    const statements = readFileSync(join(MIGRATIONS, `${entry.tag}.sql`), "utf8")
+      .split("--> statement-breakpoint")
+      .filter((statement) => statement.trim());
+    for (const statement of statements) await db.execute(sql.raw(statement));
     await db.execute(
       sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${entry.hash}, ${entry.when})`,
     );
@@ -310,4 +307,35 @@ describe("a database nobody has migrated", () => {
     // this case applies every committed migration to a bare database, and
     // that set only grows.
   }, 180_000);
+});
+
+describe("the Groq preset upgrade", () => {
+  it.each(["anthropic", "openai", "azure_openai", "gemini", "openrouter", "ollama", "custom"])(
+    "preserves an existing %s connector and permits Groq after migration",
+    async (preset) => {
+      const db = await freshDb(`groq_upgrade_${preset}`);
+      try {
+        await migrateThrough(db, readMigrationJournal(MIGRATIONS), "0152_conversion-draft-notice");
+        await db.execute(sql`
+          insert into ai_connector
+            (id, preset, protocol, base_url, api_key, model, max_output_tokens,
+             contract_conversion_analysis, contract_preparation, matter_preparation, disabled_at)
+          values ('existing-connector', ${preset}, 'openai_chat_completions',
+            'https://existing.example.test/v1', 'sealed-key-fixture', 'saved-model',
+            65536, true, true, true, '2026-09-01T00:00:00Z')
+        `);
+        const before = await db.execute(sql`select * from ai_connector`);
+        await expect(db.execute(sql`update ai_connector set preset = 'groq'`)).rejects.toThrow();
+        await runMigrations(db);
+        expect((await db.execute(sql`select * from ai_connector`)).rows).toEqual(before.rows);
+        await db.execute(sql`update ai_connector set preset = 'groq'`);
+        expect((await db.execute(sql`select preset from ai_connector`)).rows).toEqual([
+          { preset: "groq" },
+        ]);
+        await expect(db.execute(sql`update ai_connector set preset = 'unknown'`)).rejects.toThrow();
+      } finally {
+        await db.$client.end();
+      }
+    },
+  );
 });

@@ -204,7 +204,7 @@ The one AI connector for this install: the singleton provider configuration for 
 | Column                     | Type        | Notes                                                                                                                                                   |
 | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`                       | UUID        | PK                                                                                                                                                      |
-| `preset`                   | text (enum) | `anthropic` \| `openai` \| `azure_openai` \| `gemini` \| `openrouter` \| `ollama` \| `custom`                                                           |
+| `preset`                   | text (enum) | `anthropic` \| `openai` \| `azure_openai` \| `gemini` \| `openrouter` \| `groq` \| `ollama` \| `custom`                                                 |
 | `protocol`                 | text (enum) | `anthropic_messages` \| `openai_chat_completions` \| `gemini`; a custom endpoint still chooses one supported wire protocol                              |
 | `base_url`                 | text        | not null; preset-supplied or Administrator-supplied endpoint                                                                                            |
 | `api_key`                  | text        | nullable for keyless local endpoints; write-only through the API and encrypted at rest with `OPENLAW_SECRET_KEY` through `encryptedText` (**TECH-022**) |

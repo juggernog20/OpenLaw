@@ -131,7 +131,13 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
           body,
         });
         if (!result.data) {
-          setError((await problem(result)).detail ?? "The connection test failed.");
+          setError(
+            (await problem(result)).detail ??
+              intl.formatMessage({
+                id: "settings.advanced.testFailed",
+                defaultMessage: "The connection test failed.",
+              }),
+          );
           setTested(false);
         } else {
           setTested(true);
@@ -148,7 +154,13 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
           body,
         });
         if (!result.data)
-          setError((await problem(result)).detail ?? "The settings could not be saved.");
+          setError(
+            (await problem(result)).detail ??
+              intl.formatMessage({
+                id: "settings.advanced.saveFailed",
+                defaultMessage: "The settings could not be saved.",
+              }),
+          );
         else {
           setState(result.data);
           setValues(

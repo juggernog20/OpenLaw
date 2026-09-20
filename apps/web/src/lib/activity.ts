@@ -957,7 +957,7 @@ function aiPreset(intl: IntlShape, payload: Payload): string {
       defaultMessage:
         "{preset, select, anthropic {Anthropic} openai {OpenAI} " +
         "azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} " +
-        "ollama {Ollama} custom {Custom endpoint} other {{preset}}}",
+        "groq {Groq} ollama {Ollama} custom {Custom endpoint} other {{preset}}}",
     },
     { preset: text(payload, "preset") ?? "unknown" },
   );

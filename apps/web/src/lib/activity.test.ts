@@ -1447,6 +1447,21 @@ describe("the sentences a reader gets", () => {
     ]);
   });
 
+  it("names Groq in AI connector Activity", () => {
+    expect(
+      narrate("ai_connector.configured", {
+        ...SAMPLE_PAYLOADS["ai_connector.configured"],
+        preset: "groq",
+      }).sentence,
+    ).toBe("Nadia Counsel connected the AI provider Groq");
+    expect(
+      narrate("ai_connector.updated", {
+        ...SAMPLE_PAYLOADS["ai_connector.updated"],
+        preset: "groq",
+      }).sentence,
+    ).toContain("Groq");
+  });
+
   it("names AI presets and connector fields as the Integrations pane does", () => {
     expect(
       narrate("ai_connector.configured", {

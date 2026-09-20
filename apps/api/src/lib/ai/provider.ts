@@ -74,12 +74,15 @@ export type AiUnsupportedField = (typeof AI_UNSUPPORTED_FIELDS)[number];
  * reads the summary. When the refusal names a request field the model
  * does not take, `unsupportedField` carries it, read from the whole
  * bounded body before the summary is cut, so an adapter can decide
- * what to drop on structured data.
+ * what to drop on structured data. `jsonValidationFailed` carries a
+ * failed generation reported by the provider's code or message, so
+ * the adapter can request a correction without reading the summary.
  */
 export interface AiUpstreamRefusal {
   status: number;
   summary: string;
   unsupportedField?: AiUnsupportedField;
+  jsonValidationFailed?: boolean;
 }
 
 export interface AiErrorOptions {

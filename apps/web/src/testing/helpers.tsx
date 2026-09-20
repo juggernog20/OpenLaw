@@ -212,6 +212,15 @@ const AI_PRESETS: AiResponse["presets"] = [
     requiresBaseUrl: false,
   },
   {
+    preset: "groq",
+    label: "Groq",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.groq.com/openai/v1",
+    defaultModel: "openai/gpt-oss-120b",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
     preset: "ollama",
     label: "Ollama",
     protocol: "openai_chat_completions",

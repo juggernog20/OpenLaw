@@ -72,6 +72,15 @@ const PRESETS = [
     requiresBaseUrl: false,
   },
   {
+    preset: "groq",
+    label: "Groq",
+    protocol: "openai_chat_completions",
+    baseUrl: "https://api.groq.com/openai/v1",
+    defaultModel: "openai/gpt-oss-120b",
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+  },
+  {
     preset: "ollama",
     label: "Ollama",
     protocol: "openai_chat_completions",
@@ -184,7 +193,7 @@ function connectorApi(
           model: body.model,
           maxOutputTokens: body.maxOutputTokens ?? stored.maxOutputTokens,
           hasApiKey: stored.hasApiKey || body.apiKey !== undefined,
-          enabled: stored.enabled,
+          enabled: stored.configured ? stored.enabled : true,
           disabledAt: stored.disabledAt,
         });
       }
@@ -264,6 +273,39 @@ describe("the AI analysis connector pane (#662)", () => {
     expect(screen.queryByLabelText("Base URL")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Model")).toHaveValue("gemini-3.6-flash");
   });
+
+  it.each(["openai/gpt-oss-120b", "another-model"])(
+    "saves and tests Groq with model %s and no Base URL control",
+    async (model) => {
+      const user = userEvent.setup();
+      const saves: unknown[] = [];
+      stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, saves) });
+      renderAt("/settings/ai-analysis");
+      await openProvider(user);
+      expect(screen.getByRole("option", { name: "Groq" })).toHaveValue("groq");
+      await user.selectOptions(screen.getByLabelText("Provider"), "groq");
+      expect(screen.getByLabelText("Model")).toHaveValue("openai/gpt-oss-120b");
+      expect(screen.queryByLabelText("Protocol")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Base URL")).not.toBeInTheDocument();
+      if (model !== "openai/gpt-oss-120b") {
+        await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+        await user.clear(screen.getByLabelText("Model"));
+        await user.type(screen.getByLabelText("Model"), model);
+      }
+      await user.type(screen.getByLabelText("API key"), "groq-test-key");
+      await user.click(screen.getByRole("button", { name: "Save connector" }));
+      await waitFor(() =>
+        expect(saves).toEqual([
+          { preset: "groq", model, apiKey: "groq-test-key", maxOutputTokens: 32768 },
+        ]),
+      );
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Test connection" })).toBeEnabled(),
+      );
+      await user.click(screen.getByRole("button", { name: "Test connection" }));
+      expect(await screen.findByText("Connection successful.")).toBeVisible();
+    },
+  );
 
   it("keeps the stored key write-only and omits blank on save", async () => {
     const user = userEvent.setup();
@@ -441,6 +483,64 @@ describe("the Field prompts card (#665)", () => {
 });
 
 describe("the provider model selector", () => {
+  it("shows the model-family hint only for Groq", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi() });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    const hint =
+      "Groq models are filtered by model family. Use Test connection to check the selected model.";
+    for (const { preset } of PRESETS) {
+      await user.selectOptions(screen.getByLabelText("Provider"), preset);
+      if (preset === "groq") expect(screen.getByText(hint)).toBeVisible();
+      else expect(screen.queryByText(hint)).not.toBeInTheDocument();
+    }
+  });
+
+  it.each(["openrouter", "groq"] as const)(
+    "keeps the stored %s selection when refresh omits it and saves an unlisted manual ID",
+    async (preset) => {
+      const user = userEvent.setup();
+      const saves: unknown[] = [];
+      const calls: unknown[] = [];
+      const model = "vendor/saved-chat";
+      const definition = PRESETS.find((option) => option.preset === preset)!;
+      stubApi({
+        signedIn: ADMIN,
+        extra: connectorApi(
+          {
+            connector: connector({ preset, baseUrl: definition.baseUrl, model }),
+            models: (call) => {
+              calls.push(call.body);
+              return json(200, {
+                models: calls.length === 1 ? [{ id: model, label: model }] : [],
+                truncated: false,
+              });
+            },
+          },
+          saves,
+        ),
+      });
+      renderAt("/settings/ai-analysis");
+      await openProvider(user);
+      await user.click(screen.getByRole("button", { name: "Load models" }));
+      await user.click(await screen.findByRole("button", { name: "Refresh models" }));
+      expect(await screen.findByText(/selected model was not returned/)).toBeVisible();
+      expect(screen.getByRole("combobox", { name: "Model" })).toHaveValue(model);
+      expect(calls).toEqual([
+        { preset, protocol: definition.protocol, baseUrl: definition.baseUrl },
+        { preset, protocol: definition.protocol, baseUrl: definition.baseUrl },
+      ]);
+      await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
+      await user.clear(screen.getByRole("textbox", { name: "Model" }));
+      await user.type(screen.getByRole("textbox", { name: "Model" }), "unlisted-chat-model");
+      await user.click(screen.getByRole("button", { name: "Save connector" }));
+      await waitFor(() =>
+        expect(saves).toEqual([{ preset, model: "unlisted-chat-model", maxOutputTokens: 32768 }]),
+      );
+    },
+  );
+
   it("searches display names, saves the exact ID and preserves selection on refresh", async () => {
     const user = userEvent.setup();
     const saves: unknown[] = [];

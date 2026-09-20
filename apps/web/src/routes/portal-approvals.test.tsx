@@ -55,7 +55,7 @@ describe("Portal approvals", () => {
     await waitFor(() =>
       expect(screen.getByRole("link", { name: "Completed" })).toHaveAttribute(
         "href",
-        expect.stringContaining("q=Facilities"),
+        "/portal/approvals?status=completed&q=Facilities",
       ),
     );
     await user.click(screen.getByRole("link", { name: "Completed" }));
