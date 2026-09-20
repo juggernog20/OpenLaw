@@ -287,7 +287,7 @@ docker compose up -d --scale worker=2
 
 ## AI contract analysis
 
-Configure AI analysis in **Settings → Organization → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and a reference to its Saved key as organization data. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
+Configure AI analysis in **Settings → Organization → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and a reference to its Saved key as organization data. Saved keys live in the database's `ai_saved_keys` table; `ai_connector.saved_key_id` references the one the connector uses. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
 
 Enter the provider key and any required endpoint, then select **Load models**. Search the list
 and select a model. OpenLaw stores its exact ID. **Refresh models** updates the list without
@@ -297,13 +297,14 @@ unavailable or the model is missing. Azure uses the deployment name from your Az
 Save the connector and use **Test connection** to check the choice; listing alone does not prove
 that a model supports Contract analysis. Each destination, defined by preset, protocol, and
 normalized base URL, keeps one Saved key. **Key saved** means a blank save or Load models can use
-that destination's key. **Key in use** identifies the connector's current key. Pasting replaces
-only the destination's key. **Forget key** deletes a Saved key the connector does not use.
-**Remove connector** leaves Saved keys on file.
+that destination's key. **Key in use** identifies the connector's referenced key, even while the
+connector is turned off. Saving a pasted key replaces only the destination's key. Only **Forget key** deletes
+a Saved key the connector does not reference. Provider changes and **Remove connector** leave
+Saved keys on file.
 
 The **worker makes the provider calls for Contract extraction**. The **API loads model lists and makes the Test connection call** when an Administrator presses the corresponding button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for model discovery and the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
 
-The API key is write-only after save and encrypted at rest under `OPENLAW_SECRET_KEY`. The app and worker must therefore receive the same key, just as they do for the signing connector. Losing it does not damage Contracts or Analysis runs, but the stored provider key cannot be read until the old encryption key is restored or an Administrator replaces that provider key.
+Saved keys are write-only after save and encrypted at rest under `OPENLAW_SECRET_KEY`. The app and worker must therefore receive the same encryption key, just as they do for the signing connector. Losing it does not damage Contracts or Analysis runs, but Saved keys cannot be read until the old encryption key is restored or an Administrator replaces each affected destination's key. Unreadable Saved keys stay in the database for recovery; the pane shows no **Key saved** pill and no **Forget key** for them until the encryption key is restored or a new key is pasted for that destination.
 
 ## Email
 
