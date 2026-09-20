@@ -8438,6 +8438,9 @@
   "settings.aiAnalysis.models.failed": {
     "defaultMessage": "Models could not be loaded. Try again or enter the model ID manually."
   },
+  "settings.aiAnalysis.models.groq": {
+    "defaultMessage": "Groq models are filtered by model family. Use Test connection to check the selected model."
+  },
   "settings.aiAnalysis.models.load": {
     "defaultMessage": "Load models"
   },
