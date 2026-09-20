@@ -1559,7 +1559,7 @@ One `onRequest` hook on the root context, registered before any route so no modu
 
 ### Context
 
-NOT-010 adds device notifications to the staff app and the Portal. A self-hosted install
+NOT-010 adds device notifications for staff and Business Users in the Portal. A self-hosted install
 needs one stable Web Push identity, delivery outside an open tab, and authenticated reads
 of notification content. It does not need an offline copy of the application or records.
 
@@ -1591,7 +1591,8 @@ Build one hand-written service worker as a second Vite entry, served at `/sw.js`
 scope `/`. The signed-in staff and Portal shells register it. It shares the bell narration
 through a FormatJS intl instance. On Push it reads the item and the record-name preference
 from the same origin with the session cookie and `cache: "no-store"`. It suppresses read
-items and focused-window alerts, and follows NOT-010's generic fallback when a read fails.
+items and focused-window alerts. A 403 or 404 item read suppresses the notification; an
+expired session or transient failure uses NOT-010's generic fallback.
 Notification clicks use the existing read route, then focus and navigate a window on the
 correct surface or open one. Read messages from tabs close matching OS notifications.
 Subscription changes renew the browser subscription and save its current session binding.

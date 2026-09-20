@@ -110,20 +110,28 @@ it("does not show while an app window is focused, even when the read fails", asy
   await push();
   expect(show).not.toHaveBeenCalled();
 });
-it.each([401, 404, 500])(
-  "opens the bell with generic words on a failed read (%s)",
-  async (status) => {
-    fetcher.mockResolvedValue(new Response("", { status }));
-    await push("portal");
-    expect(show).toHaveBeenCalledWith(
-      "OpenLaw",
-      expect.objectContaining({
-        body: "You have a new notification",
-        data: { notificationId: "n1", surface: "portal", href: "/portal?notifications=1" },
-      }),
-    );
+it.each(["staff", "portal"])(
+  "silently omits inaccessible items on the %s bell",
+  async (surface) => {
+    for (const status of [403, 404]) {
+      fetcher.mockResolvedValue(new Response("", { status }));
+      await push(surface);
+    }
+    expect(show).not.toHaveBeenCalled();
+    expect(openWindow).not.toHaveBeenCalled();
   },
 );
+it.each([401, 500])("opens the bell with generic words on a failed read (%s)", async (status) => {
+  fetcher.mockResolvedValue(new Response("", { status }));
+  await push("portal");
+  expect(show).toHaveBeenCalledWith(
+    "OpenLaw",
+    expect.objectContaining({
+      body: "You have a new notification",
+      data: { notificationId: "n1", surface: "portal", href: "/portal?notifications=1" },
+    }),
+  );
+});
 it("uses only the event kind when record names are off", async () => {
   fetcher.mockImplementation(
     async (url: string) =>

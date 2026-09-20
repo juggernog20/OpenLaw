@@ -615,7 +615,7 @@ Three keys in `catalog.ts`; Activity's `contract.team_added` stays the narration
 ### Context
 
 The bell reaches a person while OpenLaw is open. Email reaches them outside the app,
-but an immediate ask can wait in an inbox. Staff and Requesters need an optional device
+but an immediate ask can wait in an inbox. Staff and Business Users need an optional device
 notification without sending record content through a browser vendor's push service.
 
 ### Decision
@@ -636,8 +636,10 @@ The encrypted Web Push body contains only `{ notificationId, surface }`, where `
 is `staff` or `portal`. It contains no record title, comment, document or other content.
 The delivery handler applies the bell's current audience predicate. The service worker
 then fetches the single item from that bell's same-origin API with the session cookie,
-which applies the wall again. An unavailable read, including an expired session, produces
-only "You have a new notification" and a link to the appropriate bell.
+which applies the wall again. A 403 or 404 read produces no OS notification or bell link,
+so a person removed from a Confidential record sees nothing even if its prompt was already
+in flight. An expired session or a transient read failure produces only "You have a new
+notification" and a link to the appropriate bell.
 
 Push defaults follow the existing event groups:
 

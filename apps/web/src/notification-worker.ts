@@ -46,6 +46,7 @@ export function installNotificationWorker(scope: ServiceWorkerGlobalScope) {
       const response = await request(
         `${notificationMount(data.surface)}/${encodeURIComponent(data.notificationId)}`,
       );
+      if (response.status === 403 || response.status === 404) return;
       if (!response.ok) throw new Error("Notification unavailable");
       const item = (await response.json()) as BellItem;
       if (item.readAt !== null) return;
