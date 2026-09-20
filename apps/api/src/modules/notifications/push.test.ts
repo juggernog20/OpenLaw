@@ -191,6 +191,8 @@ const deliver = (notificationId: string, retryCount = 0) =>
       db: harness.db,
       resolveVapid: createVapidResolver(harness.db, {}, "https://openlaw.example"),
       log,
+      // The relay is loopback, which the production policy refuses.
+      endpointPolicy: "any",
     },
     { notificationId, retryCount, retryLimit: 2 },
   );
@@ -391,6 +393,7 @@ it("the worker defers a 429 on the same job, then delivers its retry", async () 
     connectionString: harness.databaseUrl,
     log,
     handlers: {
+      pushEndpointPolicy: "any",
       db: harness.db,
       storage: harness.storage,
       docEngine: harness.docEngine,
@@ -454,6 +457,7 @@ it("preserves an unreadable stored key, while a complete env pin still works", a
       {
         db: harness.db,
         resolveVapid: harness.app.resolveVapid,
+        endpointPolicy: "any",
         log: {
           ...log,
           error: (fields) => {
@@ -527,6 +531,7 @@ it("keeps the email worker running when the stored push key is unreadable", asyn
         },
       },
       handlers: {
+        pushEndpointPolicy: "any",
         db: harness.db,
         storage: harness.storage,
         docEngine: harness.docEngine,
@@ -686,4 +691,62 @@ it("pushes Requester events to a Business User enrolled through the Portal, with
       .sort(),
   ).toEqual(["request.declined", "request.replied", "request.replied", "request.status_changed"]);
   expect(received).toHaveLength(5);
+});
+
+it("refuses an endpoint whose host is a private IP literal and never connects", async () => {
+  const mine = await subscribe("literal");
+  const row = await notification();
+  const warnings: Record<string, unknown>[] = [];
+  await handleNotificationPush(
+    {
+      db: harness.db,
+      resolveVapid: createVapidResolver(harness.db, {}, "https://openlaw.example"),
+      log: {
+        ...log,
+        warn: (fields) => {
+          warnings.push(fields);
+        },
+      },
+    },
+    { notificationId: row.id, retryCount: 0, retryLimit: 2 },
+  );
+  expect(received).toEqual([]);
+  expect(
+    await harness.db.select().from(pushSubscriptions).where(eq(pushSubscriptions.id, mine.id)),
+  ).toEqual([]);
+  expect(warnings).toEqual([expect.objectContaining({ subscriptionId: mine.id })]);
+  const settled = await read(row.id);
+  expect(settled.pushedAt).toBeNull();
+  expect(settled.pushSkippedAt).not.toBeNull();
+});
+
+it("refuses a hostname that resolves only to private addresses at the connection", async () => {
+  const mine = await subscribe("named");
+  await harness.db
+    .update(pushSubscriptions)
+    .set({ endpoint: "https://relay.test/named" })
+    .where(eq(pushSubscriptions.id, mine.id));
+  const row = await notification();
+  const asked: string[] = [];
+  await handleNotificationPush(
+    {
+      db: harness.db,
+      resolveVapid: createVapidResolver(harness.db, {}, "https://openlaw.example"),
+      log,
+      resolvePushHost: async (hostname) => {
+        asked.push(hostname);
+        return [
+          { address: "127.0.0.1", family: 4 },
+          { address: "fd00::1", family: 6 },
+        ];
+      },
+    },
+    { notificationId: row.id, retryCount: 0, retryLimit: 2 },
+  );
+  expect(asked).toEqual(["relay.test"]);
+  expect(received).toEqual([]);
+  expect(
+    await harness.db.select().from(pushSubscriptions).where(eq(pushSubscriptions.id, mine.id)),
+  ).toEqual([]);
+  expect((await read(row.id)).pushSkippedAt).not.toBeNull();
 });

@@ -230,6 +230,11 @@ export interface PipelineHandlers extends DerivationDeps {
    */
   resolveMailer: MailerResolver;
   resolveVapid?: VapidResolver;
+  /**
+   * `notification-push.ts`'s endpoint policy. Unset is `public`, the
+   * production guard; tests whose relay is loopback pass `any`.
+   */
+  pushEndpointPolicy?: "public" | "any";
   /** Where this install answers (BASE_URL), so an emailed notification
    * can deep-link to the record it is about (NOT-005). */
   baseUrl: string;
@@ -810,7 +815,14 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           for (const job of jobs) {
             try {
               await handleNotificationPush(
-                { db: handlers.db, resolveVapid, log },
+                {
+                  db: handlers.db,
+                  resolveVapid,
+                  log,
+                  ...(handlers.pushEndpointPolicy
+                    ? { endpointPolicy: handlers.pushEndpointPolicy }
+                    : {}),
+                },
                 {
                   notificationId: job.data.notificationId,
                   retryCount: job.retryCount,

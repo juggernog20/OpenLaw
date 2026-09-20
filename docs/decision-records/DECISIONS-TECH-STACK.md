@@ -1659,41 +1659,45 @@ display and click behaviour. Journey `59-m38-device-notifications.spec.ts` runs 
 built Compose images with only `Notification` and `PushManager` stubbed. It checks browser
 enrolment and preferences without relying on an external push service or an OS alert.
 
+### Addendum (2026-09-20, #989): a push goes only to a public address
+
+The subscription route stores any HTTPS URL a signed-in person posts, and the worker connects to it. Left alone, that is a way to make the worker open a socket inside the install's own network. The control is at the connection, in `push-endpoint.ts`. The sender's HTTPS agent resolves the host when the socket opens, refuses every answer that is not a public address, and connects to the address it checked, so a name that changes its answer between a check and the connect gains nothing. An IP literal is judged before the socket, because `net.connect` does not resolve one. A refused endpoint is pruned as a gone endpoint is, and the row settles as it does with no live subscription, with one warning line naming the subscription. Loopback, private, shared, link-local, multicast, documentation and NAT64 ranges are refused for both IP versions; an IPv4-mapped IPv6 address is judged by the IPv4 rules. One consequence: an install that reaches the internet only through NAT64 cannot push, because every synthesized answer is refused. Tests reach a loopback relay through the handler's `any` policy, which production never sets.
+
 ## Index of decisions
 
-| #        | Decision                                                                      | Status                    |
-| -------- | ----------------------------------------------------------------------------- | ------------------------- |
-| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted                  |
-| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted                  |
-| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted                  |
-| TECH-004 | Database — PostgreSQL only                                                    | Accepted                  |
-| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted                  |
-| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted                  |
-| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted                  |
-| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted                  |
-| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted                  |
-| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted                  |
-| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted                  |
-| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted                  |
-| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted                  |
-| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted                  |
-| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)      |
-| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted                  |
-| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted                  |
-| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted                  |
-| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted                  |
-| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted                  |
-| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022    |
-| TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted                  |
-| TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted                  |
-| TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted                  |
-| TECH-025 | A record applet's third web mount becomes configuration                       | Accepted                  |
-| TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                  |
-| TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026 |
-| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted                  |
-| TECH-029 | The log carries the path and the Postgres code, never a query string or param | Accepted                  |
-| TECH-030 | Connector calls: no redirects, DocuSign host allowlist, bounded reads         | Accepted                  |
-| TECH-031 | First-run setup demands a bootstrap token from the log                        | Accepted                  |
-| TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                  |
-| TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted                  |
-| TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted                  |
+| #        | Decision                                                                      | Status                                                                          |
+| -------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted                                                                        |
+| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted                                                                        |
+| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted                                                                        |
+| TECH-004 | Database — PostgreSQL only                                                    | Accepted                                                                        |
+| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted                                                                        |
+| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted                                                                        |
+| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted                                                                        |
+| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted                                                                        |
+| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted                                                                        |
+| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted                                                                        |
+| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted                                                                        |
+| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted                                                                        |
+| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted                                                                        |
+| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted                                                                        |
+| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)                                                            |
+| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted                                                                        |
+| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted                                                                        |
+| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted                                                                        |
+| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted                                                                        |
+| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted                                                                        |
+| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022                                                          |
+| TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted                                                                        |
+| TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted                                                                        |
+| TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted                                                                        |
+| TECH-025 | A record applet's third web mount becomes configuration                       | Accepted                                                                        |
+| TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                                                                        |
+| TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026                                                       |
+| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted                                                                        |
+| TECH-029 | The log carries the path and the Postgres code, never a query string or param | Accepted                                                                        |
+| TECH-030 | Connector calls: no redirects, DocuSign host allowlist, bounded reads         | Accepted                                                                        |
+| TECH-031 | First-run setup demands a bootstrap token from the log                        | Accepted                                                                        |
+| TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
+| TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted                                                                        |
+| TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |

@@ -264,6 +264,73 @@ it("removes the expired endpoint before renewal so the device cap cannot block i
   expect(subscription.unsubscribe).not.toHaveBeenCalled();
 });
 
+it("saves the replacement before removing the expired endpoint", async () => {
+  const order: string[] = [];
+  fetcher.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url === "/api/v1/me")
+      return new Response(JSON.stringify({ user: { role: "legal_team_member" } }));
+    if (init?.method === "DELETE") {
+      order.push("delete");
+      return new Response(null, { status: 204 });
+    }
+    if (init?.method === "POST") {
+      order.push("post");
+      return new Response("{}", { status: 200 });
+    }
+    return new Response(
+      JSON.stringify({ subscriptions: [{ id: "old-id", endpoint: "https://push.example/old" }] }),
+    );
+  });
+  await dispatch("pushsubscriptionchange", {
+    oldSubscription: {
+      options: { userVisibleOnly: true, applicationServerKey: new Uint8Array([1]) },
+      endpoint: "https://push.example/old",
+    },
+    newSubscription: null,
+  });
+  expect(order).toEqual(["post", "delete"]);
+  expect(subscription.unsubscribe).not.toHaveBeenCalled();
+});
+
+it.each([429, 503])("keeps the browser subscription when the save answers %s", async (status) => {
+  fetcher.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url === "/api/v1/me")
+      return new Response(JSON.stringify({ user: { role: "legal_team_member" } }));
+    if (init?.method === "POST") return new Response("{}", { status });
+    return new Response(JSON.stringify({ subscriptions: [] }));
+  });
+  await expect(
+    dispatch("pushsubscriptionchange", { oldSubscription: null, newSubscription: subscription }),
+  ).rejects.toThrow("Subscription could not be saved");
+  expect(subscription.unsubscribe).not.toHaveBeenCalled();
+});
+
+it("keeps the browser subscription when the save request never reaches the server", async () => {
+  fetcher.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url === "/api/v1/me")
+      return new Response(JSON.stringify({ user: { role: "legal_team_member" } }));
+    if (init?.method === "POST") throw new TypeError("Failed to fetch");
+    return new Response(JSON.stringify({ subscriptions: [] }));
+  });
+  await expect(
+    dispatch("pushsubscriptionchange", { oldSubscription: null, newSubscription: subscription }),
+  ).rejects.toThrow("Failed to fetch");
+  expect(subscription.unsubscribe).not.toHaveBeenCalled();
+});
+
+it("drops the browser subscription when the server refuses it outright", async () => {
+  fetcher.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url === "/api/v1/me")
+      return new Response(JSON.stringify({ user: { role: "legal_team_member" } }));
+    if (init?.method === "POST") return new Response("{}", { status: 400 });
+    return new Response(JSON.stringify({ subscriptions: [] }));
+  });
+  await expect(
+    dispatch("pushsubscriptionchange", { oldSubscription: null, newSubscription: subscription }),
+  ).rejects.toThrow("Subscription could not be saved");
+  expect(subscription.unsubscribe).toHaveBeenCalledTimes(1);
+});
+
 it("posts the browser's replacement subscription without asking for new keys", async () => {
   await dispatch("pushsubscriptionchange", {
     oldSubscription: null,

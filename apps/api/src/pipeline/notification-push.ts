@@ -31,11 +31,25 @@ import {
 import type { VapidResolver } from "../lib/notifications/vapid.js";
 import { reasonOf } from "./derivations.js";
 import type { PipelineLogger } from "./logger.js";
+import {
+  createPushAgent,
+  isRefusedLiteral,
+  PushEndpointRefused,
+  type Resolver,
+} from "./push-endpoint.js";
 
 export interface NotificationPushDeps {
   db: Db;
   resolveVapid: VapidResolver;
   log: PipelineLogger;
+  /**
+   * `public`, the default and the only production value, sends through
+   * an agent that refuses every host that is not a public address
+   * (`push-endpoint.ts`). `any` is for tests whose relay is loopback.
+   */
+  endpointPolicy?: "public" | "any";
+  /** Replaces the system resolver behind the public-only lookup, in tests. */
+  resolvePushHost?: Resolver;
 }
 export interface NotificationPushAttempt {
   notificationId: string;
@@ -132,11 +146,35 @@ async function send(deps: NotificationPushDeps, notificationId: string): Promise
   // key restored after a bad boot applies to the very next push.
   const vapidDetails = await deps.resolveVapid();
   const body = JSON.stringify({ notificationId: row.id, surface });
+  const guarded = (deps.endpointPolicy ?? "public") === "public";
+  const agent = guarded ? createPushAgent(deps.resolvePushHost) : undefined;
   let sent = false;
   let failure: PushDeliveryError | undefined;
+  const prune = (subscription: { id: string; sessionId: string }) =>
+    deps.db
+      .delete(pushSubscriptions)
+      .where(
+        and(
+          eq(pushSubscriptions.id, subscription.id),
+          eq(pushSubscriptions.sessionId, subscription.sessionId),
+        ),
+      );
+  const refuse = async (subscription: { id: string; sessionId: string }) => {
+    // Permanent for this endpoint, whatever the others need: a host that
+    // is not public is never one a browser's push relay lives on.
+    await prune(subscription);
+    deps.log.warn(
+      { notificationId: row.id, subscriptionId: subscription.id },
+      "push endpoint refused: its host is not a public address",
+    );
+  };
   // A user has at most ten subscriptions. Parallel sends keep the socket bound inside the job lease.
   await Promise.all(
     subscriptions.map(async ({ subscription }) => {
+      if (guarded && isRefusedLiteral(subscription.endpoint)) {
+        await refuse(subscription);
+        return;
+      }
       try {
         await webPush.sendNotification(
           {
@@ -144,22 +182,25 @@ async function send(deps: NotificationPushDeps, notificationId: string): Promise
             keys: { p256dh: subscription.p256dh, auth: subscription.auth },
           },
           body,
-          { vapidDetails, TTL: 86400, urgency: "normal", timeout: 20_000 },
+          {
+            vapidDetails,
+            TTL: 86400,
+            urgency: "normal",
+            timeout: 20_000,
+            ...(agent ? { agent } : {}),
+          },
         );
         sent = true;
         return;
       } catch (error) {
+        if (error instanceof PushEndpointRefused) {
+          await refuse(subscription);
+          return;
+        }
         const status = error instanceof webPush.WebPushError ? error.statusCode : undefined;
         if (status === 404 || status === 410) {
           // The endpoint is gone. Prune it even when another one needs a retry.
-          await deps.db
-            .delete(pushSubscriptions)
-            .where(
-              and(
-                eq(pushSubscriptions.id, subscription.id),
-                eq(pushSubscriptions.sessionId, subscription.sessionId),
-              ),
-            );
+          await prune(subscription);
           return;
         }
         const retryAfter =

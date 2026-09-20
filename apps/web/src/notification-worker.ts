@@ -124,34 +124,49 @@ export function installNotificationWorker(scope: ServiceWorkerGlobalScope) {
       }
       subscription = await scope.registration.pushManager.subscribe(options);
     }
-    try {
-      // The expired endpoint occupies one of the user's ten slots until deleted.
-      if (event.oldSubscription && event.oldSubscription.endpoint !== subscription.endpoint) {
-        const response = await request(`${mount}/subscriptions`);
-        if (!response.ok) throw new Error("Subscriptions could not be read");
-        const { subscriptions } = (await response.json()) as {
-          subscriptions: { id: string; endpoint: string }[];
-        };
-        for (const old of subscriptions.filter(
-          (row) => row.endpoint === event.oldSubscription!.endpoint,
-        )) {
-          const removed = await request(`${mount}/subscriptions/${encodeURIComponent(old.id)}`, {
-            method: "DELETE",
-          });
-          if (!removed.ok && removed.status !== 404)
-            throw new Error("Expired subscription could not be removed");
-        }
+    const expired =
+      event.oldSubscription && event.oldSubscription.endpoint !== subscription.endpoint
+        ? event.oldSubscription.endpoint
+        : null;
+    const removeExpired = async () => {
+      const response = await request(`${mount}/subscriptions`);
+      if (!response.ok) throw new Error("Subscriptions could not be read");
+      const { subscriptions } = (await response.json()) as {
+        subscriptions: { id: string; endpoint: string }[];
+      };
+      for (const old of subscriptions.filter((row) => row.endpoint === expired)) {
+        const removed = await request(`${mount}/subscriptions/${encodeURIComponent(old.id)}`, {
+          method: "DELETE",
+        });
+        if (!removed.ok && removed.status !== 404)
+          throw new Error("Expired subscription could not be removed");
       }
-      const saved = await request(`${mount}/subscriptions`, {
+    };
+    const save = () =>
+      request(`${mount}/subscriptions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(subscriptionBody(subscription)),
       });
-      if (!saved.ok) throw new Error("Subscription could not be saved");
-    } catch (error) {
-      await subscription.unsubscribe();
-      throw error;
+    // The replacement is saved before the expired row goes, so a save
+    // that fails never leaves the person with no row at all. The expired
+    // endpoint occupies one of the ten slots; only when the cap refuses
+    // the replacement is it removed first and the save asked again.
+    // A transport failure keeps the browser subscription: the next change
+    // event or the Devices pane posts it again.
+    let saved = await save();
+    if (saved.status === 409 && expired) {
+      await removeExpired();
+      saved = await save();
     }
+    if (saved.ok) {
+      if (expired) await removeExpired().catch(() => undefined);
+      return;
+    }
+    // A relay-side pause or a server fault is transient: the subscription
+    // stays for a later post. Any other refusal is about this subscription.
+    if (saved.status !== 429 && saved.status < 500) await subscription.unsubscribe();
+    throw new Error("Subscription could not be saved");
   }
 
   scope.addEventListener("activate", (event) => event.waitUntil(scope.clients.claim()));
