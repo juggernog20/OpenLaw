@@ -12,6 +12,8 @@ Use a disposable provider account and a small fictional Contract for your initia
 
 Expand **Provider** if collapsed. Choose **Provider**; a provider with a Saved key shows **(key saved)** in the list. Then supply the controls it exposes. Enter any required endpoint. If **Key saved** or **Key in use** appears beside **API key**, leave the field blank to use that destination's Saved key. Otherwise, enter the API key. Then select **Load models**. Use **Search models** to narrow the list by name or ID, then choose **Model**. The selection stores the exact provider ID. A prefilled value is a starting value from this OpenLaw build, not proof that your account can use it.
 
+The suffix means that provider has a Saved key. For Azure or a custom endpoint, enter the matching endpoint before reusing it. A custom endpoint must also use the matching protocol. The **Key saved** pill confirms a Saved key for the destination currently in the form; **Key in use** means the saved connector references it, even while **Use AI analysis** is off. Neither pill means a connection test has passed.
+
 **Refresh models** updates the list without changing your selection. If the selected model is missing from a later list, OpenLaw keeps it until you choose another. Use **Enter model ID manually** for a private model or when the provider cannot return a list. A partial or empty list has an explanation beside the control. Azure keeps manual entry for the deployment name because its full deployment endpoint does not list deployments.
 
 Loading models does not save settings, run inference, send Contract text or download weights. The list can include models that do not support Contract analysis. Save and test your choice before using it on a Contract.
@@ -33,7 +35,7 @@ For Ollama, `localhost` means the machine or container running each calling proc
 
 ## Save and test
 
-1. Choose the provider, enter its required endpoint and paste **API key**. Select **Load models**, search if needed, and choose **Model**. Use manual entry when needed.
+1. Choose the provider and enter its required endpoint. Paste **API key**, or leave it blank when the destination shows **Key saved** or **Key in use**. Ollama does not require a key. Select **Load models**, search if needed, and choose **Model**. Use manual entry when needed.
 2. Select **Save connector**. The key is encrypted and write-only; the saved value is never displayed.
 3. Select **Test connection** and wait for **Connection successful.** The test sends a small fixed prompt to the configured model, without Contract text. It verifies a response from this configuration, not the quality of Contract extraction.
 4. Configure the prompts below, then follow [Contract analysis](contract-analysis.md) on your fictional test Contract. Check the run's Version, model, evidence, and saved values. An automatic run may already have started when the Document's text became ready; wait for it before requesting another.
@@ -75,9 +77,11 @@ OpenLaw's encrypted key storage does not establish the provider's retention, tra
 
 Turn off **Use AI analysis** to stop new provider use while keeping the connector. A request already sent to the provider can still finish and apply its results. Disabling does not recall text already sent, cancel an in-flight provider call, erase saved values, or remove their **Unverified** markers.
 
-To rotate the key, paste a new **API key**, select **Save connector**, and test while the connector is enabled. OpenLaw keeps one **Saved key** for each destination, defined by provider preset, protocol, and normalized base URL. It ignores URL fragments, one trailing path slash, and query parameter order when matching destinations. Pasting replaces only that destination's key. **Key saved** means you can leave the field blank to use it; **Key in use** means the connector already uses it. You can switch providers and return to a Saved key without entering it again. Ollama needs no key unless your endpoint requires one.
+OpenLaw keeps one **Saved key** for each destination, defined by provider preset, protocol, and normalized base URL. It ignores URL fragments, one trailing path slash, and query parameter order when matching destinations. When you switch providers, the previous destination's key stays saved, including when you move to keyless Ollama. Returning to that destination reuses its key; a different destination needs its own Saved key or a pasted key if it requires one.
 
-To delete a Saved key, choose its destination, select **Forget key** beside **Key saved**, and confirm. OpenLaw refuses to forget the key the connector uses. Remove the connector or switch destination first. Forgetting does not revoke a key at the provider.
+To rotate a destination's key, choose that destination, paste a new **API key**, select **Save connector**, and test while the connector is enabled. Saving replaces only that destination's key. Loading models with a pasted key does not save the replacement.
+
+Only **Forget key** deletes a Saved key. Choose its destination, select **Forget key** beside **Key saved**, and confirm. The action is absent beside **Key in use** because the connector still uses that key. Remove the connector or save it with another destination first, then return to the old destination to forget its key. Disabling the connector does not release its key. Forgetting does not revoke a key at the provider.
 
 To remove the connector, select **Remove connector** and confirm. Saved keys stay on file and can be used when you reconnect, or you can delete them with **Forget key**. Removal does not revoke a key at the provider. Keep the install's encryption key in the operator's recovery materials as described in [deployment configuration](deployment-configuration.md).
 

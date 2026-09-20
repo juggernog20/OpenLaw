@@ -586,8 +586,9 @@ Ollama lists installed models through its compatible `/v1/models` endpoint and n
 
 Discovery refuses redirects and never treats pagination values as destination URLs. Provider
 refusals expose the HTTP status, not response text that could echo a key. A stored key is reused
-only for the same preset, protocol and normalized endpoint, for discovery and for a save. Changing
-that destination requires a new key. Moving to keyless Ollama clears the old provider key. Loading
+only for the same preset, protocol and normalized endpoint, for discovery and for a save. ~~Changing
+that destination requires a new key. Moving to keyless Ollama clears the old provider key.~~
+_(Superseded by the Saved keys addendum below, 2026-09-20, #982.)_ Loading
 models does not write connector settings or Activity. Changing the pending provider, protocol,
 endpoint or key discards pending list results.
 
@@ -632,6 +633,19 @@ the selected model.
 
 Source record: [Groq models reference](https://console.groq.com/docs/models),
 checked 2026-09-20. Model availability and account limits can change.
+
+### Addendum, 2026-09-20, Saved keys, #982
+
+OpenLaw keeps one **Saved key** per AI provider destination, defined by preset,
+protocol, and normalized base URL. A blank save or Load models reuses only that
+destination's Saved key. Saving a pasted key replaces only that destination's
+value. Saved keys survive provider changes, including a move to keyless Ollama,
+and connector removal. Only **Forget key** deletes a Saved key, and the connector
+must no longer reference it, even if the connector is disabled.
+
+The singleton connector references its Saved key in `ai_saved_keys`; it no longer
+holds the sealed value itself. This supersedes the sealed-singleton descriptions
+in the M31 addenda above. TECH-022 records the sealed column's new location.
 
 ## TECH-013: DocuSign auth — JWT grant (service integration)
 
@@ -1120,6 +1134,13 @@ The split follows the **recovery contract**, not the sensitivity. Consequence 6 
 ### Addendum (2026-09-03, M31 close, [#661](https://github.com/juggernog20/OpenLaw/issues/661)) — the fifth credential landed
 
 `ai_connector.api_key` is the fifth Administrator-pasted credential and joins `SEALED_COLUMNS`. It uses `encryptedText`, is write-only through the API, rewraps on the existing boot pass, and reads as absent under the existing lost-key rule. The forecast above is now spent; no new key, cipher, rotation step, or provider environment variable was added.
+
+### Addendum (2026-09-20, Saved keys, [#982](https://github.com/juggernog20/OpenLaw/issues/982))
+
+The sealed column moved from `ai_connector.api_key` to `ai_saved_keys.api_key`.
+The Saved key table's column replaces the connector column in `SEALED_COLUMNS`
+for the existing boot rewrap pass. The `OPENLAW_SECRET_KEY`, AES-256-GCM cipher,
+rotation procedure, and lost-key recovery rule are unchanged.
 
 ## TECH-023: Shared machinery grows named per-mount hooks — a third mount is configuration, not a copy
 
