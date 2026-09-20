@@ -650,6 +650,12 @@ describe("the portal bell (NOT-001, NOT-005, M20/9)", () => {
       cookies: as(REQUESTER),
     });
     expect(hidden.statusCode, hidden.body).toBe(404);
+    expect(hidden.headers["content-type"]).toContain("application/problem+json");
+    expect(hidden.json()).toMatchObject({
+      type: "about:blank",
+      status: 404,
+      title: "Notification not found.",
+    });
 
     const after = await bellItems(REQUESTER, "portal");
     expect(after.some((item) => item.entityId === request.id)).toBe(false);

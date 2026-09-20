@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import type { LightMyRequestResponse } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { activityLog, and, eq, sessions, sql, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
@@ -18,6 +19,12 @@ const subscription = (name: string) => ({
   endpoint: `https://push.example.com/${name}`,
   keys: { p256dh: `B${"a".repeat(86)}`, auth: "a".repeat(22) },
 });
+
+function expectProblem(response: LightMyRequestResponse, status: number, title: string) {
+  expect(response.statusCode, response.body).toBe(status);
+  expect(response.headers["content-type"]).toContain("application/problem+json");
+  expect(response.json()).toMatchObject({ type: "about:blank", status, title });
+}
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -136,7 +143,7 @@ it("rebinds an endpoint to a second person and session, then cascades on session
     url: `${path}/${first.json().subscription.id}`,
     cookies: staff,
   });
-  expect(forbidden.statusCode, forbidden.body).toBe(404);
+  expectProblem(forbidden, 404, "Subscription not found.");
   const rows = await harness.db.execute<{ user_id: string; session_id: string }>(
     sql`select user_id, session_id from push_subscriptions where endpoint = ${payload.endpoint}`,
   );
@@ -169,7 +176,13 @@ it("caps concurrent registrations at ten while allowing an existing endpoint to 
     ),
   );
   expect(results.filter((res) => res.statusCode === 200)).toHaveLength(10);
-  expect(results.filter((res) => res.statusCode === 409)).toHaveLength(1);
+  const refused = results.filter((res) => res.statusCode === 409);
+  expect(refused).toHaveLength(1);
+  expectProblem(
+    refused[0]!,
+    409,
+    "You can register up to ten browsers. Remove one before adding another.",
+  );
   const list = (await harness.app.inject({ url: path, cookies: staff })).json().subscriptions;
   expect(list).toHaveLength(10);
   const refresh = await harness.app.inject({
@@ -183,17 +196,28 @@ it("caps concurrent registrations at ten while allowing an existing endpoint to 
 
 it("rejects unauthenticated and malformed subscriptions", async () => {
   const path = "/api/v1/notifications/subscriptions";
-  expect(
-    (await harness.app.inject({ method: "POST", url: path, payload: subscription("anonymous") }))
-      .statusCode,
-  ).toBe(401);
+  const unauthenticated = await harness.app.inject({
+    method: "POST",
+    url: path,
+    payload: subscription("anonymous"),
+  });
+  expectProblem(unauthenticated, 401, "Authentication required.");
   for (const payload of [
     { ...subscription("bad"), endpoint: "http://push.example.com/plain" },
     { ...subscription("bad"), keys: { p256dh: "", auth: "" } },
   ]) {
-    expect(
-      (await harness.app.inject({ method: "POST", url: path, cookies: staff, payload })).statusCode,
-    ).toBe(400);
+    const invalid = await harness.app.inject({
+      method: "POST",
+      url: path,
+      cookies: staff,
+      payload,
+    });
+    expectProblem(invalid, 400, "Request validation failed");
+    expect(invalid.json().errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: expect.any(String), message: expect.any(String) }),
+      ]),
+    );
   }
 });
 

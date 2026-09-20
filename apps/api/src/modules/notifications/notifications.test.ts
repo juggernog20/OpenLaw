@@ -459,7 +459,14 @@ describe("the wall has no cracks", () => {
       harness.app.inject({ url: `/api/v1/notifications/${item.id}`, cookies: as(OUTSIDER) });
     expect((await get()).json()).toMatchObject({ id: item.id, entityId: contract.id });
     await wallOff(contract.id);
-    expect((await get()).statusCode).toBe(404);
+    const hidden = await get();
+    expect(hidden.statusCode, hidden.body).toBe(404);
+    expect(hidden.headers["content-type"]).toContain("application/problem+json");
+    expect(hidden.json()).toMatchObject({
+      type: "about:blank",
+      status: 404,
+      title: "Notification not found.",
+    });
 
     // The row is still in the table; the reads simply stop answering
     // with it. Silently — no gap, no tombstone, and no number that says

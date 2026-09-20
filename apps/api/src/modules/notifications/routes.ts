@@ -728,21 +728,13 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateMyNotificationPreferences",
         summary:
-          "Save one channel's answer for an event group or one email-only " +
-          "briefing section, for the " +
-          "signed-in person (NOT-001). One pair per request, because a " +
-          "toggle is what the pane saves and it saves the moment it is " +
-          "flipped (SET-003 immediate apply). The write lands in " +
-          "`notification_preferences` as an override, so the very next " +
-          "event honours it with no other wiring — and turning email " +
-          "off leaves the group's bell items flowing, which is the " +
-          "point of the two channels being separate rows. A save back " +
-          "to the group's own default **removes** the override rather " +
-          "than storing one that agrees with it: the table holds " +
-          "disagreements, and the effective answer is identical either " +
-          "way. Recorded in the activity log like every settings " +
-          "mutation. Answers the whole grid back, so the pane can never " +
-          "drift from what the fan-out will honour",
+          "Save a channel choice for an event group, an email-only briefing section, " +
+          "or showRecordNamesOnDevices for the signed-in person. Each request applies " +
+          "one preference immediately and records user.notification_preference_changed. " +
+          "Channel choices are stored as overrides; restoring a group default removes " +
+          "the override. Turning in-app off silences all channels for that group. " +
+          "showRecordNamesOnDevices controls whether device notifications may show record names. " +
+          "Returns the effective event-group choices, briefing sections, and device setting",
         tags: ["notifications"],
         body: z.union([
           z.strictObject({ showRecordNamesOnDevices: z.boolean() }),
