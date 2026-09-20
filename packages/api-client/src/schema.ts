@@ -9675,6 +9675,7 @@ export interface operations {
                     | "azure_openai"
                     | "gemini"
                     | "openrouter"
+                    | "groq"
                     | "ollama"
                     | "custom"
                   )
@@ -9695,6 +9696,7 @@ export interface operations {
                 | "azure_openai"
                 | "gemini"
                 | "openrouter"
+                | "groq"
                 | "ollama"
                 | "custom";
               label: string;
