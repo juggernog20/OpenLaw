@@ -415,6 +415,11 @@ async function applyAnswers(
     const prepared = new Map<string, PreparedAnswer>();
     for (const target of targets) {
       const answer = answerBySlug.get(target.slug);
+      if (answer?.invalid) {
+        outcome.invalid.push(target.slug);
+        noteResult(target.slug, answer, "invalid");
+        continue;
+      }
       if (
         answer?.conflict ||
         (run.sourceContext

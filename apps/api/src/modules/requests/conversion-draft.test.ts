@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { startAiResponseServer } from "../../testing/ai-response-server.js";
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
   aiConnector,
@@ -1501,3 +1502,69 @@ it("tells the actor a draft they left finishes, once, and stays silent while the
     outcome: "failed",
   });
 });
+
+for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini"] as const) {
+  it.each(["priority", "field:invalid_schema_text"])(
+    `${protocol} leaves invalid %s unproposed and prepares the rest`,
+    async (invalidSlug) => {
+      const [field] = await harness.db
+        .insert(fields)
+        .values({
+          slug: "invalid_schema_text",
+          displayName: "Schema text",
+          fieldType: "text",
+          moduleScope: "matter",
+          fieldTag: "legal",
+          aiPrompt: "Extract text.",
+        })
+        .onConflictDoUpdate({ target: fields.slug, set: { aiPrompt: "Extract text." } })
+        .returning();
+      await harness.db
+        .insert(matterTypeFields)
+        .values({ typeId, fieldId: field!.id, displayOrder: 200 })
+        .onConflictDoNothing();
+      const row = await ask();
+      const server = await startAiResponseServer(protocol, (slug) => ({
+        value:
+          slug === invalidSlug
+            ? slug === "priority"
+              ? ["high"]
+              : "Text" + " ".repeat(501)
+            : slug === "title"
+              ? "Response preparation"
+              : null,
+        sourceId: `request:${row.id}:description`,
+        evidence: "Respond by October 1",
+      }));
+      try {
+        const made = await prepare(row.number);
+        expect(made.statusCode, made.body).toBe(202);
+        const id = made.json().draft.id;
+        await handleConversionDraft(
+          {
+            db: harness.db,
+            storage: harness.storage,
+            docEngine: harness.docEngine,
+            notifier: harness.notifier,
+            resolveAiProvider: async () => server.provider,
+          },
+          id,
+        );
+        const read = await harness.app.inject({
+          url: `/api/v1/requests/${row.number}/conversion-drafts/${id}`,
+          cookies: cast.memberCookies,
+        });
+        expect(read.json().draft.state).toBe("ready");
+        expect(read.json().draft.suggestions.title.value).toBe("Response preparation");
+        expect(read.json().draft.suggestions).not.toHaveProperty(invalidSlug);
+        expect(
+          server.prompts.filter((prompt) =>
+            prompt.includes("Your previous response could not be used"),
+          ),
+        ).toHaveLength(1);
+      } finally {
+        await server.stop();
+      }
+    },
+  );
+}

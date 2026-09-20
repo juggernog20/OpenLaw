@@ -85,6 +85,50 @@ it("reconciles later corrections with earlier findings and keeps their original 
   });
 });
 
+it("keeps the invalid marker out of the reconciliation prompt and on the reconciled answer", async () => {
+  const first = "Review is due September 21, 2026.";
+  const later = "Review is due September 21, 2026 (confirmed).";
+  const overlong = "x".repeat(501);
+  const extract = vi
+    .fn<AiProvider["extract"]>()
+    .mockResolvedValueOnce([
+      {
+        slug: "needed_by",
+        value: overlong,
+        invalid: true,
+        sourceId: "document:1",
+        evidence: first,
+      },
+    ])
+    .mockResolvedValueOnce([
+      { slug: "needed_by", value: "2026-09-21", sourceId: "document:1", evidence: later },
+    ])
+    .mockResolvedValueOnce([
+      {
+        slug: "needed_by",
+        value: overlong,
+        invalid: true,
+        citations: [{ sourceId: "document:1", quote: later }],
+      },
+    ]);
+  const result = await extractCompleteSources(
+    provider(extract),
+    [source(first + "x".repeat(65_000) + later)],
+    targets,
+  );
+  const reconcilePrompt = extract.mock.calls[2]![1][0]!.prompt;
+  expect(reconcilePrompt).toContain(overlong);
+  expect(reconcilePrompt).not.toContain("invalid");
+  expect(result).toEqual([
+    {
+      slug: "needed_by",
+      value: overlong,
+      invalid: true,
+      citations: [{ sourceId: "document:1", revision: "v1", quote: later }],
+    },
+  ]);
+});
+
 it("refuses to silently lose supported findings during reconciliation", async () => {
   const quote = "Review due October 1.";
   const extract = vi

@@ -174,6 +174,15 @@ export async function applyKeyDateSuggestions(
   sources: readonly AiSource[],
   sourceContext?: ConversionAnalysisContext | null,
 ): Promise<ContractAnalysisResult[]> {
+  if (answer?.invalid)
+    return [
+      {
+        slug: KEY_DATES_TARGET,
+        value: answer.value,
+        evidence: answer.evidence ?? null,
+        outcome: "invalid",
+      },
+    ];
   if (!answer || answer.value === null || answer.value === undefined) return [];
   const array = z.array(z.unknown()).max(MAX_EXTRACTED_KEY_DATES).safeParse(answer.value);
   if (!array.success || answer.conflict)
