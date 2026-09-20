@@ -92,16 +92,23 @@ it.each(["none", "valid", "swapped", "invalid", "half-dropped", "renamed"])(
       await migrateThrough(db, "0097_currencies_in_use", migrationEntries());
       await db.execute(sql`insert into users (id, email, display_name)
       values ('existing-reader', 'existing@example.com', 'Existing reader')`);
-      await db
-        .insert(notifications)
-        .values([
-          reminder("contract", "contract-date"),
-          reminder("matter", "matter-date"),
-          { ...reminder("contract", "irrelevant-id"), eventType: "date.expiry_approaching" },
-          { ...reminder("matter", "unused"), entityId: "legacy-record", payload: {} },
-        ]);
+      // Seed the historical columns before the later push migration exists.
+      const existing = [
+        reminder("contract", "contract-date"),
+        reminder("matter", "matter-date"),
+        { ...reminder("contract", "irrelevant-id"), eventType: "date.expiry_approaching" },
+        { ...reminder("matter", "unused"), entityId: "legacy-record", payload: {} },
+      ];
+      for (const [index, row] of existing.entries()) {
+        await db.execute(sql`insert into notifications
+          (id, user_id, event_type, entity_type, entity_id, payload, reminder_date,
+           reminder_offset_days, email_owed, emailed_at)
+          values (${`legacy-${index}`}, ${row.userId}, ${row.eventType}, ${row.entityType},
+            ${row.entityId}, ${JSON.stringify(row.payload)}::jsonb, ${row.reminderDate},
+            ${row.reminderOffsetDays}, ${row.emailOwed}, ${row.emailedAt.toISOString()})`);
+      }
       const before = await db.execute(
-        sql`select to_jsonb(n) as row from notifications n order by id`,
+        sql`select to_jsonb(n) - 'push_owed' - 'pushed_at' - 'push_skipped_at' as row from notifications n order by id`,
       );
 
       let stagedOid: unknown;
@@ -159,7 +166,11 @@ it.each(["none", "valid", "swapped", "invalid", "half-dropped", "renamed"])(
       ).toBeNull();
 
       expect(
-        (await db.execute(sql`select to_jsonb(n) as row from notifications n order by id`)).rows,
+        (
+          await db.execute(
+            sql`select to_jsonb(n) - 'push_owed' - 'pushed_at' - 'push_skipped_at' as row from notifications n order by id`,
+          )
+        ).rows,
       ).toEqual(before.rows);
       for (const kind of ["contract", "matter"] as const) {
         expect(await insertOnce(db, reminder(kind, `${kind}-date`))).toEqual([]);

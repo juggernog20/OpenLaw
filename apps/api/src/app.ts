@@ -10,6 +10,7 @@
  * RFC 9457 problem details.
  */
 
+import { createVapidResolver, type VapidResolver } from "./lib/notifications/vapid.js";
 import { sep } from "node:path";
 import Fastify, { type FastifyError, type FastifyServerOptions } from "fastify";
 import { pingDb, type Db } from "@openlaw/db";
@@ -150,6 +151,7 @@ export interface AppDeps {
    * inject a resolver that always answers with the same fixed mailer.
    */
   resolveMailer: MailerResolver;
+  resolveVapid?: VapidResolver;
   /**
    * File storage (DOC-009, TECH-014): one narrow interface over
    * immutable blobs, with a driver chosen by the deployment. Injected
@@ -231,6 +233,7 @@ declare module "fastify" {
     db: Db;
     auth: Auth;
     resolveMailer: MailerResolver;
+    resolveVapid: VapidResolver;
     storage: StorageAdapter;
     docEngine: DocEngine;
     fillEngine: AutoDocFillEngine;
@@ -299,6 +302,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("trustedProxies", trustedProxies);
   app.decorate("setupToken", deps.config.setupToken ?? null);
   app.decorate("resolveMailer", deps.resolveMailer);
+  const resolveVapid = deps.resolveVapid ?? createVapidResolver(deps.db, {}, deps.config.baseUrl);
+  app.decorate("resolveVapid", resolveVapid);
   app.decorate("storage", deps.storage);
   app.decorate("docEngine", deps.docEngine);
   app.decorate("fillEngine", deps.fillEngine);

@@ -747,7 +747,7 @@
     "defaultMessage": "{actor} invited {email} as {role}"
   },
   "activity.user.notificationPreferenceChanged": {
-    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} briefing_approvals {approvals in their briefing} briefing_tasks {Tasks in their briefing} briefing_dates {dates in their briefing} briefing_obligations {obligations in their briefing} briefing_intake {Intake in their briefing} other {{group}}}"
+    "defaultMessage": "{kind, select, browser {{actor} turned push {state, select, on {on} off {off} other {{state}}} for a browser} devices {{actor} {state, select, on {chose to show} off {chose to hide} other {changed whether to show}} record names on their devices} other {{actor} turned {channel, select, in_app {bell items} email {emails} push {push} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} briefing_approvals {approvals in their briefing} briefing_tasks {Tasks in their briefing} briefing_dates {dates in their briefing} briefing_obligations {obligations in their briefing} briefing_intake {Intake in their briefing} other {{group}}}}}"
   },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"
@@ -7073,6 +7073,84 @@
   "notifications.olderError": {
     "defaultMessage": "The older notifications could not be read. Try again."
   },
+  "notifications.push.approval.requested": {
+    "defaultMessage": "You were asked to approve a Contract"
+  },
+  "notifications.push.briefing.ready": {
+    "defaultMessage": "Your daily briefing is ready"
+  },
+  "notifications.push.comment.mentioned": {
+    "defaultMessage": "You were mentioned on a record"
+  },
+  "notifications.push.comment.posted": {
+    "defaultMessage": "A comment was posted on a record"
+  },
+  "notifications.push.contract.generated": {
+    "defaultMessage": "A Contract was generated and you are its Legal Owner"
+  },
+  "notifications.push.contract.generatedUnassigned": {
+    "defaultMessage": "A generated Contract needs a Legal Owner"
+  },
+  "notifications.push.contract.ownerAssigned": {
+    "defaultMessage": "You were assigned a Contract"
+  },
+  "notifications.push.contract.statusChanged": {
+    "defaultMessage": "The status of a Contract changed"
+  },
+  "notifications.push.contract.taskAssigned": {
+    "defaultMessage": "You were assigned a Task"
+  },
+  "notifications.push.contract.teamAdded": {
+    "defaultMessage": "You were added to a Contract team"
+  },
+  "notifications.push.date.expiryApproaching": {
+    "defaultMessage": "A Contract is expiring"
+  },
+  "notifications.push.date.keyDateApproaching": {
+    "defaultMessage": "A Key date is coming up"
+  },
+  "notifications.push.date.noticeDeadlineApproaching": {
+    "defaultMessage": "A notice deadline is coming up"
+  },
+  "notifications.push.date.obligationApproaching": {
+    "defaultMessage": "An Obligation is coming up"
+  },
+  "notifications.push.document.added": {
+    "defaultMessage": "A Document was added to a record"
+  },
+  "notifications.push.document.versionAdded": {
+    "defaultMessage": "A Document Version was added to a record"
+  },
+  "notifications.push.envelope.ended": {
+    "defaultMessage": "Signing ended on a Contract"
+  },
+  "notifications.push.matter.taskAssigned": {
+    "defaultMessage": "You were assigned a Task"
+  },
+  "notifications.push.new": {
+    "defaultMessage": "You have a new notification"
+  },
+  "notifications.push.request.assigned": {
+    "defaultMessage": "You were assigned to triage a Request"
+  },
+  "notifications.push.request.conversionDraftFinished": {
+    "defaultMessage": "A Conversion draft finished"
+  },
+  "notifications.push.request.created": {
+    "defaultMessage": "Legal has received your Request"
+  },
+  "notifications.push.request.declined": {
+    "defaultMessage": "Legal declined your Request"
+  },
+  "notifications.push.request.replied": {
+    "defaultMessage": "Legal replied on your Request"
+  },
+  "notifications.push.request.statusChanged": {
+    "defaultMessage": "The status of your Request changed"
+  },
+  "notifications.push.request.submitted": {
+    "defaultMessage": "A new Request arrived"
+  },
   "notifications.request.assigned": {
     "defaultMessage": "{actor} assigned you to triage {request}"
   },
@@ -9308,6 +9386,72 @@
   "settings.departments.title": {
     "defaultMessage": "Departments"
   },
+  "settings.devices.blocked.chrome": {
+    "defaultMessage": "Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site."
+  },
+  "settings.devices.blocked.edge": {
+    "defaultMessage": "Notifications are blocked. In Edge, open Settings > Privacy, search, and services > Site permissions > All sites. Choose this site and allow Notifications."
+  },
+  "settings.devices.blocked.firefox": {
+    "defaultMessage": "Notifications are blocked. In Firefox, open Settings > Privacy & Security > Permissions > Notifications > Settings and allow this site."
+  },
+  "settings.devices.blocked.ios": {
+    "defaultMessage": "Notifications are blocked. Open Settings > Notifications > OpenLaw and turn on Allow Notifications."
+  },
+  "settings.devices.blocked.other": {
+    "defaultMessage": "Notifications are blocked. Open this site's permissions from the address bar and allow notifications."
+  },
+  "settings.devices.blocked.safari": {
+    "defaultMessage": "Notifications are blocked. In Safari, open Settings > Websites > Notifications and allow this site."
+  },
+  "settings.devices.description": {
+    "defaultMessage": "Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications."
+  },
+  "settings.devices.empty": {
+    "defaultMessage": "No browsers have been turned on."
+  },
+  "settings.devices.enabled": {
+    "defaultMessage": "Notifications are on for this browser."
+  },
+  "settings.devices.label": {
+    "defaultMessage": "{browser} on {platform}"
+  },
+  "settings.devices.lastSeen": {
+    "defaultMessage": "Last seen {time}"
+  },
+  "settings.devices.loadFailed": {
+    "defaultMessage": "Devices could not be read."
+  },
+  "settings.devices.loading": {
+    "defaultMessage": "Reading devices…"
+  },
+  "settings.devices.recordNames": {
+    "defaultMessage": "Show record names on devices"
+  },
+  "settings.devices.retry": {
+    "defaultMessage": "Try again"
+  },
+  "settings.devices.revoke": {
+    "defaultMessage": "Revoke"
+  },
+  "settings.devices.revokeNamed": {
+    "defaultMessage": "Revoke {device}"
+  },
+  "settings.devices.title": {
+    "defaultMessage": "Devices"
+  },
+  "settings.devices.turnOn": {
+    "defaultMessage": "Turn on for this browser"
+  },
+  "settings.devices.unknownBrowser": {
+    "defaultMessage": "Browser"
+  },
+  "settings.devices.unsupported": {
+    "defaultMessage": "This browser does not support device notifications. On iPhone or iPad, add OpenLaw to your Home Screen and open it there."
+  },
+  "settings.devices.workerUnavailable": {
+    "defaultMessage": "Device notifications could not start in this browser. Reload to try again, or update your browser and try again."
+  },
   "settings.eSignature.chip.connected": {
     "defaultMessage": "Connected"
   },
@@ -10405,6 +10549,9 @@
   },
   "settings.notifications.channel.inApp": {
     "defaultMessage": "In-app"
+  },
+  "settings.notifications.channel.push": {
+    "defaultMessage": "Push"
   },
   "settings.notifications.column.group": {
     "defaultMessage": "Event group"

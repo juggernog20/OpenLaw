@@ -50,6 +50,9 @@ export interface EventGroupPolicy {
   inApp: boolean;
   /** The email default. */
   email: boolean;
+  /** The push default (NOT-010). Only read when in-app is on: no bell
+   * row, no push. */
+  push: boolean;
   /** How email leaves, when it leaves at all (NOT-003). */
   emailTiming: EmailTiming;
 }
@@ -64,7 +67,7 @@ export interface EventGroupPolicy {
  */
 export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy> = {
   /** Group 1 — done *to* you: it interrupts. */
-  assigned_to_you: { inApp: true, email: true, emailTiming: "immediate" },
+  assigned_to_you: { push: true, inApp: true, email: true, emailTiming: "immediate" },
   /**
    * Group 2 — ambient movement: the feed, and email only if asked for.
    *
@@ -76,10 +79,10 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
    * opt-in real, so the timing is real with it (NOT-002's M18/4
    * addendum).
    */
-  activity_on_your_records: { inApp: true, email: false, emailTiming: "immediate" },
+  activity_on_your_records: { push: false, inApp: true, email: false, emailTiming: "immediate" },
   /** Group 3 — dates: the bell per date, and one briefing a day
    * (NOT-003). */
-  dates_approaching: { inApp: true, email: true, emailTiming: "digest" },
+  dates_approaching: { push: true, inApp: true, email: true, emailTiming: "digest" },
   /**
    * Group 4 — Inbox arrivals: the queue is already the surface, so the
    * mail is opt-in.
@@ -92,13 +95,13 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
    * first event, so the timing is real with it (NOT-002's M21/4
    * addendum, taking M18/5's shape).
    */
-  new_requests: { inApp: true, email: false, emailTiming: "immediate" },
+  new_requests: { push: false, inApp: true, email: false, emailTiming: "immediate" },
   /**
    * Knowledge publication is ambient: it writes no event or bell item.
    * The email choice controls the Knowledge section read directly by
    * the morning round.
    */
-  knowledge: { inApp: true, email: true, emailTiming: "digest" },
+  knowledge: { push: false, inApp: true, email: true, emailTiming: "digest" },
   /**
    * Group 5 — the portal audience's own events (INT-001/003).
    *
@@ -108,7 +111,7 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
    * that they never have to poll (INT-003 declined the status-poke
    * button on that promise).
    */
-  requester_events: { inApp: true, email: true, emailTiming: "immediate" },
+  requester_events: { push: true, inApp: true, email: true, emailTiming: "immediate" },
 };
 
 /**
@@ -167,6 +170,7 @@ export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> 
 export interface ChannelChoice {
   inApp: boolean;
   email: boolean;
+  push: boolean;
 }
 
 /**
@@ -179,7 +183,11 @@ export interface ChannelChoice {
  */
 export function defaultChoice(group: NotificationEventGroup): ChannelChoice {
   const policy = EVENT_GROUP_POLICY[group];
-  return { inApp: policy.inApp, email: policy.email && policy.emailTiming !== "none" };
+  return {
+    push: policy.push,
+    inApp: policy.inApp,
+    email: policy.email && policy.emailTiming !== "none",
+  };
 }
 
 /** How email leaves for one event, or `none` when it does not. */
@@ -293,5 +301,5 @@ const REQUEST_SIDE: Readonly<Record<string, RequestSide | null>> = Object.fromEn
   ]),
 );
 
-/** Both channels, as `notification_preferences` names them. */
-export const CHANNELS: readonly NotificationChannel[] = ["in_app", "email"];
+/** All channels, as `notification_preferences` names them. */
+export const CHANNELS: readonly NotificationChannel[] = ["in_app", "email", "push"];

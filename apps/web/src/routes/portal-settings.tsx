@@ -14,6 +14,7 @@ import {
 import { PORTAL_COPY, PORTAL_GROUPS } from "../components/portal/notification-preferences";
 import { PortalBackLink } from "../components/portal/back-link";
 import { PortalShell } from "../components/portal/portal-shell";
+import { NotificationDevices } from "../components/notification-devices";
 import { StatusNote } from "../components/status-note";
 
 export async function portalSettingsLoader({ request }: LoaderFunctionArgs) {
@@ -24,7 +25,7 @@ export async function portalSettingsLoader({ request }: LoaderFunctionArgs) {
   // catalog's defaults after a network error would show switches that
   // are not this user's.
   if (!data) throw new Error("The notification preferences could not be read.");
-  return { user, groups: data.groups };
+  return { user, ...data };
 }
 
 const TITLE = defineMessage({
@@ -33,7 +34,8 @@ const TITLE = defineMessage({
 });
 
 export function PortalSettingsPage() {
-  const { user, groups } = useLoaderData<typeof portalSettingsLoader>();
+  const { user, groups, vapidPublicKey, showRecordNamesOnDevices } =
+    useLoaderData<typeof portalSettingsLoader>();
   const intl = useIntl();
   const state = useNotificationPreferences(groups);
 
@@ -76,8 +78,16 @@ export function PortalSettingsPage() {
               would be two live regions over two switches. */}
           <StatusNote status={state.status} detail={state.detail} />
         </div>
-        <NotificationSwitchGrid order={PORTAL_GROUPS} state={state} copy={PORTAL_COPY} />
+        <NotificationSwitchGrid push order={PORTAL_GROUPS} state={state} copy={PORTAL_COPY} />
       </section>
+      {/* The Portal column is wider than a settings card. The Devices card
+          fills it, the same width as the preferences card above. */}
+      <NotificationDevices
+        surface="portal"
+        className="max-w-none"
+        vapidPublicKey={vapidPublicKey}
+        showRecordNames={showRecordNamesOnDevices}
+      />
     </PortalShell>
   );
 }

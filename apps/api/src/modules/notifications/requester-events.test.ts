@@ -284,6 +284,13 @@ describe("submitting a Request (INT-001)", () => {
     expect(rows.map((row) => row.eventType)).toEqual(["request.created"]);
     expect(rows[0]!.readAt).toBeNull();
     expect(rows[0]!.emailOwed).toBe(true);
+    expect(rows[0]!.pushOwed).toBe(true);
+    const item = await harness.app.inject({
+      url: `/api/v1/portal/notifications/${rows[0]!.id}`,
+      cookies: as(REQUESTER),
+    });
+    expect(item.statusCode, item.body).toBe(200);
+    expect(item.json().id).toBe(rows[0]!.id);
     expect(rows[0]!.payload.requestNumber).toBe(request.number);
     expect(rows[0]!.payload.requestTitle).toBe(request.title);
     expect(rows[0]!.payload.actorName).toBe(REQUESTER.displayName);
@@ -325,6 +332,7 @@ describe("a reply on the thread (INT-007)", () => {
     const rows = await rowsAbout(REQUESTER, request);
     expect(rows.map((row) => row.eventType)).toEqual(["request.replied", "request.created"]);
     expect(rows[0]!.emailOwed).toBe(true);
+    expect(rows[0]!.pushOwed).toBe(true);
     expect(rows[0]!.payload.actorName).toBe(STAFF.displayName);
 
     const message = await oneMailAbout(REQUESTER, request, "Legal replied");
@@ -632,10 +640,22 @@ describe("the portal bell (NOT-001, NOT-005, M20/9)", () => {
     // M21 owns the archive route; the column is what the predicate reads,
     // so the fact is set here rather than waited for. A frozen record is
     // not something to prompt anybody about.
+    const beforeArchive = await rowsAbout(REQUESTER, request);
     await harness.db
       .update(requests)
       .set({ archivedAt: new Date() })
       .where(eq(requests.id, request.id));
+    const hidden = await harness.app.inject({
+      url: `/api/v1/portal/notifications/${beforeArchive[0]!.id}`,
+      cookies: as(REQUESTER),
+    });
+    expect(hidden.statusCode, hidden.body).toBe(404);
+    expect(hidden.headers["content-type"]).toContain("application/problem+json");
+    expect(hidden.json()).toMatchObject({
+      type: "about:blank",
+      status: 404,
+      title: "Notification not found.",
+    });
 
     const after = await bellItems(REQUESTER, "portal");
     expect(after.some((item) => item.entityId === request.id)).toBe(false);

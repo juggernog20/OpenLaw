@@ -45,6 +45,7 @@ export const users = pgTable(
     // Display-timezone override (SET-006, DES-014): an IANA zone name.
     // NULL = "use browser timezone", the default most users never change.
     timezone: text("timezone"),
+    showRecordNamesOnDevices: boolean("show_record_names_on_devices").notNull().default(true),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
     // twoFactor-plugin column (nullable per its schema, like the admin

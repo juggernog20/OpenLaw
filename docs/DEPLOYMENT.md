@@ -483,9 +483,9 @@ The retiring key is accepted for reads only. Step 2 logs how many values it re-e
 
 ### If you lose it
 
-You lose those five credentials and nothing else. No Contract, Matter, Document, Analysis run, or activity record depends on this key — they are not encrypted with it and are unaffected.
+You lose those five credentials and the generated VAPID private key used for device notifications. No Contract, Matter, Document, Analysis run, or activity record depends on this key — they are not encrypted with it and are unaffected.
 
-Set a new `OPENLAW_SECRET_KEY`, start the stack, and the five credentials read as unset: Settings shows the signing connector, SMTP relay, SSO provider, and AI connector as missing their secrets, and your Administrators paste them in again. OpenLaw leaves the unreadable values in place rather than overwriting them, and says so in the boot log — so if the old key turns up later, putting it back in `OPENLAW_SECRET_KEY_PREVIOUS` and restarting still recovers them.
+Before starting with a new `OPENLAW_SECRET_KEY`, recover or override the VAPID pair as described under [Device notification keys](#device-notification-keys). The five administrator-entered credentials then read as unset: Settings shows the signing connector, SMTP relay, SSO provider, and AI connector as missing their secrets, and your Administrators paste them in again. OpenLaw leaves the unreadable values in place rather than overwriting them, and says so in the boot log — so if the old key turns up later, putting it back in `OPENLAW_SECRET_KEY_PREVIOUS` and restarting still recovers them.
 
 ### Upgrading from a version before this
 
@@ -562,3 +562,15 @@ reachability or executed-copy filing. Complete a test Envelope and check its Sig
 status and Executed copy. For Polling, allow the next reconciliation check to run.
 A provider outage or stopped worker can delay completion beyond the normal interval.
 Both modes use the same completion and executed-copy filing paths.
+
+### Device notification keys
+
+The first API or worker start generates a VAPID pair on `org_settings`. The private key is sealed with `OPENLAW_SECRET_KEY` and follows the same rotation process as other stored credentials. Keep the pair stable while browsers remain subscribed.
+
+To supply a pair yourself, set both `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in `.env`. These values take precedence over the stored pair in both services. Setting only one refuses startup. The public key is returned with notification preferences. The private key is never returned through the API.
+
+Push uses the SMTP from address as its `mailto:` contact, or `BASE_URL` when no from address is set.
+
+The generated VAPID private key is a stored secret in addition to the five credentials your Administrators enter. If `OPENLAW_SECRET_KEY` cannot decrypt it, OpenLaw preserves the stored pair and both services keep running. The API and the worker each log the failure at boot. Notification preferences still return the public key, which is stored in the clear. Push jobs retry and settle skipped while the private key stays unreadable; every other queue keeps working.
+
+Restore the original `OPENLAW_SECRET_KEY`, or supply it through `OPENLAW_SECRET_KEY_PREVIOUS` with the new key for the rewrap boot. The next push after the restore uses the recovered key with no restart. If you cannot recover it, set both `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in both service environments and restart. Use the same pair for both services. Re-enrol existing browsers if you replace the pair, because their subscriptions belong to the old public key.

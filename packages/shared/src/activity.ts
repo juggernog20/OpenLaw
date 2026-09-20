@@ -122,24 +122,12 @@ type UserPayloads = {
   };
   "user.theme_changed": FieldChangePayload;
   "user.timezone_changed": FieldChangePayload;
-  /**
-   * One notification preference, as the Personal → Notifications pane
-   * saves it (NOT-001, M18/5).
-   *
-   * Not {@link FieldChangePayload}, because the thing changed is a pair
-   * rather than a field: the group decides which events, the channel
-   * decides where they land, and neither alone names what moved. There
-   * is no `old` side either — the table holds overrides, so the value
-   * before a first save is a default read out of application code and
-   * not a stored fact this writer could report.
-   */
-  "user.notification_preference_changed": {
-    /** One of the notification preference groups. */
-    eventGroup: string;
-    /** `in_app` or `email` (NOT-001's two channels). */
-    channel: string;
-    enabled: boolean;
-  };
+  /** Channel overrides, browser enrolment, and device record-name settings.
+   * Subscription entries name the row, never its endpoint or keys. */
+  "user.notification_preference_changed":
+    | { eventGroup: string; channel: string; enabled: boolean }
+    | { channel: "push"; subscriptionId: string; enabled: boolean }
+    | { showRecordNamesOnDevices: boolean };
   "user.display_name_changed": FieldChangePayload;
   /** Presence-only: both sides are `[image]` or null, never the encoded
    * image — a data: URI in a payload would bloat every later query. */
