@@ -563,7 +563,9 @@ repair attempt, so an invalid target does not discard valid siblings. Shared rul
 format sentences come from code. Saved prompts supply the extraction instructions.
 
 The AI analysis pane has four collapsed cards: Provider, Answer style, Conversion draft
-prompts, and Contract analysis prompts. Each prompt shows its fixed format sentence as
+prompts, and Contract analysis prompts. The Request conversion switches card is not one
+of them. It stays open, sits between Provider and Answer style, and appears once a
+connector is saved. Each prompt shows its fixed format sentence as
 muted, non-editable text. The Contract Field editor supplies the override picker and the
 short-text tooltip, and omits AI prompts for reference Fields. The M37 browser journey
 proves these controls and reads both saved style choices after reopening.

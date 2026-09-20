@@ -722,7 +722,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - [x] Per-target validation preserves valid sibling answers after the existing repair attempt
   - [x] Reference Fields excluded from Contract analysis; type restrictions in the Field editor
   - [x] Browser journey, locale drift check, plan and record reconciliation
-  - _Decisions:_ CTR-008 addendum, SET-008, INT-008 addendum, CTR-016
+  - _Decisions:_ CTR-008 addendum, SET-008, INT-008 addendum, DES-070 amendment
 
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.

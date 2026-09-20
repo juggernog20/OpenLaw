@@ -370,10 +370,13 @@ The built card ships in M33; ST4 still owes this redraw. The labels and their di
 ## SET-008 implementation reconciliation, 2026-09-20, M37/6, #961
 
 Settings → Organization → AI analysis now has four collapsed cards: Provider, Answer
-style, Conversion draft prompts, and Contract analysis prompts. This replaces the
+style, Conversion draft prompts, and Contract analysis prompts. The Request conversion
+switches card stays open between Provider and Answer style and appears once a
+connector is saved. This replaces the
 Provider and Field prompts description in the M31 and SET-008 amendments above.
 Answer style offers Few word summary, 1-2 sentence summary, and Full clause text.
 Each of the twelve prompt rows shows editable extraction instructions and a greyed,
 code-owned format sentence. Shared rules have no editor. Contract analysis prompts
 links to Contracts → Fields for catalog prompts and their Answer style overrides.
-The pending AI analysis frame redraw must show these four cards.
+The pending AI analysis frame redraw must show these four cards and the Request
+conversion switches.
