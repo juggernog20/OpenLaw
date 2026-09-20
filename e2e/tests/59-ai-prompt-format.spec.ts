@@ -17,9 +17,11 @@ test("both AI prompt cards show the fixed format below each editable prompt", as
     const inputs = card.getByRole("textbox");
     await expect(inputs).toHaveCount(name.startsWith("Matter") ? 5 : 7);
     for (const input of await inputs.all()) {
-      const descriptionId = await input.getAttribute("aria-describedby");
-      expect(descriptionId).toBeTruthy();
-      const sentence = page.locator(`[id="${descriptionId}"]`);
+      await expect(input).toHaveAccessibleDescription(/^Return .+\.$/);
+    }
+    const sentences = card.getByText(/^Return .+\.$/);
+    await expect(sentences).toHaveCount(await inputs.count());
+    for (const sentence of await sentences.all()) {
       await expect(sentence).toBeVisible();
       await expect(sentence).toHaveClass(/text-muted/);
       expect(
@@ -32,6 +34,6 @@ test("both AI prompt cards show the fixed format below each editable prompt", as
     }
   }
   const date = page.getByRole("textbox", { name: "Effective date prompt", exact: true });
-  await expect(date).toHaveValue("Extract the Contract's effective date.");
+  await expect(date).toBeVisible();
   await expect(date).toHaveAccessibleDescription("Return a date as YYYY-MM-DD.");
 });

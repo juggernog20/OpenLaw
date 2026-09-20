@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** CTR-008: code-owned answer formats shared by extraction and the prompt cards. */
+
 import type { AiExtractionTarget } from "./provider.js";
 
 /** The answer form is fixed by the target schema, independent of its editable prompt. */
