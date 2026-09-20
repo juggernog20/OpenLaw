@@ -298,7 +298,8 @@ Save the connector and use **Test connection** to check the choice; listing alon
 that a model supports Contract analysis. Each destination, defined by preset, protocol, and
 normalized base URL, keeps one Saved key. **Key saved** means a blank save or Load models can use
 that destination's key. **Key in use** identifies the connector's current key. Pasting replaces
-only the destination's key. **Remove connector** leaves Saved keys on file.
+only the destination's key. **Forget key** deletes a Saved key the connector does not use.
+**Remove connector** leaves Saved keys on file.
 
 The **worker makes the provider calls for Contract extraction**. The **API loads model lists and makes the Test connection call** when an Administrator presses the corresponding button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for model discovery and the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
 

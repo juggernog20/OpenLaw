@@ -386,6 +386,7 @@ describe("the AI analysis connector pane (#662)", () => {
     renderAt("/settings/ai-analysis");
     await openProvider(user);
     expect(screen.getByRole("status")).toHaveTextContent("Key in use");
+    expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("API key")).not.toBeRequired();
     await user.selectOptions(screen.getByLabelText("Provider"), "gemini");
     expect(screen.queryByText("Key saved")).not.toBeInTheDocument();

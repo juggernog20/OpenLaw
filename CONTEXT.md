@@ -385,7 +385,7 @@ The singleton provider configuration for Contract analysis and opted-in Conversi
 _Avoid_: AI integration, provider environment variable, model settings
 
 **Saved key**:
-A write-only API key kept for one AI provider destination, defined by preset, protocol, and normalized base URL. The AI connector references the Saved key it uses. A blank save or Load models uses the pending destination's Saved key; a pasted key replaces that destination's value. Removing the connector keeps Saved keys. The pane and onboarding step show **Key saved**, or **Key in use** for the referenced key [SET-008].
+A write-only API key kept for one AI provider destination, defined by preset, protocol, and normalized base URL. The AI connector references the Saved key it uses. A blank save or Load models uses the pending destination's Saved key; a pasted key replaces that destination's value. Removing the connector keeps Saved keys; **Forget key** deletes one that the connector does not reference. The pane and onboarding step show **Key saved**, or **Key in use** for the referenced key, and mark providers with a Saved key as "(key saved)" [SET-008].
 _Avoid_: cached key, connector key slot
 
 **Manual hand-off**:
