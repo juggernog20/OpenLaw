@@ -80,8 +80,11 @@ export function PortalSettingsPage() {
         </div>
         <NotificationSwitchGrid push order={PORTAL_GROUPS} state={state} copy={PORTAL_COPY} />
       </section>
+      {/* The Portal column is wider than a settings card. The Devices card
+          fills it, the same width as the preferences card above. */}
       <NotificationDevices
         surface="portal"
+        className="max-w-none"
         vapidPublicKey={vapidPublicKey}
         showRecordNames={showRecordNamesOnDevices}
       />

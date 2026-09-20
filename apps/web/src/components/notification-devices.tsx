@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Devices card on Personal Notifications (DES-089). Lists registered browsers,
- * requests permission on click, and saves revocation and record-name choices immediately.
+ * The Devices card on Personal Notifications and on Portal settings (DES-089).
+ * Lists registered browsers, requests permission on click, and saves revocation and
+ * record-name choices immediately. The surface picks the mount the card talks to.
  */
 import { useCallback, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -87,7 +88,14 @@ export function NotificationDevices({
   vapidPublicKey,
   showRecordNames,
   surface = "staff",
-}: Readonly<{ vapidPublicKey: string; showRecordNames: boolean; surface?: NotificationSurface }>) {
+  className,
+}: Readonly<{
+  vapidPublicKey: string;
+  showRecordNames: boolean;
+  surface?: NotificationSurface;
+  /** Width and spacing from the pane that draws the card. */
+  className?: string;
+}>) {
   const intl = useIntl();
   const supported = supportsDeviceNotifications();
   const [permission, setPermission] = useState(supported ? Notification.permission : "default");
@@ -190,6 +198,7 @@ export function NotificationDevices({
   const active = devices.some((device) => device.endpoint === endpoint && device.currentSession);
   return (
     <SettingsCard
+      className={className}
       title={<FormattedMessage id="settings.devices.title" defaultMessage="Devices" />}
       actions={<StatusNote status={status} detail={detail} />}
     >

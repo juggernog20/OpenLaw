@@ -364,7 +364,10 @@ describe("the portal notification settings (NOT-001)", () => {
     ]) {
       expect(screen.getByRole("switch", { name: `${group} Push` })).toBeChecked();
     }
-    expect(screen.getByRole("heading", { name: "Devices" })).toBeVisible();
+    const devices = screen.getByRole("heading", { name: "Devices" });
+    expect(devices).toBeVisible();
+    // The card fills the Portal column, the width of the preferences card above it.
+    expect(devices.closest(".rounded-card")).toHaveClass("max-w-none");
     expect(screen.getAllByRole("switch")).toHaveLength(13);
   });
 

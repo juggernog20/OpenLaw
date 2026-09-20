@@ -5020,6 +5020,12 @@ The shared grid can expose Push per pane. This slice turns it on for Legal Team 
 
 Browser permission paths follow [Chrome Help](https://support.google.com/chrome/answer/3220216), [Firefox Help](https://support.mozilla.org/en-US/kb/push-notifications-firefox), [Safari Help](https://support.apple.com/guide/safari/customize-website-notifications-sfri40734/mac), and [Edge Help](https://support.microsoft.com/en-gb/edge/manage-website-notifications-in-microsoft-edge).
 
+### Built addendum (2026-09-20, M38/4, [#966](https://github.com/juggernog20/OpenLaw/issues/966))
+
+The Portal settings pane draws the Push column for its four groups and the same Devices card, on the Portal mount (`/api/v1/portal/notifications`). The card fills the Portal column rather than the settings-card width, so it lines up with the preferences card above it. The Portal shell registers the same worker.
+
+Each signed-in shell links its own manifest, in place of the one the document linked above. The staff shell links `/manifest.webmanifest` (`id`, `start_url` and `scope` at `/`). The Portal shell links `/portal.webmanifest` (`id`, `start_url` and `scope` at `/portal`), so a Home Screen install made from the Portal opens on the Portal, and Portal sign-in at `/portal/login` stays inside the installed app. The document itself links no manifest, so sign-in pages are not installable. The worker's scope stays `/` for both.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                     |
