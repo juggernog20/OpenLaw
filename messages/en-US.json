@@ -66,7 +66,7 @@
     "defaultMessage": "{preset, select, anthropic {Anthropic} openai {OpenAI} azure_openai {Azure OpenAI} gemini {Gemini} openrouter {OpenRouter} groq {Groq} ollama {Ollama} custom {Custom endpoint} other {{preset}}}"
   },
   "activity.aiConnector.removed": {
-    "defaultMessage": "{actor} removed the AI connector {provider} and its API key"
+    "defaultMessage": "{actor} removed the AI connector {provider}"
   },
   "activity.aiConnector.updated": {
     "defaultMessage": "{actor} changed the AI connector {provider}"
@@ -76,6 +76,9 @@
   },
   "activity.aiFieldPrompt.updated": {
     "defaultMessage": "{actor} changed the AI prompt for {target}"
+  },
+  "activity.aiSavedKey.stored": {
+    "defaultMessage": "{actor} stored a Saved key for {provider} at {baseUrl}"
   },
   "activity.applet": {
     "defaultMessage": "History"
@@ -8385,7 +8388,7 @@
     "defaultMessage": "API key"
   },
   "settings.aiAnalysis.apiKey.keep": {
-    "defaultMessage": "Leave blank to keep the current key. Paste a new one to rotate."
+    "defaultMessage": "Leave blank to use the saved key. Paste a new one to rotate it."
   },
   "settings.aiAnalysis.apiKey.optional": {
     "defaultMessage": "Ollama does not require an API key."
@@ -8425,6 +8428,12 @@
   },
   "settings.aiAnalysis.intro": {
     "defaultMessage": "Connect your AI provider for Contract analysis and AI-assisted Request conversion. Relevant document text, Request answers, and conversations are sent to the provider when an AI task runs."
+  },
+  "settings.aiAnalysis.keyInUse": {
+    "defaultMessage": "Key in use"
+  },
+  "settings.aiAnalysis.keySaved": {
+    "defaultMessage": "Key saved"
   },
   "settings.aiAnalysis.model": {
     "defaultMessage": "Model"
@@ -8595,7 +8604,7 @@
     "defaultMessage": "Remove connector"
   },
   "settings.aiAnalysis.removeBody": {
-    "defaultMessage": "The API key is deleted with the connector. Reconnecting means entering it again."
+    "defaultMessage": "Saved keys stay on file. You can use them when you reconnect."
   },
   "settings.aiAnalysis.removeConfirm": {
     "defaultMessage": "Remove connector"

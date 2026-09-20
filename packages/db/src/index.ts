@@ -334,6 +334,8 @@ export const ADVISORY_LOCK = {
    * read the whole register and the whole ownership graph. Taken as
    * `pg_advisory_xact_lock` inside the writing transaction. */
   entityShareRegister: 4101009,
+  /** Serializes connector saves, including the first Saved key for a destination. */
+  aiConnectorSave: 4101010,
 } as const;
 
 /**

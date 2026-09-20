@@ -4621,6 +4621,54 @@
                         "hasApiKey": {
                           "type": "boolean"
                         },
+                        "savedKeys": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "preset": {
+                                "type": "string",
+                                "enum": [
+                                  "anthropic",
+                                  "openai",
+                                  "azure_openai",
+                                  "gemini",
+                                  "openrouter",
+                                  "groq",
+                                  "ollama",
+                                  "custom"
+                                ]
+                              },
+                              "protocol": {
+                                "type": "string",
+                                "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                              },
+                              "baseUrl": {
+                                "type": "string"
+                              },
+                              "inUse": {
+                                "type": "boolean"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "preset",
+                              "protocol",
+                              "baseUrl",
+                              "inUse",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "model": {
                           "type": ["string", "null"]
                         },
@@ -4664,6 +4712,7 @@
                         "protocol",
                         "baseUrl",
                         "hasApiKey",
+                        "savedKeys",
                         "model",
                         "maxOutputTokens",
                         "disabledAt",
@@ -4742,7 +4791,7 @@
       },
       "put": {
         "operationId": "saveAiConnector",
-        "summary": "Configure or update the AI connector; a blank API key keeps the stored key",
+        "summary": "Configure or update the AI connector; a blank API key uses the destination’s Saved key",
         "tags": ["ai-connector"],
         "requestBody": {
           "required": true,
@@ -4855,6 +4904,54 @@
                         "hasApiKey": {
                           "type": "boolean"
                         },
+                        "savedKeys": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "preset": {
+                                "type": "string",
+                                "enum": [
+                                  "anthropic",
+                                  "openai",
+                                  "azure_openai",
+                                  "gemini",
+                                  "openrouter",
+                                  "groq",
+                                  "ollama",
+                                  "custom"
+                                ]
+                              },
+                              "protocol": {
+                                "type": "string",
+                                "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                              },
+                              "baseUrl": {
+                                "type": "string"
+                              },
+                              "inUse": {
+                                "type": "boolean"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "preset",
+                              "protocol",
+                              "baseUrl",
+                              "inUse",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "model": {
                           "type": ["string", "null"]
                         },
@@ -4898,6 +4995,7 @@
                         "protocol",
                         "baseUrl",
                         "hasApiKey",
+                        "savedKeys",
                         "model",
                         "maxOutputTokens",
                         "disabledAt",
@@ -4976,7 +5074,7 @@
       },
       "delete": {
         "operationId": "deleteAiConnector",
-        "summary": "Remove the AI connector and its API key",
+        "summary": "Remove the AI connector, keeping its Saved keys",
         "tags": ["ai-connector"],
         "responses": {
           "200": {
@@ -5041,6 +5139,54 @@
                         "hasApiKey": {
                           "type": "boolean"
                         },
+                        "savedKeys": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "preset": {
+                                "type": "string",
+                                "enum": [
+                                  "anthropic",
+                                  "openai",
+                                  "azure_openai",
+                                  "gemini",
+                                  "openrouter",
+                                  "groq",
+                                  "ollama",
+                                  "custom"
+                                ]
+                              },
+                              "protocol": {
+                                "type": "string",
+                                "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                              },
+                              "baseUrl": {
+                                "type": "string"
+                              },
+                              "inUse": {
+                                "type": "boolean"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "preset",
+                              "protocol",
+                              "baseUrl",
+                              "inUse",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "model": {
                           "type": ["string", "null"]
                         },
@@ -5084,6 +5230,7 @@
                         "protocol",
                         "baseUrl",
                         "hasApiKey",
+                        "savedKeys",
                         "model",
                         "maxOutputTokens",
                         "disabledAt",
@@ -5251,6 +5398,54 @@
                         "hasApiKey": {
                           "type": "boolean"
                         },
+                        "savedKeys": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "preset": {
+                                "type": "string",
+                                "enum": [
+                                  "anthropic",
+                                  "openai",
+                                  "azure_openai",
+                                  "gemini",
+                                  "openrouter",
+                                  "groq",
+                                  "ollama",
+                                  "custom"
+                                ]
+                              },
+                              "protocol": {
+                                "type": "string",
+                                "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                              },
+                              "baseUrl": {
+                                "type": "string"
+                              },
+                              "inUse": {
+                                "type": "boolean"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "preset",
+                              "protocol",
+                              "baseUrl",
+                              "inUse",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "model": {
                           "type": ["string", "null"]
                         },
@@ -5294,6 +5489,7 @@
                         "protocol",
                         "baseUrl",
                         "hasApiKey",
+                        "savedKeys",
                         "model",
                         "maxOutputTokens",
                         "disabledAt",
@@ -5566,6 +5762,54 @@
                         "hasApiKey": {
                           "type": "boolean"
                         },
+                        "savedKeys": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "preset": {
+                                "type": "string",
+                                "enum": [
+                                  "anthropic",
+                                  "openai",
+                                  "azure_openai",
+                                  "gemini",
+                                  "openrouter",
+                                  "groq",
+                                  "ollama",
+                                  "custom"
+                                ]
+                              },
+                              "protocol": {
+                                "type": "string",
+                                "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                              },
+                              "baseUrl": {
+                                "type": "string"
+                              },
+                              "inUse": {
+                                "type": "boolean"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "preset",
+                              "protocol",
+                              "baseUrl",
+                              "inUse",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "model": {
                           "type": ["string", "null"]
                         },
@@ -5609,6 +5853,7 @@
                         "protocol",
                         "baseUrl",
                         "hasApiKey",
+                        "savedKeys",
                         "model",
                         "maxOutputTokens",
                         "disabledAt",
@@ -5754,6 +5999,54 @@
                         "hasApiKey": {
                           "type": "boolean"
                         },
+                        "savedKeys": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "preset": {
+                                "type": "string",
+                                "enum": [
+                                  "anthropic",
+                                  "openai",
+                                  "azure_openai",
+                                  "gemini",
+                                  "openrouter",
+                                  "groq",
+                                  "ollama",
+                                  "custom"
+                                ]
+                              },
+                              "protocol": {
+                                "type": "string",
+                                "enum": ["anthropic_messages", "openai_chat_completions", "gemini"]
+                              },
+                              "baseUrl": {
+                                "type": "string"
+                              },
+                              "inUse": {
+                                "type": "boolean"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "preset",
+                              "protocol",
+                              "baseUrl",
+                              "inUse",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "model": {
                           "type": ["string", "null"]
                         },
@@ -5797,6 +6090,7 @@
                         "protocol",
                         "baseUrl",
                         "hasApiKey",
+                        "savedKeys",
                         "model",
                         "maxOutputTokens",
                         "disabledAt",

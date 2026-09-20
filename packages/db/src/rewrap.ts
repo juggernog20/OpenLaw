@@ -43,7 +43,7 @@ import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 // the root re-exports this one, and a value import would close the loop.
 import type { Db } from "./index.js";
 import { ssoProviders } from "./schema/auth.js";
-import { aiConnector } from "./schema/ai-connector.js";
+import { aiSavedKeys } from "./schema/ai-connector.js";
 import { orgSettings } from "./schema/org.js";
 import { signingConnectors } from "./schema/signing-connectors.js";
 import { openSecret, sealSecret, sealedByCurrentKey } from "./secrets.js";
@@ -79,7 +79,7 @@ interface SecretColumn {
  * See TECH-022's #387 addendum.
  */
 const SEALED_COLUMNS: SecretColumn[] = [
-  { table: aiConnector, id: aiConnector.id, column: aiConnector.apiKey },
+  { table: aiSavedKeys, id: aiSavedKeys.id, column: aiSavedKeys.apiKey },
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.privateKey },
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.webhookSecret },
   { table: orgSettings, id: orgSettings.id, column: orgSettings.smtpUrl },

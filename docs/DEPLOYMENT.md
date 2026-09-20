@@ -287,7 +287,7 @@ docker compose up -d --scale worker=2
 
 ## AI contract analysis
 
-Configure AI analysis in **Settings → Organization → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and API key as organization data. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
+Configure AI analysis in **Settings → Organization → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and a reference to its Saved key as organization data. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
 
 Enter the provider key and any required endpoint, then select **Load models**. Search the list
 and select a model. OpenLaw stores its exact ID. **Refresh models** updates the list without
@@ -295,8 +295,10 @@ changing the selected model. Loading does not save the connector, send Contract 
 model weights. Ollama lists its installed models. Use **Enter model ID manually** if discovery is
 unavailable or the model is missing. Azure uses the deployment name from your Azure resource.
 Save the connector and use **Test connection** to check the choice; listing alone does not prove
-that a model supports Contract analysis. A changed provider or endpoint requires a newly entered
-API key. A blank key preserves the saved key only at the same destination.
+that a model supports Contract analysis. Each destination, defined by preset, protocol, and
+normalized base URL, keeps one Saved key. **Key saved** means a blank save or Load models can use
+that destination's key. **Key in use** identifies the connector's current key. Pasting replaces
+only the destination's key. **Remove connector** leaves Saved keys on file.
 
 The **worker makes the provider calls for Contract extraction**. The **API loads model lists and makes the Test connection call** when an Administrator presses the corresponding button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for model discovery and the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
 

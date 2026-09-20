@@ -2738,6 +2738,17 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   },
 
   // ---- The AI connector (CTR-008, TECH-012) ----
+  "ai_saved_key.stored": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.aiSavedKey.stored",
+      defaultMessage: "{actor} stored a Saved key for {provider} at {baseUrl}",
+    }),
+    values: (intl, payload) => ({
+      provider: aiPreset(intl, payload),
+      baseUrl: named(intl, payload, "baseUrl"),
+    }),
+  },
   "ai_connector.configured": {
     icon: Plug,
     message: defineMessage({
@@ -2775,7 +2786,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     icon: Trash2,
     message: defineMessage({
       id: "activity.aiConnector.removed",
-      defaultMessage: "{actor} removed the AI connector {provider} and its API key",
+      defaultMessage: "{actor} removed the AI connector {provider}",
     }),
     values: (intl, payload) => ({ provider: aiPreset(intl, payload) }),
   },
