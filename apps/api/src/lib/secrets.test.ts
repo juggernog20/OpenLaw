@@ -20,6 +20,7 @@
 import { afterAll, beforeAll, expect, it, describe } from "vitest";
 import {
   eq,
+  aiSavedKeys,
   orgSettings,
   readSecretKeys,
   rewrapSecrets,
@@ -218,6 +219,15 @@ describe("rotating the key", () => {
     await saveConnector(RSA_KEY, CONNECT_SECRET);
     await db.update(orgSettings).set({ smtpUrl: RELAY_URL, smtpFrom: "OpenLaw <o@example.com>" });
 
+    await db.insert(aiSavedKeys).values({
+      preset: "openai",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "saved-ai-test-key",
+    });
+    const [savedBefore] = await db.select().from(aiSavedKeys);
+    expectSealed(await storedText("ai_saved_keys", "api_key"));
+
     // The boot the deploy docs describe: the new key in one variable,
     // the retiring one in the other.
     useSecretKeys(
@@ -229,12 +239,16 @@ describe("rotating the key", () => {
     const report = await rewrapSecrets(db);
     expect(report.unreadable).toEqual({});
     expect(report.resealed.private_key).toBe(1);
+    expect(report.resealed.api_key).toBe(1);
     expect(report.resealed.vapid_private_key).toBe(1);
 
     // And the boot after, with the old variable removed.
     useSecretKeys(readSecretKeys({ [SECRET_KEY_VARIABLE]: OTHER_KEY }));
     const [row] = await db.select().from(signingConnectors).limit(1);
     expect(row?.privateKey).toBe(RSA_KEY);
+    const [savedAfter] = await db.select().from(aiSavedKeys);
+    expect(savedAfter?.apiKey).toBe("saved-ai-test-key");
+    expect(savedAfter?.updatedAt).toEqual(savedBefore?.updatedAt);
     expect(await rewrapSecrets(db)).toEqual({ resealed: {}, unreadable: {} });
   });
 

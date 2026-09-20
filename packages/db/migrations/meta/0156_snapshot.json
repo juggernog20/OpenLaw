@@ -1,6 +1,6 @@
 {
-  "id": "a04ff3fb-b39c-43b4-8d3d-d4f6ed809082",
-  "prevId": "fed58824-04f9-434c-8449-6b82839f8d5b",
+  "id": "da28cb83-0344-4dce-b09f-bfe8bcc844f1",
+  "prevId": "a04ff3fb-b39c-43b4-8d3d-d4f6ed809082",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -223,6 +223,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "answer_style": {
+          "name": "answer_style",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'sentence'"
+        },
         "max_output_tokens": {
           "name": "max_output_tokens",
           "type": "integer",
@@ -304,6 +311,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "ai_connector_answer_style_check": {
+          "name": "ai_connector_answer_style_check",
+          "value": "\"ai_connector\".\"answer_style\" in ('few_words', 'sentence', 'full_clause')"
+        },
         "ai_connector_output_tokens_check": {
           "name": "ai_connector_output_tokens_check",
           "value": "\"ai_connector\".\"max_output_tokens\" between 1024 and 262144"
@@ -8816,6 +8827,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "ai_answer_style": {
+          "name": "ai_answer_style",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "is_system_default": {
           "name": "is_system_default",
           "type": "boolean",
@@ -8881,6 +8898,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "fields_ai_answer_style_check": {
+          "name": "fields_ai_answer_style_check",
+          "value": "\"fields\".\"ai_answer_style\" is null or (\"fields\".\"module_scope\" = 'contract' and \"fields\".\"field_type\" in ('text', 'long_text') and \"fields\".\"ai_answer_style\" in ('few_words', 'sentence', 'full_clause') and (\"fields\".\"ai_answer_style\" <> 'full_clause' or \"fields\".\"field_type\" = 'long_text'))"
+        },
         "fields_module_scope_check": {
           "name": "fields_module_scope_check",
           "value": "\"fields\".\"module_scope\" in ('matter', 'contract', 'entity')"

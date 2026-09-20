@@ -17,7 +17,8 @@ import {
   AI_OUTPUT_TOKEN_MAX,
 } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
-import { canReuseAiKey } from "../lib/ai-connector-config";
+import { AiSavedKeyControl } from "../components/ai-saved-key-control";
+import { findSavedAiKey } from "../lib/ai-connector-config";
 import { AiModelSelector } from "../components/ai-model-selector";
 import { AiAnswerStyleCard } from "../components/ai-answer-style-card";
 import { AiPromptCards } from "../components/ai-prompt-cards";
@@ -29,7 +30,7 @@ import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
-import { aiPresetLabel } from "../lib/ai-presets";
+import { aiProviderOptionLabel } from "../lib/ai-presets";
 import { api } from "../lib/api";
 import { formatShortDate } from "../lib/format";
 import { problem } from "../lib/problem";
@@ -57,10 +58,15 @@ export async function settingsAiAnalysisLoader() {
   return { ...connector.data, ...prompts.data };
 }
 
-function FormField(props: Readonly<{ id: string; label: ReactNode; children: ReactNode }>) {
+function FormField(
+  props: Readonly<{ id: string; label: ReactNode; status?: ReactNode; children: ReactNode }>,
+) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={props.id}>{props.label}</Label>
+      <div className="flex items-center gap-2">
+        <Label htmlFor={props.id}>{props.label}</Label>
+        {props.status}
+      </div>
       {props.children}
     </div>
   );
@@ -98,7 +104,7 @@ export function SettingsAiAnalysisPage() {
   const changingLifecycle = useRef(false);
   const selected = loaded.presets.find((option) => option.preset === preset)!;
 
-  const canKeepKey = canReuseAiKey(connector, { preset, protocol, baseUrl });
+  const savedKey = findSavedAiKey(connector.savedKeys, { preset, protocol, baseUrl });
 
   function note(field: Field, value: FieldStatus, message?: string) {
     setStatus((current) => ({ ...current, [field]: value }));
@@ -270,7 +276,7 @@ export function SettingsAiAnalysisPage() {
             >
               {loaded.presets.map((option) => (
                 <option key={option.preset} value={option.preset}>
-                  {aiPresetLabel(intl, option.preset)}
+                  {aiProviderOptionLabel(intl, option.preset, connector.savedKeys)}
                 </option>
               ))}
             </select>
@@ -339,12 +345,17 @@ export function SettingsAiAnalysisPage() {
           <FormField
             id="ai-api-key"
             label={<FormattedMessage id="settings.aiAnalysis.apiKey" defaultMessage="API key" />}
+            status={
+              savedKey && (
+                <AiSavedKeyControl key={savedKey.id} savedKey={savedKey} onChanged={setConnector} />
+              )
+            }
           >
             <Input
               id="ai-api-key"
               className="w-80"
               type="password"
-              required={selected.requiresApiKey && !canKeepKey}
+              required={selected.requiresApiKey && !savedKey}
               value={apiKey}
               onChange={(event) => setApiKey(event.target.value)}
               placeholder={intl.formatMessage({
@@ -353,10 +364,10 @@ export function SettingsAiAnalysisPage() {
               })}
             />
             <p className="text-xs text-muted">
-              {canKeepKey ? (
+              {savedKey ? (
                 <FormattedMessage
                   id="settings.aiAnalysis.apiKey.keep"
-                  defaultMessage="Leave blank to keep the current key. Paste a new one to rotate."
+                  defaultMessage="Leave blank to use the saved key. Paste a new one to rotate it."
                 />
               ) : selected.requiresApiKey ? (
                 <FormattedMessage
@@ -376,7 +387,7 @@ export function SettingsAiAnalysisPage() {
             key={JSON.stringify([preset, protocol, baseUrl, apiKey, connector.updatedAt])}
             config={{ preset, protocol, baseUrl, ...(apiKey.trim() ? { apiKey } : {}) }}
             canLoad={
-              (!selected.requiresApiKey || canKeepKey || !!apiKey.trim()) &&
+              (!selected.requiresApiKey || !!savedKey || !!apiKey.trim()) &&
               (!selected.requiresBaseUrl || !!baseUrl.trim())
             }
             value={model}
@@ -613,7 +624,7 @@ export function SettingsAiAnalysisPage() {
               <p className="text-sm text-muted">
                 <FormattedMessage
                   id="settings.aiAnalysis.removeBody"
-                  defaultMessage="The API key is deleted with the connector. Reconnecting means entering it again."
+                  defaultMessage="Saved keys stay on file. You can use them when you reconnect, or use Forget key to delete them."
                 />
               </p>
               <div className="flex justify-end gap-2">

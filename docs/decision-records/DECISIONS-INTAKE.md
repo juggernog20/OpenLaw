@@ -916,7 +916,7 @@ mechanics and the reason are the CTR-008 addendum of the same date in `DECISIONS
 
 The five `conversion.*` prompts now appear in the collapsed Conversion draft prompts
 card. Each editable instruction has a muted, code-owned format sentence beneath it.
-The API no longer accepts `rules.*` slugs, and migration `0155` removes their stored
+The API no longer accepts `rules.*` slugs, and migration `0156` removes their stored
 overrides. Conversion drafts retain their built-in title and description wording without Answer
 styles. Prompted catalog text Fields use the effective style through the shared target
 path, including Contract Field overrides. Sources, provenance and acceptance rules

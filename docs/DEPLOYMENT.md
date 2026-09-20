@@ -49,7 +49,7 @@ Deployment configuration uses environment variables in `.env`; [`.env.example`](
 | Variable                        | Required | Meaning                                                                                                                                                                                                                                                                                                          |
 | ------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AUTH_SECRET`                   | yes      | Session signing + at-rest crypto for 2FA material and stored OIDC tokens. Changing it signs everyone out and breaks enrolled 2FA — put the old value back, or every enrolled user re-enrols. The stored OIDC tokens stop being readable as well, and that costs nothing: the next SSO sign-in writes fresh ones. |
-| `OPENLAW_SECRET_KEY`            | yes      | Encrypts the credentials saved in Settings — the DocuSign key, the Connect secret, the SMTP relay URL, the SSO client secret, and the AI provider key. Keep it out of the database backup — see [The credential encryption key](#the-credential-encryption-key).                                                 |
+| `OPENLAW_SECRET_KEY`            | yes      | Encrypts the credentials saved in Settings — the DocuSign key, the Connect secret, the SMTP relay URL, the SSO client secret, and the AI provider Saved keys. Keep it out of the database backup — see [The credential encryption key](#the-credential-encryption-key).                                          |
 | `OPENLAW_SECRET_KEY_PREVIOUS`   | no       | The retiring key while `OPENLAW_SECRET_KEY` is being rotated. Set it for one boot, then remove it — see [The credential encryption key](#the-credential-encryption-key).                                                                                                                                         |
 | `DATABASE_URL`                  | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                                                                                                  |
 | `BASE_URL`                      | in prod  | The browser-facing origin (e.g. `https://legal.example.com`), which may be private to the office network or VPN. Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                                              |
@@ -287,7 +287,7 @@ docker compose up -d --scale worker=2
 
 ## AI contract analysis
 
-Configure AI analysis in **Settings → Organization → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and API key as organization data. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
+Configure AI analysis in **Settings → Organization → AI analysis**. The connector stores the preset or custom protocol, base URL, model, and a reference to its Saved key as organization data. Saved keys live in the database's `ai_saved_keys` table; `ai_connector.saved_key_id` references the one the connector uses. There is no AI provider environment variable: changing the connector applies to the next call without restarting either process.
 
 Enter the provider key and any required endpoint, then select **Load models**. Search the list
 and select a model. OpenLaw stores its exact ID. **Refresh models** updates the list without
@@ -295,12 +295,16 @@ changing the selected model. Loading does not save the connector, send Contract 
 model weights. Ollama lists its installed models. Use **Enter model ID manually** if discovery is
 unavailable or the model is missing. Azure uses the deployment name from your Azure resource.
 Save the connector and use **Test connection** to check the choice; listing alone does not prove
-that a model supports Contract analysis. A changed provider or endpoint requires a newly entered
-API key. A blank key preserves the saved key only at the same destination.
+that a model supports Contract analysis. Each destination, defined by preset, protocol, and
+normalized base URL, keeps one Saved key. **Key saved** means a blank save or Load models can use
+that destination's key. **Key in use** identifies the connector's referenced key, even while the
+connector is turned off. Saving a pasted key replaces only the destination's key. Only **Forget key** deletes
+a Saved key the connector does not reference. Provider changes and **Remove connector** leave
+Saved keys on file.
 
 The **worker makes the provider calls for Contract extraction**. The **API loads model lists and makes the Test connection call** when an Administrator presses the corresponding button. In a restricted deployment, allow outbound HTTPS and provider DNS from the worker for ordinary runs and from the app for model discovery and the test. A custom connector may point at another reachable HTTP endpoint, including a model server on your own network.
 
-The API key is write-only after save and encrypted at rest under `OPENLAW_SECRET_KEY`. The app and worker must therefore receive the same key, just as they do for the signing connector. Losing it does not damage Contracts or Analysis runs, but the stored provider key cannot be read until the old encryption key is restored or an Administrator replaces that provider key.
+Saved keys are write-only after save and encrypted at rest under `OPENLAW_SECRET_KEY`. The app and worker must therefore receive the same encryption key, just as they do for the signing connector. Losing it does not damage Contracts or Analysis runs, but Saved keys cannot be read until the old encryption key is restored or an Administrator replaces each affected destination's key. Unreadable Saved keys stay in the database for recovery; the pane shows no **Key saved** pill and no **Forget key** for them until the encryption key is restored or a new key is pasted for that destination.
 
 ## Email
 
@@ -441,7 +445,7 @@ The two caveats above still apply here. Emails already sent carry the attachment
 
 ## The credential encryption key
 
-Your Administrators paste five credentials into Settings: the DocuSign RSA private key, the DocuSign Connect secret, the SMTP relay URL with its password inline, the SSO client secret, and the AI provider key. OpenLaw encrypts all five before they reach Postgres, with `OPENLAW_SECRET_KEY` (TECH-022). The app and the worker both read it at boot and refuse to start without it.
+Your Administrators paste five credentials into Settings: the DocuSign RSA private key, the DocuSign Connect secret, the SMTP relay URL with its password inline, the SSO client secret, and the AI provider Saved keys. OpenLaw encrypts all five before they reach Postgres, with `OPENLAW_SECRET_KEY` (TECH-022). The app and the worker both read it at boot and refuse to start without it.
 
 The exposure this closes is not "somebody reads a password". Whoever holds the DocuSign key can mint JWTs as your integration user — send, void, and read envelopes as you — and whoever holds the Connect secret can forge a delivery telling OpenLaw a contract was signed when it was not.
 

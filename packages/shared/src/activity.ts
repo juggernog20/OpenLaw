@@ -1135,6 +1135,13 @@ type SigningConnectorPayloads = {
 
 /** The singleton AI connector follows the signing connector's settings history. */
 type AiConnectorPayloads = {
+  "ai_saved_key.forgotten": { preset: string; protocol: string; baseUrl: string };
+  "ai_saved_key.stored": {
+    preset: string;
+    protocol: string;
+    baseUrl: string;
+    replaced: boolean;
+  };
   "ai_connector.configured": {
     preset: string;
     protocol: string;

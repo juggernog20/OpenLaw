@@ -86,7 +86,7 @@ it("rolls back the whole migration after an earlier migration leaves autocommit 
 it("leaves existing Fields on Organisation default and constrains overrides", async () => {
   const db = await freshDb(container, "field_answer_styles");
   try {
-    await migrateThrough(db, "0155_answer-style", migrationEntries());
+    await migrateThrough(db, "0156_answer-style", migrationEntries());
     await runMigrations(db);
     expect((await db.execute(sql`select ai_answer_style from fields`)).rows.length).toBeGreaterThan(
       0,

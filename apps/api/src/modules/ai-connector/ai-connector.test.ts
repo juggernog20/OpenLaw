@@ -1,7 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { activityLog, aiConnector, aiFieldPrompts, asc, inArray, sql, type Db } from "@openlaw/db";
+import {
+  activityLog,
+  aiConnector,
+  aiSavedKeys,
+  eq,
+  aiFieldPrompts,
+  asc,
+  inArray,
+  sql,
+  type Db,
+} from "@openlaw/db";
 import { createAiResolver } from "../../lib/ai/resolver.js";
 import { conversionPrompt, readAiPrompts } from "../../lib/ai-prompts.js";
 import { createFakeAiProvider } from "../../lib/ai/fake.js";
@@ -20,6 +30,8 @@ import {
 const URL = "/api/v1/ai-connector";
 const PROMPTS_URL = "/api/v1/ai-field-prompts";
 const ACTIONS = [
+  "ai_saved_key.stored",
+  "ai_saved_key.forgotten",
   "ai_connector.configured",
   "ai_connector.updated",
   "ai_connector.disabled",
@@ -48,6 +60,7 @@ function auditRows(db: Db) {
 
 async function clear(): Promise<void> {
   await harness.db.delete(aiConnector);
+  await harness.db.delete(aiSavedKeys);
   await harness.db.delete(aiFieldPrompts);
   await harness.db.delete(activityLog).where(inArray(activityLog.action, [...ACTIONS]));
 }
@@ -98,6 +111,7 @@ describe("the AI connector role gate", () => {
       { method: "POST" as const, url: `${URL}/disable` },
       { method: "POST" as const, url: `${URL}/enable` },
       { method: "DELETE" as const, url: URL },
+      { method: "DELETE" as const, url: `${URL}/saved-keys/00000000-0000-4000-8000-000000000000` },
       { method: "GET" as const, url: PROMPTS_URL },
       {
         method: "PUT" as const,
@@ -319,6 +333,177 @@ describe("the core Field prompts", () => {
 });
 
 describe("saving and reading", () => {
+  it("keeps an unreadable Saved key listed, refuses reuse, and repairs the same row on paste", async () => {
+    const initial = await save({ preset: "openai", model: "one", apiKey: FAKE_VALID_AI_KEY });
+    const id = initial.json().connector.savedKeys[0].id;
+    await harness.db.execute(
+      sql`update ai_saved_keys set api_key = 'openlaw:v1:unreadable-fixture'`,
+    );
+    const read = await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies });
+    expect(read.json().connector).toMatchObject({
+      hasApiKey: false,
+      savedKeys: [{ id, hasApiKey: false, inUse: true }],
+    });
+    const build = vi.fn(createFakeAiProvider);
+    await createAiResolver(harness.db, build)();
+    expect(build.mock.calls[0]?.[0]?.apiKey).toBeNull();
+    expect((await save({ preset: "openai", model: "one" })).statusCode).toBe(400);
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const models = await harness.app.inject({
+      method: "POST",
+      url: `${URL}/models`,
+      cookies: adminCookies,
+      payload: { preset: "openai" },
+    });
+    expect(models.statusCode).toBe(400);
+    expect(fetcher).not.toHaveBeenCalled();
+    const repaired = await save({ preset: "openai", model: "one", apiKey: FAKE_VALID_AI_KEY });
+    expect(repaired.statusCode, repaired.body).toBe(200);
+    expect(repaired.json().connector.savedKeys).toEqual([
+      expect.objectContaining({ id, hasApiKey: true }),
+    ]);
+    expect(await harness.db.select().from(aiSavedKeys)).toHaveLength(1);
+  });
+
+  it("rotates only the destination's Saved key and rebuilds a driver when that key changes", async () => {
+    await save({ preset: "openai", model: "one", apiKey: FAKE_VALID_AI_KEY });
+    await save({ preset: "groq", model: "two", apiKey: "groq-test-key" });
+    await save({ preset: "openai", model: "one", apiKey: "replacement-test-key" });
+    const keys = await harness.db.select().from(aiSavedKeys);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ preset: "openai", apiKey: "replacement-test-key" }),
+        expect.objectContaining({ preset: "groq", apiKey: "groq-test-key" }),
+      ]),
+    );
+    const build = vi.fn(createFakeAiProvider);
+    const resolve = createAiResolver(harness.db, build);
+    const first = await resolve();
+    expect(await resolve()).toBe(first);
+    const [before] = await harness.db.select().from(aiConnector);
+    await harness.db
+      .update(aiSavedKeys)
+      .set({ apiKey: FAKE_VALID_AI_KEY })
+      .where(eq(aiSavedKeys.preset, "openai"));
+    expect(await resolve()).not.toBe(first);
+    expect(build).toHaveBeenCalledTimes(2);
+    expect(build.mock.calls.at(-1)?.[0]?.apiKey).toBe(FAKE_VALID_AI_KEY);
+    expect((await harness.db.select().from(aiConnector))[0]?.updatedAt).toEqual(before?.updatedAt);
+    const stored = (await auditRows(harness.db)).filter(
+      (row) => row.action === "ai_saved_key.stored",
+    );
+    expect(stored.map((row) => row.payload)).toEqual([
+      {
+        preset: "openai",
+        protocol: "openai_chat_completions",
+        baseUrl: "https://api.openai.com/v1",
+        replaced: false,
+      },
+      {
+        preset: "groq",
+        protocol: "openai_chat_completions",
+        baseUrl: "https://api.groq.com/openai/v1",
+        replaced: false,
+      },
+      {
+        preset: "openai",
+        protocol: "openai_chat_completions",
+        baseUrl: "https://api.openai.com/v1",
+        replaced: true,
+      },
+    ]);
+    expect(JSON.stringify(stored)).not.toContain("replacement-test-key");
+    expect((await auditRows(harness.db)).some((row) => row.payload.field === "apiKey")).toBe(false);
+  });
+
+  it("stores an optional pasted Ollama key and restricts deletion of a key in use", async () => {
+    const saved = await save({ preset: "ollama", model: "local", apiKey: FAKE_VALID_AI_KEY });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect(saved.json().connector.savedKeys).toEqual([
+      expect.objectContaining({ preset: "ollama", inUse: true }),
+    ]);
+    await expect(harness.db.delete(aiSavedKeys)).rejects.toThrow();
+    const reused = await save({ preset: "ollama", model: "local" });
+    expect(reused.json().connector.hasApiKey).toBe(true);
+  });
+
+  it("finds a migrated Saved key whose URL has not been normalized", async () => {
+    await harness.db.insert(aiSavedKeys).values({
+      preset: "custom",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://legacy.test/v1/?b=2&a=1#old",
+      apiKey: FAKE_VALID_AI_KEY,
+    });
+    const saved = await save({
+      preset: "custom",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://legacy.test/v1?a=1&b=2",
+      model: "local",
+    });
+    expect(saved.statusCode, saved.body).toBe(200);
+    expect(saved.json().connector.savedKeys).toHaveLength(1);
+    expect(saved.json().connector.savedKeys[0].baseUrl).toBe("https://legacy.test/v1?a=1&b=2");
+    const build = vi.fn(createFakeAiProvider);
+    await createAiResolver(harness.db, build)();
+    expect(build.mock.calls[0]?.[0]?.apiKey).toBe(FAKE_VALID_AI_KEY);
+  });
+
+  it("keeps Saved keys when switching OpenAI to Groq and back, and when removing the connector", async () => {
+    const openai = await save({ preset: "openai", model: "one", apiKey: FAKE_VALID_AI_KEY });
+    expect(openai.statusCode, openai.body).toBe(200);
+    const groq = await save({ preset: "groq", model: "two", apiKey: "groq-test-key" });
+    expect(groq.statusCode, groq.body).toBe(200);
+    const returned = await save({ preset: "openai", model: "one", apiKey: "" });
+    expect(returned.statusCode, returned.body).toBe(200);
+    expect(returned.json().connector.savedKeys).toEqual([
+      expect.objectContaining({ preset: "openai", inUse: true }),
+      expect.objectContaining({ preset: "groq", inUse: false }),
+    ]);
+    const probe = await harness.app.inject({
+      method: "POST",
+      url: `${URL}/test`,
+      cookies: adminCookies,
+    });
+    expect(probe.statusCode, probe.body).toBe(200);
+    const removed = await harness.app.inject({ method: "DELETE", url: URL, cookies: adminCookies });
+    expect(removed.statusCode, removed.body).toBe(200);
+    expect(removed.json().connector).toMatchObject({ configured: false, hasApiKey: false });
+    expect(removed.json().connector.savedKeys).toEqual([
+      expect.objectContaining({ preset: "openai", inUse: false }),
+      expect.objectContaining({ preset: "groq", inUse: false }),
+    ]);
+    const read = await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies });
+    expect(read.json().connector.savedKeys).toEqual(removed.json().connector.savedKeys);
+    for (const response of [openai, groq, returned, removed, read]) {
+      expect(response.body).not.toContain(FAKE_VALID_AI_KEY);
+      expect(response.body).not.toContain("groq-test-key");
+    }
+    expect((await save({ preset: "openai", model: "one" })).statusCode).toBe(200);
+  });
+
+  it("shares a Saved key across normalized custom URLs", async () => {
+    const config = { preset: "custom", protocol: "openai_chat_completions", model: "local" };
+    await save({
+      ...config,
+      baseUrl: "https://private.test/v1/?b=2&a=1#ignored",
+      apiKey: FAKE_VALID_AI_KEY,
+    });
+    const reused = await save({ ...config, baseUrl: "https://private.test/v1?a=1&b=2" });
+    expect(reused.statusCode, reused.body).toBe(200);
+    expect(reused.json().connector.savedKeys).toEqual([
+      expect.objectContaining({ baseUrl: "https://private.test/v1?a=1&b=2", inUse: true }),
+    ]);
+    const replaced = await save({
+      ...config,
+      baseUrl: "https://private.test/v1/?a=1&b=2",
+      apiKey: "replacement-test-key",
+    });
+    expect(replaced.statusCode, replaced.body).toBe(200);
+    expect(replaced.json().connector.savedKeys).toHaveLength(1);
+    expect(replaced.json().connector.savedKeys[0].id).toBe(reused.json().connector.savedKeys[0].id);
+  });
+
   it("reads an unconfigured singleton and the eight server-owned choices", async () => {
     const res = await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies });
     expect(res.statusCode, res.body).toBe(200);
@@ -335,7 +520,7 @@ describe("saving and reading", () => {
     ]);
   });
 
-  it("pins Groq settings, reuses its key for a model change, and drops it on a preset change", async () => {
+  it("pins Groq settings and retains its Saved key through model and preset changes", async () => {
     const missingKey = await save({ preset: "groq", model: "openai/gpt-oss-120b" });
     expect(missingKey.statusCode, missingKey.body).toBe(400);
     expect(missingKey.json().detail).toContain("API key");
@@ -369,7 +554,7 @@ describe("saving and reading", () => {
     const updated = await save({ preset: "groq", model: "another-model" });
     expect(updated.statusCode, updated.body).toBe(200);
     expect(updated.json().connector).toMatchObject({ model: "another-model", hasApiKey: true });
-    expect((await harness.db.select().from(aiConnector))[0]?.apiKey).toBe(FAKE_VALID_AI_KEY);
+    expect((await harness.db.select().from(aiSavedKeys))[0]?.apiKey).toBe(FAKE_VALID_AI_KEY);
     const probe = await harness.app.inject({
       method: "POST",
       url: `${URL}/test`,
@@ -391,7 +576,7 @@ describe("saving and reading", () => {
     const changed = await save({ preset: "ollama", model: "llama3.2" });
     expect(changed.statusCode, changed.body).toBe(200);
     expect(changed.json().connector.hasApiKey).toBe(false);
-    expect((await harness.db.select().from(aiConnector))[0]?.apiKey).toBeNull();
+    expect((await harness.db.select().from(aiConnector))[0]?.savedKeyId).toBeNull();
   });
 
   it("refuses a first non-Ollama save without a key", async () => {
@@ -486,10 +671,10 @@ describe("saving and reading", () => {
     expect(updated.body).not.toContain(FAKE_VALID_AI_KEY);
     expect(updated.json().connector).toMatchObject({ hasApiKey: true, model: "gpt-test-2" });
     expect("apiKey" in updated.json().connector).toBe(false);
-    const [opened] = await harness.db.select().from(aiConnector).limit(1);
+    const [opened] = await harness.db.select().from(aiSavedKeys).limit(1);
     expect(opened?.apiKey).toBe(FAKE_VALID_AI_KEY);
     const raw = await harness.db.execute<{ value: string }>(
-      sql`SELECT api_key AS value FROM ai_connector`,
+      sql`SELECT api_key AS value FROM ai_saved_keys`,
     );
     expect(raw.rows[0]?.value).not.toContain(FAKE_VALID_AI_KEY);
   });
@@ -571,6 +756,7 @@ describe("the settings history", () => {
     await harness.app.inject({ method: "DELETE", url: URL, cookies: adminCookies });
     const rows = await auditRows(harness.db);
     expect(rows.map((row) => row.action)).toEqual([
+      "ai_saved_key.stored",
       "ai_connector.configured",
       "ai_connector.updated",
       "ai_connector.disabled",
@@ -583,6 +769,26 @@ describe("the settings history", () => {
 });
 
 describe("model discovery", () => {
+  it("loads models with the requested Saved key even while another destination is in use", async () => {
+    await save({ preset: "openai", model: "one", apiKey: FAKE_VALID_AI_KEY });
+    await save({ preset: "groq", model: "two", apiKey: "groq-test-key" });
+    const fetcher = vi.fn().mockImplementation(() => Promise.resolve(Response.json({ data: [] })));
+    vi.stubGlobal("fetch", fetcher);
+    for (const [preset, key] of [
+      ["openai", FAKE_VALID_AI_KEY],
+      ["groq", "groq-test-key"],
+    ]) {
+      const response = await discover({ preset });
+      expect(response.statusCode, response.body).toBe(200);
+      expect(fetcher.mock.calls.at(-1)?.[1]).toMatchObject({
+        headers: { authorization: `Bearer ${key}` },
+      });
+      expect(response.body).not.toContain(key);
+    }
+    expect((await discover({ preset: "anthropic" })).statusCode).toBe(400);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
   async function discover(payload: Record<string, unknown>) {
     return harness.app.inject({
       method: "POST",
@@ -659,7 +865,7 @@ describe("model discovery", () => {
     expect(fetcher.mock.calls[0]![1]).toMatchObject({
       headers: { "x-api-key": "replacement-test-key" },
     });
-    expect((await harness.db.select().from(aiConnector))[0]?.apiKey).toBe(FAKE_VALID_AI_KEY);
+    expect((await harness.db.select().from(aiSavedKeys))[0]?.apiKey).toBe(FAKE_VALID_AI_KEY);
   });
 
   it("lists Ollama without sending a previous provider key and explains Azure manual entry", async () => {
@@ -677,20 +883,14 @@ describe("model discovery", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it("clears a previous provider key when saving keyless Ollama and records the change", async () => {
+  it("leaves the previous Saved key on file when saving keyless Ollama", async () => {
     await save({ preset: "openai", model: "old", apiKey: FAKE_VALID_AI_KEY });
     const result = await save({ preset: "ollama", model: "installed" });
     expect(result.statusCode, result.body).toBe(200);
     expect(result.json().connector.hasApiKey).toBe(false);
-    expect((await harness.db.select().from(aiConnector))[0]?.apiKey).toBeNull();
-    expect(await auditRows(harness.db)).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          action: "ai_connector.updated",
-          payload: { preset: "ollama", field: "apiKey", old: "[secret]", new: "[secret]" },
-        }),
-      ]),
-    );
+    expect((await harness.db.select().from(aiConnector))[0]?.savedKeyId).toBeNull();
+    expect(await harness.db.select().from(aiSavedKeys)).toHaveLength(1);
+    expect((await auditRows(harness.db)).some((row) => row.payload.field === "apiKey")).toBe(false);
   });
 
   it("does not expose an echoed secret when a provider refuses discovery", async () => {
@@ -782,4 +982,77 @@ it("saves the answer style, preserves it on provider edits, and audits only a ch
       })
     ).statusCode,
   ).toBe(400);
+});
+
+describe("Forget key", () => {
+  it("deletes only the named Saved key, returns the envelope and records its destination without a key", async () => {
+    const first = await save({ preset: "openai", model: "test", apiKey: "first-secret-value" });
+    const id = first.json().connector.savedKeys[0].id;
+    await save({ preset: "groq", model: "test", apiKey: "second-secret-value" });
+    const response = await harness.app.inject({
+      method: "DELETE",
+      url: `${URL}/saved-keys/${id}`,
+      cookies: adminCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().connector.savedKeys).toEqual([
+      expect.objectContaining({ preset: "groq", inUse: true, hasApiKey: true }),
+    ]);
+    const remaining = await harness.db.select().from(aiSavedKeys);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0]?.preset).toBe("groq");
+    expect(remaining[0]?.apiKey).toBe("second-secret-value");
+    const forgotten = (await auditRows(harness.db)).filter(
+      (row) => row.action === "ai_saved_key.forgotten",
+    );
+    expect(forgotten).toEqual([
+      expect.objectContaining({
+        entityType: "system",
+        visibility: "admin_only",
+        actorId: expect.any(String),
+        payload: {
+          preset: "openai",
+          protocol: "openai_chat_completions",
+          baseUrl: "https://api.openai.com/v1",
+        },
+      }),
+    ]);
+    for (const secret of ["first-secret-value", "second-secret-value"]) {
+      expect(response.body).not.toContain(secret);
+      expect(JSON.stringify(await auditRows(harness.db))).not.toContain(secret);
+    }
+    expect(response.body).not.toContain('"apiKey"');
+    const read = await harness.app.inject({ method: "GET", url: URL, cookies: adminCookies });
+    expect(read.json()).toEqual(response.json());
+    const repeated = await harness.app.inject({
+      method: "DELETE",
+      url: `${URL}/saved-keys/${id}`,
+      cookies: adminCookies,
+    });
+    expect(repeated.statusCode).toBe(404);
+  });
+
+  it.each([false, true])(
+    "refuses the referenced key with 409, including when disabled=%s",
+    async (disabled) => {
+      const saved = await save({ preset: "openai", model: "test", apiKey: "in-use-secret-value" });
+      const id = saved.json().connector.savedKeys[0].id;
+      if (disabled)
+        await harness.app.inject({ method: "POST", url: `${URL}/disable`, cookies: adminCookies });
+      const response = await harness.app.inject({
+        method: "DELETE",
+        url: `${URL}/saved-keys/${id}`,
+        cookies: adminCookies,
+      });
+      expect(response.statusCode).toBe(409);
+      expect(response.json().detail).toBe(
+        "This Saved key is in use by the AI connector. Remove the connector or choose another destination before forgetting it.",
+      );
+      expect(response.body).not.toContain("in-use-secret-value");
+      expect(await harness.db.select().from(aiSavedKeys)).toHaveLength(1);
+      expect(
+        (await auditRows(harness.db)).filter((row) => row.action === "ai_saved_key.forgotten"),
+      ).toEqual([]);
+    },
+  );
 });

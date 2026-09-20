@@ -193,7 +193,7 @@ Configure [Signing](configure-signing.md) and [AI analysis](configure-analysis.m
 
 `AUTH_SECRET` protects session signing and authentication material, including enrolled two-factor authentication. Changing it can invalidate sessions and make that material unreadable. Preserve it for a restore; do not use an ad hoc change as an account-recovery procedure.
 
-`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP server address and credentials, the SSO client secret, the AI-provider key, and the saved Advanced configuration, including object-store credentials. It does not encrypt the database's Contract text or ordinary records. Store its recovery copy separately from database archives. Both processes require it at startup.
+`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP server address and credentials, the SSO client secret, Saved keys for AI provider destinations, and the saved Advanced configuration, including object-store credentials. It does not encrypt the database's Contract text or ordinary records. Store its recovery copy separately from database archives. Both processes require it at startup.
 
 To rotate this credential key:
 

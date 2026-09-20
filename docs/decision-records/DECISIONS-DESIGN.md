@@ -4464,6 +4464,10 @@ The Field prompts card grew on 2026-09-19 (CTR-008) into one card of three alway
 
 `AiFieldPromptsCard` becomes `AiPromptCards`. The three group labels become the card titles; `settings.aiAnalysis.prompts.title` is gone. The M31 acceptance journey opens a card before it looks for a prompt.
 
+### Amendment (2026-09-20, [#982](https://github.com/juggernog20/OpenLaw/issues/982))
+
+The Provider card's API key field carries the **Key saved** / **Key in use** pill and **Forget key** for a key the connector does not reference; the Provider select carries the **(key saved)** suffix, with no new token.
+
 ## DES-071: A Comparison is one change pane beside one compare card (extends DES-006, DES-016, DES-063)
 
 - **Status:** Accepted

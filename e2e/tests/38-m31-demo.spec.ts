@@ -133,7 +133,7 @@ async function configureConnector(page: Page, stub: OpenAiStub, testInfo: TestIn
 
   const provider = page.getByRole("button", { name: "Provider", exact: true });
   if ((await provider.getAttribute("aria-expanded")) === "false") await provider.click();
-  await page.getByLabel("Provider").selectOption({ label: "Custom endpoint" });
+  await page.getByLabel("Provider").selectOption("custom");
   await page.getByLabel("Protocol").selectOption({ label: "OpenAI-compatible chat completions" });
   await page.getByLabel("Base URL").fill(stub.baseUrl);
   await page.getByLabel("API key").fill(API_KEY);

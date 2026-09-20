@@ -222,9 +222,19 @@ role and requester scope are unchanged.
 The Provider card uses a searchable model list with **Load models** and **Refresh models**.
 The Administrator can load choices before saving. An explicit manual entry control supports
 private model IDs and failed discovery. Azure keeps deployment-name entry. The selected model
-survives refresh, including when it is missing from the returned list. A changed provider or
-endpoint requires a new API key. Loading models makes no settings change; saving the selected
+survives refresh, including when it is missing from the returned list. ~~A changed provider or
+endpoint requires a new API key.~~ Superseded by the 2026-09-20 addendum below. Loading models makes no settings change; saving the selected
 model uses the existing connector save and Activity path.
+
+### Addendum, 2026-09-20, #980
+
+Saved keys belong to destinations, defined by preset, protocol, and normalized base URL. This replaces the #791 rule that every provider change requires a new key. A blank save or Load models uses the pending destination's Saved key. Pasting replaces only that destination's key. Removing the connector keeps all Saved keys.
+
+The pane and the onboarding AI analysis step show **Key saved** beside the API key field, or **Key in use** when the connector references it. The field is optional for that destination. Both pills use DES-005's success pair. The hint reads "Leave blank to use the saved key. Paste a new one to rotate it." The settings mock remains subject to SET-008's frame debt; Pencil was unreachable during this change.
+
+### Addendum, 2026-09-20, #981
+
+Each Provider option shows "(key saved)" when that provider has a Saved key, including Custom endpoint when any custom destination has one. In both the pane and the onboarding step, **Forget key** sits beside **Key saved** and asks for confirmation. The pill and action follow the pending protocol and normalized base URL. **Key in use** offers no Forget key action. The Administrator-only delete refuses a referenced Saved key with a 409 and records a forgotten Activity with the destination, never the key value. Remove connector explains that Saved keys stay and points to Forget key. Pencil was unreachable for this task, so the SET-008 frame debt remains unverified.
 
 ## SET-009: select the Signing connector's update mode
 
