@@ -327,7 +327,11 @@ describe("the Groq preset upgrade", () => {
         const before = await db.execute(sql`select * from ai_connector`);
         await expect(db.execute(sql`update ai_connector set preset = 'groq'`)).rejects.toThrow();
         await runMigrations(db);
-        expect((await db.execute(sql`select * from ai_connector`)).rows).toEqual(before.rows);
+        // Later migrations may add columns with defaults (M37 added
+        // answer_style); every column the row had before must survive.
+        expect((await db.execute(sql`select * from ai_connector`)).rows).toEqual(
+          before.rows.map((row) => expect.objectContaining(row)),
+        );
         await db.execute(sql`update ai_connector set preset = 'groq'`);
         expect((await db.execute(sql`select preset from ai_connector`)).rows).toEqual([
           { preset: "groq" },
