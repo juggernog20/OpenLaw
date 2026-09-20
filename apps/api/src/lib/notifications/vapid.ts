@@ -12,7 +12,14 @@ export interface VapidDetails {
   privateKey: string;
   subject: string;
 }
-export type VapidResolver = () => Promise<VapidDetails>;
+export interface VapidResolver {
+  /** The whole pair, as a send needs it. Throws while the sealed private key is unreadable. */
+  (): Promise<VapidDetails>;
+  /** The key browsers subscribe with. Stored in the clear, so it answers even while
+   * the private key does not (TECH-022: an unreadable value must not fail the pane
+   * that recovery happens in). Generates the pair on a first run. */
+  publicKey(): Promise<string>;
+}
 export interface VapidEnv {
   publicKey?: string;
   privateKey?: string;
@@ -31,7 +38,7 @@ export function createVapidResolver(db: Db, env: VapidEnv, baseUrl: string): Vap
   if (Boolean(env.publicKey) !== Boolean(env.privateKey)) {
     throw new Error("VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be set together.");
   }
-  return async () =>
+  const resolve = async (): Promise<VapidDetails> =>
     db.transaction(async (tx) => {
       const [settings] = await tx
         .select({
@@ -65,4 +72,14 @@ export function createVapidResolver(db: Db, env: VapidEnv, baseUrl: string): Vap
         .where(eq(orgSettings.id, settings.id));
       return { ...keys, subject: contact };
     });
+  return Object.assign(resolve, {
+    async publicKey(): Promise<string> {
+      if (env.publicKey) return env.publicKey;
+      const [stored] = await db
+        .select({ publicKey: orgSettings.vapidPublicKey })
+        .from(orgSettings)
+        .limit(1);
+      return stored?.publicKey ?? (await resolve()).publicKey;
+    },
+  });
 }

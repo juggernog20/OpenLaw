@@ -307,7 +307,15 @@ const resolveVapid = createVapidResolver(
   },
   runtimeEnv.BASE_URL || "http://localhost:3000",
 );
-await resolveVapid();
+// A first run writes the pair here. An unreadable sealed key is preserved
+// and reported, never a reason to refuse the boot (TECH-022): the public
+// key still answers in the clear, the worker settles pushes skipped, and
+// restoring OPENLAW_SECRET_KEY or pinning the pair by env repairs it.
+await resolveVapid().catch((error: unknown) => {
+  console.error(
+    `Device notifications are off until the VAPID pair can be read: ${error instanceof Error ? error.message : String(error)}`,
+  );
+});
 
 const app = await buildApp(
   {

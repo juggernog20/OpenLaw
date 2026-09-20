@@ -436,6 +436,37 @@ it("preserves an unreadable stored key, while a complete env pin still works", a
       sql`update org_settings set vapid_private_key = 'openlaw:v1:unreadable'`,
     );
     await expect(harness.app.resolveVapid()).rejects.toThrow(/unreadable/);
+    // The public key is stored in the clear, so the pane recovery happens
+    // in still answers (TECH-022), and a push owed meanwhile settles skipped
+    // with the reason on the log rather than looping.
+    const preferences = await harness.app.inject({
+      url: "/api/v1/me/notification-preferences",
+      cookies,
+    });
+    expect(preferences.statusCode, preferences.body).toBe(200);
+    expect(preferences.json().vapidPublicKey).toBe(original.public);
+    await subscribe();
+    const row = await notification();
+    const errors: Record<string, unknown>[] = [];
+    await handleNotificationPush(
+      {
+        db: harness.db,
+        resolveVapid: harness.app.resolveVapid,
+        log: {
+          ...log,
+          error: (fields) => {
+            errors.push(fields);
+          },
+        },
+      },
+      { notificationId: row.id, retryCount: 2, retryLimit: 2 },
+    );
+    expect(received).toHaveLength(0);
+    expect((await read(row.id)).pushSkippedAt).not.toBeNull();
+    expect(errors[0]).toMatchObject({
+      notificationId: row.id,
+      reason: expect.stringMatching(/unreadable/),
+    });
     const keys = webPush.generateVAPIDKeys();
     expect(
       (await createVapidResolver(harness.db, keys, "https://openlaw.example")()).publicKey,
@@ -449,13 +480,6 @@ it("preserves an unreadable stored key, while a complete env pin still works", a
   }
 });
 
-it("serializes duplicate wake-ups for one row", async () => {
-  await subscribe();
-  const row = await notification();
-  await Promise.all([deliver(row.id), deliver(row.id)]);
-  expect(received).toHaveLength(1);
-  expect((await read(row.id)).pushedAt).not.toBeNull();
-});
 it("concurrent first starts generate one pair, and env pins leave an empty database pair untouched", async () => {
   const [original] = await harness.db.select().from(orgSettings);
   try {

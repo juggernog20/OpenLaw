@@ -717,7 +717,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         groups,
         briefing,
-        vapidPublicKey: (await app.resolveVapid()).publicKey,
+        vapidPublicKey: await app.resolveVapid.publicKey(),
         showRecordNamesOnDevices: await recordNamesChoice(app.db, request.user.id),
       };
     },
@@ -802,7 +802,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         return {
           groups,
           briefing,
-          vapidPublicKey: (await app.resolveVapid()).publicKey,
+          vapidPublicKey: await app.resolveVapid.publicKey(),
           showRecordNamesOnDevices: await recordNamesChoice(tx, request.user.id),
         };
       }),

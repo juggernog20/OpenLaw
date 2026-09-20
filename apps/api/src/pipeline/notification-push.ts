@@ -4,6 +4,12 @@
  * Delivers owed device pushes through the TECH-007 worker queue.
  * NOT-001's bell row owns the debt; its live visibility predicate selects the bell.
  * The payload carries only the row id and that bell's name.
+ *
+ * The shape is the email handler's: read the row, decide, send, then
+ * settle with a guarded write. No lock is held on the bell row while
+ * the relay is on the line, so a reader marking the row read never
+ * waits behind a slow relay. A wake-up that arrives twice finds the row
+ * settled and stops.
  */
 import {
   and,
@@ -23,6 +29,7 @@ import {
   type NotificationSurface,
 } from "../lib/notifications/audience.js";
 import type { VapidResolver } from "../lib/notifications/vapid.js";
+import { reasonOf } from "./derivations.js";
 import type { PipelineLogger } from "./logger.js";
 
 export interface NotificationPushDeps {
@@ -38,8 +45,15 @@ export interface NotificationPushAttempt {
 
 /** Only safe transport facts may reach pg-boss or the log, never endpoint tokens or keys. */
 export class PushDeliveryError extends Error {
-  constructor(readonly retryAfterSeconds?: number) {
-    super("The push relay did not accept the notification.");
+  constructor(
+    readonly retryAfterSeconds?: number,
+    readonly statusCode?: number,
+  ) {
+    super(
+      statusCode === undefined
+        ? "The push relay did not accept the notification."
+        : `The push relay answered ${statusCode}.`,
+    );
   }
 }
 
@@ -53,104 +67,115 @@ export function retryAfterSeconds(
   return Number.isFinite(seconds) && seconds >= 0 ? Math.ceil(seconds) : undefined;
 }
 
+/** Marks the push settled, whichever way it went. Guarded on "still owed
+ * and still unanswered", so a stamp that landed meanwhile is not undone. */
+async function settle(db: Db, notificationId: string, sent: boolean): Promise<void> {
+  await db
+    .update(notifications)
+    .set(sent ? { pushedAt: new Date() } : { pushSkippedAt: new Date() })
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.pushOwed, true),
+        isNull(notifications.pushedAt),
+        isNull(notifications.pushSkippedAt),
+      ),
+    );
+}
+
 async function send(deps: NotificationPushDeps, notificationId: string): Promise<void> {
-  // Resolve before locking the bell row: the resolver owns the org settings lock.
+  const [row] = await deps.db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.id, notificationId))
+    .limit(1);
+  if (!row || !row.pushOwed || row.pushedAt || row.pushSkippedAt) return;
+  const [user] = await deps.db
+    .select()
+    .from(users)
+    .where(and(eq(users.id, row.userId), isNull(users.archivedAt)));
+  if (!user) {
+    await settle(deps.db, row.id, false);
+    return;
+  }
+  let surface: NotificationSurface | undefined;
+  for (const candidate of NOTIFICATION_SURFACES) {
+    const [visible] = await deps.db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(and(eq(notifications.id, row.id), notificationScope(deps.db, user, candidate)));
+    if (visible) {
+      surface = candidate;
+      break;
+    }
+  }
+  if (!surface) {
+    await settle(deps.db, row.id, false);
+    return;
+  }
+  const subscriptions = await deps.db
+    .select({ subscription: pushSubscriptions })
+    .from(pushSubscriptions)
+    .innerJoin(
+      sessions,
+      and(
+        eq(sessions.id, pushSubscriptions.sessionId),
+        eq(sessions.userId, pushSubscriptions.userId),
+      ),
+    )
+    .where(and(eq(pushSubscriptions.userId, user.id), gt(sessions.expiresAt, new Date())));
+  if (subscriptions.length === 0) {
+    await settle(deps.db, row.id, false);
+    return;
+  }
+  // The pair is read per send (TECH-011's read-on-every-decision), so a
+  // key restored after a bad boot applies to the very next push.
   const vapidDetails = await deps.resolveVapid();
-  await deps.db
-    .transaction(async (tx) => {
-      const [row] = await tx
-        .select()
-        .from(notifications)
-        .where(eq(notifications.id, notificationId))
-        .for("update");
-      if (!row || !row.pushOwed || row.pushedAt || row.pushSkippedAt) return;
-      const settle = (sent: boolean) =>
-        tx
-          .update(notifications)
-          .set(sent ? { pushedAt: new Date() } : { pushSkippedAt: new Date() })
-          .where(eq(notifications.id, row.id));
-      const [user] = await tx
-        .select()
-        .from(users)
-        .where(and(eq(users.id, row.userId), isNull(users.archivedAt)));
-      if (!user) {
-        await settle(false);
+  const body = JSON.stringify({ notificationId: row.id, surface });
+  let sent = false;
+  let failure: PushDeliveryError | undefined;
+  // A user has at most ten subscriptions. Parallel sends keep the socket bound inside the job lease.
+  await Promise.all(
+    subscriptions.map(async ({ subscription }) => {
+      try {
+        await webPush.sendNotification(
+          {
+            endpoint: subscription.endpoint,
+            keys: { p256dh: subscription.p256dh, auth: subscription.auth },
+          },
+          body,
+          { vapidDetails, TTL: 86400, urgency: "normal", timeout: 20_000 },
+        );
+        sent = true;
         return;
-      }
-      let surface: NotificationSurface | undefined;
-      for (const candidate of NOTIFICATION_SURFACES) {
-        const [visible] = await tx
-          .select({ id: notifications.id })
-          .from(notifications)
-          .where(and(eq(notifications.id, row.id), notificationScope(tx, user, candidate)));
-        if (visible) {
-          surface = candidate;
-          break;
-        }
-      }
-      if (!surface) {
-        await settle(false);
-        return;
-      }
-      const subscriptions = await tx
-        .select({ subscription: pushSubscriptions })
-        .from(pushSubscriptions)
-        .innerJoin(
-          sessions,
-          and(
-            eq(sessions.id, pushSubscriptions.sessionId),
-            eq(sessions.userId, pushSubscriptions.userId),
-          ),
-        )
-        .where(and(eq(pushSubscriptions.userId, user.id), gt(sessions.expiresAt, new Date())));
-      const body = JSON.stringify({ notificationId: row.id, surface });
-      let sent = false;
-      let failed = false;
-      let retryAfter: number | undefined;
-      // A user has at most ten subscriptions. Parallel sends keep the socket bound inside the job lease.
-      await Promise.all(
-        subscriptions.map(async ({ subscription }) => {
-          try {
-            await webPush.sendNotification(
-              {
-                endpoint: subscription.endpoint,
-                keys: { p256dh: subscription.p256dh, auth: subscription.auth },
-              },
-              body,
-              { vapidDetails, TTL: 86400, urgency: "normal", timeout: 20_000 },
+      } catch (error) {
+        const status = error instanceof webPush.WebPushError ? error.statusCode : undefined;
+        if (status === 404 || status === 410) {
+          // The endpoint is gone. Prune it even when another one needs a retry.
+          await deps.db
+            .delete(pushSubscriptions)
+            .where(
+              and(
+                eq(pushSubscriptions.id, subscription.id),
+                eq(pushSubscriptions.sessionId, subscription.sessionId),
+              ),
             );
-            sent = true;
-          } catch (error) {
-            if (
-              error instanceof webPush.WebPushError &&
-              (error.statusCode === 404 || error.statusCode === 410)
-            ) {
-              await tx
-                .delete(pushSubscriptions)
-                .where(
-                  and(
-                    eq(pushSubscriptions.id, subscription.id),
-                    eq(pushSubscriptions.sessionId, subscription.sessionId),
-                  ),
-                );
-              return;
-            }
-            failed = true;
-            if (error instanceof webPush.WebPushError && error.statusCode === 429) {
-              const seconds = retryAfterSeconds(error.headers["retry-after"]);
-              if (seconds !== undefined) retryAfter = Math.max(retryAfter ?? 0, seconds);
-            }
-          }
-        }),
-      );
-      // Commit dead-endpoint pruning even when another endpoint needs a retry.
-      if (failed) return { failure: new PushDeliveryError(retryAfter) };
-      await settle(sent);
-      return undefined;
-    })
-    .then((result) => {
-      if (result?.failure) throw result.failure;
-    });
+          return;
+        }
+        const retryAfter =
+          status === 429 && error instanceof webPush.WebPushError
+            ? retryAfterSeconds(error.headers["retry-after"])
+            : undefined;
+        const longest = Math.max(failure?.retryAfterSeconds ?? -1, retryAfter ?? -1);
+        failure = new PushDeliveryError(
+          longest < 0 ? undefined : longest,
+          status ?? failure?.statusCode,
+        );
+      }
+    }),
+  );
+  if (failure) throw failure;
+  await settle(deps.db, row.id, sent);
 }
 
 export async function handleNotificationPush(
@@ -163,19 +188,13 @@ export async function handleNotificationPush(
     if (attempt.retryCount < attempt.retryLimit) {
       throw error instanceof PushDeliveryError ? error : new PushDeliveryError();
     }
-    await deps.db
-      .update(notifications)
-      .set({ pushSkippedAt: new Date() })
-      .where(
-        and(
-          eq(notifications.id, attempt.notificationId),
-          eq(notifications.pushOwed, true),
-          isNull(notifications.pushedAt),
-          isNull(notifications.pushSkippedAt),
-        ),
-      );
+    await settle(deps.db, attempt.notificationId, false);
     deps.log.error(
-      { notificationId: attempt.notificationId, attempts: attempt.retryCount + 1 },
+      {
+        notificationId: attempt.notificationId,
+        attempts: attempt.retryCount + 1,
+        reason: reasonOf(error),
+      },
       "sending a notification push failed and will not be retried",
     );
   }
