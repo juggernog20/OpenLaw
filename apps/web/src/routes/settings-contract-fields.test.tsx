@@ -513,12 +513,17 @@ describe("Field answer style", () => {
     expect(screen.getByRole("option", { name: "Full clause text" })).not.toBeDisabled();
     await user.selectOptions(select, "full_clause");
     await user.click(screen.getByRole("button", { name: /^Save$/ }));
-    expect(calls.patches).toEqual([{ id: "f1", body: { aiAnswerStyle: "full_clause" } }]);
-    await user.click(screen.getByRole("button", { name: "Edit Governing law" }));
+    await waitFor(() =>
+      expect(calls.patches).toEqual([{ id: "f1", body: { aiAnswerStyle: "full_clause" } }]),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await user.click(await screen.findByRole("button", { name: "Edit Governing law" }));
     expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveValue("full_clause");
     await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "");
     await user.click(screen.getByRole("button", { name: /^Save$/ }));
-    expect(calls.patches.at(-1)).toEqual({ id: "f1", body: { aiAnswerStyle: null } });
+    await waitFor(() =>
+      expect(calls.patches.at(-1)).toEqual({ id: "f1", body: { aiAnswerStyle: null } }),
+    );
   });
 
   it("disables Full clause text on text Fields and describes the reason", async () => {
@@ -546,23 +551,28 @@ describe("Field answer style", () => {
     await user.click(await screen.findByRole("button", { name: "Edit Our position" }));
     expect(screen.queryByRole("combobox", { name: "Answer style" })).not.toBeInTheDocument();
   });
-});
 
-it("clears Full clause text when a new Field changes to text and sends an override on create", async () => {
-  const calls = newCalls();
-  stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
-  const user = userEvent.setup();
-  renderAt("/settings/contracts/fields");
-  await user.click(await screen.findByRole("button", { name: "Add field" }));
-  const dialog = screen.getByRole("dialog");
-  await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Assignment clause");
-  const type = within(dialog).getByRole("combobox", { name: "Type" });
-  await user.selectOptions(type, "long_text");
-  await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "full_clause");
-  await user.selectOptions(type, "text");
-  expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveValue("");
-  await user.selectOptions(type, "long_text");
-  await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "full_clause");
-  await user.click(within(dialog).getByRole("button", { name: "Add field" }));
-  expect(calls.creates[0]).toMatchObject({ fieldType: "long_text", aiAnswerStyle: "full_clause" });
+  it("clears Full clause text when a new Field changes to text and sends an override on create", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
+    const user = userEvent.setup();
+    renderAt("/settings/contracts/fields");
+    await user.click(await screen.findByRole("button", { name: "Add field" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Assignment clause");
+    const type = within(dialog).getByRole("combobox", { name: "Type" });
+    await user.selectOptions(type, "long_text");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "full_clause");
+    await user.selectOptions(type, "text");
+    expect(screen.getByRole("combobox", { name: "Answer style" })).toHaveValue("");
+    await user.selectOptions(type, "long_text");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Answer style" }), "full_clause");
+    await user.click(within(dialog).getByRole("button", { name: "Add field" }));
+    await waitFor(() =>
+      expect(calls.creates[0]).toMatchObject({
+        fieldType: "long_text",
+        aiAnswerStyle: "full_clause",
+      }),
+    );
+  });
 });
