@@ -44,3 +44,17 @@ export function aiPresetLabel(intl: IntlShape, preset: string): string {
   const message = catalog[preset];
   return message ? intl.formatMessage(message) : identifierLabel(preset);
 }
+
+export function aiProviderOptionLabel(
+  intl: IntlShape,
+  preset: AiPreset,
+  savedKeys: paths["/api/v1/ai-connector"]["get"]["responses"][200]["content"]["application/json"]["connector"]["savedKeys"],
+): string {
+  const provider = aiPresetLabel(intl, preset);
+  return savedKeys.some((key) => key.preset === preset && key.hasApiKey)
+    ? intl.formatMessage(
+        { id: "settings.aiAnalysis.provider.keySaved", defaultMessage: "{provider} (key saved)" },
+        { provider },
+      )
+    : provider;
+}

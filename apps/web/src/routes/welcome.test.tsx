@@ -1327,18 +1327,89 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await goToAiAnalysisStep(user);
     await user.click(screen.getByRole("button", { name: "Replace credentials" }));
     expect(screen.getByText("Key in use")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "OpenAI (key saved)" })).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText("Provider"), "groq");
     expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
     expect(screen.getByLabelText("API key")).toBeRequired();
     expect(screen.getByText(/Required for this provider/)).toBeVisible();
     await user.selectOptions(screen.getByLabelText("Provider"), "openai");
     expect(screen.getByText("Key saved")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Forget key" })).toBeVisible();
     expect(screen.getByLabelText("API key")).not.toBeRequired();
     expect(screen.getByLabelText("API key")).toHaveValue("");
     expect(screen.getByText(/Leave blank to use the saved key/)).toBeVisible();
     await finishFromAiAnalysis(user);
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     expect(calls.saves).toEqual([{ preset: "openai", model: "gpt-5.6-luna" }]);
+  });
+
+  it("forgets a custom Saved key matched by the typed URL and protocol and refreshes the step", async () => {
+    const user = userEvent.setup();
+    const calls: AiCalls = { saves: [], completed: 0 };
+    const saved = {
+      preset: "anthropic" as const,
+      protocol: "anthropic_messages" as const,
+      baseUrl: "https://api.anthropic.com/v1",
+      model: "claude-sonnet-5",
+      savedKeys: [
+        {
+          id: "custom-key",
+          preset: "custom" as const,
+          protocol: "openai_chat_completions" as const,
+          baseUrl: "https://custom.test/v1?a=1&b=2",
+          hasApiKey: true,
+          inUse: false,
+          updatedAt: "2026-09-05T09:00:00.000Z",
+        },
+      ],
+    };
+    const deletes: string[] = [];
+    const fallback = aiWizardExtra(calls);
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      aiConnector: saved,
+      extra: (call) => {
+        if (call.method === "DELETE" && call.url.pathname.includes("/saved-keys/")) {
+          deletes.push(call.url.pathname);
+          return json(200, {
+            connector: {
+              ...saved,
+              configured: true,
+              enabled: true,
+              hasApiKey: true,
+              savedKeys: [],
+            },
+            presets: [],
+          });
+        }
+        return fallback(call);
+      },
+    });
+    renderAt("/welcome");
+    await goToAiAnalysisStep(user);
+    await user.click(screen.getByRole("button", { name: "Replace credentials" }));
+    expect(screen.getByRole("option", { name: "Custom endpoint (key saved)" })).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Provider"), "custom");
+    await user.type(
+      screen.getByLabelText("Base URL"),
+      "https://CUSTOM.test:443/v1/?b=2&a=1#fragment",
+    );
+    expect(screen.getByText("Key saved")).toBeVisible();
+    await user.selectOptions(screen.getByLabelText("Protocol"), "gemini");
+    expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Protocol"), "openai_chat_completions");
+    await user.click(screen.getByRole("button", { name: "Forget key" }));
+    expect(deletes).toEqual([]);
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Forget key" }),
+    );
+    expect(await screen.findByRole("option", { name: "Custom endpoint" })).toBeInTheDocument();
+    expect(deletes).toEqual(["/api/v1/ai-connector/saved-keys/custom-key"]);
+    expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Forget key" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("API key")).toBeRequired();
   });
 
   it("rotates the model without asking for the stored key again", async () => {
