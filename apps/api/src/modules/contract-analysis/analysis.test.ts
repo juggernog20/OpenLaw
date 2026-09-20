@@ -15,6 +15,7 @@ import {
   contracts,
   contractTeam,
   contractTypeFields,
+  contractTypes,
   counterparties,
   documentVersions,
   documentVersionText,
@@ -1463,3 +1464,97 @@ for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini
     },
   );
 }
+
+it.each(["openai_chat_completions", "anthropic_messages", "gemini"] as const)(
+  "%s omits legacy reference Fields from the provider request and review outcome",
+  async (protocol) => {
+    const [type] = await harness.db
+      .insert(contractTypes)
+      .values({
+        slug: `references_${protocol}`,
+        displayName: `References ${protocol}`,
+        displayOrder: 0,
+      })
+      .returning();
+    const references = await harness.db
+      .insert(fields)
+      .values(
+        (["user", "entity"] as const).map((fieldType) => ({
+          slug: `legacy_${fieldType}_${protocol}`,
+          displayName: `Legacy ${fieldType}`,
+          moduleScope: "contract" as const,
+          fieldType,
+          fieldTag: "business" as const,
+          aiPrompt: `Extract the legacy ${fieldType} reference.`,
+        })),
+      )
+      .returning();
+    await harness.db.insert(contractTypeFields).values(
+      references.map((field) => ({
+        typeId: type!.id,
+        fieldId: field.id,
+        displayOrder: 0,
+      })),
+    );
+    const contract = await newContract(`Reference Fields ${protocol}`);
+    await harness.db
+      .update(contracts)
+      .set({ contractTypeId: type!.id })
+      .where(eq(contracts.id, contract.id));
+    const paper = await addPaper(contract, ["Effective on 2026-09-01."]);
+    const sentSlugs: string[] = [];
+    const server = await startAiResponseServer(protocol, (slug) => {
+      sentSlugs.push(slug);
+      return slug === "effective_date"
+        ? {
+            value: "2026-09-01",
+            evidence: "Effective on 2026-09-01.",
+            sourceId: paper.versions[0]!.id,
+          }
+        : { value: null };
+    });
+    try {
+      const [run] = await harness.db
+        .insert(contractAnalysisRuns)
+        .values({
+          contractId: contract.id,
+          versionId: paper.versions[0]!.id,
+          trigger: "manual",
+          requestedBy: memberId,
+          preset: "custom",
+          model: server.provider.model,
+        })
+        .returning();
+      await handleContractAnalysis(
+        {
+          db: harness.db,
+          resolveAiProvider: async () => server.provider,
+          log: { info: () => {}, warn: () => {}, error: () => {} },
+        },
+        { runId: run!.id, retryCount: 0, retryLimit: 2 },
+      );
+      expect(sentSlugs).toContain("effective_date");
+      const read = await harness.app.inject({
+        url: `/api/v1/contracts/${contract.number}`,
+        cookies: memberCookies,
+      });
+      expect(read.statusCode, read.body).toBe(200);
+      const { analysis, contract: saved } = read.json();
+      expect(analysis.latestRun).toMatchObject({
+        id: run!.id,
+        state: "ready",
+        outcome: { written: ["effective_date"], invalid: [] },
+      });
+      expect(saved.effectiveDate).toBe("2026-09-01");
+      for (const field of references) {
+        expect(sentSlugs).not.toContain(field.slug);
+        expect(server.prompts.join("\n")).not.toContain(field.slug);
+        expect(server.prompts.join("\n")).not.toContain(field.aiPrompt);
+        expect(JSON.stringify(analysis.latestRun.outcome)).not.toContain(field.slug);
+        expect(saved.customFields).not.toHaveProperty(field.slug);
+      }
+    } finally {
+      await server.stop();
+    }
+  },
+);

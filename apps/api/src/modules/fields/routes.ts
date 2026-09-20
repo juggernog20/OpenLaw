@@ -297,6 +297,9 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       const displayName = request.body.displayName.trim();
       const description = request.body.description?.trim() || null;
       const aiPrompt = request.body.aiPrompt?.trim() || null;
+      if (request.body.aiPrompt !== undefined && (fieldType === "user" || fieldType === "entity")) {
+        throw httpError(422, `Fields of type ${fieldType} cannot be analysed.`);
+      }
       const options = checkOptions(fieldType, request.body.options);
       if (aiPrompt !== null && moduleScope !== "contract") {
         throw httpError(400, "AI prompts live on contract-scoped fields.");
@@ -403,6 +406,9 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           wants("options", checkOptions(target.fieldType, body.options));
         }
         if (body.aiPrompt !== undefined) {
+          if (target.fieldType === "user" || target.fieldType === "entity") {
+            throw httpError(422, `Fields of type ${target.fieldType} cannot be analysed.`);
+          }
           const aiPrompt = body.aiPrompt?.trim() || null;
           if (aiPrompt !== null && target.moduleScope !== "contract") {
             throw httpError(400, "AI prompts live on contract-scoped fields.");

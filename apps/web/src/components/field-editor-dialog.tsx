@@ -98,8 +98,8 @@ export function FieldEditorDialog({
   const [error, setError] = useState<string | null>(null);
 
   const isSelect = draft.fieldType !== "" && SELECT_TYPES.has(draft.fieldType);
-  // The prompt rides on contract-scoped fields only (CTR-008/CTR-016).
-  const promptable = module === "contract";
+  const promptable =
+    module === "contract" && draft.fieldType !== "user" && draft.fieldType !== "entity";
 
   const set = <K extends keyof EditorDraft>(key: K, value: EditorDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));

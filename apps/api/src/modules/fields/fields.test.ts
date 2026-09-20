@@ -14,7 +14,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, inArray, users } from "@openlaw/db";
+import { activityLog, asc, eq, fields, inArray, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -274,6 +274,21 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
     expect(matterPrompted.statusCode, matterPrompted.body).toBe(400);
   });
 
+  it.each(["user", "entity"])("refuses AI prompts when creating a %s Field", async (fieldType) => {
+    for (const aiPrompt of ["Extract the named party.", "", "   "]) {
+      const response = await createField({
+        displayName: "Reference prompt",
+        moduleScope: "contract",
+        fieldType,
+        fieldTag: "business",
+        aiPrompt,
+      });
+      expect(response.statusCode, response.body).toBe(422);
+      expect(response.headers["content-type"]).toContain("application/problem+json");
+      expect(response.json().detail).toBe(`Fields of type ${fieldType} cannot be analysed.`);
+    }
+  });
+
   it("derives unique immutable slugs, suffixing collisions", async () => {
     const first = await createdField({
       displayName: "Renewal – Term!",
@@ -322,6 +337,34 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       cookies: adminCookies,
       payload: body,
     });
+
+  it.each(["user", "entity"])(
+    "refuses AI prompts when patching a legacy %s Field",
+    async (fieldType) => {
+      const row = await createdField({
+        displayName: `Legacy ${fieldType}`,
+        moduleScope: "contract",
+        fieldType,
+        fieldTag: "business",
+      });
+      await harness.db
+        .update(fields)
+        .set({ aiPrompt: "Old saved prompt." })
+        .where(eq(fields.id, row.id));
+      for (const aiPrompt of ["Extract the named party.", "", "   ", null]) {
+        const response = await patchField(row.id, { displayName: "Should not change", aiPrompt });
+        expect(response.statusCode, response.body).toBe(422);
+        expect(response.headers["content-type"]).toContain("application/problem+json");
+        expect(response.json().detail).toBe(`Fields of type ${fieldType} cannot be analysed.`);
+      }
+      const unchanged = (await listFields()).find((field) => field.id === row.id)!;
+      expect(unchanged.displayName).toBe(row.displayName);
+      expect(unchanged.aiPrompt).toBe("Old saved prompt.");
+      const renamed = await patchField(row.id, { displayName: "Renamed reference" });
+      expect(renamed.statusCode, renamed.body).toBe(200);
+      expect(renamed.json().field.aiPrompt).toBe("Old saved prompt.");
+    },
+  );
 
   it("renames, describes, retags, and edits the prompt in one strict body", async () => {
     const row = await createdField({

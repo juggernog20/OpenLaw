@@ -58,7 +58,9 @@ export async function buildAnalysisTargets(
   // the slug in the outcome and the unverified map, so such a Field is
   // left out rather than written twice under one key.
   const coreSlugs = new Set<string>(CORE_ANALYSIS_TARGETS.map((target) => target.slug));
-  const catalog = attached.filter((field) => !coreSlugs.has(field.slug));
+  const catalog = attached.filter(
+    (field) => field.type !== "user" && field.type !== "entity" && !coreSlugs.has(field.slug),
+  );
   return [
     ...CORE_ANALYSIS_TARGETS.map((target) => ({
       slug: target.slug,
