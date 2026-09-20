@@ -5008,7 +5008,7 @@ A Devices card follows the event grid. It lists every registered browser with a 
 
 "Show record names on devices" is one immediate-save switch, default on. Off, every event uses a generic sentence with no payload values. The worker also uses that sentence if it cannot read the preference. A successful row read uses the same narrator and surface as the bell, including its record section link. A failed row read uses "You have a new notification" and opens that surface's bell. Read rows and focused app windows produce no OS notification.
 
-A click marks the row read and reuses a window of the same surface, or opens one. When a tab marks rows read it sends their ids to the worker, which closes their OS notifications. A live bell refresh rechecks displayed notifications, so reads from another device can close them too. Sign-out unsubscribes before ending the session.
+A click marks the row read and reuses a window of the same surface, or opens one. When a tab marks rows read it sends their ids to the worker, which closes their OS notifications. A live bell refresh rechecks displayed notifications, so reads from another device can close them too. Sign-out unsubscribes this browser while the session request is in flight; the session request never waits on a browser API, so a navigation that lands during sign-out cannot leave the person signed in.
 
 ### Rationale and alternatives
 
@@ -5112,6 +5112,7 @@ Browser permission paths follow [Chrome Help](https://support.google.com/chrome/
 | DES-086 | File generated output from history or the generation form                                                                                                            | Accepted                                                                                                   |
 | DES-087 | The Auto-Doc record is a doc builder: the template beside its form, inside a four-section record page                                                                | Accepted                                                                                                   |
 | DES-088 | The Ownership tab is a share register read as of a date                                                                                                              | Accepted                                                                                                   |
+| DES-089 | Device notifications on the preferences pane, addendum to DES-050                                                                                                    | Accepted                                                                                                   |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 
@@ -5136,4 +5137,3 @@ DES-087's acknowledgement Frequency control is superseded by the organisation po
 ### DES-048 amendment — Today action, 2026-09-15
 
 Calendar pickers include a Today action. The shared date picker selects today's local calendar date and closes, following the same commit and focus behavior as choosing a day. Existing Today actions, including the Home dates calendar, are retained without duplication.
-| DES-089 | Device notifications on the preferences pane, addendum to DES-050 | Accepted |

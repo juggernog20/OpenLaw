@@ -172,6 +172,31 @@ describe("Personal · Notifications (#320)", () => {
     expect(screen.getByRole("switch", { name: "Assigned to you In-app" })).toBeChecked();
   });
 
+  it("saves a Push flip through the same immediate-save status (DES-089)", async () => {
+    const user = userEvent.setup();
+    const writes: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: capturePreferenceWrites(writes) });
+    renderAt("/settings/notifications");
+
+    const push = await screen.findByRole("switch", { name: "Assigned to you Push" });
+    expect(push).toBeChecked();
+    await user.click(push);
+
+    await waitFor(() =>
+      expect(writes).toEqual([{ eventGroup: "assigned_to_you", channel: "push", enabled: false }]),
+    );
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(screen.getByRole("switch", { name: "Assigned to you Push" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Assigned to you In-app" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Assigned to you Email" })).toBeChecked();
+    // Dates approaching has Push but no Email; Knowledge has neither.
+    expect(screen.getByRole("switch", { name: "Dates approaching Push" })).toBeVisible();
+    expect(
+      screen.queryByRole("switch", { name: "Dates approaching Email" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Knowledge items Push" })).not.toBeInTheDocument();
+  });
+
   it("sends two quick flips in order, so the slower reply cannot undo the faster press", async () => {
     const user = userEvent.setup();
     const writes: unknown[] = [];

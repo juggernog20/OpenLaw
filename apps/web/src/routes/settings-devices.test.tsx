@@ -170,12 +170,15 @@ it("revokes another device without unsubscribing this browser", async () => {
   await waitFor(() => expect(writes).toHaveLength(1));
   expect(unsubscribe).not.toHaveBeenCalled();
 });
-it("unsubscribes before ending the session", async () => {
+it("unsubscribes the browser on sign-out without holding the session request", async () => {
   getSubscription.mockResolvedValue(subscription);
-  unsubscribe.mockImplementation(async () => {
-    expect(writes.some((call) => call.url.pathname === "/api/auth/sign-out")).toBe(false);
-    return true;
-  });
+  // The browser API answers in a later task. The session request must
+  // not wait behind it, or a navigation that lands meanwhile leaves the
+  // person signed in.
+  const held: ((registration: ServiceWorkerRegistration) => void)[] = [];
+  vi.mocked(navigator.serviceWorker.getRegistration).mockImplementation(
+    () => new Promise((resolve) => held.push(resolve)),
+  );
   renderAt("/settings/notifications");
   const user = userEvent.setup();
   await user.click(await screen.findByRole("button", { name: "Casey Counsel" }));
@@ -183,7 +186,15 @@ it("unsubscribes before ending the session", async () => {
   await waitFor(() =>
     expect(writes.some((call) => call.url.pathname === "/api/auth/sign-out")).toBe(true),
   );
-  expect(unsubscribe).toHaveBeenCalled();
+  expect(unsubscribe).not.toHaveBeenCalled();
+  for (const release of held) {
+    release({
+      pushManager: { subscribe, getSubscription },
+      active: { postMessage },
+      getNotifications: vi.fn(async () => []),
+    } as unknown as ServiceWorkerRegistration);
+  }
+  await waitFor(() => expect(unsubscribe).toHaveBeenCalled());
 });
 
 it("explains a worker registration failure when the browser exposes push APIs", async () => {
