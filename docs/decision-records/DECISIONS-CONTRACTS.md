@@ -547,6 +547,29 @@ The Contract page revalidates while a run is pending and keeps typed drafts. Ret
 
 ~~The 2026-09-19 note's `rules.*` rows and its Text answers paragraph~~ are **superseded by this addendum**; its `conversion.*` rows, the one reader, and the fixed format lines stand.
 
+### CTR-008 implementation note, 2026-09-20, M37/6, #961
+
+M37 implements the addendum above. Migration `0153` adds the connector's `answer_style`
+with default `sentence` and deletes saved `rules.*` overrides. Migration `0154` adds
+`fields.ai_answer_style`, nullable for organization inheritance, with database and API
+checks for Contract `text` and `long_text` Fields. Explicit `full_clause` requires
+`long_text`. An inherited `full_clause` falls back to `sentence` for a short text Field.
+The prompt asks for at most 80 characters for Few word summary, at most 200 for
+1-2 sentence summary, and a verbatim provision for Full clause text. Existing values are unchanged.
+
+The target builder reads the effective style for each prompted catalog Field and skips
+`user` and `entity` Fields. The provider validates answers separately after the existing
+repair attempt, so an invalid target does not discard valid siblings. Shared rules and
+format sentences come from code. Saved prompts supply the extraction instructions.
+
+The AI analysis pane has four collapsed cards: Provider, Answer style, Conversion draft
+prompts, and Contract analysis prompts. The Request conversion switches card is not one
+of them. It stays open, sits between Provider and Answer style, and appears once a
+connector is saved. Each prompt shows its fixed format sentence as
+muted, non-editable text. The Contract Field editor supplies the override picker and the
+short-text tooltip, and omits AI prompts for reference Fields. The M37 browser journey
+proves these controls and reads both saved style choices after reopening.
+
 ## CTR-025 — Owning department and Region are built-in Overview attributes
 
 - **Status** — Accepted

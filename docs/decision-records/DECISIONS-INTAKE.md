@@ -911,3 +911,14 @@ paragraphs the draft's extraction carries are code-owned, and the Text answers p
 replaced by the per-Field answer style of Contract analysis. The draft's built-in targets keep
 their `conversion.*` rows and their own wording; the answer styles do not apply to them. The
 mechanics and the reason are the CTR-008 addendum of the same date in `DECISIONS-CONTRACTS.md`.
+
+### INT-008 implementation note, 2026-09-20, M37/6, #961
+
+The five `conversion.*` prompts now appear in the collapsed Conversion draft prompts
+card. Each editable instruction has a muted, code-owned format sentence beneath it.
+The API no longer accepts `rules.*` slugs, and migration `0153` removes their stored
+overrides. Conversion drafts retain their built-in title and description wording without Answer
+styles. Prompted catalog text Fields use the effective style through the shared target
+path, including Contract Field overrides. Sources, provenance and acceptance rules
+remain as recorded above. The same per-target validation preserves valid sibling
+answers when another value fails validation.

@@ -366,3 +366,17 @@ The tick closes the product milestone, not the drawing debt. ST7 still shows a C
 ST4 General now includes the Administrator-only Setup checklist card above the Organization card. It lists only outstanding steps from `GET /api/v1/onboarding` and disappears when all are done. Rows link to their Settings destinations. Email is plain text because no Settings pane edits SMTP. Review seeded types carries Mark as reviewed in the card. Built-in Authentication is already complete and does not appear. E-signature and AI analysis are separate rows, each at its SET-008 destination.
 
 The built card ships in M33; ST4 still owes this redraw. The labels and their differences from the wizard headings are recorded in `CONTEXT.md`. The built-stack demo gates axe on the checklist, and `08-accessibility.spec.ts` scans `/settings/general` as part of the Settings sweep.
+
+## SET-008 implementation reconciliation, 2026-09-20, M37/6, #961
+
+Settings → Organization → AI analysis now has four collapsed cards: Provider, Answer
+style, Conversion draft prompts, and Contract analysis prompts. The Request conversion
+switches card stays open between Provider and Answer style and appears once a
+connector is saved. This replaces the
+Provider and Field prompts description in the M31 and SET-008 amendments above.
+Answer style offers Few word summary, 1-2 sentence summary, and Full clause text.
+Each of the twelve prompt rows shows editable extraction instructions and a greyed,
+code-owned format sentence. Shared rules have no editor. Contract analysis prompts
+links to Contracts → Fields for catalog prompts and their Answer style overrides.
+The pending AI analysis frame redraw must show these four cards and the Request
+conversion switches.
