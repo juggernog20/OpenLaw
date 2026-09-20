@@ -224,3 +224,36 @@ it("ends the session when browser push cleanup does not settle", async () => {
     { timeout: 5000 },
   );
 });
+
+it("registers from the Portal and manages devices only through its mount", async () => {
+  const calls: StubCall[] = [];
+  stubApi({
+    signedIn: { ...MEMBER, role: "business_user" },
+    extra: (call) => {
+      if (call.url.pathname.includes("/notifications/subscriptions")) calls.push(call);
+      const url = new URL(call.url);
+      url.pathname = url.pathname.replace("/api/v1/portal/", "/api/v1/");
+      return extra({ ...call, url });
+    },
+  });
+  renderAt("/portal/settings");
+  const enable = await screen.findByRole("button", { name: "Turn on for this browser" });
+  await waitFor(() => expect(enable).toBeEnabled());
+  expect(navigator.serviceWorker.register).toHaveBeenCalledWith("/src/sw.ts", {
+    type: "module",
+    scope: "/",
+  });
+  expect(requestPermission).not.toHaveBeenCalled();
+  await userEvent.setup().click(enable);
+  expect(await screen.findByText("Chrome on Linux")).toBeVisible();
+  expect(writes[0]!.body).toEqual(subscription.toJSON());
+  getSubscription.mockResolvedValue(subscription);
+  await userEvent.setup().click(screen.getByRole("button", { name: "Revoke Chrome on Linux" }));
+  await screen.findByText("No browsers have been turned on.");
+  expect(unsubscribe).toHaveBeenCalledOnce();
+  expect(calls.map((call) => [call.method, call.url.pathname])).toEqual([
+    ["GET", "/api/v1/portal/notifications/subscriptions"],
+    ["POST", "/api/v1/portal/notifications/subscriptions"],
+    ["DELETE", "/api/v1/portal/notifications/subscriptions/s1"],
+  ]);
+});

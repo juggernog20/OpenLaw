@@ -12,6 +12,7 @@ import {
   contracts,
   contractTeam,
   eq,
+  inArray,
   notifications,
   orgSettings,
   requests,
@@ -27,6 +28,7 @@ import {
   signInCookies,
   type TestHarness,
 } from "../../testing/harness.js";
+import { provisionUser } from "../../auth/instance.js";
 import { createVapidResolver } from "../../lib/notifications/vapid.js";
 import { handleNotificationPush } from "../../pipeline/notification-push.js";
 import { startPipeline } from "../../pipeline/pg-boss.js";
@@ -550,4 +552,138 @@ it("keeps the email worker running when the stored push key is unreadable", asyn
       sql`update org_settings set vapid_private_key = ${raw.rows[0]!.private}`,
     );
   }
+});
+
+it("pushes Requester events to a Business User enrolled through the Portal, with assignment on the staff bell", async () => {
+  const person = {
+    email: "portal-push@example.com",
+    displayName: "Portal Requester",
+    password: "portal-test-password",
+  }; // NOSONAR — throwaway test account
+  const requester = await provisionUser(harness.app.auth, person);
+  await harness.db.update(users).set({ role: "business_user" }).where(eq(users.id, requester.id));
+  const portalCookies = await signInCookies(harness.app, person.email, person.password);
+  const enrolled = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/portal/notifications/subscriptions",
+    cookies: portalCookies,
+    payload: {
+      endpoint: `${endpoint}/portal`,
+      keys: {
+        p256dh: browser.getPublicKey().toString("base64url"),
+        auth: auth.toString("base64url"),
+      },
+    },
+  });
+  expect(enrolled.statusCode, enrolled.body).toBe(200);
+  await subscribe("staff");
+  const [type] = await harness.db.select().from(requestTypes).limit(1);
+  const [request] = await harness.db
+    .insert(requests)
+    .values({
+      requestTypeId: type!.id,
+      requesterId: requester.id,
+      title: "Review the Portal NDA",
+      urgency: "medium",
+    })
+    .returning();
+  const colleague = {
+    ...person,
+    email: "portal-push-legal@example.com",
+    displayName: "Legal colleague",
+  };
+  const legal = await provisionUser(harness.app.auth, colleague);
+  await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, legal.id));
+  const legalCookies = await signInCookies(harness.app, colleague.email, colleague.password);
+  const assigned = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/requests/${request!.number}/assignee`,
+    cookies: legalCookies,
+    payload: { assigneeId: userId },
+  });
+  expect(assigned.statusCode, assigned.body).toBe(200);
+  expect(assigned.headers["content-type"]).toContain("application/json");
+  expect(assigned.json().request.assignee).toMatchObject({ id: userId });
+  const replied = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/comments",
+    cookies,
+    payload: {
+      entityType: "request",
+      entityId: request!.id,
+      body: "Legal is reviewing this.",
+      visibility: "full_thread",
+    },
+  });
+  expect(replied.statusCode, replied.body).toBe(201);
+  expect(replied.headers["content-type"]).toContain("application/json");
+  expect(replied.json().comment).toMatchObject({
+    body: "Legal is reviewing this.",
+    visibility: "full_thread",
+  });
+  const resolved = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${request!.number}/resolve`,
+    cookies,
+    payload: { reply: "The existing terms cover this." },
+  });
+  expect(resolved.statusCode, resolved.body).toBe(200);
+  expect(resolved.headers["content-type"]).toContain("application/json");
+  expect(resolved.json().request.status).toBe("resolved");
+  const [other] = await harness.db
+    .insert(requests)
+    .values({
+      requestTypeId: type!.id,
+      requesterId: requester.id,
+      title: "Review another Portal NDA",
+      urgency: "medium",
+    })
+    .returning();
+  const declined = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${other!.number}/decline`,
+    cookies,
+    payload: { reason: "Please ask Procurement." },
+  });
+  expect(declined.statusCode, declined.body).toBe(200);
+  expect(declined.headers["content-type"]).toContain("application/json");
+  expect(declined.json().request).toMatchObject({
+    status: "declined",
+    declinedReason: "Please ask Procurement.",
+  });
+  const rows = await harness.db
+    .select()
+    .from(notifications)
+    .where(inArray(notifications.entityId, [request!.id, other!.id]));
+  expect(rows).toHaveLength(5);
+  for (const row of rows) {
+    const assigned = row.eventType === "request.assigned";
+    expect(row.userId).toBe(assigned ? userId : requester.id);
+    expect(row.pushOwed).toBe(true);
+    await deliver(row.id);
+    expect(received.at(-1)!.body).toEqual({
+      notificationId: row.id,
+      surface: assigned ? "staff" : "portal",
+    });
+    expect((await read(row.id)).pushedAt).not.toBeNull();
+    const portalRead = await harness.app.inject({
+      url: `/api/v1/portal/notifications/${row.id}`,
+      cookies: portalCookies,
+    });
+    expect(portalRead.statusCode, portalRead.body).toBe(assigned ? 404 : 200);
+    if (!assigned) {
+      const source = row.entityId === request!.id ? request! : other!;
+      expect(portalRead.json().payload).toMatchObject({
+        requestNumber: source.number,
+        requestTitle: source.title,
+      });
+    }
+  }
+  expect(
+    rows
+      .filter((row) => row.userId === requester.id)
+      .map((row) => row.eventType)
+      .sort(),
+  ).toEqual(["request.declined", "request.replied", "request.replied", "request.status_changed"]);
+  expect(received).toHaveLength(5);
 });

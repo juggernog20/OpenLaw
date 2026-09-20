@@ -164,7 +164,7 @@ it("marks read and reuses a window of the same surface", async () => {
   await dispatch("notificationclick", {
     notification: {
       close,
-      data: { notificationId: "n1", surface: "portal", href: "/portal/contracts/42" },
+      data: { notificationId: "n1", surface: "portal", href: "/portal/requests/41" },
     },
   });
   expect(fetcher).toHaveBeenCalledWith(
@@ -173,7 +173,7 @@ it("marks read and reuses a window of the same surface", async () => {
   );
   expect(close).toHaveBeenCalled();
   expect(portal.focus).toHaveBeenCalled();
-  expect(portal.navigate).toHaveBeenCalledWith("https://law.example/portal/contracts/42");
+  expect(portal.navigate).toHaveBeenCalledWith("https://law.example/portal/requests/41");
   expect(staff.navigate).not.toHaveBeenCalled();
   expect(openWindow).not.toHaveBeenCalled();
 });
@@ -270,4 +270,67 @@ it("posts the browser's replacement subscription without asking for new keys", a
     "/api/v1/notifications/subscriptions",
     expect.objectContaining({ method: "POST" }),
   );
+});
+
+it.each([
+  ["request.status_changed", "Your request Review the NDA is now In progress"],
+  ["request.declined", "Legal declined your request Review the NDA"],
+  ["request.replied", "Rita replied on your request Review the NDA"],
+])("narrates %s through the Portal mount and opens the Request", async (eventType, sentence) => {
+  const requestRow = {
+    ...row,
+    eventType,
+    entityType: "request",
+    entityId: "r1",
+    payload: {
+      requestNumber: 41,
+      requestTitle: "Review the NDA",
+      actorName: "Rita",
+      to: "converted",
+    },
+  };
+  fetcher.mockImplementation(
+    async (url: string) =>
+      new Response(
+        JSON.stringify(
+          url.endsWith("notification-preferences")
+            ? { showRecordNamesOnDevices: true }
+            : requestRow,
+        ),
+      ),
+  );
+  const staff = {
+    url: "https://law.example/requests/41",
+    focused: false,
+    focus: vi.fn(),
+    navigate: vi.fn(),
+  };
+  const prefix = {
+    ...staff,
+    url: "https://law.example/portal-other",
+    focus: vi.fn(),
+    navigate: vi.fn(),
+  };
+  windows.push(staff, prefix);
+  await push("portal");
+  expect(fetcher).toHaveBeenCalledWith("/api/v1/portal/notifications/n1", expect.anything());
+  expect(show).toHaveBeenCalledWith(
+    "OpenLaw",
+    expect.objectContaining({
+      body: sentence,
+      data: { notificationId: "n1", surface: "portal", href: "/portal/requests/41" },
+    }),
+  );
+  await dispatch("notificationclick", {
+    notification: { close: vi.fn(), data: show.mock.calls[0]![1].data },
+  });
+  expect(fetcher).toHaveBeenCalledWith(
+    "/api/v1/portal/notifications/read",
+    expect.objectContaining({ method: "POST", body: JSON.stringify({ ids: ["n1"] }) }),
+  );
+  expect(staff.focus).not.toHaveBeenCalled();
+  expect(staff.navigate).not.toHaveBeenCalled();
+  expect(prefix.focus).not.toHaveBeenCalled();
+  expect(prefix.navigate).not.toHaveBeenCalled();
+  expect(openWindow).toHaveBeenCalledWith("https://law.example/portal/requests/41");
 });
