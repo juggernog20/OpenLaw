@@ -285,6 +285,10 @@ credentials. Disable and removal retain their existing behavior.
 - **Rationale** — Reusing one definition across areas introduces coupled edits and ambiguous meaning. Independent fields keep ownership and configuration clear. Reuse within an area covers the usual need without another scope choice.
 - **Upgrade** — Migration 0140 assigns existing definitions to the area that uses them. Definitions used in more than one area become independent copies, preserving names, descriptions, options, attachment order, requiredness, archived state, answers, defaults and citation references. Contract mappings retain their original identities. Unattached definitions default to Contracts. An undecided intake form keeps one question, assigned to Contracts when used there, otherwise Matters. Future answers do not synchronize across definitions.
 
+### Amendment (2026-09-21, DD-028) — attachments are Rows on the type Form; the Request form lives on the destination type
+
+The **Intake** paragraph above is replaced. A Request form no longer has its own attachment list. It is the Intake Rows of the destination type's Form, so a collected answer always has a Row to land on. "Order and requiredness set on each attachment" becomes order in the Form tree plus three switches: On intake form, Required for creation, Visible on Portal. Built-in columns join the same Form as Rows; the ten protected intake rows (`built_in_key`) are retired. The 2026-09-08 addendum below ("all attached Fields at creation") is superseded: the creation dialog collects the Intake and Creation Rows only.
+
 ## CTR-017 — Tasks adopted; contract templates deferred
 
 - **Status** — Accepted
@@ -588,6 +592,10 @@ live Department. The old input is rejected by the strict request schema. Deploy
 the matching API and web images together; clients must use the regenerated API
 schema. Responses retain `owningDepartment` as the current display name and add
 `owningDepartmentId`. Existing stored names migrate to Department references.
+
+### Amendment (2026-09-21, DD-028) — Owning department and Region are built-in Rows
+
+"Available for every Contract Type and do not depend on a Field attachment" still holds, and now reads: they are built-in Rows on every Contract type's Form, with On intake form and Required for creation like any Row and a fixed Portal state. The catalog `region` slug and the exclusion list that stopped it being re-attached are retired with the shadow rows.
 
 ## CTR-026 — A Contract Type carries default people, added to every new Contract of that Type
 

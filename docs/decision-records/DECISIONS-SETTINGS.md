@@ -106,6 +106,10 @@ Built in M20/2 (#376) and recorded at the M20 close, where the sweep found it st
 - **Consequences** — Bulk-reassign flow is a shared component across all list-editor surfaces. Archive guards need usage-count queries per surface.
 - **Addendum (2026-08-10, M5 grill)** — The audit half is satisfiable from day one: the `activity_log` table and its writes land in **M5** with the first settings mutations (the schema doctrine puts a table in the milestone that first writes it). M9 builds the surfaces that read it. The "list-editor pattern per DES" this decision and SET-001 reference gets written as a DES record in **M6**, where the first taxonomy list-editor ships — M5's panes are not taxonomy lists.
 
+### Amendment (2026-09-21, DD-028) — the Default type refuses archive and delete
+
+Each of Contracts and Matters carries one seeded type marked `is_default`. It is the Form used when a Request type names a module and no type, so it cannot be archived or deleted; the guard refuses by name and explains, as this record's house style says. Rename and every other edit are allowed.
+
 ## SET-004 — First-run onboarding wizard + seeded defaults
 
 - **Status** — Accepted

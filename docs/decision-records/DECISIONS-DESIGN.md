@@ -1495,11 +1495,15 @@ The list row stays one line only because this screen exists; writing its anatomy
 
 The request-type editor (frame ST14) mounts this screen and diverges from it twice, in both directions. Neither is a new shape; both are this shape with a slot filled or left empty.
 
-**The right card is optional.** A mount with no form definition ships as the identity card alone; ST14 has one, so it draws the Form fields card. A screen with one card is not a broken two-card screen: it is the same layout with nothing in the second slot, and the card lands when the mount has something to put there.
+**The right card is optional.** A mount with no form definition ships as the identity card alone; ~~ST14 has one, so it draws the Form fields card~~ _(DD-028, 2026-09-21: the Request type editor's right slot is now the read-only Intake form card; the amendment below has the contract)_. A screen with one card is not a broken two-card screen: it is the same layout with nothing in the second slot, and the card lands when the mount has something to put there.
 
 **The identity card takes one more control.** ST14 draws a Target select and its help line under the slug — one native select, options grouped by module ("No target"; Matter, then each live matter type; Contract, then each live contract type), an 11px `text-secondary` help line stating what conversion will do with the chosen state, and a `status-warning` line flagging a target whose type has since been archived. It commits on pick (SET-003) with its own micro-state beside the control, because it writes the mount's own column rather than the shared identity.
 
 **The usage caption is optional too**, for the reason DES-020's is: a mount whose records do not exist yet has nothing but a zero to print. Request types draw none until `requests` land in M20.
+
+### Amendment (2026-09-21, DD-028) — the attachment card gives way to the Form tab
+
+DD-028 replaces the attachment card on the Contract, Matter and Entity type editors with a Form tab holding a tree builder: Rows with three switches on the Contract and Matter editors (On intake form, Required for creation, Visible on Portal), two on the Entity editor (no intake switch), and Branches with conditions on all three. The identity card and its slots stand. The builder's anatomy is a DES record of its own, written from a `.pen` mock before the tab is built. The Request type editor keeps this screen with the identity card and a read-only Intake form card in the right slot.
 
 ## DES-023: The comment surface — tier badges, the Legal Only row wash, and the segmented composer
 
