@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Request type facts and the Intake form read from its destination type. */
+/** Request type facts and the destination Intake form (INT-002, DD-028). */
 
 import { useRef, useState } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -82,7 +82,6 @@ function DestinationControl({
   const selected = types.find((type) => type.id === value.targetTypeId);
   async function save(next: Destination) {
     if (
-      !["contract", "matter"].includes(next.targetModule) ||
       pending.current ||
       (next.targetModule === value.targetModule && next.targetTypeId === value.targetTypeId)
     )
@@ -121,12 +120,11 @@ function DestinationControl({
           required
           aria-disabled={status === "saving"}
           aria-describedby="request-type-destination-help"
-          onChange={(event) =>
-            void save({
-              targetModule: event.target.value as TargetModule,
-              targetTypeId: null,
-            })
-          }
+          onChange={(event) => {
+            const targetModule = event.currentTarget.value;
+            if (targetModule !== "contract" && targetModule !== "matter") return;
+            void save({ targetModule, targetTypeId: null });
+          }}
         >
           <option value="contract">
             {intl.formatMessage({

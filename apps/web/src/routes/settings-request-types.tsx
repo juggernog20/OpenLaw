@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Request types and the destination type whose Form each reads. */
+/** Request types and their destination Forms (INT-002, DD-028). */
 
 import { redirect, useLoaderData } from "react-router";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";

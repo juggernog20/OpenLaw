@@ -272,7 +272,7 @@ test.describe.serial("M19 demo path", () => {
       const card = page.getByRole("region", { name: "Intake form" });
       await expect(card.getByRole("link", { name: `Edit on ${destinationName}` })).toBeVisible();
       await expect(page.getByRole("checkbox")).toHaveCount(0);
-      await expect(page.getByRole("button", { name: "Attach field", exact: true })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /^Attach field$/i })).toHaveCount(0);
       for (const name of ["Title", "Department", "Urgency", "Attachments"]) {
         await expect(card.getByText(name, { exact: true })).toBeVisible();
       }
