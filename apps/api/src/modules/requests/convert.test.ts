@@ -931,7 +931,7 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const before = await namedCount("Helix Labs GmbH");
     const res = await convert(request.number, {
       title: "Helix Labs NDA",
-      counterpartyName: "  Helix Labs GmbH  ",
+      counterparties: [{ name: "  Helix Labs GmbH  " }],
     });
     expect(res.statusCode, res.body).toBe(200);
     const contract = await contractNumbered(res.json().request.convertedContract.number as number);
@@ -963,7 +963,7 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const request = await submit("A name we already know");
     const res = await convert(request.number, {
       title: "Orion Cloud NDA",
-      counterpartyName: "orion cloud ltd",
+      counterparties: [{ name: "orion cloud ltd" }],
     });
     expect(res.statusCode, res.body).toBe(200);
     const contract = await contractNumbered(res.json().request.convertedContract.number as number);
@@ -985,7 +985,7 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const request = await submit("A deadline the requester stated");
     const res = await convert(request.number, {
       title: "Dated NDA",
-      neededBy: "2020-02-29",
+      customFields: { needed_by: "2020-02-29" },
     });
     expect(res.statusCode, res.body).toBe(200);
     const contract = await contractNumbered(res.json().request.convertedContract.number as number);
@@ -1016,8 +1016,8 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const request = await submit("Badly formed facts");
     const before = await contractCount();
     for (const body of [
-      { title: "NDA", neededBy: "next Tuesday" },
-      { title: "NDA", counterpartyName: "   " },
+      { title: "NDA", customFields: { needed_by: "next Tuesday" } },
+      { title: "NDA", counterparties: [{ name: "   " }] },
     ]) {
       const res = await convert(request.number, body);
       expect(res.statusCode, res.body).toBe(400);

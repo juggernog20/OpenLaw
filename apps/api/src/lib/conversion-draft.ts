@@ -24,7 +24,6 @@ import {
 } from "@openlaw/db";
 import {
   MAX_COUNTERPARTY_NAME_LENGTH,
-  INTAKE_CARRY_SLUGS,
   isReferenceFieldType,
   sameConversionValue,
   type ConversionPromptSlug,
@@ -394,8 +393,12 @@ export function isCarriedConversionValue(
     title: row.title,
     description: row.description,
     priority: row.urgency,
-    counterparty: row.customFields[INTAKE_CARRY_SLUGS.counterpartyName],
-    needed_by: row.customFields[INTAKE_CARRY_SLUGS.neededBy],
+    counterparty: row.intakeCounterparties.length
+      ? row.intakeCounterparties.map((party) => party.name).join("\n")
+      : Array.isArray(row.customFields.counterparties)
+        ? row.customFields.counterparties.join("\n")
+        : undefined,
+    needed_by: row.customFields.needed_by,
   };
   return sameConversionValue(
     value,

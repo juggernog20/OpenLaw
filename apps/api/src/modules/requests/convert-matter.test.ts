@@ -1093,7 +1093,10 @@ describe("the Request thread follows onto the matter (CMT-001, NOT-002)", () => 
 describe("what the form collected beside the Fields (INT-002, focus group 2026-09-07)", () => {
   it("lands Needed by as one key date on the matter and narrates it", async () => {
     const request = await submit("A deadline the requester stated");
-    const res = await convert(request.number, { title: "Dated matter", neededBy: "2027-03-31" });
+    const res = await convert(request.number, {
+      title: "Dated matter",
+      customFields: { needed_by: "2027-03-31" },
+    });
     expect(res.statusCode, res.body).toBe(200);
     const matter = await matterNumbered(res.json().request.convertedRecord.number as number);
 
@@ -1131,10 +1134,10 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const before = await matterCount();
     const res = await convert(request.number, {
       title: "Named matter",
-      counterpartyName: "Helix Labs GmbH",
+      counterparties: [{ name: "Helix Labs GmbH" }],
     });
     expect(res.statusCode, res.body).toBe(400);
-    expect(res.json().detail).toContain("matter has no counterparty");
+    expect(res.json().detail).toContain("no Counterparties Row");
     expect((await cast.stored(request.id)).status).toBe("new");
     expect(await matterCount()).toBe(before);
   });

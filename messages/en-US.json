@@ -3206,9 +3206,6 @@
   "convert.archivedReferenceNote": {
     "defaultMessage": "{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
   },
-  "convert.counterparty": {
-    "defaultMessage": "Counterparty"
-  },
   "convert.failed": {
     "defaultMessage": "The request could not be converted. Try again."
   },
@@ -3218,17 +3215,11 @@
   "convert.from": {
     "defaultMessage": "{requestType} · submitted by {requester}"
   },
-  "convert.nativeCarried": {
-    "defaultMessage": "Carries into the contract"
-  },
   "convert.needTitle": {
     "defaultMessage": "Name the {module, select, matter {matter} other {contract}}."
   },
   "convert.needType": {
     "defaultMessage": "Pick a {module, select, matter {matter} other {contract}} type."
-  },
-  "convert.neededBy": {
-    "defaultMessage": "Needed by"
   },
   "convert.otherModule": {
     "defaultMessage": "Convert to {module, select, matter {contract} other {matter}} instead"

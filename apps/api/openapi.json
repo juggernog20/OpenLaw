@@ -41531,6 +41531,22 @@
                             ]
                           }
                         },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
+                          }
+                        },
                         "declinedReason": {
                           "type": ["string", "null"]
                         },
@@ -42253,6 +42269,22 @@
                             ]
                           }
                         },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
+                          }
+                        },
                         "declinedReason": {
                           "type": ["string", "null"]
                         },
@@ -42517,6 +42549,22 @@
                                 }
                               }
                             ]
+                          }
+                        },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
                           }
                         },
                         "declinedReason": {
@@ -43054,6 +43102,22 @@
                             ]
                           }
                         },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
+                          }
+                        },
                         "declinedReason": {
                           "type": ["string", "null"]
                         },
@@ -43456,6 +43520,22 @@
                                 }
                               }
                             ]
+                          }
+                        },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
                           }
                         },
                         "declinedReason": {
@@ -44866,7 +44946,7 @@
     "/api/v1/requests/{number}/convert": {
       "post": {
         "operationId": "convertRequest",
-        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one \"Needed by\" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only",
+        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the collected built-in Rows, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Built-in Row answers land on native columns, parties and the Needed by key date. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only",
         "tags": ["requests"],
         "description": "Contract and Matter conversion set the Requester as Business Owner and add them to the record team. Team membership grants Portal access to the non-archived record (DD-023).",
         "requestBody": {
@@ -44899,9 +44979,6 @@
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "counterpartyCleared": {
-                    "type": "boolean"
                   },
                   "contractTypeId": {
                     "type": "string",
@@ -44951,15 +45028,36 @@
                     "type": "string",
                     "enum": ["low", "medium", "high", "critical"]
                   },
-                  "counterpartyName": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 200
-                  },
-                  "neededBy": {
-                    "type": "string",
-                    "format": "date",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  "counterparties": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "counterpartyId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["counterpartyId"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            }
+                          },
+                          "required": ["name"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
                   }
                 },
                 "required": ["title"],
@@ -45042,6 +45140,22 @@
                                 }
                               }
                             ]
+                          }
+                        },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
                           }
                         },
                         "declinedReason": {

@@ -51,6 +51,7 @@ export interface CreateMatterInput {
 }
 
 export interface CreatedMatter {
+  neededByKeyDateId: string | null;
   row: Matter;
   matterTypeName: string;
   statusName: string;
@@ -238,11 +239,13 @@ export async function createMatter(
       ...(template ? { template: template.name } : {}),
     },
   });
+  let neededByKeyDateId: string | null = null;
   if (input.neededBy) {
     const [date] = await tx
       .insert(matterKeyDates)
       .values({ matterId: row!.id, label: "Needed by", date: input.neededBy })
       .returning();
+    neededByKeyDateId = date!.id;
     await recordActivity(tx, {
       entityType: "matter",
       entityId: row!.id,
@@ -295,6 +298,7 @@ export async function createMatter(
     });
   }
   return {
+    neededByKeyDateId,
     row: row!,
     matterTypeName: matterType.displayName,
     statusName: status.displayName,
