@@ -3,7 +3,11 @@
 import { useCallback } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
-import { CounterpartyPicker, type CounterpartyPick } from "../counterparty-picker";
+import {
+  CounterpartyPicker,
+  type CounterpartyPick,
+  type CounterpartyOption,
+} from "../counterparty-picker";
 import { Button } from "../ui/button";
 import { api } from "../../lib/api";
 
@@ -17,9 +21,11 @@ export function IntakeCounterpartiesInput({
   invalid,
   describedBy,
   required,
+  searchOptions,
 }: Readonly<{
   id: string;
   requestTypeId: string;
+  searchOptions?: (query: string) => Promise<CounterpartyOption[]>;
   selections: readonly IntakeCounterpartySelection[];
   onChange: (value: IntakeCounterpartySelection[]) => void;
   invalid?: boolean;
@@ -29,13 +35,14 @@ export function IntakeCounterpartiesInput({
   const intl = useIntl();
   const search = useCallback(
     async (query: string) => {
+      if (searchOptions) return searchOptions(query);
       const { data } = await api.GET("/api/v1/portal/request-types/{id}/counterparties", {
         params: { path: { id: requestTypeId }, query: { query } },
       });
       if (!data) throw new Error("Counterparty search failed");
       return data.counterparties;
     },
-    [requestTypeId],
+    [requestTypeId, searchOptions],
   );
   return (
     <div className="flex flex-col gap-2">

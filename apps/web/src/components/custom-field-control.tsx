@@ -41,6 +41,7 @@ export interface CustomFieldControlProps {
   field: AttachedField;
   draft: CustomFieldDraft;
   disabled?: boolean;
+  allowCreateCurrency?: boolean;
   people?: readonly FieldReference[];
   entities?: readonly FieldReference[];
   /** The id of the field's help text, when it has any — every control
@@ -65,6 +66,7 @@ export function CustomFieldControl({
   field,
   draft,
   disabled = false,
+  allowCreateCurrency = true,
   people = [],
   entities = [],
   describedBy,
@@ -125,6 +127,7 @@ export function CustomFieldControl({
       return (
         <CurrencySelect
           {...shared}
+          allowCreate={allowCreateCurrency}
           value={text}
           onValueChange={onDraft}
           onKeyDown={onKeyDown}

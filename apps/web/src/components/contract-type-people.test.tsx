@@ -50,7 +50,7 @@ it("manages default people from the Contract Type editor", async () => {
             inUseCount: 0,
           },
         });
-      if (path === "/api/v1/contract-types/t1/fields") return json(200, { attachedFields: [] });
+      if (path === "/api/v1/contract-types/t1/form") return json(200, { form: [] });
       if (path === "/api/v1/contract-types/t1/approval-default")
         return json(200, { groupId: null });
       if (path === "/api/v1/approver-groups") return json(200, { approverGroups: [] });
@@ -75,7 +75,7 @@ it("manages default people from the Contract Type editor", async () => {
       return undefined;
     },
   });
-  renderAt("/settings/contracts/types/t1");
+  renderAt("/settings/contracts/types/t1/people");
   await screen.findByRole("heading", { name: "People" });
   await user.selectOptions(screen.getByRole("combobox", { name: "Default person" }), "bob");
   await user.click(screen.getByRole("button", { name: "Add person" }));

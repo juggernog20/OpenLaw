@@ -135,6 +135,7 @@ export function CurrencySelect({
   onValueChange,
   placeholder,
   allowEmpty = true,
+  allowCreate = true,
   className,
   onBlur,
   onKeyDown,
@@ -144,6 +145,7 @@ export function CurrencySelect({
   onValueChange: (code: string) => void;
   placeholder?: string;
   allowEmpty?: boolean;
+  allowCreate?: boolean;
 }) {
   const intl = useIntl();
   const settings = useCurrencies();
@@ -187,7 +189,7 @@ export function CurrencySelect({
             {option.code} — {option.displayName}
           </option>
         ))}
-        {settings.canManage && (
+        {allowCreate && settings.canManage && (
           <option value={ADD}>
             {intl.formatMessage({ id: "currencies.add", defaultMessage: "Add new currency" })}
           </option>

@@ -41,7 +41,7 @@
  */
 
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { ArrowLeft, GripVertical, Lock, Plus, X } from "lucide-react";
 import { resolveIntakeFieldOrder } from "@openlaw/shared";
@@ -1066,8 +1066,11 @@ export function TypeEditorScreen({
   identityExtra,
   extraCards,
   attachments,
+  sectionContent,
 }: Readonly<{
   initialType: EditorTypeRow;
+  /** Replaces Details only when the route has a section parameter. The bare type route keeps Details. */
+  sectionContent?: ReactNode;
   /** The module's section head (title + tab strip). */
   tabs: ReactNode;
   /** The Types pane this editor was reached from. */
@@ -1085,6 +1088,7 @@ export function TypeEditorScreen({
   /** The fields card; omit for a mount that has no attachment surface. */
   attachments?: TypeEditorAttachments;
 }>) {
+  const { section } = useParams();
   const [saved, setSaved] = useState<EditorTypeRow>(initialType);
   const [nameDraft, setNameDraft] = useState(saved.displayName);
   const [descriptionDraft, setDescriptionDraft] = useState(saved.description ?? "");
@@ -1153,74 +1157,78 @@ export function TypeEditorScreen({
           <ArrowLeft size={16} aria-hidden="true" />
           <FormattedMessage {...messages.allTypes} />
         </Link>
-        <div
-          className={
-            attachments
-              ? "grid min-w-0 grid-cols-1 items-start gap-4 @3xl/type-editor:grid-cols-[minmax(0,1fr)_20rem]"
-              : "grid min-w-0 grid-cols-1 items-start gap-4"
-          }
-        >
-          {attachments && (
+        {sectionContent && section ? (
+          sectionContent
+        ) : (
+          <div
+            className={
+              attachments
+                ? "grid min-w-0 grid-cols-1 items-start gap-4 @3xl/type-editor:grid-cols-[minmax(0,1fr)_20rem]"
+                : "grid min-w-0 grid-cols-1 items-start gap-4"
+            }
+          >
+            {attachments && (
+              <div className="flex min-w-0 flex-col gap-4">
+                {attachments.defaultFieldsModule && (
+                  <DefaultFields module={attachments.defaultFieldsModule} />
+                )}
+                <AttachedFieldsCard typeId={saved.id} {...attachments} />
+              </div>
+            )}
             <div className="flex min-w-0 flex-col gap-4">
-              {attachments.defaultFieldsModule && (
-                <DefaultFields module={attachments.defaultFieldsModule} />
-              )}
-              <AttachedFieldsCard typeId={saved.id} {...attachments} />
+              <SettingsCard title={saved.displayName}>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="type-display-name">
+                    <FormattedMessage {...messages.displayName} />
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="type-display-name"
+                      className="w-80 min-w-0 max-w-full"
+                      value={nameDraft}
+                      onChange={(event) => setNameDraft(event.target.value)}
+                      onBlur={commitName}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") commitName();
+                        if (event.key === "Escape") setNameDraft(saved.displayName);
+                      }}
+                    />
+                    <StatusNote status={typeStatus.name} detail={typeError.name} />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="type-description">
+                    <FormattedMessage {...messages.description} />
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="type-description"
+                      className="w-full"
+                      value={descriptionDraft}
+                      onChange={(event) => setDescriptionDraft(event.target.value)}
+                      onBlur={commitDescription}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") commitDescription();
+                        if (event.key === "Escape") setDescriptionDraft(saved.description ?? "");
+                      }}
+                    />
+                    <StatusNote status={typeStatus.description} detail={typeError.description} />
+                  </div>
+                </div>
+
+                {identityExtra}
+
+                {inUse && (
+                  <p className="text-sm text-muted">
+                    <FormattedMessage {...inUse} values={{ count: saved.inUseCount }} />
+                  </p>
+                )}
+              </SettingsCard>
+              {extraCards}
             </div>
-          )}
-          <div className="flex min-w-0 flex-col gap-4">
-            <SettingsCard title={saved.displayName}>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="type-display-name">
-                  <FormattedMessage {...messages.displayName} />
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="type-display-name"
-                    className="w-80 min-w-0 max-w-full"
-                    value={nameDraft}
-                    onChange={(event) => setNameDraft(event.target.value)}
-                    onBlur={commitName}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") commitName();
-                      if (event.key === "Escape") setNameDraft(saved.displayName);
-                    }}
-                  />
-                  <StatusNote status={typeStatus.name} detail={typeError.name} />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="type-description">
-                  <FormattedMessage {...messages.description} />
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="type-description"
-                    className="w-full"
-                    value={descriptionDraft}
-                    onChange={(event) => setDescriptionDraft(event.target.value)}
-                    onBlur={commitDescription}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") commitDescription();
-                      if (event.key === "Escape") setDescriptionDraft(saved.description ?? "");
-                    }}
-                  />
-                  <StatusNote status={typeStatus.description} detail={typeError.description} />
-                </div>
-              </div>
-
-              {identityExtra}
-
-              {inUse && (
-                <p className="text-sm text-muted">
-                  <FormattedMessage {...inUse} values={{ count: saved.inUseCount }} />
-                </p>
-              )}
-            </SettingsCard>
-            {extraCards}
           </div>
-        </div>
+        )}
       </div>
     </>
   );
