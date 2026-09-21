@@ -287,24 +287,43 @@ describe("Form tree and touchpoints", () => {
     expect(validateForm([])).toEqual([]);
   });
 
-  it("uses a hidden stored answer for a later sibling without collecting the hidden Row", () => {
+  describe("a hidden Row is unanswered for every later Branch", () => {
     const form: Form = [
       row("source"),
       branch("hidden", [condition("equals", "yes")], [row("stored", { isRequired: true })]),
       branch(
         "later",
         [condition("equals", "kept", "stored")],
-        [row("collected", { onIntakeForm: true, isRequired: true })],
+        [row("dependent", { onIntakeForm: true, isRequired: true })],
       ),
     ];
-    const answers = Object.freeze({ source: "no", stored: "kept" });
-    const before = JSON.stringify(form);
-    const result = evaluateForm(form, answers);
-    expect(refs(formRowsForTouchpoint(result.visibleRows, "intake"))).toEqual(["collected"]);
-    expect(refs(formRowsForTouchpoint(result.enforcedRequiredRows, "intake"))).toEqual([
-      "collected",
-    ]);
-    expect(JSON.stringify(form)).toBe(before);
+
+    it("opens the later Branch only while the stored Row is shown", () => {
+      expect(refs(evaluateForm(form, { source: "yes", stored: "kept" }).visibleRows)).toEqual([
+        "source",
+        "stored",
+        "dependent",
+      ]);
+      const answers = Object.freeze({ source: "no", stored: "kept" });
+      const before = JSON.stringify(form);
+      const result = evaluateForm(form, answers);
+      expect(refs(result.visibleRows)).toEqual(["source"]);
+      expect(refs(result.enforcedRequiredRows)).toEqual([]);
+      expect(JSON.stringify(form)).toBe(before);
+      expect(answers.stored).toBe("kept");
+    });
+
+    it("keeps the record page on the same rule, drawing hidden Rows that hold a value", () => {
+      expect(refs(recordFormRows(form, { source: "no", stored: "kept" }))).toEqual([
+        "source",
+        "stored",
+      ]);
+      expect(refs(recordFormRows(form, { source: "no", stored: "kept", dependent: "x" }))).toEqual([
+        "source",
+        "stored",
+        "dependent",
+      ]);
+    });
   });
 });
 

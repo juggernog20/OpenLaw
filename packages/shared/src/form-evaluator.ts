@@ -3,6 +3,8 @@
 /**
  * DD-028's Form evaluation, record visibility, touchpoints and Branch validation.
  * These functions perform no I/O and do not mutate the Form or its answers.
+ * A Row under a false Branch is unanswered for every Branch below it, so a stale
+ * answer stored under a hidden Row cannot open a Branch the requester cannot see the cause of.
  */
 
 /** DD-028. Array order is document order; rowRef is a built-in key or Field slug. */
@@ -113,12 +115,7 @@ function comparable(value: unknown, type: FormRowType): number | string | undefi
     : undefined;
 }
 
-function matches(
-  condition: FormCondition,
-  row: FormRow | undefined,
-  answers: FormAnswers,
-): boolean {
-  const answer = answerFor(answers, condition.rowRef);
+function matches(condition: FormCondition, row: FormRow | undefined, answer: unknown): boolean {
   if (!hasValue(answer)) return condition.operator === "is_not";
   if (condition.operator === "is_set") return true;
   if (!row) return false;
@@ -138,21 +135,26 @@ function matches(
   return condition.operator === "is_not" ? !equal : equal;
 }
 
-/** Visit hidden Rows too: stored answers remain available to later Branches. */
+/** Visit hidden Rows too, so the record page can draw a hidden Row that holds a value.
+ * A hidden Row's answer is not read by any later Branch: it is unanswered there.
+ */
 function visitForm(
   form: Form,
   answers: FormAnswers,
   visit: (row: FormRow, visible: boolean) => void,
 ): void {
-  const precedingRows = new Map<string, FormRow>();
+  const precedingRows = new Map<string, { row: FormRow; visible: boolean }>();
   function walk(nodes: Form, parentVisible: boolean): void {
     for (const node of nodes) {
       if (node.kind === "row") {
-        precedingRows.set(node.rowRef, node);
+        precedingRows.set(node.rowRef, { row: node, visible: parentVisible });
         visit(node, parentVisible);
       } else {
-        const test = (condition: FormCondition) =>
-          matches(condition, precedingRows.get(condition.rowRef), answers);
+        const test = (condition: FormCondition) => {
+          const source = precedingRows.get(condition.rowRef);
+          const answer = source?.visible ? answerFor(answers, condition.rowRef) : undefined;
+          return matches(condition, source?.row, answer);
+        };
         const visible =
           parentVisible &&
           (node.match === "all" ? node.conditions.every(test) : node.conditions.some(test));
