@@ -651,3 +651,23 @@ export function isOpenRequestStatus(status: string): status is "new" | "read" {
 }
 
 export { normalizeAiBaseUrl } from "./ai-destination.js";
+
+export {
+  evaluateForm,
+  formRowsForTouchpoint,
+  formRowTouchpoint,
+  recordFormRows,
+  validateForm,
+  type Form,
+  type FormNode,
+  type FormRow,
+  type FormRowType,
+  type FormBranch,
+  type FormCondition,
+  type FormOperator,
+  type FormScalar,
+  type FormAnswers,
+  type FormTouchpoint,
+  type FormEvaluation,
+  type FormValidationIssue,
+} from "./form-evaluator.js";
