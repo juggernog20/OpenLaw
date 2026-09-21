@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-028 tree operations and display names for Rows and Branches. */
 import {
   FORM_BUILTINS,
   type Form,
@@ -8,10 +10,11 @@ import {
   type FormModule,
   type FormOperator,
 } from "@openlaw/shared";
-import { formatCount, toMajorUnits } from "../../lib/format";
+import type { FormMessageKey, FormText } from "./messages";
+import { formatCount } from "../../lib/format";
 import type { ApiField } from "../../lib/field-catalog";
 
-export const OPERATORS: Record<FormOperator, string> = {
+export const OPERATORS: Record<FormOperator, FormMessageKey> = {
   equals: "is",
   is_not: "is not",
   is_one_of: "is one of",
@@ -19,7 +22,7 @@ export const OPERATORS: Record<FormOperator, string> = {
   greater_than: "is greater than",
   less_than: "is less than",
 };
-const LABELS: Record<string, string> = {
+const LABELS: Record<string, FormMessageKey> = {
   title: "Title",
   contract_type: "Type",
   matter_type: "Type",
@@ -39,12 +42,9 @@ const LABELS: Record<string, string> = {
   value: "Value",
   needed_by: "Needed by",
 };
-export function rowName(
-  row: FormRow,
-  catalog: readonly ApiField[],
-  t: (text: string) => string = (text) => text,
-) {
-  return catalog.find((f) => f.id === row.id)?.displayName ?? t(LABELS[row.rowRef] ?? row.rowRef);
+export function rowName(row: FormRow, catalog: readonly ApiField[], t: FormText = (text) => text) {
+  const label = LABELS[row.rowRef];
+  return catalog.find((f) => f.id === row.id)?.displayName ?? (label ? t(label) : row.rowRef);
 }
 export function isPinned(node: FormNode) {
   return node.kind === "row" && ["title", "contract_type", "matter_type"].includes(node.rowRef);
@@ -91,6 +91,7 @@ export function location(
 export function optionsFor(
   row: FormRow,
   catalog: readonly ApiField[],
+  t: FormText = (text) => text,
 ): { value: string; label: string }[] {
   const field = catalog.find((f) => f.id === row.id);
   if (field) return (field.options ?? []).map((value) => ({ value, label: value }));
@@ -99,16 +100,25 @@ export function optionsFor(
     priority: ["low", "medium", "high", "critical"],
     risk: ["low", "medium", "high", "critical"],
   };
+  const labels: Record<string, FormMessageKey> = {
+    fixed: "Fixed",
+    auto_renew: "Auto-renew",
+    evergreen: "Evergreen",
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+    critical: "Critical",
+  };
   return (values[row.rowRef] ?? []).map((value) => ({
     value,
-    label: value === "auto_renew" ? "Auto-renew" : value[0]!.toUpperCase() + value.slice(1),
+    label: t(labels[value]!),
   }));
 }
 export function branchName(
   branch: FormBranch,
   form: Form,
   catalog: readonly ApiField[],
-  t: (text: string) => string = (text) => text,
+  t: FormText = (text) => text,
   referenceLabels: Record<string, { value: string; label: string }[]> = {},
 ) {
   const rows = flatten(form).filter((n): n is FormRow => n.kind === "row");
@@ -122,13 +132,13 @@ export function branchName(
         const row = rows.find((r) => r.rowRef === c.rowRef);
         const value = (v: unknown) => {
           if (!row) return String(v);
-          const option = (referenceLabels[row.rowRef] ?? optionsFor(row, catalog)).find(
+          const option = (referenceLabels[row.rowRef] ?? optionsFor(row, catalog, t)).find(
             (o) => o.value === v,
           );
           if (option) return option.label;
           if (row.fieldType === "boolean") return t(v === true ? "Yes" : "No");
           if (row.fieldType === "money" && typeof v === "number")
-            return formatCount(toMajorUnits(v, "USD"));
+            return t("{amount} minor units", { amount: formatCount(v) });
           if (
             ["user", "entity"].includes(row.fieldType) ||
             [
@@ -147,4 +157,21 @@ export function branchName(
       })
       .join(", ")
   );
+}
+
+export function fieldTypeName(type: FormRow["fieldType"], t: FormText) {
+  const labels: Record<FormRow["fieldType"], FormMessageKey> = {
+    text: "Text",
+    long_text: "Long text",
+    number: "Number",
+    date: "Date",
+    boolean: "Boolean",
+    single_select: "Single select",
+    multi_select: "Multi select",
+    user: "User",
+    entity: "Entity",
+    currency: "Currency",
+    money: "Money",
+  };
+  return t(labels[type]);
 }

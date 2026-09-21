@@ -7,7 +7,7 @@ import {
   type FormModule,
   type FormRow,
 } from "@openlaw/shared";
-import { json, problem, renderAt, stubApi } from "./helpers";
+import { json, problem, renderAt, stubApi, type StubCall, type StubAnswer } from "./helpers";
 const ADMIN = {
   id: "u1",
   email: "admin@example.com",
@@ -20,6 +20,7 @@ export function setupForm(
   fail = false,
   transform?: (form: Form) => Form,
   role = "administrator",
+  extra?: (call: StubCall) => StubAnswer,
 ) {
   const fields = [
     {
@@ -94,6 +95,8 @@ export function setupForm(
   stubApi({
     signedIn: { ...ADMIN, role },
     extra(call) {
+      const override = extra?.(call);
+      if (override !== undefined) return override;
       if (call.url.pathname === path && call.method === "PATCH") patches.push(call.body);
       if (call.url.pathname === path)
         return json(200, {
@@ -128,6 +131,10 @@ export function setupForm(
         }
         return json(200, { fields });
       }
+      if (call.url.pathname === "/api/v1/portal/entities") return json(200, { entities: [] });
+      if (call.url.pathname === "/api/v1/departments/options")
+        return json(200, { departments: [] });
+      if (call.url.pathname === "/api/v1/regions") return json(200, { regions: [] });
       if (call.url.pathname.endsWith("/people")) return json(200, { people: [] });
       if (call.url.pathname === "/api/v1/users") return json(200, { users: [] });
       return undefined;

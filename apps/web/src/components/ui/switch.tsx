@@ -19,6 +19,7 @@ export function Switch(
     "aria-label"?: string;
     "aria-labelledby"?: string;
     "aria-describedby"?: string;
+    "aria-disabled"?: boolean;
   }>,
 ) {
   const { checked, onCheckedChange, disabled, id, ...aria } = props;
@@ -31,7 +32,7 @@ export function Switch(
       id={id}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        "relative h-5 w-9 shrink-0 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:cursor-not-allowed disabled:opacity-60",
+        "relative h-5 w-9 shrink-0 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60",
         checked ? "bg-cta-primary" : "bg-control",
       )}
       {...aria}

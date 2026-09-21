@@ -39,6 +39,7 @@ test("a default person receives a new Confidential Contract in the Portal", asyn
     typeId = z.object({ contractType: z.object({ id: z.string() }) }).parse(await madeType.json())
       .contractType.id;
     await page.goto(`/settings/contracts/types/${typeId}`);
+    await page.getByRole("link", { name: "People", exact: true }).click();
     await expect(page.getByRole("heading", { name: "People", exact: true })).toBeVisible();
     await page
       .getByRole("combobox", { name: "Default person", exact: true })

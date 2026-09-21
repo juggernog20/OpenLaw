@@ -1069,6 +1069,7 @@ export function TypeEditorScreen({
   sectionContent,
 }: Readonly<{
   initialType: EditorTypeRow;
+  /** Replaces Details only when the route has a section parameter. The bare type route keeps Details. */
   sectionContent?: ReactNode;
   /** The module's section head (title + tab strip). */
   tabs: ReactNode;

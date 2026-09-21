@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { Form, FormBranch, FormRow } from "@openlaw/shared";
+import { json, problem } from "../testing/helpers";
 import { setupForm } from "../testing/type-form";
 
 describe("the type Form tab", () => {
@@ -48,7 +49,12 @@ describe("the type Form tab", () => {
       name: "Business justification: Visible on Portal",
     });
     expect(portal).toBeChecked();
-    expect(portal).toBeDisabled();
+    expect(portal).toHaveAttribute("aria-disabled", "true");
+    await user.click(portal);
+    expect(portal).toHaveFocus();
+    await user.keyboard(" ");
+    expect(portal).toBeChecked();
+    expect(writes).toHaveLength(1);
     expect(portal).toHaveAccessibleDescription(/Turn off On intake form first/);
     expect(
       within(screen.getByRole("group", { name: "Business justification" })).getByText("Intake"),
@@ -64,7 +70,9 @@ describe("the type Form tab", () => {
     const required = screen.getByRole("switch", {
       name: "Finance reviewer: Required for creation",
     });
-    expect(required).toBeDisabled();
+    expect(required).toHaveAttribute("aria-disabled", "true");
+    await user.click(required);
+    expect(required).not.toBeChecked();
     expect(required).toHaveAccessibleDescription(/unavailable for Finance reviewer/);
   });
 
@@ -241,4 +249,127 @@ it("removes a populated Branch without detaching its children", async () => {
   await user.click(screen.getByRole("menuitem", { name: /Remove branch/ }));
   await waitFor(() => expect(read().at(-1)?.id).toBe("expiry_date"));
   expect(read().some((n) => n.kind === "branch")).toBe(false);
+});
+
+it("keeps successful preview options and enforces Department when Entities fail", async () => {
+  const { user } = setupForm("contract", false, undefined, "administrator", ({ url }) => {
+    if (url.pathname === "/api/v1/portal/entities") return problem(503, "Unavailable");
+    if (url.pathname === "/api/v1/departments/options")
+      return json(200, { departments: [{ id: "d1", displayName: "Finance" }] });
+    return undefined;
+  });
+  await user.click(await screen.findByRole("button", { name: "Preview intake form" }));
+  const dialog = within(screen.getByRole("dialog", { name: "Preview intake form" }));
+  expect(await dialog.findByText(/Some Portal options could not be loaded/)).toBeInTheDocument();
+  await user.type(dialog.getByLabelText(/Title/), "A test");
+  await user.click(dialog.getByRole("button", { name: "Submit request" }));
+  expect(dialog.getByText("Department is required.")).toBeInTheDocument();
+  expect(dialog.queryByText("Preview complete. No Request was sent")).not.toBeInTheDocument();
+});
+
+it("cannot complete preview when Department requirements could not be loaded", async () => {
+  const { user } = setupForm("contract", false, undefined, "administrator", ({ url }) => {
+    if (url.pathname === "/api/v1/departments/options") return problem(503, "Unavailable");
+    return undefined;
+  });
+  await user.click(await screen.findByRole("button", { name: "Preview intake form" }));
+  const dialog = within(screen.getByRole("dialog", { name: "Preview intake form" }));
+  expect(await dialog.findByText(/Some Portal options could not be loaded/)).toBeInTheDocument();
+  await user.type(dialog.getByLabelText(/Title/), "A test{Enter}");
+  expect(dialog.getByRole("button", { name: "Submit request" })).toBeDisabled();
+  expect(dialog.queryByText("Preview complete. No Request was sent")).not.toBeInTheDocument();
+});
+
+it("stores money operands in explicit minor units and matches zero-decimal JPY answers", async () => {
+  const { user, read } = setupForm("contract", false, (form) => {
+    const expiry = form.find((n) => n.id === "expiry_date") as FormRow;
+    return [
+      ...form
+        .filter((n) => n.id !== "expiry_date")
+        .map((n) => (n.id === "value" ? { ...n, onIntakeForm: true } : n)),
+      {
+        kind: "branch",
+        id: "branch",
+        match: "all",
+        conditions: [{ rowRef: "value", operator: "equals", value: 1 }],
+        children: [{ ...expiry, onIntakeForm: true }],
+      },
+    ];
+  });
+  await user.click(await screen.findByRole("button", { name: "Edit conditions" }));
+  const operand = screen.getByRole("spinbutton", { name: "Value" });
+  expect(screen.getByText(/Enter minor units/)).toBeInTheDocument();
+  await user.clear(operand);
+  await user.type(operand, "5000{Enter}");
+  await waitFor(() => expect((read().at(-1) as FormBranch).conditions[0]?.value).toBe(5000));
+  expect(
+    screen.getByRole("button", { name: /Move Show when all of: Value is 5,000 minor units/ }),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Preview intake form" }));
+  const dialog = within(screen.getByRole("dialog", { name: "Preview intake form" }));
+  expect(dialog.queryByLabelText("Expiry date")).not.toBeInTheDocument();
+  await user.type(dialog.getByLabelText("Value amount"), "5000");
+  await user.selectOptions(dialog.getByLabelText("Value currency"), "JPY");
+  expect(dialog.getByLabelText("Expiry date")).toBeInTheDocument();
+  await user.selectOptions(dialog.getByLabelText("Value currency"), "USD");
+  expect(dialog.queryByLabelText("Expiry date")).not.toBeInTheDocument();
+});
+
+it("does not reload reference labels after an unrelated switch or reorder", async () => {
+  let reads = 0;
+  const { user, writes } = setupForm(
+    "contract",
+    false,
+    (form) => [
+      ...form,
+      {
+        kind: "branch",
+        id: "branch",
+        match: "all",
+        conditions: [{ rowRef: "region", operator: "equals", value: "r1" }],
+        children: [],
+      },
+    ],
+    "administrator",
+    ({ url }) => {
+      if (url.pathname === "/api/v1/regions") {
+        reads++;
+        return json(200, { regions: [{ id: "r1", displayName: "Europe" }] });
+      }
+      return undefined;
+    },
+  );
+  await screen.findByRole("button", { name: /Move Show when all of: Region is Europe/ });
+  const initialReads = reads;
+  await user.click(
+    screen.getByRole("switch", { name: "Business justification: Required for creation" }),
+  );
+  await waitFor(() => expect(writes).toHaveLength(1));
+  screen.getByRole("button", { name: "Move Business justification" }).focus();
+  await user.keyboard("{ArrowUp}");
+  await waitFor(() => expect(writes).toHaveLength(2));
+  expect(reads).toBe(initialReads);
+});
+
+it("loads later Entity condition options and stops on a repeated registry cursor", async () => {
+  let reads = 0;
+  const { user } = setupForm("contract", false, undefined, "administrator", ({ url }) => {
+    if (url.pathname !== "/api/v1/entities") return undefined;
+    reads++;
+    if (reads > 4) return problem(500, "Repeated cursor requested again");
+    return json(200, {
+      entities: [
+        {
+          id: url.searchParams.has("cursor") ? "e2" : "e1",
+          legalName: reads === 1 ? "First entity" : "Later entity",
+        },
+      ],
+      nextCursor: "same",
+    });
+  });
+  await user.click(await screen.findByRole("button", { name: "Add branch" }));
+  await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "entity");
+  expect(await screen.findByRole("option", { name: "Later entity" })).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "First entity" })).toBeInTheDocument();
+  expect(reads).toBe(4);
 });

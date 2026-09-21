@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-028 and INT-002 intake preview. Answers and attachments stay local. */
+import { useIntl } from "react-intl";
 import { useFormText } from "./messages";
 import { useEffect, useState, type ComponentProps } from "react";
 import {
@@ -21,7 +24,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { CurrencySelect } from "../currency-select";
 import { toMinorUnits } from "../../lib/format";
-import { VALUE_CADENCES } from "../../lib/contracts";
+import { VALUE_CADENCES, cadenceLabel } from "../../lib/contracts";
 import {
   IntakeCounterpartiesInput,
   type IntakeCounterpartySelection,
@@ -48,6 +51,7 @@ export function IntakePreview({
   onCloseAutoFocus: ComponentProps<typeof DialogContent>["onCloseAutoFocus"];
 }>) {
   const t = useFormText();
+  const intl = useIntl();
   const [answers, setAnswers] = useState<FormAnswers>({
     priority: "medium",
     [`${module}_type`]: typeId,
@@ -65,33 +69,43 @@ export function IntakePreview({
   const requestType = requestTypes?.find((r) => r.id === requestTypeId) ?? requestTypes?.[0];
   const [submitted, setSubmitted] = useState(false);
   const [complete, setComplete] = useState(false);
+  const [departmentsReady, setDepartmentsReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
   useEffect(() => {
     let active = true;
-    void Promise.all([
+    void Promise.allSettled([
       readPortalEntityOptions(),
       api.GET("/api/v1/departments/options"),
       api.GET("/api/v1/regions", {}),
       api.GET("/api/v1/request-types", {}),
-    ])
-      .then(([entities, response, regions, requests]) => {
-        if (!active) return;
-        setEntities(entities);
-        if (requests.data)
-          setRequestTypes(
-            requests.data.requestTypes.filter(
-              (r) =>
-                !r.archivedAt &&
-                r.targetModule === module &&
-                (r.targetTypeId === typeId || (r.targetTypeId === null && isDefault)),
-            ),
-          );
-        if (regions.data) setRegions(regions.data.regions);
-        if (response.data) setDepartments(response.data.departments);
-      })
-      .catch(() => {
-        if (active) setLoadError(true);
-      });
+    ]).then(([entities, response, regions, requests]) => {
+      if (!active) return;
+      if (entities.status === "fulfilled") setEntities(entities.value);
+      if (response.status === "fulfilled" && response.value.data) {
+        setDepartments(response.value.data.departments);
+        setDepartmentsReady(true);
+      }
+      if (regions.status === "fulfilled" && regions.value.data)
+        setRegions(regions.value.data.regions);
+      if (requests.status === "fulfilled" && requests.value.data)
+        setRequestTypes(
+          requests.value.data.requestTypes.filter(
+            (r) =>
+              !r.archivedAt &&
+              r.targetModule === module &&
+              (r.targetTypeId === typeId || (r.targetTypeId === null && isDefault)),
+          ),
+        );
+      setLoadError(
+        entities.status === "rejected" ||
+          response.status === "rejected" ||
+          !response.value.data ||
+          regions.status === "rejected" ||
+          !regions.value.data ||
+          requests.status === "rejected" ||
+          !requests.value.data,
+      );
+    });
     return () => {
       active = false;
     };
@@ -141,7 +155,7 @@ export function IntakePreview({
       displayName: rowName(row, catalog, t),
       description: definition?.description ?? null,
       fieldType: row.fieldType === "money" ? "number" : row.fieldType,
-      options: optionsFor(row, catalog).map((o) => o.value),
+      options: optionsFor(row, catalog, t).map((o) => o.value),
       isRequired: row.isRequired,
       displayOrder: 0,
       fieldTag: "business",
@@ -170,7 +184,8 @@ export function IntakePreview({
             e.preventDefault();
             setSubmitted(true);
             setComplete(
-              answered("title") &&
+              departmentsReady &&
+                answered("title") &&
                 (!departments.length || answered("department")) &&
                 visible.every((r) => !r.isRequired || answered(r.rowRef)),
             );
@@ -206,7 +221,7 @@ export function IntakePreview({
           )}
           <Field
             htmlFor="preview-title"
-            label="Title"
+            label={t("Title")}
             required
             unanswered={submitted && !answered("title")}
           >
@@ -218,7 +233,7 @@ export function IntakePreview({
           </Field>
           <Field
             htmlFor="preview-department"
-            label="Department"
+            label={t("Department")}
             required={departments.length > 0}
             unanswered={submitted && departments.length > 0 && !answered("department")}
           >
@@ -232,27 +247,29 @@ export function IntakePreview({
               }}
             />
           </Field>
-          <Field htmlFor="preview-priority" label="Urgency">
+          <Field htmlFor="preview-priority" label={t("Urgency")}>
             <select
               id="preview-priority"
               className={CONTROL_CLASS}
               value={String(answers.priority ?? "medium")}
               onChange={(e) => answer("priority", e.target.value)}
             >
-              {["low", "medium", "high", "critical"].map((v) => (
-                <option key={v} value={v}>
-                  {v[0]!.toUpperCase() + v.slice(1)}
+              {(["Low", "Medium", "High", "Critical"] as const).map((v) => (
+                <option key={v} value={v.toLowerCase()}>
+                  {t(v)}
                 </option>
               ))}
             </select>
           </Field>
           <p aria-live="polite" className="sr-only">
-            {visible.length} questions shown:{" "}
-            {visible.map((r) => rowName(r, catalog, t)).join(", ")}
+            {t("{count} questions shown: {questions}", {
+              count: visible.length,
+              questions: visible.map((r) => rowName(r, catalog, t)).join(", "),
+            })}
           </p>
           {visible.map((row) => {
             const id = `preview-${row.id}`;
-            const options = optionsFor(row, catalog);
+            const options = optionsFor(row, catalog, t);
             return (
               <Field
                 key={row.id}
@@ -315,7 +332,7 @@ export function IntakePreview({
                     >
                       {VALUE_CADENCES.map((c) => (
                         <option key={c} value={c}>
-                          {c.replaceAll("_", " ")}
+                          {cadenceLabel(intl, c)}
                         </option>
                       ))}
                     </select>
@@ -364,7 +381,9 @@ export function IntakePreview({
           <AttachmentsField files={files} onFiles={setFiles} />
           {complete && <p role="status">{t("Preview complete. No Request was sent")}</p>}
           <div className="flex gap-2">
-            <Button type="submit">{t("Submit request")}</Button>
+            <Button type="submit" disabled={!departmentsReady}>
+              {t("Submit request")}
+            </Button>
             <Button type="button" variant="secondary" onClick={onClose}>
               {t("Close")}
             </Button>

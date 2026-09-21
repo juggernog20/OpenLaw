@@ -532,9 +532,6 @@ const BASIC_LABELS = {
   urgency: defineMessage({ id: "portal.form.urgency", defaultMessage: "Urgency" }),
 } as const;
 
-/** One form row: the label with its required mark, the control, and the
- * two lines that may sit under it — the field's help text and the
- * refusal this box earned. */
 /** Entity Fields use ENT-010's list; person Fields still have no Portal choices. */
 function AttachedField({
   field,

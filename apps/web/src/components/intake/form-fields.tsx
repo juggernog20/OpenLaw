@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** INT-002 and DES-011 labels and local attachment controls shared by intake and preview. */
 import { useRef, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Upload, X } from "lucide-react";

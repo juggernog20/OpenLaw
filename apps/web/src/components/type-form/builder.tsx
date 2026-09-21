@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-028 Form editor with whole-tree commits and local Branch validation refusals. */
 import { useFormText } from "./messages";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GripVertical, Lock, Ellipsis, X, GitBranch, Pencil } from "lucide-react";
 import {
   formRowTouchpoint,
@@ -31,6 +33,7 @@ import {
   appendNode,
   branchName,
   flatten,
+  fieldTypeName,
   isBuiltin,
   isPinned,
   location,
@@ -78,19 +81,29 @@ export function TypeFormBuilder({
   const [referenceLabels, setReferenceLabels] = useState<
     Record<string, { value: string; label: string }[]>
   >({});
-  useEffect(() => {
-    let active = true;
+  const referencedRows = useMemo(() => {
     const all = flatten(form);
     const refs = new Set(
       all.flatMap((n) => (n.kind === "branch" ? n.conditions.map((c) => c.rowRef) : [])),
     );
+    return all
+      .filter((n): n is FormRow => n.kind === "row" && refs.has(n.rowRef))
+      .map(({ id, rowRef, fieldType }) => ({ id, rowRef, fieldType }));
+  }, [form]);
+  const currentReferences = useRef(referencedRows);
+  useEffect(() => {
+    currentReferences.current = referencedRows;
+  }, [referencedRows]);
+  const referenceKey = referencedRows
+    .map((r) => JSON.stringify([r.id, r.rowRef, r.fieldType]))
+    .sort()
+    .join("\n");
+  useEffect(() => {
+    let active = true;
     void Promise.all(
-      all
-        .filter((n): n is FormRow => n.kind === "row" && refs.has(n.rowRef))
-        .map(async (row) => {
-          const options = await referenceOptions(row).catch(() => null);
-          return [row.rowRef, options] as const;
-        }),
+      currentReferences.current.map(
+        async (row) => [row.rowRef, await referenceOptions(row).catch(() => null)] as const,
+      ),
     ).then((pairs) => {
       if (active)
         setReferenceLabels(
@@ -105,7 +118,7 @@ export function TypeFormBuilder({
     return () => {
       active = false;
     };
-  }, [form]);
+  }, [referenceKey]);
   const nodes = flatten(form);
   const name = (node: FormNode) =>
     node.kind === "row"
@@ -132,7 +145,9 @@ export function TypeFormBuilder({
     if (issue) {
       const row = nodes.find((n): n is FormRow => n.kind === "row" && n.rowRef === issue.rowRef);
       if (["forward_reference", "self_reference"].includes(issue.code))
-        return `Keep ${row ? name(row) : issue.rowRef} above the Branch that uses it`;
+        return t("Keep {row} above the Branch that uses it", {
+          row: row ? name(row) : (issue.rowRef ?? ""),
+        });
       if (issue.code === "unknown_row")
         return t("Used by a Branch condition. Change the condition first");
       return t("Choose a valid value for this condition");
@@ -200,7 +215,12 @@ export function TypeFormBuilder({
       await commit(
         next,
         `${id}-move`,
-        `${name(node)} moved to position ${destination.index + 1} of ${destination.siblings.length} in ${destination.parent ? name(destination.parent) : "root"}.`,
+        t("{row} moved to position {position} of {count} in {parent}.", {
+          row: name(node),
+          position: destination.index + 1,
+          count: destination.siblings.length,
+          parent: destination.parent ? name(destination.parent) : t("root"),
+        }),
       )
     )
       focusGrip(id);
@@ -218,7 +238,12 @@ export function TypeFormBuilder({
     void commit(
       next,
       `${id}-move`,
-      `${name(siblings[loc.index + direction]!)} moved to position ${loc.index + direction + 1} of ${siblings.length} in ${loc.parent ? name(loc.parent) : "root"}.`,
+      t("{row} moved to position {position} of {count} in {parent}.", {
+        row: name(siblings[loc.index + direction]!),
+        position: loc.index + direction + 1,
+        count: siblings.length,
+        parent: loc.parent ? name(loc.parent) : t("root"),
+      }),
     ).then(() => focusGrip(id));
   }
   function moveOut(node: FormNode) {
@@ -261,7 +286,11 @@ export function TypeFormBuilder({
       visibleOnPortal: false,
       ...(module === "entity" ? {} : { onIntakeForm: false }),
     };
-    const ok = await commit(appendNode(form, parent, row), key, `${field.displayName} attached.`);
+    const ok = await commit(
+      appendNode(form, parent, row),
+      key,
+      t("{field} attached.", { field: field.displayName }),
+    );
     if (ok && created?.field.id === field.id) setCreated(null);
     return ok;
   }
@@ -288,7 +317,7 @@ export function TypeFormBuilder({
           <Button
             variant="ghost"
             size="icon"
-            aria-label={`Actions for ${name(node)}`}
+            aria-label={t("Actions for {row}", { row: name(node) })}
             disabled={busy}
           >
             <Ellipsis size={16} />
@@ -307,7 +336,8 @@ export function TypeFormBuilder({
             disabled={!location(form, node.id)?.parent}
             onSelect={() => moveOut(node)}
           >
-            Move out{!location(form, node.id)?.parent && " · Already at the root"}
+            {t("Move out")}
+            {!location(form, node.id)?.parent && ` · ${t("Already at the root")}`}
           </DropdownMenuItem>
           {field && (
             <DropdownMenuItem
@@ -326,7 +356,7 @@ export function TypeFormBuilder({
                   void commit(replaceNode(form, node.id, node.children), `${node.id}-move`)
                 }
               >
-                Remove branch · Keep children here
+                {t("Remove branch · Keep children here")}
               </DropdownMenuItem>
             </>
           )}
@@ -340,7 +370,7 @@ export function TypeFormBuilder({
         id={`move-${node.id}`}
         variant="ghost"
         size="icon"
-        aria-label={`Move ${name(node)}`}
+        aria-label={t("Move {row}", { row: name(node) })}
         aria-describedby={`note-${node.id}-move`}
         draggable={!busy}
         onDragStart={(e) => {
@@ -377,24 +407,23 @@ export function TypeFormBuilder({
       : key === "visibleOnPortal" && row.onIntakeForm
         ? t("Turn off On intake form first")
         : key === "isRequired" && row.onIntakeForm && row.fieldType === "user"
-          ? `Required for creation is unavailable for ${name(row)} while it is on the intake form`
+          ? t("Required for creation is unavailable for {row} while it is on the intake form", {
+              row: name(row),
+            })
           : key === "onIntakeForm" && row.fieldType === "user" && row.isRequired
             ? t("Turn off Required for creation first")
             : undefined;
     return (
-      <div
-        className="flex min-w-0 flex-col items-start gap-1 @min-[960px]/form:items-center"
-        tabIndex={reason ? 0 : undefined}
-        aria-label={reason ? `${name(row)}: ${label}` : undefined}
-        aria-describedby={reason ? `reason-${control}` : undefined}
-      >
+      <div className="flex min-w-0 flex-col items-start gap-1 @min-[960px]/form:items-center">
         <span className="text-xs @min-[960px]/form:hidden">{label}</span>
         <Switch
           checked={!!row[key]}
-          disabled={busy || !!reason}
+          disabled={busy}
+          aria-disabled={!!reason || undefined}
           aria-label={`${name(row)}: ${label}`}
           aria-describedby={`${reason ? `reason-${control} ` : ""}note-${control}`}
           onCheckedChange={(checked) => {
+            if (reason) return;
             const next = {
               ...row,
               [key]: checked,
@@ -448,9 +477,7 @@ export function TypeFormBuilder({
             <div style={{ paddingInlineStart: depth * 24 }}>
               <div className="text-base font-medium">{name(node)}</div>
               <div className="text-sm text-muted">
-                {isBuiltin(node, module)
-                  ? t("Built-in")
-                  : node.fieldType[0]!.toUpperCase() + node.fieldType.slice(1).replaceAll("_", " ")}
+                {isBuiltin(node, module) ? t("Built-in") : fieldTypeName(node.fieldType, t)}
               </div>
               {status(`${node.id}-move`)}
             </div>
@@ -478,7 +505,7 @@ export function TypeFormBuilder({
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label={`Detach ${name(node)}`}
+                  aria-label={t("Detach {row}", { row: name(node) })}
                   aria-describedby={`note-${node.id}-detach`}
                   disabled={busy}
                   onClick={() => void commit(replaceNode(form, node.id, []), `${node.id}-detach`)}
@@ -544,7 +571,8 @@ export function TypeFormBuilder({
               </Button>
             )}
             <div
-              aria-label={`Children of ${name(node)}`}
+              role="group"
+              aria-label={t("Children of {branch}", { branch: name(node) })}
               className="min-h-8"
               onDragOver={(e) => {
                 e.preventDefault();
@@ -598,7 +626,7 @@ export function TypeFormBuilder({
                 });
               }}
             >
-              Retry attaching {created.field.displayName}
+              {t("Retry attaching {field}", { field: created.field.displayName })}
             </Button>
           )}
         </div>
@@ -748,7 +776,9 @@ export function TypeFormBuilder({
               note(
                 `${fieldEditor.parent ?? "root"}-create`,
                 "error",
-                `${f.displayName} was created but could not be attached. Retry attachment.`,
+                t("{field} was created but could not be attached. Retry attachment.", {
+                  field: f.displayName,
+                }),
               );
             }
           }}
@@ -830,9 +860,7 @@ function AttachMenu({
         {matches.map((f) => (
           <DropdownMenuItem data-field-option key={f.id} onSelect={() => onAttach(f)}>
             <span>{f.displayName}</span>
-            <span className="text-sm text-muted">
-              {f.fieldType[0]!.toUpperCase() + f.fieldType.slice(1).replaceAll("_", " ")}
-            </span>
+            <span className="text-sm text-muted">{fieldTypeName(f.fieldType, t)}</span>
           </DropdownMenuItem>
         ))}
         {!matches.length && (

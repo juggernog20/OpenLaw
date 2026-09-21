@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-028 condition editor for one Branch and its preceding Rows. */
 import { useFormText } from "./messages";
 import { useEffect, useState } from "react";
 import type { FormBranch, FormCondition, FormOperator, FormRow, FormScalar } from "@openlaw/shared";
@@ -136,7 +138,7 @@ export function Conditions({
               <Button
                 variant="ghost"
                 size="sm"
-                aria-label={`Remove condition ${index + 1}`}
+                aria-label={t("Remove condition {number}", { number: index + 1 })}
                 onClick={() =>
                   change({ ...draft, conditions: draft.conditions.filter((_, i) => i !== index) })
                 }
@@ -195,30 +197,25 @@ function Operand({
     };
   }, [row]);
   const many = condition.operator === "is_one_of";
-  const display = (value: unknown) =>
-    row?.fieldType === "money" && typeof value === "number"
-      ? String(value / 100)
-      : String(value ?? "");
+  const display = (value: unknown) => String(value ?? "");
   const saved = Array.isArray(condition.value)
     ? condition.value.map(display).join(", ")
     : display(condition.value);
   const [text, setText] = useState(saved);
-  const options = row ? optionsFor(row, catalog) : [];
+  const options = row ? optionsFor(row, catalog, t) : [];
   const choices =
     row?.fieldType === "boolean"
       ? [
-          { value: "true", label: "Yes" },
-          { value: "false", label: "No" },
+          { value: "true", label: t("Yes") },
+          { value: "false", label: t("No") },
         ]
       : (references ?? options);
   function scalar(value: string): FormScalar {
     return row?.fieldType === "boolean"
       ? value === "true"
-      : row?.fieldType === "number"
+      : row?.fieldType === "number" || row?.fieldType === "money"
         ? Number(value)
-        : row?.fieldType === "money"
-          ? Math.round(Number(value) * 100)
-          : value;
+        : value;
   }
   function commit() {
     onChange(
@@ -231,7 +228,7 @@ function Operand({
   }
   return (
     <label className="flex min-w-40 flex-1 flex-col gap-1">
-      Value
+      {t("Value")}
       {choices.length ||
       references !== null ||
       row?.fieldType === "user" ||
@@ -300,6 +297,11 @@ function Operand({
       {referenceError && (
         <span role="alert">
           {t("Options could not be loaded. Close and reopen conditions to retry.")}
+        </span>
+      )}
+      {row?.fieldType === "money" && (
+        <span className="text-xs text-muted">
+          {t("Enter minor units. For example, 5,000 JPY or 50 USD is 5,000 minor units.")}
         </span>
       )}
       {condition.value === null && (

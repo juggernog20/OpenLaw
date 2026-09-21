@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-028 routed sections for a type editor, with one navigation strip. */
 import { useFormText } from "./type-form/messages";
 import type { ReactNode } from "react";
 import { NavLink, useParams } from "react-router";

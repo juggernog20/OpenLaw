@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-028 selectable values for reference Row conditions. */
+import { readRegistry } from "../../lib/entities";
 import { api } from "../../lib/api";
 import type { FormRow } from "@openlaw/shared";
 
 export async function referenceOptions(
-  row: FormRow,
+  row: Pick<FormRow, "id" | "rowRef" | "fieldType">,
 ): Promise<{ value: string; label: string }[] | null> {
   if (row.rowRef === "contract_type") {
     const { data } = await api.GET("/api/v1/contract-types", {});
@@ -23,15 +26,9 @@ export async function referenceOptions(
       .map((u) => ({ value: u.id, label: u.displayName }));
   }
   if (row.fieldType === "entity") {
-    const options: { value: string; label: string }[] = [];
-    let cursor: string | undefined;
-    do {
-      const { data } = await api.GET("/api/v1/entities", { params: { query: { cursor } } });
-      if (!data) throw new Error("Entities could not be read");
-      options.push(...data.entities.map((e) => ({ value: e.id, label: e.legalName })));
-      cursor = data.nextCursor ?? undefined;
-    } while (cursor);
-    return options;
+    const { data } = await readRegistry();
+    if (!data) throw new Error("Entities could not be read");
+    return data.entities.map((e) => ({ value: e.id, label: e.legalName }));
   }
   if (["department", "owning_department"].includes(row.rowRef)) {
     const { data } = await api.GET("/api/v1/departments/options");

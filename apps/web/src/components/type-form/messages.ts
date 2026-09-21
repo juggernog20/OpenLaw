@@ -1,6 +1,55 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DES-013 messages shared by the type Form editor and intake preview. */
 import { defineMessages, useIntl, type MessageDescriptor } from "react-intl";
 const messages = defineMessages({
+  "Remove condition {number}": {
+    id: "typeForm.removeCondition",
+    defaultMessage: "Remove condition {number}",
+  },
+  "{count} questions shown: {questions}": {
+    id: "typeForm.visibleQuestions",
+    defaultMessage: "{count} questions shown: {questions}",
+  },
+  Money: { id: "typeForm.money", defaultMessage: "Money" },
+  "{amount} minor units": { id: "typeForm.minorUnits", defaultMessage: "{amount} minor units" },
+  "Enter minor units. For example, 5,000 JPY or 50 USD is 5,000 minor units.": {
+    id: "typeForm.moneyConditionHint",
+    defaultMessage: "Enter minor units. For example, 5,000 JPY or 50 USD is 5,000 minor units.",
+  },
+  "Keep {row} above the Branch that uses it": {
+    id: "typeForm.keepRowAbove",
+    defaultMessage: "Keep {row} above the Branch that uses it",
+  },
+  "Required for creation is unavailable for {row} while it is on the intake form": {
+    id: "typeForm.userRequiredReason",
+    defaultMessage: "Required for creation is unavailable for {row} while it is on the intake form",
+  },
+  "Actions for {row}": { id: "typeForm.rowActions", defaultMessage: "Actions for {row}" },
+  "Move {row}": { id: "typeForm.moveRow", defaultMessage: "Move {row}" },
+  "Detach {row}": { id: "typeForm.detachRow", defaultMessage: "Detach {row}" },
+  "Children of {branch}": { id: "typeForm.branchChildren", defaultMessage: "Children of {branch}" },
+  "Retry attaching {field}": {
+    id: "typeForm.retryAttach",
+    defaultMessage: "Retry attaching {field}",
+  },
+  "{field} was created but could not be attached. Retry attachment.": {
+    id: "typeForm.createdNotAttached",
+    defaultMessage: "{field} was created but could not be attached. Retry attachment.",
+  },
+  "{field} attached.": { id: "typeForm.attached", defaultMessage: "{field} attached." },
+  "{row} moved to position {position} of {count} in {parent}.": {
+    id: "typeForm.moved",
+    defaultMessage: "{row} moved to position {position} of {count} in {parent}.",
+  },
+  root: { id: "typeForm.root", defaultMessage: "root" },
+  "Auto-renew": { id: "typeForm.autoRenew", defaultMessage: "Auto-renew" },
+  Evergreen: { id: "typeForm.evergreen", defaultMessage: "Evergreen" },
+  Low: { id: "typeForm.low", defaultMessage: "Low" },
+  Medium: { id: "typeForm.medium", defaultMessage: "Medium" },
+  High: { id: "typeForm.high", defaultMessage: "High" },
+  Critical: { id: "typeForm.critical", defaultMessage: "Critical" },
+
   "Unavailable value": { id: "typeForm.unavailableValue", defaultMessage: "Unavailable value" },
   Yes: { id: "typeForm.yes", defaultMessage: "Yes" },
   No: { id: "typeForm.no", defaultMessage: "No" },
@@ -167,10 +216,9 @@ const messages = defineMessages({
   "Value currency": { id: "typeForm.value-currency", defaultMessage: "Value currency" },
   "Visible on Portal": { id: "typeForm.visible-on-portal", defaultMessage: "Visible on Portal" },
 });
-export function useFormText() {
+export type FormMessageKey = keyof typeof messages;
+export type FormText = (text: FormMessageKey, values?: Record<string, string | number>) => string;
+export function useFormText(): FormText {
   const intl = useIntl();
-  return (text: string, values?: Record<string, string | number>) =>
-    Object.hasOwn(messages, text)
-      ? intl.formatMessage(messages[text as keyof typeof messages] as MessageDescriptor, values)
-      : text;
+  return (text, values) => intl.formatMessage(messages[text] as MessageDescriptor, values);
 }
