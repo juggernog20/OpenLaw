@@ -3,6 +3,7 @@
 /** DES-013 messages shared by the type Form editor and intake preview. */
 import { defineMessages, useIntl, type MessageDescriptor } from "react-intl";
 const messages = defineMessages({
+  Attachments: { id: "settings.requestTypeEditor.basicAttachments", defaultMessage: "Attachments" },
   "Remove condition {number}": {
     id: "typeForm.removeCondition",
     defaultMessage: "Remove condition {number}",

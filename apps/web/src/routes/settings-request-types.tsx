@@ -1,32 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * Intake · Request types (#85), from the ST12 frame of settings.pen:
- * the INT-002 taxonomy on the shared TaxonomyTypesPane machinery. This
- * file owns the INT-002 vocabulary and the API adapter over the
- * request-types routes. The behavior lives in the shared component,
- * which is the point: the Intake pane is configuration, not a copy of
- * the Matters one. The loader is the client half of SET-002's gate; the
- * API's 403 is the real refusal.
- *
- * The Target column and the two-line row are this mount's own. They
- * take the place ST6 gives the in-use caption, which is why this mount
- * draws no caption: `requests` land in M20, so the count would read
- * "0 requests" on every row. The column reads the three states plainly:
- * "Contract · NDA", "Contract", "No target". A request type whose
- * targeted type was hard-deleted has demoted to the module alone, and
- * the column says so without ceremony. ST12's Form fields column
- * beside it counts the catalog fields on that type's portal form
- * (#355), never the four basics, which are on every form and would
- * say the same thing on every row.
- *
- * Nothing here is system-protected. There is no fallback request type,
- * so a row an Administrator names "Other" archives and deletes like any
- * other. Hence no `protectedRow`.
- */
+/** Request types and their destination Forms (INT-002, DD-028). */
 
 import { redirect, useLoaderData } from "react-router";
-import { defineMessages, FormattedMessage, type MessageDescriptor } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
@@ -39,11 +16,8 @@ import {
 
 /** One request type on the pane: the shared row plus the target. */
 interface RequestTypeRow extends TaxonomyPaneRow {
-  targetModule: "matter" | "contract" | null;
+  targetModule: "matter" | "contract";
   targetTypeId: string | null;
-  /** The catalog fields on this type's portal form, over and above the
-   * four basics every form collects (INT-002). */
-  formFieldCount: number;
 }
 
 /** The section URL forwards to its first pane (SET-001 deep links). */
@@ -67,6 +41,10 @@ export async function settingsRequestTypesLoader() {
   }
   return {
     requestTypes: typesRes.data.requestTypes,
+    defaultTypeNames: {
+      contract: contractRes.data.contractTypes.find((type) => type.isDefault)?.displayName,
+      matter: matterRes.data.matterTypes.find((type) => type.isDefault)?.displayName,
+    },
     targetTypeNames: Object.fromEntries(
       [...matterRes.data.matterTypes, ...contractRes.data.contractTypes].map((row) => [
         row.id,
@@ -130,42 +108,24 @@ const MESSAGES = defineMessages({
   edit: { id: "settings.requestTypes.edit", defaultMessage: "Edit {name}" },
 });
 
-/** ST12's two mount-specific column heads and the Target cell's three
- * states. "Contract · NDA" names a type; "Contract" is the module
- * alone, which is where a hard-deleted target type leaves the row. */
 const COLUMNS: Record<
-  | "nameColumn"
-  | "targetColumn"
-  | "targetPrefix"
-  | "targetModule"
-  | "targetType"
-  | "fieldsColumn"
-  | "fieldsPrefix"
-  | "fieldsCount",
+  "nameColumn" | "destinationColumn" | "destinationPrefix" | "destinationType" | "defaultType",
   MessageDescriptor
 > = defineMessages({
   nameColumn: { id: "settings.requestTypes.nameColumn", defaultMessage: "Request type" },
-  targetColumn: { id: "settings.requestTypes.targetColumn", defaultMessage: "Default destination" },
-  targetPrefix: {
-    id: "settings.requestTypes.targetPrefix",
-    defaultMessage: "Default destination:",
+  destinationColumn: {
+    id: "settings.requestTypes.destinationColumn",
+    defaultMessage: "Destination",
   },
-  targetModule: {
-    id: "settings.requestTypes.targetModule",
-    defaultMessage:
-      "{module, select, matter {Matter} contract {Contract} other {Decide during triage}}",
+  destinationPrefix: {
+    id: "settings.requestTypes.destinationPrefix",
+    defaultMessage: "Destination:",
   },
-  targetType: {
-    id: "settings.requestTypes.targetType",
-    defaultMessage:
-      "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}",
+  destinationType: {
+    id: "settings.requestTypes.destinationType",
+    defaultMessage: "{module, select, matter {Matter · {name}} other {Contract · {name}}}",
   },
-  fieldsColumn: { id: "settings.requestTypes.fieldsColumn", defaultMessage: "Form fields" },
-  fieldsPrefix: { id: "settings.requestTypes.fieldsPrefix", defaultMessage: "Form fields:" },
-  fieldsCount: {
-    id: "settings.requestTypes.fieldsCount",
-    defaultMessage: "{count, plural, one {# field} other {# fields}}",
-  },
+  defaultType: { id: "settings.requestTypeEditor.defaultType", defaultMessage: "Default" },
 });
 
 /** The shared pane's API seam over the request-types routes. */
@@ -211,7 +171,9 @@ const PANE_API: TaxonomyPaneApi<RequestTypeRow> = {
 };
 
 export function SettingsRequestTypesPage() {
-  const { requestTypes, targetTypeNames } = useLoaderData<typeof settingsRequestTypesLoader>();
+  const intl = useIntl();
+  const { requestTypes, targetTypeNames, defaultTypeNames } =
+    useLoaderData<typeof settingsRequestTypesLoader>();
   return (
     <TaxonomyTypesPane<RequestTypeRow>
       initialRows={requestTypes}
@@ -224,33 +186,20 @@ export function SettingsRequestTypesPage() {
         description: true,
         meta: [
           {
-            header: COLUMNS.targetColumn,
-            prefix: COLUMNS.targetPrefix,
-            width: "w-40",
-            cell: (row) => {
-              const name = row.targetTypeId ? targetTypeNames[row.targetTypeId] : undefined;
-              // No name means the module alone. Either it was never
-              // given a type, or the type it named was hard-deleted and
-              // the FK demoted the row rather than stranding it.
-              return name === undefined ? (
-                <FormattedMessage {...COLUMNS.targetModule} values={{ module: row.targetModule }} />
-              ) : (
-                <FormattedMessage
-                  {...COLUMNS.targetType}
-                  values={{ module: row.targetModule, name }}
-                />
-              );
-            },
-          },
-          {
-            header: COLUMNS.fieldsColumn,
-            prefix: COLUMNS.fieldsPrefix,
-            width: "w-28",
-            // The catalog fields only: the four basics are on every
-            // form, so counting them would say the same thing on every
-            // row and hide the number that differs.
+            header: COLUMNS.destinationColumn,
+            prefix: COLUMNS.destinationPrefix,
+            width: "w-48",
             cell: (row) => (
-              <FormattedMessage {...COLUMNS.fieldsCount} values={{ count: row.formFieldCount }} />
+              <FormattedMessage
+                {...COLUMNS.destinationType}
+                values={{
+                  module: row.targetModule,
+                  name:
+                    (row.targetTypeId ? targetTypeNames[row.targetTypeId] : undefined) ??
+                    defaultTypeNames[row.targetModule] ??
+                    intl.formatMessage(COLUMNS.defaultType),
+                }}
+              />
             ),
           },
         ],

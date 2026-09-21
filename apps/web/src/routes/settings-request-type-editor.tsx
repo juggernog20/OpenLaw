@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Intake form identity, default destination, turnaround, and attached fields. */
+/** Request type facts and the destination Intake form (INT-002, DD-028). */
 
 import { useRef, useState } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { IntakeFormCard } from "../components/type-form/intake-card";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import { CONTROL_CLASS } from "../lib/form-controls";
@@ -14,10 +15,8 @@ import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Label } from "../components/ui/label";
 import {
   TypeEditorScreen,
-  type EditorRequiredRule,
   type EditorTypeRow,
-  type TypeEditorApi,
-  type TypeEditorBasics,
+  type TypeEditorIdentityApi,
 } from "../components/type-editor-screen";
 
 /** The two modules a request type may convert into (INT-002). */
@@ -27,14 +26,13 @@ export async function settingsRequestTypeEditorLoader({ params }: LoaderFunction
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
-  const [typeRes, attachedRes, catalogRes, matterRes, contractRes] = await Promise.all([
+  const [typeRes, catalogRes, matterRes, contractRes] = await Promise.all([
     api.GET("/api/v1/request-types/{id}", { params: { path: { id } } }),
-    api.GET("/api/v1/request-types/{id}/fields", { params: { path: { id } } }),
-    api.GET("/api/v1/fields", { params: { query: { intake: "true" } } }),
+    api.GET("/api/v1/fields", {}),
     api.GET("/api/v1/matter-types", { params: { query: { includeArchived: "true" } } }),
     api.GET("/api/v1/contract-types", { params: { query: { includeArchived: "true" } } }),
   ]);
-  if (!typeRes.data || !attachedRes.data) {
+  if (!typeRes.data) {
     throw new Error("The request type could not be read.");
   }
   if (!catalogRes.data) throw new Error("The field catalog could not be read.");
@@ -42,7 +40,6 @@ export async function settingsRequestTypeEditorLoader({ params }: LoaderFunction
     throw new Error("The destination types could not be read.");
   return {
     requestType: typeRes.data.requestType,
-    attachedFields: attachedRes.data.attachedFields,
     catalog: catalogRes.data.fields,
     matterTypes: matterRes.data.matterTypes,
     contractTypes: contractRes.data.contractTypes,
@@ -54,164 +51,15 @@ const MESSAGES = defineMessages({
   allTypes: { id: "settings.requestTypeEditor.allTypes", defaultMessage: "All request types" },
   displayName: { id: "settings.requestTypeEditor.displayName", defaultMessage: "Display name" },
   description: { id: "settings.requestTypeEditor.description", defaultMessage: "Description" },
-  // No `inUse`: requests land in M20, so the caption would read
-  // "0 requests" on every type — the pane omits it for the same reason.
-  attachedFields: {
-    id: "settings.requestTypeEditor.formFields",
-    defaultMessage: "Form fields",
-  },
-  fieldColumn: { id: "settings.requestTypeEditor.fieldColumn", defaultMessage: "Field" },
-  requiredColumn: { id: "settings.requestTypeEditor.requiredColumn", defaultMessage: "Required" },
-  requiredFor: { id: "settings.requestTypeEditor.requiredFor", defaultMessage: "{name} required" },
-  requiredLocked: {
-    id: "settings.requestTypeEditor.requiredLocked",
-    defaultMessage:
-      "{name} can be on the form, but it can't be required. A requester cannot pick a person in the Portal.",
-  },
-  detach: { id: "settings.requestTypeEditor.detach", defaultMessage: "Detach {name}" },
-  detached: { id: "settings.requestTypeEditor.detached", defaultMessage: "{name} detached." },
-  attach: { id: "settings.requestTypeEditor.attach", defaultMessage: "Attach field" },
-  attached: { id: "settings.requestTypeEditor.attached", defaultMessage: "{name} attached." },
-  allAttached: {
-    id: "settings.requestTypeEditor.allAttached",
-    defaultMessage: "Every field this target allows is attached.",
-  },
-  empty: {
-    id: "settings.requestTypeEditor.empty",
-    defaultMessage: "No catalog fields are on this form yet.",
-  },
-  reorder: {
-    id: "settings.requestTypeEditor.reorder",
-    defaultMessage:
-      "Reorder {name}, position {position} of {total}. Use the arrow keys to move it.",
-  },
-  moved: {
-    id: "settings.requestTypeEditor.moved",
-    defaultMessage: "{name} moved to position {position} of {total}.",
-  },
 });
 
-/** Person Fields stay optional because Portal forms have no staff directory picker (INT-002). */
-const REQUIRED_RULE: EditorRequiredRule = {
-  fieldTypes: ["user"],
-  reason: MESSAGES.requiredLocked,
+type Destination = { targetModule: TargetModule; targetTypeId: string | null };
+type DestinationType = {
+  id: string;
+  displayName: string;
+  archivedAt: string | null;
+  isDefault: boolean;
 };
-
-/**
- * The fixed basics (INT-002): what every request form collects, whatever
- * an Administrator configures. Title, Department, and Urgency are
- * required; Attachments are optional. Urgency wears the DES-018
- * severity ramp.
- */
-const BASICS = defineMessages({
-  caption: {
-    id: "settings.requestTypeEditor.basicsCaption",
-    defaultMessage: "Basics are always on the form",
-  },
-  locked: {
-    id: "settings.requestTypeEditor.basicLocked",
-    defaultMessage: "{name} is always collected.",
-  },
-  title: { id: "settings.requestTypeEditor.basicTitle", defaultMessage: "Title" },
-  titleType: { id: "settings.requestTypeEditor.basicTitleType", defaultMessage: "Text" },
-  attachments: {
-    id: "settings.requestTypeEditor.basicAttachments",
-    defaultMessage: "Attachments",
-  },
-  attachmentsType: {
-    id: "settings.requestTypeEditor.basicAttachmentsType",
-    defaultMessage: "Files",
-  },
-  department: { id: "records.department", defaultMessage: "Department" },
-  urgency: { id: "settings.requestTypeEditor.basicUrgency", defaultMessage: "Urgency" },
-  urgencyType: {
-    id: "settings.requestTypeEditor.basicUrgencyType",
-    defaultMessage: "Single select",
-  },
-});
-
-const BASICS_SLOT: TypeEditorBasics = {
-  caption: BASICS.caption,
-  locked: BASICS.locked,
-  rows: [
-    { key: "title", name: BASICS.title, caption: BASICS.titleType, isRequired: true },
-    { key: "department", name: BASICS.department, caption: BASICS.urgencyType, isRequired: true },
-    { key: "urgency", name: BASICS.urgency, caption: BASICS.urgencyType, isRequired: true },
-    {
-      key: "attachments",
-      name: BASICS.attachments,
-      caption: BASICS.attachmentsType,
-      isRequired: false,
-    },
-  ],
-};
-
-/** The shared editor's API seam over the request-types routes. */
-const EDITOR_API: TypeEditorApi = {
-  async update(id, body) {
-    const result = await api
-      .PATCH("/api/v1/request-types/{id}", {
-        params: { path: { id } },
-        body,
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.requestType, ...(await problem(result)) };
-  },
-  async attach(id, fieldId) {
-    const result = await api
-      .POST("/api/v1/request-types/{id}/fields", {
-        params: { path: { id } },
-        body: {
-          fieldId,
-        },
-      })
-      .catch(() => undefined);
-    return {
-      data: result?.data ? result.data.attachedField : undefined,
-      ...(await problem(result)),
-    };
-  },
-  async detach(id, fieldId) {
-    const result = await api
-      .DELETE("/api/v1/request-types/{id}/fields/{fieldId}", {
-        params: { path: { id, fieldId } },
-      })
-      .catch(() => undefined);
-    return { ok: result?.response.ok === true, ...(await problem(result)) };
-  },
-  async setRequired(id, fieldId, isRequired) {
-    const result = await api
-      .PATCH("/api/v1/request-types/{id}/fields/{fieldId}", {
-        params: { path: { id, fieldId } },
-        body: { isRequired },
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.attachedField, ...(await problem(result)) };
-  },
-  async reorder(id, fieldIds) {
-    const result = await api
-      .PUT("/api/v1/request-types/{id}/fields/order", {
-        params: { path: { id } },
-        body: { fieldIds },
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.attachedFields, ...(await problem(result)) };
-  },
-};
-
-/**
- * Which catalog scopes this target allows — the client half of the
- * rule the API refuses on (INT-002). It offers only what would be
- * accepted, so the Attach menu never shows a field the server would
- * turn away.
- */
-function attachableScopes(module: TargetModule | null): readonly string[] {
-  if (module === null) return ["contract", "matter"];
-  return [module];
-}
-
-type Destination = { targetModule: TargetModule | null; targetTypeId: string | null };
-type DestinationType = { id: string; displayName: string; archivedAt: string | null };
 
 function DestinationControl({
   typeId,
@@ -232,10 +80,14 @@ function DestinationControl({
   const [error, setError] = useState<string | null>(null);
   const types = value.targetModule === "contract" ? contractTypes : matterTypes;
   const selected = types.find((type) => type.id === value.targetTypeId);
+  // Migration 0157 wrote the Default type's id onto module-only rows, so
+  // a saved Default id and a null id are the same destination (DD-028.7).
+  // The picker shows one "Default" choice for both.
+  const savedTypeId = selected?.isDefault ? null : value.targetTypeId;
   async function save(next: Destination) {
     if (
       pending.current ||
-      (next.targetModule === value.targetModule && next.targetTypeId === value.targetTypeId)
+      (next.targetModule === value.targetModule && next.targetTypeId === savedTypeId)
     )
       return;
     pending.current = true;
@@ -268,22 +120,16 @@ function DestinationControl({
         <select
           id="request-type-destination"
           className={CONTROL_CLASS}
-          value={value.targetModule ?? ""}
+          value={value.targetModule}
+          required
           aria-disabled={status === "saving"}
           aria-describedby="request-type-destination-help"
-          onChange={(event) =>
-            void save({
-              targetModule: (event.target.value || null) as TargetModule | null,
-              targetTypeId: null,
-            })
-          }
+          onChange={(event) => {
+            const targetModule = event.currentTarget.value;
+            if (targetModule !== "contract" && targetModule !== "matter") return;
+            void save({ targetModule, targetTypeId: null });
+          }}
         >
-          <option value="">
-            {intl.formatMessage({
-              id: "settings.requestTypeEditor.decideLater",
-              defaultMessage: "Decide during triage",
-            })}
-          </option>
           <option value="contract">
             {intl.formatMessage({
               id: "settings.requestTypeEditor.destinationContract",
@@ -316,7 +162,7 @@ function DestinationControl({
           <select
             id="request-type-destination-type"
             className={CONTROL_CLASS}
-            value={value.targetTypeId ?? ""}
+            value={savedTypeId ?? ""}
             aria-disabled={status === "saving"}
             onChange={(event) =>
               void save({
@@ -327,8 +173,8 @@ function DestinationControl({
           >
             <option value="">
               {intl.formatMessage({
-                id: "settings.requestTypeEditor.decideLater",
-                defaultMessage: "Decide during triage",
+                id: "settings.requestTypeEditor.defaultType",
+                defaultMessage: "Default",
               })}
             </option>
             {value.targetTypeId && (!selected || selected.archivedAt) && (
@@ -350,7 +196,7 @@ function DestinationControl({
               </option>
             )}
             {types
-              .filter((type) => !type.archivedAt)
+              .filter((type) => !type.archivedAt && !type.isDefault)
               .map((type) => (
                 <option key={type.id} value={type.id}>
                   {type.displayName}
@@ -473,20 +319,35 @@ function TurnaroundControl({
 }
 
 export function SettingsRequestTypeEditorPage() {
-  const { requestType, attachedFields, catalog, matterTypes, contractTypes } =
+  const { requestType, catalog, matterTypes, contractTypes } =
     useLoaderData<typeof settingsRequestTypeEditorLoader>();
   const [destination, setDestination] = useState<Destination>({
-    targetModule: requestType.targetModule ?? null,
-    targetTypeId: requestType.targetTypeId ?? null,
+    targetModule: requestType.targetModule,
+    targetTypeId: requestType.targetTypeId,
   });
-  const scopes = attachableScopes(destination.targetModule);
-  const identity: EditorTypeRow = requestType;
+  const [identity, setIdentity] = useState<EditorTypeRow>(requestType);
+  const types = destination.targetModule === "contract" ? contractTypes : matterTypes;
+  const destinationType = destination.targetTypeId
+    ? types.find((type) => type.id === destination.targetTypeId)
+    : types.find((type) => type.isDefault);
+  const editorApi: TypeEditorIdentityApi = {
+    async update(id, body) {
+      const result = await api
+        .PATCH("/api/v1/request-types/{id}", {
+          params: { path: { id } },
+          body,
+        })
+        .catch(() => undefined);
+      if (result?.data) setIdentity(result.data.requestType);
+      return { data: result?.data?.requestType, ...(await problem(result)) };
+    },
+  };
   return (
     <TypeEditorScreen
       initialType={identity}
       tabs={<IntakeSettingsTabs />}
       backPath="/settings/intake/request-types"
-      api={EDITOR_API}
+      api={editorApi}
       messages={MESSAGES}
       identityExtra={
         <>
@@ -504,15 +365,15 @@ export function SettingsRequestTypeEditorPage() {
           />
         </>
       }
-      attachments={{
-        createFieldModule: destination.targetModule ?? "choose",
-        initialAttached: attachedFields,
-        catalog: catalog.filter((field) => scopes.includes(field.moduleScope)),
-        api: EDITOR_API,
-        messages: MESSAGES,
-        basics: BASICS_SLOT,
-        requiredRule: REQUIRED_RULE,
-      }}
+      rightCard={
+        <IntakeFormCard
+          key={`${destination.targetModule}:${destinationType?.id}`}
+          module={destination.targetModule}
+          destinationType={destinationType}
+          catalog={catalog}
+          requestType={identity}
+        />
+      }
     />
   );
 }

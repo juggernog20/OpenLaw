@@ -1,1 +1,13 @@
-{ "schemaVersion": 1, "redirects": [] }
+{
+  "schemaVersion": 1,
+  "redirects": [
+    {
+      "from": "request-forms#choose-the-form-fields",
+      "to": "request-forms#choose-the-intake-rows"
+    },
+    {
+      "from": "request-forms#collect-default-contract-fields",
+      "to": "request-forms#collect-built-in-contract-rows"
+    }
+  ]
+}

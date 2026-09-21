@@ -35,6 +35,7 @@ export function IntakePreview({
   form,
   catalog,
   typeName,
+  requestType: suppliedRequestType,
   typeId,
   isDefault,
   module,
@@ -44,6 +45,7 @@ export function IntakePreview({
   form: Form;
   catalog: readonly ApiField[];
   typeName: string;
+  requestType?: { displayName: string; description: string | null };
   typeId: string;
   isDefault: boolean;
   module: "contract" | "matter" | "entity";
@@ -66,7 +68,8 @@ export function IntakePreview({
     { id: string; displayName: string; description: string | null }[] | null
   >(null);
   const [requestTypeId, setRequestTypeId] = useState("");
-  const requestType = requestTypes?.find((r) => r.id === requestTypeId) ?? requestTypes?.[0];
+  const requestType =
+    suppliedRequestType ?? requestTypes?.find((r) => r.id === requestTypeId) ?? requestTypes?.[0];
   const [submitted, setSubmitted] = useState(false);
   const [complete, setComplete] = useState(false);
   const [departmentsReady, setDepartmentsReady] = useState(false);
@@ -77,7 +80,7 @@ export function IntakePreview({
       readPortalEntityOptions(),
       api.GET("/api/v1/departments/options"),
       api.GET("/api/v1/regions", {}),
-      api.GET("/api/v1/request-types", {}),
+      suppliedRequestType ? Promise.resolve(null) : api.GET("/api/v1/request-types", {}),
     ]).then(([entities, response, regions, requests]) => {
       if (!active) return;
       if (entities.status === "fulfilled") setEntities(entities.value);
@@ -87,9 +90,9 @@ export function IntakePreview({
       }
       if (regions.status === "fulfilled" && regions.value.data)
         setRegions(regions.value.data.regions);
-      if (requests.status === "fulfilled" && requests.value.data)
+      if (requests.status === "fulfilled" && requests.value?.data)
         setRequestTypes(
-          requests.value.data.requestTypes.filter(
+          requests.value?.data.requestTypes.filter(
             (r) =>
               !r.archivedAt &&
               r.targetModule === module &&
@@ -103,13 +106,13 @@ export function IntakePreview({
           regions.status === "rejected" ||
           !regions.value.data ||
           requests.status === "rejected" ||
-          !requests.value.data,
+          (!suppliedRequestType && !requests.value?.data),
       );
     });
     return () => {
       active = false;
     };
-  }, [module, typeId, isDefault]);
+  }, [module, typeId, isDefault, suppliedRequestType]);
   const visible = formRowsForTouchpoint(evaluateForm(form, answers).visibleRows, "intake").filter(
     (r) =>
       ![
@@ -191,12 +194,12 @@ export function IntakePreview({
             );
           }}
         >
-          {requestTypes && requestTypes.length > 1 && (
+          {!suppliedRequestType && requestTypes && requestTypes.length > 1 && (
             <label className="flex flex-col gap-1">
               {t("Request type")}
               <select
                 className={CONTROL_CLASS}
-                value={requestType?.id ?? ""}
+                value={requestTypeId || requestTypes[0]?.id || ""}
                 onChange={(e) => setRequestTypeId(e.target.value)}
               >
                 {requestTypes.map((r) => (
@@ -211,7 +214,7 @@ export function IntakePreview({
           {requestType?.description && (
             <p className="text-sm text-muted">{requestType.description}</p>
           )}
-          {requestTypes?.length === 0 && (
+          {!suppliedRequestType && requestTypes?.length === 0 && (
             <p className="text-sm text-muted">{t("No Request type uses this Form yet")}</p>
           )}
           {loadError && (
