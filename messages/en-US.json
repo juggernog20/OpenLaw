@@ -10817,17 +10817,8 @@
   "settings.reminders.title": {
     "defaultMessage": "Reminder lead times"
   },
-  "settings.requestTypeEditor.allAttached": {
-    "defaultMessage": "Every field this target allows is attached."
-  },
   "settings.requestTypeEditor.allTypes": {
     "defaultMessage": "All request types"
-  },
-  "settings.requestTypeEditor.attach": {
-    "defaultMessage": "Attach field"
-  },
-  "settings.requestTypeEditor.attached": {
-    "defaultMessage": "{name} attached."
   },
   "settings.requestTypeEditor.basicAttachments": {
     "defaultMessage": "Attachments"
@@ -10835,26 +10826,8 @@
   "settings.requestTypeEditor.basicAttachmentsType": {
     "defaultMessage": "Files"
   },
-  "settings.requestTypeEditor.basicLocked": {
-    "defaultMessage": "{name} is always collected."
-  },
-  "settings.requestTypeEditor.basicTitle": {
-    "defaultMessage": "Title"
-  },
-  "settings.requestTypeEditor.basicTitleType": {
-    "defaultMessage": "Text"
-  },
-  "settings.requestTypeEditor.basicUrgency": {
-    "defaultMessage": "Urgency"
-  },
-  "settings.requestTypeEditor.basicUrgencyType": {
-    "defaultMessage": "Single select"
-  },
-  "settings.requestTypeEditor.basicsCaption": {
-    "defaultMessage": "Basics are always on the form"
-  },
-  "settings.requestTypeEditor.decideLater": {
-    "defaultMessage": "Decide during triage"
+  "settings.requestTypeEditor.defaultType": {
+    "defaultMessage": "Default"
   },
   "settings.requestTypeEditor.description": {
     "defaultMessage": "Description"
@@ -10874,41 +10847,32 @@
   "settings.requestTypeEditor.destinationType": {
     "defaultMessage": "{module, select, contract {Default contract type} other {Default matter type}}"
   },
-  "settings.requestTypeEditor.detach": {
-    "defaultMessage": "Detach {name}"
-  },
-  "settings.requestTypeEditor.detached": {
-    "defaultMessage": "{name} detached."
-  },
   "settings.requestTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.requestTypeEditor.empty": {
-    "defaultMessage": "No catalog fields are on this form yet."
+  "settings.requestTypeEditor.editOnType": {
+    "defaultMessage": "Edit on {type}"
   },
-  "settings.requestTypeEditor.fieldColumn": {
-    "defaultMessage": "Field"
+  "settings.requestTypeEditor.formLoading": {
+    "defaultMessage": "Loading Intake form…"
   },
-  "settings.requestTypeEditor.formFields": {
-    "defaultMessage": "Form fields"
+  "settings.requestTypeEditor.formReadError": {
+    "defaultMessage": "The Intake form could not be read."
   },
-  "settings.requestTypeEditor.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
+  "settings.requestTypeEditor.intakeForm": {
+    "defaultMessage": "Intake form"
+  },
+  "settings.requestTypeEditor.optionalFact": {
+    "defaultMessage": "Optional"
   },
   "settings.requestTypeEditor.previousDestination": {
     "defaultMessage": "Previous selection"
   },
-  "settings.requestTypeEditor.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
-  },
-  "settings.requestTypeEditor.requiredColumn": {
+  "settings.requestTypeEditor.requiredFact": {
     "defaultMessage": "Required"
   },
-  "settings.requestTypeEditor.requiredFor": {
-    "defaultMessage": "{name} required"
-  },
-  "settings.requestTypeEditor.requiredLocked": {
-    "defaultMessage": "{name} can be on the form, but it can't be required. A requester cannot pick a person in the Portal."
+  "settings.requestTypeEditor.retryForm": {
+    "defaultMessage": "Retry"
   },
   "settings.requestTypeEditor.turnaround": {
     "defaultMessage": "Target turnaround (business days)"
@@ -10949,17 +10913,17 @@
   "settings.requestTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
   },
+  "settings.requestTypes.destinationColumn": {
+    "defaultMessage": "Destination"
+  },
+  "settings.requestTypes.destinationPrefix": {
+    "defaultMessage": "Destination:"
+  },
+  "settings.requestTypes.destinationType": {
+    "defaultMessage": "{module, select, matter {Matter · {name}} other {Contract · {name}}}"
+  },
   "settings.requestTypes.edit": {
     "defaultMessage": "Edit {name}"
-  },
-  "settings.requestTypes.fieldsColumn": {
-    "defaultMessage": "Form fields"
-  },
-  "settings.requestTypes.fieldsCount": {
-    "defaultMessage": "{count, plural, one {# field} other {# fields}}"
-  },
-  "settings.requestTypes.fieldsPrefix": {
-    "defaultMessage": "Form fields:"
   },
   "settings.requestTypes.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
@@ -10987,18 +10951,6 @@
   },
   "settings.requestTypes.restore": {
     "defaultMessage": "Restore {name}"
-  },
-  "settings.requestTypes.targetColumn": {
-    "defaultMessage": "Default destination"
-  },
-  "settings.requestTypes.targetModule": {
-    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {Decide during triage}}"
-  },
-  "settings.requestTypes.targetPrefix": {
-    "defaultMessage": "Default destination:"
-  },
-  "settings.requestTypes.targetType": {
-    "defaultMessage": "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}"
   },
   "settings.requestTypes.title": {
     "defaultMessage": "Request types"

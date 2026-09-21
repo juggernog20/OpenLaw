@@ -8,18 +8,17 @@ import { json, renderAt, stubApi } from "../testing/helpers";
 describe.each([
   ["contract", "contracts"],
   ["matter", "matters"],
-  ["request", "intake/request"],
   ["entity", "entities"],
 ] as const)("%s Attach field search", (module, section) => {
   function setup() {
     const attaches: unknown[] = [];
-    const attachLabel = module === "request" ? "Attach field" : "Attach Field";
+    const attachLabel = "Attach Field";
     const path = `/api/v1/${module}-types/t1`;
     const fields = ["Zebra notes", "beta notes", "Alpha notes"].map((displayName, i) => ({
       id: `f${i}`,
       slug: `field_${i}`,
       displayName,
-      moduleScope: module === "request" ? "contract" : module,
+      moduleScope: module,
       fieldType: "text",
       description: null,
       options: null,
@@ -49,13 +48,9 @@ describe.each([
                 inUseCount: 0,
                 isSystemDefault: false,
                 displayOrder: 1,
-                targetModule: null,
-                targetTypeId: null,
-                turnaroundDays: null,
               },
             });
           if (call.url.pathname === `${path}/form`) return json(200, { form: [] });
-          if (call.url.pathname === `${path}/fields`) return json(200, { attachedFields: [] });
           if (call.url.pathname === "/api/v1/fields") return json(200, { fields });
           if (call.url.pathname === `${path}/people`) return json(200, { people: [] });
           if (call.url.pathname === "/api/v1/users") return json(200, { users: [] });
@@ -65,19 +60,10 @@ describe.each([
           attaches.push({ fieldId: body.form.at(-1)!.id });
           return json(200, call.body);
         }
-        if (call.url.pathname === `${path}/fields` && call.method === "POST") {
-          attaches.push(call.body);
-          const field = fields.find((f) => f.id === (call.body as { fieldId: string }).fieldId)!;
-          return json(201, {
-            attachedField: { ...field, fieldId: field.id, displayOrder: 1, isRequired: false },
-          });
-        }
         return undefined;
       },
     });
-    renderAt(
-      `/settings/${section}${module === "request" ? "-types" : "/types"}/t1${module === "request" ? "" : "/form"}`,
-    );
+    renderAt(`/settings/${section}/types/t1/form`);
     return { user: userEvent.setup(), attaches, attachLabel };
   }
 
@@ -110,9 +96,7 @@ describe.each([
     const search = await screen.findByRole("textbox", { name: "Search fields" });
     await waitFor(() => expect(search).toHaveFocus());
     await user.type(search, "unmatched field");
-    expect(
-      screen.getByText(module === "request" ? "No matching fields." : "No Fields match"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("No Fields match")).toBeInTheDocument();
     if (module === "contract" || module === "matter") {
       expect(screen.getByRole("menuitem", { name: "Create Field" })).toBeInTheDocument();
     }

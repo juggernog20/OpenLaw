@@ -1065,6 +1065,7 @@ export function TypeEditorScreen({
   messages,
   identityExtra,
   extraCards,
+  rightCard,
   attachments,
   sectionContent,
 }: Readonly<{
@@ -1085,6 +1086,8 @@ export function TypeEditorScreen({
    */
   identityExtra?: ReactNode;
   extraCards?: ReactNode;
+  /** Read-only content beside the identity card. */
+  rightCard?: ReactNode;
   /** The fields card; omit for a mount that has no attachment surface. */
   attachments?: TypeEditorAttachments;
 }>) {
@@ -1162,9 +1165,11 @@ export function TypeEditorScreen({
         ) : (
           <div
             className={
-              attachments
-                ? "grid min-w-0 grid-cols-1 items-start gap-4 @3xl/type-editor:grid-cols-[minmax(0,1fr)_20rem]"
-                : "grid min-w-0 grid-cols-1 items-start gap-4"
+              rightCard
+                ? "grid min-w-0 grid-cols-1 items-start gap-4 @3xl/type-editor:grid-cols-[minmax(0,35rem)_minmax(0,1fr)]"
+                : attachments
+                  ? "grid min-w-0 grid-cols-1 items-start gap-4 @3xl/type-editor:grid-cols-[minmax(0,1fr)_20rem]"
+                  : "grid min-w-0 grid-cols-1 items-start gap-4"
             }
           >
             {attachments && (
@@ -1227,6 +1232,7 @@ export function TypeEditorScreen({
               </SettingsCard>
               {extraCards}
             </div>
+            {rightCard}
           </div>
         )}
       </div>

@@ -1,25 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * Intake · Request types (#85, INT-002) at the route seam: the shared
- * TaxonomyTypesPane on the request mount. The three seeds sit at their
- * own URL with the Intake vocabulary, with in-place rename against the
- * request-types routes, the inline add row, the archive-guard modal,
- * keyboard reorder, and the rail entry the M5 close left out. The
- * Contracts reference suite and the HTTP seam in apps/api cover the
- * machinery itself. These tests pin the wiring: the Intake URL, the
- * request endpoints, and the Intake copy.
- *
- * Two absences are asserted rather than assumed: no row is
- * system-protected here, and no in-use caption is drawn, because
- * `requests` land in M20.
- *
- * The Target column and the two-line row are this mount's own (#354):
- * the three states read as ST12 draws them, and the per-row Edit
- * affordance opens the editor screen. The target type's name comes
- * from the taxonomy it points at, so the loader reads those two lists
- * beside the request types.
- */
+/** Request type list actions and destination labels at the route seam. */
 
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -36,8 +17,7 @@ const ADMIN = {
 
 const MEMBER = { ...ADMIN, id: "u2", email: "casey@example.com", role: "legal_team_member" };
 
-/** The three INT-002 seeds ST12 draws, in seeded order, with the three
- * target states between them. */
+/** Seeded Request types with explicit and module-only destinations. */
 const SEEDS = [
   [
     "r1",
@@ -62,15 +42,21 @@ const SEEDS = [
     "legal_question",
     "Legal question",
     "One-off question — no record is created up front.",
-    null,
+    "matter",
     null,
     0,
   ],
 ] as const;
 
 /** The two taxonomies a target may name, as their own routes answer. */
-const MATTER_TYPES = [{ id: "mt-lit", displayName: "Litigation", archivedAt: null }];
-const CONTRACT_TYPES = [{ id: "ct-nda", displayName: "NDA", archivedAt: null }];
+const MATTER_TYPES = [
+  { id: "mt-lit", displayName: "Litigation", archivedAt: null, isDefault: false },
+  { id: "mt-default", displayName: "Default", archivedAt: null, isDefault: true },
+];
+const CONTRACT_TYPES = [
+  { id: "ct-nda", displayName: "NDA", archivedAt: null, isDefault: false },
+  { id: "ct-default", displayName: "Default", archivedAt: null, isDefault: true },
+];
 
 /** One row as the request-types routes answer it. */
 interface StubRow {
@@ -82,7 +68,7 @@ interface StubRow {
   isSystemDefault: boolean;
   archivedAt: string | null;
   inUseCount: number;
-  targetModule: "matter" | "contract" | null;
+  targetModule: "matter" | "contract";
   targetTypeId: string | null;
   formFieldCount: number;
 }
@@ -146,7 +132,7 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
           isSystemDefault: false,
           archivedAt: null,
           inUseCount: 0,
-          targetModule: null,
+          targetModule: "matter",
           targetTypeId: null,
           formFieldCount: 0,
         },
@@ -159,11 +145,8 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
         requestTypes: ids.map((id, index) => ({ ...byId(id), displayOrder: index + 1 })),
       });
     }
-    // The editor's other reads, for the row the Edit affordance opens:
-    // its form definition and the catalog behind it.
-    if (/^\/api\/v1\/request-types\/[^/]+\/fields$/.test(path) && call.method === "GET") {
-      return json(200, { attachedFields: [] });
-    }
+    // Destination Form and catalog reads for the editor link.
+    if (path.endsWith("/form") && call.method === "GET") return json(200, { form: [] });
     if (path === "/api/v1/fields" && call.method === "GET") {
       return json(200, { fields: [] });
     }
@@ -249,7 +232,7 @@ describe("the seeded list (INT-002)", () => {
   });
 
   it("locks nothing: a request type named Other archives like any other row", async () => {
-    const rows = [
+    const rows: StubRow[] = [
       ...seededTypes(),
       {
         id: "r4",
@@ -260,7 +243,7 @@ describe("the seeded list (INT-002)", () => {
         isSystemDefault: false,
         archivedAt: null,
         inUseCount: 0,
-        targetModule: null,
+        targetModule: "matter",
         targetTypeId: null,
         formFieldCount: 0,
       },
@@ -293,16 +276,16 @@ describe("the seeded list (INT-002)", () => {
   });
 });
 
-describe("the Target column (INT-002)", () => {
-  it("reads the three states as ST12 draws them", async () => {
+describe("the Destination column (INT-002)", () => {
+  it("names the destination type or its module Default", async () => {
     stubApi({ signedIn: ADMIN, extra: typesApi(newCalls()) });
     renderAt("/settings/intake/request-types");
     await screen.findByText("NDA request");
     const [nda, review, question] = within(typeList()).getAllByRole("listitem");
     expect(within(nda!).getByText("Contract · NDA")).toBeInTheDocument();
-    expect(within(review!).getByText("Contract")).toBeInTheDocument();
-    expect(within(question!).getByText("Decide during triage")).toBeInTheDocument();
-    expect(screen.getByText("Default destination")).toBeInTheDocument();
+    expect(within(review!).getByText("Contract · Default")).toBeInTheDocument();
+    expect(within(question!).getByText("Matter · Default")).toBeInTheDocument();
+    expect(screen.getByText("Destination")).toBeInTheDocument();
   });
 
   it("names a matter type the same way", async () => {
@@ -314,41 +297,28 @@ describe("the Target column (INT-002)", () => {
     expect(screen.getByText("Matter · Litigation")).toBeInTheDocument();
   });
 
-  it("reads a demoted row as the module alone", async () => {
-    // The targeted contract type was hard-deleted: `on delete set null`
-    // left the module standing, so the row says "Contract".
+  it("reads a deleted destination type as the module Default", async () => {
+    // Deleting a destination type leaves its module and the Default Form.
     const rows = seededTypes();
     rows[0] = { ...rows[0]!, targetTypeId: null };
     stubApi({ signedIn: ADMIN, extra: typesApi(newCalls(), rows) });
     renderAt("/settings/intake/request-types");
     await screen.findByText("NDA request");
     const [nda] = within(typeList()).getAllByRole("listitem");
-    expect(within(nda!).getByText("Contract")).toBeInTheDocument();
+    expect(within(nda!).getByText("Contract · Default")).toBeInTheDocument();
     expect(within(nda!).queryByText("Contract · NDA")).not.toBeInTheDocument();
   });
 });
 
-describe("the Form fields column (#355)", () => {
-  it("counts each type's live attachments, and reads the sr-only prefix", async () => {
-    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls()) });
-    renderAt("/settings/intake/request-types");
-    await screen.findByText("NDA request");
-    const [nda, review, question] = within(typeList()).getAllByRole("listitem");
-    expect(within(nda!).getByText("4 fields")).toBeInTheDocument();
-    expect(within(review!).getByText("2 fields")).toBeInTheDocument();
-    expect(within(question!).getByText("0 fields")).toBeInTheDocument();
-    expect(screen.getByText("Form fields")).toBeInTheDocument();
-    expect(within(nda!).getByText("Form fields:")).toBeInTheDocument();
-  });
-
-  it("pluralizes one field in the singular", async () => {
-    const rows = seededTypes();
-    rows[2] = { ...rows[2]!, formFieldCount: 1 };
-    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls(), rows) });
-    renderAt("/settings/intake/request-types");
-    await screen.findByText("Legal question");
-    expect(screen.getByText("1 field")).toBeInTheDocument();
-  });
+it("replaces the Form fields count with Destination", async () => {
+  stubApi({ signedIn: ADMIN, extra: typesApi(newCalls()) });
+  renderAt("/settings/intake/request-types");
+  await screen.findByText("NDA request");
+  expect(screen.getByText("Destination")).toBeVisible();
+  expect(screen.queryByText("Form fields")).not.toBeInTheDocument();
+  expect(screen.queryByText(/^[0-9]+ fields?$/)).not.toBeInTheDocument();
+  const [nda] = within(typeList()).getAllByRole("listitem");
+  expect(within(nda!).getByText("Destination:")).toBeInTheDocument();
 });
 
 describe("the per-row editor affordance", () => {
