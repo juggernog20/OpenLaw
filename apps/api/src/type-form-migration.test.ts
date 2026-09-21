@@ -147,19 +147,32 @@ it.each([false, true])(
 
 it.each([
   [
-    "built-in has no matching Matter Row",
+    "targets Matters but holds an intake built-in",
+    "'matter'",
     "select 'unmapped', id, 1 from fields where built_in_key = 'effectiveDate'",
   ],
-  ["Field sits outside the Matter module", "values ('unmapped', 'unmapped-contract-field', 1)"],
-])("names a legacy Request whose %s", async (_, source) => {
+  [
+    "targets Matters but holds a Contract Field",
+    "'matter'",
+    "values ('unmapped', 'unmapped-contract-field', 1)",
+  ],
+  [
+    "has no module and holds Fields of both modules",
+    "null",
+    "values ('unmapped', 'unmapped-contract-field', 1), ('unmapped', 'unmapped-matter-field', 2)",
+  ],
+])("names a legacy Request that %s", async (_, module, source) => {
   const db = await freshDb(container, `unmapped_${source.length}`);
   try {
     await migrateThrough(db, "0156_answer-style", migrationEntries());
     await db.execute(
-      sql`insert into request_types (id, slug, display_name, display_order) values ('unmapped', 'unmapped', 'Unrouted question', 99)`,
+      sql.raw(
+        `insert into request_types (id, slug, display_name, display_order, target_module) values ('unmapped', 'unmapped', 'Unrouted question', 99, ${module})`,
+      ),
     );
     await db.execute(sql`insert into fields (id, slug, display_name, module_scope, field_type, field_tag) values
-      ('unmapped-contract-field', 'unmapped_contract_field', 'Counterparty name', 'contract', 'text', 'business')`);
+      ('unmapped-contract-field', 'unmapped_contract_field', 'Counterparty name', 'contract', 'text', 'business'),
+      ('unmapped-matter-field', 'unmapped_matter_field', 'Docket', 'matter', 'text', 'business')`);
     await db.execute(
       sql.raw(
         `insert into request_type_fields (request_type_id, field_id, display_order) ${source}`,
@@ -168,6 +181,38 @@ it.each([
     await expect(runMigrations(db)).rejects.toMatchObject({
       cause: { message: expect.stringContaining("Unrouted question") },
     });
+  } finally {
+    await db.$client.end();
+  }
+});
+
+// 0140 kept an untargeted intake question in Contracts, so a Request type with no
+// module follows its Fields there instead of the Matter fallback.
+it("sends a no-module Request type where 0140 sent its questions", async () => {
+  const db = await freshDb(container, "unrouted_contract");
+  try {
+    await migrateThrough(db, "0156_answer-style", migrationEntries());
+    await db.execute(
+      sql`insert into request_types (id, slug, display_name, display_order) values ('unrouted', 'unrouted', 'Unrouted question', 99)`,
+    );
+    await db.execute(sql`insert into fields (id, slug, display_name, module_scope, field_type, field_tag) values
+      ('unrouted-contract-field', 'unrouted_contract_field', 'Counterparty name', 'contract', 'text', 'business')`);
+    await db.execute(
+      sql`insert into request_type_fields (request_type_id, field_id, display_order) values ('unrouted', 'unrouted-contract-field', 1)`,
+    );
+    await runMigrations(db);
+    expect(
+      (
+        await db.execute(sql`select r.target_module, t.is_default
+      from request_types r join contract_types t on t.id = r.target_contract_type_id where r.id = 'unrouted'`)
+      ).rows,
+    ).toEqual([{ target_module: "contract", is_default: true }]);
+    expect(
+      (
+        await db.execute(sql`select f.on_intake_form from contract_type_fields f
+      join contract_types t on t.id = f.contract_type_id where t.is_default and f.field_id = 'unrouted-contract-field'`)
+      ).rows,
+    ).toEqual([{ on_intake_form: true }]);
   } finally {
     await db.$client.end();
   }

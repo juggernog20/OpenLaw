@@ -95,9 +95,18 @@ INSERT INTO matter_types (id, slug, display_name, display_order, is_default, is_
 SELECT gen_random_uuid()::text, 'default', 'Default', coalesce(max(display_order), 0) + 1, true, true FROM matter_types
 ON CONFLICT (slug) DO UPDATE SET is_default = true, archived_at = NULL;
 --> statement-breakpoint
--- A destinationless legacy Request could collect Contract built-ins and Fields of
--- either module. Matter has no Rows for the built-ins, and a type attaches only its
--- own module's Fields (Contract also refuses the two Overview attributes). Refuse
+-- A legacy Request type with no module goes where 0140 sent its questions: to
+-- Contracts when it holds a Contract Field or an intake built-in, otherwise to
+-- Matters. A Request type that holds Fields of both modules has no single
+-- destination; the guard below names it.
+UPDATE request_types r SET target_module = CASE WHEN EXISTS (
+  SELECT 1 FROM request_type_fields j JOIN fields f ON f.id = j.field_id
+  WHERE j.request_type_id = r.id AND (f.module_scope = 'contract' OR f.built_in_key IS NOT NULL)
+) THEN 'contract' ELSE 'matter' END
+WHERE r.target_module IS NULL;
+--> statement-breakpoint
+-- A type attaches only its own module's Fields (Contract also refuses the two
+-- Overview attributes) and Matter has no Rows for the intake built-ins. Refuse
 -- with names, as the INT-002 re-target guard does, rather than write attachments
 -- the API would refuse or silently drop a question.
 DO $$
@@ -112,15 +121,13 @@ BEGIN
       'renewalPeriodMonths', 'noticePeriodDays', 'valueAmount', 'valueCurrency', 'valueCadence'
     )
   ELSE
-    f.module_scope IS DISTINCT FROM coalesce(r.target_module, 'matter')
+    f.module_scope IS DISTINCT FROM r.target_module
     OR (r.target_module = 'contract' AND f.slug IN ('owning_department', 'region'))
   END;
   IF unmapped IS NOT NULL THEN
     RAISE EXCEPTION 'Cannot migrate the intake form of Request types: %. A Field has no Row on the destination type (outside its module, a Contract Overview attribute, or a built-in without a Matter Row). Re-target the Request type or detach those Fields before upgrading.', unmapped;
   END IF;
 END $$;
---> statement-breakpoint
-UPDATE request_types SET target_module = 'matter' WHERE target_module IS NULL;
 --> statement-breakpoint
 UPDATE request_types SET target_contract_type_id = (SELECT id FROM contract_types WHERE is_default)
 WHERE target_module = 'contract' AND target_contract_type_id IS NULL;
