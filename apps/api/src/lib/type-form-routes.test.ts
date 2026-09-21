@@ -76,6 +76,10 @@ it("draws pinned Rows first and seeds built-ins on new types", async () => {
     "contract_type",
   ]);
   expect(form.filter((n) => n.kind === "row" && n.rowRef === "value")).toHaveLength(1);
+  // Description starts On intake form; every other built-in starts as a Record Row.
+  expect(form.flatMap((n) => (n.kind === "row" && n.onIntakeForm ? [n.rowRef] : []))).toEqual([
+    "description",
+  ]);
 });
 
 it("round-trips nested Branches and audits one whole replacement", async () => {

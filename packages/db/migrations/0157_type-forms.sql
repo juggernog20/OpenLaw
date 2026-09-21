@@ -189,12 +189,14 @@ SELECT type_id, field_id, new_order::integer, is_required, true, visible_on_port
 ON CONFLICT (matter_type_id, field_id) DO UPDATE SET
   on_intake_form = true, is_required = matter_type_fields.is_required OR excluded.is_required;
 --> statement-breakpoint
-INSERT INTO contract_type_builtin_rows (contract_type_id, builtin_key, display_order)
-SELECT t.id, b.key, b.position - 14
+-- Every Portal form drew Description as a basic before the Form, so its Row
+-- starts On intake form; the other built-ins start as Record Rows.
+INSERT INTO contract_type_builtin_rows (contract_type_id, builtin_key, display_order, on_intake_form)
+SELECT t.id, b.key, b.position - 14, b.key = 'description'
 FROM contract_types t CROSS JOIN (VALUES ('description', 1), ('entity', 2), ('counterparties', 3), ('owning_department', 4), ('region', 5), ('priority', 6), ('risk', 7), ('term_type', 8), ('effective_date', 9), ('expiry_date', 10), ('renewal_period_months', 11), ('notice_period_days', 12), ('value', 13), ('needed_by', 14)) AS b(key, position);
 --> statement-breakpoint
-INSERT INTO matter_type_builtin_rows (matter_type_id, builtin_key, display_order)
-SELECT t.id, b.key, b.position - 6
+INSERT INTO matter_type_builtin_rows (matter_type_id, builtin_key, display_order, on_intake_form)
+SELECT t.id, b.key, b.position - 6, b.key = 'description'
 FROM matter_types t CROSS JOIN (VALUES ('description', 1), ('department', 2), ('region', 3), ('priority', 4), ('risk', 5), ('needed_by', 6)) AS b(key, position);
 --> statement-breakpoint
 -- The three Value questions now configure one compound Row. Answers stay under __intake_* until M39/11.

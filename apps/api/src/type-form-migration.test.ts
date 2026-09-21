@@ -102,18 +102,18 @@ it.each([false, true])(
           sql`select builtin_key, is_required from contract_type_builtin_rows b join contract_types t on t.id = b.contract_type_id where t.slug = 'nda' and on_intake_form order by builtin_key`,
         )
       ).rows;
-      expect(builtins).toEqual(
-        [
-          "counterparties",
-          "effective_date",
-          "entity",
-          "expiry_date",
-          "notice_period_days",
-          "renewal_period_months",
-          "term_type",
-          "value",
-        ].map((builtin_key) => ({ builtin_key, is_required: true })),
-      );
+      expect(builtins).toEqual([
+        { builtin_key: "counterparties", is_required: true },
+        // Description was a basic on every Portal form; it stays a question.
+        { builtin_key: "description", is_required: false },
+        { builtin_key: "effective_date", is_required: true },
+        { builtin_key: "entity", is_required: true },
+        { builtin_key: "expiry_date", is_required: true },
+        { builtin_key: "notice_period_days", is_required: true },
+        { builtin_key: "renewal_period_months", is_required: true },
+        { builtin_key: "term_type", is_required: true },
+        { builtin_key: "value", is_required: true },
+      ]);
       expect(
         (
           await db.execute(
