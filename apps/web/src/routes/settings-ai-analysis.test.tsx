@@ -567,23 +567,16 @@ describe("the AI analysis connector pane (#662)", () => {
 });
 
 describe("the prompt cards (#665)", () => {
-  it("shows each fixed format beneath its textarea in both prompt cards", async () => {
+  it("shows the editable prompts without the code-owned format sentence in both cards", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi() });
     renderAt("/settings/ai-analysis");
     for (const name of ["Matter and Contract conversion prompts", "Contract analysis prompts"]) {
       await openCard(user, name);
       const card = screen.getByRole("region", { name });
-      expect(
-        within(card).getByText("The greyed sentence is fixed by the Field's type."),
-      ).toBeVisible();
-      for (const input of within(card).getAllByRole("textbox")) {
-        expect(input).toHaveAccessibleDescription("Return a short text.");
-        const sentence = document.getElementById(input.getAttribute("aria-describedby")!)!;
-        expect(sentence).toHaveClass("text-muted");
-        expect(sentence.tagName).toBe("P");
-        expect(input.nextElementSibling).toBe(sentence);
-      }
+      expect(within(card).getAllByRole("textbox").length).toBeGreaterThan(0);
+      expect(within(card).queryByText("Return a short text.")).not.toBeInTheDocument();
+      expect(within(card).queryByText(/greyed sentence/)).not.toBeInTheDocument();
     }
   });
 

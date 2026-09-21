@@ -915,7 +915,9 @@ mechanics and the reason are the CTR-008 addendum of the same date in `DECISIONS
 ### INT-008 implementation note, 2026-09-20, M37/6, #961
 
 The five `conversion.*` prompts now appear in the collapsed Conversion draft prompts
-card. Each editable instruction has a muted, code-owned format sentence beneath it.
+card. ~~Each editable instruction has a muted, code-owned format sentence beneath it.~~ The
+format sentence is code-owned and enforced on every call; the card stopped showing it on
+2026-09-21.
 The API no longer accepts `rules.*` slugs, and migration `0156` removes their stored
 overrides. Conversion drafts retain their built-in title and description wording without Answer
 styles. Prompted catalog text Fields use the effective style through the shared target
