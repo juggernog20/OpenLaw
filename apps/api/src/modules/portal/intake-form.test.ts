@@ -367,3 +367,95 @@ it("stores native Row keys, validates Value and registry picks, and converts wit
   expect(linked.map((p) => p.counterpartyId)).toContain(party!.id);
   expect(linked).toHaveLength(2);
 });
+
+it("lands a Region answered by id on the Contract's region name at conversion", async () => {
+  const made = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/contract-types",
+    cookies,
+    payload: { displayName: "Region intake" },
+  });
+  const typeId = made.json().contractType.id;
+  const form: FormNode[] = [
+    ...pinnedFormRows("contract"),
+    ...Object.entries(FORM_BUILTINS.contract).map(([rowRef, fieldType]) => ({
+      kind: "row" as const,
+      id: rowRef,
+      rowRef,
+      fieldType,
+      isRequired: false,
+      onIntakeForm: rowRef === "region",
+      visibleOnPortal: true,
+    })),
+  ];
+  const written = await h.app.inject({
+    method: "PUT",
+    url: `/api/v1/contract-types/${typeId}/form`,
+    cookies,
+    payload: { form },
+  });
+  expect(written.statusCode, written.body).toBe(200);
+  const rt = (
+    await h.app.inject({
+      method: "POST",
+      url: "/api/v1/request-types",
+      cookies,
+      payload: { displayName: "Region request" },
+    })
+  ).json().requestType;
+  const target = await h.app.inject({
+    method: "PATCH",
+    url: `/api/v1/request-types/${rt.id}`,
+    cookies,
+    payload: { targetModule: "contract", targetTypeId: typeId },
+  });
+  expect(target.statusCode, target.body).toBe(200);
+  const madeRegion = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/regions",
+    cookies,
+    payload: { displayName: "EMEA" },
+  });
+  expect(madeRegion.statusCode, madeRegion.body).toBe(201);
+  const region = madeRegion.json().region as { id: string };
+  const read = await h.app.inject({
+    method: "GET",
+    url: `/api/v1/portal/request-types/${rt.slug}`,
+    cookies: requesterCookies,
+  });
+  expect(read.statusCode, read.body).toBe(200);
+  expect(read.json().fields.find((f: { slug: string }) => f.slug === "region").options).toContain(
+    region.id,
+  );
+  const created = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/requests",
+    cookies: requesterCookies,
+    payload: {
+      requestTypeId: rt.id,
+      departmentId,
+      title: "Regional NDA",
+      urgency: "medium",
+      customFields: { region: region.id },
+    },
+  });
+  expect(created.statusCode, created.body).toBe(201);
+  const detail = await h.app.inject({
+    method: "GET",
+    url: `/api/v1/requests/${created.json().request.number}`,
+    cookies,
+  });
+  expect(detail.json().customFieldRefs.builtins).toEqual({ [region.id]: "EMEA" });
+  const converted = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${created.json().request.number}/convert`,
+    cookies,
+    payload: { title: "Regional NDA" },
+  });
+  expect(converted.statusCode, converted.body).toBe(200);
+  const [contract] = await h.db
+    .select({ region: contracts.region })
+    .from(contracts)
+    .where(eq(contracts.number, converted.json().request.convertedContract.number));
+  expect(contract?.region).toBe("EMEA");
+});

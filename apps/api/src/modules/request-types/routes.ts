@@ -114,12 +114,6 @@ export const requestTypesRoutes = taxonomyRoutes({
         throw httpError(400, "A Request type needs a destination module. Pick Matter or Contract.");
 
       if (typeId !== null) {
-        if (module === null) {
-          throw httpError(
-            400,
-            "A target type needs a target module. Pick Matter or Contract first.",
-          );
-        }
         const table = TARGET_TABLES[module];
         const [candidate] = await tx
           .select({ id: table.id, archivedAt: table.archivedAt })

@@ -83,10 +83,12 @@ import {
   matterKeyDates,
   matterTypeFields,
   matterTypes,
+  regions,
   requestTypes,
   SEVERITY_LEVELS,
   requests,
   type CustomFieldValue,
+  type Executor,
   type Transaction,
 } from "@openlaw/db";
 import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
@@ -341,8 +343,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                         : { name: party.name },
                     ),
                     owningDepartmentId: row.departmentId,
-                    region:
-                      typeof row.customFields.region === "string" ? row.customFields.region : null,
+                    region: await intakeRegionName(tx, row.customFields.region),
                     description:
                       request.body.description === undefined
                         ? row.description
@@ -611,4 +612,14 @@ function confirmedTarget(
     400,
     "Pick a contract type — this request type does not name a live one to confirm.",
   );
+}
+
+/** The Region Row stores the region id (INT-002); older Requests hold the name. Either lands as the name the Contract column references. */
+async function intakeRegionName(db: Executor, value: CustomFieldValue | undefined) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const [region] = await db
+    .select({ displayName: regions.displayName })
+    .from(regions)
+    .where(eq(regions.id, value));
+  return region?.displayName ?? value;
 }
