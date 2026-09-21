@@ -14,6 +14,7 @@ export const entityTypeFields = pgTable(
       .references(() => entityTypes.id, { onDelete: "cascade" }),
     ...typeFieldColumns(),
     visibleOnPortal: boolean("visible_on_portal").notNull().default(true),
+    /** NULL places this attachment at the Form root, outside every Branch. */
     branchId: text("branch_id"),
   },
   (table) => [

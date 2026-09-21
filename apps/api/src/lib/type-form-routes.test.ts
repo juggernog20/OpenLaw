@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { activityLog, contractTypes, eq, fields, sql } from "@openlaw/db";
-import type { FormNode, FormRow } from "@openlaw/shared";
+import { activityLog, contractTypes, eq, fields, sql, users } from "@openlaw/db";
+import type { FormNode, FormRow, FormModule } from "@openlaw/shared";
 import { startHarness, signInCookies, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
+
+import { provisionUser } from "../auth/instance.js";
 
 let h: TestHarness;
 let cookies: Record<string, string>;
@@ -42,13 +44,16 @@ function put(id: string, form: FormNode[], module = "contract") {
     payload: { form },
   });
 }
-async function field(module = "contract", fieldType: "text" | "user" = "text"): Promise<FormRow> {
+async function field(
+  module: FormModule = "contract",
+  fieldType: "text" | "user" = "text",
+): Promise<FormRow> {
   const [f] = await h.db
     .insert(fields)
     .values({
       slug: `test_${crypto.randomUUID()}`,
       displayName: "Test Row",
-      moduleScope: module as "contract",
+      moduleScope: module,
       fieldType,
       fieldTag: "business",
     })
@@ -250,6 +255,14 @@ it("legacy PATCH cannot make an Intake user Row required, and detach cannot brea
 
 it("mounts the Form only for record types, and requires an Administrator", async () => {
   const id = await createType();
+  const member = {
+    email: "form-member@example.test",
+    displayName: "Member",
+    password: "correct-horse-battery",
+  };
+  const user = await provisionUser(h.app.auth, member);
+  await h.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, user.id));
+  const memberCookies = await signInCookies(h.app, member.email, member.password);
   for (const method of ["GET", "PUT"] as const) {
     const res = await h.app.inject({
       method,
@@ -257,6 +270,13 @@ it("mounts the Form only for record types, and requires an Administrator", async
       ...(method === "PUT" ? { payload: { form: [] } } : {}),
     });
     expect(res.statusCode).toBe(401);
+    const forbidden = await h.app.inject({
+      method,
+      url: `/api/v1/contract-types/${id}/form`,
+      cookies: memberCookies,
+      ...(method === "PUT" ? { payload: { form: [] } } : {}),
+    });
+    expect(forbidden.statusCode, forbidden.body).toBe(403);
     const absent = await h.app.inject({
       method,
       url: `/api/v1/request-types/${id}/form`,
@@ -267,7 +287,7 @@ it("mounts the Form only for record types, and requires an Administrator", async
   }
 });
 
-it.each(["matter", "entity"])(
+it.each(["matter", "entity"] as const)(
   "round-trips the %s mount with the same tree machinery",
   async (module) => {
     const id = await createType(module);
@@ -319,3 +339,36 @@ it("legacy ordering preserves Branch and built-in slots", async () => {
   expect(reordered.statusCode, reordered.body).toBe(200);
   expect(await read(id)).toEqual([...original.slice(0, 2), second, value, first, form.at(-1)!]);
 });
+
+it.each([true, false])(
+  "keeps archived attachments when their Branch survives: %s",
+  async (keepBranch) => {
+    const id = await createType();
+    const first = await field();
+    const hidden = { ...(await field()), isRequired: true, onIntakeForm: true };
+    const branch = {
+      kind: "branch" as const,
+      id: "archive-parent",
+      match: "all" as const,
+      conditions: [{ rowRef: first.rowRef, operator: "is_set" as const, value: null }],
+      children: [hidden],
+    };
+    const pins = (await read(id)).slice(0, 2);
+    expect((await put(id, [...pins, first, branch])).statusCode).toBe(200);
+    await h.db.update(fields).set({ archivedAt: new Date() }).where(eq(fields.id, hidden.id));
+    const next = [
+      ...pins,
+      first,
+      ...(keepBranch ? [{ ...branch, children: [await field()] }] : []),
+    ];
+    expect((await put(id, next)).statusCode).toBe(200);
+    expect(await read(id)).toEqual(next);
+    await h.db.update(fields).set({ archivedAt: null }).where(eq(fields.id, hidden.id));
+    const last = next.at(-1)!;
+    expect(await read(id)).toEqual(
+      keepBranch && last.kind === "branch"
+        ? [...pins, first, { ...last, children: [...last.children, hidden] }]
+        : [...next, hidden],
+    );
+  },
+);

@@ -131,3 +131,20 @@ it.each([false, true])(
     }
   },
 );
+
+it("names a legacy Request whose built-in has no matching Matter Row", async () => {
+  const db = await freshDb(container, "unmapped_intake_builtin");
+  try {
+    await migrateThrough(db, "0156_answer-style", migrationEntries());
+    await db.execute(
+      sql`insert into request_types (id, slug, display_name, display_order) values ('unmapped', 'unmapped', 'Unrouted question', 99)`,
+    );
+    await db.execute(sql`insert into request_type_fields (request_type_id, field_id, display_order)
+      select 'unmapped', id, 1 from fields where built_in_key = 'effectiveDate'`);
+    await expect(runMigrations(db)).rejects.toMatchObject({
+      cause: { message: expect.stringContaining("Unrouted question") },
+    });
+  } finally {
+    await db.$client.end();
+  }
+});

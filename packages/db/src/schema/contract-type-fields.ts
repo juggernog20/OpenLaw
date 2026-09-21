@@ -29,6 +29,7 @@ export const contractTypeFields = pgTable(
       .references(() => contractTypes.id, { onDelete: "cascade" }),
     ...typeFieldColumns(),
     visibleOnPortal: boolean("visible_on_portal").notNull().default(true),
+    /** NULL places this attachment at the Form root, outside every Branch. */
     branchId: text("branch_id"),
     onIntakeForm: boolean("on_intake_form").notNull().default(false),
   },

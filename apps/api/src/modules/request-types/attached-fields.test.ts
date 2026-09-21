@@ -360,7 +360,7 @@ describe("the scope rule, in both destination modules (INT-002)", () => {
     );
   });
 
-  it("requires the destination module before attaching Fields", async () => {
+  it("rejects Fields outside the destination scope and destination changes that strand them", async () => {
     const type = await addType("Destination scope");
     const contractField = await createField("Destination value", "contract");
     const matterField = await plantScopedField(

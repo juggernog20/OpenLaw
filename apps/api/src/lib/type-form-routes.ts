@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * DD-028 Administrator Form routes: validate and replace whole trees, reconstruct
+ * stored Rows and Branches, and record one DD-017 change entry.
+ */
+
 import { z } from "zod";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import {
@@ -8,6 +14,7 @@ import {
   fields,
   inArray,
   isNull,
+  isNotNull,
   contractTypeBranches,
   contractTypeBuiltinRows,
   contractTypeFields,
@@ -413,13 +420,23 @@ export function typeFormRoutes<TRow extends TaxonomyRow>(
               : config.scopeRule;
           const catalog = await validate(tx, form, rule);
           const before = await readTypeForm(tx, module, type.id);
-          await tx.delete(joins).where(eq(joins.typeId, type.id));
-          if (builtins) await tx.delete(builtins).where(eq(builtins.typeId, type.id));
-          await tx.delete(branches).where(eq(branches.typeId, type.id));
-          async function write(nodes: Form, parent: string | null) {
+          // Archived Fields are absent from GET. Preserve their attachments for restore.
+          const hidden = await tx
+            .select({ join: joins })
+            .from(joins)
+            .innerJoin(fields, eq(joins.fieldId, fields.id))
+            .where(and(eq(joins.typeId, type.id), isNotNull(fields.archivedAt)))
+            .orderBy(asc(joins.displayOrder), asc(joins.fieldId))
+            .for("share", { of: fields });
+          const branchLevels: (typeof branches.$inferInsert)[][] = [];
+          const builtinValues: (typeof contractTypeBuiltinRows.$inferInsert)[] = [];
+          const joinValues: (typeof contractTypeFields.$inferInsert)[] = [];
+          const lastOrder = new Map<string | null, number>();
+          function collect(nodes: Form, parent: string | null, depth: number) {
+            lastOrder.set(parent, nodes.length);
             for (const [order, node] of nodes.entries()) {
               if (node.kind === "branch") {
-                await tx.insert(branches).values({
+                (branchLevels[depth] ??= []).push({
                   typeId: type.id,
                   id: node.id,
                   parentBranchId: parent,
@@ -427,10 +444,10 @@ export function typeFormRoutes<TRow extends TaxonomyRow>(
                   match: node.match,
                   conditions: [...node.conditions],
                 });
-                await write(node.children, node.id);
+                collect(node.children, node.id, depth + 1);
               } else if (pins.some((p) => p.rowRef === node.rowRef)) continue;
               else if (builtins && Object.hasOwn(definitions, node.rowRef)) {
-                await tx.insert(builtins).values({
+                builtinValues.push({
                   typeId: type.id,
                   builtinKey: node.rowRef,
                   displayOrder: order + 1,
@@ -439,7 +456,7 @@ export function typeFormRoutes<TRow extends TaxonomyRow>(
                   onIntakeForm: node.onIntakeForm ?? false,
                 });
               } else {
-                await tx.insert(joins).values({
+                joinValues.push({
                   typeId: type.id,
                   fieldId: catalog.get(node.id)!.id,
                   displayOrder: order + 1,
@@ -451,7 +468,21 @@ export function typeFormRoutes<TRow extends TaxonomyRow>(
               }
             }
           }
-          await write(form, null);
+          collect(form, null, 0);
+          for (const { join } of hidden) {
+            const branchId = lastOrder.has(join.branchId) ? join.branchId : null;
+            const displayOrder = lastOrder.get(branchId)! + 1;
+            lastOrder.set(branchId, displayOrder);
+            joinValues.push({ ...join, branchId, displayOrder });
+          }
+          await tx.delete(joins).where(eq(joins.typeId, type.id));
+          if (builtins) await tx.delete(builtins).where(eq(builtins.typeId, type.id));
+          await tx.delete(branches).where(eq(branches.typeId, type.id));
+          // Each batch's parent Branches already exist before its children are inserted.
+          for (const level of branchLevels)
+            if (level?.length) await tx.insert(branches).values(level);
+          if (builtins && builtinValues.length) await tx.insert(builtins).values(builtinValues);
+          if (joinValues.length) await tx.insert(joins).values(joinValues);
           const result = await readTypeForm(tx, module, type.id);
           await recordActivity(tx, {
             entityType: "system",

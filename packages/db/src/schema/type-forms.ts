@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * DD-028 Branch and built-in Row tables for Contract, Matter and Entity type Forms.
+ */
+
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -23,6 +28,7 @@ function branchTable<N extends string>(name: N, typeColumn: string, typeId: () =
     {
       typeId: text(typeColumn).notNull().references(typeId, { onDelete: "cascade" }),
       id: text("id").notNull(),
+      /** NULL places this Branch at the Form root, outside every Branch. */
       parentBranchId: text("parent_branch_id"),
       displayOrder: integer("display_order").notNull(),
       match: text("match", { enum: ["all", "any"] }).notNull(),
@@ -70,6 +76,7 @@ function builtinTable<N extends string>(
       displayOrder: integer("display_order").notNull(),
       isRequired: boolean("is_required").notNull().default(false),
       onIntakeForm: boolean("on_intake_form").notNull().default(false),
+      /** NULL places this built-in Row at the Form root, outside every Branch. */
       branchId: text("branch_id"),
     },
     (t) => [

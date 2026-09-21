@@ -14,7 +14,7 @@
  * archives and deletes like any other row.
  *
  * **The target is this mount's extras.** A request type targets
- * nothing, the Matter module, or the Contract module — and inside
+ * the Matter module or the Contract module — and inside
  * Matter or Contract it may name one specific type. On the wire that is
  * two values: `targetModule` and the optional `targetTypeId`. The table
  * holds three columns, one per module plus the module itself; which
@@ -131,7 +131,7 @@ export const requestTypesRoutes = taxonomyRoutes({
       return {
         formFieldOrder: type.formFieldOrder,
         turnaroundDays: type.turnaroundDays,
-        targetModule: type.targetModule as TargetModule,
+        targetModule: type.targetModule,
         targetTypeId: targetTypeId(type),
         formFieldCount: counts.get(type.id) ?? 0,
       };
@@ -172,7 +172,7 @@ export const requestTypesRoutes = taxonomyRoutes({
         changed.turnaroundDays = { from: current.turnaroundDays, to: body.turnaroundDays };
       }
       if (!namesModule && !namesType) return { columns, changed };
-      const currentModule = current.targetModule as TargetModule | null;
+      const currentModule = current.targetModule;
       const currentTypeId = targetTypeId(current);
       // The two keys are one value: a body that names the module says
       // the whole target, so an id it leaves out means "the module

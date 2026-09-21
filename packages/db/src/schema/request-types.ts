@@ -41,7 +41,9 @@ export const requestTypes = pgTable(
     /** INT-003: business days offered to triage as an unconfirmed estimate; NULL means no suggestion. */
     turnaroundDays: integer("turnaround_days"),
     /** Every Request type names a module, including one created by the legacy editor. */
-    targetModule: text("target_module").notNull().default("matter"),
+    targetModule: text("target_module", { enum: ["matter", "contract"] })
+      .notNull()
+      .default("matter"),
     /** The specific matter type, set only under `target_module =
      * 'matter'`; NULL leaves the type to the reviewer at conversion. */
     targetMatterTypeId: text("target_matter_type_id").references(() => matterTypes.id, {

@@ -868,7 +868,7 @@ describe("the three-state target at the database (INT-002)", () => {
     await refusedByTargetCheck(
       harness.db
         .update(requestTypes)
-        .set({ targetModule: "knowledge" })
+        .set({ targetModule: sql`'knowledge'` })
         .where(eq(requestTypes.id, question.id)),
     );
   });

@@ -61,6 +61,10 @@ test("an Administrator lists an Entity and a Business User picks it on a require
       .object({ requestType: z.object({ id: z.string(), slug: z.string() }) })
       .parse(await type.json()).requestType;
     typeId = requestType.id;
+    const destination = await page.request.patch(`/api/v1/request-types/${typeId}`, {
+      data: { targetModule: "contract" },
+    });
+    expect(destination.status(), await destination.text()).toBe(200);
     const field = await page.request.post("/api/v1/fields", {
       data: {
         displayName: `Signing Entity ${suffix}`,

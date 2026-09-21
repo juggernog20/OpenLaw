@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * DD-028 built-in Row keys and pinned Rows shared by type Form readers and writers.
+ */
+
 import type { FormRow, FormRowType } from "./form-evaluator.js";
 
 /** DD-028's canonical built-in keys. Value remains one compound money Row. */

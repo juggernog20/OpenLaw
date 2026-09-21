@@ -95,6 +95,25 @@ INSERT INTO matter_types (id, slug, display_name, display_order, is_default, is_
 SELECT gen_random_uuid()::text, 'default', 'Default', coalesce(max(display_order), 0) + 1, true, true FROM matter_types
 ON CONFLICT (slug) DO UPDATE SET is_default = true, archived_at = NULL;
 --> statement-breakpoint
+-- A destinationless legacy Request could collect Contract built-ins. Matter has
+-- no matching Rows for them; refuse with names rather than silently lose switches.
+DO $$
+DECLARE unmapped text;
+BEGIN
+  SELECT string_agg(DISTINCT r.display_name, ', ' ORDER BY r.display_name) INTO unmapped
+  FROM request_type_fields j JOIN request_types r ON r.id = j.request_type_id
+  JOIN fields f ON f.id = j.field_id
+  WHERE f.built_in_key IS NOT NULL AND (
+    r.target_module IS DISTINCT FROM 'contract' OR f.built_in_key NOT IN (
+      'entityId', 'counterparties', 'effectiveDate', 'expiryDate', 'termType',
+      'renewalPeriodMonths', 'noticePeriodDays', 'valueAmount', 'valueCurrency', 'valueCadence'
+    )
+  );
+  IF unmapped IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot migrate intake built-ins on Request types: %. Choose a Contract destination or detach unsupported built-ins before upgrading.', unmapped;
+  END IF;
+END $$;
+--> statement-breakpoint
 UPDATE request_types SET target_module = 'matter' WHERE target_module IS NULL;
 --> statement-breakpoint
 UPDATE request_types SET target_contract_type_id = (SELECT id FROM contract_types WHERE is_default)
