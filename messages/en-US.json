@@ -3134,9 +3134,6 @@
   "conversion.previousPassage": {
     "defaultMessage": "Previous passage"
   },
-  "conversion.restrictedOmitted": {
-    "defaultMessage": "Restricted messages and Legal or reference Fields were omitted to keep record values safe for broader readers."
-  },
   "conversion.settings": {
     "defaultMessage": "Request conversion"
   },
