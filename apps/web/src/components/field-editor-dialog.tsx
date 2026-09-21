@@ -83,6 +83,7 @@ export function FieldEditorDialog({
   target,
   module: initialModule,
   allowModuleSelection = false,
+  hideTag = false,
   onOpenChange,
   onRowChanged,
   onCreated,
@@ -93,6 +94,7 @@ export function FieldEditorDialog({
   module: ModuleScope;
   /** Intake forms without a destination can collect Contract or Matter fields. */
   allowModuleSelection?: boolean;
+  hideTag?: boolean;
   onOpenChange: (open: boolean) => void;
   /** The saved field after a successful edit. */
   onRowChanged: (row: FieldRow) => void;
@@ -380,23 +382,25 @@ export function FieldEditorDialog({
                 </>
               )}
             </div>
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="field-tag">
-                <FormattedMessage id="settings.contractFields.tagColumn" defaultMessage="Tag" />
-              </Label>
-              <select
-                id="field-tag"
-                value={draft.tag}
-                className={CONTROL_CLASS}
-                onChange={(event) => set("tag", event.target.value as Tag)}
-              >
-                {TAGS.map((tag) => (
-                  <option key={tag} value={tag}>
-                    {tagLabel(intl, tag)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {!hideTag && (
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="field-tag">
+                  <FormattedMessage id="settings.contractFields.tagColumn" defaultMessage="Tag" />
+                </Label>
+                <select
+                  id="field-tag"
+                  value={draft.tag}
+                  className={CONTROL_CLASS}
+                  onChange={(event) => set("tag", event.target.value as Tag)}
+                >
+                  {TAGS.map((tag) => (
+                    <option key={tag} value={tag}>
+                      {tagLabel(intl, tag)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           {isSelect && (
             <div className="flex flex-col gap-1.5">

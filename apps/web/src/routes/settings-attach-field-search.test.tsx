@@ -13,6 +13,7 @@ describe.each([
 ] as const)("%s Attach field search", (module, section) => {
   function setup() {
     const attaches: unknown[] = [];
+    const attachLabel = module === "request" ? "Attach field" : "Attach Field";
     const path = `/api/v1/${module}-types/t1`;
     const fields = ["Zebra notes", "beta notes", "Alpha notes"].map((displayName, i) => ({
       id: `f${i}`,
@@ -53,10 +54,16 @@ describe.each([
                 turnaroundDays: null,
               },
             });
+          if (call.url.pathname === `${path}/form`) return json(200, { form: [] });
           if (call.url.pathname === `${path}/fields`) return json(200, { attachedFields: [] });
           if (call.url.pathname === "/api/v1/fields") return json(200, { fields });
           if (call.url.pathname === `${path}/people`) return json(200, { people: [] });
           if (call.url.pathname === "/api/v1/users") return json(200, { users: [] });
+        }
+        if (call.url.pathname === `${path}/form` && call.method === "PUT") {
+          const body = call.body as { form: { id: string }[] };
+          attaches.push({ fieldId: body.form.at(-1)!.id });
+          return json(200, call.body);
         }
         if (call.url.pathname === `${path}/fields` && call.method === "POST") {
           attaches.push(call.body);
@@ -68,13 +75,15 @@ describe.each([
         return undefined;
       },
     });
-    renderAt(`/settings/${section}${module === "request" ? "-types" : "/types"}/t1`);
-    return { user: userEvent.setup(), attaches };
+    renderAt(
+      `/settings/${section}${module === "request" ? "-types" : "/types"}/t1${module === "request" ? "" : "/form"}`,
+    );
+    return { user: userEvent.setup(), attaches, attachLabel };
   }
 
   it("sorts alphabetically and filters by name without menu typeahead stealing typed spaces", async () => {
-    const { user, attaches } = setup();
-    await user.click(await screen.findByRole("button", { name: "Attach field" }));
+    const { user, attaches, attachLabel } = setup();
+    await user.click(await screen.findByRole("button", { name: attachLabel }));
     const menu = await screen.findByRole("menu");
     const search = within(menu).getByRole("textbox", { name: "Search fields" });
     await waitFor(() => expect(search).toHaveFocus());
@@ -90,24 +99,26 @@ describe.each([
     await user.keyboard("{ArrowDown}{Enter}");
     await waitFor(() => expect(attaches).toEqual([{ fieldId: "f1" }]));
     await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: "Attach field" }));
+    await user.click(screen.getByRole("button", { name: attachLabel }));
     expect(screen.getByRole("textbox", { name: "Search fields" })).toHaveValue("");
     expect(within(screen.getByRole("menu")).queryByText("beta notes")).not.toBeInTheDocument();
   });
 
   it("shows no results, keeps creation available, and closes with Escape", async () => {
-    const { user, attaches } = setup();
-    await user.click(await screen.findByRole("button", { name: "Attach field" }));
+    const { user, attaches, attachLabel } = setup();
+    await user.click(await screen.findByRole("button", { name: attachLabel }));
     const search = await screen.findByRole("textbox", { name: "Search fields" });
     await waitFor(() => expect(search).toHaveFocus());
     await user.type(search, "unmatched field");
-    expect(screen.getByText("No matching fields.")).toBeInTheDocument();
+    expect(
+      screen.getByText(module === "request" ? "No matching fields." : "No Fields match"),
+    ).toBeInTheDocument();
     if (module === "contract" || module === "matter") {
-      expect(screen.getByRole("menuitem", { name: "Add new field" })).toBeInTheDocument();
+      expect(screen.getByRole("menuitem", { name: "Create Field" })).toBeInTheDocument();
     }
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
-    expect(screen.getByRole("button", { name: "Attach field" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: attachLabel })).toHaveFocus();
     expect(attaches).toHaveLength(0);
   });
 });
