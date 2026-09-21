@@ -26,6 +26,8 @@ const CreatedMatter = z.object({
   matter: z.object({
     number: z.number().int(),
     createdAt: z.iso.datetime(),
+    priority: z.string(),
+    risk: z.string().nullable(),
   }),
 });
 const Tasks = z.object({
@@ -163,8 +165,11 @@ test.describe.serial("M24 deployer journey", () => {
       await expect(template).toHaveValue(templateId);
       await expect(create.getByText("Template adds 2 tasks and 1 key date.")).toBeVisible();
       await expect(create.getByLabel("Title")).toHaveValue(TITLE_PREFIX);
-      await expect(create.getByLabel("Priority")).toHaveValue("high");
-      await expect(create.getByLabel("Risk")).toHaveValue("medium");
+      // Priority and Risk are Record Rows on the seeded Matter Form (DD-028),
+      // so the dialog does not draw them. The template's defaults land on the
+      // created Matter, checked below.
+      await expect(create.getByLabel("Priority")).toHaveCount(0);
+      await expect(create.getByLabel("Risk")).toHaveCount(0);
       await create.getByLabel("Title").fill(MATTER_TITLE);
 
       const created = page.waitForResponse(
@@ -176,6 +181,8 @@ test.describe.serial("M24 deployer journey", () => {
       expect(createdResponse.status(), await createdResponse.text()).toBe(201);
       const matter = CreatedMatter.parse(await createdResponse.json()).matter;
       matterNumber = matter.number;
+      expect(matter.priority).toBe("high");
+      expect(matter.risk).toBe("medium");
       await expect(page).toHaveURL(new RegExp(`/matters/${matter.number}$`));
       await expect(page.getByRole("region", { name: MATTER_TITLE })).toBeVisible();
 

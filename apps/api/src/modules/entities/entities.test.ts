@@ -114,7 +114,7 @@ const typeOptionBySlug = async (slug: string) => {
     .json()
     .entityTypes.find((candidate: { slug: string }) => candidate.slug === slug);
   expect(option, slug).toBeDefined();
-  return option as { id: string; slug: string; displayName: string };
+  return option as { id: string; slug: string; displayName: string; form?: unknown };
 };
 
 const register = (cookies: Record<string, string>, payload: Record<string, unknown>) =>
