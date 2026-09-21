@@ -16,12 +16,8 @@
  * the arrival honest: group 4 is actor-excluded (INT-006), so the
  * Administrator hears about a Request somebody else raised.
  *
- * **The carry-through is the milestone, so the demo sets up a value to
- * carry.** M19's seed puts no catalog field on the NDA form and none on
- * the NDA contract type, so the journey starts by attaching one to each
- * — the same `governing_law` slug on both sides — and then proves that
- * what the requester typed into the portal box is what the contract's
- * field holds. Nothing is re-keyed, and nothing in between is faked.
+ * Governing law is Required on the destination NDA type's Intake Form.
+ * The journey proves its Portal answer reaches the converted contract.
  *
  * **What conversion moves and what it copies.** The Request's paper is
  * promoted into a document at version 1 and the Request's own download
@@ -31,8 +27,8 @@
  * Thread answer on the record still reaches the requester's bell and
  * their email. That last one is the reply promise following the thread.
  *
- * **What the sweep can and cannot take back.** The two field
- * attachments are put back the way the run found them, the contract is
+ * **What the sweep can and cannot take back.** The destination Form
+ * is put back the way the run found it, the contract is
  * archived, and the requester is archived. The Request itself stays:
  * no route deletes one, and a converted Request is out of the Inbox
  * queue by definition, so it reaches no later run's screens.
@@ -47,6 +43,7 @@ import {
   type Page,
 } from "@playwright/test";
 import { z } from "zod";
+import { configureRequestIntake } from "./intake-form.js";
 import {
   ADMIN,
   completePortalFirstRun,
@@ -112,10 +109,6 @@ const RequestTypeRows = z.object({
 
 const ContractTypeRows = z.object({
   contractTypes: z.array(z.object({ id: z.string(), slug: z.string() })),
-});
-
-const AttachedFields = z.object({
-  attachedFields: z.array(z.object({ slug: z.string(), isRequired: z.boolean() })),
 });
 
 const MyRequest = z.object({ request: z.object({ id: z.string(), number: z.number().int() }) });
@@ -196,87 +189,6 @@ async function catalogFieldId(request: APIRequestContext): Promise<string> {
     `no live ${FIELD_SLUG} field: the seed is missing, or this install archived it`,
   ).toBeDefined();
   return row!.id;
-}
-
-/**
- * Both taxonomies attach catalog fields through the same machinery
- * (TECH-023), so one pair of helpers serves the request type and the
- * contract type. `base` is the collection the type lives in.
- */
-type TypeCollection = "request-types" | "contract-types";
-
-/**
- * Whether this run's field is on that type right now, and with what
- * required flag. `null` means it is not attached at all.
- *
- * The demo mutates **seeded** rows rather than ones of its own, so it
- * reads the state it is about to change and puts that state back — not
- * the state it happens to want. An install whose Administrator attached
- * this field on purpose must survive a test run untouched (TECH-018).
- */
-async function attachmentState(
-  request: APIRequestContext,
-  base: TypeCollection,
-  typeId: string,
-): Promise<boolean | null> {
-  const read = await request.get(`/api/v1/${base}/${typeId}/fields`);
-  expect(read.status(), await read.text()).toBe(200);
-  const row = AttachedFields.parse(await read.json()).attachedFields.find(
-    (field) => field.slug === FIELD_SLUG,
-  );
-  return row ? row.isRequired : null;
-}
-
-/** Puts the field on the type at the flag this run needs, whatever it
- * found. Attaching and re-flagging are two calls because they are two
- * facts: one is membership, the other is what the form demands. */
-async function ensureAttached(
-  request: APIRequestContext,
-  base: TypeCollection,
-  typeId: string,
-  fieldId: string,
-  required: boolean,
-): Promise<void> {
-  const now = await attachmentState(request, base, typeId);
-  if (now === null) {
-    const attached = await request.post(`/api/v1/${base}/${typeId}/fields`, {
-      data: { fieldId, isRequired: required },
-    });
-    expect(attached.status(), await attached.text()).toBe(201);
-    return;
-  }
-  if (now === required) return;
-  const flagged = await request.patch(`/api/v1/${base}/${typeId}/fields/${fieldId}`, {
-    data: { isRequired: required },
-  });
-  expect(flagged.status(), await flagged.text()).toBe(200);
-}
-
-/**
- * Puts the type back the way the run found it: attached with the flag it
- * had, or off it when it was never on it. The catalog definition and the
- * values already written under its slug stay either way (MTR-014); only
- * the join row moves.
- */
-async function restoreAttachment(
-  request: APIRequestContext,
-  base: TypeCollection,
-  typeId: string,
-  fieldId: string,
-  was: boolean | null,
-): Promise<void> {
-  if (was === null) {
-    const detached = await request.delete(`/api/v1/${base}/${typeId}/fields/${fieldId}`);
-    // 404 is an answer too: a run that failed before it attached has
-    // nothing to take off.
-    expect([204, 404], await detached.text()).toContain(detached.status());
-    return;
-  }
-  if ((await attachmentState(request, base, typeId)) === was) return;
-  const restored = await request.patch(`/api/v1/${base}/${typeId}/fields/${fieldId}`, {
-    data: { isRequired: was },
-  });
-  expect(restored.status(), await restored.text()).toBe(200);
 }
 
 /**
@@ -399,20 +311,14 @@ test.describe.serial("M21 demo path", () => {
     const targetTypeId = await contractTypeId(page.request);
     const fieldId = await catalogFieldId(page.request);
 
-    // Read before writing, on both sides.
-    const onFormBefore = await attachmentState(page.request, "request-types", formTypeId);
-    const onTargetBefore = await attachmentState(page.request, "contract-types", targetTypeId);
+    const restoreForm = await configureRequestIntake(page.request, formTypeId, fieldId);
 
     const context = await browser.newContext();
     /**
      * Leaves the shared instance as the run found it (TECH-018).
      *
-     * Every step runs, whatever the ones before it did. The four are
-     * independent — a contract, two seeded join rows, and a person — so
-     * a sweep that stopped at the first refusal would strand the other
-     * three for the next run, which is the failure this whole function
-     * exists to prevent. What went wrong is reported together at the
-     * end rather than swallowed.
+     * Every cleanup runs even if an earlier one fails; failures are reported
+     * together after the contract, destination Form, and requester are restored.
      */
     const leaveInert = async () => {
       await context.close();
@@ -421,26 +327,12 @@ test.describe.serial("M21 demo path", () => {
         await step().catch((error: unknown) => failures.push(error));
       };
       await settle(() => ensureDemoContractsInert(page.request));
-      await settle(() =>
-        restoreAttachment(page.request, "request-types", formTypeId, fieldId, onFormBefore),
-      );
-      await settle(() =>
-        restoreAttachment(page.request, "contract-types", targetTypeId, fieldId, onTargetBefore),
-      );
+      await settle(restoreForm);
       await settle(() => ensureMemberInert(page.request, REQUESTER));
       if (failures.length > 0) throw new AggregateError(failures, "M21 demo cleanup failed");
     };
 
     try {
-      // ---- One field, both sides of the door ----
-      //
-      // The form collects it, required, because that is what makes it an
-      // answer worth carrying. The contract type attaches it optional:
-      // the carry-through is a slug match, and the required flag is the
-      // gap rule rather than the carry rule (INT-002, CTR-016).
-      await ensureAttached(page.request, "request-types", formTypeId, fieldId, true);
-      await ensureAttached(page.request, "contract-types", targetTypeId, fieldId, false);
-
       // ---- The ask ----
 
       const portal = await enterPortalByMagicLink(context, page.request);

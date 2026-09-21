@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { withAnsweredIntakeDefaults } from "../../lib/intake-default-fields.js";
+import { readIntakeForm } from "../../lib/intake-form.js";
 
 /**
  * The staff request detail (INT-006, INT-007, #414): one Request as
@@ -22,8 +22,8 @@ import { withAnsweredIntakeDefaults } from "../../lib/intake-default-fields.js";
  * exists so yesterday's decisions stay findable (INT-007). Only an
  * archived Request is absent, by the house rule that NULL means live.
  *
- * **The values are labelled through the type's live attached fields**,
- * read by the same `selectAttachedFields` the form drew its boxes from
+ * **The values are labelled through the destination type's live Intake Rows**,
+ * read by the same `readIntakeForm` the form drew its boxes from
  * and the submission route checked against — so a value is named
  * exactly as the box that collected it was. A value whose field the
  * Administrator has since detached or archived stays on the row and is
@@ -69,7 +69,7 @@ import { withAnsweredIntakeDefaults } from "../../lib/intake-default-fields.js";
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { activityLog, and, asc, eq, isNull, requests, requestTypeFields, users } from "@openlaw/db";
+import { activityLog, and, asc, eq, isNull, requests, users } from "@openlaw/db";
 import { publishInboxTotal } from "./live-inbox.js";
 import { requireRole } from "../../auth/guards.js";
 import type { Readable } from "node:stream";
@@ -80,7 +80,7 @@ import {
 } from "../../lib/doc-engine/engine.js";
 import { cachedPdfRendition } from "../../lib/preview-rendition.js";
 import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
-import { AttachedCustomFieldSchema, selectAttachedFields } from "../../lib/custom-fields.js";
+import { AttachedCustomFieldSchema } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import {
   attachmentOn,
@@ -164,9 +164,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
           200: z.object({
             request: StaffRequestSchema,
             conversion: z.object({ at: z.iso.datetime(), by: z.string().nullable() }).nullable(),
-            /** The type's attached fields, in the order the form drew
-             * them. A value whose field has since been detached or
-             * archived is not among them and is therefore not drawn. */
+            /** Current Intake Row labels. Detached or archived Rows retain their answers but are not drawn. */
             fields: z.array(AttachedCustomFieldSchema),
             customFieldRefs: StaffRequestCustomFieldRefsSchema,
             /** The paper, oldest first. Empty is an answer: a Request
@@ -180,7 +178,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const row = await staffRequestRow(app.db, request.user, request.params.number);
       const [attached, attachments] = await Promise.all([
-        selectAttachedFields(app.db, requestTypeFields, row.typeId),
+        readIntakeForm(app.db, row.typeId, { includeArchived: true }),
         row.status === "converted" ? [] : selectAttachments(app.db, row.id),
       ]);
       const [conversion] =
@@ -199,7 +197,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
               .orderBy(asc(activityLog.createdAt), asc(activityLog.id))
               .limit(1)
           : [];
-      const readableFields = await withAnsweredIntakeDefaults(app.db, attached, row.customFields);
+      const readableFields = attached.fields;
       return {
         conversion: conversion ? { at: conversion.at.toISOString(), by: conversion.by } : null,
         request: toStaffRequest(row),

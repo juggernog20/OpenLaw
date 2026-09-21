@@ -1,110 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { evaluateForm, intakeFormAnswers } from "@openlaw/shared";
+import { readIntakeForm, intakeRowKeys } from "../../lib/intake-form.js";
 import { isOpenRequestStatus } from "@openlaw/shared";
 import {
   IntakeCounterpartiesInput,
   resolveIntakeCounterparties,
 } from "../../lib/intake-counterparties.js";
-import {
-  readIntakeContractFacts,
-  withAnsweredIntakeDefaults,
-} from "../../lib/intake-default-fields.js";
+import { readIntakeContractFacts } from "../../lib/intake-default-fields.js";
 
-/**
- * The Request record (INT-001, INT-002, #378): submission, and the
- * validation that stands between an open form and a row.
- *
- * **Its own module rather than the portal's.** `portal/routes.ts` is
- * the requester-facing *read* of the Administrator's intake
- * configuration; this is the record the configuration exists to
- * produce, and M21's Inbox reads it from the staff side. One module
- * owns the Request whichever surface asks.
- *
- * **The gate is a session and nothing else** — the portal's own rule
- * (the INT-001 M20/2 addendum). Member+ staff submit Requests too, and
- * on this surface they are a Requester like anybody else.
- *
- * **The Requester is the session, never a body field.** A Business User
- * creates Requests as themselves (DD-013), so there is nothing to send
- * and nothing to forge.
- *
- * The form definition is read, not restated. What a form collects is
- * the four fixed basics — Title, Description, Attachments, Urgency,
- * fixed by the INT-002 M19/4 addendum and therefore stated in code
- * here, because a fixed set is a fact about the form rather than a
- * configuration of it — plus the type's attached catalog fields, which
- * come from `selectAttachedFields` over `request_type_fields`. That is
- * the same read the portal's form route draws from, so the form and the
- * refusal cannot disagree about what the form is.
- *
- * Three things are checked, in the order the route runs them:
- *
- * 1. **The type must be live.** An archived form takes no submissions
- *    (the INT-004 addendum), and the picker hiding it is not enough: a
- *    form opened before the archive is still on somebody's screen.
- * 2. **Values are accepted for exactly the attached fields**, and each
- *    is checked against its field's type. A slug the type does not
- *    attach is refused, because a value stored under it is one no
- *    surface could ever show. An attachment whose scope no longer
- *    matches the type's target is *not* refused: the INT-002 M19/7
- *    addendum makes that a state that exists, and M20's job is to meet
- *    it — it renders and collects like any other field, and what an
- *    out-of-scope collected value means is conversion's question (M21).
- *    This runs before the required check because the required check
- *    reads the *collected* values, and a value is not collected until
- *    it has been coerced.
- * 3. **The required fields must be answered** — the three required
- *    basics and every attachment the Administrator marked required
- *    (INT-002). One refusal names all of them, because a person who
- *    has to fill something in needs to know which something.
- *
- * ## The paper that travels with the ask (#380)
- *
- * Attachments are the fourth basic, and they are optional: a submission
- * with none is complete. `POST /requests/{number}/attachments` takes one
- * file per call through the storage seam documents already upload
- * through, and writes a `request_attachments` row while the Request is
- * `new`. After a disposition it refuses with the stable Request thread
- * named, because paper now arrives on a comment (CMT-011). **Nothing
- * enters `documents`** — a Request is not a document owner (DOC-008),
- * and promotion into the record a Request becomes is conversion's job
- * (M21).
- *
- * **The upload is a write on the Request, so it sits at `/requests` like
- * the submission it belongs to.** The reads split by audience — the
- * requester's own download is on the portal mount beside the detail that
- * lists it — because a read's projection is what differs between a
- * requester and M21's Inbox. A write of the record does not differ; it
- * is the same act whoever makes it.
- *
- * A Request the caller did not submit answers 404 on both, exactly as
- * the detail read does: to a requester another person's Request does not
- * exist, and neither does its paper.
- *
- * ## The requester's reads (#379)
- *
- * `GET /portal/requests` and `GET /portal/requests/{number}` answer the
- * my-requests list and the request detail. They sit on the **portal
- * mount** and in **this module**, and the two halves say different
- * things: the mount names the audience, the module names the record.
- * The INT-001 M20/3 addendum settled the mount — a requester-facing
- * read is its own route rather than a loosened gate on a staff one — and
- * the INT-002 M20/4 addendum settled the module, because one module
- * owns the Request whichever surface asks. M21's Inbox reads the same
- * rows through routes of its own, at a different address, with a
- * different projection.
- *
- * **Both reads scope to the session and nothing else** (DD-013). There
- * is no `requesterId` filter on the wire and no way to ask for somebody
- * else's list. A Request that is not the caller's is answered 404 rather
- * than 403: to a requester, another person's Request does not exist, and
- * a refusal that distinguished the two would confirm the row is there.
- * Member+ staff get the same rule applied to themselves — on this
- * surface they are a Requester like anybody else.
- *
- * A converted Request answers a current-access-checked Portal redirect
- * (DD-023). An archived destination leaves the Requester's original ask
- * as a read-only stub. Neither response exposes the record's Tasks.
- */
+/** Request submission evaluates the destination Intake Form under the destination
+type lock. Only visible Rows accept answers or enforce Required. Attachments
+follow the accepted Request in separate uploads. */
 
 import { requestAssignees } from "./projection.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -127,7 +33,6 @@ import {
   sql,
   REQUEST_STATUSES,
   requestAttachments,
-  requestTypeFields,
   requestTypes,
   requests,
   SEVERITY_LEVELS,
@@ -155,7 +60,6 @@ import {
   CustomFieldsSchema,
   hasCustomFieldValue,
   listNames,
-  selectAttachedFields,
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
@@ -241,18 +145,13 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "submitRequest",
         summary:
-          "Submit a Request through a request type's portal form " +
-          "(INT-001). The Requester is the session; the type must be " +
-          "live; Title, Description, and Urgency are required, as is " +
-          "every attached field the type marks required; values are " +
-          "accepted for exactly the fields the type attaches, and a " +
-          "user Field must name a live person and an Entity Field must name a Portal-listed Entity",
+          "Submit the destination type's Intake Form. The session is the Requester. Required applies to visible Rows, and answers outside that set are refused.",
         tags: ["requests"],
         body: z.strictObject({
           requestTypeId: z.string(),
           departmentId: z.string().min(1).nullable().optional(),
           title: z.string(),
-          description: z.string(),
+          description: z.string().optional(),
           /** DES-018's four severity levels and nothing else. */
           urgency: z.enum(SEVERITY_LEVELS),
           customFields: CustomFieldsInput.optional(),
@@ -297,16 +196,40 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // The type's attached fields, in the order the form draws them.
         // The portal's form route reads the same thing the same way —
         // that is what makes the refusal and the screen agree.
-        const attached = await selectAttachedFields(tx, requestTypeFields, requestType.id);
+        const intake = await readIntakeForm(tx, requestType.id, { lock: true });
+        const attached = intake.fields;
         const rawFields = { ...(body.customFields ?? {}) };
+        if (body.description !== undefined && body.description.trim())
+          rawFields.description = body.description;
+        if (rawFields.counterparties !== undefined && body.counterparties === undefined) {
+          const picks = rawFields.counterparties;
+          if (!Array.isArray(picks))
+            throw httpError(400, "Counterparties: pick from the registry.");
+          const parsed = IntakeCounterpartiesInput.safeParse(
+            picks.map((counterpartyId) => ({ counterpartyId })),
+          );
+          if (!parsed.success)
+            throw httpError(400, "Counterparties: select up to 50 registry entries.");
+          body.counterparties = parsed.data;
+        }
         let intakeCounterparties: Array<{ counterpartyId?: string; name: string }> = [];
         if (body.counterparties !== undefined) {
           const field = attached.find((field) => field.builtInKey === "counterparties");
           if (!field) throw httpError(400, "This form does not collect counterparties.");
           intakeCounterparties = await resolveIntakeCounterparties(tx, body.counterparties);
-          rawFields[field.slug] = intakeCounterparties.map((party) => party.name).join("\n");
+          rawFields[field.slug] = intakeCounterparties.map(
+            (party) => party.counterpartyId ?? party.name,
+          );
         }
         const customFields = collectValues(attached, rawFields);
+        const visible = evaluateForm(intake.form, intakeFormAnswers(customFields)).visibleRows;
+        const visibleKeys = new Set(visible.flatMap((row) => intakeRowKeys(row.rowRef)));
+        for (const key of Object.keys(rawFields)) {
+          if (!visibleKeys.has(key))
+            throw httpError(400, "That Row is not on the visible Request form.");
+        }
+        const visibleFields = attached.filter((field) => visibleKeys.has(field.slug));
+        // Validate native facts now; conversion reads them again when creating the record.
         await readIntakeContractFacts(tx, customFields);
 
         // Lock referenced rows until submission commits, so a concurrent
@@ -323,11 +246,11 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // together. Two refusals would make a requester press Submit
         // twice to learn two halves of the same answer.
         const title = body.title.trim();
-        const description = body.description.trim();
+        const description =
+          typeof customFields.description === "string" ? customFields.description : "";
         assertAnswered([
           { name: "Title", answered: title !== "" },
-          { name: "Description", answered: description !== "" },
-          ...attached
+          ...visibleFields
             .filter((field) => field.isRequired)
             .map((field) => ({
               name: field.displayName,
@@ -335,6 +258,9 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             })),
         ]);
 
+        // Description already has a native Request column for older intake clients.
+        if (body.description !== undefined && body.customFields?.description === undefined)
+          delete customFields.description;
         const department = body.departmentId ? await lockedDepartment(tx, body.departmentId) : null;
         if (!department) {
           const [available] = await tx
@@ -513,14 +439,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
               .object({ module: z.enum(["contract", "matter"]), number: z.number().int() })
               .nullable(),
             recordArchived: z.boolean(),
-            /** The type's attached fields, in the order the form drew
-             * them — the same read the form and the submission route
-             * make, so the detail labels a value exactly as the box
-             * that collected it was labelled. A value whose field has
-             * since been detached or archived stays on the row and is
-             * not drawn: the label that would name it is no longer on
-             * this form, and `selectAttachedFields` already answers
-             * that question for every record surface. */
+            /** Current Intake Row labels. Detached or archived Rows retain their answers but are not drawn. */
             fields: z.array(AttachedCustomFieldSchema),
             customFieldRefs: RequestCustomFieldRefsSchema,
             /** The paper, oldest first — the order it was attached in,
@@ -595,10 +514,10 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       }
 
       const [attached, attachments] = await Promise.all([
-        selectAttachedFields(app.db, requestTypeFields, row.typeId),
+        readIntakeForm(app.db, row.typeId, { includeArchived: true }),
         row.status === "converted" ? [] : selectAttachments(app.db, row.id),
       ]);
-      const readableFields = await withAnsweredIntakeDefaults(app.db, attached, row.customFields);
+      const readableFields = attached.fields;
       return {
         redirectTo,
         recordArchived,
@@ -1033,6 +952,12 @@ function collectValues(
   for (const [slug, raw] of Object.entries(incoming)) {
     const field = attached.find((candidate) => candidate.slug === slug);
     if (!field) throw httpError(400, "That field is not on this request type's form.");
+    if (field.builtInKey === "counterparties") {
+      if (raw !== null && (!Array.isArray(raw) || raw.some((id) => typeof id !== "string")))
+        throw httpError(400, "Counterparties: pick from the registry.");
+      if (Array.isArray(raw) && raw.length) values[slug] = raw;
+      continue;
+    }
     const value = coerceCustomFieldValue(field, raw);
     if (value !== null) values[slug] = value;
   }

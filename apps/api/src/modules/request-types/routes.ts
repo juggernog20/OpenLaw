@@ -1,48 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The request-type taxonomy routes (INT-002, #85): the shared taxonomy
- * machinery (`taxonomyRoutes`) mounted on `request_types` with the
- * INT-002 vocabulary — the fourth mount, and the point of #85 is that
- * this file is configuration, not a copy. Every mutation is
- * Administrator-only and audit-logged (DD-017) — see the factory for
- * the behavior set.
- *
- * **No protected slug.** There is no fallback request type: no record
- * needs a non-null request type once conversion is done, so nothing has
- * to survive an Administrator's tidy-up. A row someone names "Other"
- * archives and deletes like any other row.
- *
- * **The target is this mount's extras.** A request type targets
- * the Matter module or the Contract module — and inside
- * Matter or Contract it may name one specific type. On the wire that is
- * two values: `targetModule` and the optional `targetTypeId`. The table
- * holds three columns, one per module plus the module itself; which
- * table an id names is the module's to say, so the projection collapses
- * the two id columns into one and the validator routes a written id
- * back to its own column.
- *
- * The two keys are **one value**. Naming the module rewrites the target
- * whole — a type id absent from the body means the module-only state,
- * so a stale id from the other module can never survive a re-point.
- * Naming only the type id leaves the module alone and the id must fit
- * it. Both refusals are RFC 9457 problems, decided under the row lock
- * the machinery already holds; the check constraint holds the same
- * invariant at the table, for the writes no route makes.
- *
- * **The target also decides the form**, so the validator does one more
- * thing: a re-point whose scope rule would exclude fields already
- * attached is refused and names them (INT-002). The Administrator
- * detaches first — guards refuse and explain, they do not delete
- * quietly (SET-003). The rule itself is neither this file's nor the
- * attachment mount's; both read `form-definition.ts`.
- *
- * The row carries one more column for the same reason: ST12's **Form
- * fields** count, read over the whole answer set rather than per row.
- *
- * In-use counts are live over Requests, as Matter type counts became
- * live over Matters in M22.
- */
+/** Request types keep their identity, turnaround and destination. A destination
+names a module and may name a type; module-only Requests use its Default Form. */
 
 import { z } from "zod";
 import {
@@ -50,23 +9,14 @@ import {
   eq,
   matterTypes,
   requestTypes,
-  requestTypeFields,
   type Executor,
   type RequestType,
 } from "@openlaw/db";
-import { resolveIntakeFieldOrder, type ChangedFields } from "@openlaw/shared";
-import { selectAttachedFields } from "../../lib/custom-fields.js";
+import { type ChangedFields } from "@openlaw/shared";
 import { httpError } from "../../lib/problem.js";
 import { requestTypeUsage } from "../requests/type-usage.js";
 import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
-import {
-  formFieldCounts,
-  formFieldScopeRule,
-  strandedFieldNames,
-  strandRefusal,
-  TARGET_MODULES,
-  type TargetModule,
-} from "./form-definition.js";
+import { formFieldCounts, TARGET_MODULES, type TargetModule } from "./form-definition.js";
 
 const TargetModuleSchema = z.enum(TARGET_MODULES);
 
@@ -137,7 +87,6 @@ export const requestTypesRoutes = taxonomyRoutes({
       };
     },
     patchSchema: {
-      formFieldOrder: z.array(z.string().min(1)).max(1005).optional(),
       turnaroundDays: z.number().int().min(0).max(36500).nullable().optional(),
       targetModule: TargetModuleSchema.nullable().optional(),
       targetTypeId: z.string().nullable().optional(),
@@ -148,25 +97,6 @@ export const requestTypesRoutes = taxonomyRoutes({
       const current = row as RequestType;
       const columns: Partial<RequestType> = {};
       const changed: ChangedFields = {};
-      if (body.formFieldOrder !== undefined) {
-        const attached = await selectAttachedFields(tx, requestTypeFields, current.id);
-        const expected = resolveIntakeFieldOrder(attached.map((field) => field.fieldId));
-        const order = body.formFieldOrder;
-        if (
-          order.length !== expected.length ||
-          new Set(order).size !== order.length ||
-          order.some((key) => !expected.includes(key))
-        ) {
-          throw httpError(
-            400,
-            "Include every default and attached field exactly once. Refresh the form and try again.",
-          );
-        }
-        if (JSON.stringify(order) !== JSON.stringify(current.formFieldOrder)) {
-          columns.formFieldOrder = order;
-          changed.formFieldOrder = { from: current.formFieldOrder, to: order };
-        }
-      }
       if (body.turnaroundDays !== undefined && body.turnaroundDays !== current.turnaroundDays) {
         columns.turnaroundDays = body.turnaroundDays;
         changed.turnaroundDays = { from: current.turnaroundDays, to: body.turnaroundDays };
@@ -184,12 +114,6 @@ export const requestTypesRoutes = taxonomyRoutes({
         throw httpError(400, "A Request type needs a destination module. Pick Matter or Contract.");
 
       if (typeId !== null) {
-        if (module === null) {
-          throw httpError(
-            400,
-            "A target type needs a target module. Pick Matter or Contract first.",
-          );
-        }
         const table = TARGET_TABLES[module];
         const [candidate] = await tx
           .select({ id: table.id, archivedAt: table.archivedAt })
@@ -206,21 +130,6 @@ export const requestTypesRoutes = taxonomyRoutes({
       }
 
       if (module === currentModule && typeId === currentTypeId) return { columns, changed };
-
-      // The strand refusal (INT-002): a target decides which catalog
-      // fields the form may collect, so re-pointing it can leave
-      // attached fields with nowhere to land. The change is refused and
-      // names them — the Administrator detaches first — and the read
-      // sits under the row lock the machinery already holds, so nothing
-      // attaches between the check and the write.
-      if (module !== currentModule) {
-        const stranded = await strandedFieldNames(
-          tx,
-          current.id,
-          formFieldScopeRule(module).scopes,
-        );
-        if (stranded.length > 0) throw httpError(409, strandRefusal(stranded));
-      }
 
       if (module !== currentModule) {
         changed.targetModule = { from: currentModule, to: module };

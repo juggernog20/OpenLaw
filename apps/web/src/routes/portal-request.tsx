@@ -12,7 +12,7 @@ import { CircleCheck, CircleX, FileText, Info, PackageCheck } from "lucide-react
 import { api } from "../lib/api";
 import { severityLabel } from "../lib/contracts";
 import { isAnswered, type CustomFieldValue } from "../lib/custom-fields";
-import { formatFullDate, formatShortDate } from "../lib/format";
+import { formatFullDate, formatShortDate, formatCurrency } from "../lib/format";
 import {
   REQUEST_STATUS_PILL,
   requestAttachmentHref,
@@ -145,13 +145,15 @@ export function PortalRequestPage() {
               </h2>
             </div>
             <dl className="flex flex-col">
-              {request.description !== null && request.description !== "" && (
-                <ValueRow label={intl.formatMessage(BASIC_LABELS.description)}>
-                  {/* A requester's paragraphs are theirs: the line breaks
+              {request.description !== null &&
+                request.description !== "" &&
+                !Object.hasOwn(request.customFields, "description") && (
+                  <ValueRow label={intl.formatMessage(BASIC_LABELS.description)}>
+                    {/* A requester's paragraphs are theirs: the line breaks
                       they typed are part of what they said. */}
-                  <span className="whitespace-pre-line">{request.description}</span>
-                </ValueRow>
-              )}
+                    <span className="whitespace-pre-line">{request.description}</span>
+                  </ValueRow>
+                )}
               {attachments.length > 0 && (
                 <ValueRow label={intl.formatMessage(BASIC_LABELS.attachments)}>
                   <AttachmentList number={request.number} attachments={attachments} />
@@ -176,7 +178,13 @@ export function PortalRequestPage() {
                 .filter((field) => isAnswered(request.customFields[field.slug]))
                 .map((field) => (
                   <ValueRow key={field.slug} label={field.displayName}>
-                    {renderValue(intl, field, request.customFields[field.slug]!, customFieldRefs)}
+                    {renderValue(
+                      intl,
+                      field,
+                      request.customFields[field.slug]!,
+                      customFieldRefs,
+                      request.customFields,
+                    )}
                   </ValueRow>
                 ))}
             </dl>
@@ -343,7 +351,25 @@ function renderValue(
   field: MyRequestField,
   value: CustomFieldValue,
   refs: MyRequestFieldRefs,
+  answers: Readonly<Record<string, CustomFieldValue>>,
 ): React.ReactNode {
+  if (
+    field.builtInKey === "value_amount" &&
+    typeof value === "number" &&
+    typeof answers.value_currency === "string"
+  )
+    return formatCurrency(
+      { amount: value, currency: answers.value_currency },
+      { locale: intl.locale },
+    );
+  if (
+    ["counterparties", "owning_department", "department", "region"].includes(
+      field.builtInKey ?? "",
+    ) &&
+    typeof value === "string" &&
+    refs.builtins?.[value]
+  )
+    return refs.builtins[value];
   switch (field.fieldType) {
     case "number":
       return typeof value === "number" ? intl.formatNumber(value) : String(value);
@@ -358,7 +384,18 @@ function renderValue(
         { value: String(value === true) },
       );
     case "multi_select":
-      return Array.isArray(value) ? intl.formatList(value, { type: "conjunction" }) : String(value);
+      return Array.isArray(value)
+        ? intl.formatList(
+            value.map((v) =>
+              ["counterparties", "owning_department", "department", "region"].includes(
+                field.builtInKey ?? "",
+              )
+                ? (refs.builtins?.[v] ?? v)
+                : v,
+            ),
+            { type: "conjunction" },
+          )
+        : String(value);
     case "user":
       return refs.users.find((person) => person.id === value)?.displayName ?? String(value);
     case "entity": {

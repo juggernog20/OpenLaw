@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -18,6 +19,7 @@ import {
   documents,
   documentVersions,
   eq,
+  fields,
   matterKeyDates,
   matters,
   matterStatuses,
@@ -59,6 +61,7 @@ let requiredMatterTypeId: string;
 let boundRequestTypeId: string;
 let moduleOnlyRequestTypeId: string;
 let retiredRequestTypeId: string;
+let retiredMatterTypeId: string;
 let noTargetRequestTypeId: string;
 let contractTargetRequestTypeId: string;
 let carrySlug: string;
@@ -105,15 +108,11 @@ beforeAll(async () => {
     .where(eq(requestTypes.slug, "nda_request"));
   contractTargetRequestTypeId = nda!.id;
 
-  const retiredMatterTypeId = await createMatterType("Retired conversion matter");
+  retiredMatterTypeId = await createMatterType("Retired conversion matter");
   retiredRequestTypeId = await createRequestType("Retired matter intake", {
     targetModule: "matter",
     targetTypeId: retiredMatterTypeId,
   });
-  await harness.db
-    .update(matterTypes)
-    .set({ archivedAt: new Date() })
-    .where(eq(matterTypes.id, retiredMatterTypeId));
 
   for (const fieldId of [carry.id, stays.id, owner.id]) {
     await attach("request-types", boundRequestTypeId, fieldId, false);
@@ -233,7 +232,7 @@ async function submit(
   customFields: Record<string, unknown> = {},
   urgency = "high",
 ) {
-  const res = await harness.app.inject({
+  const res = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,
@@ -420,6 +419,16 @@ describe("the matter target", () => {
       { [carrySlug]: "Meridian Logistics", [staysSlug]: "EMEA" },
       "critical",
     );
+    const [detachedField] = await harness.db
+      .select()
+      .from(fields)
+      .where(eq(fields.slug, staysSlug));
+    const detached = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/matter-types/${ordinaryMatterTypeId}/fields/${detachedField!.id}`,
+      cookies: adminCookies,
+    });
+    expect(detached.statusCode, detached.body).toBe(204);
     const res = await convert(request.number, { title: "Meridian injunction threat" });
     expect(res.statusCode, res.body).toBe(200);
     expect(res.json().request.convertedRecord).toEqual({
@@ -603,6 +612,11 @@ describe("the matter target", () => {
   it("asks a module-only or archived target for a live matter type", async () => {
     for (const typeId of [moduleOnlyRequestTypeId, retiredRequestTypeId]) {
       const request = await submit(`Needs a live matter type ${typeId}`, typeId);
+      if (typeId === retiredRequestTypeId)
+        await harness.db
+          .update(matterTypes)
+          .set({ archivedAt: new Date() })
+          .where(eq(matterTypes.id, retiredMatterTypeId));
       const before = await matterCount();
       const refused = await convert(request.number, { title: "Still untyped" });
       expect(refused.statusCode, refused.body).toBe(400);

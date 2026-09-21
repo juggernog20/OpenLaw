@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -168,7 +169,7 @@ async function submit(
   title: string,
   urgency: "low" | "medium" | "high" | "critical" = "high",
 ): Promise<RequestRow> {
-  const res = await harness.app.inject({
+  const res = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: as(fixture),

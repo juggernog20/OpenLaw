@@ -16,15 +16,9 @@
  * asking for the requester's own Request gets the same 404, word for
  * word, as one asking for a number nobody has.
  *
- * **The arc, not the surface.** M19 built the front door's configuration
- * and nothing a requester could see. So the journey starts by attaching a
- * catalog field to the seeded "NDA request" type and marking it required
- * **on that form** — the per-attachment flag that makes a form definition
- * more than a list (INT-002) — and then walks the requester through the
- * portal that renders it. The refusal on the empty form names the basics
- * and the attached field in one sentence, which is the INT-002 M20/4
- * rule that nobody should press Submit twice to learn two halves of one
- * answer.
+ * The Administrator enables Description and Governing law on the destination
+ * NDA type's Intake Form. The empty submission names both Required Rows and
+ * the basics, then the requester supplies the answers and an attachment.
  *
  * **Everything after the submission is the paper and the thread.** The
  * file rides the upload seam and comes back as a download link on the
@@ -33,8 +27,8 @@
  * on the portal bell, and as the group 5 email a requester who does not
  * live in the app depends on (INT-003).
  *
- * **What the sweep can and cannot take back.** The attached field is
- * detached and the requester is archived, so the never-reset instance
+ * **What the sweep can and cannot take back.** The destination Form is
+ * restored and the requester is archived, so the never-reset instance
  * (TECH-018) is left as the run found it. The Request itself stays: there
  * is no route that deletes one, because M21 is where a Request's fate is
  * decided. Its requester is archived and its title is per-run, so it
@@ -49,6 +43,7 @@ import {
   type Page,
 } from "@playwright/test";
 import { z } from "zod";
+import { configureRequestIntake } from "./intake-form.js";
 import {
   ADMIN,
   completePortalFirstRun,
@@ -104,10 +99,6 @@ const RequestTypeRows = z.object({
 
 const MyRequests = z.object({ requests: z.array(z.object({ number: z.number().int() })) });
 
-const AttachedFields = z.object({
-  attachedFields: z.array(z.object({ slug: z.string(), isRequired: z.boolean() })),
-});
-
 const MyRequest = z.object({ request: z.object({ id: z.string(), number: z.number().int() }) });
 
 /** An RFC 9457 problem, loosely — enough of it to compare two refusals. */
@@ -139,54 +130,6 @@ async function governingLawFieldId(request: APIRequestContext): Promise<string> 
   );
   expect(row, `the ${FIELD_SLUG} field seed is missing`).toBeDefined();
   return row!.id;
-}
-
-/**
- * Whether the run's field is on the seeded form right now, and with what
- * required flag. `null` means it is not attached at all.
- *
- * The demo mutates a **seeded** row rather than one of its own, so it
- * reads the state it is about to change and puts that state back — not
- * the state it happens to want. A seed that ever ships this field
- * attached, or an install whose Administrator attached it on purpose,
- * must survive a test run untouched (TECH-018).
- */
-async function attachmentState(
-  request: APIRequestContext,
-  typeId: string,
-): Promise<boolean | null> {
-  const read = await request.get(`/api/v1/request-types/${typeId}/fields`);
-  expect(read.status(), await read.text()).toBe(200);
-  const row = AttachedFields.parse(await read.json()).attachedFields.find(
-    (field) => field.slug === FIELD_SLUG,
-  );
-  return row ? row.isRequired : null;
-}
-
-/**
- * Puts the form back the way the run found it: attached with the flag it
- * had, or off the form when it was never on it. The catalog definition
- * and the values already collected under its slug stay either way
- * (MTR-014); only the join row moves.
- */
-async function restoreAttachment(
-  request: APIRequestContext,
-  typeId: string,
-  fieldId: string,
-  was: boolean | null,
-): Promise<void> {
-  if (was === null) {
-    const detached = await request.delete(`/api/v1/request-types/${typeId}/fields/${fieldId}`);
-    // 404 is an answer too: a run that failed before it attached has
-    // nothing to take off.
-    expect([204, 404], await detached.text()).toContain(detached.status());
-    return;
-  }
-  if ((await attachmentState(request, typeId)) === was) return;
-  const restored = await request.patch(`/api/v1/request-types/${typeId}/fields/${fieldId}`, {
-    data: { isRequired: was },
-  });
-  expect(restored.status(), await restored.text()).toBe(200);
 }
 
 /**
@@ -266,41 +209,17 @@ test.describe.serial("M20 demo path", () => {
     const typeId = await ndaRequestTypeId(page.request);
     const fieldId = await governingLawFieldId(page.request);
 
-    // Read before writing: the form this demo configures is a seeded row
-    // that an install may have configured for itself, so what the sweep
-    // puts back is what was there and not what this run wanted.
-    const attachedBefore = await attachmentState(page.request, typeId);
+    const restoreForm = await configureRequestIntake(page.request, typeId, fieldId);
 
     const context = await browser.newContext();
     /** Leaves the shared instance as the run found it (TECH-018). */
     const leaveInert = async () => {
       await context.close();
-      await restoreAttachment(page.request, typeId, fieldId, attachedBefore);
+      await restoreForm();
       await ensureMemberInert(page.request, REQUESTER);
     };
 
     try {
-      // ---- M19's configuration, one screen back from the portal ----
-      //
-      // The seeded NDA form collects the four basics and nothing else
-      // until an Administrator puts a catalog field on it. Required
-      // here means required **on this form**. Attached if it was not
-      // there, and flagged if it was, so a run on an install that had
-      // already attached it starts from the same screen.
-      if (attachedBefore === null) {
-        const attached = await page.request.post(`/api/v1/request-types/${typeId}/fields`, {
-          data: { fieldId, isRequired: true },
-        });
-        expect(attached.status(), await attached.text()).toBe(201);
-      } else if (!attachedBefore) {
-        const flagged = await page.request.patch(
-          `/api/v1/request-types/${typeId}/fields/${fieldId}`,
-          { data: { isRequired: true } },
-        );
-        expect(flagged.status(), await flagged.text()).toBe(200);
-      }
-      expect(await attachmentState(page.request, typeId)).toBe(true);
-
       // ---- The requester arrives ----
 
       const portal = await enterPortalByMagicLink(context, page.request);

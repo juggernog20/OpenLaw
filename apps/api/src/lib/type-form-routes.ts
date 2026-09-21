@@ -121,6 +121,9 @@ export async function seedTypeForm(tx: Transaction, module: FormModule, typeId: 
       builtinKey,
       // Leave the legacy attachment order (starting at 1) available.
       displayOrder: index - Object.keys(FORM_BUILTINS[module]).length + 1,
+      // The Portal form drew Description as a basic before DD-028; it stays
+      // a question on every new type until an Administrator switches it off.
+      onIntakeForm: builtinKey === "description",
     })),
   );
 }

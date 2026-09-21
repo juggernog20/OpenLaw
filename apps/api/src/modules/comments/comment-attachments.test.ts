@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -157,7 +158,7 @@ async function contractWithContributor(title: string) {
 }
 
 async function submittedRequest(title: string): Promise<string> {
-  const response = await harness.app.inject({
+  const response = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,

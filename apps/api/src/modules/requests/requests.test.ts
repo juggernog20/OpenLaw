@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
@@ -182,7 +183,7 @@ function completeBody(overrides: Record<string, unknown> = {}) {
 }
 
 async function submit(body: Record<string, unknown>, cookies = requesterCookies) {
-  return await harness.app.inject({
+  return await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies,
@@ -241,7 +242,7 @@ describe("submitting a Request", () => {
   });
 
   it("refuses a caller with no session", async () => {
-    const res = await harness.app.inject({
+    const res = await submitRequestFixture(harness, {
       method: "POST",
       url: "/api/v1/requests",
       payload: completeBody(),
@@ -262,14 +263,13 @@ describe("submitting a Request", () => {
 });
 
 describe("the basics every form collects", () => {
-  it("requires Title, Description, and Urgency", async () => {
+  it("requires Title and Urgency while Description follows its Row", async () => {
     const blankTitle = await submit(completeBody({ title: "   " }));
     expect(blankTitle.statusCode, blankTitle.body).toBe(400);
     expect(blankTitle.json().detail).toContain("Title");
 
     const blankDescription = await submit(completeBody({ description: "" }));
-    expect(blankDescription.statusCode, blankDescription.body).toBe(400);
-    expect(blankDescription.json().detail).toContain("Description");
+    expect(blankDescription.statusCode, blankDescription.body).toBe(201);
 
     const noUrgency = await submit({ ...completeBody(), urgency: undefined });
     expect(noUrgency.statusCode, noUrgency.body).toBe(400);
@@ -283,7 +283,6 @@ describe("the basics every form collects", () => {
     expect(res.statusCode, res.body).toBe(400);
     const detail = res.json().detail as string;
     expect(detail).toContain("Title");
-    expect(detail).toContain("Description");
     expect(detail).toContain("Counterparty name");
   });
 
@@ -529,14 +528,15 @@ describe("the form definition a requester reads", () => {
     const form = res.json();
     expect(form.requestType.displayName).toBe("Contract review");
     expect(form.fields.map((field: { displayName: string }) => field.displayName)).toEqual([
+      "Description",
       "Counterparty name",
       "Deal desk region",
       "Paper side",
     ]);
-    expect(form.fields[0].isRequired).toBe(true);
-    expect(form.fields[1].isRequired).toBe(false);
+    expect(form.fields[1].isRequired).toBe(true);
+    expect(form.fields[2].isRequired).toBe(false);
     // A select is not a control without its options.
-    expect(form.fields[2].options).toEqual(["Ours", "Theirs"]);
+    expect(form.fields[3].options).toEqual(["Ours", "Theirs"]);
     expect(form.intakeLinks.map((row: { label: string }) => row.label)).toEqual([
       "When does a contract need legal review?",
     ]);
@@ -698,6 +698,7 @@ describe("the request detail", () => {
     // The labels come from the same attached-fields read the form drew
     // its boxes from, so a value is named exactly as the box was.
     expect(detail.fields.map((field: { displayName: string }) => field.displayName)).toEqual([
+      "Description",
       "Counterparty name",
       "Deal desk region",
       "Paper side",

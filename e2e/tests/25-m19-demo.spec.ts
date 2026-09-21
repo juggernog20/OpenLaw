@@ -303,13 +303,11 @@ test.describe.serial("M19 demo path", () => {
 
       // The basics state what every form always collects. They sit in
       // the Form fields list itself, above anything attached: each row is
-      // locked (no Detach, a disabled required box) but carries a grip,
-      // because a basic can be reordered among the attached Fields.
+      // locked (no Detach, a disabled required box) and cannot be reordered.
       await expect(page.getByText("Basics are always on the form")).toBeVisible();
-      const formFields = page.getByRole("list", { name: "Form fields" });
+      const formFields = page.getByRole("list", { name: "Basics are always on the form" });
       for (const [name, caption] of [
         ["Title", "Text"],
-        ["Description", "Long text"],
         ["Attachments", "Files"],
         ["Department", "Single select"],
         ["Urgency", "Single select"],
@@ -319,28 +317,18 @@ test.describe.serial("M19 demo path", () => {
           .filter({ has: page.getByRole("checkbox", { name: `${name} required` }) });
         await expect(basic.getByText(caption, { exact: true })).toBeVisible();
         await expect(basic.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
-        await expect(
-          basic.getByText(`${name} is always collected. You can change its position.`),
-        ).toHaveCount(1);
+        await expect(basic.getByText(`${name} is always collected.`)).toHaveCount(1);
         await expect(basic.getByRole("button", { name: `Detach ${name}` })).toHaveCount(0);
         await expect(
-          basic.getByRole("button", {
-            name: new RegExp(`^Reorder ${name}, position \\d+ of 5\\.`),
-          }),
-        ).toBeEnabled();
+          basic.getByRole("button", { name: new RegExp(`^Reorder ${name}`) }),
+        ).toHaveCount(0);
       }
-      // Nothing is attached yet, so the five basics are the whole list.
-      // Title, Description, Department, and Urgency are required on every
+      // Nothing is attached yet, so the four basics are the whole list.
+      // Title, Department, and Urgency are required on every
       // form; Attachments are optional. None can be changed.
-      await expect(formFields.getByRole("listitem")).toHaveCount(5);
-      expect(await formFields.getByRole("checkbox", { checked: true }).count()).toBe(4);
+      await expect(formFields.getByRole("listitem")).toHaveCount(4);
+      expect(await formFields.getByRole("checkbox", { checked: true }).count()).toBe(3);
 
-      // Keep these attachments on the form, leaving the shared NDA Type unchanged.
-      const destinationFields = await page.request.get(
-        `/api/v1/contract-types/${ndaType!.id}/fields`,
-      );
-      expect(destinationFields.status(), await destinationFields.text()).toBe(200);
-      const onDestination = AttachedFields.parse(await destinationFields.json()).attachedFields;
       for (const fieldName of [FIRST_FIELD, SECOND_FIELD]) {
         const attached = page.waitForResponse(
           (response) =>
@@ -349,10 +337,6 @@ test.describe.serial("M19 demo path", () => {
         );
         await page.getByRole("button", { name: "Attach field" }).click();
         await page.getByRole("menuitem", { name: new RegExp(fieldName) }).click();
-        if (!onDestination.some((field) => field.displayName === fieldName)) {
-          const offer = page.getByRole("dialog", { name: `Attach ${fieldName} to NDA too?` });
-          await offer.getByRole("button", { name: "Form only" }).click();
-        }
         expect((await attached).ok()).toBe(true);
         await expect(page.getByRole("button", { name: `Detach ${fieldName}` })).toBeVisible();
       }
@@ -371,13 +355,17 @@ test.describe.serial("M19 demo path", () => {
         attachedList.getByRole("checkbox", { name: `${FIRST_FIELD} required` }),
       ).toBeChecked();
 
-      // A Matter destination would strand the attached Contract fields.
-      const refused = await page.request.patch(`/api/v1/request-types/${typeId}`, {
+      // Routing selects the destination's Form; legacy Request attachments do not block it.
+      const rerouted = await page.request.patch(`/api/v1/request-types/${typeId}`, {
         data: { targetModule: "matter", targetTypeId: null },
       });
-      expect(refused.status(), await refused.text()).toBe(409);
+      expect(rerouted.status(), await rerouted.text()).toBe(200);
       const retained = (await listRequestTypes(page.request)).find((type) => type.id === typeId);
-      expect(retained).toMatchObject({ targetModule: "contract", targetTypeId: ndaType!.id });
+      expect(retained).toMatchObject({ targetModule: "matter", targetTypeId: null });
+      const restored = await page.request.patch(`/api/v1/request-types/${typeId}`, {
+        data: { targetModule: "contract", targetTypeId: ndaType!.id },
+      });
+      expect(restored.status(), await restored.text()).toBe(200);
 
       // ---- The deflection link, above the form (INT-004) ----
 

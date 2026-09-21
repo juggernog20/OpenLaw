@@ -83,6 +83,7 @@ export function ValueField({
   onDraftChange,
   required = false,
   idPrefix = "contract-value",
+  cadences = VALUE_CADENCES,
 }: Readonly<{
   value: ContractValue | null;
   /** The record is frozen: it is archived, or this viewer reads it
@@ -98,6 +99,7 @@ export function ValueField({
   required?: boolean;
   /** Distinct per mount: the create dialog can open over a record that draws its own Value. */
   idPrefix?: string;
+  cadences?: readonly ValueCadence[];
 }>) {
   const intl = useIntl();
   const [editingAmount, setEditingAmount] = useState(false);
@@ -281,7 +283,7 @@ export function ValueField({
               >
                 {/* No empty option: an amount always says what it is per, and
               a one-off is a cadence, not the absence of one (CTR-010). */}
-                {VALUE_CADENCES.map((cadence) => (
+                {cadences.map((cadence) => (
                   <option key={cadence} value={cadence}>
                     {cadenceLabel(intl, cadence)}
                   </option>

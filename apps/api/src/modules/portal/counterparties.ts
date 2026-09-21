@@ -2,7 +2,8 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { and, eq, fields, isNull, requestTypeFields, requestTypes } from "@openlaw/db";
+import { and, eq, isNull, requestTypes } from "@openlaw/db";
+import { readIntakeTree, intakeRows } from "../../lib/intake-form.js";
 import { requireAuth } from "../../auth/guards.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { CounterpartyOptionSchema, searchCounterparties } from "../counterparties/routes.js";
@@ -28,17 +29,15 @@ export const portalCounterpartiesRoutes: FastifyPluginAsyncZod = async (app) => 
       const [form] = await app.db
         .select({ id: requestTypes.id })
         .from(requestTypes)
-        .innerJoin(requestTypeFields, eq(requestTypeFields.typeId, requestTypes.id))
-        .innerJoin(fields, eq(fields.id, requestTypeFields.fieldId))
-        .where(
-          and(
-            eq(requestTypes.id, request.params.id),
-            isNull(requestTypes.archivedAt),
-            eq(fields.builtInKey, "counterparties"),
-          ),
-        )
+        .where(and(eq(requestTypes.id, request.params.id), isNull(requestTypes.archivedAt)))
         .limit(1);
-      if (!form) throw httpError(404, "This form does not collect counterparties.");
+      if (
+        !form ||
+        !intakeRows((await readIntakeTree(app.db, form.id)).form).some(
+          (row) => row.rowRef === "counterparties",
+        )
+      )
+        throw httpError(404, "This form does not collect counterparties.");
       return { counterparties: await searchCounterparties(app.db, request.query.query) };
     },
   );
