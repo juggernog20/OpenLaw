@@ -862,31 +862,31 @@ export function ConvertDialog({
             )}
             {initialDraft &&
               !dropped &&
-              initialDraft.warnings.map((warning) => (
-                <p key={warning} role="status" className="text-sm text-muted">
-                  {warning === "restricted_sources" ? (
-                    <FormattedMessage
-                      id="conversion.restrictedOmitted"
-                      defaultMessage="Restricted messages and Legal or reference Fields were omitted to keep record values safe for broader readers."
-                    />
-                  ) : warning === "attachment_omissions" ? (
-                    <FormattedMessage
-                      id="conversion.attachmentOmissions"
-                      defaultMessage="Some attachments could not be fully read. Review the source statuses and original files before converting."
-                    />
-                  ) : warning === "target_budget" ? (
-                    <FormattedMessage
-                      id="conversion.targetBudgetOmitted"
-                      defaultMessage="Some Fields exceeded the preparation limit. Complete them manually."
-                    />
-                  ) : (
-                    <FormattedMessage
-                      id="conversion.budgetOmitted"
-                      defaultMessage="Some sources exceeded the reading limit and were omitted. Review the original Request too."
-                    />
-                  )}
-                </p>
-              ))}
+              // "restricted_sources" draws no line: every restricted source
+              // already carries "restricted source" in the source list, and
+              // the omission is the rule rather than something to act on.
+              initialDraft.warnings
+                .filter((warning) => warning !== "restricted_sources")
+                .map((warning) => (
+                  <p key={warning} role="status" className="text-sm text-muted">
+                    {warning === "attachment_omissions" ? (
+                      <FormattedMessage
+                        id="conversion.attachmentOmissions"
+                        defaultMessage="Some attachments could not be fully read. Review the source statuses and original files before converting."
+                      />
+                    ) : warning === "target_budget" ? (
+                      <FormattedMessage
+                        id="conversion.targetBudgetOmitted"
+                        defaultMessage="Some Fields exceeded the preparation limit. Complete them manually."
+                      />
+                    ) : (
+                      <FormattedMessage
+                        id="conversion.budgetOmitted"
+                        defaultMessage="Some sources exceeded the reading limit and were omitted. Review the original Request too."
+                      />
+                    )}
+                  </p>
+                ))}
             {/* Only the files that could not be fully read are worth a
                 line: they are what the omission warning above points at.
                 A list of "readable" files says nothing the reader can act on. */}

@@ -1189,7 +1189,10 @@ describe("Matter Conversion drafts", () => {
         sourceRuntimeMs: 15000,
         runtimeMs: 45000,
       },
-      warnings: withAttachments === true ? ["attachment_omissions"] : [],
+      warnings: [
+        "restricted_sources",
+        ...(withAttachments === true ? ["attachment_omissions"] : []),
+      ],
       attachmentReads: withAttachments
         ? [
             { sourceId: "attachment:nda", label: "Signed NDA.pdf", status: "readable" },
@@ -1668,6 +1671,18 @@ describe("Matter Conversion drafts", () => {
     // A file that was read in full is not a detail anyone acts on.
     expect(screen.queryByText(/Signed NDA.pdf/)).toBeNull();
     expect(screen.queryByText(/Up to 20 attachments, 10 MiB each/)).toBeNull();
+  });
+  it("draws no banner for restricted sources, whose omission the source list already says", async () => {
+    const user = userEvent.setup();
+    open(preparedApi(false, false, true));
+    await openDisposition(user, "Convert to matter");
+    await screen.findByDisplayValue("Prepared response");
+    expect(screen.queryByText(/Restricted messages/)).toBeNull();
+    expect(
+      screen.getByText(
+        "Some attachments could not be fully read. Review the source statuses and original files before converting.",
+      ),
+    ).toBeVisible();
   });
   it("says nothing about attachment reading when every file was read in full", async () => {
     const user = userEvent.setup();

@@ -735,7 +735,7 @@ describe("welcome wizard e-signature step (#698)", () => {
       },
     ]);
     expect(calls.saves).toEqual([]);
-    await user.selectOptions(screen.getByLabelText("Model"), "legal-model");
+    await user.click(screen.getByRole("option", { name: "Legal model · legal-model" }));
     await finishFromAiAnalysis(user);
     expect(calls.saves).toEqual([
       { preset: "anthropic", model: "legal-model", apiKey: "discovery-test-key" },
@@ -1116,7 +1116,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
       },
     ]);
     expect(calls.saves).toEqual([]);
-    await user.selectOptions(screen.getByLabelText("Model"), "legal-model");
+    await user.click(screen.getByRole("option", { name: "Legal model · legal-model" }));
     await finishFromAiAnalysis(user);
     expect(calls.saves).toEqual([
       { preset: "anthropic", model: "legal-model", apiKey: "discovery-test-key" },

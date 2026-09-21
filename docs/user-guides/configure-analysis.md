@@ -10,7 +10,7 @@ Use a disposable provider account and a small fictional Contract for your initia
 
 ## Choose the provider configuration
 
-Expand **Provider** if collapsed. Choose **Provider**; a provider with a Saved key shows **(key saved)** in the list. Then supply the controls it exposes. Enter any required endpoint. If **Key saved** or **Key in use** appears beside **API key**, leave the field blank to use that destination's Saved key. Otherwise, enter the API key. Then select **Load models**. Use **Search models** to narrow the list by name or ID, then choose **Model**. The selection stores the exact provider ID. A prefilled value is a starting value from this OpenLaw build, not proof that your account can use it.
+Expand **Provider** if collapsed. Choose **Provider**; a provider with a Saved key shows **(key saved)** in the list. Then supply the controls it exposes. Enter any required endpoint. If **Key saved** or **Key in use** appears beside **API key**, leave the field blank to use that destination's Saved key. Otherwise, enter the API key. Then select **Load models**. Select **Model** and type to narrow the list by name or ID, then choose a model from the list. The selection stores the exact provider ID. A prefilled value is a starting value from this OpenLaw build, not proof that your account can use it.
 
 The suffix means that provider has a Saved key. For Azure or a custom endpoint, enter the matching endpoint before reusing it. A custom endpoint must also use the matching protocol. The **Key saved** pill confirms a Saved key for the destination currently in the form; **Key in use** means the saved connector references it, even while **Use AI analysis** is off. Neither pill means a connection test has passed.
 
