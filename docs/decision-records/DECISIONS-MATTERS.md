@@ -993,3 +993,43 @@ The shared catalog couples Matter classification to Contract classification and 
 ### 2026-09-18 — Security review H1: naming the Matter Manager on a Confidential Matter
 
 Naming the Matter Manager of a Confidential Matter is an audience change. The Manager reaches the record by the seat alone and may clear the flag, so `PATCH /matters/:number` with `managerId` on a Confidential Matter takes the team routes' actor set: an Administrator, the creator, or the current Manager. A team Member who is none of the three is refused with the team routes' own 403. An open Matter is unchanged, and any Member+ names the Manager. The change stays narrated inside `matter.updated`.
+
+## MTR-018: an attached Field chooses whether the creation form collects it
+
+- **Status:** Accepted
+- **Date:** 2026-09-21
+
+### Context
+
+MTR-011 attaches a Field to a type, and MTR-014 puts `is_required` on that attachment. Nothing else rides there, so every attached Field appears on every surface that collects values: the Contract and Matter creation dialogs, the creation half of the conversion dialog, and the record. A team that wants a Field on the record but not at the moment of creation has no way to say so, and the conversion dialog grows a long form of values the triager cannot answer yet. The owner raised this on 2026-09-21 after reviewing the running build.
+
+### Decision
+
+1. **`on_create_form` lives on the per-type attachment**, beside `is_required`, default true. A Field can be collected at creation for NDAs and left for later on MSAs, the same way required-ness already varies by type.
+2. **Required and off-the-form are mutually exclusive.** MTR-014 enforces a required Field at creation, so a form that never asks for it could not be satisfied. The API refuses the pair. The type editor disables the Required box on an off-form row and says why, as SET-003 asks.
+3. **Three surfaces collect only on-form Fields**: the Contract creation dialog, the Matter creation dialog, and the creation half of the conversion dialog. Every attached Field still renders on the record, where an off-form Field is filled after creation.
+4. **A Request answer still carries.** Conversion copies the requester's own answers onto the new record whether or not the target's form shows the Field. Hiding a question from the triager is not a reason to drop an answer the requester already gave.
+5. **The conversion draft prepares on-form Fields only**, so an off-form Field never delays the dialog the triager is waiting on.
+6. **Off-form Fields are prepared after the record is born, in a call of their own.** For a Contract this rides the post-conversion Analysis run that conversion already reserves. For a Matter it is a queue of its own reading the same Request sources. Either way the values land through the existing provenance path and wear the Unverified marker, so nothing arrives on a record unreviewed and unmarked.
+7. **Entities take the column but not the control yet.** `entity_type_fields` gains `on_create_form` with the other two, because the three tables share `typeFieldColumns()`. The entity creation form collects no custom Fields at all today, so the switch would govern nothing there; the Entity type editor gains the box when entity creation collects Fields and enforces required-ness, the gap `entity-types/attached-fields.ts` already records as owed.
+
+### Rationale
+
+Required-ness and form membership are the same kind of fact about the same relationship, so they belong in the same row and the same control. Putting the switch on the Field instead would make one team's "ask at creation" the whole organisation's.
+
+The split AI pass is the owner's call and it is the right one. A conversion draft is a person waiting at a dialog, so the work that dialog needs is the only work worth blocking on. Everything else is a record that already exists and can be filled a minute later, which is what the Analysis run already does for Contracts.
+
+### Alternatives considered
+
+- **One switch on the Field** — cannot vary by type, and Required already does.
+- **Dropping the off-form Fields from the AI entirely** — cheaper per conversion, but the values are wanted, just not at that moment.
+- **Preparing everything in the conversion draft and hiding the off-form values** — the triager waits on work they will never see, and the values land without review.
+- **Leaving required-ness free on an off-form row** — creation would refuse a record over a question it never asked.
+
+### Consequences
+
+- `contract_type_fields`, `matter_type_fields` and `entity_type_fields` gain `on_create_form` (boolean, not null, default true). Existing attachments are unchanged, so nothing disappears from a form on upgrade.
+- The shared `typeFieldRoutes()` factory carries the flag, so all four mounts get it at once; the Request type mount ignores it, since a request form is the thing being defined rather than a record's creation form.
+- `selectAttachedFields` grows a form filter. Its record-side callers keep every attached Field.
+- A Matter gains its own deferred Field-preparation queue, the first AI writer on the Matter side; `matters.ai_unverified` already holds the shape it needs.
+- Turning a Field off the form does not touch stored values, in line with MTR-011's retention rule.
