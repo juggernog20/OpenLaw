@@ -15,15 +15,18 @@ import {
   matterTypeFields,
   matterTypes,
   contractTypes,
+  departments,
+  regions,
   contractTypeFields,
   requestAttachments,
-  requestTypeFields,
   requests,
   users,
   type Executor,
+  type FieldType,
 } from "@openlaw/db";
 import {
   MAX_COUNTERPARTY_NAME_LENGTH,
+  formRowTouchpoint,
   isReferenceFieldType,
   sameConversionValue,
   type ConversionPromptSlug,
@@ -37,6 +40,8 @@ import {
 } from "./custom-fields.js";
 import type { AiExtraction, AiExtractionTarget, AiSource } from "./ai/provider.js";
 import { type AttachmentSource } from "./conversion-attachments.js";
+import { readTypeForm } from "./type-form-routes.js";
+import { intakeRows, readIntakeTree } from "./intake-form.js";
 import { httpError } from "./problem.js";
 import { conversionPrompt, readAiPrompts } from "./ai-prompts.js";
 
@@ -76,21 +81,31 @@ export async function preparationEnabled(
   const [row] = await (lock ? query.for("share") : query);
   return row?.enabled === true && row.disabledAt === null;
 }
-export async function conversionSources(db: Executor, requestId: string, lockSources = false) {
+export async function conversionSources(
+  db: Executor,
+  requestId: string,
+  lockSources = false,
+  destination?: { module: "matter" | "contract"; typeId: string },
+) {
   const [row] = await db
     .select()
     .from(requests)
     .where(and(eq(requests.id, requestId), isNull(requests.archivedAt)))
     .limit(1);
   if (!row) throw httpError(404, "The Request is unavailable.");
+  const target =
+    destination ?? (await readIntakeTree(db, row.requestTypeId, { includeArchived: true }));
+  const targetModule = target.module;
+  const joins = targetModule === "contract" ? contractTypeFields : matterTypeFields;
   if (lockSources)
     await db
       .select({ id: catalogFields.id })
       .from(catalogFields)
-      .innerJoin(requestTypeFields, eq(requestTypeFields.fieldId, catalogFields.id))
-      .where(eq(requestTypeFields.typeId, row.requestTypeId))
-      .for("share", { of: catalogFields });
-  const fields = await selectAttachedFields(db, requestTypeFields, row.requestTypeId);
+      .innerJoin(joins, eq(joins.fieldId, catalogFields.id))
+      .where(eq(joins.typeId, target.typeId))
+      .for("share", { of: [catalogFields, joins] });
+  const fields = await selectAttachedFields(db, joins, target.typeId);
+  const rows = intakeRows(await readTypeForm(db, targetModule, target.typeId));
   const all: (AiSource & { restricted: boolean })[] = [];
   function add(source: Omit<AiSource, "revision">, restricted = false) {
     all.push({ ...source, revision: hash(source), restricted });
@@ -119,8 +134,26 @@ export async function conversionSources(db: Executor, requestId: string, lockSou
         label: `${field.displayName} (${field.fieldType})`,
         text: typeof value === "string" ? value : JSON.stringify(value),
       },
-      field.fieldTag === "legal" || isReferenceFieldType(field.fieldType),
+      rows.find((r) => r.id === field.fieldId)?.visibleOnPortal !== true ||
+        isReferenceFieldType(field.fieldType),
     );
+  }
+  for (const builtin of rows.filter((r) => r.id === r.rowRef)) {
+    for (const key of builtin.rowRef === "value"
+      ? ["value_amount", "value_currency", "value_cadence"]
+      : [builtin.rowRef]) {
+      const value = row.customFields[key];
+      if (value === undefined) continue;
+      add(
+        {
+          id: `field:${row.id}:${key}`,
+          kind: "field",
+          label: key,
+          text: typeof value === "string" ? value : JSON.stringify(value),
+        },
+        isReferenceFieldType(builtin.fieldType) || builtin.rowRef === "counterparties",
+      );
+    }
   }
   const threadId = row.convertedMatterId ?? row.convertedContractId ?? row.id;
   const threadType = row.convertedMatterId
@@ -238,8 +271,14 @@ export async function conversionContext(
   targetTypeId: string,
   lockSources = false,
   targetModule: "matter" | "contract" = "matter",
+  phase: "creation" | "record" = "creation",
 ) {
-  const source = await conversionSources(db, requestId, lockSources);
+  const source = await conversionSources(
+    db,
+    requestId,
+    lockSources,
+    targetTypeId ? { module: targetModule, typeId: targetTypeId } : undefined,
+  );
   const typeTable = targetModule === "matter" ? matterTypes : contractTypes;
   const typeFields = targetModule === "matter" ? matterTypeFields : contractTypeFields;
   const moduleLabel = targetModule === "matter" ? "Matter" : "Contract";
@@ -255,7 +294,20 @@ export async function conversionContext(
   // check and on each poll, so a read per Type is a read per second.
   const asked = targetTypeId ? types.filter((type) => type.id === targetTypeId) : types;
   const attached: Awaited<ReturnType<typeof selectAttachedFields>>[] = [];
-  for (const type of asked) attached.push(await selectAttachedFields(db, typeFields, type.id));
+  const forms = await Promise.all(asked.map((type) => readTypeForm(db, targetModule, type.id)));
+  const rows = forms
+    .flatMap(intakeRows)
+    .filter((row) =>
+      phase === "record"
+        ? formRowTouchpoint(row) === "record"
+        : formRowTouchpoint(row) !== "record",
+    );
+  for (const type of asked)
+    attached.push(
+      (await selectAttachedFields(db, typeFields, type.id)).filter((field) =>
+        rows.some((row) => row.id === field.fieldId),
+      ),
+    );
   const fields = [...new Map(attached.flat().map((field) => [field.slug, field])).values()];
   const fieldPrompts = fields.length
     ? await db
@@ -277,7 +329,7 @@ export async function conversionContext(
   // 2026-09-19), so an edited prompt reaches the next draft.
   const book = await readAiPrompts(db);
   const said = (slug: ConversionPromptSlug) => conversionPrompt(book, slug, moduleLabel);
-  const allTargets: AiExtractionTarget[] = [
+  const builtinTargets: AiExtractionTarget[] = [
     {
       slug: "title",
       type: "text",
@@ -316,6 +368,76 @@ export async function conversionContext(
           },
         ]
       : []),
+  ];
+  const builtinRows = rows.filter(
+    (row) =>
+      row.id === row.rowRef &&
+      !builtinTargets.some(
+        (t) =>
+          t.slug === row.rowRef || (t.slug === "counterparty" && row.rowRef === "counterparties"),
+      ),
+  );
+  for (const row of builtinRows) {
+    if (isReferenceFieldType(row.fieldType)) continue;
+    let options: string[] | undefined;
+    if (row.rowRef === "risk") options = ["low", "medium", "high", "critical"];
+    if (row.rowRef === "term_type") options = ["fixed", "auto_renew", "evergreen"];
+    if (["department", "owning_department", "region"].includes(row.rowRef)) {
+      const table = row.rowRef === "region" ? regions : departments;
+      const choices = await db
+        .select({ id: table.id, name: table.displayName })
+        .from(table)
+        .where(isNull(table.archivedAt));
+      builtinTargets.push({
+        slug: row.rowRef,
+        type: "single_select",
+        options: choices.map((c) => c.id),
+        prompt: `Choose only a supported id for ${row.rowRef}: ${JSON.stringify(choices)}.`,
+      });
+      continue;
+    }
+    if (row.fieldType === "money") {
+      builtinTargets.push(
+        {
+          slug: "value_amount",
+          type: "number",
+          prompt: "Extract the value amount in minor currency units.",
+        },
+        {
+          slug: "value_currency",
+          type: "currency",
+          prompt: "Extract the ISO currency code for the value.",
+        },
+        {
+          slug: "value_cadence",
+          type: "single_select",
+          options: ["one_time", "monthly", "annually"],
+          prompt: "Extract the value cadence.",
+        },
+      );
+      continue;
+    }
+    builtinTargets.push({
+      slug: row.rowRef,
+      type: row.fieldType,
+      options,
+      prompt: `Extract ${row.rowRef.replaceAll("_", " ")}.`,
+    });
+  }
+  const allTargets: AiExtractionTarget[] = [
+    ...builtinTargets.filter((t) =>
+      ["title", `${targetModule}_type`, "description", "priority"].includes(t.slug)
+        ? phase === "creation"
+        : rows.some(
+            (r) =>
+              r.rowRef ===
+              (t.slug === "counterparty"
+                ? "counterparties"
+                : t.slug.startsWith("value_")
+                  ? "value"
+                  : t.slug),
+          ),
+    ),
     ...fields
       .filter((f) => !isReferenceFieldType(f.fieldType))
       .map((f) => ({
@@ -347,6 +469,8 @@ export async function conversionContext(
       "complete-sources-v2",
       targetModule,
       targetTypeId,
+      phase,
+      forms,
       source.all,
       source.attachments.map((a) => ({
         id: a.id,
@@ -439,7 +563,22 @@ export function checkedSuggestion(
     const result = z.iso.date().safeParse(raw);
     value = result.success ? result.data : null;
   } else {
-    const field = context.fields.find((f) => `field:${f.slug}` === answer.slug);
+    const target = context.targets.find((t) => t.slug === answer.slug);
+    const field =
+      context.fields.find((f) => `field:${f.slug}` === answer.slug) ??
+      (target && !answer.slug.startsWith("field:")
+        ? {
+            fieldId: target.slug,
+            slug: target.slug,
+            fieldType: target.type as FieldType,
+            options: target.options ? [...target.options] : null,
+            displayName: target.slug,
+            description: null,
+            fieldTag: "business" as const,
+            displayOrder: 0,
+            isRequired: false,
+          }
+        : undefined);
     if (field && !isReferenceFieldType(field.fieldType)) {
       const parsed = CustomFieldValueSchema.safeParse(raw);
       if (parsed.success)

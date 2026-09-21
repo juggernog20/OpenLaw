@@ -24,6 +24,7 @@ import {
   type Db,
 } from "@openlaw/db";
 import { conversionContext, hash } from "../lib/conversion-draft.js";
+import { buildAnalysisTargets, type AnalysisTarget } from "../lib/analysis-targets.js";
 import { reachedContract } from "../lib/contract-access.js";
 import type { JobQueue } from "./jobs.js";
 
@@ -131,6 +132,7 @@ export async function requestAnalysisContext(db: Executor, run: ContractAnalysis
     source.targetTypeId,
     lock,
     "contract",
+    "record",
   );
   if (context.row.convertedContractId !== run.contractId) throw new Error("changed");
   // A broadly visible Field cannot derive a fact from Confidential supporting paper.
@@ -156,4 +158,27 @@ export async function requestAnalysisContext(db: Executor, run: ContractAnalysis
   }
   context.snapshot = hash([context.snapshot, context.attachments]);
   return { context, actor, contract };
+}
+
+/** Record Rows use the Analysis writer's core types and the same bounded Form targets. */
+export async function requestAnalysisTargets(
+  db: Executor,
+  typeId: string,
+  context: Awaited<ReturnType<typeof conversionContext>>,
+) {
+  const targets = await buildAnalysisTargets(db, typeId, true);
+  for (const target of context.targets) {
+    if (!["risk", "region", "owning_department", "needed_by"].includes(target.slug)) continue;
+    targets.push({
+      ...target,
+      options: target.options ? [...target.options] : null,
+      core: true,
+    } as AnalysisTarget);
+  }
+  let characters = 0;
+  return targets.filter((target, index) => {
+    if (index >= 100 || characters + target.prompt.length > 20_000) return false;
+    characters += target.prompt.length;
+    return true;
+  });
 }

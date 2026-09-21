@@ -63,6 +63,8 @@ import { conversionForm, ConversionParties } from "./convert-form.js";
  * anywhere leaves the conversation exactly where the requester left it.
  */
 
+import { boundedQueueAsk } from "../../pipeline/jobs.js";
+import { reserveMatterRecordPreparation } from "../../pipeline/matter-record-preparation.js";
 import { reserveConversionAnalysis } from "../../pipeline/conversion-analysis.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -182,6 +184,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       const analysis: { run: Awaited<ReturnType<typeof reserveConversionAnalysis>> } = {
         run: null,
       };
+      const matterPreparation: { run: Awaited<ReturnType<typeof reserveMatterRecordPreparation>> } =
+        { run: null };
       const converted = await withPromotedPaper(
         {
           storage: app.storage,
@@ -382,6 +386,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                 actorId: request.user.id,
               });
             }
+            if (target.module === "matter")
+              matterPreparation.run = await reserveMatterRecordPreparation(tx, {
+                matterId: born.row.id,
+                requestId: held.id,
+                targetTypeId: target.typeId,
+                actorId: request.user.id,
+              });
             // CMT-001's thread, moved onto the record beside the paper
             // (#422). Tiers are preserved because the write does not
             // touch them, and each reader's place in the conversation
@@ -460,6 +471,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
         void app.jobs
           .requestContractAnalysis(queuedRun.contractId, queuedRun.id)
           .catch(() => false);
+      if (matterPreparation.run)
+        await boundedQueueAsk(
+          app.jobs.requestMatterRecordPreparation(matterPreparation.run.id),
+        ).catch(() => {});
       return converted;
     },
   );

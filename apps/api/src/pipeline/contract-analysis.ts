@@ -12,6 +12,8 @@ import {
   and,
   contractAnalysisRuns,
   contractCounterparties,
+  contractKeyDates,
+  regions,
   contracts,
   counterparties,
   desc,
@@ -42,7 +44,7 @@ import { readAiPrompts } from "../lib/ai-prompts.js";
 import { AiConfigError, isTerminalAiError, type AiExtraction } from "../lib/ai/provider.js";
 import type { AiResolver } from "../lib/ai/resolver.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../lib/activity.js";
-import { requestAnalysisContext } from "./conversion-analysis.js";
+import { requestAnalysisContext, requestAnalysisTargets } from "./conversion-analysis.js";
 import { checkedCitations, hash, withAttachmentReads } from "../lib/conversion-draft.js";
 import { readConversionAttachments } from "../lib/conversion-attachments.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
@@ -383,7 +385,7 @@ async function applyAnswers(
       if (lease?.state !== "pending" || lease.startedAt?.valueOf() !== run.startedAt?.valueOf())
         return;
       const current = await requestAnalysisContext(tx, run, true);
-      const currentTargets = await buildAnalysisTargets(tx, row.contractTypeId);
+      const currentTargets = await requestAnalysisTargets(tx, row.contractTypeId, current.context);
       if (current.context.snapshot !== requestSnapshot || hash(currentTargets) !== hash(targets))
         throw new AnalysisTargetError(
           "Request sources or Contract Fields changed. Retry the Analysis run.",
@@ -523,6 +525,58 @@ async function applyAnswers(
         patch.valueCadenceDescription = null;
       }
       flags[slug] = flag(item.evidence, run.id, !!run.sourceContext);
+      outcome.written.push(slug);
+      noteResult(slug, item, "written", item.value);
+    }
+
+    for (const slug of ["risk", "region", "owning_department", "needed_by"] as const) {
+      const item = prepared.get(slug);
+      if (!item) continue;
+      prepared.delete(slug);
+      const currentValue =
+        slug === "risk"
+          ? row.risk
+          : slug === "region"
+            ? row.region
+            : slug === "owning_department"
+              ? row.owningDepartmentId
+              : null;
+      const existingDate =
+        slug === "needed_by"
+          ? await tx
+              .select()
+              .from(contractKeyDates)
+              .where(
+                and(
+                  eq(contractKeyDates.contractId, row.id),
+                  eq(contractKeyDates.label, "Needed by"),
+                ),
+              )
+              .limit(1)
+          : [];
+      if (row.analysisHumanFields.includes(slug) || currentValue !== null || existingDate.length) {
+        outcome.kept.push(slug);
+        noteResult(slug, item, "kept", item.value);
+        continue;
+      }
+      const marker = flag(item.evidence, run.id, true);
+      if (slug === "risk") patch.risk = item.value as Contract["risk"];
+      if (slug === "region") {
+        const [region] = await tx
+          .select()
+          .from(regions)
+          .where(eq(regions.id, String(item.value)));
+        if (!region) continue;
+        patch.region = region.displayName;
+      }
+      if (slug === "owning_department") patch.owningDepartmentId = String(item.value);
+      if (slug === "needed_by") {
+        const [date] = await tx
+          .insert(contractKeyDates)
+          .values({ contractId: row.id, label: "Needed by", date: String(item.value) })
+          .returning();
+        flags[slug] = { ...marker, keyDateId: date!.id };
+      } else flags[slug] = marker;
       outcome.written.push(slug);
       noteResult(slug, item, "written", item.value);
     }
@@ -861,7 +915,7 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
   }, 30_000);
   try {
     const { context, contract } = await requestAnalysisContext(deps.db, run);
-    const targets = await buildAnalysisTargets(deps.db, contract.contractTypeId);
+    const targets = await requestAnalysisTargets(deps.db, contract.contractTypeId, context);
     const provider = await deps.resolveAiProvider();
     if (!provider) throw new AiConfigError("AI connector disabled.");
     await deps.db
@@ -877,7 +931,8 @@ async function handleRequestAnalysis(deps: ContractAnalysisDeps, run: ContractAn
     const beforeCall = await requestAnalysisContext(deps.db, run);
     if (
       beforeCall.context.snapshot !== context.snapshot ||
-      hash(await buildAnalysisTargets(deps.db, contract.contractTypeId)) !== hash(targets)
+      hash(await requestAnalysisTargets(deps.db, contract.contractTypeId, beforeCall.context)) !==
+        hash(targets)
     )
       throw new AnalysisTargetError(
         "Request sources or Contract Fields changed before extraction.",
