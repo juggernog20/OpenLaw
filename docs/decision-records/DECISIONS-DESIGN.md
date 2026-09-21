@@ -5060,7 +5060,7 @@ Each signed-in shell links its own manifest, in place of the one the document li
 
 DD-028 moves the Form onto the destination type. The old attachment table cannot show built-in Rows, three switches and nested conditions. DES-022 still owns the type's identity card. DES-020 supplies the grip and immediate commits; DES-021 supplies column headings and captions; DES-087 supplies condition sentences and refusals at the control. This record settles how those parts fit together before the Form tab is built.
 
-Two directions were drawn as static HTML on the existing app tokens: **A, conditions inside the tree**, and **B, a tree beside a condition inspector**. A is chosen here. The screenshots are retained in `designs/reviews/1011/` and embedded in the PR description. The HTML and its drawing script are disposable and are not checked in.
+Two directions were drawn as static HTML on the existing app tokens: **A, conditions inside the tree**, and **B, a tree beside a condition inspector**. A is chosen here. The screenshots are embedded in the description of PR #1023. The HTML, its drawing script and the screenshots are disposable and are not checked in, as DES-087 did.
 
 **HTML stood in for Pencil in this build session.** After `cursor --reuse-window designs/settings.pen`, Pencil's `get_app_state` and `read_skill` still refused with "A file needs to be open in the editor to perform this action." An `execute` call with the absolute `designs/settings.pen` path returned the same refusal. The session had full filesystem access. No `.pen` file was read or edited outside Pencil. This uses the ticket's DES-087 fallback; `settings.pen` has no new frames from this task.
 
