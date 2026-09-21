@@ -95,22 +95,28 @@ INSERT INTO matter_types (id, slug, display_name, display_order, is_default, is_
 SELECT gen_random_uuid()::text, 'default', 'Default', coalesce(max(display_order), 0) + 1, true, true FROM matter_types
 ON CONFLICT (slug) DO UPDATE SET is_default = true, archived_at = NULL;
 --> statement-breakpoint
--- A destinationless legacy Request could collect Contract built-ins. Matter has
--- no matching Rows for them; refuse with names rather than silently lose switches.
+-- A destinationless legacy Request could collect Contract built-ins and Fields of
+-- either module. Matter has no Rows for the built-ins, and a type attaches only its
+-- own module's Fields (Contract also refuses the two Overview attributes). Refuse
+-- with names, as the INT-002 re-target guard does, rather than write attachments
+-- the API would refuse or silently drop a question.
 DO $$
 DECLARE unmapped text;
 BEGIN
   SELECT string_agg(DISTINCT r.display_name, ', ' ORDER BY r.display_name) INTO unmapped
   FROM request_type_fields j JOIN request_types r ON r.id = j.request_type_id
   JOIN fields f ON f.id = j.field_id
-  WHERE f.built_in_key IS NOT NULL AND (
+  WHERE CASE WHEN f.built_in_key IS NOT NULL THEN
     r.target_module IS DISTINCT FROM 'contract' OR f.built_in_key NOT IN (
       'entityId', 'counterparties', 'effectiveDate', 'expiryDate', 'termType',
       'renewalPeriodMonths', 'noticePeriodDays', 'valueAmount', 'valueCurrency', 'valueCadence'
     )
-  );
+  ELSE
+    f.module_scope IS DISTINCT FROM coalesce(r.target_module, 'matter')
+    OR (r.target_module = 'contract' AND f.slug IN ('owning_department', 'region'))
+  END;
   IF unmapped IS NOT NULL THEN
-    RAISE EXCEPTION 'Cannot migrate intake built-ins on Request types: %. Choose a Contract destination or detach unsupported built-ins before upgrading.', unmapped;
+    RAISE EXCEPTION 'Cannot migrate the intake form of Request types: %. A Field has no Row on the destination type (outside its module, a Contract Overview attribute, or a built-in without a Matter Row). Re-target the Request type or detach those Fields before upgrading.', unmapped;
   END IF;
 END $$;
 --> statement-breakpoint

@@ -274,6 +274,10 @@ export function typeFormRoutes<TRow extends TaxonomyRow>(
       }
     }
     walk(form, 0);
+    // One Row per built-in key per type: a tree cannot drop Effective date from the record page.
+    for (const key of Object.keys(definitions))
+      if (!refs.has(key))
+        throw httpError(400, `Built-in Row "${key}" is missing: every built-in keeps one Row.`);
     for (const [index, pin] of pins.entries()) {
       const node = form[index];
       if (

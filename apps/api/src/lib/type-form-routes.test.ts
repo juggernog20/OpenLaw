@@ -83,7 +83,7 @@ it("round-trips nested Branches and audits one whole replacement", async () => {
   const first = await field();
   const second = await field();
   const form: FormNode[] = [
-    ...(await read(id)).slice(0, 2),
+    ...(await read(id)),
     first,
     {
       kind: "branch",
@@ -120,7 +120,7 @@ it("names a Branch referencing its children and rolls back the replacement", asy
   const before = await read(id);
   const child = await field();
   const res = await put(id, [
-    ...before.slice(0, 2),
+    ...before,
     {
       kind: "branch",
       id: "invalid-branch",
@@ -136,21 +136,27 @@ it("names a Branch referencing its children and rolls back the replacement", asy
 
 it("refuses invalid switches, duplicate Rows, foreign scopes, spoofed types and misplaced pins", async () => {
   const id = await createType();
-  const pins = (await read(id)).slice(0, 2);
+  const base = await read(id);
   const custom = await field();
   const person = await field("contract", "user");
   const foreign = await field("matter");
   for (const form of [
-    [...pins, { ...custom, onIntakeForm: true, visibleOnPortal: false }],
-    [...pins, { ...person, onIntakeForm: true, isRequired: true }],
-    [...pins, custom, custom],
-    [...pins, foreign],
-    [...pins, { ...person, fieldType: "text" as const }],
-    [pins[1]!, pins[0]!],
+    [...base, { ...custom, onIntakeForm: true, visibleOnPortal: false }],
+    [...base, { ...person, onIntakeForm: true, isRequired: true }],
+    [...base, custom, custom],
+    [...base, foreign],
+    [...base, { ...person, fieldType: "text" as const }],
+    [base[1]!, base[0]!, ...base.slice(2)],
   ]) {
     const res = await put(id, form);
     expect(res.statusCode, res.body).toBe(400);
   }
+  const dropped = await put(
+    id,
+    base.filter((n) => n.id !== "value"),
+  );
+  expect(dropped.statusCode, dropped.body).toBe(400);
+  expect(dropped.json().detail).toContain('Built-in Row "value"');
   const entityId = await createType("entity");
   const entityForm = await read(entityId, "entity");
   const res = await put(
@@ -225,7 +231,7 @@ it("legacy PATCH cannot make an Intake user Row required, and detach cannot brea
   const id = await createType();
   const person = { ...(await field("contract", "user")), onIntakeForm: true };
   const form: FormNode[] = [
-    ...(await read(id)).slice(0, 2),
+    ...(await read(id)),
     person,
     {
       kind: "branch",
@@ -294,7 +300,7 @@ it.each(["matter", "entity"] as const)(
     const first = await field(module);
     const second = await field(module);
     const form: FormNode[] = [
-      ...(module === "matter" ? (await read(id, module)).slice(0, 2) : []),
+      ...(await read(id, module)),
       first,
       {
         kind: "branch",
@@ -315,11 +321,12 @@ it("legacy ordering preserves Branch and built-in slots", async () => {
   const original = await read(id);
   const first = await field();
   const second = await field();
-  const value = original.find((n) => n.kind === "row" && n.rowRef === "value")!;
+  const pins = original.slice(0, 2);
+  const builtins = original.slice(2);
   const form: FormNode[] = [
-    ...original.slice(0, 2),
+    ...pins,
     first,
-    value,
+    ...builtins,
     second,
     {
       kind: "branch",
@@ -337,7 +344,7 @@ it("legacy ordering preserves Branch and built-in slots", async () => {
     payload: { fieldIds: [second.id, first.id] },
   });
   expect(reordered.statusCode, reordered.body).toBe(200);
-  expect(await read(id)).toEqual([...original.slice(0, 2), second, value, first, form.at(-1)!]);
+  expect(await read(id)).toEqual([...pins, second, ...builtins, first, form.at(-1)!]);
 });
 
 it.each([true, false])(
@@ -353,11 +360,11 @@ it.each([true, false])(
       conditions: [{ rowRef: first.rowRef, operator: "is_set" as const, value: null }],
       children: [hidden],
     };
-    const pins = (await read(id)).slice(0, 2);
-    expect((await put(id, [...pins, first, branch])).statusCode).toBe(200);
+    const base = await read(id);
+    expect((await put(id, [...base, first, branch])).statusCode).toBe(200);
     await h.db.update(fields).set({ archivedAt: new Date() }).where(eq(fields.id, hidden.id));
     const next = [
-      ...pins,
+      ...base,
       first,
       ...(keepBranch ? [{ ...branch, children: [await field()] }] : []),
     ];
@@ -367,7 +374,7 @@ it.each([true, false])(
     const last = next.at(-1)!;
     expect(await read(id)).toEqual(
       keepBranch && last.kind === "branch"
-        ? [...pins, first, { ...last, children: [...last.children, hidden] }]
+        ? [...base, first, { ...last, children: [...last.children, hidden] }]
         : [...next, hidden],
     );
   },

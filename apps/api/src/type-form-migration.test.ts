@@ -121,6 +121,19 @@ it.each([false, true])(
           )
         ).rows,
       ).toEqual([{ count: 12 }]);
+      // The module-only and no-module Requests land their Fields on each Default type.
+      expect(
+        (
+          await db.execute(sql`select f.field_id, f.is_required, f.on_intake_form
+      from contract_type_fields f join contract_types t on t.id = f.contract_type_id where t.is_default`)
+        ).rows,
+      ).toEqual([{ field_id: "form-business", is_required: false, on_intake_form: true }]);
+      expect(
+        (
+          await db.execute(sql`select f.field_id, f.is_required, f.on_intake_form
+      from matter_type_fields f join matter_types t on t.id = f.matter_type_id where t.is_default`)
+        ).rows,
+      ).toEqual([{ field_id: "form-matter", is_required: true, on_intake_form: true }]);
       await expect(
         db.execute(
           sql`update request_types set target_module = null where id = 'form-null-request'`,
@@ -132,15 +145,26 @@ it.each([false, true])(
   },
 );
 
-it("names a legacy Request whose built-in has no matching Matter Row", async () => {
-  const db = await freshDb(container, "unmapped_intake_builtin");
+it.each([
+  [
+    "built-in has no matching Matter Row",
+    "select 'unmapped', id, 1 from fields where built_in_key = 'effectiveDate'",
+  ],
+  ["Field sits outside the Matter module", "values ('unmapped', 'unmapped-contract-field', 1)"],
+])("names a legacy Request whose %s", async (_, source) => {
+  const db = await freshDb(container, `unmapped_${source.length}`);
   try {
     await migrateThrough(db, "0156_answer-style", migrationEntries());
     await db.execute(
       sql`insert into request_types (id, slug, display_name, display_order) values ('unmapped', 'unmapped', 'Unrouted question', 99)`,
     );
-    await db.execute(sql`insert into request_type_fields (request_type_id, field_id, display_order)
-      select 'unmapped', id, 1 from fields where built_in_key = 'effectiveDate'`);
+    await db.execute(sql`insert into fields (id, slug, display_name, module_scope, field_type, field_tag) values
+      ('unmapped-contract-field', 'unmapped_contract_field', 'Counterparty name', 'contract', 'text', 'business')`);
+    await db.execute(
+      sql.raw(
+        `insert into request_type_fields (request_type_id, field_id, display_order) ${source}`,
+      ),
+    );
     await expect(runMigrations(db)).rejects.toMatchObject({
       cause: { message: expect.stringContaining("Unrouted question") },
     });
