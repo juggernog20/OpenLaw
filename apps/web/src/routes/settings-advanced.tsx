@@ -60,6 +60,11 @@ const labels = defineMessages({
     defaultMessage: "Comparison timeout (milliseconds)",
   },
 });
+const driverOptions = defineMessages({
+  local: { id: "settings.advanced.driver.local", defaultMessage: "Local filesystem" },
+  s3: { id: "settings.advanced.driver.s3", defaultMessage: "S3-compatible storage" },
+  "azure-blob": { id: "settings.advanced.driver.azureBlob", defaultMessage: "Azure Blob Storage" },
+});
 const descriptions = defineMessages({
   instance: {
     id: "settings.advanced.instanceHelp",
@@ -227,14 +232,14 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
               const options =
                 field.key === "STORAGE_DRIVER"
                   ? [
-                      ["local", "Local filesystem"],
-                      ["s3", "S3-compatible storage"],
-                      ["azure-blob", "Azure Blob Storage"],
+                      ["local", intl.formatMessage(driverOptions.local)],
+                      ["s3", intl.formatMessage(driverOptions.s3)],
+                      ["azure-blob", intl.formatMessage(driverOptions["azure-blob"])],
                     ]
                   : field.key === "S3_FORCE_PATH_STYLE"
                     ? [
-                        ["false", "No"],
-                        ["true", "Yes"],
+                        ["false", intl.formatMessage({ id: "common.no", defaultMessage: "No" })],
+                        ["true", intl.formatMessage({ id: "common.yes", defaultMessage: "Yes" })],
                       ]
                     : null;
               return (
@@ -328,7 +333,14 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                       <FormattedMessage
                         id="settings.advanced.active"
                         defaultMessage="Active: {value}"
-                        values={{ value: field.activeValue || "—" }}
+                        values={{
+                          value:
+                            field.activeValue ||
+                            intl.formatMessage({
+                              id: "settings.advanced.noValue",
+                              defaultMessage: "—",
+                            }),
+                        }}
                       />
                     </p>
                   )}
@@ -441,7 +453,16 @@ export function SettingsSystemStatusPage() {
             <tbody>
               {state.processes.map((row, index) => (
                 <tr key={index} className="border-t border-border-default">
-                  <td className="p-2">{row.role === "api" ? "API" : "Worker"}</td>
+                  <td className="p-2">
+                    {row.role === "api" ? (
+                      <FormattedMessage id="settings.advanced.role.api" defaultMessage="API" />
+                    ) : (
+                      <FormattedMessage
+                        id="settings.advanced.role.worker"
+                        defaultMessage="Worker"
+                      />
+                    )}
+                  </td>
                   <td className="p-2">
                     {row.online ? (
                       <FormattedMessage id="settings.advanced.online" defaultMessage="Running" />

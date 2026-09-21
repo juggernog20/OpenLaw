@@ -59,7 +59,11 @@ export function DocumentDropFolders({
     },
     ...(folders ?? []).map((folder) => ({
       id: folder.id,
-      name: pathOf(folders ?? [], folder, "/"),
+      name: pathOf(
+        folders ?? [],
+        folder,
+        intl.formatMessage({ id: "documents.folder.pathSeparator", defaultMessage: "/" }),
+      ),
     })),
   ];
   return (

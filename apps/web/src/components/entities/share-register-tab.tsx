@@ -598,7 +598,9 @@ function ReconciliationNote({ register }: Readonly<{ register: ShareRegister }>)
       (total) =>
         `${intl.formatNumber(total.issued)} ${register.classes.find((row) => row.id === total.shareClassId)?.name ?? ""}`,
     )
-    .join(" · ");
+    .join(
+      ` ${intl.formatMessage({ id: "entities.register.listSeparator", defaultMessage: "·" })} `,
+    );
   return (
     <p
       role={agrees ? undefined : "alert"}
@@ -689,7 +691,9 @@ function HolderCell({ row }: Readonly<{ row: RegisterRow }>) {
                 row.holder.jurisdiction,
               ]
                 .filter(Boolean)
-                .join(" · ")
+                .join(
+                  ` ${intl.formatMessage({ id: "entities.register.listSeparator", defaultMessage: "·" })} `,
+                )
             : intl.formatMessage({
                 id: "entities.ownership.individual",
                 defaultMessage: "Individual",
@@ -846,10 +850,16 @@ function RegisterOfMembers({
                         {percent(intl, row.percentOfVotes)}
                       </td>
                       <td className="px-3 py-2 font-mono text-xs">
-                        {row.certificates.join(", ") || "—"}
+                        {row.certificates.join(", ") || (
+                          <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                        )}
                       </td>
                       <td className="px-3 py-2">
-                        {row.memberSince ? formatDay(intl, row.memberSince) : "—"}
+                        {row.memberSince ? (
+                          formatDay(intl, row.memberSince)
+                        ) : (
+                          <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                        )}
                       </td>
                       {historic ? <ChangeCell from={row.balance} to={row.balanceToday} /> : null}
                     </tr>
@@ -880,9 +890,15 @@ function RegisterOfMembers({
                           total.issued > 0 ? (treasury.balance / total.issued) * 100 : 0,
                         )}
                       </td>
-                      <td className="px-3 py-2 text-end text-muted">—</td>
-                      <td className="px-3 py-2 text-muted">—</td>
-                      <td className="px-3 py-2 text-muted">—</td>
+                      <td className="px-3 py-2 text-end text-muted">
+                        <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                      </td>
+                      <td className="px-3 py-2 text-muted">
+                        <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                      </td>
+                      <td className="px-3 py-2 text-muted">
+                        <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                      </td>
                       {historic ? <td className="px-3 py-2" /> : null}
                     </tr>
                   ) : null}
@@ -947,7 +963,11 @@ function ChangeCell({ from, to }: Readonly<{ from: number; to: number }>) {
         delta > 0 ? "text-status-success-fg" : delta < 0 ? "text-status-danger-fg" : "text-muted",
       )}
     >
-      {delta === 0 ? "—" : `${delta > 0 ? "+" : "−"}${intl.formatNumber(Math.abs(delta))}`}
+      {delta === 0 ? (
+        <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+      ) : (
+        `${delta > 0 ? "+" : "−"}${intl.formatNumber(Math.abs(delta))}`
+      )}
     </td>
   );
 }
@@ -1073,29 +1093,44 @@ function EntriesTable({
               </td>
               <td className="px-3 py-2">
                 {classNames.get(entry.shareClassId) ?? ""}
-                {entry.toShareClassId ? ` → ${classNames.get(entry.toShareClassId) ?? ""}` : ""}
+                {entry.toShareClassId
+                  ? ` ${intl.formatMessage({ id: "entities.register.entry.classArrow", defaultMessage: "→" })} ${classNames.get(entry.toShareClassId) ?? ""}`
+                  : ""}
               </td>
               <td className="px-3 py-2 text-end tabular-nums">
                 {intl.formatNumber(entry.quantity)}
               </td>
-              <td className="px-3 py-2 font-mono text-xs">{entry.distinctiveNumbers ?? "—"}</td>
+              <td className="px-3 py-2 font-mono text-xs">
+                {entry.distinctiveNumbers ?? (
+                  <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                )}
+              </td>
               <td className="px-3 py-2">
                 {entry.consideration ??
-                  (entry.pricePerShare !== null && entry.priceCurrency
-                    ? intl.formatNumber(toMajorUnits(entry.pricePerShare, entry.priceCurrency), {
-                        style: "currency",
-                        currency: entry.priceCurrency,
-                      })
-                    : "—")}
+                  (entry.pricePerShare !== null && entry.priceCurrency ? (
+                    intl.formatNumber(toMajorUnits(entry.pricePerShare, entry.priceCurrency), {
+                      style: "currency",
+                      currency: entry.priceCurrency,
+                    })
+                  ) : (
+                    <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                  ))}
               </td>
               <td className="px-3 py-2 font-mono text-xs">
-                {entry.certificatesIssued.map((certificate) => certificate.number).join(", ") ||
-                  "—"}
+                {entry.certificatesIssued.map((certificate) => certificate.number).join(", ") || (
+                  <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                )}
               </td>
               <td className="px-3 py-2 font-mono text-xs">
-                {entry.certificatesCancelled.join(", ") || "—"}
+                {entry.certificatesCancelled.join(", ") || (
+                  <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                )}
               </td>
-              <td className="px-3 py-2">{entry.resolutionRef ?? "—"}</td>
+              <td className="px-3 py-2">
+                {entry.resolutionRef ?? (
+                  <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+                )}
+              </td>
               <td className="px-3 py-2">
                 <div className="flex justify-end gap-1">
                   <Button

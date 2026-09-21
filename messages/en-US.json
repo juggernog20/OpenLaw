@@ -1604,6 +1604,9 @@
   "autoDocs.formVersion": {
     "defaultMessage": "Form version {number}"
   },
+  "autoDocs.formatBoth": {
+    "defaultMessage": "Word · PDF"
+  },
   "autoDocs.formatName": {
     "defaultMessage": "{format, select, docx {Word} pdf {PDF} other {Word and PDF}}"
   },
@@ -4004,6 +4007,9 @@
   "documents.bulk.deleteWarning": {
     "defaultMessage": "The selected documents and all their versions will be permanently deleted. This cannot be undone."
   },
+  "documents.bulk.errorRow": {
+    "defaultMessage": "{title}: {detail}"
+  },
   "documents.bulk.failed": {
     "defaultMessage": "This document could not be updated. Try again."
   },
@@ -4148,6 +4154,9 @@
   "documents.executed": {
     "defaultMessage": "Executed"
   },
+  "documents.fileType.unknown": {
+    "defaultMessage": "FILE"
+  },
   "documents.filter.counterparty": {
     "defaultMessage": "Counterparty"
   },
@@ -4210,6 +4219,9 @@
   },
   "documents.folder.count": {
     "defaultMessage": "{count, plural, =0 {Empty} one {# document} other {# documents}}"
+  },
+  "documents.folder.countSeparator": {
+    "defaultMessage": "·"
   },
   "documents.folder.createInsideTitle": {
     "defaultMessage": "New folder in {name}"
@@ -4600,6 +4612,9 @@
   },
   "entities.chart.export.minorUnits": {
     "defaultMessage": "{value} minor units"
+  },
+  "entities.chart.export.officerEntry": {
+    "defaultMessage": "{name} ({role})"
   },
   "entities.chart.export.open": {
     "defaultMessage": "Export chart"
@@ -5309,6 +5324,9 @@
   "entities.register.entry.class": {
     "defaultMessage": "Class"
   },
+  "entities.register.entry.classArrow": {
+    "defaultMessage": "→"
+  },
   "entities.register.entry.classRequired": {
     "defaultMessage": "Pick a share class."
   },
@@ -5467,6 +5485,9 @@
   },
   "entities.register.kind.transfer": {
     "defaultMessage": "Transfer"
+  },
+  "entities.register.listSeparator": {
+    "defaultMessage": "·"
   },
   "entities.register.members.change": {
     "defaultMessage": "Change to today"
@@ -7337,6 +7358,9 @@
   "portal.autoDocs.libraryIntro": {
     "defaultMessage": "Create documents from Legal's approved templates, then find and download your finished documents here."
   },
+  "portal.autoDocs.noDescription": {
+    "defaultMessage": "—"
+  },
   "portal.autoDocs.noDocuments": {
     "defaultMessage": "No documents generated yet"
   },
@@ -8345,6 +8369,15 @@
   "settings.advanced.driver": {
     "defaultMessage": "Store new documents in"
   },
+  "settings.advanced.driver.azureBlob": {
+    "defaultMessage": "Azure Blob Storage"
+  },
+  "settings.advanced.driver.local": {
+    "defaultMessage": "Local filesystem"
+  },
+  "settings.advanced.driver.s3": {
+    "defaultMessage": "S3-compatible storage"
+  },
   "settings.advanced.engineUrl": {
     "defaultMessage": "Document service address"
   },
@@ -8371,6 +8404,9 @@
   },
   "settings.advanced.networkError": {
     "defaultMessage": "The server could not be reached. Try again."
+  },
+  "settings.advanced.noValue": {
+    "defaultMessage": "—"
   },
   "settings.advanced.offline": {
     "defaultMessage": "No recent heartbeat"
@@ -8410,6 +8446,12 @@
   },
   "settings.advanced.restartHelp": {
     "defaultMessage": "Changes take effect after both the API and worker restart. Values saved here override deployment defaults."
+  },
+  "settings.advanced.role.api": {
+    "defaultMessage": "API"
+  },
+  "settings.advanced.role.worker": {
+    "defaultMessage": "Worker"
   },
   "settings.advanced.s3Endpoint": {
     "defaultMessage": "S3 endpoint (optional for AWS)"

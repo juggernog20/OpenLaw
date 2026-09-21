@@ -113,7 +113,10 @@ export function DocumentFilterBar({
           id: record.reference,
           displayName:
             record.kind === "contract" || record.kind === "matter"
-              ? `${record.reference} · ${record.title}`
+              ? intl.formatMessage(
+                  { id: "documents.list.owner", defaultMessage: "{reference} · {title}" },
+                  { reference: record.reference, title: record.title },
+                )
               : record.title,
         })),
     },
@@ -134,7 +137,11 @@ export function DocumentFilterBar({
               },
               ...folders.map((folder) => ({
                 id: folder.id,
-                displayName: pathOf(folders, folder, "/"),
+                displayName: pathOf(
+                  folders,
+                  folder,
+                  intl.formatMessage({ id: "documents.folder.pathSeparator", defaultMessage: "/" }),
+                ),
               })),
             ],
           },

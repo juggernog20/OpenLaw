@@ -115,7 +115,14 @@ export function exportFieldValue(
   if (id === "officers") {
     const current = record.officers.filter((officer) => officer.resignedOn === null);
     return current.length
-      ? current.map((officer) => `${officer.name} (${officer.officerRoleName})`).join("\n")
+      ? current
+          .map((officer) =>
+            intl.formatMessage(
+              { id: "entities.chart.export.officerEntry", defaultMessage: "{name} ({role})" },
+              { name: officer.name, role: officer.officerRoleName },
+            ),
+          )
+          .join("\n")
       : undefined;
   }
   if (id.startsWith("custom:")) {
