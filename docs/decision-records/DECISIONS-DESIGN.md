@@ -5050,9 +5050,9 @@ The Portal settings pane draws the Push column for its four groups and the same 
 
 Each signed-in shell links its own manifest, in place of the one the document linked above. The staff shell links `/manifest.webmanifest` (`id`, `start_url` and `scope` at `/`). The Portal shell links `/portal.webmanifest` (`id`, `start_url` and `scope` at `/portal`), so a Home Screen install made from the Portal opens on the Portal, and Portal sign-in at `/portal/login` stays inside the installed app. The document itself links no manifest, so sign-in pages are not installable. The worker's scope stays `/` for both.
 
-## DES-090: The type Form is one tree with inline Branch conditions (extends DES-020, DES-021, DES-022, DES-032 and DES-087)
+## DES-090: The type Form is one tree with inline Branch conditions (extends DES-020, DES-021, DES-032 and DES-087; amends DES-022's strip and cards)
 
-- **Status:** Accepted for the M39 build, subject to PR review.
+- **Status:** Accepted. The builder picked direction A from two HTML mocks on 2026-09-21; Blair did not choose between them.
 - **Date:** 2026-09-21
 - **Source:** [#1011](https://github.com/juggernog20/OpenLaw/issues/1011), under [#1007](https://github.com/juggernog20/OpenLaw/issues/1007) and DD-028.
 
@@ -5060,7 +5060,7 @@ Each signed-in shell links its own manifest, in place of the one the document li
 
 DD-028 moves the Form onto the destination type. The old attachment table cannot show built-in Rows, three switches and nested conditions. DES-022 still owns the type's identity card. DES-020 supplies the grip and immediate commits; DES-021 supplies column headings and captions; DES-087 supplies condition sentences and refusals at the control. This record settles how those parts fit together before the Form tab is built.
 
-Two directions were drawn as static HTML on the existing app tokens: **A, conditions inside the tree**, and **B, a tree beside a condition inspector**. A is chosen here. No human selection is claimed. The screenshots are retained in `designs/reviews/1011/` and embedded in the PR description. The HTML and its drawing script are disposable and are not checked in.
+Two directions were drawn as static HTML on the existing app tokens: **A, conditions inside the tree**, and **B, a tree beside a condition inspector**. A is chosen here. The screenshots are retained in `designs/reviews/1011/` and embedded in the PR description. The HTML and its drawing script are disposable and are not checked in.
 
 **HTML stood in for Pencil in this build session.** After `cursor --reuse-window designs/settings.pen`, Pencil's `get_app_state` and `read_skill` still refused with "A file needs to be open in the editor to perform this action." An `execute` call with the absolute `designs/settings.pen` path returned the same refusal. The session had full filesystem access. No `.pen` file was read or edited outside Pencil. This uses the ticket's DES-087 fallback; `settings.pen` has no new frames from this task.
 
@@ -5090,7 +5090,7 @@ Title and Type stay first at the root. They draw a presentational lock in the gr
 
 Other built-ins can reorder and move under a Branch but cannot detach. Their trailing slot has overflow alone. All built-ins remain on the Form, including one compound Value Row for amount, currency and cadence. An attached Field can detach without a guard modal; stored values remain. If a condition references it, detach is refused beside its `x` until that condition is removed or changed. Changing a Field definition uses the existing Field editor via the Row's overflow; the Row caption is not a second definition editor.
 
-On an **Entity type**, omit both On intake form and Visible on Portal, their headings and their column space. Keep Required for creation, Touchpoint, Branches and Field actions. There is no intake preview action. Entity built-ins, including identity, stay on the existing create form; no synthetic Title/Type Rows enter the Entity tree. This clarifies the glossary's earlier "last two" wording in accordance with #1011; it changes no API storage contract and introduces no term.
+On an **Entity type**, omit both On intake form and Visible on Portal, their headings and their column space. Keep Required for creation, Touchpoint, Branches and Field actions. There is no intake preview action. Entity built-ins, including identity, stay on the existing create form; no synthetic Title/Type Rows enter the Entity tree. The API still stores `visible_on_portal` on `entity_type_fields` (DD-028 Consequences, default true) and the Form write requires it on every Entity Row. The builder sends back the value it read and never draws a switch for it; no Portal read uses that column today. This corrects the glossary's earlier "last two" wording, as #1011 asks. It changes no API storage contract and introduces no term.
 
 **3. A Branch states its condition above its children.** The block starts at the name column with a 2px `border-default` left rule. Its header is at least 44px, on `bg-control`, with grip, 16px `git-branch`, the sentence, an edit button and overflow. The sentence is 13px medium and wraps without truncation. It uses labels and display values, never slugs or operator enums:
 
@@ -5172,6 +5172,8 @@ At a content width below 960px, reflow each Row into name/actions above labelled
 4. `preview-answered.png` and `preview-empty.png` are the same form. The example's 50,000 threshold is a displayed money amount; the evaluator receives minor units. Keep Value's three controls grouped under one accessible label even though the screenshot lays them over two lines. No separate currency or cadence Row is created.
 5. The side-inspector alternative is a cropped anatomy comparison. It omits pinned and later Rows; it is not a proposal to remove them. The chosen Form screenshot includes every Contract built-in once, with Expiry date under the Branch.
 6. Existing Switch draws 36 × 20px. Expand its hit area to at least 24px high without growing the pill. The mock adds a border around off switches for contrast; the build uses `border-default` if the current component needs that correction. A disabled reason must be available on keyboard focus, not hover alone.
+7. The preview mock draws the Finance reviewer User Row as the caption "Legal will fill this in." That copy is the mock's own. The build draws a User Row with the Portal's existing control (an empty "Not set" select, INT-002 M20/10) and adds no caption. A different Portal treatment for User Rows is a Portal ticket, not this record.
+8. DES-022 kept the module's settings strip (Types, Fields and the module's other panes) on the type editor and drew People and Approval defaults as cards below the identity card. This record replaces that strip with the editor's own Details / Form / People / Approval defaults strip and moves those two cards behind their sections. The breadcrumb is the only way back to the module strip. DES-032's one-strip ceiling holds.
 
 ### Rationale
 
@@ -5283,7 +5285,7 @@ The later builder, Request type editor and preview tickets use this record and t
 | DES-087 | The Auto-Doc record is a doc builder: the template beside its form, inside a four-section record page                                                                | Accepted                                                                                                   |
 | DES-088 | The Ownership tab is a share register read as of a date                                                                                                              | Accepted                                                                                                   |
 | DES-089 | Device notifications on the preferences pane, addendum to DES-050                                                                                                    | Accepted                                                                                                   |
-| DES-090 | The type Form is one tree with inline Branch conditions                                                                                                              | Accepted for M39 build, subject to PR review                                                               |
+| DES-090 | The type Form is one tree with inline Branch conditions                                                                                                              | Accepted; the builder picked A from two HTML mocks, not Blair                                              |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 
