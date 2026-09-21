@@ -5,6 +5,7 @@ import { entityTypeFields, entityTypes } from "@openlaw/db";
 import { typeFieldRoutes } from "../../lib/type-field-routes.js";
 
 export const entityAttachedFieldsRoutes = typeFieldRoutes({
+  formModule: "entity",
   typesTable: entityTypes,
   joinTable: entityTypeFields,
   path: "entity-types",

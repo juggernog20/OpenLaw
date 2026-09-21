@@ -35,6 +35,7 @@ import {
   inArray,
   matterTypes,
   requestTypes,
+  sql,
   requests,
   users,
 } from "@openlaw/db";
@@ -197,7 +198,7 @@ describe("GET /request-types", () => {
     }
   });
 
-  it("seeds the three targets: the NDA contract type, the Contract module, and nothing", async () => {
+  it("seeds NDA and the Contract and Matter Default destinations", async () => {
     const seeded = await harness.db
       .select()
       .from(requestTypes)
@@ -216,13 +217,13 @@ describe("GET /request-types", () => {
     });
     expect(bySlug.get("contract_review")).toMatchObject({
       targetModule: "contract",
-      targetContractTypeId: null,
+      targetContractTypeId: expect.any(String),
       targetMatterTypeId: null,
     });
     expect(bySlug.get("legal_question")).toMatchObject({
-      targetModule: null,
+      targetModule: "matter",
       targetContractTypeId: null,
-      targetMatterTypeId: null,
+      targetMatterTypeId: expect.any(String),
     });
   });
 
@@ -243,11 +244,11 @@ describe("GET /request-types", () => {
     });
     expect(bySlug.get("contract_review")).toMatchObject({
       targetModule: "contract",
-      targetTypeId: null,
+      targetTypeId: expect.any(String),
     });
     expect(bySlug.get("legal_question")).toMatchObject({
-      targetModule: null,
-      targetTypeId: null,
+      targetModule: "matter",
+      targetTypeId: expect.any(String),
     });
     for (const row of rows) {
       // The columns themselves stay behind the projection.
@@ -644,7 +645,7 @@ describe("PATCH /request-types/:id — the three-state target (INT-002)", () => 
     return row!;
   };
 
-  it("takes all three states, and the module alone clears a named type", async () => {
+  it("accepts a module-only destination and refuses a missing module", async () => {
     const nda = await contractTypeBySlug("nda");
     const row = await addType("Target walk");
 
@@ -665,11 +666,8 @@ describe("PATCH /request-types/:id — the three-state target (INT-002)", () => 
     });
 
     const toNothing = await patch(row.id, { targetModule: null });
-    expect(toNothing.statusCode, toNothing.body).toBe(200);
-    expect(toNothing.json().requestType).toMatchObject({
-      targetModule: null,
-      targetTypeId: null,
-    });
+    expect(toNothing.statusCode, toNothing.body).toBe(400);
+    expect(toNothing.json().detail).toContain("destination module");
   });
 
   it("re-points a contract target at a matter type in one PATCH", async () => {
@@ -759,7 +757,7 @@ describe("PATCH /request-types/:id — the three-state target (INT-002)", () => 
     const nda = await contractTypeBySlug("nda");
     const row = await addType("Narrated target");
     await patch(row.id, { targetModule: "contract", targetTypeId: nda.id });
-    await patch(row.id, { targetModule: null });
+    await patch(row.id, { targetModule: "matter" });
 
     const rows = await auditRows();
     const updates = rows.filter(
@@ -769,11 +767,11 @@ describe("PATCH /request-types/:id — the three-state target (INT-002)", () => 
     );
     expect(updates).toHaveLength(2);
     expect((updates[0]!.payload as { changed: unknown }).changed).toMatchObject({
-      targetModule: { from: null, to: "contract" },
+      targetModule: { from: "matter", to: "contract" },
       targetType: { from: null, to: nda.displayName },
     });
     expect((updates[1]!.payload as { changed: unknown }).changed).toMatchObject({
-      targetModule: { from: "contract", to: null },
+      targetModule: { from: "contract", to: "matter" },
       targetType: { from: nda.displayName, to: null },
     });
   });
@@ -857,12 +855,12 @@ describe("the three-state target at the database (INT-002)", () => {
       .where(eq(contractTypes.slug, "nda"))
       .limit(1);
     const question = await typeBySlug("legal_question");
-    await refusedByTargetCheck(
+    await expect(
       harness.db
         .update(requestTypes)
-        .set({ targetModule: null, targetContractTypeId: nda!.id })
+        .set({ targetModule: sql`null`, targetContractTypeId: nda!.id })
         .where(eq(requestTypes.id, question.id)),
-    );
+    ).rejects.toMatchObject({ cause: { code: "23502" } });
   });
 
   it("refuses a module that is neither matter nor contract", async () => {
@@ -964,6 +962,7 @@ it("persists a complete form order for the Portal and refuses incomplete or stal
       cookies: adminCookies,
       payload,
     });
+  await patch(type.id, { targetModule: "contract" });
   const field = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",

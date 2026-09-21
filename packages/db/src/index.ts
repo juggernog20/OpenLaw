@@ -12,6 +12,8 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 export type { PoolClient } from "pg";
 import { guardMigrationJournal } from "./migration-journal.js";
+import * as typeFormsSchema from "./schema/type-forms.js";
+export * from "./schema/type-forms.js";
 import * as activitySchema from "./schema/activity.js";
 import * as aiConnectorSchema from "./schema/ai-connector.js";
 import * as approverGroupsSchema from "./schema/approver-groups.js";
@@ -142,6 +144,7 @@ export * from "./migration-journal.js";
 export * from "./rewrap.js";
 export * from "./secrets.js";
 export const schema = {
+  ...typeFormsSchema,
   ...activitySchema,
   ...aiConnectorSchema,
   ...approverGroupsSchema,

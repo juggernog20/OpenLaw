@@ -12,11 +12,19 @@
  * type editor.
  */
 
-import { pgTable, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, pgTable, uniqueIndex } from "drizzle-orm/pg-core";
 import { taxonomyColumns } from "./helpers.js";
 
-export const matterTypes = pgTable("matter_types", taxonomyColumns(), (table) => [
-  uniqueIndex("matter_types_slug_unique").on(table.slug),
-]);
+export const matterTypes = pgTable(
+  "matter_types",
+  { ...taxonomyColumns(), isDefault: boolean("is_default").notNull().default(false) },
+  (table) => [
+    uniqueIndex("matter_types_one_default")
+      .on(table.isDefault)
+      .where(sql`${table.isDefault}`),
+    uniqueIndex("matter_types_slug_unique").on(table.slug),
+  ],
+);
 
 export type MatterType = typeof matterTypes.$inferSelect;

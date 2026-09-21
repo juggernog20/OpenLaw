@@ -14,6 +14,7 @@ import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
 import { matterTypeUsage } from "../matters/type-usage.js";
 
 export const matterTypesRoutes = taxonomyRoutes({
+  formModule: "matter",
   table: matterTypes,
   path: "matter-types",
   tag: "matter-types",

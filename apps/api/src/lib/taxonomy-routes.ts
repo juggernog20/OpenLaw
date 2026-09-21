@@ -31,6 +31,8 @@
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { seedTypeForm } from "./type-form-routes.js";
+import type { FormModule } from "@openlaw/shared";
 import { z } from "zod";
 import {
   asc,
@@ -165,6 +167,7 @@ interface TaxonomyRoutesBase<
   TPatch extends z.ZodRawShape = z.ZodRawShape,
   TContext = undefined,
 > {
+  formModule?: FormModule;
   table: TaxonomyTable;
   /** URL segment under /api/v1, e.g. `contract-types`. */
   path: string;
@@ -270,6 +273,7 @@ function toRow(row: TaxonomyRow, counts: Map<string, number>, projectExtras?: Pr
     description: row.description,
     displayOrder: row.displayOrder,
     isSystemDefault: row.isSystemDefault,
+    ...("isDefault" in row ? { isDefault: row.isDefault } : {}),
     archivedAt: row.archivedAt?.toISOString() ?? null,
     inUseCount: counts.get(row.id) ?? 0,
     ...projectExtras?.(row),
@@ -316,9 +320,10 @@ export function taxonomyRoutes<
   const aNoun = `${/^[aeiou]/i.test(noun) ? "an" : "a"} ${noun}`;
   // A mount with no extras gets `TaxonomyRowSchema` itself, so its
   // OpenAPI row and its responses are the ones it has always had.
-  const RowSchema = config.extras
-    ? TaxonomyRowSchema.extend(config.extras.rowSchema)
-    : TaxonomyRowSchema;
+  const RowSchema = TaxonomyRowSchema.extend({
+    ...(config.formModule ? { isDefault: z.boolean() } : {}),
+    ...config.extras?.rowSchema,
+  });
   const RowEnvelope = z.object({ [config.keySingular]: RowSchema });
   const ListEnvelope = z.object({ [config.keyPlural]: z.array(RowSchema) });
   // The system-protected row's clause in the generated summaries. Empty
@@ -474,6 +479,7 @@ export function taxonomyRoutes<
             .insert(table)
             .values({ slug, displayName, displayOrder })
             .returning();
+          if (config.formModule) await seedTypeForm(tx, config.formModule, created!.id);
           await recordActivity(tx, {
             entityType: "system",
             actorId: request.user.id,
@@ -713,6 +719,12 @@ export function taxonomyRoutes<
         }
         const row = await app.db.transaction(async (tx) => {
           const target = await lockedType(tx, request.params.id);
+          if ("isDefault" in target && target.isDefault) {
+            throw httpError(
+              409,
+              `${target.displayName} is the Default type and cannot be archived or deleted: module-only Requests need its Form.`,
+            );
+          }
           if (isProtected(target)) {
             throw httpError(
               409,
@@ -852,6 +864,12 @@ export function taxonomyRoutes<
       async (request, reply) => {
         await app.db.transaction(async (tx) => {
           const target = await lockedType(tx, request.params.id);
+          if ("isDefault" in target && target.isDefault) {
+            throw httpError(
+              409,
+              `${target.displayName} is the Default type and cannot be archived or deleted: module-only Requests need its Form.`,
+            );
+          }
           if (isProtected(target)) {
             throw httpError(
               409,

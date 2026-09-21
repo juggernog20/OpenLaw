@@ -13,6 +13,7 @@ import { matterTypeFields, matterTypes } from "@openlaw/db";
 import { typeFieldRoutes } from "../../lib/type-field-routes.js";
 
 export const matterAttachedFieldsRoutes = typeFieldRoutes({
+  formModule: "matter",
   typesTable: matterTypes,
   joinTable: matterTypeFields,
   path: "matter-types",

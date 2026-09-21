@@ -32,10 +32,24 @@
  * this route would refuse staff a picker that has rows.
  */
 
+import type { FormModule } from "@openlaw/shared";
+import {
+  assertTypeFormReferences,
+  legacyFormFieldOrder,
+  typeFormRoutes,
+} from "./type-form-routes.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   and,
+  contractTypeFields,
+  contractTypeBranches,
+  contractTypeBuiltinRows,
+  matterTypeFields,
+  matterTypeBranches,
+  matterTypeBuiltinRows,
+  entityTypeFields,
+  entityTypeBranches,
   asc,
   eq,
   fields,
@@ -148,6 +162,7 @@ export interface TypeFieldTargetAttachRule<TRow extends TaxonomyRow = TaxonomyRo
  * mount is the one place that may say what its rows carry.
  */
 export interface TypeFieldRoutesConfig<TRow extends TaxonomyRow = TaxonomyRow> {
+  formModule?: FormModule;
   typesTable: TaxonomyTable;
   joinTable: TypeFieldsTable;
   /** URL segment of the owning taxonomy, e.g. `contract-types`. */
@@ -213,7 +228,26 @@ export async function appendedOrder(
     .where(eq(joinTable.typeId, typeId))
     .for("update");
   if (existing.some((candidate) => candidate.fieldId === fieldId)) return null;
-  return existing.reduce((top, candidate) => Math.max(top, candidate.displayOrder), 0) + 1;
+  let top = existing.reduce((max, row) => Math.max(max, row.displayOrder), 0);
+  const form =
+    joinTable === contractTypeFields
+      ? { branches: contractTypeBranches, builtins: contractTypeBuiltinRows }
+      : joinTable === matterTypeFields
+        ? { branches: matterTypeBranches, builtins: matterTypeBuiltinRows }
+        : joinTable === entityTypeFields
+          ? { branches: entityTypeBranches, builtins: null }
+          : null;
+  if (form) {
+    for (const table of [form.branches, form.builtins]) {
+      if (!table) continue;
+      const rows = await tx
+        .select({ displayOrder: table.displayOrder })
+        .from(table)
+        .where(eq(table.typeId, typeId));
+      top = rows.reduce((max, row) => Math.max(max, row.displayOrder), top);
+    }
+  }
+  return top + 1;
 }
 
 /**
@@ -316,6 +350,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
   }
 
   return async (app) => {
+    if (config.formModule) await app.register(typeFormRoutes(config, config.formModule));
     /** Locks and returns the type, or 404s — every mutation starts here. */
     async function lockedType(tx: Transaction, id: string): Promise<TaxonomyRow> {
       const [row] = await tx
@@ -443,7 +478,13 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
 
           const [created] = await tx
             .insert(joinTable)
-            .values({ typeId: type.id, fieldId: field.id, displayOrder, isRequired })
+            .values({
+              typeId: type.id,
+              fieldId: field.id,
+              displayOrder,
+              isRequired,
+              ...(config.formModule ? { visibleOnPortal: field.fieldTag === "business" } : {}),
+            })
             .returning();
           await recordActivity(tx, {
             entityType: "system",
@@ -500,6 +541,15 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
           // even by a row that already holds it, and clearing the flag
           // is always allowed — that is the repair.
           if (isRequired) {
+            if (
+              "onIntakeForm" in target.join &&
+              target.join.onIntakeForm &&
+              target.field.fieldType === "user"
+            )
+              throw httpError(
+                400,
+                `${target.field.displayName}: a user Row On intake form cannot be Required for creation.`,
+              );
             const refusal = requiredRefusal(target.field);
             if (refusal) throw httpError(400, refusal);
           }
@@ -558,16 +608,20 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
             return attachments.map(({ join, field }) => toRow(join, field));
           }
 
+          const formOrders = config.formModule
+            ? await legacyFormFieldOrder(tx, config.formModule, type.id, fieldIds)
+            : null;
           const reordered: ReturnType<typeof toRow>[] = [];
           for (const [index, fieldId] of fieldIds.entries()) {
             const current = byFieldId.get(fieldId)!;
-            if (current.join.displayOrder === index + 1) {
+            const displayOrder = formOrders?.get(fieldId) ?? index + 1;
+            if (current.join.displayOrder === displayOrder) {
               reordered.push(toRow(current.join, current.field));
               continue;
             }
             const [updated] = await tx
               .update(joinTable)
-              .set({ displayOrder: index + 1 })
+              .set({ displayOrder })
               .where(and(eq(joinTable.typeId, type.id), eq(joinTable.fieldId, fieldId)))
               .returning();
             reordered.push(toRow(updated!, current.field));
@@ -584,7 +638,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
             .where(and(eq(joinTable.typeId, type.id), isNotNull(fields.archivedAt)))
             .orderBy(asc(joinTable.displayOrder), asc(joinTable.createdAt))
             .for("update", { of: joinTable });
-          for (const [index, row] of hidden.entries()) {
+          for (const [index, row] of (formOrders ? [] : hidden).entries()) {
             const displayOrder = fieldIds.length + index + 1;
             if (row.displayOrder === displayOrder) continue;
             await tx
@@ -592,6 +646,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
               .set({ displayOrder })
               .where(and(eq(joinTable.typeId, type.id), eq(joinTable.fieldId, row.fieldId)));
           }
+          if (config.formModule) await assertTypeFormReferences(tx, config.formModule, type.id);
           await recordActivity(tx, {
             entityType: "system",
             actorId: request.user.id,
@@ -631,6 +686,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
             )
             .returning();
           if (!detached) throw httpError(404, "This field is not attached to this type.");
+          if (config.formModule) await assertTypeFormReferences(tx, config.formModule, type.id);
           const [field] = await tx
             .select({ slug: fields.slug })
             .from(fields)

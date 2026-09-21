@@ -11,7 +11,8 @@
  * (MTR-014). Matter writes hard-enforce `is_required`.
  */
 
-import { index, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { boolean, foreignKey, index, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { matterTypeBranches } from "./type-forms.js";
 import { matterTypes } from "./matter-types.js";
 import { typeFieldColumns } from "./fields.js";
 
@@ -24,9 +25,16 @@ export const matterTypeFields = pgTable(
       .notNull()
       .references(() => matterTypes.id, { onDelete: "cascade" }),
     ...typeFieldColumns(),
+    visibleOnPortal: boolean("visible_on_portal").notNull().default(true),
+    branchId: text("branch_id"),
+    onIntakeForm: boolean("on_intake_form").notNull().default(false),
   },
   (table) => [
     primaryKey({ columns: [table.typeId, table.fieldId] }),
+    foreignKey({
+      columns: [table.typeId, table.branchId],
+      foreignColumns: [matterTypeBranches.typeId, matterTypeBranches.id],
+    }).onDelete("cascade"),
     // The PK leads with the type id; the catalog's per-field counts and
     // the fields FK checks look up by field id alone.
     index("matter_type_fields_field_id_idx").on(table.fieldId),

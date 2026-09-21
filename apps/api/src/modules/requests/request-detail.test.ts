@@ -330,12 +330,12 @@ describe("the envelope (INT-006)", () => {
     expect((await readDetail(moduleOnly.number)).json().request.requestType).toMatchObject({
       displayName: "Contract review",
       targetModule: "contract",
-      targetTypeName: null,
+      targetTypeName: "Default",
     });
     expect((await readDetail(noTarget.number)).json().request.requestType).toMatchObject({
       displayName: "Legal question",
-      targetModule: null,
-      targetTypeName: null,
+      targetModule: "matter",
+      targetTypeName: "Default",
     });
   });
 

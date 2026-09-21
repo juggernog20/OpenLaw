@@ -63,6 +63,122 @@
         },
         "required": ["name", "version"]
       },
+      "FormNodeInput": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "row"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "rowRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "fieldType": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "long_text",
+                  "number",
+                  "money",
+                  "currency",
+                  "date",
+                  "boolean",
+                  "single_select",
+                  "multi_select",
+                  "user",
+                  "entity"
+                ]
+              },
+              "onIntakeForm": {
+                "type": "boolean"
+              },
+              "isRequired": {
+                "type": "boolean"
+              },
+              "visibleOnPortal": {
+                "type": "boolean"
+              }
+            },
+            "required": ["kind", "id", "rowRef", "fieldType", "isRequired", "visibleOnPortal"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "branch"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "match": {
+                "type": "string",
+                "enum": ["all", "any"]
+              },
+              "conditions": {
+                "minItems": 1,
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rowRef": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "operator": {
+                      "type": "string",
+                      "enum": [
+                        "equals",
+                        "is_not",
+                        "is_one_of",
+                        "is_set",
+                        "greater_than",
+                        "less_than"
+                      ]
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": ["string", "number", "boolean"]
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": ["string", "number", "boolean"]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["rowRef", "operator", "value"]
+                }
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FormNodeInput"
+                }
+              }
+            },
+            "required": ["kind", "id", "match", "conditions", "children"]
+          }
+        ]
+      },
       "Problem": {
         "type": "object",
         "properties": {
@@ -117,6 +233,125 @@
         },
         "required": ["name", "version"],
         "additionalProperties": false
+      },
+      "FormNode": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "row"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "rowRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "fieldType": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "long_text",
+                  "number",
+                  "money",
+                  "currency",
+                  "date",
+                  "boolean",
+                  "single_select",
+                  "multi_select",
+                  "user",
+                  "entity"
+                ]
+              },
+              "onIntakeForm": {
+                "type": "boolean"
+              },
+              "isRequired": {
+                "type": "boolean"
+              },
+              "visibleOnPortal": {
+                "type": "boolean"
+              }
+            },
+            "required": ["kind", "id", "rowRef", "fieldType", "isRequired", "visibleOnPortal"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "branch"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "match": {
+                "type": "string",
+                "enum": ["all", "any"]
+              },
+              "conditions": {
+                "minItems": 1,
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rowRef": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "operator": {
+                      "type": "string",
+                      "enum": [
+                        "equals",
+                        "is_not",
+                        "is_one_of",
+                        "is_set",
+                        "greater_than",
+                        "less_than"
+                      ]
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": ["string", "number", "boolean"]
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": ["string", "number", "boolean"]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["rowRef", "operator", "value"],
+                  "additionalProperties": false
+                }
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FormNode"
+                }
+              }
+            },
+            "required": ["kind", "id", "match", "conditions", "children"],
+            "additionalProperties": false
+          }
+        ]
       }
     }
   },
@@ -17611,6 +17846,9 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -17621,7 +17859,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "isDefault"
                         ],
                         "additionalProperties": false
                       }
@@ -17714,6 +17953,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -17724,7 +17966,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -17810,6 +18053,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -17820,7 +18066,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -17933,6 +18180,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -17943,7 +18193,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -18071,6 +18322,9 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -18081,7 +18335,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "isDefault"
                         ],
                         "additionalProperties": false
                       }
@@ -18183,6 +18438,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -18193,7 +18451,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -18279,6 +18538,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -18289,7 +18551,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -19275,6 +19538,119 @@
         }
       }
     },
+    "/api/v1/contract-types/{id}/form": {
+      "get": {
+        "operationId": "getContractTypeForm",
+        "tags": ["contract-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceContractTypeForm",
+        "tags": ["contract-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "form": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/FormNodeInput"
+                    }
+                  }
+                },
+                "required": ["form"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/contract-types/{id}/fields": {
       "get": {
         "operationId": "listContractTypeFields",
@@ -19833,6 +20209,9 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -19843,7 +20222,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "isDefault"
                         ],
                         "additionalProperties": false
                       }
@@ -19936,6 +20316,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -19946,7 +20329,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -20032,6 +20416,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -20042,7 +20429,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -20155,6 +20543,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -20165,7 +20556,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -20293,6 +20685,9 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -20303,7 +20698,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "isDefault"
                         ],
                         "additionalProperties": false
                       }
@@ -20405,6 +20801,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -20415,7 +20814,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -20501,6 +20901,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -20511,7 +20914,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -21882,6 +22286,119 @@
                     }
                   },
                   "required": ["region"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matter-types/{id}/form": {
+      "get": {
+        "operationId": "getMatterTypeForm",
+        "tags": ["matter-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceMatterTypeForm",
+        "tags": ["matter-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "form": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/FormNodeInput"
+                    }
+                  }
+                },
+                "required": ["form"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
                   "additionalProperties": false
                 }
               }
@@ -31751,15 +32268,8 @@
                             ]
                           },
                           "targetModule": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "enum": ["matter", "contract"]
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": "string",
+                            "enum": ["matter", "contract"]
                           },
                           "targetTypeId": {
                             "type": ["string", "null"]
@@ -31896,15 +32406,8 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
@@ -32034,15 +32537,8 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
@@ -32233,15 +32729,8 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
@@ -32413,15 +32902,8 @@
                             ]
                           },
                           "targetModule": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "enum": ["matter", "contract"]
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": "string",
+                            "enum": ["matter", "contract"]
                           },
                           "targetTypeId": {
                             "type": ["string", "null"]
@@ -32567,15 +33049,8 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
@@ -32705,15 +33180,8 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
@@ -73358,6 +73826,119 @@
                     }
                   },
                   "required": ["entityType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entity-types/{id}/form": {
+      "get": {
+        "operationId": "getEntityTypeForm",
+        "tags": ["entity-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceEntityTypeForm",
+        "tags": ["entity-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "form": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/FormNodeInput"
+                    }
+                  }
+                },
+                "required": ["form"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
                   "additionalProperties": false
                 }
               }

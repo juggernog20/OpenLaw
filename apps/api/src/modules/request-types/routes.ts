@@ -113,7 +113,7 @@ export const requestTypesRoutes = taxonomyRoutes({
     rowSchema: {
       formFieldOrder: z.array(z.string()),
       turnaroundDays: z.number().int().nullable(),
-      targetModule: TargetModuleSchema.nullable(),
+      targetModule: TargetModuleSchema,
       targetTypeId: z.string().nullable(),
       /** ST12's Form fields column: how many catalog fields this type's
        * portal form collects, over and above the four fixed basics. */
@@ -131,7 +131,7 @@ export const requestTypesRoutes = taxonomyRoutes({
       return {
         formFieldOrder: type.formFieldOrder,
         turnaroundDays: type.turnaroundDays,
-        targetModule: type.targetModule as TargetModule | null,
+        targetModule: type.targetModule as TargetModule,
         targetTypeId: targetTypeId(type),
         formFieldCount: counts.get(type.id) ?? 0,
       };
@@ -179,6 +179,9 @@ export const requestTypesRoutes = taxonomyRoutes({
       // alone" rather than "keep the old one".
       const module = namesModule ? (body.targetModule ?? null) : currentModule;
       const typeId = namesType ? (body.targetTypeId ?? null) : namesModule ? null : currentTypeId;
+
+      if (module === null)
+        throw httpError(400, "A Request type needs a destination module. Pick Matter or Contract.");
 
       if (typeId !== null) {
         if (module === null) {
