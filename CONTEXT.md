@@ -323,18 +323,18 @@ The Administrator-only card above Organization in Settings → Organization → 
 _Avoid_: onboarding dashboard, skip history, restart setup
 
 **Type**:
-The configurable taxonomy on a Matter, Contract, Entity, or Request, and the designated carrier for policy — the Form, templates, approvals attach here [CTR-002, MTR-001, INT-002, DD-028].
+The configurable taxonomy on a Matter, Contract, Entity, or Request, and the designated carrier for policy — templates and approvals attach here. A Contract, Matter, or Entity type owns a Form; a Request type owns none and reads the Intake Rows of its destination type's Form [CTR-002, MTR-001, INT-002, DD-028].
 
 **Default type**:
 The one seeded type per module (Contracts, Matters) marked `is_default`. Editable and renameable, never archived or deleted. Its Form is the Request form when a Request type names a module and no type, and the create dialogs preselect it [DD-028].
 _Avoid_: fallback type, untyped, generic type
 
 **Form**:
-The ordered tree a Contract, Matter, or Entity type owns, made of Rows and Branches. One Form feeds the Request form, the creation form, the record page, and the Portal record [DD-028].
+The ordered tree a Contract, Matter, or Entity type owns, made of Rows and Branches. A Contract or Matter Form feeds the Request form, the creation form, the record page, and the Portal record. An Entity Form has no intake switch and feeds the create form and the record only [DD-028].
 _Avoid_: attachment list, field list, form definition (Auto-Docs own that term)
 
 **Row**:
-A node on a Form that collects one value: a built-in column or an attached Field. Carries three switches, On intake form, Required for creation, Visible on Portal [DD-028].
+A node on a Form that collects one value: a built-in column or an attached Field. On a Contract or Matter Form it carries three switches, On intake form, Required for creation, Visible on Portal. On an Entity Form it carries the last two [DD-028].
 _Avoid_: attachment, form field, question
 
 **Branch**:
@@ -342,7 +342,7 @@ A node on a Form holding a condition group (match all or any of `row operator va
 _Avoid_: rule, logic jump, section, conditional group
 
 **Touchpoint**:
-Where a Row is first collected, derived from its switches and never stored: Intake (on intake form), Creation (required and not on intake), Record (neither). The creation form collects Intake and Creation Rows [DD-028].
+Where a Row is first collected, derived from its switches and never stored: Intake (on intake form), Creation (required and not on intake), Record (neither). The creation form collects Intake and Creation Rows; an Entity Form has no Intake Rows, so its create form collects the required Rows [DD-028].
 _Avoid_: level, stage, surface
 
 **Intake form**:
