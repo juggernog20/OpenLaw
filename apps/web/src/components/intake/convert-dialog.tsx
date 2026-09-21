@@ -441,11 +441,30 @@ export function ConvertDialog({
   );
   // Record-only Field Rows also accept carried answers.
   for (const field of targetFields) targetRefs.add(field.slug);
+  // A legacy intake slug carries only where the target has the Row its built-in
+  // key lands on (M39/11 re-keys these answers and removes this map).
+  const legacyBuiltinRows: Record<string, string> = {
+    entityId: "entity",
+    counterparties: "counterparties",
+    effectiveDate: "effective_date",
+    expiryDate: "expiry_date",
+    termType: "term_type",
+    renewalPeriodMonths: "renewal_period_months",
+    noticePeriodDays: "notice_period_days",
+    valueAmount: "value",
+    valueCurrency: "value",
+    valueCadence: "value",
+  };
   const staysBehind = fields.filter(
     (field) =>
       isAnswered(request.customFields[field.slug]) &&
       !targetRefs.has(field.slug) &&
-      !(field.builtInKey && targetModule === "contract" && field.slug.startsWith("__intake_")) &&
+      !(
+        field.builtInKey &&
+        targetModule === "contract" &&
+        field.slug.startsWith("__intake_") &&
+        targetRefs.has(legacyBuiltinRows[field.builtInKey] ?? "")
+      ) &&
       !(field.slug.startsWith("value_") && targetRefs.has("value")),
   );
   // Keep live carried references labelled even when an options read omits them.

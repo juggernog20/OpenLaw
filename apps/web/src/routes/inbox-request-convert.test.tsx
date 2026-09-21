@@ -246,6 +246,7 @@ const request = (overrides: Record<string, unknown> = {}) =>
 const detail = (
   row: Record<string, unknown>,
   customFieldRefs: unknown = { users: [], entities: [] },
+  extraFields: unknown[] = [],
 ) => ({
   ...(staffDetail(row, [
     OPPOSING_PARTY,
@@ -254,6 +255,7 @@ const detail = (
     CONTRACTING_ENTITY,
     COUNTERPARTY_NAME,
     NEEDED_BY,
+    ...extraFields,
   ]) as Record<string, unknown>),
   customFieldRefs,
 });
@@ -268,12 +270,13 @@ function requestApi(
   initial = request(),
   answer: (call: StubCall) => Response | undefined = () => undefined,
   customFieldRefs: unknown = { users: [], entities: [] },
+  extraFields: unknown[] = [],
 ) {
   const api = dispositionApi({
     segment: "convert",
     initial,
     answer,
-    detail: (row) => detail(row, customFieldRefs),
+    detail: (row) => detail(row, customFieldRefs, extraFields),
     applied: (row, body) => {
       const sent = body as Record<string, unknown>;
       const requestType = row.requestType as { targetModule?: unknown };
@@ -611,6 +614,35 @@ describe("conversion built-in Rows", () => {
     expect(
       within(dialog).getByText("Does not carry into the contract").parentElement,
     ).toHaveTextContent("Requesting manager");
+  });
+
+  it("lists a legacy intake answer as staying behind when the target has no Row for it", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(
+      request({
+        customFields: {
+          opposing_party: "Northwind Labs",
+          __intake_contract_effectiveDate: "2026-10-01",
+        },
+      }),
+      undefined,
+      undefined,
+      [
+        field("__intake_contract_effectiveDate", "Effective date", {
+          fieldType: "date",
+          builtInKey: "effectiveDate",
+        }),
+      ],
+    );
+    open(api);
+    const dialog = await openConvert(user);
+    expect(within(dialog).queryByLabelText(/^Effective date/)).toBeNull();
+    expect(
+      within(dialog).getByText("Does not carry into the contract").parentElement,
+    ).toHaveTextContent("Effective date");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).not.toHaveProperty(["customFields", "effective_date"]);
   });
 
   it("keeps Contract-only answers behind when re-targeting to Matter", async () => {
