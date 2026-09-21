@@ -362,6 +362,7 @@ describe("Form validation", () => {
 
   it.each([
     ["is_one_of", "one", "text"],
+    ["is_one_of", [], "text"],
     ["equals", ["one"], "text"],
     ["is_set", true, "text"],
     ["greater_than", "10", "number"],

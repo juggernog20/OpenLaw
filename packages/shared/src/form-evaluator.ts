@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * DD-028's Form evaluation, record visibility, touchpoints and Branch validation.
+ * These functions perform no I/O and do not mutate the Form or its answers.
+ */
+
 /** DD-028. Array order is document order; rowRef is a built-in key or Field slug. */
 export type Form = readonly FormNode[];
 export type FormNode = FormRow | FormBranch;
@@ -250,7 +255,9 @@ export function validateForm(form: Form): FormValidationIssue[] {
         condition.operator === "is_set"
           ? condition.value === null
           : condition.operator === "is_one_of"
-            ? Array.isArray(condition.value) && condition.value.every(scalar)
+            ? Array.isArray(condition.value) &&
+              condition.value.length > 0 &&
+              condition.value.every(scalar)
             : ordered
               ? comparable(condition.value, referenced.row.fieldType) !== undefined
               : scalar(condition.value);
