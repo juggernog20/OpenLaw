@@ -10835,14 +10835,8 @@
   "settings.requestTypeEditor.basicAttachmentsType": {
     "defaultMessage": "Files"
   },
-  "settings.requestTypeEditor.basicDescription": {
-    "defaultMessage": "Description"
-  },
-  "settings.requestTypeEditor.basicDescriptionType": {
-    "defaultMessage": "Long text"
-  },
   "settings.requestTypeEditor.basicLocked": {
-    "defaultMessage": "{name} is always collected. You can change its position."
+    "defaultMessage": "{name} is always collected."
   },
   "settings.requestTypeEditor.basicTitle": {
     "defaultMessage": "Title"

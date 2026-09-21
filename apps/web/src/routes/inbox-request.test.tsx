@@ -839,3 +839,29 @@ it("marks the mounted full record read and keeps triage available", async () => 
   expect(await screen.findByText("Read")).toBeVisible();
   expect(screen.getByRole("button", { name: "Triage" })).toBeVisible();
 });
+
+it.each([true, false])(
+  "renders a native Description once only while attached (%s)",
+  async (attached) => {
+    const description = "Description from the destination Form";
+    const api = detailApi(
+      detail({
+        request: { description, customFields: { description } },
+        fields: attached
+          ? [
+              field({
+                slug: "description",
+                builtInKey: "description",
+                displayName: "Description",
+                fieldType: "long_text",
+              }),
+            ]
+          : [],
+      }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/inbox/45");
+    await screen.findByRole("heading", { name: "Form responses" });
+    expect(screen.queryAllByText(description)).toHaveLength(attached ? 1 : 0);
+  },
+);

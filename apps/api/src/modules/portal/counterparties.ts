@@ -3,7 +3,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { and, eq, isNull, requestTypes } from "@openlaw/db";
-import { readIntakeForm, intakeRows } from "../../lib/intake-form.js";
+import { readIntakeTree, intakeRows } from "../../lib/intake-form.js";
 import { requireAuth } from "../../auth/guards.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { CounterpartyOptionSchema, searchCounterparties } from "../counterparties/routes.js";
@@ -33,7 +33,7 @@ export const portalCounterpartiesRoutes: FastifyPluginAsyncZod = async (app) => 
         .limit(1);
       if (
         !form ||
-        !intakeRows((await readIntakeForm(app.db, form.id)).form).some(
+        !intakeRows((await readIntakeTree(app.db, form.id)).form).some(
           (row) => row.rowRef === "counterparties",
         )
       )

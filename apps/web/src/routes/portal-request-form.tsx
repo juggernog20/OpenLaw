@@ -551,6 +551,8 @@ function AttachedField({
           className={CONTROL_CLASS}
           value={typeof draft === "string" ? draft : ""}
           aria-required={field.isRequired}
+          aria-invalid={unanswered || undefined}
+          aria-describedby={field.description ? `${controlId}-help` : undefined}
           onChange={(e) => onDraft(e.target.value)}
         >
           <option value="">

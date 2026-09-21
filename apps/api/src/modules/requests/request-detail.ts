@@ -164,9 +164,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
           200: z.object({
             request: StaffRequestSchema,
             conversion: z.object({ at: z.iso.datetime(), by: z.string().nullable() }).nullable(),
-            /** The type's attached fields, in the order the form drew
-             * them. A value whose field has since been detached or
-             * archived is not among them and is therefore not drawn. */
+            /** Current Intake Row labels. Detached or archived Rows retain their answers but are not drawn. */
             fields: z.array(AttachedCustomFieldSchema),
             customFieldRefs: StaffRequestCustomFieldRefsSchema,
             /** The paper, oldest first. Empty is an answer: a Request
@@ -180,7 +178,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const row = await staffRequestRow(app.db, request.user, request.params.number);
       const [attached, attachments] = await Promise.all([
-        readIntakeForm(app.db, row.typeId),
+        readIntakeForm(app.db, row.typeId, { includeArchived: true }),
         row.status === "converted" ? [] : selectAttachments(app.db, row.id),
       ]);
       const [conversion] =

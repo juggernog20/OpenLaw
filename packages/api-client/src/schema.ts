@@ -19900,6 +19900,8 @@ export interface operations {
         content: {
           "application/json": {
             requestTypes: {
+              /** @deprecated */
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               id: string;
               slug: string;
@@ -19984,6 +19986,8 @@ export interface operations {
         content: {
           "application/json": {
             requestType: {
+              /** @deprecated */
+              formFieldOrder: string[];
               turnaroundDays: number | null;
               id: string;
               slug: string;

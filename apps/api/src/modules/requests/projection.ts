@@ -626,7 +626,11 @@ async function resolveBuiltinRefs(
   values: Readonly<Record<string, CustomFieldValue>>,
 ) {
   const ids = attached
-    .filter((field) => field.builtInKey)
+    .filter((field) =>
+      ["counterparties", "owning_department", "department", "region"].includes(
+        field.builtInKey ?? "",
+      ),
+    )
     .flatMap((field) => {
       const value = values[field.slug];
       return Array.isArray(value) ? value : typeof value === "string" ? [value] : [];

@@ -196,7 +196,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // The type's attached fields, in the order the form draws them.
         // The portal's form route reads the same thing the same way —
         // that is what makes the refusal and the screen agree.
-        const intake = await readIntakeForm(tx, requestType.id, true);
+        const intake = await readIntakeForm(tx, requestType.id, { lock: true });
         const attached = intake.fields;
         const rawFields = { ...(body.customFields ?? {}) };
         if (body.description !== undefined && body.description.trim())
@@ -229,6 +229,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
             throw httpError(400, "That Row is not on the visible Request form.");
         }
         const visibleFields = attached.filter((field) => visibleKeys.has(field.slug));
+        // Validate native facts now; conversion reads them again when creating the record.
         await readIntakeContractFacts(tx, customFields);
 
         // Lock referenced rows until submission commits, so a concurrent
@@ -513,7 +514,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       }
 
       const [attached, attachments] = await Promise.all([
-        readIntakeForm(app.db, row.typeId),
+        readIntakeForm(app.db, row.typeId, { includeArchived: true }),
         row.status === "converted" ? [] : selectAttachments(app.db, row.id),
       ]);
       const readableFields = attached.fields;

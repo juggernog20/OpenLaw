@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** Resolve destination Intake trees and Row definitions for Requests (DD-028, INT-002). */
 import {
   contractTypes,
   matterTypes,
@@ -7,6 +9,7 @@ import {
   matterTypeFields,
   departments,
   regions,
+  and,
   eq,
   isNull,
   type Executor,
@@ -35,7 +38,7 @@ const labels: Record<string, string> = {
   value_cadence: "Value frequency",
   needed_by: "Needed by",
 };
-const options: Record<string, string[]> = {
+const choices: Record<string, string[]> = {
   priority: ["low", "medium", "high", "critical"],
   risk: ["low", "medium", "high", "critical"],
   term_type: ["fixed", "auto_renew", "evergreen"],
@@ -49,7 +52,13 @@ export function intakeRowKeys(rowRef: string): string[] {
 }
 
 /** The Request type selects a Form; it owns no questions of its own. */
-export async function readIntakeForm(db: Executor, requestTypeId: string, lock = false) {
+type ReadOptions = { lock?: boolean; includeArchived?: boolean };
+
+export async function readIntakeTree(
+  db: Executor,
+  requestTypeId: string,
+  options: ReadOptions = {},
+) {
   const [requestType] = await db
     .select()
     .from(requestTypes)
@@ -62,14 +71,28 @@ export async function readIntakeForm(db: Executor, requestTypeId: string, lock =
   const query = db
     .select({ id: table.id })
     .from(table)
-    .where(selected ? eq(table.id, selected) : eq(table.isDefault, true));
-  const [type] = await (lock ? query.for("share") : query);
+    .where(
+      and(
+        selected ? eq(table.id, selected) : eq(table.isDefault, true),
+        options.includeArchived ? undefined : isNull(table.archivedAt),
+      ),
+    );
+  const [type] = await (options.lock ? query.for("share") : query);
   if (!type) throw httpError(400, "This Request type needs a destination type.");
   const form = formForTouchpoint(await readTypeForm(db, module, type.id), "intake");
+  return { form, module, typeId: type.id };
+}
+
+export async function readIntakeForm(
+  db: Executor,
+  requestTypeId: string,
+  options: ReadOptions = {},
+) {
+  const { form, module, typeId } = await readIntakeTree(db, requestTypeId, options);
   const attached = await selectAttachedFields(
     db,
     module === "contract" ? contractTypeFields : matterTypeFields,
-    type.id,
+    typeId,
   );
   const fields: AttachedCustomField[] = intakeRows(form).flatMap((row) => {
     const field = attached.find((f) => f.fieldId === row.id);
@@ -92,7 +115,7 @@ export async function readIntakeForm(db: Executor, requestTypeId: string, lock =
           : row.fieldType === "money"
             ? "number"
             : row.fieldType,
-      options: options[key] ?? null,
+      options: choices[key] ?? null,
       isRequired: row.isRequired,
     }));
   });
@@ -112,5 +135,5 @@ export async function readIntakeForm(db: Executor, requestTypeId: string, lock =
       field.options = departmentOptions.map((o) => o.id);
     if (field.builtInKey === "region") field.options = regionOptions.map((o) => o.id);
   }
-  return { form, fields, regions: regionOptions, module, typeId: type.id };
+  return { form, fields, regions: regionOptions, module, typeId };
 }

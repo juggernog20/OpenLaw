@@ -368,14 +368,13 @@ describe("default destination", () => {
 });
 
 describe("the form definition (ST14's right card)", () => {
-  it("opens with the five basics, locked and disabled, on the DES-018 ramp", async () => {
+  it("opens with the four basics, locked and disabled, on the DES-018 ramp", async () => {
     openEditor(editorApi(newCalls()));
     expect(await screen.findByText("Form fields")).toBeInTheDocument();
     expect(screen.getByText("Basics are always on the form")).toBeInTheDocument();
 
     for (const [name, required] of [
       ["Title", true],
-      ["Description", true],
       ["Attachments", false],
       ["Department", true],
       ["Urgency", true],

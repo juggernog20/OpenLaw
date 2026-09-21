@@ -30,6 +30,8 @@ import { readIntakeForm } from "../../lib/intake-form.js";
 import { FormNodeSchema } from "../../lib/type-form-routes.js";
 
 const PortalRequestTypeSchema = z.object({
+  // Retained for v1 readers; the destination Form now determines order.
+  formFieldOrder: z.array(z.string()).meta({ deprecated: true }),
   turnaroundDays: z.number().int().nullable(),
   id: z.string(),
   /** Addresses the type's form; the picker links on it. */
@@ -169,6 +171,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           description: requestTypes.description,
           turnaroundDays: requestTypes.turnaroundDays,
           displayOrder: requestTypes.displayOrder,
+          formFieldOrder: requestTypes.formFieldOrder,
         })
         .from(requestTypes)
         .where(isNull(requestTypes.archivedAt))
@@ -253,6 +256,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           description: requestTypes.description,
           turnaroundDays: requestTypes.turnaroundDays,
           displayOrder: requestTypes.displayOrder,
+          formFieldOrder: requestTypes.formFieldOrder,
         })
         .from(requestTypes)
         .where(and(eq(requestTypes.slug, request.params.slug), isNull(requestTypes.archivedAt)))

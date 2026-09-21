@@ -100,7 +100,13 @@ export function customFieldValueText(
       { locale: intl.locale },
     );
   }
-  if (field.builtInKey && typeof value === "string" && refs.builtins?.[value])
+  if (
+    ["counterparties", "owning_department", "department", "region"].includes(
+      field.builtInKey ?? "",
+    ) &&
+    typeof value === "string" &&
+    refs.builtins?.[value]
+  )
     return refs.builtins[value];
   switch (field.fieldType) {
     case "number":
@@ -112,7 +118,13 @@ export function customFieldValueText(
     case "multi_select":
       return Array.isArray(value)
         ? intl.formatList(
-            value.map((v) => (field.builtInKey ? (refs.builtins?.[v] ?? v) : v)),
+            value.map((v) =>
+              ["counterparties", "owning_department", "department", "region"].includes(
+                field.builtInKey ?? "",
+              )
+                ? (refs.builtins?.[v] ?? v)
+                : v,
+            ),
             { type: "conjunction" },
           )
         : String(value);

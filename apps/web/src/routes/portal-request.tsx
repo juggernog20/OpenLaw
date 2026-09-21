@@ -145,13 +145,15 @@ export function PortalRequestPage() {
               </h2>
             </div>
             <dl className="flex flex-col">
-              {request.description !== null && request.description !== "" && (
-                <ValueRow label={intl.formatMessage(BASIC_LABELS.description)}>
-                  {/* A requester's paragraphs are theirs: the line breaks
+              {request.description !== null &&
+                request.description !== "" &&
+                !Object.hasOwn(request.customFields, "description") && (
+                  <ValueRow label={intl.formatMessage(BASIC_LABELS.description)}>
+                    {/* A requester's paragraphs are theirs: the line breaks
                       they typed are part of what they said. */}
-                  <span className="whitespace-pre-line">{request.description}</span>
-                </ValueRow>
-              )}
+                    <span className="whitespace-pre-line">{request.description}</span>
+                  </ValueRow>
+                )}
               {attachments.length > 0 && (
                 <ValueRow label={intl.formatMessage(BASIC_LABELS.attachments)}>
                   <AttachmentList number={request.number} attachments={attachments} />
@@ -360,7 +362,13 @@ function renderValue(
       { amount: value, currency: answers.value_currency },
       { locale: intl.locale },
     );
-  if (field.builtInKey && typeof value === "string" && refs.builtins?.[value])
+  if (
+    ["counterparties", "owning_department", "department", "region"].includes(
+      field.builtInKey ?? "",
+    ) &&
+    typeof value === "string" &&
+    refs.builtins?.[value]
+  )
     return refs.builtins[value];
   switch (field.fieldType) {
     case "number":
@@ -378,7 +386,13 @@ function renderValue(
     case "multi_select":
       return Array.isArray(value)
         ? intl.formatList(
-            value.map((v) => (field.builtInKey ? (refs.builtins?.[v] ?? v) : v)),
+            value.map((v) =>
+              ["counterparties", "owning_department", "department", "region"].includes(
+                field.builtInKey ?? "",
+              )
+                ? (refs.builtins?.[v] ?? v)
+                : v,
+            ),
             { type: "conjunction" },
           )
         : String(value);

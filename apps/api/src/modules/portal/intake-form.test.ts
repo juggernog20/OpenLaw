@@ -187,6 +187,24 @@ it("reads the destination Intake tree, evaluates Required, and labels built-in a
   });
   expect(noModule.statusCode).toBe(400);
   expect(noModule.json().detail).toContain("destination module");
+  await h.db
+    .update(contractTypes)
+    .set({ archivedAt: new Date() })
+    .where(eq(contractTypes.id, typeId));
+  const archivedForm = await h.app.inject({
+    method: "GET",
+    url: `/api/v1/portal/request-types/${rt.slug}`,
+    cookies: requesterCookies,
+  });
+  expect(archivedForm.statusCode, archivedForm.body).toBe(400);
+  const archivedSubmit = await submit({});
+  expect(archivedSubmit.statusCode, archivedSubmit.body).toBe(400);
+  const existing = await h.app.inject({
+    method: "GET",
+    url: `/api/v1/requests/${answered.json().request.number}`,
+    cookies,
+  });
+  expect(existing.statusCode, existing.body).toBe(200);
 });
 
 it("uses only the Contract Default Form for a module-only destination", async () => {
@@ -199,12 +217,13 @@ it("uses only the Contract Default Form for a module-only destination", async ()
       payload: { displayName: "Default intake" },
     })
   ).json().requestType;
-  await h.app.inject({
+  const target = await h.app.inject({
     method: "PATCH",
     url: `/api/v1/request-types/${rt.id}`,
     cookies,
     payload: { targetModule: "contract" },
   });
+  expect(target.statusCode, target.body).toBe(200);
   const read = await h.app.inject({
     method: "GET",
     url: `/api/v1/portal/request-types/${rt.slug}`,
@@ -258,12 +277,13 @@ it("stores native Row keys, validates Value and registry picks, and converts wit
       payload: { displayName: "Native request" },
     })
   ).json().requestType;
-  await h.app.inject({
+  const target = await h.app.inject({
     method: "PATCH",
     url: `/api/v1/request-types/${rt.id}`,
     cookies,
     payload: { targetModule: "contract", targetTypeId: typeId },
   });
+  expect(target.statusCode, target.body).toBe(200);
   const [party] = await h.db
     .insert(counterparties)
     .values({ name: "Registry selection", jurisdiction: "Delaware" })

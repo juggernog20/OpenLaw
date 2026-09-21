@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-028/INT-002 workflow fixtures declare their questions through Request attachments.
+ * Install those declarations on the destination Form before submitting the fixture.
+ * New Form behavior tests configure the destination directly and call inject themselves.
+ */
 import {
   and,
   eq,
@@ -15,10 +20,6 @@ import {
 import type { InjectOptions } from "fastify";
 import type { TestHarness } from "./harness.js";
 
-/** Older workflow fixtures declare their questions through Request attachments.
- * Install those declarations on the destination Form before submitting the fixture.
- * New Form behavior tests configure the destination directly and call inject themselves.
- */
 export async function submitRequestFixture(h: TestHarness, options: InjectOptions) {
   const body = options.payload as Record<string, unknown> | undefined;
   const id = body?.requestTypeId;

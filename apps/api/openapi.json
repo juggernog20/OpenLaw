@@ -34259,6 +34259,13 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "formFieldOrder": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "deprecated": true
+                          },
                           "turnaroundDays": {
                             "anyOf": [
                               {
@@ -34290,6 +34297,7 @@
                           }
                         },
                         "required": [
+                          "formFieldOrder",
                           "turnaroundDays",
                           "id",
                           "slug",
@@ -34428,6 +34436,13 @@
                     "requestType": {
                       "type": "object",
                       "properties": {
+                        "formFieldOrder": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "deprecated": true
+                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -34459,6 +34474,7 @@
                         }
                       },
                       "required": [
+                        "formFieldOrder",
                         "turnaroundDays",
                         "id",
                         "slug",

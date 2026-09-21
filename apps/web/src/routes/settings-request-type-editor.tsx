@@ -99,7 +99,7 @@ const REQUIRED_RULE: EditorRequiredRule = {
 
 /**
  * The fixed basics (INT-002): what every request form collects, whatever
- * an Administrator configures. Title, Description, Department, and Urgency are
+ * an Administrator configures. Title, Department, and Urgency are
  * required; Attachments are optional. Urgency wears the DES-018
  * severity ramp.
  */
@@ -110,15 +110,10 @@ const BASICS = defineMessages({
   },
   locked: {
     id: "settings.requestTypeEditor.basicLocked",
-    defaultMessage: "{name} is always collected. You can change its position.",
+    defaultMessage: "{name} is always collected.",
   },
   title: { id: "settings.requestTypeEditor.basicTitle", defaultMessage: "Title" },
   titleType: { id: "settings.requestTypeEditor.basicTitleType", defaultMessage: "Text" },
-  description: { id: "settings.requestTypeEditor.basicDescription", defaultMessage: "Description" },
-  descriptionType: {
-    id: "settings.requestTypeEditor.basicDescriptionType",
-    defaultMessage: "Long text",
-  },
   attachments: {
     id: "settings.requestTypeEditor.basicAttachments",
     defaultMessage: "Attachments",
@@ -140,20 +135,14 @@ const BASICS_SLOT: TypeEditorBasics = {
   locked: BASICS.locked,
   rows: [
     { key: "title", name: BASICS.title, caption: BASICS.titleType, isRequired: true },
-    {
-      key: "description",
-      name: BASICS.description,
-      caption: BASICS.descriptionType,
-      isRequired: true,
-    },
+    { key: "department", name: BASICS.department, caption: BASICS.urgencyType, isRequired: true },
+    { key: "urgency", name: BASICS.urgency, caption: BASICS.urgencyType, isRequired: true },
     {
       key: "attachments",
       name: BASICS.attachments,
       caption: BASICS.attachmentsType,
       isRequired: false,
     },
-    { key: "department", name: BASICS.department, caption: BASICS.urgencyType, isRequired: true },
-    { key: "urgency", name: BASICS.urgency, caption: BASICS.urgencyType, isRequired: true },
   ],
 };
 

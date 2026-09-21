@@ -72,6 +72,7 @@ let fieldSlugs: Map<string, string>;
 
 /** A request type whose bound contract type has since been archived. */
 let retiredTargetTypeId: string;
+let retiredContractTypeId: string;
 /** A request type that targets the Matter module — Re-target's subject. */
 let matterTargetTypeId: string;
 
@@ -202,10 +203,7 @@ beforeAll(async () => {
     targetModule: "contract",
     targetTypeId: retiredType.json().contractType.id as string,
   });
-  await harness.db
-    .update(contractTypes)
-    .set({ archivedAt: new Date() })
-    .where(eq(contractTypes.id, retiredType.json().contractType.id as string));
+  retiredContractTypeId = retiredType.json().contractType.id as string;
 
   // A Matter-targeting Request can still convert into a Contract —
   // DD-018 rule 5's lossless Re-target, symmetric since M22.
@@ -427,6 +425,10 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     const request = await submit("The bound type has been retired", {
       typeId: retiredTargetTypeId,
     });
+    await harness.db
+      .update(contractTypes)
+      .set({ archivedAt: new Date() })
+      .where(eq(contractTypes.id, retiredContractTypeId));
     const detail = await harness.app.inject({
       method: "GET",
       url: `/api/v1/requests/${request.number}`,

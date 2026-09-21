@@ -174,14 +174,15 @@ describe("the request type's form", () => {
   });
 
   it("draws the four fixed basics on every form", async () => {
-    openForm({ fields: [] });
+    openForm({ fields: [], form: [] });
     // INT-002's basics: three that carry a value, and Attachments,
     // which is on the form whatever the Administrator configured.
     expect(await screen.findByLabelText(/^Title/)).toHaveAttribute(
       "placeholder",
       "Enter a descriptive title for your request",
     );
-    expect(screen.getByLabelText(/^Description/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Description/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Department/)).toBeInTheDocument();
     expect(screen.getByLabelText(/^Urgency/)).toBeInTheDocument();
     expect(screen.getByText("Attachments")).toBeInTheDocument();
   });
@@ -824,4 +825,24 @@ it("collects Value as one Row and submits its three scalar parts", async () => {
   expect(submissions.bodies[0]).toMatchObject({
     customFields: { value_amount: 12345, value_currency: "USD", value_cadence: "monthly" },
   });
+});
+
+it("exposes reference picker validation and help text to assistive technology", async () => {
+  openForm({
+    fields: [
+      {
+        ...COUNTERPARTY,
+        fieldId: "owning_department",
+        slug: "owning_department",
+        builtInKey: "owning_department",
+        displayName: "Owning department",
+        fieldType: "single_select",
+        description: "Choose the team that owns the agreement.",
+      },
+    ],
+  });
+  const picker = await screen.findByRole("combobox", { name: /^Owning department/ });
+  expect(picker).toHaveAccessibleDescription("Choose the team that owns the agreement.");
+  await userEvent.setup().click(screen.getByRole("button", { name: "Submit request" }));
+  expect(picker).toHaveAttribute("aria-invalid", "true");
 });
