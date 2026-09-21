@@ -841,9 +841,12 @@ describe("the provider model selector", () => {
     renderAt("/settings/ai-analysis");
     await openProvider(user);
     await user.click(screen.getByRole("button", { name: "Load models" }));
-    await user.type(await screen.findByRole("searchbox", { name: "Search models" }), "Legal");
+    await user.type(screen.getByRole("combobox", { name: "Model" }), "Legal");
+    expect(screen.getByRole("option", { name: "Legal model · vendor/legal" })).toBeVisible();
     expect(screen.queryByRole("option", { name: /General model/ })).not.toBeInTheDocument();
-    await user.selectOptions(screen.getByLabelText("Model"), "vendor/legal");
+    await user.click(screen.getByRole("option", { name: "Legal model · vendor/legal" }));
+    expect(screen.getByLabelText("Model")).toHaveValue("vendor/legal");
+    expect(screen.getByLabelText("Model")).toHaveAttribute("aria-expanded", "false");
     await user.click(screen.getByRole("button", { name: "Refresh models" }));
     expect(await screen.findByText(/selected model was not returned/)).toBeVisible();
     expect(screen.getByLabelText("Model")).toHaveValue("vendor/legal");
@@ -851,6 +854,49 @@ describe("the provider model selector", () => {
     await waitFor(() =>
       expect(saves).toEqual([{ preset: "openai", model: "vendor/legal", maxOutputTokens: 32768 }]),
     );
+  });
+
+  it("opens the model list on focus, walks it with the keyboard and reverts on Escape", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi({
+        models: () =>
+          json(200, {
+            models: [
+              { id: "claude-sonnet-5", label: "Claude Sonnet 5" },
+              { id: "claude-opus-5", label: "Claude Opus 5" },
+            ],
+            truncated: false,
+          }),
+      }),
+    });
+    renderAt("/settings/ai-analysis");
+    await openProvider(user);
+    const model = screen.getByRole("combobox", { name: "Model" });
+    expect(model).toHaveValue("gpt-saved");
+    await user.click(model);
+    expect(
+      screen.getByRole("option", { name: /Load models to choose from a list/ }),
+    ).toHaveAttribute("aria-disabled", "true");
+    await user.keyboard("{Escape}");
+    expect(model).toHaveValue("gpt-saved");
+    await user.click(screen.getByRole("button", { name: "Load models" }));
+    await screen.findByRole("button", { name: "Refresh models" });
+    expect(screen.getByText(/selected model was not returned/)).toBeVisible();
+    await user.click(model);
+    expect(
+      within(screen.getByRole("listbox", { name: "Models" })).getAllByRole("option"),
+    ).toHaveLength(2);
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(model).toHaveValue("claude-opus-5");
+    expect(screen.queryByText(/selected model was not returned/)).not.toBeInTheDocument();
+    expect(model).toHaveAttribute("aria-expanded", "false");
+    await user.click(model);
+    await user.keyboard("nomatch");
+    expect(screen.getByRole("option", { name: "No matching models." })).toBeVisible();
+    await user.keyboard("{Escape}");
+    expect(model).toHaveValue("claude-opus-5");
   });
 
   it("loads unsaved credentials before a connector exists and keeps manual fallback after failure", async () => {

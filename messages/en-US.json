@@ -8555,6 +8555,9 @@
   "settings.aiAnalysis.models.groq": {
     "defaultMessage": "Groq models are filtered by model family. Use Test connection to check the selected model."
   },
+  "settings.aiAnalysis.models.list": {
+    "defaultMessage": "Models"
+  },
   "settings.aiAnalysis.models.load": {
     "defaultMessage": "Load models"
   },
@@ -8563,6 +8566,9 @@
   },
   "settings.aiAnalysis.models.manual": {
     "defaultMessage": "Enter model ID manually"
+  },
+  "settings.aiAnalysis.models.noMatches": {
+    "defaultMessage": "No matching models."
   },
   "settings.aiAnalysis.models.ollama": {
     "defaultMessage": "Load models installed in Ollama. This does not download models."
@@ -8575,6 +8581,9 @@
   },
   "settings.aiAnalysis.models.search": {
     "defaultMessage": "Search models"
+  },
+  "settings.aiAnalysis.models.unloaded": {
+    "defaultMessage": "Load models to choose from a list, or enter the model ID manually."
   },
   "settings.aiAnalysis.models.useList": {
     "defaultMessage": "Choose from list"

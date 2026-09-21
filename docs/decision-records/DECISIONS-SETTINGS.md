@@ -236,6 +236,10 @@ The pane and the onboarding AI analysis step show **Key saved** beside the API k
 
 Each Provider option shows "(key saved)" when that provider has a Saved key, including Custom endpoint when any custom destination has one. In both the pane and the onboarding step, **Forget key** sits beside **Key saved** and asks for confirmation. The pill and action follow the pending protocol and normalized base URL. **Key in use** offers no Forget key action. The Administrator-only delete refuses a referenced Saved key with a 409 and records a forgotten Activity with the destination, never the key value. Remove connector explains that Saved keys stay and points to Forget key. Pencil was unreachable for this task, so the SET-008 frame debt remains unverified.
 
+### Addendum, 2026-09-21, model search
+
+The #791 model search was a search box beside a native select. Typing narrowed the options inside the closed select, so the Administrator saw no change until they opened it. The two controls are now one combobox on the DES-014 timezone picker pattern: focus opens the loaded list, typing narrows it by display name or model ID, Arrow keys walk it, Enter commits, Escape reverts. Before **Load models** the open list says to load models or enter the ID manually. The manual entry control, Azure deployment-name entry, and the kept-selection rule are unchanged.
+
 ## SET-009: select the Signing connector's update mode
 
 - **Status:** Accepted
