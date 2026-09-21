@@ -4694,6 +4694,9 @@
   "entities.documents.folder.recordRoot": {
     "defaultMessage": "None"
   },
+  "entities.form.fieldMissing": {
+    "defaultMessage": "Fill {field}."
+  },
   "entities.form.formedOn": {
     "defaultMessage": "Formed on"
   },
@@ -6652,9 +6655,6 @@
   },
   "matters.createFailed": {
     "defaultMessage": "The matter could not be created."
-  },
-  "matters.customFields": {
-    "defaultMessage": "Custom fields"
   },
   "matters.documents.batch.failures": {
     "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the matter.} one {The other # is on the matter.} other {The other # are on the matter.}}"
@@ -11627,6 +11627,9 @@
   "typeForm.creation": {
     "defaultMessage": "Creation"
   },
+  "typeForm.creationOptionsFailed": {
+    "defaultMessage": "Some choices could not be loaded. Close the dialog and try again."
+  },
   "typeForm.critical": {
     "defaultMessage": "Critical"
   },
@@ -11737,6 +11740,9 @@
   },
   "typeForm.needed-by": {
     "defaultMessage": "Needed by"
+  },
+  "typeForm.neededByFailed": {
+    "defaultMessage": "Needed by could not be saved."
   },
   "typeForm.no": {
     "defaultMessage": "No"
