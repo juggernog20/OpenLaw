@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { readIntakeContractFacts } from "../../lib/intake-default-fields.js";
+import { conversionForm, ConversionParties } from "./convert-form.js";
 
 /**
  * Convert (INT-002, INT-006, INT-007, DD-018, #420): the disposition
@@ -24,16 +24,7 @@ import { readIntakeContractFacts } from "../../lib/intake-default-fields.js";
  * person is its Matter Manager or Contract Owner (the INT-002
  * 2026-09-06 and 2026-09-09 addenda).
  *
- * **Two facts the form collects are not Fields on the record** (the
- * INT-002 2026-09-09 focus-group addendum). The other side of a Contract is
- * a `contract_counterparties` row and a deadline is a key date, so no
- * slug intersection could carry them. The dialog draws both as its own
- * controls, prefilled from the seeded request fields, and sends them as
- * `counterpartyName` and `neededBy`. The server lands what the body
- * says and never reads the slugs: a counterparty is found or created
- * under CTR-011's name lock and linked primary, and the date becomes
- * one "Needed by" key date on either record. A matter has no
- * counterparty model, so a name on that arm is refused.
+ * Built-in Rows land through the ordinary creation path alongside attached Fields.
  *
  * **Both records narrate it** (DD-017). `request.converted` on the ask
  * names the permanent reference it became; the module's
@@ -76,28 +67,19 @@ import { reserveConversionAnalysis } from "../../pipeline/conversion-analysis.js
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
-  contractKeyDates,
-  contractTypeFields,
   contractTypes,
   eq,
-  matterKeyDates,
-  matterTypeFields,
   matterTypes,
-  regions,
   requestTypes,
   SEVERITY_LEVELS,
   requests,
-  type CustomFieldValue,
-  type Executor,
-  type Transaction,
 } from "@openlaw/db";
 import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { CounterpartyNameSchema } from "../../lib/counterparty-link.js";
 import { acceptedConversionProvenance } from "./conversion-draft.js";
 import { matters, contracts } from "@openlaw/db";
-import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
+import { CustomFieldsInput } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { createContract } from "../contracts/create.js";
 import { createMatter } from "../matters/create.js";
@@ -111,13 +93,6 @@ import { moveThread } from "./move-thread.js";
 import { withPromotedPaper } from "./promote-paper.js";
 import { liveTargetContractType, liveTargetMatterType, StaffRequestSchema } from "./projection.js";
 import type { ConversionRecordReference } from "./record-reference.js";
-
-/**
- * The label the "Needed by" key date is born with. Stored text, like a
- * template key date's label: the requester stated a date, and this is
- * the record's word for what that date was.
- */
-const NEEDED_BY_LABEL = "Needed by";
 
 export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
@@ -136,15 +111,12 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, " +
           "never both. The record is born through its ordinary create callable " +
           "with the title seeded from the Request title, urgency defaulting " +
-          "priority unless overridden, the Request description, risk unset, the converting " +
+          "priority unless overridden, the collected built-in Rows, the converting " +
           "person as Matter Manager or Contract Owner, one creator row, and no confidential " +
           "flag. Matching collected values carry server-side; values with no " +
           "field remain on the Request; missing required fields and dead " +
           "references are refused by name and can be answered in customFields. " +
-          "counterpartyName, contract conversions only, finds or creates the live " +
-          "counterparty of that name (case-insensitive) and links it as the primary; " +
-          'a matter conversion refuses it with 400. neededBy lands one "Needed by" ' +
-          "key date on either record, past dates included. " +
+          "Built-in Row answers land on native columns, parties and the Needed by key date. " +
           "Matter conversions may apply a live template for the confirmed type; " +
           "carried values and triager answers override its defaults. " +
           "Both records narrate the conversion and requestStatusChanged raises " +
@@ -163,7 +135,6 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             description: z.string().trim().max(10000).nullable().optional(),
             conversionDraftId: z.string().optional(),
             aiAccepted: z.array(z.string()).max(100).optional(),
-            counterpartyCleared: z.boolean().optional(),
             /** Overrides the configured target type. */
             contractTypeId: z.string().min(1).optional(),
             /** The matter sibling of contractTypeId. Supplying this on a
@@ -174,18 +145,10 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
              * instantiation, so direct creation and conversion cannot
              * drift. */
             templateId: z.string().min(1).optional(),
-            /** The gaps the form did not collect, keyed by field slug. The
-             * carried values are the server's to land and need not be
-             * here; a slug the target type does not attach is refused. */
+            /** Dialog answers use Row keys; Value uses its three intake scalar keys. */
             customFields: CustomFieldsInput.optional(),
             priority: z.enum(SEVERITY_LEVELS).optional(),
-            /** The other side, by name, on the contract arm only. The
-             * dialog prefills it from the request form's "Counterparty
-             * name" field; the seam reads only what is sent here. */
-            counterpartyName: CounterpartyNameSchema.optional(),
-            /** The requester's deadline as an ISO civil date. Becomes
-             * one "Needed by" key date on either record. */
-            neededBy: z.iso.date().optional(),
+            counterparties: ConversionParties.optional(),
           })
           .refine((body) => !(body.contractTypeId && body.matterTypeId), {
             message: "Name either a contract type or a matter type, never both.",
@@ -210,8 +173,6 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
       const chosenMatterTypeId = request.body.matterTypeId;
       const chosenTemplateId = request.body.templateId;
       const answers = request.body.customFields;
-      const counterpartyName = request.body.counterpartyName;
-      const neededBy = request.body.neededBy;
 
       // The promotion's wrapper sits **outside** the transaction and the
       // disposition alike, because what it owns happens on either side
@@ -276,12 +237,6 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             if (target.module === "contract" && chosenTemplateId !== undefined) {
               throw httpError(400, "A matter template can only be applied to a matter conversion.");
             }
-            if (target.module === "matter" && counterpartyName !== undefined) {
-              throw httpError(
-                400,
-                "A counterparty can only be named on a contract conversion — a matter has no counterparty.",
-              );
-            }
             if (title === "") {
               throw httpError(
                 400,
@@ -297,59 +252,27 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               );
             }
 
-            // INT-002's carry-through, landed by the server. Every collected
-            // value whose slug the target type also attaches, and nothing
-            // else — a value with no field to land in stays where it is,
-            // readable on the Request, which is the whole of the M19/7
-            // addendum's answer. The triager's own answers go on top, so a
-            // hard-required gap they filled wins over an absent carry and an
-            // edit they made in the dialog wins over the collected value.
-            const attached = await selectAttachedFields(
-              tx,
-              target.module === "contract" ? contractTypeFields : matterTypeFields,
-              target.typeId,
-            );
-            const carried: Record<string, CustomFieldValue | null> = {};
-            for (const field of attached) {
-              const value = row.customFields[field.slug];
-              if (value !== undefined) carried[field.slug] = value;
-            }
-
-            const intake =
-              target.module === "contract"
-                ? await readIntakeContractFacts(tx, row.customFields)
-                : null;
-            const intakeParties: Array<{ name: string; counterpartyId?: string }> = request.body
-              .counterpartyCleared
-              ? []
-              : counterpartyName !== undefined
-                ? [{ name: counterpartyName }]
-                : target.module !== "contract"
-                  ? []
-                  : row.intakeCounterparties.length
-                    ? row.intakeCounterparties
-                    : (intake?.counterparties ?? []).map((name) => ({ name }));
-            const customFields = { ...carried, ...(answers ?? {}) };
+            const form = await conversionForm(tx, target.module, target.typeId, row, request.body);
+            const { customFields, carried } = form;
+            const neededBy = form.native.neededBy;
+            const counterpartyName = form.counterparties
+              ?.map((p) =>
+                "name" in p
+                  ? p.name
+                  : row.intakeCounterparties.find((r) => r.counterpartyId === p.counterpartyId)
+                      ?.name,
+              )
+              .filter(Boolean)
+              .join("\n");
             const born =
               target.module === "contract"
                 ? await createContract(tx, app.notifier, {
                     actorId: request.user.id,
                     title,
                     contractTypeId: target.typeId,
-                    ...(intake ? { intakeFacts: intake.facts } : {}),
-                    counterparties: intakeParties.map((party) =>
-                      party.counterpartyId
-                        ? { counterpartyId: party.counterpartyId }
-                        : { name: party.name },
-                    ),
-                    owningDepartmentId: row.departmentId,
-                    region: await intakeRegionName(tx, row.customFields.region),
-                    description:
-                      request.body.description === undefined
-                        ? row.description
-                        : request.body.description,
+                    ...form.native,
+                    counterparties: form.counterparties,
                     customFields,
-                    priority: request.body.priority ?? row.urgency,
                     // The Contract Owner, the Matter Manager's sibling
                     // (CTR-004). Self-assignment narrates nothing beyond
                     // `contract.created`, as the matter arm does.
@@ -358,7 +281,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     businessOwnerId: row.requesterId,
                   })
                 : await createMatter(tx, {
-                    departmentId: row.departmentId,
+                    ...form.native,
+                    risk: form.native.risk ?? null,
                     actorId: request.user.id,
                     businessOwnerId: row.requesterId,
                     // The dialog seeds this from the title. The held
@@ -367,14 +291,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     // contract and the I8 matter modal.
                     title,
                     matterTypeId: target.typeId,
-                    description:
-                      request.body.description === undefined
-                        ? row.description
-                        : request.body.description,
                     ...(chosenTemplateId === undefined ? {} : { templateId: chosenTemplateId }),
                     customFields,
-                    priority: request.body.priority ?? row.urgency,
-                    risk: null,
                     managerId: request.user.id,
                     isConfidential: false,
                   });
@@ -425,14 +343,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               actorName: request.user.displayName,
             });
 
-            if (neededBy !== undefined) {
-              const keyDateId = await addNeededByKeyDate(tx, {
-                record,
-                date: neededBy,
-                actorId: request.user.id,
-              });
-              if (provenance?.needed_by) provenance.needed_by.keyDateId = keyDateId;
-            }
+            if (born.neededByKeyDateId && provenance?.needed_by)
+              provenance.needed_by.keyDateId = born.neededByKeyDateId;
 
             if (provenance) {
               if (born.row.title !== title) delete provenance.title;
@@ -449,9 +361,14 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                 .set({
                   analysisHumanFields: [
                     ...new Set([
-                      ...Object.keys(carried),
-                      ...Object.keys(answers ?? {}),
-                      ...(counterpartyName !== undefined || request.body.counterpartyCleared
+                      ...Object.keys({ ...carried, ...answers }).map((key) =>
+                        key === "counterparties"
+                          ? "counterparty"
+                          : ["value_amount", "value_currency", "value_cadence"].includes(key)
+                            ? "value"
+                            : key,
+                      ),
+                      ...(request.body.counterparties !== undefined || form.counterparties?.length
                         ? ["counterparty"]
                         : []),
                     ]),
@@ -548,36 +465,6 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 };
 
-/**
- * One "Needed by" key date on either record, narrated the way the key
- * date routes narrate theirs. A past date still lands: it is a fact the
- * requester stated, and the deadline surfaces will say it is behind us.
- */
-async function addNeededByKeyDate(
-  tx: Transaction,
-  input: { record: ConversionRecordReference; date: string; actorId: string },
-): Promise<string> {
-  const [created] =
-    input.record.module === "contract"
-      ? await tx
-          .insert(contractKeyDates)
-          .values({ contractId: input.record.id, date: input.date, label: NEEDED_BY_LABEL })
-          .returning({ id: contractKeyDates.id })
-      : await tx
-          .insert(matterKeyDates)
-          .values({ matterId: input.record.id, date: input.date, label: NEEDED_BY_LABEL })
-          .returning({ id: matterKeyDates.id });
-  await recordActivity(tx, {
-    entityType: input.record.module,
-    entityId: input.record.id,
-    actorId: input.actorId,
-    action: "key_date.added",
-    visibility: RECORD_ACTIVITY_TIER,
-    payload: { keyDateId: created!.id, label: NEEDED_BY_LABEL, date: input.date },
-  });
-  return created!.id;
-}
-
 /** Explicit choices override the Request type; omitted choices use its live default. */
 type ConversionTarget =
   { module: "contract"; typeId: string } | { module: "matter"; typeId: string };
@@ -612,14 +499,4 @@ function confirmedTarget(
     400,
     "Pick a contract type — this request type does not name a live one to confirm.",
   );
-}
-
-/** The Region Row stores the region id (INT-002); older Requests hold the name. Either lands as the name the Contract column references. */
-async function intakeRegionName(db: Executor, value: CustomFieldValue | undefined) {
-  if (typeof value !== "string" || !value.trim()) return null;
-  const [region] = await db
-    .select({ displayName: regions.displayName })
-    .from(regions)
-    .where(eq(regions.id, value));
-  return region?.displayName ?? value;
 }

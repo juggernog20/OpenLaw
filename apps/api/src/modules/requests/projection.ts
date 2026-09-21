@@ -518,6 +518,9 @@ export const StaffRequestSchema = z.object({
   urgency: z.enum(SEVERITY_LEVELS),
   /** What the form collected, keyed by field slug (INT-002). */
   customFields: CustomFieldsSchema,
+  intakeCounterparties: z
+    .array(z.object({ counterpartyId: z.string().optional(), name: z.string() }))
+    .optional(),
   /** INT-006: "no" always arrives with a why. NULL on every status but
    * `declined`. */
   declinedReason: z.string().nullable(),
@@ -560,6 +563,7 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       departmentId: requests.departmentId,
       urgency: requests.urgency,
       customFields: requests.customFields,
+      intakeCounterparties: requests.intakeCounterparties,
       declinedReason: requests.declinedReason,
       createdAt: requests.createdAt,
       typeId: requestTypes.id,
@@ -605,6 +609,7 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     department: row.department,
     urgency: row.urgency,
     customFields: row.customFields,
+    intakeCounterparties: row.intakeCounterparties,
     declinedReason: row.declinedReason,
     createdAt: row.createdAt.toISOString(),
     requestType: toStaffRequestType(row),

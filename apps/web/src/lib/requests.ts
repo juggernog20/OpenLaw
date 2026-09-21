@@ -282,10 +282,7 @@ export interface ConvertRequestInput {
   templateId?: string;
   priority?: StaffRequest["urgency"];
   customFields?: Record<string, CustomFieldValue | null>;
-  /** The other side by name; contract conversions only. */
-  counterpartyName?: string;
-  /** The requester's deadline as an ISO civil date; either arm. */
-  neededBy?: string;
+  counterparties?: ({ counterpartyId: string } | { name: string })[];
 }
 
 type ConvertBody = NonNullable<
@@ -308,8 +305,7 @@ export async function convertRequest(
     ...(input.matterTypeId === undefined ? {} : { matterTypeId: input.matterTypeId }),
     ...(input.templateId === undefined ? {} : { templateId: input.templateId }),
     ...(input.customFields === undefined ? {} : { customFields: input.customFields }),
-    ...(input.counterpartyName === undefined ? {} : { counterpartyName: input.counterpartyName }),
-    ...(input.neededBy === undefined ? {} : { neededBy: input.neededBy }),
+    ...(input.counterparties === undefined ? {} : { counterparties: input.counterparties }),
   };
   // Settled, never rejected — `declineRequest`'s rule.
   const result = await api

@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import {
+  CreationRows,
+  creationRows,
+  creationNativeValues,
+  type CreationValues,
+} from "../type-form/creation-rows";
+import { conversionValues, conversionRowAnswers } from "./conversion-values";
 import { identifierLabel } from "../../lib/identifier-label";
 
 /** Prefilled conversion form. Edits apply to the new record when conversion succeeds. */
@@ -14,10 +21,10 @@ import { useEffect, useRef, useState } from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { ArrowRightLeft, FilePen } from "lucide-react";
 import {
-  INTAKE_CARRY_SLUGS,
+  type Form,
+  type FormRow,
   sameConversionValue,
   MAX_CONTRACT_TITLE_LENGTH,
-  MAX_COUNTERPARTY_NAME_LENGTH,
   MAX_MATTER_TITLE_LENGTH,
   type RequestOutcome,
 } from "@openlaw/shared";
@@ -165,8 +172,12 @@ export function ConvertDialog({
       title: request.title,
       description: request.description,
       priority: request.urgency,
-      counterparty: collectedText(fields, request, INTAKE_CARRY_SLUGS.counterpartyName),
-      needed_by: collectedText(fields, request, INTAKE_CARRY_SLUGS.neededBy),
+      counterparty: request.intakeCounterparties?.length
+        ? request.intakeCounterparties.map((p) => p.name).join("\n")
+        : Array.isArray(request.customFields.counterparties)
+          ? request.customFields.counterparties.join("\n")
+          : "",
+      needed_by: String(request.customFields.needed_by ?? ""),
       [`${request.requestType.targetModule}_type`]: request.requestType.targetTypeId,
     };
     return values[slug];
@@ -208,7 +219,12 @@ export function ConvertDialog({
     );
   const [showRequesterDescription, setShowRequesterDescription] = useState(false);
   const [description, setDescription] = useState(
-    String(suggestions.description?.value ?? request.description ?? ""),
+    String(
+      suggestions.description?.value ??
+        request.customFields.description ??
+        request.description ??
+        "",
+    ),
   );
 
   type TargetModule = "contract" | "matter";
@@ -239,22 +255,21 @@ export function ConvertDialog({
   const [templateId, setTemplateId] = useState("");
   const [title, setTitle] = useState(String(suggestions.title?.value ?? request.title));
   const [priority, setPriority] = useState<StaffRequest["urgency"]>(
-    SEVERITY_LEVELS.find((level) => level === suggestions.priority?.value) ?? request.urgency,
+    SEVERITY_LEVELS.find((level) => level === suggestions.priority?.value) ??
+      SEVERITY_LEVELS.find((level) => level === request.customFields.priority) ??
+      request.urgency,
   );
-  /** The two facts that are not Fields on the record (INT-002's
-   * 2026-09-09 addendum). Seeded once from the seeded request fields,
-   * where the form collected them; editable either way. */
-  const [counterpartyName, setCounterpartyName] = useState(() =>
-    String(
-      suggestions.counterparty?.value ??
-        collectedText(fields, request, INTAKE_CARRY_SLUGS.counterpartyName),
-    ),
-  );
-  const [neededBy, setNeededBy] = useState(() =>
-    String(
-      suggestions.needed_by?.value ?? collectedText(fields, request, INTAKE_CARRY_SLUGS.neededBy),
-    ),
-  );
+  const [native, setNative] = useState<CreationValues>(() => ({
+    ...conversionValues(request, fields, customFieldRefs),
+    ...(suggestions.needed_by ? { neededBy: String(suggestions.needed_by.value) } : {}),
+    ...(suggestions.counterparty
+      ? { counterparties: [{ name: String(suggestions.counterparty.value) }] }
+      : {}),
+  }));
+  const setNeededBy = (neededBy: string) =>
+    setNative((current) => ({ ...current, neededBy: neededBy || null }));
+  const setCounterpartyName = (name: string) =>
+    setNative((current) => ({ ...current, counterparties: name ? [{ name }] : [] }));
   /** The creation fields' drafts, keyed by slug. They survive switching
    * types and back — a value typed once should not have to be typed
    * again because somebody checked another type on the way. */
@@ -302,10 +317,12 @@ export function ConvertDialog({
       if (slug === "title") setTitle(request.title);
       else if (slug === "priority") setPriority(request.urgency);
       else if (slug === "description") setDescription(request.description ?? "");
-      else if (slug === "needed_by")
-        setNeededBy(collectedText(fields, request, INTAKE_CARRY_SLUGS.neededBy));
+      else if (slug === "needed_by") setNeededBy(String(request.customFields.needed_by ?? ""));
       else if (slug === "counterparty")
-        setCounterpartyName(collectedText(fields, request, INTAKE_CARRY_SLUGS.counterpartyName));
+        setNative((current) => ({
+          ...current,
+          counterparties: conversionValues(request, fields, customFieldRefs).counterparties,
+        }));
       else if (slug === "matter_type" || slug === "contract_type")
         setPickedIds((current) => ({
           ...current,
@@ -417,48 +434,19 @@ export function ConvertDialog({
       )
       .map((field) => field.slug),
   );
-  /** The slugs this form lands through its own boxes rather than as
-   * Fields: a value in one of them is carried, so it is never listed as
-   * staying behind. The counterparty box is drawn on the contract arm
-   * only. */
-  const targetAttaches = (slug: string) => targetFields.some((attached) => attached.slug === slug);
-  // A box is drawn only where the target type gives the fact no Field
-  // of its own; a type that attaches the slug lands the value once, as
-  // that Field, through the ordinary carry.
-  const drawsCounterparty =
-    targetModule === "contract" && !targetAttaches(INTAKE_CARRY_SLUGS.counterpartyName);
-  const drawsNeededBy = !targetAttaches(INTAKE_CARRY_SLUGS.neededBy);
-  // A box that holds a value carries it. A box the person cleared does
-  // not, and the collected value is then named as staying behind.
-  const drawnSlugs = new Set<string>([
-    ...(drawsNeededBy && neededBy.trim() !== "" ? [INTAKE_CARRY_SLUGS.neededBy] : []),
-    ...(drawsCounterparty && counterpartyName.trim() !== ""
-      ? [INTAKE_CARRY_SLUGS.counterpartyName]
-      : []),
-  ]);
-  const nativeValueComplete = ["valueAmount", "valueCurrency", "valueCadence"].every((key) =>
-    fields.some(
-      (field) => field.builtInKey === key && isAnswered(request.customFields[field.slug]),
-    ),
+  const formRows = (form: Form): FormRow[] =>
+    form.flatMap((node) => (node.kind === "row" ? [node] : formRows(node.children)));
+  const targetRefs = new Set(
+    formRows(target?.form ?? target?.creationForm ?? []).map((row) => row.rowRef),
   );
-  const nativeCarried =
-    targetModule === "contract"
-      ? fields.filter(
-          (field) =>
-            field.builtInKey &&
-            isAnswered(request.customFields[field.slug]) &&
-            (!["valueAmount", "valueCurrency", "valueCadence"].includes(field.builtInKey) ||
-              nativeValueComplete) &&
-            (field.builtInKey !== "counterparties" ||
-              (!human.has("counterparty") && counterpartyName.trim() === "")),
-        )
-      : [];
+  // Record-only Field Rows also accept carried answers.
+  for (const field of targetFields) targetRefs.add(field.slug);
   const staysBehind = fields.filter(
     (field) =>
       isAnswered(request.customFields[field.slug]) &&
-      !nativeCarried.some((native) => native.fieldId === field.fieldId) &&
-      !drawnSlugs.has(field.slug) &&
-      !targetAttaches(field.slug),
+      !targetRefs.has(field.slug) &&
+      !(field.builtInKey && targetModule === "contract" && field.slug.startsWith("__intake_")) &&
+      !(field.slug.startsWith("value_") && targetRefs.has("value")),
   );
   // Keep live carried references labelled even when an options read omits them.
   const fieldPeople = [
@@ -488,6 +476,18 @@ export function ConvertDialog({
         selectedTemplate?.defaultCustomFields[field.slug],
     );
   }
+
+  const collection = creationRows(
+    target?.creationForm,
+    targetFields,
+    Object.fromEntries(targetFields.map((field) => [field.slug, fieldDraft(field)])),
+    {
+      ...native,
+      description,
+      priority,
+    },
+    { title, [`${targetModule}TypeId`]: pickedId },
+  );
 
   async function submit() {
     if (busy || attachments.created) return;
@@ -522,7 +522,7 @@ export function ConvertDialog({
     // them. The seam refuses an empty one too — this saves a round trip
     // and names the field (DES-035 clause 12).
     const customFields: Record<string, CustomFieldValue | null> = {};
-    for (const field of targetFields) {
+    for (const field of collection.fields) {
       const parsed = toValue(field, fieldDraft(field));
       if ("error" in parsed) {
         setError({
@@ -567,7 +567,28 @@ export function ConvertDialog({
         customFields[field.slug] = parsed.value;
     }
 
-    const namedCounterparty = counterpartyName.trim();
+    const visibleNative = creationNativeValues(collection.rows, {
+      ...native,
+      description,
+      priority,
+    });
+    if (collection.rows.some((row) => row.rowRef === "value") && native.valueError) {
+      setError({ onTitle: false, message: native.valueError });
+      return;
+    }
+    if (
+      collection.rows.some((row) => row.rowRef === "term_type") &&
+      human.has("term_type") &&
+      native.termType === undefined
+    )
+      customFields.term_type = null;
+    Object.assign(
+      customFields,
+      conversionRowAnswers({
+        ...visibleNative,
+        ...(visibleNative.region !== undefined ? { regionId: native.regionId } : {}),
+      }),
+    );
     const result = await onConvert({
       title: named,
       ...(initialDraft && (!dropped || human.has("description"))
@@ -590,14 +611,10 @@ export function ConvertDialog({
         : { matterTypeId: target.id }),
       ...(selectedTemplate ? { templateId: selectedTemplate.id } : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
-      // A deliberate clear survives the later Request-context Analysis run.
-      ...(drawsCounterparty && human.has("counterparty") && namedCounterparty === ""
-        ? { counterpartyCleared: true }
+      ...(visibleNative.counterparties?.length ||
+      (visibleNative.counterparties && human.has("counterparty"))
+        ? { counterparties: visibleNative.counterparties }
         : {}),
-      ...(drawsCounterparty && namedCounterparty !== ""
-        ? { counterpartyName: namedCounterparty }
-        : {}),
-      ...(drawsNeededBy && neededBy !== "" ? { neededBy } : {}),
     });
     if (result.ok) {
       // The Request is decided; a late draft is nothing to be told about.
@@ -1008,62 +1025,6 @@ export function ConvertDialog({
               </AiField>
               {marker("priority")}
             </div>
-            {drawsCounterparty && (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="convert-counterparty">
-                  <FormattedMessage id="convert.counterparty" defaultMessage="Counterparty" />
-                </Label>
-                <AiField active={marked("counterparty")} className="flex">
-                  <Input
-                    id="convert-counterparty"
-                    value={counterpartyName}
-                    maxLength={MAX_COUNTERPARTY_NAME_LENGTH}
-                    onChange={(event) => {
-                      humanValue("counterparty");
-                      setCounterpartyName(event.target.value);
-                      setError(null);
-                    }}
-                  />
-                </AiField>
-                {marker("counterparty")}
-              </div>
-            )}
-            {drawsNeededBy && (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="convert-needed-by">
-                  <FormattedMessage id="convert.neededBy" defaultMessage="Needed by" />
-                </Label>
-                <AiField active={marked("needed_by")} className="flex">
-                  <Input
-                    id="convert-needed-by"
-                    type="date"
-                    value={neededBy}
-                    onChange={(event) => {
-                      humanValue("needed_by");
-                      setNeededBy(event.target.value);
-                      setError(null);
-                    }}
-                  />
-                </AiField>
-                {marker("needed_by")}
-              </div>
-            )}
-            {target && nativeCarried.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                <p className="text-sm font-medium">
-                  <FormattedMessage
-                    id="convert.nativeCarried"
-                    defaultMessage="Carries into the contract"
-                  />
-                </p>
-                <p className="text-xs text-muted">
-                  {intl.formatList(
-                    nativeCarried.map((field) => field.displayName),
-                    { type: "conjunction" },
-                  )}
-                </p>
-              </div>
-            )}
             {target && staysBehind.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium">
@@ -1081,58 +1042,107 @@ export function ConvertDialog({
                 </p>
               </div>
             )}
-            {targetFields.map((field) => (
-              <div key={field.slug} className="flex flex-col gap-1.5">
-                <Label
-                  id={`convert-${field.slug}-label`}
-                  htmlFor={`convert-${field.slug}`}
-                  required={field.isRequired}
-                >
-                  {field.displayName}
-                </Label>
-                <AiField
-                  active={marked(`field:${field.slug}`)}
-                  className={field.fieldType === "boolean" ? "flex self-start" : "flex"}
-                >
-                  <CustomFieldControl
-                    id={`convert-${field.slug}`}
-                    field={field}
-                    draft={fieldDraft(field)}
-                    people={fieldPeople}
-                    entities={fieldEntities}
-                    required={field.isRequired}
-                    describedBy={
-                      archivedCarrySlugs.has(field.slug) ? `convert-${field.slug}-help` : undefined
-                    }
-                    onDraft={(next) => {
-                      humanValue(`field:${field.slug}`);
-                      setDrafts((current) => ({ ...current, [field.slug]: next }));
-                      setError(null);
-                    }}
-                  />
-                </AiField>
-                {archivedCarrySlugs.has(field.slug) && (
-                  <p id={`convert-${field.slug}-help`} className="text-xs text-muted">
-                    {archivedCarrySlugs.has(field.slug) ? (
-                      <FormattedMessage
-                        id="convert.archivedReferenceNote"
-                        defaultMessage="{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
-                        values={{
-                          value: customFieldValueText(
-                            intl,
-                            field,
-                            request.customFields[field.slug]!,
-                            customFieldRefs,
-                          ),
-                          fieldType: field.fieldType,
+            {collection.rows
+              .filter(
+                (row) =>
+                  row.rowRef !== "priority" &&
+                  !(
+                    row.rowRef === "description" &&
+                    initialDraft &&
+                    (!dropped || human.has("description"))
+                  ),
+              )
+              .map((row) => {
+                const field = collection.fields.find((field) => field.slug === row.rowRef);
+                if (!field) {
+                  const slug = row.rowRef === "counterparties" ? "counterparty" : row.rowRef;
+                  return (
+                    <div key={row.id}>
+                      <AiField active={marked(slug)}>
+                        <CreationRows
+                          rows={[row]}
+                          fields={[]}
+                          drafts={{}}
+                          onDraft={() => {}}
+                          native={{ ...native, description, priority }}
+                          onNative={(next) => {
+                            humanValue(slug);
+                            if (row.rowRef === "description")
+                              setDescription(next.description ?? "");
+                            setNative(next);
+                            setError(null);
+                          }}
+                          people={fieldPeople}
+                          entities={fieldEntities}
+                          partyLabels={{
+                            ...customFieldRefs.builtins,
+                            ...Object.fromEntries(
+                              (request.intakeCounterparties ?? []).flatMap((p) =>
+                                p.counterpartyId ? [[p.counterpartyId, p.name]] : [],
+                              ),
+                            ),
+                          }}
+                        />
+                      </AiField>
+                      {marker(slug)}
+                    </div>
+                  );
+                }
+                return (
+                  <div key={field.slug} className="flex flex-col gap-1.5">
+                    <Label
+                      id={`convert-${field.slug}-label`}
+                      htmlFor={`convert-${field.slug}`}
+                      required={field.isRequired}
+                    >
+                      {field.displayName}
+                    </Label>
+                    <AiField
+                      active={marked(`field:${field.slug}`)}
+                      className={field.fieldType === "boolean" ? "flex self-start" : "flex"}
+                    >
+                      <CustomFieldControl
+                        id={`convert-${field.slug}`}
+                        field={field}
+                        draft={fieldDraft(field)}
+                        people={fieldPeople}
+                        entities={fieldEntities}
+                        required={field.isRequired}
+                        describedBy={
+                          archivedCarrySlugs.has(field.slug)
+                            ? `convert-${field.slug}-help`
+                            : undefined
+                        }
+                        onDraft={(next) => {
+                          humanValue(`field:${field.slug}`);
+                          setDrafts((current) => ({ ...current, [field.slug]: next }));
+                          setError(null);
                         }}
                       />
-                    ) : null}
-                  </p>
-                )}
-                {marker(`field:${field.slug}`)}
-              </div>
-            ))}
+                    </AiField>
+                    {archivedCarrySlugs.has(field.slug) && (
+                      <p id={`convert-${field.slug}-help`} className="text-xs text-muted">
+                        {archivedCarrySlugs.has(field.slug) ? (
+                          <FormattedMessage
+                            id="convert.archivedReferenceNote"
+                            defaultMessage="{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
+                            values={{
+                              value: customFieldValueText(
+                                intl,
+                                field,
+                                request.customFields[field.slug]!,
+                                customFieldRefs,
+                              ),
+                              fieldType: field.fieldType,
+                            }}
+                          />
+                        ) : null}
+                      </p>
+                    )}
+                    {marker(`field:${field.slug}`)}
+                  </div>
+                );
+              })}
             <CreateAttachments
               showKind={targetModule !== "matter"}
               uploads={attachments}
@@ -1180,19 +1190,4 @@ export function ConvertDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-/**
- * The text a request-form field collected under one slug, or the empty
- * string. Only a field the form still names counts: a value under a
- * slug no field carries is a leftover nobody can read the label of.
- */
-function collectedText(
-  fields: readonly StaffRequestField[],
-  request: StaffRequest,
-  slug: string,
-): string {
-  if (!fields.some((field) => field.slug === slug)) return "";
-  const value = request.customFields[slug];
-  return typeof value === "string" ? value.trim() : "";
 }

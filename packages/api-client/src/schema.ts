@@ -4232,7 +4232,7 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one "Needed by" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only
+     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the collected built-in Rows, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Built-in Row answers land on native columns, parties and the Needed by key date. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only
      * @description Contract and Matter conversion set the Requester as Business Owner and add them to the record team. Team membership grants Portal access to the non-archived record (DD-023).
      */
     post: operations["convertRequest"];
@@ -22569,6 +22569,10 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              intakeCounterparties?: {
+                counterpartyId?: string;
+                name: string;
+              }[];
               declinedReason: string | null;
               createdAt: string;
               requestType: {
@@ -22895,6 +22899,10 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              intakeCounterparties?: {
+                counterpartyId?: string;
+                name: string;
+              }[];
               declinedReason: string | null;
               createdAt: string;
               requestType: {
@@ -22979,6 +22987,10 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              intakeCounterparties?: {
+                counterpartyId?: string;
+                name: string;
+              }[];
               declinedReason: string | null;
               createdAt: string;
               requestType: {
@@ -23161,6 +23173,10 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              intakeCounterparties?: {
+                counterpartyId?: string;
+                name: string;
+              }[];
               declinedReason: string | null;
               createdAt: string;
               requestType: {
@@ -23298,6 +23314,10 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              intakeCounterparties?: {
+                counterpartyId?: string;
+                name: string;
+              }[];
               declinedReason: string | null;
               createdAt: string;
               requestType: {
@@ -23882,7 +23902,6 @@ export interface operations {
           description?: string | null;
           conversionDraftId?: string;
           aiAccepted?: string[];
-          counterpartyCleared?: boolean;
           contractTypeId?: string;
           matterTypeId?: string;
           templateId?: string;
@@ -23891,9 +23910,14 @@ export interface operations {
           };
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
-          counterpartyName?: string;
-          /** Format: date */
-          neededBy?: string;
+          counterparties?: (
+            | {
+                counterpartyId: string;
+              }
+            | {
+                name: string;
+              }
+          )[];
         };
       };
     };
@@ -23919,6 +23943,10 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              intakeCounterparties?: {
+                counterpartyId?: string;
+                name: string;
+              }[];
               declinedReason: string | null;
               createdAt: string;
               requestType: {

@@ -255,7 +255,7 @@ it("prepares actual current messages, binds quotes and provenance, and preserves
     payload: {
       title: "Response preparation",
       matterTypeId: typeId,
-      neededBy: "2026-10-02",
+      customFields: { needed_by: "2026-10-02" },
       conversionDraftId: id,
       aiAccepted: ["title", "needed_by"],
     },
@@ -1000,7 +1000,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
       contractTypeId: type!.id,
       title: "Prepared Contract",
       description: null,
-      counterpartyName: "Acme",
+      counterparties: [{ name: "Acme" }],
       conversionDraftId: id,
       aiAccepted: ["title", "description", "counterparty", "unknown", "toString", "__proto__"],
     },
@@ -1110,8 +1110,7 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
   const payload = {
     title: "Agreement review",
     contractTypeId: type!.id,
-    customFields: { contract_opening: "Supported opening" },
-    neededBy: "2026-10-02",
+    customFields: { contract_opening: "Supported opening", needed_by: "2026-10-02" },
     conversionDraftId: id,
     aiAccepted: ["title", "field:contract_opening", "needed_by"],
   };

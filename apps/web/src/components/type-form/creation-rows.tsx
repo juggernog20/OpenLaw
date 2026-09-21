@@ -23,10 +23,7 @@ import { CustomFieldControl, type FieldReference } from "../custom-field-control
 import { ValueField } from "../contracts/value-field";
 import { DepartmentPicker } from "../department-picker";
 import { AutoResizeTextarea } from "../auto-resize-textarea";
-import {
-  IntakeCounterpartiesInput,
-  type IntakeCounterpartySelection,
-} from "../intake/counterparties-input";
+import { IntakeCounterpartiesInput } from "../intake/counterparties-input";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { CONTROL_CLASS } from "../../lib/form-controls";
@@ -52,7 +49,7 @@ export interface CreationValues {
   neededBy?: string | null;
   counterparties?: ({ counterpartyId: string } | { name: string })[];
 }
-const keys: Record<string, keyof CreationValues> = {
+export const creationKeys: Record<string, keyof CreationValues> = {
   description: "description",
   entity: "entityId",
   owning_department: "owningDepartmentId",
@@ -117,7 +114,7 @@ export function creationNativeValues(
   rows: readonly FormRow[],
   native: CreationValues,
 ): CreationValues {
-  const visible = new Set(rows.map((r) => keys[r.rowRef]));
+  const visible = new Set(rows.map((r) => creationKeys[r.rowRef]));
   return Object.fromEntries(
     Object.entries(native).filter(([key]) => visible.has(key as keyof CreationValues)),
   );
@@ -134,7 +131,9 @@ export function CreationRows({
   entities = [],
   departments: givenDepartments,
   regions: givenRegions,
+  partyLabels = {},
 }: Readonly<{
+  partyLabels?: Readonly<Record<string, string>>;
   rows: readonly FormRow[];
   fields: readonly AttachedField[];
   drafts: Readonly<Record<string, CustomFieldDraft>>;
@@ -156,7 +155,8 @@ export function CreationRows({
     people: FieldReference[];
     entities: FieldReference[];
   }>({ people: [], entities: [] });
-  const [parties, setParties] = useState<IntakeCounterpartySelection[]>([]);
+
+  const [partyNames, setPartyNames] = useState<Record<string, string>>({});
   const [valueError, setValueError] = useState<string>();
   const [optionsError, setOptionsError] = useState(false);
   const needsDepartments =
@@ -222,7 +222,7 @@ export function CreationRows({
         const field = fields.find((f) => f.slug === row.rowRef);
         const id = `creation-${row.rowRef}`;
         const label = field?.displayName ?? rowName(row, [], t);
-        const key = keys[row.rowRef];
+        const key = creationKeys[row.rowRef];
         const value = key ? native[key] : undefined;
         let control;
         if (field)
@@ -258,7 +258,15 @@ export function CreationRows({
             <IntakeCounterpartiesInput
               id={id}
               requestTypeId=""
-              selections={parties}
+              selections={(native.counterparties ?? []).map((pick) => ({
+                pick,
+                label:
+                  "name" in pick
+                    ? pick.name
+                    : (partyLabels[pick.counterpartyId] ??
+                      partyNames[pick.counterpartyId] ??
+                      pick.counterpartyId),
+              }))}
               required={row.isRequired}
               searchOptions={async (query) => {
                 const { data } = await api.GET("/api/v1/counterparties", {
@@ -268,7 +276,14 @@ export function CreationRows({
                 return data.counterparties;
               }}
               onChange={(next) => {
-                setParties(next);
+                setPartyNames((current) => ({
+                  ...current,
+                  ...Object.fromEntries(
+                    next.flatMap((p) =>
+                      "counterpartyId" in p.pick ? [[p.pick.counterpartyId, p.label]] : [],
+                    ),
+                  ),
+                }));
                 set(
                   "counterparties",
                   next.map((p) => p.pick),
@@ -310,7 +325,14 @@ export function CreationRows({
               id={id}
               className={CONTROL_CLASS}
               aria-required={row.isRequired}
-              value={typeof value === "string" ? value : ""}
+              value={
+                key === "region"
+                  ? (regions.find((r) => r.id === native.regionId)?.displayName ??
+                    (typeof value === "string" ? value : ""))
+                  : typeof value === "string"
+                    ? value
+                    : ""
+              }
               onChange={(e) =>
                 key === "region"
                   ? onNative({

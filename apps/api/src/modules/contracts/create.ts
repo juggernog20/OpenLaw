@@ -193,6 +193,7 @@ export interface CreateContractInput {
  * query for facts this one already holds.
  */
 export interface CreatedContract {
+  neededByKeyDateId: string | null;
   row: Contract;
   contractTypeName: string;
   statusName: string;
@@ -443,11 +444,13 @@ export async function createContract(
       isPrimary: index === 0,
     });
   }
+  let neededByKeyDateId: string | null = null;
   if (input.neededBy) {
     const [date] = await tx
       .insert(contractKeyDates)
       .values({ contractId: row!.id, label: "Needed by", date: input.neededBy })
       .returning();
+    neededByKeyDateId = date!.id;
     await recordActivity(tx, {
       entityType: "contract",
       entityId: row!.id,
@@ -547,6 +550,7 @@ export async function createContract(
   }
 
   const born = {
+    neededByKeyDateId,
     row: row!,
     contractTypeName: contractType.displayName,
     statusName: draft.displayName,

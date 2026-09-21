@@ -218,7 +218,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["inbox.convert"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "create-contract",

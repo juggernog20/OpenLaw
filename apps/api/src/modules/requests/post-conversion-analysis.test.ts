@@ -483,7 +483,7 @@ it("reads multiple original attachments, reports omissions and suppresses compet
 it("keeps an explicitly cleared Counterparty empty after conversion", async () => {
   const { counterparties, contractCounterparties } = await import("@openlaw/db");
   await harness.db.insert(counterparties).values({ name: "Post analysis counterparty" });
-  const { contract, runs } = await convert({ counterpartyCleared: true }, async (id) => {
+  const { contract, runs } = await convert({ counterparties: [] }, async (id) => {
     answers.counterparty = {
       value: "Post analysis counterparty",
       sourceId: `request:${id}:title`,
