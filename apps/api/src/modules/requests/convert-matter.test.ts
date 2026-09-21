@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -233,7 +234,7 @@ async function submit(
   customFields: Record<string, unknown> = {},
   urgency = "high",
 ) {
-  const res = await harness.app.inject({
+  const res = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,
@@ -439,7 +440,7 @@ describe("the matter target", () => {
       isConfidential: false,
       createdBy: memberId,
     });
-    expect(matter.customFields).toEqual({ [carrySlug]: "Meridian Logistics" });
+    expect(matter.customFields).toEqual({ [carrySlug]: "Meridian Logistics", [staysSlug]: "EMEA" });
     expect((await cast.stored(request.id)).customFields[staysSlug]).toBe("EMEA");
     const [status] = await harness.db
       .select({ category: matterStatuses.category })

@@ -323,3 +323,18 @@ export function recordFormAnswers(
     needed_by: record.neededBy,
   };
 }
+
+/** Request Value uses three scalar keys in custom_fields. */
+export function intakeFormAnswers(answers: FormAnswers): Record<string, unknown> {
+  return {
+    ...answers,
+    value:
+      answers.value_amount == null
+        ? null
+        : {
+            amount: answers.value_amount,
+            currency: answers.value_currency,
+            cadence: answers.value_cadence,
+          },
+  };
+}

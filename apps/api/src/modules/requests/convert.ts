@@ -92,7 +92,7 @@ import {
 import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { CounterpartyNameSchema, linkPrimaryCounterparty } from "../../lib/counterparty-link.js";
+import { CounterpartyNameSchema } from "../../lib/counterparty-link.js";
 import { acceptedConversionProvenance } from "./conversion-draft.js";
 import { matters, contracts } from "@openlaw/db";
 import { CustomFieldsInput, selectAttachedFields } from "../../lib/custom-fields.js";
@@ -317,7 +317,8 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               target.module === "contract"
                 ? await readIntakeContractFacts(tx, row.customFields)
                 : null;
-            const intakeParties = request.body.counterpartyCleared
+            const intakeParties: Array<{ name: string; counterpartyId?: string }> = request.body
+              .counterpartyCleared
               ? []
               : counterpartyName !== undefined
                 ? [{ name: counterpartyName }]
@@ -334,6 +335,11 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     title,
                     contractTypeId: target.typeId,
                     ...(intake ? { intakeFacts: intake.facts } : {}),
+                    counterparties: intakeParties.map((party) =>
+                      party.counterpartyId
+                        ? { counterpartyId: party.counterpartyId }
+                        : { name: party.name },
+                    ),
                     owningDepartmentId: row.departmentId,
                     region:
                       typeof row.customFields.region === "string" ? row.customFields.region : null,
@@ -418,19 +424,6 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               actorName: request.user.displayName,
             });
 
-            // The two facts that are not Fields, landed as the rows they
-            // are. After the paper, so the counterparty name's advisory
-            // lock spans two inserts and the commit rather than the blob
-            // copies above. The contract arm was refused above for a
-            // matter, so a name here is always on a contract.
-            for (const [index, party] of intakeParties.entries()) {
-              await linkPrimaryCounterparty(tx, {
-                contract: { id: born.row.id, number: born.row.number, title: born.row.title },
-                ...party,
-                isPrimary: index === 0,
-                actorId: request.user.id,
-              });
-            }
             if (neededBy !== undefined) {
               const keyDateId = await addNeededByKeyDate(tx, {
                 record,

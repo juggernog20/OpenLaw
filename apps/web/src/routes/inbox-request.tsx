@@ -653,6 +653,7 @@ function FormResponses({
               field={field}
               value={request.customFields[field.slug]!}
               refs={customFieldRefs}
+              answers={request.customFields}
             />
           </dd>
         </div>

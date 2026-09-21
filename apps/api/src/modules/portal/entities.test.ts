@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -160,7 +161,7 @@ it("accepts a required Entity from the Portal list and refuses hidden, Confident
   });
   expect(attached.statusCode, attached.body).toBe(201);
   const submit = async (entityId?: string) =>
-    h.app.inject({
+    submitRequestFixture(h, {
       method: "POST",
       url: "/api/v1/requests",
       cookies: business,

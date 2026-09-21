@@ -24,7 +24,7 @@ import {
   type MessageDescriptor,
 } from "react-intl";
 import type { CustomFieldValue } from "../../lib/custom-fields";
-import { formatFullDate } from "../../lib/format";
+import { formatFullDate, formatCurrency } from "../../lib/format";
 import type { StaffRequestField, StaffRequestFieldRefs } from "../../lib/requests";
 
 const BOOLEAN_VALUE: MessageDescriptor = defineMessage({
@@ -40,16 +40,18 @@ export function CustomFieldValueText({
   field,
   value,
   refs,
+  answers = {},
 }: Readonly<{
   field: StaffRequestField;
   value: CustomFieldValue;
   refs: StaffRequestFieldRefs;
+  answers?: Readonly<Record<string, CustomFieldValue>>;
 }>) {
   const intl = useIntl();
   if (field.fieldType === "long_text") {
     return <span className="whitespace-pre-line">{String(value)}</span>;
   }
-  const text = customFieldValueText(intl, field, value, refs);
+  const text = customFieldValueText(intl, field, value, refs, answers);
   if (!isArchivedCustomFieldReference(field, value, refs)) return <>{text}</>;
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
@@ -86,7 +88,20 @@ export function customFieldValueText(
   field: StaffRequestField,
   value: CustomFieldValue,
   refs: StaffRequestFieldRefs,
+  answers: Readonly<Record<string, CustomFieldValue>> = {},
 ): string {
+  if (
+    field.builtInKey === "value_amount" &&
+    typeof value === "number" &&
+    typeof answers.value_currency === "string"
+  ) {
+    return formatCurrency(
+      { amount: value, currency: answers.value_currency },
+      { locale: intl.locale },
+    );
+  }
+  if (field.builtInKey && typeof value === "string" && refs.builtins?.[value])
+    return refs.builtins[value];
   switch (field.fieldType) {
     case "number":
       return typeof value === "number" ? intl.formatNumber(value) : String(value);
@@ -95,7 +110,12 @@ export function customFieldValueText(
     case "boolean":
       return intl.formatMessage(BOOLEAN_VALUE, { value: String(value === true) });
     case "multi_select":
-      return Array.isArray(value) ? intl.formatList(value, { type: "conjunction" }) : String(value);
+      return Array.isArray(value)
+        ? intl.formatList(
+            value.map((v) => (field.builtInKey ? (refs.builtins?.[v] ?? v) : v)),
+            { type: "conjunction" },
+          )
+        : String(value);
     case "user":
       return refs.users.find((person) => person.id === value)?.displayName ?? String(value);
     case "entity": {

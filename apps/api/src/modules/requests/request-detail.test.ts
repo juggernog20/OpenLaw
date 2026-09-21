@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { contractTypeFields } from "@openlaw/db";
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -164,7 +166,7 @@ function slug(displayName: string): string {
 
 /** Submits one Request as the Business User, and answers the row. */
 async function submit(body: Record<string, unknown> = {}): Promise<{ id: string; number: number }> {
-  const res = await harness.app.inject({
+  const res = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,
@@ -385,6 +387,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
     // The labels come from the same attached-fields read the form drew
     // its boxes from, so a value is named exactly as the box was.
     expect(detail.fields.map((field: { displayName: string }) => field.displayName)).toEqual([
+      "Description",
       "Counterparty",
       "Requesting manager",
       "Contracting entity",
@@ -407,6 +410,9 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
       cookies: adminCookies,
     });
     expect(detached.statusCode, detached.body).toBe(204);
+    await harness.db
+      .delete(contractTypeFields)
+      .where(eq(contractTypeFields.fieldId, fieldIds.get("Deal desk region")!));
 
     try {
       const detail = (await readDetail(number)).json();

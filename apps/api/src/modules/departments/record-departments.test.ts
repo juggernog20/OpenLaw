@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { departments, eq, requests } from "@openlaw/db";
@@ -48,7 +49,7 @@ it.each(["matter", "contract"] as const)(
       payload: { displayName: `Department intake ${module}` },
     });
     const formId = form.json().requestType.id;
-    const submission = await harness.app.inject({
+    const submission = await submitRequestFixture(harness, {
       method: "POST",
       url: "/api/v1/requests",
       cookies: cast.requesterCookies,

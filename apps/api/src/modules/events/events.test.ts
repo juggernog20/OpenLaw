@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -553,7 +554,7 @@ describe("GET /api/events", () => {
 
     try {
       const submit = async (requestTypeId: string, title: string) => {
-        const response = await harness.app.inject({
+        const response = await submitRequestFixture(harness, {
           method: "POST",
           url: "/api/v1/requests",
           cookies: requesterCookies,
@@ -635,7 +636,7 @@ describe("GET /api/events", () => {
     const member = await EventStream.open(streamUrl(), memberCookies);
     try {
       const submit = async (title: string) => {
-        const response = await harness.app.inject({
+        const response = await submitRequestFixture(harness, {
           method: "POST",
           url: "/api/v1/requests",
           cookies: requesterCookies,

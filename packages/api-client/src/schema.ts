@@ -3089,7 +3089,7 @@ export interface paths {
     /** One request type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listRequestTypeFields"];
     put?: never;
-    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002); alsoAttachToTarget attaches the same field to the request type's default destination type (INT-002) in the same transaction */
+    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002) */
     post: operations["attachRequestTypeField"];
     delete?: never;
     options?: never;
@@ -3242,7 +3242,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One request type's form definition (INT-002): the type, its attached catalog fields in display order, and the deflection links placed on this form. The four basics — Title, Description, Attachments, Urgency — are fixed on every form and are drawn by the portal, so they are not answered here */
+    /** The destination type's Intake tree, pinned basics, Row definitions and deflection links */
     get: operations["readPortalRequestForm"];
     put?: never;
     post?: never;
@@ -3770,7 +3770,7 @@ export interface paths {
     /** The Inbox (INT-006, INT-007): the Requests whose fate is undecided, ordered by urgency rank — critical first — then age, oldest first, unless sort names a column, and paged by cursor. The answer is the `new` and `read` Requests by default; status choices or includeTriaged=true widen it to the converted, resolved, and declined ones with their outcomes. A converted row carries the contract or matter it became only when the caller reaches that record, and carries null otherwise (DD-014). Member+ only: a Contributor and a Business User are refused */
     get: operations["listInbox"];
     put?: never;
-    /** Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user Field must name a live person and an Entity Field must name a Portal-listed Entity */
+    /** Submit the destination type's Intake Form. The session is the Requester. Required applies to visible Rows, and answers outside that set are refused. */
     post: operations["submitRequest"];
     delete?: never;
     options?: never;
@@ -16736,6 +16736,9 @@ export interface operations {
               isRequired: boolean;
             }[];
             customFieldRefs: {
+              builtins?: {
+                [key: string]: string;
+              };
               users: {
                 id: string;
                 displayName: string;
@@ -16914,6 +16917,9 @@ export interface operations {
               isRequired: boolean;
             }[];
             customFieldRefs: {
+              builtins?: {
+                [key: string]: string;
+              };
               users: {
                 id: string;
                 displayName: string;
@@ -19168,7 +19174,6 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
-          formFieldOrder?: string[];
           turnaroundDays?: number | null;
           targetModule?: ("matter" | "contract") | null;
           targetTypeId?: string | null;
@@ -19435,12 +19440,6 @@ export interface operations {
         "application/json": {
           fieldId: string;
           isRequired?: boolean;
-          alsoAttachToTarget?: boolean;
-          expectedTarget?: {
-            /** @enum {string} */
-            module: "contract" | "matter";
-            typeId: string;
-          };
         };
       };
     };
@@ -19474,13 +19473,6 @@ export interface operations {
               displayOrder: number;
               isRequired: boolean;
             };
-            alsoAttachedTo: {
-              /** @enum {string} */
-              module: "contract" | "matter";
-              typeId: string;
-              typeDisplayName: string;
-              attached: boolean;
-            } | null;
           };
         };
       };
@@ -19908,7 +19900,6 @@ export interface operations {
         content: {
           "application/json": {
             requestTypes: {
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               id: string;
               slug: string;
@@ -19993,7 +19984,6 @@ export interface operations {
         content: {
           "application/json": {
             requestType: {
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               id: string;
               slug: string;
@@ -20024,6 +20014,12 @@ export interface operations {
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
+            }[];
+            form: components["schemas"]["FormNode"][];
+            basics: ("title" | "department" | "urgency" | "attachments")[];
+            regions: {
+              id: string;
+              displayName: string;
             }[];
             departments: {
               id: string;
@@ -22165,7 +22161,7 @@ export interface operations {
           requestTypeId: string;
           departmentId?: string | null;
           title: string;
-          description: string;
+          description?: string;
           /** @enum {string} */
           urgency: "low" | "medium" | "high" | "critical";
           customFields?: {
@@ -22341,6 +22337,9 @@ export interface operations {
               isRequired: boolean;
             }[];
             customFieldRefs: {
+              builtins?: {
+                [key: string]: string;
+              };
               users: {
                 id: string;
                 displayName: string;
@@ -23044,6 +23043,9 @@ export interface operations {
               isRequired: boolean;
             }[];
             customFieldRefs: {
+              builtins?: {
+                [key: string]: string;
+              };
               users: {
                 id: string;
                 displayName: string;
@@ -37215,6 +37217,9 @@ export interface operations {
               isRequired: boolean;
             }[];
             customFieldRefs: {
+              builtins?: {
+                [key: string]: string;
+              };
               users: {
                 id: string;
                 displayName: string;
@@ -37346,6 +37351,9 @@ export interface operations {
               isRequired: boolean;
             }[];
             customFieldRefs: {
+              builtins?: {
+                [key: string]: string;
+              };
               users: {
                 id: string;
                 displayName: string;

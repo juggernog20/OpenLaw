@@ -654,6 +654,7 @@ export { normalizeAiBaseUrl } from "./ai-destination.js";
 
 export {
   evaluateForm,
+  intakeFormAnswers,
   formForTouchpoint,
   recordFormAnswers,
   formRowsForTouchpoint,

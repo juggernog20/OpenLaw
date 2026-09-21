@@ -14,14 +14,10 @@ import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Label } from "../components/ui/label";
 import {
   TypeEditorScreen,
-  type AttachOptions,
-  type EditorCatalogRow,
   type EditorRequiredRule,
   type EditorTypeRow,
-  type TargetOffer,
   type TypeEditorApi,
   type TypeEditorBasics,
-  type TypeEditorTargetOffer,
 } from "../components/type-editor-screen";
 
 /** The two modules a request type may convert into (INT-002). */
@@ -172,22 +168,17 @@ const EDITOR_API: TypeEditorApi = {
       .catch(() => undefined);
     return { data: result?.data?.requestType, ...(await problem(result)) };
   },
-  async attach(id, fieldId, options?: AttachOptions) {
+  async attach(id, fieldId) {
     const result = await api
       .POST("/api/v1/request-types/{id}/fields", {
         params: { path: { id } },
         body: {
           fieldId,
-          ...(options?.alsoAttachToTarget
-            ? { alsoAttachToTarget: true, expectedTarget: options.expectedTarget }
-            : {}),
         },
       })
       .catch(() => undefined);
     return {
-      data: result?.data
-        ? { ...result.data.attachedField, alsoAttachedTo: result.data.alsoAttachedTo }
-        : undefined,
+      data: result?.data ? result.data.attachedField : undefined,
       ...(await problem(result)),
     };
   },
@@ -232,77 +223,6 @@ function attachableScopes(module: TargetModule | null): readonly string[] {
 
 type Destination = { targetModule: TargetModule | null; targetTypeId: string | null };
 type DestinationType = { id: string; displayName: string; archivedAt: string | null };
-
-/**
- * The offer to attach a form field to the default destination type as
- * well (INT-002, 2026-09-19). The scope rule admits any contract-scoped
- * field on a Contract-targeting form, but a collected answer carries
- * into the record only through a Field the destination type attaches.
- * The editor is where the two rules meet, so it says so before the
- * attach and offers to close the gap in the same act.
- */
-const OFFER_MESSAGES = defineMessages({
-  title: {
-    id: "settings.requestTypeEditor.targetOffer.title",
-    defaultMessage: "Attach {name} to {target} too?",
-  },
-  body: {
-    id: "settings.requestTypeEditor.targetOffer.body",
-    defaultMessage:
-      "{name} is not on the {target} {module, select, contract {contract} other {matter}} type. An answer collected on this form carries into a {module, select, contract {contract} other {matter}} only through a Field its type attaches. Without it, the answer stays on the Request.",
-  },
-  accept: {
-    id: "settings.requestTypeEditor.targetOffer.accept",
-    defaultMessage: "Attach to both",
-  },
-  decline: {
-    id: "settings.requestTypeEditor.targetOffer.decline",
-    defaultMessage: "Form only",
-  },
-  attachedBoth: {
-    id: "settings.requestTypeEditor.targetOffer.attachedBoth",
-    defaultMessage: "{name} attached to the form and to {target}.",
-  },
-});
-
-/**
- * Whether the destination type lacks this field. Read at attach time
- * rather than loaded with the page, so a destination saved a moment
- * ago is the one asked about. A default field carries on its own and
- * is never offered; a read that fails offers nothing, and the attach
- * goes on.
- */
-async function targetLacks(
-  requestTypeId: string,
-  types: readonly DestinationType[],
-  field: EditorCatalogRow,
-): Promise<TargetOffer | null> {
-  const current = await api.GET("/api/v1/request-types/{id}", {
-    params: { path: { id: requestTypeId } },
-  });
-  const destination = current.data?.requestType;
-  if (!destination) return null;
-  const { targetModule, targetTypeId } = destination;
-  if (
-    (targetModule !== "contract" && targetModule !== "matter") ||
-    !targetTypeId ||
-    field.builtInKey
-  )
-    return null;
-  const type = types.find((candidate) => candidate.id === targetTypeId);
-  if (!type || type.archivedAt) return null;
-  const result =
-    targetModule === "contract"
-      ? await api
-          .GET("/api/v1/contract-types/{id}/fields", { params: { path: { id: targetTypeId } } })
-          .catch(() => undefined)
-      : await api
-          .GET("/api/v1/matter-types/{id}/fields", { params: { path: { id: targetTypeId } } })
-          .catch(() => undefined);
-  const attached = result?.data?.attachedFields;
-  if (!attached || attached.some((row) => row.fieldId === field.id)) return null;
-  return { module: targetModule, typeId: targetTypeId, typeDisplayName: type.displayName };
-}
 
 function DestinationControl({
   typeId,
@@ -572,11 +492,6 @@ export function SettingsRequestTypeEditorPage() {
   });
   const scopes = attachableScopes(destination.targetModule);
   const identity: EditorTypeRow = requestType;
-  const destinationTypes = [...contractTypes, ...matterTypes];
-  const targetOffer: TypeEditorTargetOffer = {
-    check: (field) => targetLacks(requestType.id, destinationTypes, field),
-    ...OFFER_MESSAGES,
-  };
   return (
     <TypeEditorScreen
       initialType={identity}
@@ -602,25 +517,12 @@ export function SettingsRequestTypeEditorPage() {
       }
       attachments={{
         createFieldModule: destination.targetModule ?? "choose",
-        formOrder: {
-          initial: requestType.formFieldOrder ?? [],
-          save: async (id, formFieldOrder) => {
-            const result = await api
-              .PATCH("/api/v1/request-types/{id}", {
-                params: { path: { id } },
-                body: { formFieldOrder },
-              })
-              .catch(() => undefined);
-            return { data: result?.data?.requestType.formFieldOrder, ...(await problem(result)) };
-          },
-        },
         initialAttached: attachedFields,
         catalog: catalog.filter((field) => scopes.includes(field.moduleScope)),
         api: EDITOR_API,
         messages: MESSAGES,
         basics: BASICS_SLOT,
         requiredRule: REQUIRED_RULE,
-        targetOffer,
       }}
     />
   );

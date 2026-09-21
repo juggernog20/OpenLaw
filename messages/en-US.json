@@ -5591,6 +5591,9 @@
   "error.title": {
     "defaultMessage": "Something went wrong."
   },
+  "fields.notSet": {
+    "defaultMessage": "Not set"
+  },
   "format.deadline.overdue": {
     "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
   },
@@ -7579,9 +7582,6 @@
   },
   "portal.form.description": {
     "defaultMessage": "Description"
-  },
-  "portal.form.descriptionHint": {
-    "defaultMessage": "What is it, who is on the other side, and what do you need from Legal?"
   },
   "portal.form.fieldRequired": {
     "defaultMessage": "{field} is required."
@@ -10915,21 +10915,6 @@
   },
   "settings.requestTypeEditor.requiredLocked": {
     "defaultMessage": "{name} can be on the form, but it can't be required. A requester cannot pick a person in the Portal."
-  },
-  "settings.requestTypeEditor.targetOffer.accept": {
-    "defaultMessage": "Attach to both"
-  },
-  "settings.requestTypeEditor.targetOffer.attachedBoth": {
-    "defaultMessage": "{name} attached to the form and to {target}."
-  },
-  "settings.requestTypeEditor.targetOffer.body": {
-    "defaultMessage": "{name} is not on the {target} {module, select, contract {contract} other {matter}} type. An answer collected on this form carries into a {module, select, contract {contract} other {matter}} only through a Field its type attaches. Without it, the answer stays on the Request."
-  },
-  "settings.requestTypeEditor.targetOffer.decline": {
-    "defaultMessage": "Form only"
-  },
-  "settings.requestTypeEditor.targetOffer.title": {
-    "defaultMessage": "Attach {name} to {target} too?"
   },
   "settings.requestTypeEditor.turnaround": {
     "defaultMessage": "Target turnaround (business days)"

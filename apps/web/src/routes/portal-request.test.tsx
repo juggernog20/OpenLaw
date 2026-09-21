@@ -1132,3 +1132,32 @@ it("shows Legal's owner and submitted Needed by date without a separate return e
   expect(screen.getByText("Oct 8, 2026")).toBeInTheDocument();
   expect(screen.queryByText("Oct 10, 2026")).not.toBeInTheDocument();
 });
+
+it("shows native Value in currency units and Counterparty registry names", async () => {
+  stubApi({
+    signedIn: REQUESTER,
+    extra: detailRead(
+      detail({
+        customFields: { value_amount: 12345, value_currency: "USD", counterparties: ["party-1"] },
+        fields: [
+          field({
+            slug: "value_amount",
+            builtInKey: "value_amount",
+            displayName: "Value amount",
+            fieldType: "number",
+          }),
+          field({
+            slug: "counterparties",
+            builtInKey: "counterparties",
+            displayName: "Counterparties",
+            fieldType: "multi_select",
+          }),
+        ],
+        customFieldRefs: { users: [], entities: [], builtins: { "party-1": "Registry supplier" } },
+      }),
+    ),
+  });
+  renderAt("/portal/requests/45");
+  expect(await screen.findByText("$123.45")).toBeInTheDocument();
+  expect(screen.getByText("Registry supplier")).toBeInTheDocument();
+});

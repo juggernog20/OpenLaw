@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -49,7 +50,7 @@ it.each(["contract", "matter"] as const)(
   "preserves original intake on the %s after description edits and enforces both audiences",
   async (module) => {
     const description = "Original requester context.\nAn exception that the title leaves out.";
-    const submitted = await harness.app.inject({
+    const submitted = await submitRequestFixture(harness, {
       method: "POST",
       url: "/api/v1/requests",
       cookies: cast.requesterCookies,

@@ -12,7 +12,7 @@ import { CircleCheck, CircleX, FileText, Info, PackageCheck } from "lucide-react
 import { api } from "../lib/api";
 import { severityLabel } from "../lib/contracts";
 import { isAnswered, type CustomFieldValue } from "../lib/custom-fields";
-import { formatFullDate, formatShortDate } from "../lib/format";
+import { formatFullDate, formatShortDate, formatCurrency } from "../lib/format";
 import {
   REQUEST_STATUS_PILL,
   requestAttachmentHref,
@@ -176,7 +176,13 @@ export function PortalRequestPage() {
                 .filter((field) => isAnswered(request.customFields[field.slug]))
                 .map((field) => (
                   <ValueRow key={field.slug} label={field.displayName}>
-                    {renderValue(intl, field, request.customFields[field.slug]!, customFieldRefs)}
+                    {renderValue(
+                      intl,
+                      field,
+                      request.customFields[field.slug]!,
+                      customFieldRefs,
+                      request.customFields,
+                    )}
                   </ValueRow>
                 ))}
             </dl>
@@ -343,7 +349,19 @@ function renderValue(
   field: MyRequestField,
   value: CustomFieldValue,
   refs: MyRequestFieldRefs,
+  answers: Readonly<Record<string, CustomFieldValue>>,
 ): React.ReactNode {
+  if (
+    field.builtInKey === "value_amount" &&
+    typeof value === "number" &&
+    typeof answers.value_currency === "string"
+  )
+    return formatCurrency(
+      { amount: value, currency: answers.value_currency },
+      { locale: intl.locale },
+    );
+  if (field.builtInKey && typeof value === "string" && refs.builtins?.[value])
+    return refs.builtins[value];
   switch (field.fieldType) {
     case "number":
       return typeof value === "number" ? intl.formatNumber(value) : String(value);
@@ -358,7 +376,12 @@ function renderValue(
         { value: String(value === true) },
       );
     case "multi_select":
-      return Array.isArray(value) ? intl.formatList(value, { type: "conjunction" }) : String(value);
+      return Array.isArray(value)
+        ? intl.formatList(
+            value.map((v) => (field.builtInKey ? (refs.builtins?.[v] ?? v) : v)),
+            { type: "conjunction" },
+          )
+        : String(value);
     case "user":
       return refs.users.find((person) => person.id === value)?.displayName ?? String(value);
     case "entity": {

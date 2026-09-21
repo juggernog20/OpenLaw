@@ -26,7 +26,7 @@ export type IntakeContractFacts = Partial<
   >
 >;
 
-/** Only protected catalog definitions can supply native record facts. */
+/** Native Row keys take precedence over the protected intake slugs retained until migration. */
 export async function readIntakeContractFacts(
   db: Executor,
   answers: Readonly<Record<string, CustomFieldValue>>,
@@ -39,7 +39,47 @@ export async function readIntakeContractFacts(
   for (const field of definitions) {
     if (field.key && answers[field.slug] !== undefined) values[field.key] = answers[field.slug]!;
   }
-  return parseIntakeContractFacts(values);
+  const nativeKeys = {
+    entity: "entityId",
+    effective_date: "effectiveDate",
+    expiry_date: "expiryDate",
+    term_type: "termType",
+    renewal_period_months: "renewalPeriodMonths",
+    notice_period_days: "noticePeriodDays",
+  } as const;
+  for (const [key, native] of Object.entries(nativeKeys)) {
+    if (answers[key] !== undefined) values[native] = answers[key]!;
+  }
+  const terms: Record<string, string> = {
+    fixed: "Fixed term",
+    auto_renew: "Auto-renewing",
+    evergreen: "Evergreen",
+  };
+  if (typeof answers.term_type === "string")
+    values.termType = terms[answers.term_type] ?? answers.term_type;
+  const parsed = parseIntakeContractFacts(values);
+  if (
+    ["value_amount", "value_currency", "value_cadence"].some((key) => answers[key] !== undefined)
+  ) {
+    const amount = answers.value_amount;
+    const currency = answers.value_currency;
+    const cadence = answers.value_cadence;
+    if (
+      typeof amount !== "number" ||
+      !Number.isSafeInteger(amount) ||
+      amount < 0 ||
+      typeof currency !== "string" ||
+      !Intl.supportedValuesOf("currency").includes(currency) ||
+      (cadence !== "one_time" && cadence !== "monthly" && cadence !== "annually")
+    )
+      throw httpError(400, "Value: enter an amount, currency and frequency.");
+    Object.assign(parsed.facts, {
+      valueAmount: amount,
+      valueCurrency: currency,
+      valueCadence: cadence,
+    });
+  }
+  return parsed;
 }
 
 export function parseIntakeContractFacts(values: Readonly<Record<string, CustomFieldValue>>) {

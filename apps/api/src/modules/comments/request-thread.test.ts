@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -148,7 +149,7 @@ afterAll(async () => {
 /** One Request through the portal's own door, answered by its id — the
  * reference the thread is keyed by (CMT-010). */
 async function submit(cookies: Record<string, string>, title: string): Promise<string> {
-  const res = await harness.app.inject({
+  const res = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies,
