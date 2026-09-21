@@ -4697,6 +4697,9 @@
   "entities.form.fieldMissing": {
     "defaultMessage": "Fill {field}."
   },
+  "entities.form.fieldNumberInvalid": {
+    "defaultMessage": "{field}: enter this as a number."
+  },
   "entities.form.formedOn": {
     "defaultMessage": "Formed on"
   },

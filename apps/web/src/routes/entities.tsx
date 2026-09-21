@@ -1269,7 +1269,19 @@ function RegisterEntityDialog({
     const customFields: Record<string, CustomFieldValue> = {};
     for (const field of creation.fields) {
       const parsed = toValue(field, fieldDrafts[field.slug] ?? emptyDraft(field));
-      if ("error" in parsed || (field.isRequired && parsed.value === null)) {
+      if ("error" in parsed) {
+        setError(
+          intl.formatMessage(
+            {
+              id: "entities.form.fieldNumberInvalid",
+              defaultMessage: "{field}: enter this as a number.",
+            },
+            { field: field.displayName },
+          ),
+        );
+        return;
+      }
+      if (field.isRequired && parsed.value === null) {
         setError(
           intl.formatMessage(
             { id: "entities.form.fieldMissing", defaultMessage: "Fill {field}." },

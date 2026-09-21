@@ -227,6 +227,7 @@ function EntityRecord() {
   const intl = useIntl();
   const [saved, setSaved] = useState<EntityRow>(loaded.entity);
   const [attachedFields, setAttachedFields] = useState<EntityField[]>(loaded.fields);
+  const [form, setForm] = useState(loaded.form);
   const [refs, setRefs] = useState<EntityCustomFieldRefs>(loaded.customFieldRefs);
   const [drafts, setDrafts] = useState(() => textDrafts(loaded.entity));
   const [formedOn, setFormedOn] = useState(loaded.entity.formedOn ?? "");
@@ -337,6 +338,7 @@ function EntityRecord() {
       (data) => {
         setSaved(data.entity);
         setAttachedFields(data.fields);
+        setForm(data.form);
         setRefs(data.customFieldRefs);
         if (key === "formedOn") setFormedOn(data.entity.formedOn ?? "");
         if (isTextKey(key))
@@ -753,14 +755,8 @@ function EntityRecord() {
                 <EntityFieldsCard
                   entity={saved}
                   fields={
-                    (loaded.entityTypes.find((type) => type.id === saved.entityTypeId)?.form ??
-                    loaded.form)
-                      ? recordFormRows(
-                          loaded.entityTypes.find((type) => type.id === saved.entityTypeId)?.form ??
-                            loaded.form ??
-                            [],
-                          saved.customFields,
-                        ).flatMap((row) => {
+                    form
+                      ? recordFormRows(form, saved.customFields).flatMap((row) => {
                           const field = attachedFields.find((field) => field.slug === row.rowRef);
                           return field ? [field] : [];
                         })

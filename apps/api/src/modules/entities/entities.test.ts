@@ -605,9 +605,13 @@ describe("PATCH /entities/:id — correcting the identity card", () => {
       registeredAgent: "Corporate Agents Inc",
       registeredAddress: "1209 Orange Street, Wilmington, DE",
     });
+    // The answer carries the new type's Form, so the record page draws
+    // the LLC Rows and not the Corporation ones.
+    expect(res.json().form).toEqual(llc.form);
     // The correction survives the round trip.
     const read = await getEntity(memberCookies, id);
     expect(read.json().entity.legalName).toBe("New Name LLC");
+    expect(read.json().form).toEqual(res.json().form);
   });
 
   it("clears an optional card field with null and trims blank strings to null", async () => {

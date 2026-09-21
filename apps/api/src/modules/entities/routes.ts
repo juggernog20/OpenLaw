@@ -943,6 +943,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         return { row: updated!, entityTypeName: typeName, attached: fields };
       });
       return {
+        form: await readTypeForm(app.db, "entity", row.entityTypeId),
         entity: toRow(row, entityTypeName),
         fields: attached,
         customFieldRefs: await resolveStaffRefs(
