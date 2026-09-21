@@ -43,6 +43,7 @@ import { Label } from "../ui/label";
 
 export function CreateMatterDialog({
   matterTypes,
+  departments,
   users,
   entities,
   viewerId,
@@ -345,6 +346,7 @@ export function CreateMatterDialog({
               onNative={setNative}
               people={people}
               entities={entities}
+              departments={departments}
             />
             <ConfidentialToggle
               id="matter-new-confidential"

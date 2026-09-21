@@ -132,6 +132,8 @@ export function CreationRows({
   onNative,
   people = [],
   entities = [],
+  departments: givenDepartments,
+  regions: givenRegions,
 }: Readonly<{
   rows: readonly FormRow[];
   fields: readonly AttachedField[];
@@ -141,10 +143,15 @@ export function CreationRows({
   onNative: (value: CreationValues) => void;
   people?: readonly FieldReference[];
   entities?: readonly FieldReference[];
+  /** Choices the opener already holds. Absent means the component reads them itself. */
+  departments?: readonly { id: string; displayName: string }[];
+  regions?: readonly { id: string; displayName: string }[];
 }>) {
   const t = useFormText();
-  const [departments, setDepartments] = useState<{ id: string; displayName: string }[]>([]);
-  const [regions, setRegions] = useState<{ id: string; displayName: string }[]>([]);
+  const [readDepartments, setDepartments] = useState<{ id: string; displayName: string }[]>([]);
+  const [readRegions, setRegions] = useState<{ id: string; displayName: string }[]>([]);
+  const departments = givenDepartments ?? readDepartments;
+  const regions = givenRegions ?? readRegions;
   const [references, setReferences] = useState<{
     people: FieldReference[];
     entities: FieldReference[];
@@ -152,8 +159,9 @@ export function CreationRows({
   const [parties, setParties] = useState<IntakeCounterpartySelection[]>([]);
   const [valueError, setValueError] = useState<string>();
   const [optionsError, setOptionsError] = useState(false);
-  const needsDepartments = rows.some((r) => ["department", "owning_department"].includes(r.rowRef));
-  const needsRegions = rows.some((r) => r.rowRef === "region");
+  const needsDepartments =
+    !givenDepartments && rows.some((r) => ["department", "owning_department"].includes(r.rowRef));
+  const needsRegions = !givenRegions && rows.some((r) => r.rowRef === "region");
   const needsPeople = !people.length && rows.some((r) => r.fieldType === "user");
   const needsEntities = !entities.length && rows.some((r) => r.fieldType === "entity");
   useEffect(() => {
@@ -233,6 +241,7 @@ export function CreationRows({
         else if (row.rowRef === "value")
           return (
             <ValueField
+              idPrefix={id}
               required={row.isRequired}
               key={row.id}
               value={native.value ?? null}

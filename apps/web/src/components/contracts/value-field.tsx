@@ -82,6 +82,7 @@ export function ValueField({
   onCommit,
   onDraftChange,
   required = false,
+  idPrefix = "contract-value",
 }: Readonly<{
   value: ContractValue | null;
   /** The record is frozen: it is archived, or this viewer reads it
@@ -95,6 +96,8 @@ export function ValueField({
   onCommit: (value: ContractValue | null) => void;
   onDraftChange?: (value: ContractValue | null, error?: string) => void;
   required?: boolean;
+  /** Distinct per mount: the create dialog can open over a record that draws its own Value. */
+  idPrefix?: string;
 }>) {
   const intl = useIntl();
   const [editingAmount, setEditingAmount] = useState(false);
@@ -189,7 +192,7 @@ export function ValueField({
       <div className="flex flex-wrap items-center gap-2">
         <div
           role="group"
-          aria-labelledby="contract-value-label"
+          aria-labelledby={`${idPrefix}-label`}
           className="flex flex-1 flex-wrap items-end gap-2"
           // Focus moving between the three controls stays inside one
           // field, so only focus leaving the group commits it.
@@ -209,7 +212,7 @@ export function ValueField({
         >
           <div className="flex w-40 flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <Label id="contract-value-label" htmlFor="contract-value-amount" required={required}>
+              <Label id={`${idPrefix}-label`} htmlFor={`${idPrefix}-amount`} required={required}>
                 <FormattedMessage id="contracts.form.value" defaultMessage="Value" />
               </Label>
               {marker}
@@ -218,7 +221,7 @@ export function ValueField({
             <AiField active={Boolean(marker)}>
               <Input
                 aria-required={required || undefined}
-                id="contract-value-amount"
+                id={`${idPrefix}-amount`}
                 type="text"
                 inputMode="decimal"
                 disabled={frozen}
@@ -234,12 +237,12 @@ export function ValueField({
             </AiField>
           </div>
           <div className="flex w-56 flex-col gap-1.5">
-            <Label htmlFor="contract-value-currency">
+            <Label htmlFor={`${idPrefix}-currency`}>
               <FormattedMessage id="contracts.value.currency" defaultMessage="Currency" />
             </Label>
             <AiField active={Boolean(marker)}>
               <CurrencySelect
-                id="contract-value-currency"
+                id={`${idPrefix}-currency`}
                 className="w-full"
                 disabled={frozen}
                 aria-label={intl.formatMessage({
@@ -256,12 +259,12 @@ export function ValueField({
             </AiField>
           </div>
           <div className="flex w-40 flex-col gap-1.5">
-            <Label htmlFor="contract-value-cadence">
+            <Label htmlFor={`${idPrefix}-cadence`}>
               <FormattedMessage id="contracts.value.cadence" defaultMessage="Frequency" />
             </Label>
             <AiField active={Boolean(marker)}>
               <select
-                id="contract-value-cadence"
+                id={`${idPrefix}-cadence`}
                 className={CONTROL_CLASS}
                 disabled={frozen}
                 aria-label={intl.formatMessage({
@@ -289,7 +292,7 @@ export function ValueField({
           {draft.cadence === "other" && (
             <AiField active={Boolean(marker)} className="min-w-40 flex-1">
               <Input
-                id="contract-value-custom-cadence"
+                id={`${idPrefix}-custom-cadence`}
                 disabled={frozen}
                 maxLength={100}
                 aria-label={intl.formatMessage({

@@ -983,63 +983,66 @@ function MatterRecord() {
       />
     ),
     description: (
-      <MatterConversionValue
-        active={Boolean(saved.aiUnverified?.description) && !showRequesterDescription}
-        number={saved.number}
-        slug="description"
-        onConfirmed={!frozen ? confirmedConversion : undefined}
-      >
-        {" "}
-        <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-          <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
-            <h2 className="text-base font-semibold">
-              <FormattedMessage id="matters.field.description" defaultMessage="Description" />
-            </h2>
-            {loader.originalIntake && (
-              <DescriptionSourceToggle
-                requester={showRequesterDescription}
-                onChange={setShowRequesterDescription}
-              />
-            )}
-          </header>
-          <div className="p-4">
-            {showRequesterDescription && loader.originalIntake ? (
-              <RequesterDescription description={loader.originalIntake.description} />
-            ) : businessFrozen ? (
-              <AiField
-                active={Boolean(saved.aiUnverified?.description)}
-                className="-mx-2 w-fit px-2"
-              >
-                <p className="whitespace-pre-wrap text-base text-muted">
-                  {saved.description || notProvided(intl)}
-                </p>
-              </AiField>
-            ) : (
-              <>
-                <AiField active={Boolean(saved.aiUnverified?.description)} className="flex">
-                  <AutoResizeTextarea
-                    aria-label={intl.formatMessage({
-                      id: "matters.field.description",
-                      defaultMessage: "Description",
-                    })}
-                    className="text-base"
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                    onBlur={() => commitText("description")}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") setDescription(saved.description ?? "");
-                    }}
-                  />
-                </AiField>
-                <StatusNote
-                  status={fieldStatus.description ?? "idle"}
-                  detail={fieldError.description}
+      // The Form places the description among the other Rows, so it sits
+      // in the grid. It keeps the full width a free-form textarea needs.
+      <div className="@2xl/page:col-span-2">
+        <MatterConversionValue
+          active={Boolean(saved.aiUnverified?.description) && !showRequesterDescription}
+          number={saved.number}
+          slug="description"
+          onConfirmed={!frozen ? confirmedConversion : undefined}
+        >
+          <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+            <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
+              <h2 className="text-base font-semibold">
+                <FormattedMessage id="matters.field.description" defaultMessage="Description" />
+              </h2>
+              {loader.originalIntake && (
+                <DescriptionSourceToggle
+                  requester={showRequesterDescription}
+                  onChange={setShowRequesterDescription}
                 />
-              </>
-            )}
-          </div>
-        </section>
-      </MatterConversionValue>
+              )}
+            </header>
+            <div className="p-4">
+              {showRequesterDescription && loader.originalIntake ? (
+                <RequesterDescription description={loader.originalIntake.description} />
+              ) : businessFrozen ? (
+                <AiField
+                  active={Boolean(saved.aiUnverified?.description)}
+                  className="-mx-2 w-fit px-2"
+                >
+                  <p className="whitespace-pre-wrap text-base text-muted">
+                    {saved.description || notProvided(intl)}
+                  </p>
+                </AiField>
+              ) : (
+                <>
+                  <AiField active={Boolean(saved.aiUnverified?.description)} className="flex">
+                    <AutoResizeTextarea
+                      aria-label={intl.formatMessage({
+                        id: "matters.field.description",
+                        defaultMessage: "Description",
+                      })}
+                      className="text-base"
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      onBlur={() => commitText("description")}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") setDescription(saved.description ?? "");
+                      }}
+                    />
+                  </AiField>
+                  <StatusNote
+                    status={fieldStatus.description ?? "idle"}
+                    detail={fieldError.description}
+                  />
+                </>
+              )}
+            </div>
+          </section>
+        </MatterConversionValue>
+      </div>
     ),
   };
   const orderedRows = (

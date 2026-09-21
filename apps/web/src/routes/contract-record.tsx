@@ -2379,7 +2379,9 @@ function ContractRecord() {
       />
     ),
     description: (
-      <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+      // The Form places the description among the other Rows, so it sits
+      // in the grid. It keeps the full width a free-form textarea needs.
+      <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised @2xl/page:col-span-2">
         <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
           <h2 id="contract-description-heading" className="text-base font-semibold">
             <FormattedMessage id="contracts.form.description" defaultMessage="Description" />
