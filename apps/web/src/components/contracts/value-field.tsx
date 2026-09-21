@@ -80,6 +80,8 @@ export function ValueField({
   confirmation,
   onStatus,
   onCommit,
+  onDraftChange,
+  required = false,
 }: Readonly<{
   value: ContractValue | null;
   /** The record is frozen: it is archived, or this viewer reads it
@@ -91,6 +93,8 @@ export function ValueField({
   confirmation?: React.ReactNode;
   onStatus: (status: FieldStatus, detail?: string) => void;
   onCommit: (value: ContractValue | null) => void;
+  onDraftChange?: (value: ContractValue | null, error?: string) => void;
+  required?: boolean;
 }>) {
   const intl = useIntl();
   const [editingAmount, setEditingAmount] = useState(false);
@@ -100,88 +104,84 @@ export function ValueField({
    * with a fresh row without discarding a half-typed amount here. */
   const [seed, setSeed] = useState(() => valueSeed(value));
   const seeded = valueSeed(value);
-  if (seed !== seeded) {
+  if (!onDraftChange && seed !== seeded) {
     setSeed(seeded);
     setDraft(valueDraft(value, intl.locale));
   }
 
   function revert() {
-    setDraft(valueDraft(value, intl.locale));
+    changeDraft(valueDraft(value, intl.locale));
     onStatus("idle");
   }
 
-  function commit() {
-    // Enter already committed this draft and the PATCH is in flight —
-    // the blur that follows must not send a duplicate.
-    if (status === "saving") return;
-    const typed = draft.amount.trim();
-
-    if (typed === "") {
-      // Before the first value is saved, keep the other parts so the
-      // person can choose a cadence or currency before entering an amount.
-      if (value === null) {
-        onStatus("idle");
-        return;
-      }
-      onCommit(null);
-      return;
-    }
-
-    const validAmount = /^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?$|^\.\d+$/.test(typed);
+  function parse(nextDraft: ValueDraft): { value: ContractValue | null; error?: string } {
+    const typed = nextDraft.amount.trim();
+    if (!typed) return { value: null };
     const major = Number(typed.replaceAll(",", ""));
-    if (!validAmount || !Number.isFinite(major) || major < 0) {
-      onStatus(
-        "error",
-        intl.formatMessage({
+    const validAmount = /^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?$|^\.\d+$/.test(typed);
+    if (!validAmount || !Number.isFinite(major) || major < 0)
+      return {
+        value: null,
+        error: intl.formatMessage({
           id: "contracts.value.amountInvalid",
           defaultMessage: "Enter the amount as a number.",
         }),
-      );
-      return;
-    }
-    if (draft.currency === "") {
-      // The seam refuses this too, and the database refuses it again.
-      // Saying so here keeps a round trip out of a mistake the form can
-      // see for itself — the same guard an empty title already gets.
-      onStatus(
-        "error",
-        intl.formatMessage({
+      };
+    if (!nextDraft.currency)
+      return {
+        value: null,
+        error: intl.formatMessage({
           id: "contracts.value.currencyMissing",
           defaultMessage: "Pick a currency for the amount.",
         }),
-      );
-      return;
-    }
-
-    if (draft.cadence === "other" && !draft.cadenceDescription.trim()) {
-      onStatus(
-        "error",
-        intl.formatMessage({
+      };
+    if (nextDraft.cadence === "other" && !nextDraft.cadenceDescription.trim())
+      return {
+        value: null,
+        error: intl.formatMessage({
           id: "contracts.value.customCadenceRequired",
           defaultMessage: "Enter a custom cadence.",
         }),
-      );
+      };
+    const amount = toMinorUnits(major, nextDraft.currency, { locale: intl.locale });
+    if (!Number.isSafeInteger(amount))
+      return {
+        value: null,
+        error: intl.formatMessage({
+          id: "contracts.value.amountInvalid",
+          defaultMessage: "Enter the amount as a number.",
+        }),
+      };
+    return {
+      value: {
+        amount,
+        currency: nextDraft.currency,
+        cadence: nextDraft.cadence,
+        ...(nextDraft.cadence === "other"
+          ? { cadenceDescription: nextDraft.cadenceDescription.trim() }
+          : {}),
+      },
+    };
+  }
+  function changeDraft(next: ValueDraft) {
+    setDraft(next);
+    if (onDraftChange) {
+      const parsed = parse(next);
+      onDraftChange(parsed.value, parsed.error);
+    }
+  }
+  function commit() {
+    if (status === "saving") return;
+    const parsed = parse(draft);
+    if (parsed.error) {
+      onStatus("error", parsed.error);
       return;
     }
-    const next: ContractValue = {
-      amount: toMinorUnits(major, draft.currency, { locale: intl.locale }),
-      currency: draft.currency,
-      cadence: draft.cadence,
-      ...(draft.cadence === "other" ? { cadenceDescription: draft.cadenceDescription.trim() } : {}),
-    };
-    if (
-      value &&
-      next.amount === value.amount &&
-      next.currency === value.currency &&
-      next.cadence === value.cadence &&
-      next.cadenceDescription === value.cadenceDescription
-    ) {
-      // Nothing changed: commit nothing (DES-017), and drop any
-      // refusal the last attempt left standing.
+    if (valueSeed(parsed.value) === valueSeed(value)) {
       onStatus("idle");
       return;
     }
-    onCommit(next);
+    onCommit(parsed.value);
   }
 
   return (
@@ -209,7 +209,7 @@ export function ValueField({
         >
           <div className="flex w-40 flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <Label id="contract-value-label" htmlFor="contract-value-amount">
+              <Label id="contract-value-label" htmlFor="contract-value-amount" required={required}>
                 <FormattedMessage id="contracts.form.value" defaultMessage="Value" />
               </Label>
               {marker}
@@ -217,6 +217,7 @@ export function ValueField({
             </div>
             <AiField active={Boolean(marker)}>
               <Input
+                aria-required={required || undefined}
                 id="contract-value-amount"
                 type="text"
                 inputMode="decimal"
@@ -228,9 +229,7 @@ export function ValueField({
                 value={editingAmount ? draft.amount : groupedAmount(draft.amount)}
                 onFocus={() => setEditingAmount(true)}
                 onBlur={() => setEditingAmount(false)}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, amount: event.target.value }))
-                }
+                onChange={(event) => changeDraft({ ...draft, amount: event.target.value })}
               />
             </AiField>
           </div>
@@ -248,7 +247,7 @@ export function ValueField({
                   defaultMessage: "Currency",
                 })}
                 value={draft.currency}
-                onValueChange={(currency) => setDraft((current) => ({ ...current, currency }))}
+                onValueChange={(currency) => changeDraft({ ...draft, currency })}
                 placeholder={intl.formatMessage({
                   id: "contracts.value.currencyPlaceholder",
                   defaultMessage: "Currency…",
@@ -271,10 +270,10 @@ export function ValueField({
                 })}
                 value={draft.cadence}
                 onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
+                  changeDraft({
+                    ...draft,
                     cadence: event.target.value as ValueCadence,
-                  }))
+                  })
                 }
               >
                 {/* No empty option: an amount always says what it is per, and
@@ -303,7 +302,7 @@ export function ValueField({
                 })}
                 value={draft.cadenceDescription}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, cadenceDescription: event.target.value }))
+                  changeDraft({ ...draft, cadenceDescription: event.target.value })
                 }
               />
             </AiField>

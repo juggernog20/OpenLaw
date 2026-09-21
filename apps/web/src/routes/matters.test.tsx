@@ -30,7 +30,34 @@ const REQUIRED_FIELD = {
   displayOrder: 1,
   isRequired: true,
 } as const;
+function matterCreationForm(
+  fields: readonly { fieldId: string; slug: string; fieldType: string; isRequired: boolean }[] = [
+    REQUIRED_FIELD,
+  ],
+) {
+  return [
+    ...["priority", "risk", "description"].map((rowRef) => ({
+      kind: "row",
+      id: rowRef,
+      rowRef,
+      fieldType: rowRef === "description" ? "long_text" : "single_select",
+      isRequired: rowRef === "priority",
+      onIntakeForm: true,
+      visibleOnPortal: true,
+    })),
+    ...fields.map((field) => ({
+      kind: "row",
+      id: field.fieldId,
+      rowRef: field.slug,
+      fieldType: field.fieldType,
+      isRequired: field.isRequired,
+      onIntakeForm: true,
+      visibleOnPortal: true,
+    })),
+  ];
+}
 const TYPE = {
+  creationForm: matterCreationForm(),
   id: "type-employment",
   slug: "employment",
   displayName: "Employment",
@@ -323,13 +350,15 @@ describe("the Matters destination", () => {
     expect(screen.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
   });
 
-  it("draws every M8 field without a Template row and names all current gaps in one refusal", async () => {
+  it("draws the chosen type creation Rows and names all current gaps in one refusal", async () => {
     stubApi({ signedIn: MEMBER, extra: matterApi() });
     renderAt("/matters");
     const user = userEvent.setup();
     await screen.findByRole("heading", { name: "No matters yet" });
     await user.click(screen.getAllByRole("button", { name: "New matter" })[0]!);
     const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).queryByLabelText("Priority")).not.toBeInTheDocument();
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
     for (const label of [
       "Title",
       "Matter type",
@@ -387,7 +416,6 @@ describe("the Matters destination", () => {
       title: "New advice",
       matterTypeId: TYPE.id,
       managerId: MEMBER.id,
-      departmentId: null,
       priority: "high",
       risk: "low",
       description: "Review the transfer.",
@@ -627,7 +655,14 @@ describe("the Matters destination", () => {
         extra: (call) => {
           if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
             return json(200, {
-              matterTypes: [{ ...TYPE, fields: [field], templates: [TEMPLATE] }],
+              matterTypes: [
+                {
+                  ...TYPE,
+                  fields: [field],
+                  creationForm: matterCreationForm([field]),
+                  templates: [TEMPLATE],
+                },
+              ],
               matterStatuses: [],
               users: [],
             });
@@ -717,3 +752,71 @@ it.each(["task", "key_date"] as const)(
     expect(link).toHaveAttribute("href", `/matters/7/${source === "task" ? "tasks" : "key-dates"}`);
   },
 );
+
+it("collects creation Rows in Form order and reveals a required Branch live", async () => {
+  const field = {
+    fieldId: "f-conditional",
+    slug: "conditional",
+    displayName: "Conditional answer",
+    description: null,
+    fieldType: "text",
+    fieldTag: "business",
+    options: null,
+    displayOrder: 1,
+    isRequired: true,
+  };
+  const choice = { ...field, fieldId: "f-choice", slug: "choice", displayName: "Choice" };
+  const row = (f: typeof field) => ({
+    kind: "row",
+    id: f.fieldId,
+    rowRef: f.slug,
+    fieldType: f.fieldType,
+    isRequired: true,
+    visibleOnPortal: true,
+  });
+  const type = {
+    id: "t-branch",
+    slug: "branch",
+    displayName: "Branch type",
+    fields: [
+      choice,
+      field,
+      {
+        ...field,
+        fieldId: "f-record",
+        slug: "record_note",
+        displayName: "Record note",
+        isRequired: false,
+      },
+    ],
+    creationForm: [
+      row(choice),
+      {
+        kind: "branch",
+        id: "b",
+        match: "all",
+        conditions: [{ rowRef: "choice", operator: "equals", value: "Yes" }],
+        children: [row(field)],
+      },
+    ],
+  };
+  const fallback = matterApi();
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/matters/options"
+        ? json(200, { matterTypes: [type], matterStatuses: [], users: [] })
+        : fallback(call),
+  });
+  renderAt("/matters");
+  const user = userEvent.setup();
+  await user.click((await screen.findAllByRole("button", { name: "New matter" }))[0]!);
+  const dialog = within(screen.getByRole("dialog"));
+  await user.selectOptions(dialog.getByLabelText(/Matter type/i), "t-branch");
+  expect(dialog.queryByLabelText(/Conditional answer/)).not.toBeInTheDocument();
+  expect(dialog.queryByLabelText(/Record note/)).not.toBeInTheDocument();
+  await user.type(dialog.getByLabelText(/Choice/), "Yes");
+  expect(dialog.getByLabelText(/Conditional answer/)).toBeRequired();
+  await user.clear(dialog.getByLabelText(/Choice/));
+  expect(dialog.queryByLabelText(/Conditional answer/)).not.toBeInTheDocument();
+});

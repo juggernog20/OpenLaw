@@ -2543,7 +2543,7 @@ export interface paths {
     /** The managed Matters list, filtered and keyset-paged after access scope, with active counts */
     get: operations["listMatters"];
     put?: never;
-    /** Create the next M-number on the first live open status, enforcing required type fields */
+    /** Create the next M-number on the first live open Status, enforcing Required on visible creation Rows */
     post: operations["createMatter"];
     delete?: never;
     options?: never;
@@ -2574,7 +2574,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Live matter types with attached fields and creation templates, statuses, and assignable people */
+    /** Live Matter types with Forms, creation trees, Field definitions and templates; Statuses and assignable people */
     get: operations["listMatterOptions"];
     put?: never;
     post?: never;
@@ -4426,7 +4426,7 @@ export interface paths {
     get: operations["listContracts"];
     put?: never;
     /**
-     * Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly, and the Owner (CTR-004), which the create dialog seeds with the acting person and which must be a live Administrator or Legal Team Member; omitted or null is unassigned, a real state. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created
+     * Create a Contract from the chosen type's Intake and Creation Rows. Required applies only to visible Rows after Branch evaluation. Built-in answers populate native columns, Counterparties and the Needed by Key date. The record starts in Draft; Owner and Confidential are explicit choices. renewalOf copies the predecessor's business facts and links the new Contract as a child or successor.
      * @description M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.
      */
     post: operations["createContract"];
@@ -4459,7 +4459,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source; and the live approver groups the record's apply picker offers, each with the ids of the people applying it would ask (CTR-012) — the settings surfaces that manage all of these stay Administrator-only per SET-002 */
+    /** Live Contract types with their Forms, creation trees and Field definitions; live Statuses, Departments, Regions, people and approver groups for Member+ pickers */
     get: operations["listContractOptions"];
     put?: never;
     post?: never;
@@ -6402,7 +6402,7 @@ export interface paths {
     /** The filtered, sorted, keyset-paged Entity registry with its soonest open obligation; the entities array remains the M8 signing-entity picker seam */
     get: operations["listEntities"];
     put?: never;
-    /** Register an entity with its ENT-001 identity card: legal name and type required, the rest optional; status defaults to active */
+    /** Register an Entity with its identity card and visible required Fields from its type Form. Status defaults to active. */
     post: operations["createEntity"];
     delete?: never;
     options?: never;
@@ -16379,6 +16379,7 @@ export interface operations {
         "application/json": {
           title: string;
           matterTypeId: string;
+          neededBy?: string | null;
           managerId?: string | null;
           departmentId?: string | null;
           region?: string | null;
@@ -16540,6 +16541,9 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              form?: components["schemas"]["FormNode"][];
+              creationForm?: components["schemas"]["FormNode"][];
+              isDefault?: boolean;
               fields: {
                 builtInKey?: string | null;
                 fieldId: string;
@@ -16706,6 +16710,7 @@ export interface operations {
               image: string | null;
               archived: boolean;
             } | null;
+            form?: components["schemas"]["FormNode"][];
             fields: {
               builtInKey?: string | null;
               fieldId: string;
@@ -16883,6 +16888,7 @@ export interface operations {
               image: string | null;
               archived: boolean;
             } | null;
+            form?: components["schemas"]["FormNode"][];
             fields: {
               builtInKey?: string | null;
               fieldId: string;
@@ -24763,6 +24769,33 @@ export interface operations {
       content: {
         "application/json": {
           title: string;
+          description?: string | null;
+          entityId?: string | null;
+          /** @enum {string} */
+          priority?: "low" | "medium" | "high" | "critical";
+          risk?: ("low" | "medium" | "high" | "critical") | null;
+          /** @enum {string} */
+          termType?: "fixed" | "auto_renew" | "evergreen";
+          effectiveDate?: string | null;
+          expiryDate?: string | null;
+          renewalPeriodMonths?: number | null;
+          noticePeriodDays?: number | null;
+          value?: {
+            amount: number;
+            currency: string;
+            /** @enum {string} */
+            cadence: "one_time" | "monthly" | "annually" | "other";
+            cadenceDescription?: string;
+          } | null;
+          neededBy?: string | null;
+          counterparties?: (
+            | {
+                counterpartyId: string;
+              }
+            | {
+                name: string;
+              }
+          )[];
           owningDepartmentId?: string | null;
           region?: string | null;
           contractTypeId: string;
@@ -25001,6 +25034,9 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              isDefault?: boolean;
+              form?: components["schemas"]["FormNode"][];
+              creationForm?: components["schemas"]["FormNode"][];
               fields: {
                 builtInKey?: string | null;
                 fieldId: string;
@@ -25225,6 +25261,7 @@ export interface operations {
                   }
               )[];
             };
+            form?: components["schemas"]["FormNode"][];
             originalIntake?: {
               number: number;
               description: string | null;
@@ -36902,6 +36939,9 @@ export interface operations {
         "application/json": {
           legalName: string;
           entityTypeId: string;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
           portalListed?: boolean;
           jurisdiction?: string;
           /** Format: date */
@@ -37017,6 +37057,32 @@ export interface operations {
         content: {
           "application/json": {
             entityTypes: {
+              form?: components["schemas"]["FormNode"][];
+              creationForm?: components["schemas"]["FormNode"][];
+              fields?: {
+                builtInKey?: string | null;
+                fieldId: string;
+                slug: string;
+                displayName: string;
+                description: string | null;
+                /** @enum {string} */
+                fieldType:
+                  | "text"
+                  | "long_text"
+                  | "number"
+                  | "currency"
+                  | "date"
+                  | "boolean"
+                  | "single_select"
+                  | "multi_select"
+                  | "user"
+                  | "entity";
+                /** @enum {string} */
+                fieldTag: "business" | "legal";
+                options: string[] | null;
+                displayOrder: number;
+                isRequired: boolean;
+              }[];
               id: string;
               slug: string;
               displayName: string;
@@ -37094,6 +37160,7 @@ export interface operations {
         };
         content: {
           "application/json": {
+            form?: components["schemas"]["FormNode"][];
             canManageAccess?: boolean;
             entity: {
               id: string;
@@ -37224,6 +37291,7 @@ export interface operations {
         };
         content: {
           "application/json": {
+            form?: components["schemas"]["FormNode"][];
             canManageAccess?: boolean;
             entity: {
               id: string;

@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import {
+  CreationRows,
+  creationRows,
+  creationNativeValues,
+  type CreationValues,
+} from "../type-form/creation-rows";
+
 /**
  * The create-contract dialog (M8), drawn from `S10 Overlay` in the C10
  * frame of `designs/contracts.pen`.
@@ -60,7 +67,7 @@ import { problem as readProblem } from "../../lib/problem";
 import { matterReference } from "../../lib/matters";
 import { isMemberPlus } from "../../lib/roles";
 import { ConfidentialToggle } from "../confidential-toggle";
-import { CustomFieldControl, type FieldReference } from "../custom-field-control";
+import { type FieldReference } from "../custom-field-control";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
@@ -118,7 +125,9 @@ export function CreateContractDialog({
   // person may edit either box, and a prefill that re-applied itself
   // would take their edit back.
   const [title, setTitle] = useState(renewalOf?.title ?? "");
-  const [contractTypeId, setContractTypeId] = useState(renewalOf?.contractTypeId ?? "");
+  const [contractTypeId, setContractTypeId] = useState(
+    renewalOf?.contractTypeId ?? contractTypes.find((t) => t.isDefault)?.id ?? "",
+  );
   const people: FieldReference[] = users.map((person) => ({
     id: person.id,
     label: person.displayName,
@@ -153,8 +162,16 @@ export function CreateContractDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fields =
-    contractTypes.find((contractType) => contractType.id === contractTypeId)?.fields ?? [];
+  const [native, setNative] = useState<CreationValues>({ priority: "medium" });
+  const selectedType = contractTypes.find((type) => type.id === contractTypeId);
+  const creation = creationRows(
+    selectedType?.creationForm,
+    selectedType?.fields ?? [],
+    fieldDrafts,
+    native,
+    { title, contractTypeId },
+  );
+  const fields = creation.fields;
 
   const trimmedMatterQuery = matterQuery.trim();
   useEffect(() => {
@@ -232,8 +249,13 @@ export function CreateContractDialog({
       }
       if (parsed.value !== null) customFields[field.slug] = parsed.value;
     }
+    if (creation.rows.some((row) => row.rowRef === "value") && native.valueError) {
+      setError(native.valueError);
+      return;
+    }
     setBusy(true);
     const body = {
+      ...creationNativeValues(creation.rows, native),
       title: title.trim(),
       contractTypeId,
       customFields,
@@ -343,6 +365,57 @@ export function CreateContractDialog({
               />
             </div>
             <div className="flex flex-col gap-1.5">
+              <Label htmlFor="contract-new-type" required>
+                <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
+              </Label>
+              <select
+                id="contract-new-type"
+                aria-required="true"
+                value={contractTypeId}
+                className={CONTROL_CLASS}
+                onChange={(event) => {
+                  setContractTypeId(event.target.value);
+                  // Picking a type answers the pick-a-type refusal.
+                  if (event.target.value !== "") setError(null);
+                }}
+              >
+                <option value="">
+                  {intl.formatMessage({
+                    id: "contracts.form.typePlaceholder",
+                    defaultMessage: "Type…",
+                  })}
+                </option>
+                {contractTypes.map((contractType) => (
+                  <option key={contractType.id} value={contractType.id}>
+                    {contractType.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="contract-new-owner">
+                <FormattedMessage id="contracts.form.owner" defaultMessage="Legal Owner" />
+              </Label>
+              <select
+                id="contract-new-owner"
+                className={CONTROL_CLASS}
+                value={managerId}
+                onChange={(event) => setManagerId(event.target.value)}
+              >
+                <option value="">
+                  {intl.formatMessage({
+                    id: "contracts.ownerUnassigned",
+                    defaultMessage: "Unassigned",
+                  })}
+                </option>
+                {owners.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="contract-new-matter">
                 <FormattedMessage id="contracts.form.matter" defaultMessage="Matter" />
               </Label>
@@ -423,86 +496,19 @@ export function CreateContractDialog({
                 />
               </p>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="contract-new-type" required>
-                <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
-              </Label>
-              <select
-                id="contract-new-type"
-                aria-required="true"
-                value={contractTypeId}
-                className={CONTROL_CLASS}
-                onChange={(event) => {
-                  setContractTypeId(event.target.value);
-                  // Picking a type answers the pick-a-type refusal.
-                  if (event.target.value !== "") setError(null);
-                }}
-              >
-                <option value="">
-                  {intl.formatMessage({
-                    id: "contracts.form.typePlaceholder",
-                    defaultMessage: "Type…",
-                  })}
-                </option>
-                {contractTypes.map((contractType) => (
-                  <option key={contractType.id} value={contractType.id}>
-                    {contractType.displayName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="contract-new-owner">
-                <FormattedMessage id="contracts.form.owner" defaultMessage="Legal Owner" />
-              </Label>
-              <select
-                id="contract-new-owner"
-                className={CONTROL_CLASS}
-                value={managerId}
-                onChange={(event) => setManagerId(event.target.value)}
-              >
-                <option value="">
-                  {intl.formatMessage({
-                    id: "contracts.ownerUnassigned",
-                    defaultMessage: "Unassigned",
-                  })}
-                </option>
-                {owners.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.displayName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {fields.map((field) => (
-              <div key={field.slug} className="flex flex-col gap-1.5">
-                <Label
-                  id={`contract-new-${field.slug}-label`}
-                  htmlFor={`contract-new-${field.slug}`}
-                  required={field.isRequired}
-                >
-                  {field.displayName}
-                </Label>
-                <CustomFieldControl
-                  id={`contract-new-${field.slug}`}
-                  field={field}
-                  required={field.isRequired}
-                  draft={fieldDrafts[field.slug] ?? emptyDraft(field)}
-                  people={people}
-                  entities={entities}
-                  describedBy={field.description ? `contract-new-${field.slug}-help` : undefined}
-                  onDraft={(next) => {
-                    setFieldDrafts((current) => ({ ...current, [field.slug]: next }));
-                    setError(null);
-                  }}
-                />
-                {field.description && (
-                  <p id={`contract-new-${field.slug}-help`} className="text-xs text-muted">
-                    {field.description}
-                  </p>
-                )}
-              </div>
-            ))}
+            <CreationRows
+              rows={creation.rows}
+              fields={fields}
+              drafts={fieldDrafts}
+              onDraft={(slug, next) => {
+                setFieldDrafts((current) => ({ ...current, [slug]: next }));
+                setError(null);
+              }}
+              native={native}
+              onNative={setNative}
+              people={people}
+              entities={entities}
+            />
             {/* DD-014's flag, where the C10 mock draws it: the last row
               before the note, so the audience is decided before the
               record exists rather than in the seconds after. */}

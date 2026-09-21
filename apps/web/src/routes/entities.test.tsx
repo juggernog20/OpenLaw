@@ -403,3 +403,74 @@ it("keeps Portal listing out of the Member's registration form and request", asy
   await waitFor(() => expect(posted).toBeDefined());
   expect(posted).not.toHaveProperty("portalListed");
 });
+
+it("collects creation Rows in Form order and reveals a required Branch live", async () => {
+  const field = {
+    fieldId: "f-conditional",
+    slug: "conditional",
+    displayName: "Conditional answer",
+    description: null,
+    fieldType: "text",
+    fieldTag: "business",
+    options: null,
+    displayOrder: 1,
+    isRequired: true,
+  };
+  const choice = { ...field, fieldId: "f-choice", slug: "choice", displayName: "Choice" };
+  const row = (f: typeof field) => ({
+    kind: "row",
+    id: f.fieldId,
+    rowRef: f.slug,
+    fieldType: f.fieldType,
+    isRequired: true,
+    visibleOnPortal: true,
+  });
+  const type = {
+    id: "t-branch",
+    slug: "branch",
+    displayName: "Branch type",
+    fields: [
+      choice,
+      field,
+      {
+        ...field,
+        fieldId: "f-record",
+        slug: "record_note",
+        displayName: "Record note",
+        isRequired: false,
+      },
+    ],
+    creationForm: [
+      row(choice),
+      {
+        kind: "branch",
+        id: "b",
+        match: "all",
+        conditions: [{ rowRef: "choice", operator: "equals", value: "Yes" }],
+        children: [row(field)],
+      },
+    ],
+  };
+  const fallback = registryApi([]);
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/entities/types"
+        ? json(200, { entityTypes: [type] })
+        : fallback(call),
+  });
+  renderAt("/entities?view=list");
+  const user = userEvent.setup();
+  await user.click((await screen.findAllByRole("button", { name: "Add entity" }))[0]!);
+  const dialog = within(screen.getByRole("dialog"));
+  await user.selectOptions(dialog.getByLabelText(/Entity type/i), "t-branch");
+  expect(dialog.queryByLabelText(/Conditional answer/)).not.toBeInTheDocument();
+  expect(dialog.queryByLabelText(/Record note/)).not.toBeInTheDocument();
+  await user.type(dialog.getByLabelText(/Choice/), "Yes");
+  expect(dialog.getByLabelText(/Conditional answer/)).toBeRequired();
+  await user.type(dialog.getByLabelText(/Legal name/), "Required Entity");
+  await user.click(dialog.getByRole("button", { name: "Register" }));
+  expect(await dialog.findByRole("alert")).toHaveTextContent("Conditional answer");
+  await user.clear(dialog.getByLabelText(/Choice/));
+  expect(dialog.queryByLabelText(/Conditional answer/)).not.toBeInTheDocument();
+});

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { recordFormRows } from "@openlaw/shared";
+
 /** The Entity record shell and M27/4 Overview (ENT-001/ENT-002). */
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { useMemo, useState, type ReactNode } from "react";
@@ -151,6 +153,7 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     tab: (params.tab ?? "overview") as EntityTab,
     entity: record.data.entity,
     canManageAccess: record.data.canManageAccess ?? false,
+    form: record.data.form,
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     entityTypes: types.data.entityTypes,
@@ -749,7 +752,20 @@ function EntityRecord() {
                 />
                 <EntityFieldsCard
                   entity={saved}
-                  fields={attachedFields}
+                  fields={
+                    (loaded.entityTypes.find((type) => type.id === saved.entityTypeId)?.form ??
+                    loaded.form)
+                      ? recordFormRows(
+                          loaded.entityTypes.find((type) => type.id === saved.entityTypeId)?.form ??
+                            loaded.form ??
+                            [],
+                          saved.customFields,
+                        ).flatMap((row) => {
+                          const field = attachedFields.find((field) => field.slug === row.rowRef);
+                          return field ? [field] : [];
+                        })
+                      : attachedFields
+                  }
                   people={people}
                   entities={entityRefs}
                   frozen={frozen}

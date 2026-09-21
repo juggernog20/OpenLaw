@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { recordFormAnswers } from "@openlaw/shared";
+import { assertCreationForm } from "../../lib/creation-form.js";
+
 /** Matter creation as a caller-owned transactional step (M22/2). */
 import {
   and,
@@ -24,11 +27,7 @@ import {
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { civilToday, shiftDays } from "../../lib/contract-term.js";
 import { MATTER_MANAGER_REFUSAL, MATTER_MANAGER_ROLES } from "../../lib/matter-access.js";
-import {
-  applyCustomFields,
-  assertRequiredCustomFields,
-  selectAttachedFields,
-} from "../../lib/custom-fields.js";
+import { applyCustomFields, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
 import { lockedRegionName } from "../regions/references.js";
 import { lockedDepartment, departmentByName } from "../departments/references.js";
@@ -36,6 +35,7 @@ import { createMatterTask } from "../matter-tasks/create.js";
 
 export interface CreateMatterInput {
   actorId: string;
+  neededBy?: string | null;
   title: string;
   matterTypeId: string;
   managerId?: string | null;
@@ -170,7 +170,6 @@ export async function createMatter(
       ...(input.customFields ?? {}),
     },
   );
-  assertRequiredCustomFields(attached, customFields);
 
   const departmentId =
     input.departmentId !== undefined
@@ -185,6 +184,19 @@ export async function createMatter(
             template?.defaultCustomFields?.business_unit ??
             template?.defaultCustomFields?.["business-unit"],
         );
+  await assertCreationForm(
+    tx,
+    "matter",
+    matterType.id,
+    attached,
+    recordFormAnswers({
+      ...input,
+      departmentId,
+      customFields,
+      priority: input.priority ?? template?.defaultPriority ?? "medium",
+      risk: input.risk !== undefined ? input.risk : template?.defaultRisk,
+    }),
+  );
   const confidential = input.isConfidential ?? false;
   const [row] = await tx
     .insert(matters)
@@ -226,6 +238,20 @@ export async function createMatter(
       ...(template ? { template: template.name } : {}),
     },
   });
+  if (input.neededBy) {
+    const [date] = await tx
+      .insert(matterKeyDates)
+      .values({ matterId: row!.id, label: "Needed by", date: input.neededBy })
+      .returning();
+    await recordActivity(tx, {
+      entityType: "matter",
+      entityId: row!.id,
+      actorId: input.actorId,
+      action: "key_date.added",
+      visibility: RECORD_ACTIVITY_TIER,
+      payload: { keyDateId: date!.id, label: "Needed by", date: input.neededBy },
+    });
+  }
   if (template) {
     const createdOn = civilToday(row!.createdAt);
     for (const task of templateContent[0]) {

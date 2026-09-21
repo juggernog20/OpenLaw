@@ -538,9 +538,7 @@ describe("the /contracts destination", () => {
     ).toBeInTheDocument();
     expect(api.creates).toEqual([]);
 
-    const notes = screen.getByLabelText("Notes");
-    expect(notes).not.toHaveAttribute("aria-required", "true");
-    await user.type(notes, "Annual review");
+    expect(screen.queryByLabelText("Notes")).not.toBeInTheDocument();
     await user.type(law, "England & Wales");
     await user.click(screen.getByRole("button", { name: "Create" }));
     await waitFor(() =>
@@ -548,7 +546,7 @@ describe("the /contracts destination", () => {
         {
           title: "Orion MSA",
           contractTypeId: "t-msa",
-          customFields: { governing_law: "England & Wales", notes: "Annual review" },
+          customFields: { governing_law: "England & Wales" },
           isConfidential: false,
           managerId: MEMBER.id,
         },
@@ -1080,4 +1078,118 @@ it("marks an unverified Contract Next deadline", async () => {
   renderAt("/contracts");
   const link = await screen.findByRole("link", { name: /Expiry date.*Unverified/ });
   expect(within(link).getByText("Unverified")).toBeInTheDocument();
+});
+
+it("collects creation Rows in Form order and reveals a required Branch live", async () => {
+  const field = {
+    fieldId: "f-conditional",
+    slug: "conditional",
+    displayName: "Conditional answer",
+    description: null,
+    fieldType: "text",
+    fieldTag: "business",
+    options: null,
+    displayOrder: 1,
+    isRequired: true,
+  };
+  const choice = { ...field, fieldId: "f-choice", slug: "choice", displayName: "Choice" };
+  const row = (f: typeof field) => ({
+    kind: "row",
+    id: f.fieldId,
+    rowRef: f.slug,
+    fieldType: f.fieldType,
+    isRequired: true,
+    visibleOnPortal: true,
+  });
+  const type = {
+    id: "t-branch",
+    slug: "branch",
+    displayName: "Branch type",
+    fields: [
+      choice,
+      field,
+      {
+        ...field,
+        fieldId: "f-record",
+        slug: "record_note",
+        displayName: "Record note",
+        isRequired: false,
+      },
+    ],
+    creationForm: [
+      row(choice),
+      {
+        kind: "branch",
+        id: "b",
+        match: "all",
+        conditions: [{ rowRef: "choice", operator: "equals", value: "Yes" }],
+        children: [row(field)],
+      },
+    ],
+  };
+  const fallback = listApi([]).handler;
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/contracts/options"
+        ? json(200, { ...OPTIONS, contractTypes: [type] })
+        : fallback(call),
+  });
+  renderAt("/contracts");
+  const user = userEvent.setup();
+  await openCreateDialog(user);
+  const dialog = within(screen.getByRole("dialog"));
+  await user.selectOptions(dialog.getByLabelText(/Contract type/i), "t-branch");
+  expect(dialog.queryByLabelText(/Conditional answer/)).not.toBeInTheDocument();
+  expect(dialog.queryByLabelText(/Record note/)).not.toBeInTheDocument();
+  await user.type(dialog.getByLabelText(/Choice/), "Yes");
+  expect(dialog.getByLabelText(/Conditional answer/)).toBeRequired();
+  await user.clear(dialog.getByLabelText(/Choice/));
+  expect(dialog.queryByLabelText(/Conditional answer/)).not.toBeInTheDocument();
+});
+
+it("reveals Expiry date only when the creation Form's Term type Branch is true", async () => {
+  const row = (rowRef: string, fieldType: string, isRequired = false) => ({
+    kind: "row",
+    id: rowRef,
+    rowRef,
+    fieldType,
+    onIntakeForm: true,
+    isRequired,
+    visibleOnPortal: true,
+  });
+  const type = {
+    id: "t-term",
+    slug: "term",
+    displayName: "Term form",
+    fields: [],
+    creationForm: [
+      row("term_type", "single_select"),
+      {
+        kind: "branch",
+        id: "fixed",
+        match: "all",
+        conditions: [{ rowRef: "term_type", operator: "equals", value: "fixed" }],
+        children: [row("expiry_date", "date", true)],
+      },
+    ],
+  };
+  const fallback = listApi([]).handler;
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/contracts/options"
+        ? json(200, { ...OPTIONS, contractTypes: [type] })
+        : fallback(call),
+  });
+  renderAt("/contracts");
+  const user = userEvent.setup();
+  await openCreateDialog(user);
+  const dialog = within(screen.getByRole("dialog"));
+  await user.selectOptions(dialog.getByLabelText(/Contract type/), "t-term");
+  expect(dialog.queryByLabelText(/Expiry date/)).not.toBeInTheDocument();
+  await user.selectOptions(dialog.getByLabelText(/Term type/), "fixed");
+  expect(dialog.getByLabelText(/Expiry date/)).toBeInTheDocument();
+  await user.selectOptions(dialog.getByLabelText(/Term type/), "evergreen");
+  expect(dialog.queryByLabelText(/Expiry date/)).not.toBeInTheDocument();
 });

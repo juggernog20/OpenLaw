@@ -24,6 +24,7 @@ import {
   entityTypeBranches,
   entityTypeFields,
   type Transaction,
+  type Executor,
   type Field,
 } from "@openlaw/db";
 import {
@@ -79,7 +80,7 @@ const Row = z.object({
   visibleOnPortal: z.boolean(),
 });
 // Recursive schemas retain the shared evaluator's wire shape in OpenAPI as well as at runtime.
-const Node: z.ZodType<FormNode> = z.union([
+export const FormNodeSchema: z.ZodType<FormNode> = z.union([
   Row,
   z.object({
     kind: z.literal("branch"),
@@ -102,13 +103,13 @@ const Node: z.ZodType<FormNode> = z.union([
       )
       .min(1)
       .max(100),
-    get children(): z.ZodArray<typeof Node> {
-      return z.array(Node);
+    get children(): z.ZodArray<typeof FormNodeSchema> {
+      return z.array(FormNodeSchema);
     },
   }),
 ]);
-z.globalRegistry.add(Node, { id: "FormNode" });
-const Envelope = z.object({ form: z.array(Node) });
+z.globalRegistry.add(FormNodeSchema, { id: "FormNode" });
+const Envelope = z.object({ form: z.array(FormNodeSchema) });
 
 /** Called inside type creation's transaction, so a newly created type has its built-in Rows. */
 export async function seedTypeForm(tx: Transaction, module: FormModule, typeId: string) {
@@ -125,7 +126,7 @@ export async function seedTypeForm(tx: Transaction, module: FormModule, typeId: 
 }
 
 export async function readTypeForm(
-  tx: Transaction,
+  tx: Executor,
   module: FormModule,
   typeId: string,
 ): Promise<FormNode[]> {

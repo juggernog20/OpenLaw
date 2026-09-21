@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { CreationRows, creationRows } from "../components/type-form/creation-rows";
+import {
+  toValue,
+  emptyDraft,
+  type CustomFieldDraft,
+  type CustomFieldValue,
+} from "../lib/custom-fields";
+
 /** M27's routed Calendar, managed registry List, and ownership Chart destination. */
 
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
@@ -1228,6 +1236,9 @@ function RegisterEntityDialog({
   const intl = useIntl();
   const attachments = useCreateAttachments();
   const [draft, setDraft] = useState<RegisterDraft>(EMPTY_DRAFT);
+  const [fieldDrafts, setFieldDrafts] = useState<Record<string, CustomFieldDraft>>({});
+  const type = entityTypes.find((type) => type.id === draft.entityTypeId);
+  const creation = creationRows(type?.creationForm, type?.fields ?? [], fieldDrafts, {});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1255,10 +1266,25 @@ function RegisterEntityDialog({
       );
       return;
     }
+    const customFields: Record<string, CustomFieldValue> = {};
+    for (const field of creation.fields) {
+      const parsed = toValue(field, fieldDrafts[field.slug] ?? emptyDraft(field));
+      if ("error" in parsed || (field.isRequired && parsed.value === null)) {
+        setError(
+          intl.formatMessage(
+            { id: "entities.form.fieldMissing", defaultMessage: "Fill {field}." },
+            { field: field.displayName },
+          ),
+        );
+        return;
+      }
+      if (parsed.value !== null) customFields[field.slug] = parsed.value;
+    }
     setBusy(true);
     const result = await api
       .POST("/api/v1/entities", {
         body: {
+          customFields,
           legalName: draft.legalName.trim(),
           entityTypeId: draft.entityTypeId,
           portalListed: canListInPortal ? draft.portalListed : undefined,
@@ -1475,6 +1501,16 @@ function RegisterEntityDialog({
                 </p>
               </div>
             )}
+            <CreationRows
+              rows={creation.rows}
+              fields={creation.fields}
+              drafts={fieldDrafts}
+              onDraft={(slug, value) =>
+                setFieldDrafts((current) => ({ ...current, [slug]: value }))
+              }
+              native={{}}
+              onNative={() => {}}
+            />
             <CreateAttachments uploads={attachments} disabled={busy} />
             {error && (
               <p role="alert" className="text-xs text-status-danger-fg">

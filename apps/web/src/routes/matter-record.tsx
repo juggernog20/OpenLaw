@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import {
+  addMatterKeyDate as addNeededBy,
+  updateMatterKeyDate as updateNeededBy,
+  removeMatterKeyDate as removeNeededBy,
+} from "../lib/matter-key-dates";
+import { NeededByField } from "../components/type-form/needed-by-field";
+import { RecordRows } from "../components/type-form/record-rows";
+import { recordFormAnswers } from "@openlaw/shared";
+
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
 import { subscribeLiveEvents } from "../lib/events";
 import { MatterConversionValue } from "../components/intake/matter-conversion-value";
@@ -162,6 +171,7 @@ export async function matterRecordLoader({ params, request }: LoaderFunctionArgs
     matter: record.data.matter,
     creator: record.data.creator ?? null,
     originalIntake: record.data.originalIntake ?? null,
+    form: record.data.form,
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     // Keep older cached/stubbed envelopes readable across the M22/5
@@ -636,7 +646,6 @@ function MatterRecord() {
         },
         ...matterStatuses,
       ];
-  const customFields = fields;
 
   function renderMatterField(field: MatterField) {
     return (
@@ -795,6 +804,255 @@ function MatterRecord() {
       canEdit,
       frozen,
     ],
+  );
+
+  const recordForm =
+    loader.matterTypes.find((type) => type.id === saved.matterTypeId)?.form ?? loader.form;
+  const neededBy = deadlines.find((date) => date.label === "Needed by" && date.keyDateId);
+  const formControls = {
+    needed_by: (
+      <NeededByField
+        date={neededBy?.date}
+        frozen={frozen}
+        onCommit={async (date) => {
+          if (!date && !neededBy?.keyDateId) return;
+          const result = !date
+            ? await removeNeededBy(neededBy!.keyDateId!)
+            : neededBy?.keyDateId
+              ? await updateNeededBy(neededBy.keyDateId, { date, label: "Needed by" })
+              : await addNeededBy(saved.number, { date, label: "Needed by" });
+          if (!result.ok)
+            return (
+              result.detail ??
+              intl.formatMessage({
+                id: "typeForm.neededByFailed",
+                defaultMessage: "Needed by could not be saved.",
+              })
+            );
+          setDeadlines(result.deadlines);
+        }}
+      />
+    ),
+
+    matter_type: (
+      <MatterConversionValue
+        active={Boolean(saved.aiUnverified?.matter_type)}
+        number={saved.number}
+        slug="matter_type"
+        onConfirmed={!frozen ? confirmedConversion : undefined}
+      >
+        {" "}
+        <EditableSelectFact
+          id="matter-type"
+          aiGenerated={Boolean(saved.aiUnverified?.matter_type)}
+          label={<FormattedMessage id="matters.field.type" defaultMessage="Matter type" />}
+          frozen={frozen}
+          value={saved.matterTypeId}
+          display={saved.matterTypeName}
+          status={fieldStatus.matterTypeId ?? "idle"}
+          error={fieldError.matterTypeId}
+          onChange={pickType}
+          options={typeOptions.map((type) => ({
+            value: type.id,
+            label: type.displayName,
+          }))}
+        />
+      </MatterConversionValue>
+    ),
+    department: (
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="matter-department">
+          <FormattedMessage id="records.department" defaultMessage="Department" />
+        </Label>
+        <div>
+          {frozen ? (
+            <p className="text-sm">{saved.department ?? notProvided(intl)}</p>
+          ) : (
+            <DepartmentPicker
+              id="matter-department"
+              value={saved.departmentId ?? null}
+              currentName={saved.department}
+              options={loader.departments}
+              disabled={fieldStatus.departmentId === "saving"}
+              onChange={(departmentId) => void commit("departmentId", { departmentId })}
+            />
+          )}
+          {!frozen && (
+            <StatusNote
+              status={fieldStatus.departmentId ?? "idle"}
+              detail={fieldError.departmentId}
+            />
+          )}
+        </div>
+      </div>
+    ),
+    region: (
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="matter-region">
+          <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
+        </Label>
+        {frozen ? (
+          <p className="text-sm">{saved.region ?? notProvided(intl)}</p>
+        ) : (
+          <>
+            <select
+              id="matter-region"
+              className={CONTROL_CLASS}
+              value={saved.region ?? ""}
+              disabled={fieldStatus.region === "saving"}
+              onChange={(event) => void commit("region", { region: event.target.value || null })}
+            >
+              <option value="">
+                {intl.formatMessage({
+                  id: "contracts.region.none",
+                  defaultMessage: "No Region",
+                })}
+              </option>
+              {saved.region &&
+                !loader.regions.some((region) => region.displayName === saved.region) && (
+                  <option value={saved.region} disabled>
+                    {saved.region}
+                  </option>
+                )}
+              {loader.regions.map((region) => (
+                <option key={region.id} value={region.displayName}>
+                  {region.displayName}
+                </option>
+              ))}
+            </select>
+            <StatusNote status={fieldStatus.region ?? "idle"} detail={fieldError.region} />
+          </>
+        )}
+      </div>
+    ),
+    priority: (
+      <MatterConversionValue
+        active={Boolean(saved.aiUnverified?.priority)}
+        number={saved.number}
+        slug="priority"
+        onConfirmed={!frozen ? confirmedConversion : undefined}
+      >
+        {" "}
+        <EditableSelectFact
+          id="matter-priority"
+          aiGenerated={Boolean(saved.aiUnverified?.priority)}
+          label={<FormattedMessage id="matters.field.priority" defaultMessage="Priority" />}
+          frozen={frozen}
+          value={saved.priority}
+          display={matterSeverityLabel(intl, saved.priority)}
+          status={fieldStatus.priority ?? "idle"}
+          error={fieldError.priority}
+          onChange={(priority) => void commit("priority", { priority })}
+          options={MATTER_SEVERITIES.map((severity) => ({
+            value: severity,
+            label: matterSeverityLabel(intl, severity),
+          }))}
+        />
+      </MatterConversionValue>
+    ),
+    risk: (
+      <EditableSelectFact
+        id="matter-risk"
+        label={<FormattedMessage id="matters.field.risk" defaultMessage="Risk" />}
+        frozen={frozen}
+        value={saved.risk ?? ""}
+        display={
+          saved.risk
+            ? matterSeverityLabel(intl, saved.risk)
+            : intl.formatMessage({
+                id: "matters.notAssessed",
+                defaultMessage: "Not assessed",
+              })
+        }
+        status={fieldStatus.risk ?? "idle"}
+        error={fieldError.risk}
+        onChange={(risk) => void commit("risk", { risk: risk || null })}
+        options={[
+          {
+            value: "",
+            label: intl.formatMessage({
+              id: "matters.notAssessed",
+              defaultMessage: "Not assessed",
+            }),
+          },
+          ...MATTER_SEVERITIES.map((severity) => ({
+            value: severity,
+            label: matterSeverityLabel(intl, severity),
+          })),
+        ]}
+      />
+    ),
+    description: (
+      <MatterConversionValue
+        active={Boolean(saved.aiUnverified?.description) && !showRequesterDescription}
+        number={saved.number}
+        slug="description"
+        onConfirmed={!frozen ? confirmedConversion : undefined}
+      >
+        {" "}
+        <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+          <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
+            <h2 className="text-base font-semibold">
+              <FormattedMessage id="matters.field.description" defaultMessage="Description" />
+            </h2>
+            {loader.originalIntake && (
+              <DescriptionSourceToggle
+                requester={showRequesterDescription}
+                onChange={setShowRequesterDescription}
+              />
+            )}
+          </header>
+          <div className="p-4">
+            {showRequesterDescription && loader.originalIntake ? (
+              <RequesterDescription description={loader.originalIntake.description} />
+            ) : businessFrozen ? (
+              <AiField
+                active={Boolean(saved.aiUnverified?.description)}
+                className="-mx-2 w-fit px-2"
+              >
+                <p className="whitespace-pre-wrap text-base text-muted">
+                  {saved.description || notProvided(intl)}
+                </p>
+              </AiField>
+            ) : (
+              <>
+                <AiField active={Boolean(saved.aiUnverified?.description)} className="flex">
+                  <AutoResizeTextarea
+                    aria-label={intl.formatMessage({
+                      id: "matters.field.description",
+                      defaultMessage: "Description",
+                    })}
+                    className="text-base"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    onBlur={() => commitText("description")}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") setDescription(saved.description ?? "");
+                    }}
+                  />
+                </AiField>
+                <StatusNote
+                  status={fieldStatus.description ?? "idle"}
+                  detail={fieldError.description}
+                />
+              </>
+            )}
+          </div>
+        </section>
+      </MatterConversionValue>
+    ),
+  };
+  const orderedRows = (
+    <RecordRows
+      form={recordForm}
+      answers={recordFormAnswers({
+        ...saved,
+        regionId: loader.regions.find((r) => r.displayName === saved.region)?.id,
+        neededBy: deadlines.find((d) => d.label === "Needed by")?.date,
+      })}
+      builtins={formControls}
+      fields={fields.map((field) => ({ slug: field.slug, control: renderMatterField(field) }))}
+    />
   );
 
   return (
@@ -1055,31 +1313,7 @@ function MatterRecord() {
                     )}
                   </MatterConversionValue>{" "}
                   <dl className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-2">
-                    <MatterConversionValue
-                      active={Boolean(saved.aiUnverified?.matter_type)}
-                      number={saved.number}
-                      slug="matter_type"
-                      onConfirmed={!frozen ? confirmedConversion : undefined}
-                    >
-                      {" "}
-                      <EditableSelectFact
-                        id="matter-type"
-                        aiGenerated={Boolean(saved.aiUnverified?.matter_type)}
-                        label={
-                          <FormattedMessage id="matters.field.type" defaultMessage="Matter type" />
-                        }
-                        frozen={frozen}
-                        value={saved.matterTypeId}
-                        display={saved.matterTypeName}
-                        status={fieldStatus.matterTypeId ?? "idle"}
-                        error={fieldError.matterTypeId}
-                        onChange={pickType}
-                        options={typeOptions.map((type) => ({
-                          value: type.id,
-                          label: type.displayName,
-                        }))}
-                      />
-                    </MatterConversionValue>{" "}
+                    {orderedRows}
                     <RecordPersonField
                       id="matter-manager"
                       label={intl.formatMessage({
@@ -1111,132 +1345,6 @@ function MatterRecord() {
                       status={fieldStatus.businessOwnerId ?? "idle"}
                       error={fieldError.businessOwnerId}
                       onChange={(businessOwnerId) => commit("businessOwnerId", { businessOwnerId })}
-                    />
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="matter-department">
-                        <FormattedMessage id="records.department" defaultMessage="Department" />
-                      </Label>
-                      <div>
-                        {frozen ? (
-                          <p className="text-sm">{saved.department ?? notProvided(intl)}</p>
-                        ) : (
-                          <DepartmentPicker
-                            id="matter-department"
-                            value={saved.departmentId ?? null}
-                            currentName={saved.department}
-                            options={loader.departments}
-                            disabled={fieldStatus.departmentId === "saving"}
-                            onChange={(departmentId) =>
-                              void commit("departmentId", { departmentId })
-                            }
-                          />
-                        )}
-                        {!frozen && (
-                          <StatusNote
-                            status={fieldStatus.departmentId ?? "idle"}
-                            detail={fieldError.departmentId}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="matter-region">
-                        <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
-                      </Label>
-                      {frozen ? (
-                        <p className="text-sm">{saved.region ?? notProvided(intl)}</p>
-                      ) : (
-                        <>
-                          <select
-                            id="matter-region"
-                            className={CONTROL_CLASS}
-                            value={saved.region ?? ""}
-                            disabled={fieldStatus.region === "saving"}
-                            onChange={(event) =>
-                              void commit("region", { region: event.target.value || null })
-                            }
-                          >
-                            <option value="">
-                              {intl.formatMessage({
-                                id: "contracts.region.none",
-                                defaultMessage: "No Region",
-                              })}
-                            </option>
-                            {saved.region &&
-                              !loader.regions.some(
-                                (region) => region.displayName === saved.region,
-                              ) && (
-                                <option value={saved.region} disabled>
-                                  {saved.region}
-                                </option>
-                              )}
-                            {loader.regions.map((region) => (
-                              <option key={region.id} value={region.displayName}>
-                                {region.displayName}
-                              </option>
-                            ))}
-                          </select>
-                          <StatusNote
-                            status={fieldStatus.region ?? "idle"}
-                            detail={fieldError.region}
-                          />
-                        </>
-                      )}
-                    </div>
-                    <MatterConversionValue
-                      active={Boolean(saved.aiUnverified?.priority)}
-                      number={saved.number}
-                      slug="priority"
-                      onConfirmed={!frozen ? confirmedConversion : undefined}
-                    >
-                      {" "}
-                      <EditableSelectFact
-                        id="matter-priority"
-                        aiGenerated={Boolean(saved.aiUnverified?.priority)}
-                        label={
-                          <FormattedMessage id="matters.field.priority" defaultMessage="Priority" />
-                        }
-                        frozen={frozen}
-                        value={saved.priority}
-                        display={matterSeverityLabel(intl, saved.priority)}
-                        status={fieldStatus.priority ?? "idle"}
-                        error={fieldError.priority}
-                        onChange={(priority) => void commit("priority", { priority })}
-                        options={MATTER_SEVERITIES.map((severity) => ({
-                          value: severity,
-                          label: matterSeverityLabel(intl, severity),
-                        }))}
-                      />
-                    </MatterConversionValue>{" "}
-                    <EditableSelectFact
-                      id="matter-risk"
-                      label={<FormattedMessage id="matters.field.risk" defaultMessage="Risk" />}
-                      frozen={frozen}
-                      value={saved.risk ?? ""}
-                      display={
-                        saved.risk
-                          ? matterSeverityLabel(intl, saved.risk)
-                          : intl.formatMessage({
-                              id: "matters.notAssessed",
-                              defaultMessage: "Not assessed",
-                            })
-                      }
-                      status={fieldStatus.risk ?? "idle"}
-                      error={fieldError.risk}
-                      onChange={(risk) => void commit("risk", { risk: risk || null })}
-                      options={[
-                        {
-                          value: "",
-                          label: intl.formatMessage({
-                            id: "matters.notAssessed",
-                            defaultMessage: "Not assessed",
-                          }),
-                        },
-                        ...MATTER_SEVERITIES.map((severity) => ({
-                          value: severity,
-                          label: matterSeverityLabel(intl, severity),
-                        })),
-                      ]}
                     />
                   </dl>
                   <dl className="grid grid-cols-1 gap-x-8 gap-y-4 @2xl/page:grid-cols-[max-content_max-content]">
@@ -1282,79 +1390,7 @@ function MatterRecord() {
                     />
                   </section>
                 </div>
-              </section>
-              <MatterConversionValue
-                active={Boolean(saved.aiUnverified?.description) && !showRequesterDescription}
-                number={saved.number}
-                slug="description"
-                onConfirmed={!frozen ? confirmedConversion : undefined}
-              >
-                {" "}
-                <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                  <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
-                    <h2 className="text-base font-semibold">
-                      <FormattedMessage
-                        id="matters.field.description"
-                        defaultMessage="Description"
-                      />
-                    </h2>
-                    {loader.originalIntake && (
-                      <DescriptionSourceToggle
-                        requester={showRequesterDescription}
-                        onChange={setShowRequesterDescription}
-                      />
-                    )}
-                  </header>
-                  <div className="p-4">
-                    {showRequesterDescription && loader.originalIntake ? (
-                      <RequesterDescription description={loader.originalIntake.description} />
-                    ) : businessFrozen ? (
-                      <AiField
-                        active={Boolean(saved.aiUnverified?.description)}
-                        className="-mx-2 w-fit px-2"
-                      >
-                        <p className="whitespace-pre-wrap text-base text-muted">
-                          {saved.description || notProvided(intl)}
-                        </p>
-                      </AiField>
-                    ) : (
-                      <>
-                        <AiField active={Boolean(saved.aiUnverified?.description)} className="flex">
-                          <AutoResizeTextarea
-                            aria-label={intl.formatMessage({
-                              id: "matters.field.description",
-                              defaultMessage: "Description",
-                            })}
-                            className="text-base"
-                            value={description}
-                            onChange={(event) => setDescription(event.target.value)}
-                            onBlur={() => commitText("description")}
-                            onKeyDown={(event) => {
-                              if (event.key === "Escape") setDescription(saved.description ?? "");
-                            }}
-                          />
-                        </AiField>
-                        <StatusNote
-                          status={fieldStatus.description ?? "idle"}
-                          detail={fieldError.description}
-                        />
-                      </>
-                    )}
-                  </div>
-                </section>
-              </MatterConversionValue>{" "}
-              {customFields.length > 0 && (
-                <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                  <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-                    <h2 className="text-base font-semibold">
-                      <FormattedMessage id="matters.customFields" defaultMessage="Custom fields" />
-                    </h2>
-                  </header>
-                  <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
-                    {customFields.map(renderMatterField)}
-                  </div>
-                </section>
-              )}
+              </section>{" "}
               <RelatedMattersCard
                 relations={relations}
                 onChanged={setRelations}
