@@ -9215,56 +9215,17 @@
   "settings.contractStatuses.title": {
     "defaultMessage": "Contract statuses"
   },
-  "settings.contractTypeEditor.allAttached": {
-    "defaultMessage": "Every catalog field is attached."
-  },
   "settings.contractTypeEditor.allTypes": {
     "defaultMessage": "All types"
-  },
-  "settings.contractTypeEditor.attach": {
-    "defaultMessage": "Attach field"
-  },
-  "settings.contractTypeEditor.attached": {
-    "defaultMessage": "{name} attached."
-  },
-  "settings.contractTypeEditor.attachedFields": {
-    "defaultMessage": "Custom Fields"
   },
   "settings.contractTypeEditor.description": {
     "defaultMessage": "Description"
   },
-  "settings.contractTypeEditor.detach": {
-    "defaultMessage": "Detach {name}"
-  },
-  "settings.contractTypeEditor.detached": {
-    "defaultMessage": "{name} detached."
-  },
   "settings.contractTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.contractTypeEditor.empty": {
-    "defaultMessage": "No fields are attached to this type."
-  },
-  "settings.contractTypeEditor.fieldColumn": {
-    "defaultMessage": "Field"
-  },
-  "settings.contractTypeEditor.help": {
-    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
-  },
   "settings.contractTypeEditor.inUse": {
     "defaultMessage": "{count, plural, one {# contract uses this type.} other {# contracts use this type.}}"
-  },
-  "settings.contractTypeEditor.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
-  },
-  "settings.contractTypeEditor.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
-  },
-  "settings.contractTypeEditor.requiredColumn": {
-    "defaultMessage": "Required"
-  },
-  "settings.contractTypeEditor.requiredFor": {
-    "defaultMessage": "{name} required"
   },
   "settings.contractTypePeople.add": {
     "defaultMessage": "Add person"
@@ -9665,56 +9626,17 @@
   "settings.entities.title": {
     "defaultMessage": "Entities"
   },
-  "settings.entityTypeEditor.allAttached": {
-    "defaultMessage": "Every eligible field is attached."
-  },
   "settings.entityTypeEditor.allTypes": {
     "defaultMessage": "All types"
-  },
-  "settings.entityTypeEditor.attach": {
-    "defaultMessage": "Attach field"
-  },
-  "settings.entityTypeEditor.attached": {
-    "defaultMessage": "{name} attached."
-  },
-  "settings.entityTypeEditor.attachedFields": {
-    "defaultMessage": "Attached fields"
   },
   "settings.entityTypeEditor.description": {
     "defaultMessage": "Description"
   },
-  "settings.entityTypeEditor.detach": {
-    "defaultMessage": "Detach {name}"
-  },
-  "settings.entityTypeEditor.detached": {
-    "defaultMessage": "{name} detached."
-  },
   "settings.entityTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.entityTypeEditor.empty": {
-    "defaultMessage": "No fields are attached to this type."
-  },
-  "settings.entityTypeEditor.fieldColumn": {
-    "defaultMessage": "Field"
-  },
-  "settings.entityTypeEditor.help": {
-    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
-  },
   "settings.entityTypeEditor.inUse": {
     "defaultMessage": "{count, plural, one {# entity uses this type.} other {# entities use this type.}}"
-  },
-  "settings.entityTypeEditor.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
-  },
-  "settings.entityTypeEditor.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
-  },
-  "settings.entityTypeEditor.requiredColumn": {
-    "defaultMessage": "Required"
-  },
-  "settings.entityTypeEditor.requiredFor": {
-    "defaultMessage": "{name} required"
   },
   "settings.entityTypes.add": {
     "defaultMessage": "Add type"
@@ -10445,56 +10367,17 @@
   "settings.matterTemplates.typeLabel": {
     "defaultMessage": "Matter type"
   },
-  "settings.matterTypeEditor.allAttached": {
-    "defaultMessage": "Every eligible field is attached."
-  },
   "settings.matterTypeEditor.allTypes": {
     "defaultMessage": "All types"
-  },
-  "settings.matterTypeEditor.attach": {
-    "defaultMessage": "Attach field"
-  },
-  "settings.matterTypeEditor.attached": {
-    "defaultMessage": "{name} attached."
-  },
-  "settings.matterTypeEditor.attachedFields": {
-    "defaultMessage": "Custom Fields"
   },
   "settings.matterTypeEditor.description": {
     "defaultMessage": "Description"
   },
-  "settings.matterTypeEditor.detach": {
-    "defaultMessage": "Detach {name}"
-  },
-  "settings.matterTypeEditor.detached": {
-    "defaultMessage": "{name} detached."
-  },
   "settings.matterTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.matterTypeEditor.empty": {
-    "defaultMessage": "No fields are attached to this type."
-  },
-  "settings.matterTypeEditor.fieldColumn": {
-    "defaultMessage": "Field"
-  },
-  "settings.matterTypeEditor.help": {
-    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
-  },
   "settings.matterTypeEditor.inUse": {
     "defaultMessage": "{count, plural, one {# matter uses this type.} other {# matters use this type.}}"
-  },
-  "settings.matterTypeEditor.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
-  },
-  "settings.matterTypeEditor.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
-  },
-  "settings.matterTypeEditor.requiredColumn": {
-    "defaultMessage": "Required"
-  },
-  "settings.matterTypeEditor.requiredFor": {
-    "defaultMessage": "{name} required"
   },
   "settings.matterTypes.add": {
     "defaultMessage": "Add type"
@@ -11659,6 +11542,312 @@
   },
   "timezone.searchPlaceholder": {
     "defaultMessage": "Search timezones"
+  },
+  "typeForm.add-a-condition": {
+    "defaultMessage": "Add a condition"
+  },
+  "typeForm.add-a-row-above-this-branch-first": {
+    "defaultMessage": "Add a Row above this Branch first"
+  },
+  "typeForm.add-branch": {
+    "defaultMessage": "Add branch"
+  },
+  "typeForm.add-branch-inside": {
+    "defaultMessage": "Add branch inside"
+  },
+  "typeForm.add-condition": {
+    "defaultMessage": "Add condition"
+  },
+  "typeForm.add-row-into-branch": {
+    "defaultMessage": "Add row into branch"
+  },
+  "typeForm.all": {
+    "defaultMessage": "All"
+  },
+  "typeForm.all-fields-are-attached": {
+    "defaultMessage": "All Fields are attached"
+  },
+  "typeForm.already-at-the-root": {
+    "defaultMessage": "Already at the root"
+  },
+  "typeForm.any": {
+    "defaultMessage": "Any"
+  },
+  "typeForm.approval-defaults": {
+    "defaultMessage": "Approval defaults"
+  },
+  "typeForm.attach-field": {
+    "defaultMessage": "Attach Field"
+  },
+  "typeForm.boolean": {
+    "defaultMessage": "Boolean"
+  },
+  "typeForm.branch-conditions": {
+    "defaultMessage": "Branch conditions"
+  },
+  "typeForm.built-in": {
+    "defaultMessage": "Built-in"
+  },
+  "typeForm.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "typeForm.changes-apply-immediately": {
+    "defaultMessage": "Changes apply immediately"
+  },
+  "typeForm.choose-a-valid-value-for-this-condition": {
+    "defaultMessage": "Choose a valid value for this condition"
+  },
+  "typeForm.choose-a-value": {
+    "defaultMessage": "Choose a value"
+  },
+  "typeForm.close": {
+    "defaultMessage": "Close"
+  },
+  "typeForm.complete-the-branch-condition-first": {
+    "defaultMessage": "Complete the Branch condition first"
+  },
+  "typeForm.counterparties": {
+    "defaultMessage": "Counterparties"
+  },
+  "typeForm.create-field": {
+    "defaultMessage": "Create Field"
+  },
+  "typeForm.creation": {
+    "defaultMessage": "Creation"
+  },
+  "typeForm.currency": {
+    "defaultMessage": "Currency"
+  },
+  "typeForm.date": {
+    "defaultMessage": "Date"
+  },
+  "typeForm.department": {
+    "defaultMessage": "Department"
+  },
+  "typeForm.description": {
+    "defaultMessage": "Description"
+  },
+  "typeForm.details": {
+    "defaultMessage": "Details"
+  },
+  "typeForm.edit-conditions": {
+    "defaultMessage": "Edit conditions"
+  },
+  "typeForm.edit-field": {
+    "defaultMessage": "Edit Field"
+  },
+  "typeForm.effective-date": {
+    "defaultMessage": "Effective date"
+  },
+  "typeForm.entity": {
+    "defaultMessage": "Entity"
+  },
+  "typeForm.expiry-date": {
+    "defaultMessage": "Expiry date"
+  },
+  "typeForm.fixed": {
+    "defaultMessage": "Fixed"
+  },
+  "typeForm.form": {
+    "defaultMessage": "Form"
+  },
+  "typeForm.intake": {
+    "defaultMessage": "Intake"
+  },
+  "typeForm.is": {
+    "defaultMessage": "is"
+  },
+  "typeForm.is-greater-than": {
+    "defaultMessage": "is greater than"
+  },
+  "typeForm.is-less-than": {
+    "defaultMessage": "is less than"
+  },
+  "typeForm.is-not": {
+    "defaultMessage": "is not"
+  },
+  "typeForm.is-one-of": {
+    "defaultMessage": "is one of"
+  },
+  "typeForm.is-set": {
+    "defaultMessage": "is set"
+  },
+  "typeForm.long-text": {
+    "defaultMessage": "Long text"
+  },
+  "typeForm.match": {
+    "defaultMessage": "Match"
+  },
+  "typeForm.move-into": {
+    "defaultMessage": "Move into"
+  },
+  "typeForm.move-out": {
+    "defaultMessage": "Move out"
+  },
+  "typeForm.multi-select": {
+    "defaultMessage": "Multi select"
+  },
+  "typeForm.needed-by": {
+    "defaultMessage": "Needed by"
+  },
+  "typeForm.no": {
+    "defaultMessage": "No"
+  },
+  "typeForm.no-fields-attached": {
+    "defaultMessage": "No Fields attached"
+  },
+  "typeForm.no-fields-match": {
+    "defaultMessage": "No Fields match"
+  },
+  "typeForm.noRequestTypes": {
+    "defaultMessage": "No Request type uses this Form yet"
+  },
+  "typeForm.not-set": {
+    "defaultMessage": "Not set"
+  },
+  "typeForm.notice-period": {
+    "defaultMessage": "Notice period"
+  },
+  "typeForm.number": {
+    "defaultMessage": "Number"
+  },
+  "typeForm.on-intake-form": {
+    "defaultMessage": "On intake form"
+  },
+  "typeForm.operator": {
+    "defaultMessage": "Operator"
+  },
+  "typeForm.options-could-not-be-loaded-close-and-reopen-conditions-to-retry": {
+    "defaultMessage": "Options could not be loaded. Close and reopen conditions to retry."
+  },
+  "typeForm.people": {
+    "defaultMessage": "People"
+  },
+  "typeForm.position-and-switches-are-fixed": {
+    "defaultMessage": "Position and switches are fixed"
+  },
+  "typeForm.preview-complete-no-request-was-sent": {
+    "defaultMessage": "Preview complete. No Request was sent"
+  },
+  "typeForm.preview-intake-form": {
+    "defaultMessage": "Preview intake form"
+  },
+  "typeForm.preview-only-no-request-will-be-sent": {
+    "defaultMessage": "Preview only. No Request will be sent."
+  },
+  "typeForm.priority": {
+    "defaultMessage": "Priority"
+  },
+  "typeForm.record": {
+    "defaultMessage": "Record"
+  },
+  "typeForm.region": {
+    "defaultMessage": "Region"
+  },
+  "typeForm.remove-branch-keep-children-here": {
+    "defaultMessage": "Remove branch · Keep children here"
+  },
+  "typeForm.renewal-period": {
+    "defaultMessage": "Renewal period"
+  },
+  "typeForm.requestType": {
+    "defaultMessage": "Request type"
+  },
+  "typeForm.required-for-creation": {
+    "defaultMessage": "Required for creation"
+  },
+  "typeForm.retry-condition-change": {
+    "defaultMessage": "Retry condition change"
+  },
+  "typeForm.risk": {
+    "defaultMessage": "Risk"
+  },
+  "typeForm.row": {
+    "defaultMessage": "Row"
+  },
+  "typeForm.rows-above-only": {
+    "defaultMessage": "Rows above only"
+  },
+  "typeForm.search-fields": {
+    "defaultMessage": "Search fields"
+  },
+  "typeForm.select-row": {
+    "defaultMessage": "Select Row"
+  },
+  "typeForm.select-value": {
+    "defaultMessage": "Select value"
+  },
+  "typeForm.show-when-all-of": {
+    "defaultMessage": "Show when all of:"
+  },
+  "typeForm.show-when-any-of": {
+    "defaultMessage": "Show when any of:"
+  },
+  "typeForm.single-select": {
+    "defaultMessage": "Single select"
+  },
+  "typeForm.some-portal-options-could-not-be-loaded-reopen-the-preview-to-retry": {
+    "defaultMessage": "Some Portal options could not be loaded. Reopen the preview to retry."
+  },
+  "typeForm.submit-request": {
+    "defaultMessage": "Submit request"
+  },
+  "typeForm.term-type": {
+    "defaultMessage": "Term type"
+  },
+  "typeForm.text": {
+    "defaultMessage": "Text"
+  },
+  "typeForm.this-section-does-not-exist": {
+    "defaultMessage": "This section does not exist."
+  },
+  "typeForm.title": {
+    "defaultMessage": "Title"
+  },
+  "typeForm.touchpoint": {
+    "defaultMessage": "Touchpoint"
+  },
+  "typeForm.turn-off-on-intake-form-first": {
+    "defaultMessage": "Turn off On intake form first"
+  },
+  "typeForm.turn-off-required-for-creation-first": {
+    "defaultMessage": "Turn off Required for creation first"
+  },
+  "typeForm.type": {
+    "defaultMessage": "Type"
+  },
+  "typeForm.type-sections": {
+    "defaultMessage": "Type sections"
+  },
+  "typeForm.unavailableValue": {
+    "defaultMessage": "Unavailable value"
+  },
+  "typeForm.urgency": {
+    "defaultMessage": "Urgency"
+  },
+  "typeForm.used-by-a-branch-condition-change-the-condition-first": {
+    "defaultMessage": "Used by a Branch condition. Change the condition first"
+  },
+  "typeForm.user": {
+    "defaultMessage": "User"
+  },
+  "typeForm.value": {
+    "defaultMessage": "Value"
+  },
+  "typeForm.value-amount": {
+    "defaultMessage": "Value amount"
+  },
+  "typeForm.value-cadence": {
+    "defaultMessage": "Value cadence"
+  },
+  "typeForm.value-currency": {
+    "defaultMessage": "Value currency"
+  },
+  "typeForm.visible-on-portal": {
+    "defaultMessage": "Visible on Portal"
+  },
+  "typeForm.yes": {
+    "defaultMessage": "Yes"
   },
   "views.builtIn": {
     "defaultMessage": "Default view"

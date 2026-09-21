@@ -153,6 +153,16 @@ describe.each(["contract", "matter", "entity"] as const)(
       expect(attaches).toHaveLength(2);
     });
 
+    it("returns focus to Attach Field after creating from its menu is cancelled", async () => {
+      const { user } = setup();
+      const trigger = await screen.findByRole("button", { name: "Attach Field" });
+      await user.click(trigger);
+      await user.click(screen.getByRole("menuitem", { name: "Create Field" }));
+      const dialog = within(await screen.findByRole("dialog", { name: "Add field" }));
+      await user.click(dialog.getByRole("button", { name: "Cancel" }));
+      await waitFor(() => expect(trigger).toHaveFocus());
+    });
+
     it("cancels without creating or attaching a field", async () => {
       const { user, creates, attaches } = setup();
       const dialog = await open(user);

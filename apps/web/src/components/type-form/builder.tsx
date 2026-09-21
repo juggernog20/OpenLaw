@@ -265,8 +265,12 @@ export function TypeFormBuilder({
     if (ok && created?.field.id === field.id) setCreated(null);
     return ok;
   }
-  function openField(parent: string | null, target: FieldRow | null = null) {
-    restoreFocus.current = document.activeElement as HTMLElement;
+  function openField(
+    parent: string | null,
+    target: FieldRow | null = null,
+    trigger: HTMLElement | null = document.activeElement as HTMLElement,
+  ) {
+    restoreFocus.current = trigger;
     setFieldEditor({ parent, target });
   }
   const available = catalog.filter(
@@ -306,7 +310,9 @@ export function TypeFormBuilder({
             Move out{!location(form, node.id)?.parent && " · Already at the root"}
           </DropdownMenuItem>
           {field && (
-            <DropdownMenuItem onSelect={() => openField(null, field)}>
+            <DropdownMenuItem
+              onSelect={() => openField(null, field, document.getElementById(`move-${node.id}`))}
+            >
               {t("Edit Field")}
             </DropdownMenuItem>
           )}
@@ -572,7 +578,7 @@ export function TypeFormBuilder({
             disabled={busy}
             label={parent ? t("Add row into branch") : t("Attach Field")}
             onAttach={(f) => void attach(f, parent, `${key}-attach`)}
-            onCreate={() => openField(parent)}
+            onCreate={(trigger) => openField(parent, null, trigger)}
           />
           {status(`${key}-attach`)}
         </div>
@@ -778,11 +784,12 @@ function AttachMenu({
   disabled: boolean;
   label: string;
   onAttach: (f: ApiField) => void;
-  onCreate: () => void;
+  onCreate: (trigger: HTMLButtonElement | null) => void;
 }>) {
   const t = useFormText();
   const [search, setSearch] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
   const matches = fields
     .filter((f) => f.displayName.toLowerCase().includes(search.toLowerCase()))
     .toSorted((a, b) => a.displayName.localeCompare(b.displayName));
@@ -794,7 +801,7 @@ function AttachMenu({
       }}
     >
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="sm" disabled={disabled}>
+        <Button ref={trigger} variant="secondary" size="sm" disabled={disabled}>
           {label}
         </Button>
       </DropdownMenuTrigger>
@@ -833,7 +840,9 @@ function AttachMenu({
             {fields.length ? t("No Fields match") : t("All Fields are attached")}
           </p>
         )}
-        <DropdownMenuItem onSelect={onCreate}>{t("Create Field")}</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onCreate(trigger.current)}>
+          {t("Create Field")}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
