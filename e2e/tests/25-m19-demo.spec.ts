@@ -1,44 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * M19 milestone acceptance (#357): the demo, end to end, in one browser
- * session.
- *
- * An Administrator builds an "NDA" request form targeting the NDA
- * contract type, attaches two catalog fields, and adds a deflection link
- * above it — #350's demo sentence, run through the real screens.
- *
- * The journey is the whole front door being configured. The rail's
- * **Intake** section opens on Request types (ST12), where the three
- * seeded rows read their DD-028 destinations — `Contract · NDA`,
- * `Contract · Default`, and `Matter · Default`. A new request type is added from the inline draft row,
- * given an existing NDA routing default through the API, then given two
- * catalog fields from the M6 catalog, and one of them is marked required
- * **on this form** — the per-attachment flag that makes a form definition
- * more than a list. Then a deflection link is placed on that request type
- * from the Deflection links pane (ST13), and the browser is reloaded so
- * every one of those facts is read back from the database rather than
- * from a screen that never re-rendered.
- *
- * **The scope rule is proved, not assumed.** The four basics stay locked
- * and unattachable, and re-pointing a form whose fields the new target
- * would not admit is refused by name rather than detached quietly —
- * CTR-016's scope rule applied one level out, and SET-003's house style
- * applied to it.
- *
- * The second journey is SET-002 from the intake side: a Legal Team
- * Member's settings rail carries no Intake section, its three URLs
- * bounce, and the API's 403 stands behind the bounce.
- *
- * The seed sweep at the top proves the M19 migrations (0057–0059) landed
- * on the running stack — the `docker compose up` acceptance, asserted
- * from inside the demo.
- *
- * Everything per-run ends deleted, so the never-reset instance
- * (TECH-018) stays clean. A request type is hard-deletable — this mount
- * has no system-protected row — and deleting one takes its form
- * definition and any link placed on it with it.
- */
+/** M19 and DD-028: configure a Request type through its destination Form and add guidance. */
 
 import { test, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { z } from "zod";
@@ -86,7 +48,6 @@ const RequestTypeRows = z.object({
       displayName: z.string(),
       targetModule: z.enum(["matter", "contract"]),
       targetTypeId: z.string().nullable(),
-      formFieldCount: z.number().int(),
       archivedAt: z.string().nullable(),
     }),
   ),
@@ -109,10 +70,14 @@ const ContractTypeRows = z.object({
   contractTypes: z.array(z.object({ id: z.string(), slug: z.string(), displayName: z.string() })),
 });
 
-/** One request type's form definition, as the seam answers it. */
-const AttachedFields = z.object({
-  attachedFields: z.array(
-    z.object({ slug: z.string(), displayName: z.string(), isRequired: z.boolean() }),
+const TypeForm = z.object({
+  form: z.array(
+    z.object({
+      kind: z.string(),
+      rowRef: z.string().optional(),
+      isRequired: z.boolean().optional(),
+      onIntakeForm: z.boolean().optional(),
+    }),
   ),
 });
 
@@ -135,9 +100,9 @@ async function listContractTypes(request: APIRequestContext) {
 }
 
 async function readForm(request: APIRequestContext, typeId: string) {
-  const read = await request.get(`/api/v1/request-types/${typeId}/fields`);
+  const read = await request.get(`/api/v1/contract-types/${typeId}/form`);
   expect(read.status(), await read.text()).toBe(200);
-  return AttachedFields.parse(await read.json()).attachedFields;
+  return TypeForm.parse(await read.json()).form;
 }
 
 /** Removes every per-run deflection link this suite ever created — a
@@ -151,15 +116,18 @@ async function ensureDemoLinksAbsent(request: APIRequestContext) {
   }
 }
 
-/** Hard-deletes every per-run request type this suite ever created. The
- * delete takes the form definition with it, and any deflection link
- * placed on the type goes too — a link's placement is its audience, so
- * the row cannot outlive the form it was written for. */
+/** Deletes the per-run Request types before their destination Contract types. */
 async function ensureDemoTypesAbsent(request: APIRequestContext) {
   for (const row of (await listRequestTypes(request)).filter((type) =>
     type.displayName.startsWith(TYPE_PREFIX),
   )) {
     const deleted = await request.delete(`/api/v1/request-types/${row.id}`);
+    expect(deleted.status(), await deleted.text()).toBe(204);
+  }
+  for (const row of (await listContractTypes(request)).filter((type) =>
+    type.displayName.startsWith(TYPE_PREFIX),
+  )) {
+    const deleted = await request.delete(`/api/v1/contract-types/${row.id}`);
     expect(deleted.status(), await deleted.text()).toBe(204);
   }
 }
@@ -242,6 +210,14 @@ test.describe.serial("M19 demo path", () => {
     };
 
     try {
+      const destinationName = `${typeName} destination`;
+      const destinationResponse = await page.request.post("/api/v1/contract-types", {
+        data: { displayName: destinationName },
+      });
+      expect(destinationResponse.status()).toBe(201);
+      const destination = z
+        .object({ contractType: z.object({ id: z.string() }) })
+        .parse(await destinationResponse.json()).contractType;
       // Into settings from its way in (SET-001), then the Organization
       // rail's Intake section — its URL forwards to the Request types
       // pane, the section's first (INT-002).
@@ -256,13 +232,13 @@ test.describe.serial("M19 demo path", () => {
       // column, so routing is auditable without opening an editor
       // (story 16).
       await expect(
-        cell(requestTypeRow(page, "NDA request"), "Default destination", "Contract · NDA"),
+        cell(requestTypeRow(page, "NDA request"), "Destination", "Contract · NDA"),
       ).toBeVisible();
       await expect(
-        cell(requestTypeRow(page, "Contract review"), "Default destination", "Contract · Default"),
+        cell(requestTypeRow(page, "Contract review"), "Destination", "Contract · Default"),
       ).toBeVisible();
       await expect(
-        cell(requestTypeRow(page, "Legal question"), "Default destination", "Matter · Default"),
+        cell(requestTypeRow(page, "Legal question"), "Destination", "Matter · Default"),
       ).toBeVisible();
 
       // Adds a request type: the inline draft row is the form
@@ -280,8 +256,8 @@ test.describe.serial("M19 demo path", () => {
 
       // The legacy create endpoint defaults to Matter, with no attached Fields yet.
       const row = requestTypeRow(page, typeName);
-      await expect(cell(row, "Default destination", "Matter")).toBeVisible();
-      await expect(cell(row, "Form fields", "0 fields")).toBeVisible();
+      await expect(cell(row, "Destination", "Matter · Default")).toBeVisible();
+      await expect(page.getByText("Form fields", { exact: true })).toHaveCount(0);
 
       // Its pencil opens the type's own editor screen (DES-022), where
       // identity and form live together (story 19).
@@ -290,82 +266,58 @@ test.describe.serial("M19 demo path", () => {
       const typeId = new URL(page.url()).pathname.split("/").pop()!;
       await expect(page.getByLabel("Display name")).toHaveValue(typeName);
 
-      // Existing routing defaults still scope the catalog, while the editor
-      // leaves destination choice to Legal at conversion.
-      await expect(page.getByLabel("Target", { exact: true })).toHaveCount(0);
-      const targeted = await page.request.patch(`/api/v1/request-types/${typeId}`, {
-        data: { targetModule: "contract", targetTypeId: ndaType!.id },
-      });
-      expect(targeted.status(), await targeted.text()).toBe(200);
-      await page.reload();
-      await expect(page.getByLabel("Display name")).toHaveValue(typeName);
-      await expect(page.getByLabel("Target", { exact: true })).toHaveCount(0);
-
-      // The basics state what every form always collects. They sit in
-      // the Form fields list itself, above anything attached: each row is
-      // locked (no Detach, a disabled required box) and cannot be reordered.
-      await expect(page.getByText("Basics are always on the form")).toBeVisible();
-      const formFields = page.getByRole("list", { name: "Basics are always on the form" });
-      for (const [name, caption] of [
-        ["Title", "Text"],
-        ["Attachments", "Files"],
-        ["Department", "Single select"],
-        ["Urgency", "Single select"],
-      ] as const) {
-        const basic = formFields
-          .getByRole("listitem")
-          .filter({ has: page.getByRole("checkbox", { name: `${name} required` }) });
-        await expect(basic.getByText(caption, { exact: true })).toBeVisible();
-        await expect(basic.getByRole("checkbox", { name: `${name} required` })).toBeDisabled();
-        await expect(basic.getByText(`${name} is always collected.`)).toHaveCount(1);
-        await expect(basic.getByRole("button", { name: `Detach ${name}` })).toHaveCount(0);
-        await expect(
-          basic.getByRole("button", { name: new RegExp(`^Reorder ${name}`) }),
-        ).toHaveCount(0);
+      await page.getByLabel("Default destination", { exact: true }).selectOption("contract");
+      await expect(page.getByLabel("Default contract type")).toBeVisible();
+      await page.getByLabel("Default contract type").selectOption(destination.id);
+      const card = page.getByRole("region", { name: "Intake form" });
+      await expect(card.getByRole("link", { name: `Edit on ${destinationName}` })).toBeVisible();
+      await expect(page.getByRole("checkbox")).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Attach field", exact: true })).toHaveCount(0);
+      for (const name of ["Title", "Department", "Urgency", "Attachments"]) {
+        await expect(card.getByText(name, { exact: true })).toBeVisible();
       }
-      // Nothing is attached yet, so the four basics are the whole list.
-      // Title, Department, and Urgency are required on every
-      // form; Attachments are optional. None can be changed.
-      await expect(formFields.getByRole("listitem")).toHaveCount(4);
-      expect(await formFields.getByRole("checkbox", { checked: true }).count()).toBe(3);
 
+      await card.getByRole("link", { name: `Edit on ${destinationName}` }).click();
+      await expect(page).toHaveURL(new RegExp(`/settings/contracts/types/${destination.id}/form$`));
       for (const fieldName of [FIRST_FIELD, SECOND_FIELD]) {
-        const attached = page.waitForResponse(
-          (response) =>
-            /\/api\/v1\/request-types\/[^/]+\/fields$/.test(response.url()) &&
-            response.request().method() === "POST",
-        );
-        await page.getByRole("button", { name: "Attach field" }).click();
+        await page.getByRole("button", { name: "Attach Field", exact: true }).click();
         await page.getByRole("menuitem", { name: new RegExp(fieldName) }).click();
-        expect((await attached).ok()).toBe(true);
-        await expect(page.getByRole("button", { name: `Detach ${fieldName}` })).toBeVisible();
+        const onIntake = page.getByRole("switch", {
+          name: `${fieldName}: On intake form`,
+          exact: true,
+        });
+        await expect(onIntake).toBeEnabled();
+        await onIntake.click();
+        await expect(onIntake).toBeChecked();
+        await expect(onIntake).toBeEnabled();
       }
+      const required = page.getByRole("switch", {
+        name: `${FIRST_FIELD}: Required for creation`,
+        exact: true,
+      });
+      await required.click();
+      await expect(required).toBeChecked();
+      await expect(required).toBeEnabled();
+      await page.goto(`/settings/intake/request-types/${typeId}`);
+      await expect(card.getByText(FIRST_FIELD, { exact: true })).toBeVisible();
+      await expect(card.getByText(SECOND_FIELD, { exact: true })).toBeVisible();
+      await card.getByRole("button", { name: "Preview intake form" }).click();
+      const preview = page.getByRole("dialog", { name: "Preview intake form" });
+      await expect(preview.getByRole("heading", { name: typeName, exact: true })).toBeVisible();
+      await expect(preview.getByLabel(FIRST_FIELD, { exact: false })).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(preview).toBeHidden();
 
-      // The required flag is per form, not per field: Governing law is
-      // required on this form and untouched everywhere else (story 23).
-      const requiredHere = page.waitForResponse(
-        (response) =>
-          /\/api\/v1\/request-types\/[^/]+\/fields\/[^/]+$/.test(response.url()) &&
-          response.request().method() === "PATCH",
+      await page.getByLabel("Default destination", { exact: true }).selectOption("matter");
+      await expect(card.getByRole("link", { name: "Edit on Default" })).toHaveAttribute(
+        "href",
+        `/settings/matters/types/${matterDefault.id}/form`,
       );
-      const attachedList = page.getByRole("list", { name: "Form fields" });
-      await attachedList.getByRole("checkbox", { name: `${FIRST_FIELD} required` }).click();
-      expect((await requiredHere).ok()).toBe(true);
-      await expect(
-        attachedList.getByRole("checkbox", { name: `${FIRST_FIELD} required` }),
-      ).toBeChecked();
-
-      // Routing selects the destination's Form; legacy Request attachments do not block it.
-      const rerouted = await page.request.patch(`/api/v1/request-types/${typeId}`, {
-        data: { targetModule: "matter", targetTypeId: null },
-      });
-      expect(rerouted.status(), await rerouted.text()).toBe(200);
-      const retained = (await listRequestTypes(page.request)).find((type) => type.id === typeId);
-      expect(retained).toMatchObject({ targetModule: "matter", targetTypeId: null });
-      const restored = await page.request.patch(`/api/v1/request-types/${typeId}`, {
-        data: { targetModule: "contract", targetTypeId: ndaType!.id },
-      });
-      expect(restored.status(), await restored.text()).toBe(200);
+      await expect(card.getByText(FIRST_FIELD, { exact: true })).toHaveCount(0);
+      await page.getByLabel("Default destination", { exact: true }).selectOption("contract");
+      await expect(page.getByLabel("Default contract type")).toBeVisible();
+      await page.getByLabel("Default contract type").selectOption(destination.id);
+      await expect(card.getByText(FIRST_FIELD, { exact: true })).toBeVisible();
 
       // ---- The deflection link, above the form (INT-004) ----
 
@@ -409,27 +361,25 @@ test.describe.serial("M19 demo path", () => {
       await tabs.getByRole("link", { name: "Request types" }).click();
       await expect(page).toHaveURL(/\/settings\/intake\/request-types$/);
       const reloadedRow = requestTypeRow(page, typeName);
-      await expect(cell(reloadedRow, "Default destination", "Contract · NDA")).toBeVisible();
-      // Two catalog fields — the four basics are on every form and are
-      // never counted here.
-      await expect(cell(reloadedRow, "Form fields", "2 fields")).toBeVisible();
-
+      await expect(cell(reloadedRow, "Destination", `Contract · ${destinationName}`)).toBeVisible();
       await reloadedRow.getByRole("button", { name: `Edit ${typeName}` }).click();
       await expect(page.getByLabel("Display name")).toHaveValue(typeName);
-      await expect(page.getByLabel("Target", { exact: true })).toHaveCount(0);
-      const reloadedFields = page.getByRole("list", { name: "Form fields" });
-      await expect(
-        reloadedFields.getByRole("checkbox", { name: `${FIRST_FIELD} required` }),
-      ).toBeChecked();
-      await expect(
-        reloadedFields.getByRole("checkbox", { name: `${SECOND_FIELD} required` }),
-      ).not.toBeChecked();
-
-      // And behind the screen, at the seam the portal will read in M20:
-      // the form definition in its order, and the link on this form.
-      const form = await readForm(page.request, typeId);
-      expect(form.map((field) => field.displayName)).toEqual([FIRST_FIELD, SECOND_FIELD]);
-      expect(form.map((field) => field.isRequired)).toEqual([true, false]);
+      const reloadedCard = page.getByRole("region", { name: "Intake form" });
+      const firstRow = reloadedCard
+        .getByRole("listitem")
+        .filter({ has: page.getByText(FIRST_FIELD, { exact: true }) });
+      const secondRow = reloadedCard
+        .getByRole("listitem")
+        .filter({ has: page.getByText(SECOND_FIELD, { exact: true }) });
+      await expect(firstRow.getByText("Required", { exact: true })).toBeVisible();
+      await expect(secondRow.getByText("Optional", { exact: true })).toBeVisible();
+      await expect(page.getByRole("checkbox")).toHaveCount(0);
+      const form = (await readForm(page.request, destination.id)).filter((node) =>
+        ["governing_law", "jurisdiction"].includes(node.rowRef ?? ""),
+      );
+      expect(form.map((node) => node.rowRef)).toEqual(["governing_law", "jurisdiction"]);
+      expect(form.map((node) => node.isRequired)).toEqual([true, false]);
+      expect(form.every((node) => node.onIntakeForm)).toBe(true);
       const links = await listIntakeLinks(page.request);
       expect(links.find((link) => link.label === linkLabel)).toMatchObject({
         url: LINK_URL,
