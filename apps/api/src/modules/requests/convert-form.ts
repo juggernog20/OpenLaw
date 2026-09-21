@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** INT-002 / DD-028 conversion answers: lock the target Form, merge Request and
+ * dialog values, and resolve built-in Rows for ordinary record creation. */
+
 import {
   contractTypes,
   matterTypes,

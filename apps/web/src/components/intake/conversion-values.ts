@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** INT-002 / DD-028 maps Request answers into conversion controls and back to
+ * Row keys, including legacy intake answers retained until M39/11. */
+
 import type { CustomFieldValue } from "../../lib/custom-fields";
 import type { StaffRequest, StaffRequestField, StaffRequestFieldRefs } from "../../lib/requests";
 import { creationKeys, type CreationValues } from "../type-form/creation-rows";
