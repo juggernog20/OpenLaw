@@ -210,33 +210,32 @@ export function AiModelSelector({
                 editing === null && "hidden",
               )}
             >
-              {editing !== null &&
-                filtered.map((option, index) => (
-                  <li
-                    key={option.id}
-                    id={optionId(index)}
-                    role="option"
-                    aria-selected={option.id === value}
-                    className={cn(
-                      "cursor-default truncate px-2 py-1 text-sm text-primary",
-                      index === activeIndex && "bg-control",
-                    )}
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                      commit(option.id);
-                    }}
-                    onMouseMove={() => {
-                      if (activeIndex !== index)
-                        setEditing({ query: editing.query, activeIndex: index });
-                    }}
-                  >
-                    {optionText(option)}
-                  </li>
-                ))}
+              {filtered.map((option, index) => (
+                <li
+                  key={option.id}
+                  id={optionId(index)}
+                  role="option"
+                  aria-selected={option.id === value}
+                  className={cn(
+                    "cursor-default truncate px-2 py-1 text-sm text-primary",
+                    index === activeIndex && "bg-control",
+                  )}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    commit(option.id);
+                  }}
+                  onMouseMove={() => {
+                    if (editing && activeIndex !== index)
+                      setEditing({ query: editing.query, activeIndex: index });
+                  }}
+                >
+                  {optionText(option)}
+                </li>
+              ))}
               {/* A disabled option, not role="presentation": non-option children
                   of a listbox are not reliably exposed, so an empty list would
                   read as silence to assistive technology. */}
-              {editing !== null && filtered.length === 0 && (
+              {filtered.length === 0 && (
                 <li
                   className="px-2 py-1 text-sm text-muted"
                   role="option"
