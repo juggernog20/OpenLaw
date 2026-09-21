@@ -40,6 +40,7 @@ const SEED_SLUGS = [
   "employment",
   "license",
   "other",
+  "default",
 ] as const;
 
 let harness: TestHarness;
@@ -163,10 +164,10 @@ describe("the SET-002 role gate", () => {
 });
 
 describe("GET /contract-types", () => {
-  it("lists the eight CTR-002 seeds in display order", async () => {
+  it("lists the CTR-002 seeds and Default in display order", async () => {
     const rows = await listTypes();
     expect(rows.map((row) => row.slug)).toEqual([...SEED_SLUGS]);
-    expect(rows.map((row) => row.displayOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(rows.map((row) => row.displayOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     for (const row of rows) {
       expect(row.isSystemDefault).toBe(true);
       expect(row.archivedAt).toBeNull();
@@ -192,7 +193,7 @@ describe("POST /contract-types", () => {
     expect(created.slug).toBe("real_estate");
     expect(created.displayName).toBe("Real Estate");
     expect(created.isSystemDefault).toBe(false);
-    expect(created.displayOrder).toBe(9);
+    expect(created.displayOrder).toBe(10);
 
     const rows = await listTypes();
     expect(rows.at(-1)!.slug).toBe("real_estate");

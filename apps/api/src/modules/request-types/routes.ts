@@ -14,7 +14,7 @@
  * archives and deletes like any other row.
  *
  * **The target is this mount's extras.** A request type targets
- * nothing, the Matter module, or the Contract module — and inside
+ * the Matter module or the Contract module — and inside
  * Matter or Contract it may name one specific type. On the wire that is
  * two values: `targetModule` and the optional `targetTypeId`. The table
  * holds three columns, one per module plus the module itself; which
@@ -113,7 +113,7 @@ export const requestTypesRoutes = taxonomyRoutes({
     rowSchema: {
       formFieldOrder: z.array(z.string()),
       turnaroundDays: z.number().int().nullable(),
-      targetModule: TargetModuleSchema.nullable(),
+      targetModule: TargetModuleSchema,
       targetTypeId: z.string().nullable(),
       /** ST12's Form fields column: how many catalog fields this type's
        * portal form collects, over and above the four fixed basics. */
@@ -131,7 +131,7 @@ export const requestTypesRoutes = taxonomyRoutes({
       return {
         formFieldOrder: type.formFieldOrder,
         turnaroundDays: type.turnaroundDays,
-        targetModule: type.targetModule as TargetModule | null,
+        targetModule: type.targetModule,
         targetTypeId: targetTypeId(type),
         formFieldCount: counts.get(type.id) ?? 0,
       };
@@ -172,13 +172,16 @@ export const requestTypesRoutes = taxonomyRoutes({
         changed.turnaroundDays = { from: current.turnaroundDays, to: body.turnaroundDays };
       }
       if (!namesModule && !namesType) return { columns, changed };
-      const currentModule = current.targetModule as TargetModule | null;
+      const currentModule = current.targetModule;
       const currentTypeId = targetTypeId(current);
       // The two keys are one value: a body that names the module says
       // the whole target, so an id it leaves out means "the module
       // alone" rather than "keep the old one".
       const module = namesModule ? (body.targetModule ?? null) : currentModule;
       const typeId = namesType ? (body.targetTypeId ?? null) : namesModule ? null : currentTypeId;
+
+      if (module === null)
+        throw httpError(400, "A Request type needs a destination module. Pick Matter or Contract.");
 
       if (typeId !== null) {
         if (module === null) {

@@ -482,8 +482,8 @@ describe("what one row carries (INT-007, I1)", () => {
 
     const read = await readInbox(memberCookies);
     expect(read.requests.map((row) => row.requestType)).toMatchObject([
-      { displayName: "Contract review", targetModule: "contract", targetTypeName: null },
-      { displayName: "Legal question", targetModule: null, targetTypeName: null },
+      { displayName: "Contract review", targetModule: "contract", targetTypeName: "Default" },
+      { displayName: "Legal question", targetModule: "matter", targetTypeName: "Default" },
     ]);
   });
 });

@@ -671,3 +671,4 @@ export {
   type FormEvaluation,
   type FormValidationIssue,
 } from "./form-evaluator.js";
+export { FORM_BUILTINS, pinnedFormRows, type FormModule } from "./form-builtins.js";

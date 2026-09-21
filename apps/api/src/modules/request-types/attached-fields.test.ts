@@ -111,7 +111,10 @@ const addType = async (displayName: string): Promise<RequestTypeRow> => {
     payload: { displayName },
   });
   expect(res.statusCode, res.body).toBe(201);
-  return res.json().requestType;
+  const type = res.json().requestType;
+  const targeted = await setTarget(type.id, { targetModule: "contract" });
+  expect(targeted.statusCode, targeted.body).toBe(200);
+  return targeted.json().requestType;
 };
 
 const setTarget = async (typeId: string, body: Record<string, unknown>) =>
@@ -312,7 +315,7 @@ describe("attach and detach", () => {
   });
 });
 
-describe("the scope rule, in all three target arms (INT-002)", () => {
+describe("the scope rule, in both destination modules (INT-002)", () => {
   it("takes contract-scoped fields when the target is Contract", async () => {
     const type = await addType("Contract arm");
     await setTarget(type.id, { targetModule: "contract" });
@@ -357,28 +360,20 @@ describe("the scope rule, in all three target arms (INT-002)", () => {
     );
   });
 
-  it("takes contract and matter fields when the destination is decided during triage", async () => {
-    const type = await addType("No-target arm");
-    const secondField = await createField("No-target owner", "contract");
-    const contractField = await createField("No-target value", "contract");
+  it("rejects Fields outside the destination scope and destination changes that strand them", async () => {
+    const type = await addType("Destination scope");
+    const contractField = await createField("Destination value", "contract");
     const matterField = await plantScopedField(
-      "no_target_practice",
-      "No-target practice",
+      "destination_practice",
+      "Destination practice",
       "matter",
     );
-
-    expect((await attach(type.id, { fieldId: secondField })).statusCode).toBe(201);
     expect((await attach(type.id, { fieldId: contractField })).statusCode).toBe(201);
-    expect((await attach(type.id, { fieldId: matterField })).statusCode).toBe(201);
-    expect((await listAttached(type.id)).map((row) => row.slug)).toEqual([
-      "no_target_owner",
-      "no_target_value",
-      "no_target_practice",
-    ]);
-    const refused = await setTarget(type.id, { targetModule: "contract" });
+    expect((await attach(type.id, { fieldId: matterField })).statusCode).toBe(400);
+    const refused = await setTarget(type.id, { targetModule: "matter" });
     expect(refused.statusCode).toBe(409);
-    expect(refused.json().detail).toContain("No-target practice");
-    expect((await typeBySlug(type.slug)).targetModule).toBeNull();
+    expect(refused.json().detail).toContain("Destination value");
+    expect((await typeBySlug(type.slug)).targetModule).toBe("contract");
   });
 
   it("reads the row's target on every attach, never a cached rule", async () => {
@@ -461,18 +456,18 @@ describe("the strand refusal on a target change (INT-002)", () => {
     const type = await addType("Empty form destination");
     expect((await setTarget(type.id, { targetModule: "contract" })).statusCode).toBe(200);
     expect((await setTarget(type.id, { targetModule: "matter" })).statusCode).toBe(200);
-    expect((await setTarget(type.id, { targetModule: null })).statusCode).toBe(200);
+    expect((await setTarget(type.id, { targetModule: null })).statusCode).toBe(400);
   });
 
-  it("clears a destination without detaching module-specific fields", async () => {
+  it("refuses to clear the destination and retains module-specific fields", async () => {
     const type = await addType("Clear destination probe");
     await setTarget(type.id, { targetModule: "contract" });
     const fieldId = await createField("Keep contract answer", "contract");
     expect((await attach(type.id, { fieldId, isRequired: true })).statusCode).toBe(201);
     const result = await setTarget(type.id, { targetModule: null });
-    expect(result.statusCode, result.body).toBe(200);
-    expect(result.json().requestType).toMatchObject({
-      targetModule: null,
+    expect(result.statusCode, result.body).toBe(400);
+    expect(await typeBySlug(type.slug)).toMatchObject({
+      targetModule: "contract",
       targetTypeId: null,
       formFieldCount: 1,
     });

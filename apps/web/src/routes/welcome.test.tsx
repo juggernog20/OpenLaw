@@ -1534,6 +1534,7 @@ const TYPE_ROW = {
   description: null,
   displayOrder: 1,
   isSystemDefault: true,
+  isDefault: false,
   archivedAt: null,
   inUseCount: 0,
 } satisfies ReviewResponse<"/api/v1/matter-types">["matterTypes"][number];
@@ -1552,7 +1553,7 @@ const REVIEW_RESPONSES = {
       {
         ...TYPE_ROW,
         turnaroundDays: null,
-        targetModule: null,
+        targetModule: "matter",
         targetTypeId: null,
         formFieldCount: 0,
         formFieldOrder: [],

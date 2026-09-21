@@ -474,9 +474,9 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
 /** The eight catalog lists as the API lists them, with the skeleton
  * each keeps (SET-004, Start blank). */
 const CATALOG_LISTS = [
-  ["/api/v1/matter-types", "matterTypes", ["other"]],
+  ["/api/v1/matter-types", "matterTypes", ["other", "default"]],
   ["/api/v1/matter-statuses", "matterStatuses", ["open", "closed"]],
-  ["/api/v1/contract-types", "contractTypes", ["other"]],
+  ["/api/v1/contract-types", "contractTypes", ["other", "default"]],
   ["/api/v1/contract-statuses", "contractStatuses", ["draft", "active", "expired"]],
   ["/api/v1/entity-types", "entityTypes", ["other"]],
   ["/api/v1/officer-roles", "officerRoles", ["other"]],

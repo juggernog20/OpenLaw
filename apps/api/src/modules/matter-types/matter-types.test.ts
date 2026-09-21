@@ -38,6 +38,7 @@ const SEED_SLUGS = [
   "privacy",
   "advisory",
   "other",
+  "default",
 ] as const;
 
 let harness: TestHarness;
@@ -161,10 +162,10 @@ describe("the SET-002 role gate", () => {
 });
 
 describe("GET /matter-types", () => {
-  it("lists the nine MTR-001 seeds in display order", async () => {
+  it("lists the MTR-001 seeds and Default in display order", async () => {
     const rows = await listTypes();
     expect(rows.map((row) => row.slug)).toEqual([...SEED_SLUGS]);
-    expect(rows.map((row) => row.displayOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(rows.map((row) => row.displayOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     for (const row of rows) {
       expect(row.isSystemDefault).toBe(true);
       expect(row.archivedAt).toBeNull();
@@ -189,7 +190,7 @@ describe("POST /matter-types", () => {
     expect(created.slug).toBe("data_governance");
     expect(created.displayName).toBe("Data Governance");
     expect(created.isSystemDefault).toBe(false);
-    expect(created.displayOrder).toBe(10);
+    expect(created.displayOrder).toBe(11);
 
     const rows = await listTypes();
     expect(rows.at(-1)!.slug).toBe("data_governance");

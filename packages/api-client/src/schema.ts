@@ -2044,6 +2044,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contract-types/{id}/form": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getContractTypeForm"];
+    put: operations["replaceContractTypeForm"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types/{id}/fields": {
     parameters: {
       query?: never;
@@ -2338,6 +2354,22 @@ export interface paths {
     put?: never;
     /** Restore an archived Region (SET-003's recovery story) to the end of the display order */
     post: operations["restoreRegion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}/form": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getMatterTypeForm"];
+    put: operations["replaceMatterTypeForm"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -5883,6 +5915,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entity-types/{id}/form": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEntityTypeForm"];
+    put: operations["replaceEntityTypeForm"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entity-types/{id}/fields": {
     parameters: {
       query?: never;
@@ -7226,6 +7274,43 @@ export interface components {
       name: "OpenLaw";
       version: string;
     };
+    FormNodeInput:
+      | {
+          /** @constant */
+          kind: "row";
+          id: string;
+          rowRef: string;
+          /** @enum {string} */
+          fieldType:
+            | "text"
+            | "long_text"
+            | "number"
+            | "money"
+            | "currency"
+            | "date"
+            | "boolean"
+            | "single_select"
+            | "multi_select"
+            | "user"
+            | "entity";
+          onIntakeForm?: boolean;
+          isRequired: boolean;
+          visibleOnPortal: boolean;
+        }
+      | {
+          /** @constant */
+          kind: "branch";
+          id: string;
+          /** @enum {string} */
+          match: "all" | "any";
+          conditions: {
+            rowRef: string;
+            /** @enum {string} */
+            operator: "equals" | "is_not" | "is_one_of" | "is_set" | "greater_than" | "less_than";
+            value: (string | number | boolean) | (string | number | boolean)[] | null;
+          }[];
+          children: components["schemas"]["FormNodeInput"][];
+        };
     Problem: {
       /** @default about:blank */
       type: string;
@@ -7243,6 +7328,43 @@ export interface components {
       name: "OpenLaw";
       version: string;
     };
+    FormNode:
+      | {
+          /** @constant */
+          kind: "row";
+          id: string;
+          rowRef: string;
+          /** @enum {string} */
+          fieldType:
+            | "text"
+            | "long_text"
+            | "number"
+            | "money"
+            | "currency"
+            | "date"
+            | "boolean"
+            | "single_select"
+            | "multi_select"
+            | "user"
+            | "entity";
+          onIntakeForm?: boolean;
+          isRequired: boolean;
+          visibleOnPortal: boolean;
+        }
+      | {
+          /** @constant */
+          kind: "branch";
+          id: string;
+          /** @enum {string} */
+          match: "all" | "any";
+          conditions: {
+            rowRef: string;
+            /** @enum {string} */
+            operator: "equals" | "is_not" | "is_one_of" | "is_set" | "greater_than" | "less_than";
+            value: (string | number | boolean) | (string | number | boolean)[] | null;
+          }[];
+          children: components["schemas"]["FormNode"][];
+        };
   };
   responses: never;
   parameters: never;
@@ -13248,6 +13370,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             }[];
           };
         };
@@ -13294,6 +13417,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -13336,6 +13460,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -13414,6 +13539,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -13460,6 +13586,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             }[];
           };
         };
@@ -13508,6 +13635,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -13550,6 +13678,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -14088,6 +14217,78 @@ export interface operations {
       };
     };
   };
+  getContractTypeForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            form: components["schemas"]["FormNode"][];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  replaceContractTypeForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          form: components["schemas"]["FormNodeInput"][];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            form: components["schemas"]["FormNode"][];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listContractTypeFields: {
     parameters: {
       query?: never;
@@ -14381,6 +14582,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             }[];
           };
         };
@@ -14427,6 +14629,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -14469,6 +14672,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -14547,6 +14751,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -14593,6 +14798,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             }[];
           };
         };
@@ -14641,6 +14847,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -14683,6 +14890,7 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              isDefault: boolean;
             };
           };
         };
@@ -15314,6 +15522,78 @@ export interface operations {
               archivedAt: string | null;
               inUseCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterTypeForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            form: components["schemas"]["FormNode"][];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  replaceMatterTypeForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          form: components["schemas"]["FormNodeInput"][];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            form: components["schemas"]["FormNode"][];
           };
         };
       };
@@ -18720,7 +19000,8 @@ export interface operations {
               inUseCount: number;
               formFieldOrder: string[];
               turnaroundDays: number | null;
-              targetModule: ("matter" | "contract") | null;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
               targetTypeId: string | null;
               formFieldCount: number;
             }[];
@@ -18771,7 +19052,8 @@ export interface operations {
               inUseCount: number;
               formFieldOrder: string[];
               turnaroundDays: number | null;
-              targetModule: ("matter" | "contract") | null;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
               targetTypeId: string | null;
               formFieldCount: number;
             };
@@ -18818,7 +19100,8 @@ export interface operations {
               inUseCount: number;
               formFieldOrder: string[];
               turnaroundDays: number | null;
-              targetModule: ("matter" | "contract") | null;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
               targetTypeId: string | null;
               formFieldCount: number;
             };
@@ -18905,7 +19188,8 @@ export interface operations {
               inUseCount: number;
               formFieldOrder: string[];
               turnaroundDays: number | null;
-              targetModule: ("matter" | "contract") | null;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
               targetTypeId: string | null;
               formFieldCount: number;
             };
@@ -18956,7 +19240,8 @@ export interface operations {
               inUseCount: number;
               formFieldOrder: string[];
               turnaroundDays: number | null;
-              targetModule: ("matter" | "contract") | null;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
               targetTypeId: string | null;
               formFieldCount: number;
             }[];
@@ -19009,7 +19294,8 @@ export interface operations {
               inUseCount: number;
               formFieldOrder: string[];
               turnaroundDays: number | null;
-              targetModule: ("matter" | "contract") | null;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
               targetTypeId: string | null;
               formFieldCount: number;
             };
@@ -19056,7 +19342,8 @@ export interface operations {
               inUseCount: number;
               formFieldOrder: string[];
               turnaroundDays: number | null;
-              targetModule: ("matter" | "contract") | null;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
               targetTypeId: string | null;
               formFieldCount: number;
             };
@@ -33417,6 +33704,78 @@ export interface operations {
               archivedAt: string | null;
               inUseCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getEntityTypeForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            form: components["schemas"]["FormNode"][];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  replaceEntityTypeForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          form: components["schemas"]["FormNodeInput"][];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            form: components["schemas"]["FormNode"][];
           };
         };
       };

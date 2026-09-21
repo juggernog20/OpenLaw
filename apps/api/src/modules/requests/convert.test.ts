@@ -409,30 +409,14 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     });
   });
 
-  it("asks a module-only target for the type the form deferred", async () => {
-    // "Contract review" promises a contract without pre-deciding which
-    // kind (the INT-002 M19/4 addendum). That one choice is the
-    // triager's, and it is the only one they get.
-    const request = await submit("Which kind is still open", {
+  it("uses the Default type backfilled onto a module-only destination", async () => {
+    const request = await submit("Default destination", {
       typeId: requestTypeIds.get("contract_review"),
     });
-    const before = await contractCount();
-    const without = await convert(request.number, { title: "Orion redline" });
-    expect(without.statusCode, without.body).toBe(400);
-    expect((await stored(request.id)).status).toBe("new");
-    // The refusal writes nothing. Without this the second press below
-    // would supply a contract for a test that never checked the first
-    // press had not already made one.
-    expect(await contractCount()).toBe(before);
-
-    const withType = await convert(request.number, {
-      title: "Orion redline",
-      contractTypeId: contractTypeIds.get("msa"),
-      customFields: { [fieldSlugs.get("Governing law")!]: "England and Wales" },
-    });
-    expect(withType.statusCode, withType.body).toBe(200);
-    const number = withType.json().request.convertedContract.number as number;
-    expect((await contractNumbered(number)).contractTypeId).toBe(contractTypeIds.get("msa"));
+    const converted = await convert(request.number, { title: "Orion redline" });
+    expect(converted.statusCode, converted.body).toBe(200);
+    const record = await contractNumbered(converted.json().request.convertedContract.number);
+    expect(record.contractTypeId).toBe(contractTypeIds.get("default"));
   });
 
   it("reads an archived target type as no type, on the read and at the write", async () => {
@@ -1252,13 +1236,6 @@ describe("default contract fields on intake forms", () => {
   });
   it("enforces native constraints at submission and preserves answers when triage creates a matter", async () => {
     const { typeId, answer } = await nativeForm("Undecided native intake");
-    const pointed = await harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/request-types/${typeId}`,
-      cookies: adminCookies,
-      payload: { targetModule: null },
-    });
-    expect(pointed.statusCode, pointed.body).toBe(200);
     const invalid = await harness.app.inject({
       method: "POST",
       url: "/api/v1/requests",

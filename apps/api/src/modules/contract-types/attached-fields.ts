@@ -15,6 +15,7 @@ import { contractTypeFields, contractTypes } from "@openlaw/db";
 import { typeFieldRoutes } from "../../lib/type-field-routes.js";
 
 export const attachedFieldsRoutes = typeFieldRoutes({
+  formModule: "contract",
   typesTable: contractTypes,
   joinTable: contractTypeFields,
   path: "contract-types",

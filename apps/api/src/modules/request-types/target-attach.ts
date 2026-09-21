@@ -102,9 +102,13 @@ async function attachToTarget(
   const displayOrder = await appendedOrder(tx, joinTable, target.id, field.id);
   if (displayOrder === null) return { ...answer, attached: false };
 
-  await tx
-    .insert(joinTable)
-    .values({ typeId: target.id, fieldId: field.id, displayOrder, isRequired: false });
+  await tx.insert(joinTable).values({
+    typeId: target.id,
+    fieldId: field.id,
+    displayOrder,
+    isRequired: false,
+    visibleOnPortal: field.fieldTag === "business",
+  });
   await recordActivity(tx, {
     entityType: "system",
     actorId,

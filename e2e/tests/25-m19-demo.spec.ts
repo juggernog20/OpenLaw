@@ -10,9 +10,8 @@
  *
  * The journey is the whole front door being configured. The rail's
  * **Intake** section opens on Request types (ST12), where the three
- * seeded rows already read their targets — `Contract · NDA`, `Contract`,
- * and `No target` — which is the three-state model (INT-002 addendum)
- * drawn as a fact. A new request type is added from the inline draft row,
+ * seeded rows read their DD-028 destinations — `Contract · NDA`,
+ * `Contract · Default`, and `Matter · Default`. A new request type is added from the inline draft row,
  * given an existing NDA routing default through the API, then given two
  * catalog fields from the M6 catalog, and one of them is marked required
  * **on this form** — the per-attachment flag that makes a form definition
@@ -85,7 +84,7 @@ const RequestTypeRows = z.object({
       id: z.string(),
       slug: z.string(),
       displayName: z.string(),
-      targetModule: z.enum(["matter", "contract"]).nullable(),
+      targetModule: z.enum(["matter", "contract"]),
       targetTypeId: z.string().nullable(),
       formFieldCount: z.number().int(),
       archivedAt: z.string().nullable(),
@@ -198,8 +197,7 @@ test.describe.serial("M19 demo path", () => {
     await ensureDemoTypesAbsent(page.request);
 
     // The compose-up acceptance, from inside the running stack: the M19
-    // seeds (migrations 0057–0059) answer over the API, each carrying
-    // one of the three target states INT-002's addendum records. Subset
+    // seeds answer over the API with the DD-028 destination backfill. Subset
     // checks — the accumulated instance holds more than the seeds.
     const seeded = await listRequestTypes(page.request);
     const seededBySlug = new Map(seeded.map((row) => [row.slug, row]));
@@ -210,18 +208,27 @@ test.describe.serial("M19 demo path", () => {
       (type) => type.slug === TARGET_TYPE_SLUG,
     );
     expect(ndaType, "the NDA contract type seed is missing").toBeDefined();
-    // A type target, a module-only target, and no target at all.
+    const contractDefault = (await listContractTypes(page.request)).find(
+      (type) => type.slug === "default",
+    )!;
+    const matterTypesResponse = await page.request.get("/api/v1/matter-types");
+    expect(matterTypesResponse.status()).toBe(200);
+    const matterDefault = z
+      .object({ matterTypes: z.array(z.object({ id: z.string(), slug: z.string() })) })
+      .parse(await matterTypesResponse.json())
+      .matterTypes.find((type) => type.slug === "default")!;
+    // Specific destinations survive; module-only and missing destinations use Default.
     expect(seededBySlug.get("nda_request")).toMatchObject({
       targetModule: "contract",
       targetTypeId: ndaType!.id,
     });
     expect(seededBySlug.get("contract_review")).toMatchObject({
       targetModule: "contract",
-      targetTypeId: null,
+      targetTypeId: contractDefault.id,
     });
     expect(seededBySlug.get("legal_question")).toMatchObject({
-      targetModule: null,
-      targetTypeId: null,
+      targetModule: "matter",
+      targetTypeId: matterDefault.id,
     });
 
     const stamp = Date.now();
@@ -252,10 +259,10 @@ test.describe.serial("M19 demo path", () => {
         cell(requestTypeRow(page, "NDA request"), "Default destination", "Contract · NDA"),
       ).toBeVisible();
       await expect(
-        cell(requestTypeRow(page, "Contract review"), "Default destination", "Contract"),
+        cell(requestTypeRow(page, "Contract review"), "Default destination", "Contract · Default"),
       ).toBeVisible();
       await expect(
-        cell(requestTypeRow(page, "Legal question"), "Default destination", "Decide during triage"),
+        cell(requestTypeRow(page, "Legal question"), "Default destination", "Matter · Default"),
       ).toBeVisible();
 
       // Adds a request type: the inline draft row is the form
@@ -271,10 +278,9 @@ test.describe.serial("M19 demo path", () => {
       expect((await created).ok()).toBe(true);
       await expect(page.getByRole("button", { name: `Rename ${typeName}` })).toBeVisible();
 
-      // A brand-new type has no target and no fields yet — the row says
-      // so on both new columns.
+      // The legacy create endpoint defaults to Matter, with no attached Fields yet.
       const row = requestTypeRow(page, typeName);
-      await expect(cell(row, "Default destination", "Decide during triage")).toBeVisible();
+      await expect(cell(row, "Default destination", "Matter")).toBeVisible();
       await expect(cell(row, "Form fields", "0 fields")).toBeVisible();
 
       // Its pencil opens the type's own editor screen (DES-022), where

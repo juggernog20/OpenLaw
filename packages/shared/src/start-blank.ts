@@ -19,9 +19,9 @@
  * types have no fallback row and keep nothing.
  */
 export const START_BLANK_LISTS = {
-  matter_type: ["other"],
+  matter_type: ["other", "default"],
   matter_status: ["open", "closed"],
-  contract_type: ["other"],
+  contract_type: ["other", "default"],
   contract_status: ["draft", "active", "expired"],
   entity_type: ["other"],
   officer_role: ["other"],

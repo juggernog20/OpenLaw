@@ -14,7 +14,8 @@
  * while a field it marks required has no value.
  */
 
-import { index, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { boolean, foreignKey, index, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { contractTypeBranches } from "./type-forms.js";
 import { contractTypes } from "./contract-types.js";
 import { typeFieldColumns } from "./fields.js";
 
@@ -27,9 +28,17 @@ export const contractTypeFields = pgTable(
       .notNull()
       .references(() => contractTypes.id, { onDelete: "cascade" }),
     ...typeFieldColumns(),
+    visibleOnPortal: boolean("visible_on_portal").notNull().default(true),
+    /** NULL places this attachment at the Form root, outside every Branch. */
+    branchId: text("branch_id"),
+    onIntakeForm: boolean("on_intake_form").notNull().default(false),
   },
   (table) => [
     primaryKey({ columns: [table.typeId, table.fieldId] }),
+    foreignKey({
+      columns: [table.typeId, table.branchId],
+      foreignColumns: [contractTypeBranches.typeId, contractTypeBranches.id],
+    }).onDelete("cascade"),
     // The PK leads with the type id; the catalog's per-field counts and
     // the fields FK checks look up by field id alone.
     index("contract_type_fields_field_id_idx").on(table.fieldId),
