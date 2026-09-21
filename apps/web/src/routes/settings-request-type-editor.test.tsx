@@ -324,6 +324,25 @@ it("requires a destination module and offers only live types", async () => {
   expect(within(type).queryByRole("option", { name: "Retired kind" })).not.toBeInTheDocument();
 });
 
+it("reads a saved Default type id as the one Default choice and does not re-save it", async () => {
+  // Migration 0157 wrote the Default type's id onto module-only rows.
+  const calls = newCalls();
+  openEditor(editorApi(calls, review({ targetTypeId: "ct-default" })));
+  const user = userEvent.setup();
+  const type = await screen.findByLabelText("Default contract type");
+  expect(type).toHaveValue("");
+  expect(within(type).getAllByRole("option", { name: "Default" })).toHaveLength(1);
+  expect(await screen.findByRole("link", { name: "Edit on Default" })).toHaveAttribute(
+    "href",
+    "/settings/contracts/types/ct-default/form",
+  );
+  await user.selectOptions(type, "");
+  await user.selectOptions(type, "ct-nda");
+  await waitFor(() =>
+    expect(calls.patches).toEqual([{ targetModule: "contract", targetTypeId: "ct-nda" }]),
+  );
+});
+
 it("keeps the previous destination and card when the server refuses a change", async () => {
   openEditor(
     editorApi(newCalls(), review(), { status: 400, detail: "The destination is unavailable." }),

@@ -80,10 +80,14 @@ function DestinationControl({
   const [error, setError] = useState<string | null>(null);
   const types = value.targetModule === "contract" ? contractTypes : matterTypes;
   const selected = types.find((type) => type.id === value.targetTypeId);
+  // Migration 0157 wrote the Default type's id onto module-only rows, so
+  // a saved Default id and a null id are the same destination (DD-028.7).
+  // The picker shows one "Default" choice for both.
+  const savedTypeId = selected?.isDefault ? null : value.targetTypeId;
   async function save(next: Destination) {
     if (
       pending.current ||
-      (next.targetModule === value.targetModule && next.targetTypeId === value.targetTypeId)
+      (next.targetModule === value.targetModule && next.targetTypeId === savedTypeId)
     )
       return;
     pending.current = true;
@@ -158,7 +162,7 @@ function DestinationControl({
           <select
             id="request-type-destination-type"
             className={CONTROL_CLASS}
-            value={value.targetTypeId ?? ""}
+            value={savedTypeId ?? ""}
             aria-disabled={status === "saving"}
             onChange={(event) =>
               void save({
@@ -192,9 +196,7 @@ function DestinationControl({
               </option>
             )}
             {types
-              .filter(
-                (type) => !type.archivedAt && (!type.isDefault || type.id === value.targetTypeId),
-              )
+              .filter((type) => !type.archivedAt && !type.isDefault)
               .map((type) => (
                 <option key={type.id} value={type.id}>
                   {type.displayName}
