@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { formForTouchpoint } from "@openlaw/shared";
+import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
+
 import { regionOptions, lockedRegionName } from "../regions/references.js";
 
 /**
@@ -183,7 +186,7 @@ import {
   type SQL,
   type Transaction,
 } from "@openlaw/db";
-import { departmentOptions, departmentName, lockedDepartment } from "../departments/references.js";
+import { departmentOptions, lockedDepartment } from "../departments/references.js";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { addContractTeamMember } from "../../lib/contract-team.js";
@@ -647,6 +650,7 @@ const ContractFieldsEnvelope = ContractEnvelope.extend({
  * here rather than on the row, because only the record renders them —
  * the list would carry joins it never draws. */
 const ContractRecordEnvelope = ContractFieldsEnvelope.extend({
+  form: z.array(FormNodeSchema).optional(),
   originalIntake: OriginalIntakeSchema.nullable().optional(),
   creator: PersonSchema.nullable().optional(),
   team: z.array(TeamMemberSchema),
@@ -689,6 +693,9 @@ const TypeOptionSchema = z.object({
  * data its type demands — the client half of the MTR-014 rule the seam
  * enforces either way. */
 const TypeChoiceSchema = TypeOptionSchema.extend({
+  isDefault: z.boolean().optional(),
+  form: z.array(FormNodeSchema).optional(),
+  creationForm: z.array(FormNodeSchema).optional(),
   fields: z.array(AttachedCustomFieldSchema),
 });
 
@@ -1804,15 +1811,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listContractOptions",
         summary:
-          "The live contract types in display order, each with the " +
-          "fields it attaches (CTR-016) so the create dialog can grow " +
-          "the ones it requires; the live statuses; and the live people " +
-          "the Owner and team pickers offer — the create dialog's and " +
-          "the record's Member+ picker source; and the live approver " +
-          "groups the record's apply picker offers, each with the ids " +
-          "of the people applying it would ask (CTR-012) — the settings " +
-          "surfaces that manage all of these stay Administrator-only " +
-          "per SET-002",
+          "Live Contract types with their Forms, creation trees and Field definitions; " +
+          "live Statuses, Departments, Regions, people and approver groups for Member+ pickers",
         tags: ["contracts"],
         response: {
           200: z.object({
@@ -1834,6 +1834,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             id: contractTypes.id,
             slug: contractTypes.slug,
             displayName: contractTypes.displayName,
+            isDefault: contractTypes.isDefault,
           })
           .from(contractTypes)
           .where(isNull(contractTypes.archivedAt))
@@ -1903,6 +1904,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (row.memberId !== null) group.memberIds.push(row.memberId);
       }
       const groupOptions = [...byGroupId.values()];
+      const forms = await Promise.all(
+        types.map((type) => readTypeForm(app.db, "contract", type.id)),
+      );
       // Each type's own attachments, so the dialog knows what picking
       // that type will demand before it asks for it. One query per live
       // type: the taxonomy is a handful of rows, and the alternative —
@@ -1916,6 +1920,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         contractTypes: types.map((contractType, index) => ({
           ...contractType,
           fields: attached[index]!,
+          form: forms[index]!,
+          creationForm: formForTouchpoint(forms[index]!, "creation"),
         })),
         contractStatuses: statuses,
         users: people.map((person) => ({ ...toPerson(person), role: person.role })),
@@ -1962,6 +1968,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         originalIntake(app.db, request.user, "contract", row.row.id),
       ]);
       return {
+        form: await readTypeForm(app.db, "contract", row.row.contractTypeId),
         contract: toRow(row, custom.customFields, custom.fields),
         originalIntake: intake,
         creator: await recordPerson(app.db, row.row.createdBy),
@@ -2073,33 +2080,36 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         description:
           "M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.",
         summary:
-          "Create a contract from a title, a live type, and any custom " +
-          "fields that type hard-requires (CTR-016/MTR-014 — creation is " +
-          "refused while one is empty); the status starts on the " +
-          "protected draft seed (CTR-001) and the number comes from the " +
-          "CTR-003 sequence. Everything else is set inline on the record " +
-          "afterward — except the Confidential flag (DD-014), which may " +
-          "be set here so a sensitive record is never visible to the " +
-          "wrong audience, even briefly, and the Owner (CTR-004), which " +
-          "the create dialog seeds with the acting person and which " +
-          "must be a live Administrator or Legal Team Member; omitted or " +
-          "null is unassigned, a real state. " +
-          "`renewalOf` routes a renewal into a new record (CTR-007's " +
-          "third and fourth vehicles, M16/5): the successor is born " +
-          "carrying its predecessor's business facts — our entity, the " +
-          "value, the term shape, and the counterparties — and linked " +
-          "to it, as a child by contracts.parent_id or as a standalone " +
-          "successor by a CTR-015 `renews` row. The team, the status, " +
-          "and the Confidential flag are **never** copied: CTR-015's " +
-          "no-inheritance stance, applied at birth. The title and the " +
-          "type are the body's, so whatever the person edited before " +
-          "pressing Create is what the record is born with. Appends the " +
-          "link's own activity action beside contract.created",
+          "Create a Contract from the chosen type's Intake and Creation Rows. " +
+          "Required applies only to visible Rows after Branch evaluation. " +
+          "Built-in answers populate native columns, Counterparties and the Needed by Key date. " +
+          "The record starts in Draft; Owner and Confidential are explicit choices. " +
+          "renewalOf copies the predecessor's business facts and links the new Contract as a child or successor.",
         tags: ["contracts"],
         // Strict: the number is the sequence's to give, so a body
         // carrying one is refused rather than silently ignored.
         body: z.strictObject({
           title: TitleSchema,
+          description: DescriptionSchema.nullable().optional(),
+          entityId: z.string().nullable().optional(),
+          priority: SeveritySchema.optional(),
+          risk: SeveritySchema.nullable().optional(),
+          termType: TermTypeSchema.optional(),
+          effectiveDate: z.iso.date().nullable().optional(),
+          expiryDate: z.iso.date().nullable().optional(),
+          renewalPeriodMonths: RenewalPeriodSchema.nullable().optional(),
+          noticePeriodDays: NoticePeriodSchema.nullable().optional(),
+          value: ContractValueInput.nullable().optional(),
+          neededBy: z.iso.date().nullable().optional(),
+          counterparties: z
+            .array(
+              z.union([
+                z.strictObject({ counterpartyId: z.string().min(1) }),
+                z.strictObject({ name: CounterpartyNameSchema }),
+              ]),
+            )
+            .max(50)
+            .optional(),
           owningDepartmentId: z.string().min(1).nullable().optional(),
           region: z.string().trim().max(MAX_CONTRACT_CLASSIFICATION_LENGTH).nullable().optional(),
           contractTypeId: z.string(),
@@ -2172,7 +2182,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (matter?.archivedAt) {
           throw httpError(409, "This matter is archived. Restore it before linking to it.");
         }
+        if (request.body.entityId) {
+          const [entity] = await tx
+            .select({ id: entities.id })
+            .from(entities)
+            .where(and(eq(entities.id, request.body.entityId), entityReachScope(tx, request.user)))
+            .for("update");
+          if (!entity) throw httpError(400, "Our entity must be a reachable live Entity.");
+        }
         const born = await createContract(tx, app.notifier, {
+          ...request.body,
           actorId: request.user.id,
           title,
           contractTypeId,
@@ -2184,21 +2203,6 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           renewal,
           matter,
         });
-        if (!renewal && !born.row.managerId) {
-          return {
-            ...born,
-            owningDepartment: await departmentName(tx, born.row.owningDepartmentId),
-            // A new contract with no Owner named is unassigned, which of
-            // ours signs is not known yet, and nobody is recorded on the
-            // other side; all three are set on the record afterwards.
-            manager: null,
-            businessOwner: null,
-            entity: null,
-            entityRestricted: false,
-            primaryCounterparty: null,
-          };
-        }
-
         // The copied facts, and the Owner the body named, read back off
         // the row that now holds them rather than off the request: the
         // entity, the primary party, and the Owner the answer names

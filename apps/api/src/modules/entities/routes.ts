@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { assertCreationForm } from "../../lib/creation-form.js";
+import { formForTouchpoint } from "@openlaw/shared";
+import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
+
 /**
  * The Entities registry routes (ENT-001/ENT-004, #98): list and create
  * for the registry core, plus the type-picker read and the archive
@@ -119,6 +123,9 @@ const EntityListRowSchema = EntityRowSchema.extend({
  * picker source. GET /entity-types itself is Administrator-only per
  * SET-002, so the registry carries its own read. */
 const EntityTypeOptionSchema = z.object({
+  form: z.array(FormNodeSchema).optional(),
+  creationForm: z.array(FormNodeSchema).optional(),
+  fields: z.array(AttachedCustomFieldSchema).optional(),
   id: z.string(),
   slug: z.string(),
   displayName: z.string(),
@@ -139,6 +146,7 @@ const PersonOptionSchema = z.object({
 });
 
 const EntityRecordEnvelope = z.object({
+  form: z.array(FormNodeSchema).optional(),
   canManageAccess: z.boolean().optional(),
   entity: EntityRowSchema,
   fields: z.array(AttachedCustomFieldSchema),
@@ -459,7 +467,19 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(entityTypes)
         .where(isNull(entityTypes.archivedAt))
         .orderBy(asc(entityTypes.displayOrder), asc(entityTypes.createdAt));
-      return { entityTypes: rows };
+      return {
+        entityTypes: await Promise.all(
+          rows.map(async (row) => {
+            const form = await readTypeForm(app.db, "entity", row.id);
+            return {
+              ...row,
+              form,
+              creationForm: formForTouchpoint(form, "creation"),
+              fields: await selectAttachedFields(app.db, entityTypeFields, row.id),
+            };
+          }),
+        ),
+      };
     },
   );
 
@@ -537,6 +557,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         row.entity.entityTypeId,
       );
       return {
+        form: await readTypeForm(app.db, "entity", row.entity.entityTypeId),
         entity: toRow(row.entity, row.entityTypeName),
         canManageAccess: await canManageEntityAccess(app.db, request.user, row.entity),
         fields: attached,
@@ -557,12 +578,12 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "createEntity",
         summary:
-          "Register an entity with its ENT-001 identity card: legal name " +
-          "and type required, the rest optional; status defaults to active",
+          "Register an Entity with its identity card and visible required Fields from its type Form. Status defaults to active.",
         tags: ["entities"],
         body: z.object({
           legalName: LegalNameSchema,
           entityTypeId: z.string(),
+          customFields: CustomFieldsInput.optional(),
           portalListed: z.boolean().optional(),
           jurisdiction: CardTextSchema.optional(),
           formedOn: z.iso.date().optional(),
@@ -600,9 +621,18 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           throw httpError(400, "The entity type must be a live entity type.");
         }
 
+        const attached = await selectAttachedFields(tx, entityTypeFields, entityType.id);
+        const { values: customFields } = await applyCustomFields(
+          tx,
+          attached,
+          {},
+          body.customFields ?? {},
+        );
+        await assertCreationForm(tx, "entity", entityType.id, attached, customFields);
         const [created] = await tx
           .insert(entities)
           .values({
+            customFields,
             legalName: body.legalName.trim(),
             entityTypeId: entityType.id,
             portalListed: body.portalListed ?? false,
@@ -913,6 +943,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         return { row: updated!, entityTypeName: typeName, attached: fields };
       });
       return {
+        form: await readTypeForm(app.db, "entity", row.entityTypeId),
         entity: toRow(row, entityTypeName),
         fields: attached,
         customFieldRefs: await resolveStaffRefs(

@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import {
+  addContractKeyDate as addNeededBy,
+  updateContractKeyDate as updateNeededBy,
+  removeContractKeyDate as removeNeededBy,
+} from "../lib/key-dates";
+import { NeededByField } from "../components/type-form/needed-by-field";
+import { RecordRows } from "../components/type-form/record-rows";
+import { recordFormAnswers, recordFormRows } from "@openlaw/shared";
+
 import { identifierLabel } from "../lib/identifier-label";
 
 /**
@@ -437,6 +446,7 @@ export async function contractRecordLoader({ params, request }: LoaderFunctionAr
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
+    form: record.data.form,
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     team: record.data.team,
@@ -678,6 +688,7 @@ function ContractRecord() {
     renewals: contractRenewals,
     analysis: loadedAnalysis,
     documentsCursor,
+    form: loadedForm,
     fields,
     customFieldRefs,
     team,
@@ -1945,6 +1956,516 @@ function ContractRecord() {
     ],
   );
 
+  const recordForm =
+    contractTypes.find((type) => type.id === saved.contractTypeId)?.form ?? loadedForm;
+  const neededBy = deadlines.find((date) => date.label === "Needed by" && date.keyDateId);
+  const formControls = {
+    needed_by: (
+      <NeededByField
+        date={neededBy?.date}
+        frozen={frozen}
+        onCommit={async (date) => {
+          if (!date && !neededBy?.keyDateId) return;
+          const result = !date
+            ? await removeNeededBy(neededBy!.keyDateId!)
+            : neededBy?.keyDateId
+              ? await updateNeededBy(neededBy.keyDateId, { date, label: "Needed by" })
+              : await addNeededBy(saved.number, { date, label: "Needed by" });
+          if (!result.ok)
+            return (
+              result.detail ??
+              intl.formatMessage({
+                id: "typeForm.neededByFailed",
+                defaultMessage: "Needed by could not be saved.",
+              })
+            );
+          setDeadlines(result.deadlines);
+        }}
+      />
+    ),
+
+    title: (
+      <div className="@2xl/page:col-span-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="contract-title">
+            <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
+          </Label>
+          <div className="flex items-center gap-2">
+            <AiField active={Boolean(saved.aiUnverified?.title)} className="min-w-0 flex-1">
+              <Input
+                id="contract-title"
+                value={drafts.title}
+                disabled={frozen}
+                onChange={(event) =>
+                  setDrafts((current) => ({ ...current, title: event.target.value }))
+                }
+                onBlur={() => commitText("title")}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") commitText("title");
+                  if (event.key === "Escape") revertText("title");
+                }}
+              />
+            </AiField>
+            <StatusNote status={fieldStatus.title ?? "idle"} detail={fieldError.title} />
+          </div>
+          {unverifiedMarker("title")}
+          {confirmationControl("title")}
+        </div>
+      </div>
+    ),
+    contract_type: (
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="contract-type">
+          <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
+        </Label>
+        <div className="flex items-center gap-2">
+          <AiField active={Boolean(saved.aiUnverified?.contract_type)} className="min-w-0 flex-1">
+            <select
+              id="contract-type"
+              value={saved.contractTypeId}
+              className={CONTROL_CLASS}
+              disabled={frozen}
+              onChange={(event) => pickType(event.target.value)}
+            >
+              {typeOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.displayName}
+                </option>
+              ))}
+            </select>
+          </AiField>
+          <StatusNote
+            status={fieldStatus.contractTypeId ?? "idle"}
+            detail={fieldError.contractTypeId}
+          />
+        </div>
+        {unverifiedMarker("contract_type")}
+        {confirmationControl("contract_type")}
+      </div>
+    ),
+    owning_department: (
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="contract-owningDepartment">
+          <FormattedMessage id="contracts.form.owningDepartment" defaultMessage="Department" />
+        </Label>
+        <div className="flex items-center gap-2">
+          <DepartmentPicker
+            id="contract-owningDepartment"
+            value={saved.owningDepartmentId}
+            currentName={saved.owningDepartment}
+            options={departments}
+            disabled={frozen}
+            onChange={(owningDepartmentId) =>
+              void commit("owningDepartmentId", { owningDepartmentId })
+            }
+          />
+          <StatusNote
+            status={fieldStatus.owningDepartmentId ?? "idle"}
+            detail={fieldError.owningDepartmentId}
+          />
+        </div>
+      </div>
+    ),
+    priority: (
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="contract-priority">
+          <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
+        </Label>
+        <div className="flex items-center gap-2">
+          <AiField active={Boolean(saved.aiUnverified?.priority)} className="min-w-0 flex-1">
+            <select
+              id="contract-priority"
+              value={saved.priority}
+              className={CONTROL_CLASS}
+              disabled={frozen}
+              onChange={(event) =>
+                void commit("priority", {
+                  priority: event.target.value as SeverityLevel,
+                })
+              }
+            >
+              {SEVERITY_LEVELS.map((level) => (
+                <option key={level} value={level}>
+                  {severityLabel(intl, level)}
+                </option>
+              ))}
+            </select>
+          </AiField>
+          <StatusNote status={fieldStatus.priority ?? "idle"} detail={fieldError.priority} />
+        </div>
+        {unverifiedMarker("priority")}
+        {confirmationControl("priority")}
+      </div>
+    ),
+    risk: (
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="contract-risk">
+          <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
+        </Label>
+        <div className="flex items-center gap-2">
+          <select
+            id="contract-risk"
+            value={saved.risk ?? ""}
+            className={CONTROL_CLASS}
+            disabled={frozen}
+            onChange={(event) =>
+              void commit("risk", {
+                risk: event.target.value === "" ? null : (event.target.value as SeverityLevel),
+              })
+            }
+          >
+            {/* Empty is a real answer, not a placeholder: risk
+                        stays unset until legal assesses it (CTR-005). */}
+            <option value="">{riskLabel(intl, null)}</option>
+            {SEVERITY_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {severityLabel(intl, level)}
+              </option>
+            ))}
+          </select>
+          <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
+        </div>
+      </div>
+    ),
+    region: (
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="contract-region">
+          <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
+        </Label>
+        <div className="flex flex-col gap-1.5">
+          <select
+            id="contract-region"
+            className={CONTROL_CLASS}
+            value={saved.region ?? ""}
+            disabled={frozen || fieldStatus.region === "saving"}
+            onChange={(event) => void commit("region", { region: event.target.value || null })}
+          >
+            <option value="">
+              {intl.formatMessage({
+                id: "contracts.region.none",
+                defaultMessage: "No Region",
+              })}
+            </option>
+            {saved.region && !regions.some((region) => region.displayName === saved.region) && (
+              <option value={saved.region} disabled>
+                {saved.region}
+              </option>
+            )}
+            {regions.map((region) => (
+              <option key={region.id} value={region.displayName}>
+                {region.displayName}
+              </option>
+            ))}
+          </select>
+          <StatusNote status={fieldStatus.region ?? "idle"} detail={fieldError.region} />
+        </div>
+      </div>
+    ),
+    entity: (
+      <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
+        <Label htmlFor="contract-entity">
+          {/* "Our entity" as the C2 mock labels it: the Entity
+                        is ours, the Counterparty is theirs, and the
+                        record must never blur the two (CONTEXT.md). */}
+          <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
+        </Label>
+        <div className="flex items-center gap-2">
+          {saved.entity?.restricted ? (
+            <RestrictedRecordCell
+              label={{
+                id: "entities.restricted",
+                defaultMessage: "Restricted Entity",
+              }}
+            />
+          ) : (
+            <select
+              id="contract-entity"
+              value={saved.entity?.id ?? ""}
+              className={CONTROL_CLASS}
+              disabled={frozen}
+              onChange={(event) =>
+                void commit("entityId", { entityId: event.target.value || null })
+              }
+            >
+              {/* Empty is a real answer: a contract is often
+                        recorded before anyone decides which of ours
+                        signs it (CTR-011). */}
+              <option value="">
+                {intl.formatMessage({
+                  id: "contracts.entityUnknown",
+                  defaultMessage: "Not known yet",
+                })}
+              </option>
+              {entityOptions.map((entity) => (
+                <option key={entity.id} value={entity.id}>
+                  {entity.legalName}
+                </option>
+              ))}
+            </select>
+          )}
+          <StatusNote status={fieldStatus.entityId ?? "idle"} detail={fieldError.entityId} />
+        </div>
+      </div>
+    ),
+    counterparties: (
+      <CounterpartiesField
+        contractNumber={saved.number}
+        parties={parties}
+        frozen={frozen}
+        status={fieldStatus.counterparties ?? "idle"}
+        error={fieldError.counterparties}
+        marker={unverifiedMarker("counterparty")}
+        confirmation={confirmationControl("counterparty")}
+        onStatus={(next, detail) => note("counterparties", next, detail)}
+        onChange={(row, next) => {
+          // The primary decides what the list column and the
+          // record hero show, so the row moves with the party.
+          adoptSaved(row);
+          setParties(next);
+        }}
+      />
+    ),
+    value: (
+      <ValueField
+        value={saved.value}
+        frozen={businessFrozen}
+        status={fieldStatus.value ?? "idle"}
+        error={fieldError.value}
+        marker={unverifiedMarker("value")}
+        confirmation={confirmationControl("value")}
+        onStatus={(next, detail) => note("value", next, detail)}
+        onCommit={(next) => void commit("value", { value: next })}
+      />
+    ),
+    term_type: (
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="contract-term-type">
+            <FormattedMessage id="contracts.form.termType" defaultMessage="Term type" />
+          </Label>
+          {unverifiedMarker("term_type")}
+        </div>
+        <div className="flex items-center gap-2">
+          <AiField active={Boolean(saved.aiUnverified?.term_type)} className="flex-1">
+            <select
+              id="contract-term-type"
+              value={saved.termType}
+              className={CONTROL_CLASS}
+              disabled={frozen}
+              onChange={(event) =>
+                void commit("termType", {
+                  termType: event.target.value as TermType,
+                })
+              }
+            >
+              {TERM_TYPES.map((option) => (
+                <option key={option} value={option}>
+                  {termTypeLabel(intl, option)}
+                </option>
+              ))}
+            </select>
+          </AiField>
+          <StatusNote status={fieldStatus.termType ?? "idle"} detail={fieldError.termType} />
+          {confirmationControl("term_type")}
+        </div>
+      </div>
+    ),
+    effective_date: (
+      <TermField
+        id="contract-effective-date"
+        type="date"
+        label={
+          <FormattedMessage id="contracts.form.effectiveDate" defaultMessage="Effective date" />
+        }
+        draft={termFields.effectiveDate}
+        frozen={businessFrozen}
+        status={fieldStatus.effectiveDate ?? "idle"}
+        error={fieldError.effectiveDate}
+        marker={unverifiedMarker("effective_date")}
+        confirmation={confirmationControl("effective_date")}
+        onDraft={(next) => setTermFields((current) => ({ ...current, effectiveDate: next }))}
+        onCommit={(next) => commitTerm("effectiveDate", next)}
+        onRevert={() => revertTerm("effectiveDate")}
+      />
+    ),
+    expiry_date: (
+      <>
+        {saved.termType === "evergreen" ? (
+          <ReadOnlyField
+            label={<FormattedMessage id="contracts.form.expiryDate" defaultMessage="Expiry date" />}
+            value={notRecorded}
+          />
+        ) : (
+          <TermField
+            id="contract-expiry-date"
+            type="date"
+            label={<FormattedMessage id="contracts.form.expiryDate" defaultMessage="Expiry date" />}
+            draft={termFields.expiryDate}
+            frozen={frozen}
+            status={fieldStatus.expiryDate ?? "idle"}
+            error={fieldError.expiryDate}
+            marker={unverifiedMarker("expiry_date")}
+            confirmation={confirmationControl("expiry_date")}
+            onDraft={(next) => setTermFields((current) => ({ ...current, expiryDate: next }))}
+            onCommit={(next) => commitTerm("expiryDate", next)}
+            onRevert={() => revertTerm("expiryDate")}
+          />
+        )}
+      </>
+    ),
+    renewal_period_months: (
+      <>
+        {saved.termType === "auto_renew" ? (
+          <TermField
+            id="contract-renewal-period"
+            type="number"
+            // A roll of zero months would advance an
+            // expiry to itself, so the stepper cannot
+            // reach it — the same floor the seam holds.
+            min={1}
+            label={
+              <FormattedMessage
+                id="contracts.form.renewalPeriod"
+                defaultMessage="Renewal period (months)"
+              />
+            }
+            draft={termFields.renewalPeriodMonths}
+            frozen={frozen}
+            status={fieldStatus.renewalPeriodMonths ?? "idle"}
+            error={fieldError.renewalPeriodMonths}
+            marker={unverifiedMarker("renewal_period_months")}
+            confirmation={confirmationControl("renewal_period_months")}
+            onDraft={(next) =>
+              setTermFields((current) => ({ ...current, renewalPeriodMonths: next }))
+            }
+            onCommit={() => commitTerm("renewalPeriodMonths")}
+            onRevert={() => revertTerm("renewalPeriodMonths")}
+          />
+        ) : (
+          <ReadOnlyField
+            label={
+              <FormattedMessage
+                id="contracts.form.renewalPeriod"
+                defaultMessage="Renewal period (months)"
+              />
+            }
+            value={notRecorded}
+          />
+        )}
+      </>
+    ),
+    notice_period_days: (
+      <TermField
+        id="contract-notice-period"
+        type="number"
+        // Zero days' notice is a real term: some
+        // contracts end on the date and no earlier.
+        min={0}
+        label={
+          <FormattedMessage
+            id="contracts.form.noticePeriod"
+            defaultMessage="Notice period (days)"
+          />
+        }
+        draft={termFields.noticePeriodDays}
+        frozen={frozen}
+        status={fieldStatus.noticePeriodDays ?? "idle"}
+        error={fieldError.noticePeriodDays}
+        marker={unverifiedMarker("notice_period_days")}
+        confirmation={confirmationControl("notice_period_days")}
+        onDraft={(next) => setTermFields((current) => ({ ...current, noticePeriodDays: next }))}
+        onCommit={() => commitTerm("noticePeriodDays")}
+        onRevert={() => revertTerm("noticePeriodDays")}
+      />
+    ),
+    description: (
+      // The Form places the description among the other Rows, so it sits
+      // in the grid. It keeps the full width a free-form textarea needs.
+      <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised @2xl/page:col-span-2">
+        <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
+          <h2 id="contract-description-heading" className="text-base font-semibold">
+            <FormattedMessage id="contracts.form.description" defaultMessage="Description" />
+          </h2>
+          {originalIntake && (
+            <DescriptionSourceToggle
+              requester={showRequesterDescription}
+              onChange={setShowRequesterDescription}
+            />
+          )}
+        </header>
+        {showRequesterDescription && originalIntake ? (
+          <div className="p-4">
+            <RequesterDescription description={originalIntake.description} />
+          </div>
+        ) : (
+          <div className="flex items-start gap-2 p-4">
+            <AiField active={Boolean(saved.aiUnverified?.description)} className="min-w-0 flex-1">
+              <AutoResizeTextarea
+                id="contract-description"
+                className="text-base"
+                // The card's own heading names the field: a second
+                // label above a full-width textarea would repeat it.
+                aria-labelledby="contract-description-heading"
+                value={drafts.description}
+                disabled={frozen}
+                onChange={(event) =>
+                  setDrafts((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
+                }
+                onBlur={() => commitText("description")}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") revertText("description");
+                }}
+              />
+            </AiField>
+            <StatusNote
+              status={fieldStatus.description ?? "idle"}
+              detail={fieldError.description}
+            />
+            {unverifiedMarker("description")}
+            {confirmationControl("description")}
+          </div>
+        )}
+      </section>
+    ),
+  };
+  const recordAnswers = recordFormAnswers({
+    ...saved,
+    regionId: regions.find((r) => r.displayName === saved.region)?.id,
+    counterparties: parties.map((p) => p.id),
+    neededBy: deadlines.find((d) => d.label === "Needed by")?.date,
+  });
+  const orderedRows = (
+    <RecordRows
+      form={recordForm}
+      answers={recordAnswers}
+      builtins={formControls}
+      fields={attached.map((field) => ({
+        slug: field.slug,
+        control: (
+          <CustomFieldRow
+            key={field.slug}
+            field={field}
+            value={saved.customFields[field.slug]}
+            people={peopleReferences}
+            entities={entityReferences}
+            frozen={frozen}
+            marker={Boolean(
+              saved.aiUnverified?.[field.slug] ?? saved.aiUnverified?.[`field:${field.slug}`],
+            )}
+            confirmation={confirmationControl(`field:${field.slug}`)}
+            status={fieldStatus[`field:${field.slug}`] ?? "idle"}
+            error={fieldError[`field:${field.slug}`]}
+            onStatus={(status, detail) => note(`field:${field.slug}`, status, detail)}
+            onCommit={(value) => commitCustomField(field.slug, value)}
+          />
+        ),
+      }))}
+    />
+  );
+
   return (
     <RecordContext.Provider value={facts}>
       <AppShell
@@ -2324,70 +2845,7 @@ function ContractRecord() {
                     </h2>
                   </header>
                   <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
-                    <div className="@2xl/page:col-span-2">
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="contract-title">
-                          <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <AiField
-                            active={Boolean(saved.aiUnverified?.title)}
-                            className="min-w-0 flex-1"
-                          >
-                            <Input
-                              id="contract-title"
-                              value={drafts.title}
-                              disabled={frozen}
-                              onChange={(event) =>
-                                setDrafts((current) => ({ ...current, title: event.target.value }))
-                              }
-                              onBlur={() => commitText("title")}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") commitText("title");
-                                if (event.key === "Escape") revertText("title");
-                              }}
-                            />
-                          </AiField>
-                          <StatusNote
-                            status={fieldStatus.title ?? "idle"}
-                            detail={fieldError.title}
-                          />
-                        </div>
-                        {unverifiedMarker("title")}
-                        {confirmationControl("title")}
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-type">
-                        <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <AiField
-                          active={Boolean(saved.aiUnverified?.contract_type)}
-                          className="min-w-0 flex-1"
-                        >
-                          <select
-                            id="contract-type"
-                            value={saved.contractTypeId}
-                            className={CONTROL_CLASS}
-                            disabled={frozen}
-                            onChange={(event) => pickType(event.target.value)}
-                          >
-                            {typeOptions.map((option) => (
-                              <option key={option.id} value={option.id}>
-                                {option.displayName}
-                              </option>
-                            ))}
-                          </select>
-                        </AiField>
-                        <StatusNote
-                          status={fieldStatus.contractTypeId ?? "idle"}
-                          detail={fieldError.contractTypeId}
-                        />
-                      </div>
-                      {unverifiedMarker("contract_type")}
-                      {confirmationControl("contract_type")}
-                    </div>
+                    {orderedRows}
                     <RecordPersonField
                       id="contract-owner"
                       label={intl.formatMessage({
@@ -2442,395 +2900,6 @@ function ContractRecord() {
                               }));
                       }}
                     />
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-owningDepartment">
-                        <FormattedMessage
-                          id="contracts.form.owningDepartment"
-                          defaultMessage="Department"
-                        />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <DepartmentPicker
-                          id="contract-owningDepartment"
-                          value={saved.owningDepartmentId}
-                          currentName={saved.owningDepartment}
-                          options={departments}
-                          disabled={frozen}
-                          onChange={(owningDepartmentId) =>
-                            void commit("owningDepartmentId", { owningDepartmentId })
-                          }
-                        />
-                        <StatusNote
-                          status={fieldStatus.owningDepartmentId ?? "idle"}
-                          detail={fieldError.owningDepartmentId}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-priority">
-                        <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <AiField
-                          active={Boolean(saved.aiUnverified?.priority)}
-                          className="min-w-0 flex-1"
-                        >
-                          <select
-                            id="contract-priority"
-                            value={saved.priority}
-                            className={CONTROL_CLASS}
-                            disabled={frozen}
-                            onChange={(event) =>
-                              void commit("priority", {
-                                priority: event.target.value as SeverityLevel,
-                              })
-                            }
-                          >
-                            {SEVERITY_LEVELS.map((level) => (
-                              <option key={level} value={level}>
-                                {severityLabel(intl, level)}
-                              </option>
-                            ))}
-                          </select>
-                        </AiField>
-                        <StatusNote
-                          status={fieldStatus.priority ?? "idle"}
-                          detail={fieldError.priority}
-                        />
-                      </div>
-                      {unverifiedMarker("priority")}
-                      {confirmationControl("priority")}
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-risk">
-                        <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <select
-                          id="contract-risk"
-                          value={saved.risk ?? ""}
-                          className={CONTROL_CLASS}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            void commit("risk", {
-                              risk:
-                                event.target.value === ""
-                                  ? null
-                                  : (event.target.value as SeverityLevel),
-                            })
-                          }
-                        >
-                          {/* Empty is a real answer, not a placeholder: risk
-                        stays unset until legal assesses it (CTR-005). */}
-                          <option value="">{riskLabel(intl, null)}</option>
-                          {SEVERITY_LEVELS.map((level) => (
-                            <option key={level} value={level}>
-                              {severityLabel(intl, level)}
-                            </option>
-                          ))}
-                        </select>
-                        <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-region">
-                        <FormattedMessage id="contracts.form.region" defaultMessage="Region" />
-                      </Label>
-                      <div className="flex flex-col gap-1.5">
-                        <select
-                          id="contract-region"
-                          className={CONTROL_CLASS}
-                          value={saved.region ?? ""}
-                          disabled={frozen || fieldStatus.region === "saving"}
-                          onChange={(event) =>
-                            void commit("region", { region: event.target.value || null })
-                          }
-                        >
-                          <option value="">
-                            {intl.formatMessage({
-                              id: "contracts.region.none",
-                              defaultMessage: "No Region",
-                            })}
-                          </option>
-                          {saved.region &&
-                            !regions.some((region) => region.displayName === saved.region) && (
-                              <option value={saved.region} disabled>
-                                {saved.region}
-                              </option>
-                            )}
-                          {regions.map((region) => (
-                            <option key={region.id} value={region.displayName}>
-                              {region.displayName}
-                            </option>
-                          ))}
-                        </select>
-                        <StatusNote
-                          status={fieldStatus.region ?? "idle"}
-                          detail={fieldError.region}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
-                      <Label htmlFor="contract-entity">
-                        {/* "Our entity" as the C2 mock labels it: the Entity
-                        is ours, the Counterparty is theirs, and the
-                        record must never blur the two (CONTEXT.md). */}
-                        <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        {saved.entity?.restricted ? (
-                          <RestrictedRecordCell
-                            label={{
-                              id: "entities.restricted",
-                              defaultMessage: "Restricted Entity",
-                            }}
-                          />
-                        ) : (
-                          <select
-                            id="contract-entity"
-                            value={saved.entity?.id ?? ""}
-                            className={CONTROL_CLASS}
-                            disabled={frozen}
-                            onChange={(event) =>
-                              void commit("entityId", { entityId: event.target.value || null })
-                            }
-                          >
-                            {/* Empty is a real answer: a contract is often
-                        recorded before anyone decides which of ours
-                        signs it (CTR-011). */}
-                            <option value="">
-                              {intl.formatMessage({
-                                id: "contracts.entityUnknown",
-                                defaultMessage: "Not known yet",
-                              })}
-                            </option>
-                            {entityOptions.map((entity) => (
-                              <option key={entity.id} value={entity.id}>
-                                {entity.legalName}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                        <StatusNote
-                          status={fieldStatus.entityId ?? "idle"}
-                          detail={fieldError.entityId}
-                        />
-                      </div>
-                    </div>
-                    {/* Counterparties follow our signing Entity (CONTEXT.md). */}
-                    <CounterpartiesField
-                      contractNumber={saved.number}
-                      parties={parties}
-                      frozen={frozen}
-                      status={fieldStatus.counterparties ?? "idle"}
-                      error={fieldError.counterparties}
-                      marker={unverifiedMarker("counterparty")}
-                      confirmation={confirmationControl("counterparty")}
-                      onStatus={(next, detail) => note("counterparties", next, detail)}
-                      onChange={(row, next) => {
-                        // The primary decides what the list column and the
-                        // record hero show, so the row moves with the party.
-                        adoptSaved(row);
-                        setParties(next);
-                      }}
-                    />
-                    {/* The status is not a field of this card any more
-                      (DES-053). It commits from the sub-bar's stage
-                      strip, which is on screen in every section, and a
-                      second control for one datum would be two places
-                      to keep in step. What the record holds is still
-                      read here — the sub-bar pill says it, two rows
-                      up. */}
-                    {/* CTR-010's value: three controls, one field. It sits
-                    with the other scalars the record holds, because the
-                    C2 hero meta strip it is drawn in edits through the
-                    page-level Edit toggle DES-017 removed — the same
-                    move the Owner, our entity, and the counterparties
-                    already made. */}
-                    <ValueField
-                      value={saved.value}
-                      frozen={businessFrozen}
-                      status={fieldStatus.value ?? "idle"}
-                      error={fieldError.value}
-                      marker={unverifiedMarker("value")}
-                      confirmation={confirmationControl("value")}
-                      onStatus={(next, detail) => note("value", next, detail)}
-                      onCommit={(next) => void commit("value", { value: next })}
-                    />
-                    {/* CTR-006's term: five fields, and one rule
-                          running between them. Each commits on its own
-                          (DES-017, no carve-out), and the type is what
-                          decides which of the other four this record
-                          may hold at all — so the two the type forbids
-                          are drawn as facts with an em dash rather than
-                          as boxes the seam would refuse everything
-                          typed into. The blank is honest either way: it
-                          says the record holds nothing there, which is
-                          exactly true. */}
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="contract-term-type">
-                          <FormattedMessage
-                            id="contracts.form.termType"
-                            defaultMessage="Term type"
-                          />
-                        </Label>
-                        {unverifiedMarker("term_type")}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <AiField active={Boolean(saved.aiUnverified?.term_type)} className="flex-1">
-                          <select
-                            id="contract-term-type"
-                            value={saved.termType}
-                            className={CONTROL_CLASS}
-                            disabled={frozen}
-                            onChange={(event) =>
-                              void commit("termType", {
-                                termType: event.target.value as TermType,
-                              })
-                            }
-                          >
-                            {TERM_TYPES.map((option) => (
-                              <option key={option} value={option}>
-                                {termTypeLabel(intl, option)}
-                              </option>
-                            ))}
-                          </select>
-                        </AiField>
-                        <StatusNote
-                          status={fieldStatus.termType ?? "idle"}
-                          detail={fieldError.termType}
-                        />
-                        {confirmationControl("term_type")}
-                      </div>
-                    </div>
-                    <TermField
-                      id="contract-effective-date"
-                      type="date"
-                      label={
-                        <FormattedMessage
-                          id="contracts.form.effectiveDate"
-                          defaultMessage="Effective date"
-                        />
-                      }
-                      draft={termFields.effectiveDate}
-                      frozen={businessFrozen}
-                      status={fieldStatus.effectiveDate ?? "idle"}
-                      error={fieldError.effectiveDate}
-                      marker={unverifiedMarker("effective_date")}
-                      confirmation={confirmationControl("effective_date")}
-                      onDraft={(next) =>
-                        setTermFields((current) => ({ ...current, effectiveDate: next }))
-                      }
-                      onCommit={(next) => commitTerm("effectiveDate", next)}
-                      onRevert={() => revertTerm("effectiveDate")}
-                    />
-                    {/* An evergreen contract has no end, so the record
-                          does not offer to invent one for it. */}
-                    {saved.termType === "evergreen" ? (
-                      <ReadOnlyField
-                        label={
-                          <FormattedMessage
-                            id="contracts.form.expiryDate"
-                            defaultMessage="Expiry date"
-                          />
-                        }
-                        value={notRecorded}
-                      />
-                    ) : (
-                      <TermField
-                        id="contract-expiry-date"
-                        type="date"
-                        label={
-                          <FormattedMessage
-                            id="contracts.form.expiryDate"
-                            defaultMessage="Expiry date"
-                          />
-                        }
-                        draft={termFields.expiryDate}
-                        frozen={frozen}
-                        status={fieldStatus.expiryDate ?? "idle"}
-                        error={fieldError.expiryDate}
-                        marker={unverifiedMarker("expiry_date")}
-                        confirmation={confirmationControl("expiry_date")}
-                        onDraft={(next) =>
-                          setTermFields((current) => ({ ...current, expiryDate: next }))
-                        }
-                        onCommit={(next) => commitTerm("expiryDate", next)}
-                        onRevert={() => revertTerm("expiryDate")}
-                      />
-                    )}
-                    {/* Nothing rolls but an auto-renewing contract, so
-                          nothing else is asked how far a roll goes. */}
-                    {saved.termType === "auto_renew" ? (
-                      <TermField
-                        id="contract-renewal-period"
-                        type="number"
-                        // A roll of zero months would advance an
-                        // expiry to itself, so the stepper cannot
-                        // reach it — the same floor the seam holds.
-                        min={1}
-                        label={
-                          <FormattedMessage
-                            id="contracts.form.renewalPeriod"
-                            defaultMessage="Renewal period (months)"
-                          />
-                        }
-                        draft={termFields.renewalPeriodMonths}
-                        frozen={frozen}
-                        status={fieldStatus.renewalPeriodMonths ?? "idle"}
-                        error={fieldError.renewalPeriodMonths}
-                        marker={unverifiedMarker("renewal_period_months")}
-                        confirmation={confirmationControl("renewal_period_months")}
-                        onDraft={(next) =>
-                          setTermFields((current) => ({ ...current, renewalPeriodMonths: next }))
-                        }
-                        onCommit={() => commitTerm("renewalPeriodMonths")}
-                        onRevert={() => revertTerm("renewalPeriodMonths")}
-                      />
-                    ) : (
-                      <ReadOnlyField
-                        label={
-                          <FormattedMessage
-                            id="contracts.form.renewalPeriod"
-                            defaultMessage="Renewal period (months)"
-                          />
-                        }
-                        value={notRecorded}
-                      />
-                    )}
-                    {/* A notice obligation sits on any kind of term,
-                          so this box is drawn whatever the type says.
-                          The deadline it feeds derives only when there
-                          is an expiry to subtract it from. */}
-                    <TermField
-                      id="contract-notice-period"
-                      type="number"
-                      // Zero days' notice is a real term: some
-                      // contracts end on the date and no earlier.
-                      min={0}
-                      label={
-                        <FormattedMessage
-                          id="contracts.form.noticePeriod"
-                          defaultMessage="Notice period (days)"
-                        />
-                      }
-                      draft={termFields.noticePeriodDays}
-                      frozen={frozen}
-                      status={fieldStatus.noticePeriodDays ?? "idle"}
-                      error={fieldError.noticePeriodDays}
-                      marker={unverifiedMarker("notice_period_days")}
-                      confirmation={confirmationControl("notice_period_days")}
-                      onDraft={(next) =>
-                        setTermFields((current) => ({ ...current, noticePeriodDays: next }))
-                      }
-                      onCommit={() => commitTerm("noticePeriodDays")}
-                      onRevert={() => revertTerm("noticePeriodDays")}
-                    />
-                    {/* Derived from the expiry and never stored, so it
-                          is a fact of the record rather than a field of
-                          it — and blank for an evergreen contract,
-                          which has no end to count down to. */}
                     <ReadOnlyField
                       label={
                         <FormattedMessage
@@ -2840,17 +2909,6 @@ function ContractRecord() {
                       }
                       value={daysRemainingLabel(intl, saved.daysRemaining) ?? notRecorded}
                     />
-                    {/* When the term last rolled (grill row G.R5).
-                          Read from the record's renewal history rather
-                          than from a column, because nothing stores a
-                          renewal: the confirmed-roll entries are what
-                          says one happened, and the newest of them is
-                          the first the seam answers. A record where no
-                          roll has been confirmed prints the same em
-                          dash every other absence on this card prints
-                          (X.6, DES-040 clause 5) — most contracts have
-                          never renewed, and that is a fact rather than
-                          a gap. */}
                     <ReadOnlyField
                       label={
                         <FormattedMessage
@@ -2864,17 +2922,6 @@ function ContractRecord() {
                           : notRecorded
                       }
                     />
-                    {/* Who may see the record at all (DD-014). It closes
-                      the card because it is the record's audience
-                      rather than one of its business facts, and it is
-                      the one field here that most of the people
-                      reading it may not touch.
-
-                      It commits on the switch's own change: a switch
-                      has no blur to wait for, and DES-017 commits when
-                      the person is done deciding — which for a
-                      two-state control is the moment they flip it, the
-                      same rule the record's selects already follow. */}
                     <div className="@2xl/page:col-span-2">
                       <ConfidentialToggle
                         id="contract-confidential"
@@ -2907,60 +2954,7 @@ function ContractRecord() {
                   The heading names the textarea rather than the card:
                   one accessible name each, carried by the control that
                   answers to it, as the Contract card above does. */}
-                <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                  <header className="flex min-h-(--height-section-header) flex-wrap items-center justify-between gap-2 py-2 rounded-t-card border-b border-border-default bg-section-header px-4">
-                    <h2 id="contract-description-heading" className="text-base font-semibold">
-                      <FormattedMessage
-                        id="contracts.form.description"
-                        defaultMessage="Description"
-                      />
-                    </h2>
-                    {originalIntake && (
-                      <DescriptionSourceToggle
-                        requester={showRequesterDescription}
-                        onChange={setShowRequesterDescription}
-                      />
-                    )}
-                  </header>
-                  {showRequesterDescription && originalIntake ? (
-                    <div className="p-4">
-                      <RequesterDescription description={originalIntake.description} />
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-2 p-4">
-                      <AiField
-                        active={Boolean(saved.aiUnverified?.description)}
-                        className="min-w-0 flex-1"
-                      >
-                        <AutoResizeTextarea
-                          id="contract-description"
-                          className="text-base"
-                          // The card's own heading names the field: a second
-                          // label above a full-width textarea would repeat it.
-                          aria-labelledby="contract-description-heading"
-                          value={drafts.description}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            setDrafts((current) => ({
-                              ...current,
-                              description: event.target.value,
-                            }))
-                          }
-                          onBlur={() => commitText("description")}
-                          onKeyDown={(event) => {
-                            if (event.key === "Escape") revertText("description");
-                          }}
-                        />
-                      </AiField>
-                      <StatusNote
-                        status={fieldStatus.description ?? "idle"}
-                        detail={fieldError.description}
-                      />
-                      {unverifiedMarker("description")}
-                      {confirmationControl("description")}
-                    </div>
-                  )}
-                </section>
+
                 {/* CTR-006's term as a picture (M16/2). It closes the
                       Overview because it draws facts the two cards
                       above already state — the mock's own order, where
@@ -2988,7 +2982,14 @@ function ContractRecord() {
             {tab === "fields" && (
               <>
                 <FieldsCard
-                  fields={attached}
+                  fields={
+                    recordForm
+                      ? recordFormRows(recordForm, recordAnswers).flatMap((row) => {
+                          const field = attached.find((f) => f.slug === row.rowRef);
+                          return field ? [field] : [];
+                        })
+                      : attached
+                  }
                   values={saved.customFields}
                   people={peopleReferences}
                   entities={entityReferences}

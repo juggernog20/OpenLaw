@@ -35,6 +35,7 @@ let businessCookies: Record<string, string>;
 let memberId: string;
 let corporationId: string;
 let directorRoleId: string;
+let reportingCodeSlug: string | undefined;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -83,7 +84,11 @@ async function newEntity(legalName: string) {
     method: "POST",
     url: "/api/v1/entities",
     cookies: memberCookies,
-    payload: { legalName, entityTypeId: corporationId },
+    payload: {
+      legalName,
+      entityTypeId: corporationId,
+      customFields: reportingCodeSlug ? { [reportingCodeSlug]: "ENT-44" } : {},
+    },
   });
   expect(response.statusCode, response.body).toBe(201);
   return response.json().entity as { id: string; legalName: string };
@@ -223,6 +228,7 @@ describe("the Entity Overview read and PATCH", () => {
   it("returns attached Fields and uses shared coercion for required values and types", async () => {
     const entity = await newEntity("Fields Record Ltd");
     const required = await defineAndAttachField("Entity reporting code", "text", undefined, true);
+    reportingCodeSlug = required.slug;
     const count = await defineAndAttachField("Licensed locations", "number");
 
     const missing = await patchEntity(entity.id, { customFields: { [required.slug]: "  " } });

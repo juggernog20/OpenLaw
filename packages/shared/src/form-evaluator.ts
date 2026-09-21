@@ -272,3 +272,54 @@ export function validateForm(form: Form): FormValidationIssue[] {
   }
   return issues;
 }
+
+/** Keep Branches while selecting the Rows collected at a touchpoint. */
+export function formForTouchpoint(form: Form, touchpoint: FormTouchpoint): FormNode[] {
+  return form.flatMap((node): FormNode[] => {
+    if (node.kind === "row") return formRowsForTouchpoint([node], touchpoint);
+    const children = formForTouchpoint(node.children, touchpoint);
+    return children.length ? [{ ...node, children }] : [];
+  });
+}
+
+/** Map native record columns to DD-028 Row keys for creation and record evaluation. */
+export function recordFormAnswers(
+  record: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const custom = record.customFields;
+  return {
+    ...(typeof custom === "object" && custom !== null ? custom : {}),
+    title: record.title,
+    contract_type: record.contractTypeId,
+    matter_type: record.matterTypeId,
+    description: record.description,
+    entity: record.entityId ?? (record.entity as { id?: string } | null)?.id,
+    counterparties: Array.isArray(record.counterparties)
+      ? record.counterparties.map((party: unknown) => {
+          if (typeof party !== "object" || party === null) return party;
+          const reference = party as { counterpartyId?: string; id?: string; name?: string };
+          return reference.counterpartyId ?? reference.id ?? reference.name;
+        })
+      : record.counterparties,
+    owning_department: record.owningDepartmentId,
+    department: record.departmentId,
+    region: record.regionId ?? record.region,
+    priority: record.priority,
+    risk: record.risk,
+    term_type: record.termType,
+    effective_date: record.effectiveDate,
+    expiry_date: record.expiryDate,
+    renewal_period_months: record.renewalPeriodMonths,
+    notice_period_days: record.noticePeriodDays,
+    value:
+      record.value ??
+      (record.valueAmount != null
+        ? {
+            amount: record.valueAmount,
+            currency: record.valueCurrency,
+            cadence: record.valueCadence,
+          }
+        : null),
+    needed_by: record.neededBy,
+  };
+}

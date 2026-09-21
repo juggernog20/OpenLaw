@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+import { linkPrimaryCounterparty } from "../../lib/counterparty-link.js";
+import { contractKeyDates } from "@openlaw/db";
+import { recordFormAnswers } from "@openlaw/shared";
+import { assertCreationForm } from "../../lib/creation-form.js";
 import type { IntakeContractFacts } from "../../lib/intake-default-fields.js";
 import { assertPortalEntity } from "../../lib/portal-entities.js";
 
@@ -51,14 +56,8 @@ import { lockedRegionName } from "../regions/references.js";
  * person made in the create dialog, or the converting person at
  * INT-002's conversion (CTR-004 focus-group addendum, 2026-09-09).
  *
- * **Risk is never born and priority is born only where a caller holds
- * one** (MTR-012, M21/9). Risk is legal's assessment of how bad it
- * would be if this went wrong, and nobody has made it at the moment a
- * record appears, so there is no way to supply it here. Priority is how
- * fast, and INT-002 maps the requester's urgency onto it 1:1 at
- * conversion — that is a fact somebody stated, carried rather than
- * assessed. The create route holds no such fact and passes none, so an
- * ordinary create still starts on the column's own `medium` default.
+ * The type Form decides which built-in and Field Rows creation requires.
+ * Branches use the answers this transaction will store.
  */
 
 import { addContractTeamMember } from "../../lib/contract-team.js";
@@ -92,11 +91,7 @@ import {
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { OWNER_REFUSAL, OWNER_ROLES } from "../../lib/contract-access.js";
 import { linkContracts, setContractParent } from "../../lib/contract-relations.js";
-import {
-  applyCustomFields,
-  assertRequiredCustomFields,
-  selectAttachedFields,
-} from "../../lib/custom-fields.js";
+import { applyCustomFields, selectAttachedFields } from "../../lib/custom-fields.js";
 import { httpError } from "../../lib/problem.js";
 
 /** The protected CTR-001 seed every contract is born on. */
@@ -133,6 +128,22 @@ export interface CreateContractInput {
   /** Who is creating it: the CTR-004 creator row and the actor on every
    * entry this write narrates. */
   actorId: string;
+  entityId?: string | null;
+  risk?: SeverityLevel | null;
+  termType?: Contract["termType"];
+  effectiveDate?: string | null;
+  expiryDate?: string | null;
+  renewalPeriodMonths?: number | null;
+  noticePeriodDays?: number | null;
+  value?: {
+    amount: number;
+    currency: string;
+    cadence: NonNullable<Contract["valueCadence"]>;
+    cadenceDescription?: string;
+  } | null;
+  neededBy?: string | null;
+  counterparties?: readonly ({ counterpartyId: string } | { name: string })[];
+
   /** Trusted Auto-Doc provenance and facts resolved by the Generation path. */
   autoDoc?: { id: string; generationId: string; facts: AutoDocContractSnapshot };
   title: string;
@@ -146,16 +157,7 @@ export interface CreateContractInput {
    * to be here — the rest are set on the record — and a slug the type
    * does not attach is refused. */
   customFields?: Readonly<Record<string, CustomFieldValue | null>> | undefined;
-  /**
-   * How fast, where the caller holds a stated one (MTR-012).
-   *
-   * The one caller that does is INT-002's conversion, which maps the
-   * requester's urgency onto it 1:1 — priority is what legal holds and
-   * urgency is what the requester claimed, and the claim is the honest
-   * starting point. Omitted is the ordinary create, which leaves the
-   * column's `medium` default. There is no `risk` beside it: risk is an
-   * assessment nobody has made at birth, and a requester never sets it.
-   */
+  /** Priority collected by the Form, inherited from Intake, or left at the default. */
   priority?: SeverityLevel | undefined;
   /** DD-014's flag, from the first moment, so a sensitive record is
    * never visible to the wrong audience even briefly. Omitted means
@@ -280,7 +282,6 @@ export async function createContract(
     {},
     input.customFields ?? {},
   );
-  assertRequiredCustomFields(attached, customFields);
 
   // CTR-007's prefill, and the whole of it: the business facts of the
   // deal, copied so routing a renewal is not re-keying a contract. The
@@ -331,6 +332,83 @@ export async function createContract(
 
   if (input.intakeFacts?.entityId)
     await assertPortalEntity(tx, input.intakeFacts.entityId, "Our entity");
+  const native = {
+    ...copied,
+    ...input.intakeFacts,
+    ...(input.entityId !== undefined ? { entityId: input.entityId } : {}),
+    ...(input.termType !== undefined ? { termType: input.termType } : {}),
+    ...(input.effectiveDate !== undefined ? { effectiveDate: input.effectiveDate } : {}),
+    ...(input.expiryDate !== undefined ? { expiryDate: input.expiryDate } : {}),
+    ...(input.renewalPeriodMonths !== undefined
+      ? { renewalPeriodMonths: input.renewalPeriodMonths }
+      : {}),
+    ...(input.noticePeriodDays !== undefined ? { noticePeriodDays: input.noticePeriodDays } : {}),
+    ...(input.value !== undefined
+      ? {
+          valueAmount: input.value?.amount ?? null,
+          valueCurrency: input.value?.currency ?? null,
+          valueCadence: input.value?.cadence ?? null,
+          valueCadenceDescription: input.value?.cadenceDescription ?? null,
+        }
+      : {}),
+    ...(input.autoDoc
+      ? {
+          createdByGenerationId: input.autoDoc.generationId,
+          entityId: input.autoDoc.facts.entityId,
+          effectiveDate: input.autoDoc.facts.effectiveDate,
+          expiryDate: input.autoDoc.facts.expiryDate,
+          termType: input.autoDoc.facts.termType,
+          valueAmount: input.autoDoc.facts.value?.amount ?? null,
+          valueCurrency: input.autoDoc.facts.value?.currency ?? null,
+          valueCadence: input.autoDoc.facts.value?.cadence ?? null,
+        }
+      : {}),
+  };
+  const termType = native.termType ?? "fixed";
+  if (termType === "evergreen" && native.expiryDate)
+    throw httpError(400, "An evergreen contract has no expiry date.");
+  if (termType !== "auto_renew" && native.renewalPeriodMonths)
+    throw httpError(400, "A renewal period applies only to an auto-renewing contract.");
+  if (input.entityId) {
+    const [entity] = await tx
+      .select()
+      .from(entities)
+      .where(eq(entities.id, input.entityId))
+      .for("update");
+    if (!entity || entity.archivedAt) throw httpError(400, "Our entity must be a live Entity.");
+  }
+  const parties =
+    renewal && input.counterparties === undefined
+      ? await tx
+          .select({
+            counterpartyId: contractCounterparties.counterpartyId,
+            isPrimary: contractCounterparties.isPrimary,
+          })
+          .from(contractCounterparties)
+          .innerJoin(
+            counterparties,
+            and(
+              eq(contractCounterparties.counterpartyId, counterparties.id),
+              isNull(counterparties.archivedAt),
+            ),
+          )
+          .where(eq(contractCounterparties.contractId, renewal.predecessor.id))
+          .orderBy(desc(contractCounterparties.isPrimary), asc(sql`lower(${counterparties.name})`))
+      : [];
+  await assertCreationForm(
+    tx,
+    "contract",
+    contractType.id,
+    attached,
+    recordFormAnswers({
+      ...input,
+      ...native,
+      counterparties: input.counterparties ?? parties,
+      customFields,
+      priority: input.priority ?? "medium",
+      termType: native.termType,
+    }),
+  );
   const isConfidential = input.isConfidential ?? false;
   const [row] = await tx
     .insert(contracts)
@@ -352,22 +430,33 @@ export async function createContract(
       // own `medium` default stands, which is what an unassessed record
       // honestly is (MTR-012).
       ...(input.priority ? { priority: input.priority } : {}),
-      ...(copied ?? {}),
-      ...(input.intakeFacts ?? {}),
-      ...(input.autoDoc
-        ? {
-            createdByGenerationId: input.autoDoc.generationId,
-            entityId: input.autoDoc.facts.entityId,
-            effectiveDate: input.autoDoc.facts.effectiveDate,
-            expiryDate: input.autoDoc.facts.expiryDate,
-            termType: input.autoDoc.facts.termType,
-            valueAmount: input.autoDoc.facts.value?.amount ?? null,
-            valueCurrency: input.autoDoc.facts.value?.currency ?? null,
-            valueCadence: input.autoDoc.facts.value?.cadence ?? null,
-          }
-        : {}),
+      ...native,
+      risk: input.risk ?? null,
     })
     .returning();
+  for (const [index, party] of (input.counterparties ?? []).entries()) {
+    await linkPrimaryCounterparty(tx, {
+      contract: row!,
+      actorId,
+      name: "name" in party ? party.name : "",
+      ...("counterpartyId" in party ? { counterpartyId: party.counterpartyId } : {}),
+      isPrimary: index === 0,
+    });
+  }
+  if (input.neededBy) {
+    const [date] = await tx
+      .insert(contractKeyDates)
+      .values({ contractId: row!.id, label: "Needed by", date: input.neededBy })
+      .returning();
+    await recordActivity(tx, {
+      entityType: "contract",
+      entityId: row!.id,
+      actorId,
+      action: "key_date.added",
+      visibility: RECORD_ACTIVITY_TIER,
+      payload: { keyDateId: date!.id, label: "Needed by", date: input.neededBy },
+    });
+  }
   // Provenance, written once and never again (CTR-004): who made this
   // record survives every later owner change. It is part of creation, so
   // `contract.created` records it — no separate team row for something
@@ -479,22 +568,8 @@ export async function createContract(
   // carried across and re-seated when the party holding it is the one
   // that left, so the invariant "a contract with parties has a primary"
   // holds at birth.
-  const parties = await tx
-    .select({
-      counterpartyId: contractCounterparties.counterpartyId,
-      isPrimary: contractCounterparties.isPrimary,
-    })
-    .from(contractCounterparties)
-    .innerJoin(
-      counterparties,
-      and(
-        eq(contractCounterparties.counterpartyId, counterparties.id),
-        isNull(counterparties.archivedAt),
-      ),
-    )
-    .where(eq(contractCounterparties.contractId, renewal.predecessor.id))
-    .orderBy(desc(contractCounterparties.isPrimary), asc(sql`lower(${counterparties.name})`));
-  if (parties.length > 0) {
+
+  if (parties.length > 0 && input.counterparties === undefined) {
     const keepsPrimary = parties.some((party) => party.isPrimary);
     await tx.insert(contractCounterparties).values(
       parties.map((party, index) => ({

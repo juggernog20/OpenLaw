@@ -313,6 +313,15 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
               id: "ct-employment",
               slug: "employment",
               displayName: "Employment",
+              creationForm: ["employee", "probation", "notes"].map((rowRef) => ({
+                kind: "row",
+                id: rowRef,
+                rowRef,
+                fieldType: rowRef === "probation" ? "number" : "text",
+                isRequired: rowRef === "employee",
+                onIntakeForm: true,
+                visibleOnPortal: true,
+              })),
               fields: [
                 {
                   fieldId: "f-employee",

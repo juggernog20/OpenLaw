@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import {
+  CreationRows,
+  creationRows,
+  creationNativeValues,
+  type CreationValues,
+} from "../type-form/creation-rows";
+
 /**
  * The M8 create-matter dialog, with all type-driven fields redrawn on
  * type change.
@@ -21,8 +28,6 @@ import {
 } from "../../lib/custom-fields";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import {
-  MATTER_SEVERITIES,
-  matterSeverityLabel,
   matterReference,
   type MatterRow,
   type MatterTypeOption,
@@ -30,21 +35,15 @@ import {
 } from "../../lib/matters";
 import { problem as readProblem } from "../../lib/problem";
 import { ConfidentialToggle } from "../confidential-toggle";
-import { AutoResizeTextarea } from "../auto-resize-textarea";
-import { CustomFieldControl, type FieldReference } from "../custom-field-control";
+import { type FieldReference } from "../custom-field-control";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
-import { DepartmentPicker } from "../department-picker";
 import { Label } from "../ui/label";
-
-function isMatterSeverity(value: string): value is MatterRow["priority"] {
-  return value === "low" || value === "medium" || value === "high" || value === "critical";
-}
 
 export function CreateMatterDialog({
   matterTypes,
-  departments = [],
+  departments,
   users,
   entities,
   viewerId,
@@ -65,8 +64,8 @@ export function CreateMatterDialog({
   const intl = useIntl();
   const attachments = useCreateAttachments();
   const [title, setTitle] = useState("");
-  const [departmentId, setDepartmentId] = useState<string | null>(null);
-  const [matterTypeId, setMatterTypeId] = useState("");
+  const [native, setNative] = useState<CreationValues>({ priority: "medium", risk: null });
+  const [matterTypeId, setMatterTypeId] = useState(matterTypes.find((t) => t.isDefault)?.id ?? "");
   const [templateId, setTemplateId] = useState("");
   const managers = users.filter(
     (person) => person.role === "administrator" || person.role === "legal_team_member",
@@ -76,15 +75,21 @@ export function CreateMatterDialog({
   const [managerId, setManagerId] = useState(
     managers.some((person) => person.id === viewerId) ? viewerId : "",
   );
-  const [priority, setPriority] = useState<MatterRow["priority"]>("medium");
-  const [risk, setRisk] = useState<MatterRow["risk"]>(null);
-  const [description, setDescription] = useState("");
+
   const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
   const [confidential, setConfidential] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fields = matterTypes.find((type) => type.id === matterTypeId)?.fields ?? [];
+
   const selectedType = matterTypes.find((type) => type.id === matterTypeId);
+  const creation = creationRows(
+    selectedType?.creationForm,
+    selectedType?.fields ?? [],
+    drafts,
+    native,
+    { title, matterTypeId },
+  );
+  const fields = creation.fields;
   const templates = selectedType?.templates ?? [];
   const selectedTemplate = templates.find((template) => template.id === templateId);
   const people = users.map((person) => ({
@@ -105,8 +110,11 @@ export function CreateMatterDialog({
     setTemplateId(template?.id ?? "");
     const untouched = title.trim() === "" || title === (selectedTemplate?.titlePrefix ?? "");
     if (untouched) setTitle(template?.titlePrefix ?? "");
-    setPriority(template?.defaultPriority ?? "medium");
-    setRisk(template?.defaultRisk ?? null);
+    setNative((current) => ({
+      ...current,
+      priority: template?.defaultPriority ?? "medium",
+      risk: template?.defaultRisk ?? null,
+    }));
     setDrafts(
       Object.fromEntries(
         (type?.fields ?? []).map((field) => [
@@ -161,10 +169,7 @@ export function CreateMatterDialog({
           title: title.trim(),
           matterTypeId,
           managerId: managerId || null,
-          departmentId,
-          priority,
-          risk,
-          description: description.trim() || null,
+          ...creationNativeValues(creation.rows, native),
           customFields,
           ...(templateId ? { templateId } : {}),
           isConfidential: confidential,
@@ -329,95 +334,20 @@ export function CreateMatterDialog({
                 ))}
               </select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="matter-new-department">
-                <FormattedMessage id="records.department" defaultMessage="Department" />
-              </Label>
-              <DepartmentPicker
-                id="matter-new-department"
-                value={departmentId}
-                options={departments}
-                onChange={setDepartmentId}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="matter-new-priority" required>
-                  <FormattedMessage id="matters.field.priority" defaultMessage="Priority" />
-                </Label>
-                <select
-                  id="matter-new-priority"
-                  aria-required="true"
-                  className={CONTROL_CLASS}
-                  value={priority}
-                  onChange={(event) => {
-                    if (isMatterSeverity(event.target.value)) setPriority(event.target.value);
-                  }}
-                >
-                  {MATTER_SEVERITIES.map((level) => (
-                    <option key={level} value={level}>
-                      {matterSeverityLabel(intl, level)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="matter-new-risk">
-                  <FormattedMessage id="matters.field.risk" defaultMessage="Risk" />
-                </Label>
-                <select
-                  id="matter-new-risk"
-                  className={CONTROL_CLASS}
-                  value={risk ?? ""}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    if (value === "" || isMatterSeverity(value)) setRisk(value || null);
-                  }}
-                >
-                  <option value="">
-                    {intl.formatMessage({
-                      id: "matters.notAssessed",
-                      defaultMessage: "Not assessed",
-                    })}
-                  </option>
-                  {MATTER_SEVERITIES.map((level) => (
-                    <option key={level} value={level}>
-                      {matterSeverityLabel(intl, level)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            {fields.map((field) => (
-              <div key={field.slug} className="flex flex-col gap-1.5">
-                <Label htmlFor={`matter-new-${field.slug}`} required={field.isRequired}>
-                  {field.displayName}
-                </Label>
-                <CustomFieldControl
-                  id={`matter-new-${field.slug}`}
-                  field={field}
-                  draft={drafts[field.slug] ?? emptyDraft(field)}
-                  people={people}
-                  entities={entities}
-                  required={field.isRequired}
-                  onDraft={(draft) => {
-                    setDrafts((current) => ({ ...current, [field.slug]: draft }));
-                    setError(null);
-                  }}
-                />
-                {field.description && <p className="text-xs text-muted">{field.description}</p>}
-              </div>
-            ))}
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="matter-new-description">
-                <FormattedMessage id="matters.field.description" defaultMessage="Description" />
-              </Label>
-              <AutoResizeTextarea
-                id="matter-new-description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-            </div>
+            <CreationRows
+              rows={creation.rows}
+              fields={fields}
+              drafts={drafts}
+              onDraft={(slug, next) => {
+                setDrafts((current) => ({ ...current, [slug]: next }));
+                setError(null);
+              }}
+              native={native}
+              onNative={setNative}
+              people={people}
+              entities={entities}
+              departments={departments}
+            />
             <ConfidentialToggle
               id="matter-new-confidential"
               record="matter"

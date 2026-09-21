@@ -24235,7 +24235,7 @@
       },
       "post": {
         "operationId": "createMatter",
-        "summary": "Create the next M-number on the first live open status, enforcing required type fields",
+        "summary": "Create the next M-number on the first live open Status, enforcing Required on visible creation Rows",
         "tags": ["matters"],
         "requestBody": {
           "required": true,
@@ -24251,6 +24251,18 @@
                   },
                   "matterTypeId": {
                     "type": "string"
+                  },
+                  "neededBy": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "managerId": {
                     "type": ["string", "null"]
@@ -24734,7 +24746,7 @@
     "/api/v1/matters/options": {
       "get": {
         "operationId": "listMatterOptions",
-        "summary": "Live matter types with attached fields and creation templates, statuses, and assignable people",
+        "summary": "Live Matter types with Forms, creation trees, Field definitions and templates; Statuses and assignable people",
         "tags": ["matters"],
         "responses": {
           "200": {
@@ -24757,6 +24769,21 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "form": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "creationForm": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           },
                           "fields": {
                             "type": "array",
@@ -25374,6 +25401,12 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
                     },
                     "fields": {
                       "type": "array",
@@ -26021,6 +26054,12 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
                     },
                     "fields": {
                       "type": "array",
@@ -47288,7 +47327,7 @@
       },
       "post": {
         "operationId": "createContract",
-        "summary": "Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly, and the Owner (CTR-004), which the create dialog seeds with the acting person and which must be a live Administrator or Legal Team Member; omitted or null is unassigned, a real state. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created",
+        "summary": "Create a Contract from the chosen type's Intake and Creation Rows. Required applies only to visible Rows after Branch evaluation. Built-in answers populate native columns, Counterparties and the Needed by Key date. The record starts in Draft; Owner and Confidential are explicit choices. renewalOf copies the predecessor's business facts and links the new Contract as a child or successor.",
         "tags": ["contracts"],
         "description": "M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.",
         "requestBody": {
@@ -47302,6 +47341,160 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "entityId": {
+                    "type": ["string", "null"]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high", "critical"]
+                  },
+                  "risk": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "termType": {
+                    "type": "string",
+                    "enum": ["fixed", "auto_renew", "evergreen"]
+                  },
+                  "effectiveDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "expiryDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "renewalPeriodMonths": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "noticePeriodDays": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 36500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "cadence": {
+                            "type": "string",
+                            "enum": ["one_time", "monthly", "annually", "other"]
+                          },
+                          "cadenceDescription": {
+                            "type": "string",
+                            "maxLength": 100
+                          }
+                        },
+                        "required": ["amount", "currency", "cadence"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "neededBy": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "counterparties": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "counterpartyId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["counterpartyId"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            }
+                          },
+                          "required": ["name"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
                   },
                   "owningDepartmentId": {
                     "anyOf": [
@@ -48046,7 +48239,7 @@
     "/api/v1/contracts/options": {
       "get": {
         "operationId": "listContractOptions",
-        "summary": "The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source; and the live approver groups the record's apply picker offers, each with the ids of the people applying it would ask (CTR-012) — the settings surfaces that manage all of these stay Administrator-only per SET-002",
+        "summary": "Live Contract types with their Forms, creation trees and Field definitions; live Statuses, Departments, Regions, people and approver groups for Member+ pickers",
         "tags": ["contracts"],
         "responses": {
           "200": {
@@ -48101,6 +48294,21 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "isDefault": {
+                            "type": "boolean"
+                          },
+                          "form": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "creationForm": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
                           },
                           "fields": {
                             "type": "array",
@@ -48932,6 +49140,12 @@
                       },
                       "required": ["users", "entities"],
                       "additionalProperties": false
+                    },
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
                     },
                     "originalIntake": {
                       "anyOf": [
@@ -83014,7 +83228,7 @@
       },
       "post": {
         "operationId": "createEntity",
-        "summary": "Register an entity with its ENT-001 identity card: legal name and type required, the rest optional; status defaults to active",
+        "summary": "Register an Entity with its identity card and visible required Fields from its type Form. Status defaults to active.",
         "tags": ["entities"],
         "requestBody": {
           "required": true,
@@ -83030,6 +83244,38 @@
                   },
                   "entityTypeId": {
                     "type": "string"
+                  },
+                  "customFields": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
                   },
                   "portalListed": {
                     "type": "boolean"
@@ -83334,6 +83580,93 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "form": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "creationForm": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "builtInKey": {
+                                  "type": ["string", "null"]
+                                },
+                                "fieldId": {
+                                  "type": "string"
+                                },
+                                "slug": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": ["string", "null"]
+                                },
+                                "fieldType": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "long_text",
+                                    "number",
+                                    "currency",
+                                    "date",
+                                    "boolean",
+                                    "single_select",
+                                    "multi_select",
+                                    "user",
+                                    "entity"
+                                  ]
+                                },
+                                "fieldTag": {
+                                  "type": "string",
+                                  "enum": ["business", "legal"]
+                                },
+                                "options": {
+                                  "anyOf": [
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "displayOrder": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "isRequired": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fieldId",
+                                "slug",
+                                "displayName",
+                                "description",
+                                "fieldType",
+                                "fieldTag",
+                                "options",
+                                "displayOrder",
+                                "isRequired"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
                           "id": {
                             "type": "string"
                           },
@@ -83465,6 +83798,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    },
                     "canManageAccess": {
                       "type": "boolean"
                     },
@@ -83984,6 +84323,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    },
                     "canManageAccess": {
                       "type": "boolean"
                     },

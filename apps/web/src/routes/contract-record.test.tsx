@@ -11424,3 +11424,73 @@ it("keeps cadence and currency entered before an amount when focus leaves the va
   );
   expect(screen.getByLabelText("Amount")).toHaveValue("10,000");
 });
+
+it("draws built-in and Field Rows in Form order, retaining a hidden Row with a value", async () => {
+  const field = {
+    ...PAYMENT_TERMS,
+    fieldId: "f-record-note",
+    slug: "record_note",
+    displayName: "Record note",
+    fieldType: "text",
+    isRequired: false,
+  };
+  const row = (rowRef: string, fieldType = "text") => ({
+    kind: "row",
+    id: rowRef,
+    rowRef,
+    fieldType,
+    isRequired: false,
+    visibleOnPortal: true,
+  });
+  const form = [
+    row("title"),
+    row("contract_type", "single_select"),
+    row("term_type", "single_select"),
+    row("record_note"),
+    {
+      kind: "branch",
+      id: "fixed",
+      match: "all",
+      conditions: [{ rowRef: "term_type", operator: "equals", value: "fixed" }],
+      children: [row("expiry_date", "date"), row("notice_period_days", "number")],
+    },
+    row("priority", "single_select"),
+  ];
+  const contract = contractRow({
+    termType: "auto_renew",
+    expiryDate: "2027-09-01",
+    noticePeriodDays: null,
+    customFields: { record_note: "Keep this" },
+  });
+  const fallback = recordApi(contract);
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET")
+        return json(200, {
+          contract,
+          form,
+          fields: [field],
+          customFieldRefs: { users: [], entities: [] },
+          team: [],
+          counterparties: [],
+          renewals: [],
+          analysis: { available: false, latestRun: null },
+        });
+      return fallback.handler(call);
+    },
+  });
+  renderAt("/contracts/42");
+  const note = await screen.findByLabelText(/Record note/);
+  const expiry = screen.getByLabelText(/Expiry date/);
+  const term = screen.getByLabelText(/Term type/);
+  expect(note).toHaveValue("Keep this");
+  expect(expiry).toHaveTextContent("Sep 1, 2027");
+  expect(screen.queryByLabelText(/Notice period/)).not.toBeInTheDocument();
+  expect(term.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(note.compareDocumentPosition(expiry) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(
+    expiry.compareDocumentPosition(screen.getByLabelText(/^Priority/)) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
