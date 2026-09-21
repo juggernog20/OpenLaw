@@ -1501,6 +1501,10 @@ The request-type editor (frame ST14) mounts this screen and diverges from it twi
 
 **The usage caption is optional too**, for the reason DES-020's is: a mount whose records do not exist yet has nothing but a zero to print. Request types draw none until `requests` land in M20.
 
+### Amendment (2026-09-21, DD-028) — the attachment card gives way to the Form tab
+
+DD-028 replaces the attachment card on the Contract, Matter and Entity type editors with a Form tab holding a tree builder (Rows with three switches, Branches with conditions). The identity card and its slots stand. The builder's anatomy is a DES record of its own, written from a `.pen` mock before the tab is built. The Request type editor keeps this screen with the identity card and a read-only Intake form card in the right slot.
+
 ## DES-023: The comment surface — tier badges, the Legal Only row wash, and the segmented composer
 
 - **Status:** Accepted

@@ -45,6 +45,10 @@ The Ownership tab's reconciliation line compares the Overview's declared `shares
 
 Migration `0082_great_betty_ross` adds the share-capital columns, `entity` Field scope, `entity_type_fields`, officer roles, and `entity_officers`. Entities Settings mounts the shared taxonomy, type-editor, and Field-catalog machinery. The Entity record reads and writes the three share-capital columns and its type-attached Fields through `PATCH /entities/:id`. Each Field commit uses the shared coercion and required-value checks, including live `user` and `entity` references. Officers have Member+ list, create, inline update, resignation, and delete routes. Each write appends its own `entity_officer.*` Activity entry in the same transaction.
 
+### Amendment (2026-09-21, DD-028) — Entity types get the Form
+
+`entity_type_fields` becomes the Row table of an Entity type's Form: Required for creation and Branches, no intake switch and no built-in Rows. The entity create form collects the required Rows of the chosen type; the rest go on the record.
+
 ## ENT-002 — Multi-jurisdiction: registrations table
 
 - **Status** — Accepted

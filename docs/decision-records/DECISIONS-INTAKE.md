@@ -342,6 +342,10 @@ DES-065 records the two portal readings. A dispositioned detail draws no Request
 
 M22 made `matter` a complete target rather than a configuration value waiting for a record. A live bound matter type is confirmed, a module-only target asks for its type, and an archived bound type reads as module-only on both staff reads and at the write. The conversion resolves the destination's attached fields through one module-aware definition: collected values with matching slugs carry server-side, required gaps are asked in the dialog, dead references get the existing repair control, and values with nowhere to land remain whole on the Request. Request attachments become root documents owned by the matter while the original attachment rows and downloads remain.
 
+### Amendment (2026-09-21, DD-028) — the Request form is the destination type's Intake rows
+
+The Decision above defined the Portal form as basics plus `request_type_fields`. DD-028 moves the form onto the destination type: the Portal form is the pinned basics (Title, Department, Urgency at the top, Attachments last) plus the Intake Rows of the destination type's Form, Branches included. `request_type_fields` and `form_field_order` are retired after migration; the 2026-09-19 companion-attach addendum below is retired with them, because there is no longer a second list to keep in step. The destination must name a module and may name a type; a module-only destination lands on that module's Default type. The M19/7 strand state and the M20/11 required rule (`user` may never be required on a Portal form) carry over to the Form: On intake form is refused on a `user` Row, in the same house style. Q6 in the Consequences above (conditional form logic) is now taken by DD-028's Branches.
+
 ## INT-003 — Requester updates: email notifications only; no status-poke button
 
 - **Status** — Accepted

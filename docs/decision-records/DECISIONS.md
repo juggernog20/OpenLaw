@@ -645,6 +645,8 @@ The predicate runs inside every Entity collection, record, picker, calendar, sea
 
 ## DD-015: Contributor permission grid — read, comment, upload, edit business fields
 
+**2026-09-21 amendment:** DD-028 retires the `business | legal` Field tag. Its one live effect, what a Business User reads on the Portal record, becomes the **Visible on Portal** switch on the type Form Row. Business maps to on and legal to off on upgrade.
+
 **2026-09-11 amendment:** DD-023 defines the current three account types and the Portal contribution grid. Contributor accounts become Business Users. Team membership grants their Portal access; staff record pages remain Member+. Historical rationale below describes the former model.
 
 - **Status:** Accepted
@@ -1287,6 +1289,73 @@ Listing every Entity would confuse a Business User with holding companies they w
 
 `entities.portal_listed` (ENT-010). A Portal read of Portal-listed Entity names. INT-002's M20/11 addendum is superseded for `entity` and stands for `user`. Every Portal write that carries an `entity` value checks the chosen row is live, non-Confidential, and Portal-listed.
 
+## DD-028: The type Form — one tree per type decides intake, creation, record and Portal
+
+- **Status:** Accepted
+- **Date:** 2026-09-21
+- **Source:** Grilling session on the field settings, 2026-09-21; supersedes MTR-018 and DD-015, amends INT-002, CTR-016, CTR-025, MTR-011, MTR-014, ENT-001, SET-003. Spec: [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).
+
+### Context
+
+The Field catalog is one table (CTR-016). What was not one thing was where a Field gets attached. A Contract type, a Matter type, an Entity type and a Request type each carried their own attachment join, and a Matter template carried default values on top. No screen showed those attachments side by side. A Field could sit on a Request form and be missing from the destination type, and its answer then stayed behind at conversion; the only bridge was the 2026-09-19 "Attach to the destination type too?" offer in the Request type editor.
+
+Built-in columns made it worse. Ten protected catalog rows (`__intake_*`, `fields.built_in_key`) existed only so a Request form could collect a native column such as Effective date. The convert dialog drew Counterparty and Needed by as hand-made boxes fed by two demo-seed Fields. Effective date existed under four spellings across the intake rows, the contract column, the AI targets and the Auto-Doc attributes. The DD-015 business/legal tag on a Field was, in practice, a Portal visibility switch with a name that did not say so. And MTR-014 had deferred conditional questions since 2026-08-02.
+
+Blair's own words on 2026-09-21: "We have an omnibus fields section in contracts / matters, specific matter / contract type fields, then a separate intake section with the fields... then we have intake fields, conversion fields, and record fields... it's making my head hurt a bit." MTR-018, written that morning, had added one more switch to the same pile. This record replaces it.
+
+### Decision
+
+**1. Each Contract type, Matter type and Entity type owns one Form.** The Form is an ordered tree. A node is a **Row** or a **Branch**. A Row is a built-in column or an attached Field. A Branch is a condition group whose children (Rows or further Branches) show only when the condition holds. Rows and Branches share one order under each parent; every node can be reordered by drag or keyboard. Title and Type are pinned at the top of every Form and can go under no Branch.
+
+**2. A Row carries three switches: On intake form, Required for creation, Visible on Portal.** The touchpoint is derived, never stored:
+
+- On intake form → **Intake**. The requester answers it on the Portal Request form. Legal sees it again at creation.
+- Required for creation and not on intake → **Creation**. Legal answers it in the convert dialog or the create dialog before the record is born.
+- Neither → **Record**. The row lives on the record page only.
+
+There is no optional-at-creation. The creation form is the Intake rows plus the Creation rows. This is a deliberate simplification: two switches, one derivation, and a Field Legal always wants at creation is, in practice, required. On intake form forces Visible on Portal on; the API refuses the other pair and the builder disables the switch with a reason. Required for creation is enforced at creation as MTR-014 says.
+
+**3. Built-in columns are Rows with the same switches**, except that their Visible on Portal is fixed (the Portal record keeps drawing its fixed built-ins). Contract: `title` (pinned), `contract_type` (pinned), `description`, `entity`, `counterparties`, `owning_department`, `region`, `priority`, `risk`, `term_type`, `effective_date`, `expiry_date`, `renewal_period_months`, `notice_period_days`, `value` (amount, currency and cadence as one Row), `needed_by` (lands as the "Needed by" key date). Matter: `title` (pinned), `matter_type` (pinned), `description`, `department`, `region`, `priority`, `risk`, `needed_by`. Fixed at creation and never on a Form: manager, business owner, status, confidentiality. The Portal form pins Department and Urgency at the top and Attachments last. Counterparties is one Row that draws the registry picker on every touchpoint and lands `contract_counterparties`. The ten `__intake_*` catalog rows, `fields.built_in_key`, and the demo-seed `counterparty_name` and `needed_by` Fields are retired. The Auto-Doc contract attributes, the core analysis targets and the built-in Row keys share one spelling per built-in.
+
+**4. A Branch is a condition group.** Match all or match any over conditions of the shape `row operator value`. Operators are the Auto-Doc four (`equals`, `is_not`, `is_one_of`, `is_set`) plus `greater_than` and `less_than` for number, money and date Rows. A condition may reference only a Row placed above the Branch in document order, never the Branch's own children and never itself, so cycles cannot exist and one top-to-bottom pass resolves every Branch. A Branch inside a Branch is AND by structure; two sibling Branches are OR by structure; the match toggle handles AND and OR inside one Branch. A Row under a false Branch is not shown, not collected and not enforced at any touchpoint. The record page draws such a Row only when it holds a value; a condition never deletes a stored value. Nested condition groups inside one Branch, and new node kinds (section heading, help text, page break, repeater), are admitted by the tree and not built now.
+
+**5. One evaluator, shared.** A pure function in the shared package takes a Form and an answers map and returns the ordered visible Rows and the enforced-required subset. The builder, the Portal form, the convert dialog, the create dialogs, the Portal record and the record page call it; the API calls the same function on Request submit, on convert and on create. A condition on an unanswered Row is false for every operator except `is_not`, which is true, and `is_set`, which is false.
+
+**6. Intake settings keep the Request type's own facts and no field list.** A Request type keeps display name, description, turnaround and a destination. The destination must name a module and may name a type; a Request type with no module is no longer a state. Several Request types may point at one destination type. The Request type editor shows a read-only Intake form card: the destination type's Intake rows in order, the basics as fixed rows, an eye icon that previews the form, and a link to the type's Form tab. The companion-attach offer and `form_field_order` are retired. Re-target at conversion keeps its rule: answers carry by slug where the new type has a Row, the rest stay behind.
+
+**7. A Default type per module, seeded, editable, not deletable.** Contracts and Matters each get one type row marked `is_default`. It is a plain type: records carry it, the create dialogs preselect it, and a Request type that names a module and no type lands on it. Nothing inherits from it. Rename is allowed; delete and archive are refused with a reason.
+
+**8. Visible on Portal replaces the business/legal tag.** DD-015's `field_tag` is retired. A Business User reads a Field on the Portal record when the Row for that Field on the record's type has Visible on Portal on. Business becomes on and legal becomes off on every Row a Field has, so nothing changes for Business Users on upgrade. A Request answer is a restricted Conversion draft source when the destination type's Row for that Field is hidden on the Portal; reference-typed Fields stay restricted as INT-008 says.
+
+**9. The AI split.** The Conversion draft prepares the target type's Intake and Creation Rows, plus title, type, description and priority, so the draft covers what the dialog will ask and no more. When a record is born from a Request, its Record Rows are prepared in a call of their own: a Contract rides the post-conversion Analysis run CTR-008 already reserves; a Matter gets a queue of its own reading the same Request sources. Both land through the existing provenance path and wear the Unverified marker. Conditional Rows are prepared whether or not their Branch resolves, because the draft runs before the triager answers anything. A record created without a Request gets no post-birth pass; the primary document's Analysis run covers Contracts as today.
+
+**10. Entities get the Form with Required for creation and Branches, and no intake switch.** The entity create form collects the required Rows of the chosen type; the rest go on the record. Entity built-in columns stay as the create form draws them today.
+
+**11. Upgrade.** Each `request_type_fields` row becomes an On intake form Row on its destination type, attached if missing; module-only destinations map to that module's Default type; a Request type with no module becomes a Matter destination. Required is kept when either the Request row or the type row had it. Visible on Portal copies the Field's tag onto each Row. The ten intake rows become On intake form on the built-in Row of each type that attached them, and stored Request answers under those slugs are re-keyed to the built-in key. Answered Requests are otherwise untouched: `requests.custom_fields` stays keyed by slug and conversion copies by slug as today.
+
+### Rationale
+
+The pain was not two catalogs. It was one catalog with five attachment points and no view across them. Putting the Request form on the destination type removes one attachment point and the only bridge that existed between the other two. Deriving the touchpoint from two switches removes the third switch MTR-018 was about to add and keeps Required with one meaning. Making built-in columns Rows removes the shadow catalog and gives Effective date one name. Naming the tag for what it does removes a rule nobody could explain to a Business User. The tree is the form-builder shape Blair asked for, and it is the one shape that lets conditions, ordering and touchpoints live in one editor and admit new node kinds later without a second editor.
+
+### Alternatives considered
+
+- **Keep Request types as field carriers and add a cross-Field view on the catalog.** Rejected. It shows the duplication; it does not remove it.
+- **Merge Request types into destination types.** Rejected. Two Request types onto one Contract type with different requester wording is real, and a Request type that ends as no record is real.
+- **Three independent switches (intake, creation, portal) and no derivation.** Rejected. "Requester fills it, Legal never sees it at creation" is a trap for direct-create records, which would then never collect that Field.
+- **Required per touchpoint.** Rejected. Two meanings for one word; "optional for the requester, required for Legal" is Creation-level Required.
+- **Show-when as a column on a flat list instead of a tree.** Rejected. It cannot nest, cannot host new node kinds, and does not read as a form.
+- **Nested condition groups inside one Branch.** Deferred. Structure gives AND and OR today; a nested-group editor is a second editor.
+- **A Default type that other types inherit from.** Rejected. A Field's switches on NDA would then come from two rows, which is the attached-in-two-places pain again.
+- **Portal switch on built-in Rows.** Deferred. Coherent, but it turns the Portal record page into a per-type renderer nothing needs yet.
+
+### Consequences
+
+- The shared per-type attachment column set gains `on_intake_form`, `visible_on_portal` and a nullable `branch_id`; the request join is retired after migration. Two new table factories, shared by module: built-in Rows (contract, matter) and Branches (contract, matter, entity). `contract_types` and `matter_types` gain `is_default`. `request_types.target_module` becomes NOT NULL; `form_field_order` goes. `fields.field_tag`, `fields.built_in_key` and the ten seeded rows go.
+- The Form read and write are one tree each: `GET` and `PUT /{module}-types/{id}/form`. The per-Field attach, detach, patch and order endpoints go. The options endpoints return each type's creation Rows as a tree. The Portal Request type read returns the destination type's Intake tree.
+- The type editors gain a Form tab holding the builder and lose the Custom Fields and Default Fields cards. Its anatomy is a DES record of its own, written from a `.pen` mock before the tab is built (DES-022 stays for the identity card).
+- The Field editor dialog and the catalog pages drop the tag. The convert dialog drops its Counterparty and Needed by boxes. The Request type editor drops the Form fields card.
+- MTR-018 is superseded whole. DD-015 is superseded for the tag. INT-002 no longer defines the Request form's contents. MTR-014's deferral of conditional logic ends. CTR-025's "do not depend on a Field attachment" reads as "are built-in Rows". CONTEXT.md gains Form, Row, Branch, Touchpoint, Intake form and Default type, and the three switch names.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status                                                                      |
@@ -1318,3 +1387,4 @@ Listing every Entity would confuse a Business User with holding companies they w
 | DD-025 | Business Owner replaces the seeded Business sponsor Field                                 | Accepted                                                                    |
 | DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                                                                    |
 | DD-027 | Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on     | Accepted                                                                    |
+| DD-028 | The type Form — one tree per type decides intake, creation, record and Portal             | Accepted                                                                    |

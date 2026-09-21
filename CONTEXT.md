@@ -316,18 +316,42 @@ _Avoid_: reset, factory reset, wipe the instance, archive the seeds
 
 **Default Field**:
 A Field that a migration seeded, marked `is_system_default`. Today these are governing law, jurisdiction, and our position, the CTR-008 core Fields with shipped AI prompts. Start blank keeps them [SET-004, CTR-016].
-_Avoid_: system field, built-in field, protected field
+_Avoid_: system field, built-in field, protected field, intake default (the former `__intake_*` rows, retired by DD-028)
 
 **Setup checklist**:
 The Administrator-only card above Organization in Settings → Organization → General. It lists currently unfinished onboarding steps and disappears when none remain. Each row links to its Settings pane, except Email, which has no pane and is plain text, and Review seeded types, which has a Mark as reviewed action. Completion follows current configuration, so a later removal can bring a row back without reopening the wizard. The card calls the wizard's Your organization step Organization and its Outbound email step Email to fit the Settings context. It expands Review to Review seeded types because the card has no surrounding wizard to explain what to review. All other step labels match [SET-004].
 _Avoid_: onboarding dashboard, skip history, restart setup
 
 **Type**:
-The configurable taxonomy on a Matter, Contract, or Request, and the designated carrier for policy — fields, templates, approvals attach here [CTR-002, MTR-001, INT-002].
+The configurable taxonomy on a Matter, Contract, Entity, or Request, and the designated carrier for policy — the Form, templates, approvals attach here [CTR-002, MTR-001, INT-002, DD-028].
+
+**Default type**:
+The one seeded type per module (Contracts, Matters) marked `is_default`. Editable and renameable, never archived or deleted. Its Form is the Request form when a Request type names a module and no type, and the create dialogs preselect it [DD-028].
+_Avoid_: fallback type, untyped, generic type
+
+**Form**:
+The ordered tree a Contract, Matter, or Entity type owns, made of Rows and Branches. One Form feeds the Request form, the creation form, the record page, and the Portal record [DD-028].
+_Avoid_: attachment list, field list, form definition (Auto-Docs own that term)
+
+**Row**:
+A node on a Form that collects one value: a built-in column or an attached Field. Carries three switches, On intake form, Required for creation, Visible on Portal [DD-028].
+_Avoid_: attachment, form field, question
+
+**Branch**:
+A node on a Form holding a condition group (match all or any of `row operator value`) whose children show only when it holds. A condition references only Rows above the Branch [DD-028].
+_Avoid_: rule, logic jump, section, conditional group
+
+**Touchpoint**:
+Where a Row is first collected, derived from its switches and never stored: Intake (on intake form), Creation (required and not on intake), Record (neither). The creation form collects Intake and Creation Rows [DD-028].
+_Avoid_: level, stage, surface
+
+**Intake form**:
+The Portal Request form for a Request type: the pinned basics plus the Intake Rows of its destination type's Form [INT-002, DD-028].
+_Avoid_: request form fields, portal form definition
 
 **Field**:
-An entry in the shared custom-field catalog, defined once with a module scope and attached to the types that should render it [MTR-011, CTR-016].
-_Avoid_: custom field (when referring to the catalog entry itself), attribute, property
+An entry in the shared custom-field catalog, defined once with a module scope and placed as a Row on the Forms of the types that should collect it [MTR-011, CTR-016, DD-028].
+_Avoid_: custom field (when referring to the catalog entry itself), attribute, property, business field, legal field (the tag is retired; say Visible on Portal)
 
 **Term type**:
 What kind of commitment a Contract is — **fixed**, **auto-renewing**, or **evergreen**. It is one of three fixed values, not a configurable label, because the rest of the term follows from it: an evergreen Contract holds no expiry date, and only an auto-renewing one holds a renewal period [CTR-006].

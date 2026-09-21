@@ -594,6 +594,10 @@ M22 widened the shared field catalog to admit `matter`, mounted the Fields pane 
 
 ---
 
+### Amendment (2026-09-21, DD-028) — the attachment becomes a Row on the type Form
+
+Point 3 (per-type attachment with order) now lives on the type's Form, one ordered tree of built-in Rows, Field Rows and Branches. Point 4 (the DD-015 tag on every Field) is retired: Portal visibility is the Visible on Portal switch on the Row. Storage in point 6 gains `on_intake_form`, `visible_on_portal` and `branch_id` on the join, plus a built-in Row table and a Branch table per module. Retention rules are unchanged.
+
 ## MTR-012: Priority and risk — both first-class default fields on every matter
 
 - **Status:** Accepted
@@ -730,6 +734,10 @@ Enterprise research flagged required-ness as the first thing users ask of a cust
 ### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — hard-required at every write that can make a gap
 
 M22 enforces the attachment's `is_required` at direct creation, conversion, re-type, and field edit. Each refusal names every missing field; re-type and conversion render controls for the gaps before retrying. Making a field required later does not rewrite old rows: the managed list's Incomplete filter finds them, and their next relevant edit must satisfy the rule. Detaching or archiving a definition never removes a stored value.
+
+### Amendment (2026-09-21, DD-028) — conditional logic is no longer deferred
+
+Point 3 and rationale 4 above deferred show/hide logic. DD-028 takes it: a Branch on the type Form holds a condition group, a condition may reference only a Row above it (so no cycles), a Row under a false Branch is neither collected nor enforced (so no hidden-but-required), and the record page draws a hidden Row only when it holds a value (so no stale hidden value is ever invisible). Hard-required at creation stays as decided; it now applies to the evaluated visible set.
 
 ## MTR-015: Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics
 
@@ -1033,3 +1041,9 @@ The split AI pass is the owner's call and it is the right one. A conversion draf
 - `selectAttachedFields` grows a form filter. Its record-side callers keep every attached Field.
 - A Matter gains its own deferred Field-preparation queue, the first AI writer on the Matter side; `matters.ai_unverified` already holds the shape it needs.
 - Turning a Field off the form does not touch stored values, in line with MTR-011's retention rule.
+
+### Superseded (2026-09-21) by DD-028
+
+- **Status:** Superseded by DD-028, the same day, before any of it was built (#996 to #1003 closed; spec #1007).
+
+The core idea stands: the attachment decides, not the Field. What changed is the switch. DD-028 replaces the `on_create_form` boolean with a derived touchpoint from two switches, On intake form and Required for creation, on a per-type Form that also holds built-in columns and conditional Branches. Points 4, 5 and 6 above (a Request answer still carries; the draft prepares what the dialog asks; the rest is prepared after birth in a call of its own) carry into DD-028 unchanged. Point 7 (Entities take the column, not the control) is replaced: Entities get the Form with Required for creation and Branches.

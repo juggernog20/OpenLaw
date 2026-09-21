@@ -1212,6 +1212,8 @@ The table landed with M20/4 (#378), migration 0061, and was reconciled against t
 
 ---
 
+> **DD-028 (2026-09-21), planned:** `request_type_fields` and `request_types.form_field_order` are retired once the type Form lands. The Request form becomes the Intake Rows of the destination type's Form. `target_module` becomes NOT NULL. The attachment joins (`contract_type_fields`, `matter_type_fields`, `entity_type_fields`) gain `on_intake_form`, `visible_on_portal`, `branch_id`; per-module built-in Row tables and Branch tables (`type_id`, `parent_branch_id`, `display_order`, `match`, `conditions` jsonb) join them; `contract_types` and `matter_types` gain `is_default`; `fields.field_tag`, `fields.built_in_key` and the ten `__intake_*` rows go. Tables land with the milestone that writes them, as the schema doctrine says.
+
 ### `request_types` / `request_type_fields` / `request_attachments`
 
 Source: **INT-002**
