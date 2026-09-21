@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { useIntl } from "react-intl";
+
 /** A document-shaped format badge; no file contents need to be loaded. */
 export function FileTypeIcon({ filename }: Readonly<{ filename: string }>) {
+  const intl = useIntl();
   const extension = filename.includes(".") ? (filename.split(".").at(-1)?.toLowerCase() ?? "") : "";
   const tone =
     extension === "pdf"
@@ -13,7 +16,10 @@ export function FileTypeIcon({ filename }: Readonly<{ filename: string }>) {
           : ["ppt", "pptx", "odp"].includes(extension)
             ? "text-status-warning-fg"
             : "text-muted";
-  const label = extension && extension.length <= 5 ? extension.toUpperCase() : "FILE";
+  const label =
+    extension && extension.length <= 5
+      ? extension.toUpperCase()
+      : intl.formatMessage({ id: "documents.fileType.unknown", defaultMessage: "FILE" });
   return (
     <svg
       aria-hidden="true"

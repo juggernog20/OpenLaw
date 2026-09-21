@@ -2364,7 +2364,15 @@ function FolderRows({
                       )}
                       {childCount > 0 && (
                         <>
-                          {folder.documentCount > 0 && " · "}
+                          {folder.documentCount > 0 && (
+                            <>
+                              {" "}
+                              <FormattedMessage
+                                id="documents.folder.countSeparator"
+                                defaultMessage="·"
+                              />{" "}
+                            </>
+                          )}
                           <FormattedMessage
                             id="documents.folder.childCount"
                             defaultMessage="{count, plural, one {# folder} other {# folders}}"

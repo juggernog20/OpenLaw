@@ -167,7 +167,11 @@ export function BulkDocumentActions({
         <ul role="alert" className="mt-2 space-y-1 text-sm text-status-danger-fg">
           {errors.map((error) => (
             <li key={error.id}>
-              {error.title}: {error.detail}
+              <FormattedMessage
+                id="documents.bulk.errorRow"
+                defaultMessage="{title}: {detail}"
+                values={{ title: error.title, detail: error.detail }}
+              />
             </li>
           ))}
         </ul>

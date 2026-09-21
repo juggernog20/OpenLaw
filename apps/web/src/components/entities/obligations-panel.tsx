@@ -296,7 +296,10 @@ function obligationCatalogue(intl: IntlShape): TableCatalogue<EntityObligation> 
       label: () => labels.repeat,
       defaultWidth: 128,
       minWidth: 80,
-      render: (row) => row.recurrenceMonths ?? "—",
+      render: (row) =>
+        row.recurrenceMonths ?? (
+          <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+        ),
     },
     {
       key: "registration",
@@ -304,7 +307,12 @@ function obligationCatalogue(intl: IntlShape): TableCatalogue<EntityObligation> 
       label: () => labels.registration,
       defaultWidth: 180,
       minWidth: 100,
-      render: (row) => (row.registration ? registrationLabel(intl, row.registration) : "—"),
+      render: (row) =>
+        row.registration ? (
+          registrationLabel(intl, row.registration)
+        ) : (
+          <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
+        ),
     },
     {
       key: "assignee",
@@ -322,7 +330,7 @@ function obligationCatalogue(intl: IntlShape): TableCatalogue<EntityObligation> 
       minWidth: 100,
       render: (row) =>
         row.matter === null ? (
-          "—"
+          <FormattedMessage id="entities.list.value.none" defaultMessage="—" />
         ) : "restricted" in row.matter ? (
           <RestrictedRecordCell
             label={{
@@ -342,7 +350,8 @@ function obligationCatalogue(intl: IntlShape): TableCatalogue<EntityObligation> 
       label: () => labels.note,
       defaultWidth: 180,
       minWidth: 80,
-      render: (row) => row.note || "—",
+      render: (row) =>
+        row.note || <FormattedMessage id="entities.list.value.none" defaultMessage="—" />,
     },
   ];
   return {

@@ -86,7 +86,9 @@ const libraryColumns: TableCatalogue<AvailableAutoDoc> = {
       render: (row) => (
         <span className="text-muted">
           {row.availability.ready ? (
-            row.description || "—"
+            row.description || (
+              <FormattedMessage id="portal.autoDocs.noDescription" defaultMessage="—" />
+            )
           ) : (
             <span className="inline-flex items-center gap-2 text-status-warning-fg">
               <CircleAlert size={14} className="shrink-0" aria-hidden="true" />
@@ -105,7 +107,13 @@ const libraryColumns: TableCatalogue<AvailableAutoDoc> = {
       minWidth: 100,
       render: (row) => (
         <span className="text-sm text-muted">
-          {row.formats === "both" ? "Word · PDF" : row.formats === "pdf" ? "PDF" : "Word"}
+          {row.formats === "both" ? (
+            <FormattedMessage id="autoDocs.formatBoth" defaultMessage="Word · PDF" />
+          ) : row.formats === "pdf" ? (
+            <FormattedMessage id="autoDocs.formatPdf" defaultMessage="PDF" />
+          ) : (
+            <FormattedMessage id="autoDocs.formatWord" defaultMessage="Word" />
+          )}
         </span>
       ),
     },

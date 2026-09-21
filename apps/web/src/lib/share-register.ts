@@ -77,7 +77,7 @@ export function entryKindPillClass(kind: ShareEntryKind): string {
 
 /** The holder's display name, or the MTR-015 placeholder for a walled Entity. */
 export function holderLabel(intl: IntlShape, holder: HolderRef | null): string {
-  if (!holder) return "—";
+  if (!holder) return intl.formatMessage({ id: "entities.list.value.none", defaultMessage: "—" });
   if (holder.restricted) {
     return intl.formatMessage({ id: "entities.restricted", defaultMessage: "Restricted Entity" });
   }
