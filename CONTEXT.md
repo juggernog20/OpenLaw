@@ -334,7 +334,7 @@ The ordered tree a Contract, Matter, or Entity type owns, made of Rows and Branc
 _Avoid_: attachment list, field list, form definition (Auto-Docs own that term)
 
 **Row**:
-A node on a Form that collects one value: a built-in column or an attached Field. On a Contract or Matter Form it carries three switches, On intake form, Required for creation, Visible on Portal. On an Entity Form it carries the last two [DD-028].
+A node on a Form that collects one value: a built-in column or an attached Field. On a Contract or Matter Form it carries three switches, On intake form, Required for creation, Visible on Portal. On an Entity Form only Required for creation is shown; On intake form and Visible on Portal are absent [DD-028, DES-090].
 _Avoid_: attachment, form field, question
 
 **Branch**:
