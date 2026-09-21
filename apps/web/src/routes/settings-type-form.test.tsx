@@ -243,6 +243,25 @@ it("keeps a new Branch draft and its refusal visible after a failed write", asyn
   expect(screen.getByRole("button", { name: "Retry condition change" })).toBeInTheDocument();
 });
 
+it("keeps an edited Branch draft after a failed write and resends it on Retry", async () => {
+  const { user, writes } = setupForm("contract", true, conditional);
+  await user.click(await screen.findByRole("button", { name: "Edit conditions" }));
+  await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "evergreen");
+  expect(await screen.findByText("The Form changed. Try again.")).toBeInTheDocument();
+  expect(screen.getByRole("combobox", { name: "Value" })).toHaveValue("evergreen");
+  expect(
+    screen.getByRole("button", { name: /Move Show when all of: Term type is Evergreen/ }),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Retry condition change" }));
+  await waitFor(() => expect(writes).toHaveLength(2));
+  expect((writes[1]!.at(-1) as FormBranch).conditions[0]?.value).toBe("evergreen");
+  screen.getByRole("combobox", { name: "Value" }).focus();
+  await user.keyboard("{Escape}");
+  expect(
+    screen.getByRole("button", { name: /Move Show when all of: Term type is Fixed/ }),
+  ).toBeInTheDocument();
+});
+
 it("removes a populated Branch without detaching its children", async () => {
   const { user, read } = setupForm("contract", false, conditional);
   await user.click(await screen.findByRole("button", { name: /Actions for Show when all of/ }));

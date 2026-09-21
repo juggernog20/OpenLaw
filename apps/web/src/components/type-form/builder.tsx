@@ -180,10 +180,10 @@ export function TypeFormBuilder({
       note(key, "saved");
       if (message) setAnnouncement(message);
     } else {
-      const newBranch =
-        key.endsWith("-condition") &&
-        !flatten(saved.current).some((n) => `${n.id}-condition` === key);
-      setForm(newBranch ? next : saved.current);
+      // A condition draft stays in the tree so Retry condition change can send it again
+      // and the open Conditions panel still matches what the caption reads. Escape
+      // restores the saved Branch. Every other control falls back to the saved tree.
+      setForm(key.endsWith("-condition") ? next : saved.current);
       note(key, "error", (await problem(result)).detail);
     }
     busyRef.current = false;
