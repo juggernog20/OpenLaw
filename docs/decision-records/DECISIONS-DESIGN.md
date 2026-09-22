@@ -5077,10 +5077,10 @@ The card has a 44px header, a 40px column-heading strip, the tree, and a footer.
 | Part                  | Width and treatment                                                                                                            |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Grip                  | 36px column, 16px `grip-vertical` in a 28px button.                                                                            |
-| Name                  | Flexible, minimum 240px at the root; 13px medium. Under it, a 12px caption with the Field type's display name or **Built-in**. |
-| On intake form        | 160px, centered 36 × 20px switch.                                                                                              |
-| Required for creation | 160px, same switch.                                                                                                            |
-| Visible on Portal     | 144px, same switch for Fields; a 16px lock and **Fixed** for built-ins.                                                        |
+| Name                  | Flexible, minimum 200px at the root; 13px medium. Under it, a 12px caption with the Field type's display name or **Built-in**. |
+| On intake form        | 128px, centered 36 × 20px switch.                                                                                              |
+| Required for creation | 128px, same switch.                                                                                                            |
+| Visible on Portal     | 128px, same switch for Fields; a 16px lock and **Fixed** for built-ins.                                                        |
 | Touchpoint            | 80px, 12px muted caption: **Intake**, **Creation** or **Record**.                                                              |
 | Actions               | 64px, 28px overflow and detach buttons with 16px `ellipsis` and `x` icons.                                                     |
 
