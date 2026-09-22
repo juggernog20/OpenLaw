@@ -3269,6 +3269,9 @@
   "createAttachments.continue": {
     "defaultMessage": "Continue"
   },
+  "createAttachments.download": {
+    "defaultMessage": "Download {name}"
+  },
   "createAttachments.drop": {
     "defaultMessage": "or drag and drop files here"
   },
@@ -4048,6 +4051,9 @@
   },
   "documents.composer.chooseMany": {
     "defaultMessage": "Choose files"
+  },
+  "documents.composer.clearFile": {
+    "defaultMessage": "Remove {name}"
   },
   "documents.composer.file": {
     "defaultMessage": "File"

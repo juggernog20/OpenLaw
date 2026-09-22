@@ -5,7 +5,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Check, FileText, Loader, Paperclip, X } from "lucide-react";
+import { Check, Download, FileText, Loader, Paperclip, X } from "lucide-react";
 import {
   DOCUMENT_VERSION_KINDS,
   documentKindLabel,
@@ -16,6 +16,7 @@ import {
 import { formatFileSize } from "../../lib/format";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { Button } from "../ui/button";
+import { FileTile, FileTileGrid, TILE_ACTION_CLASS } from "./file-tiles";
 import { Label } from "../ui/label";
 
 type Attachment = {
@@ -133,14 +134,28 @@ export function useCreateAttachments() {
   };
 }
 
+/** A file the record already carries before anything is staged here.
+ * The Convert dialog passes the Request's own attachments, which the
+ * conversion copies onto the new record (INT-002, DOC-008). */
+export type ExistingAttachment = {
+  id: string;
+  filename: string;
+  /** Download target, when the reader is allowed to open it. */
+  href?: string;
+};
+
 export function CreateAttachments({
   uploads,
   disabled = false,
   showKind = true,
+  existing = [],
 }: Readonly<{
   uploads: ReturnType<typeof useCreateAttachments>;
   disabled?: boolean;
   showKind?: boolean;
+  /** Files already on the way to the record, shown read-only before
+   * anything staged here. */
+  existing?: readonly ExistingAttachment[];
 }>) {
   const intl = useIntl();
   const id = useId();
@@ -154,7 +169,7 @@ export function CreateAttachments({
       </Label>
       {!uploads.created && (
         <div
-          className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border p-5 text-center"
+          className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border p-5 text-center"
           onDragOver={(event) => {
             event.preventDefault();
           }}
@@ -163,7 +178,62 @@ export function CreateAttachments({
             if (!blocked) uploads.add(Array.from(event.dataTransfer.files));
           }}
         >
-          <Paperclip size={20} className="text-muted" aria-hidden="true" />
+          {existing.length > 0 && (
+            <FileTileGrid>
+              {existing.map((file) => (
+                <FileTile
+                  key={file.id}
+                  filename={file.filename}
+                  action={
+                    file.href && (
+                      <Button asChild variant="ghost" size="icon" className={TILE_ACTION_CLASS}>
+                        <a download={file.filename} href={file.href}>
+                          <Download aria-hidden="true" className="size-3.5" />
+                          <span className="sr-only">
+                            <FormattedMessage
+                              id="createAttachments.download"
+                              defaultMessage="Download {name}"
+                              values={{ name: file.filename }}
+                            />
+                          </span>
+                        </a>
+                      </Button>
+                    )
+                  }
+                />
+              ))}
+            </FileTileGrid>
+          )}
+          {uploads.rows.length > 0 && (
+            <FileTileGrid>
+              {uploads.rows.map((row) => (
+                <FileTile
+                  key={row.id}
+                  filename={row.file.name}
+                  caption={formatFileSize(row.file.size, { locale: intl.locale })}
+                  action={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className={TILE_ACTION_CLASS}
+                      disabled={blocked}
+                      aria-label={intl.formatMessage(
+                        { id: "createAttachments.remove", defaultMessage: "Remove {name}" },
+                        { name: row.file.name },
+                      )}
+                      onClick={() => uploads.remove(row.id)}
+                    >
+                      <X aria-hidden="true" className="size-3.5" />
+                    </Button>
+                  }
+                />
+              ))}
+            </FileTileGrid>
+          )}
+          {existing.length === 0 && uploads.rows.length === 0 && (
+            <Paperclip size={20} className="text-muted" aria-hidden="true" />
+          )}
           <Button
             type="button"
             variant="secondary"
@@ -196,72 +266,55 @@ export function CreateAttachments({
           />
         </div>
       )}
-      {uploads.rows.length > 0 && (
-        <>
-          {!uploads.created && showKind && (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor={`${id}-kind`}>
-                <FormattedMessage id="createAttachments.kind" defaultMessage="Document kind" />
-              </Label>
-              <select
-                id={`${id}-kind`}
-                className={CONTROL_CLASS}
-                value={uploads.kind}
-                disabled={blocked}
-                onChange={(event) => {
-                  const kind = DOCUMENT_VERSION_KINDS.find((kind) => kind === event.target.value);
-                  if (kind) uploads.setKind(kind);
-                }}
-              >
-                {DOCUMENT_VERSION_KINDS.map((kind) => (
-                  <option key={kind} value={kind}>
-                    {documentKindLabel(intl, kind)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          <ul className="divide-y divide-border rounded-lg border border-border">
-            {uploads.rows.map((row) => (
-              <li key={row.id} className="flex items-center gap-3 p-3">
-                {row.state === "uploading" ? (
-                  <Loader size={16} className="shrink-0 animate-spin" aria-hidden="true" />
-                ) : row.state === "done" ? (
-                  <Check size={16} className="shrink-0 text-status-success-fg" aria-hidden="true" />
-                ) : (
-                  <FileText size={16} className="shrink-0 text-muted" aria-hidden="true" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="break-words text-sm">{row.file.name}</p>
-                  <p className="text-xs text-muted">
-                    {formatFileSize(row.file.size, { locale: intl.locale })}
-                  </p>
-                  {row.error && <p className="text-xs text-status-danger-fg">{row.error}</p>}
-                  {row.state === "done" && (
-                    <span className="text-xs text-muted">
-                      <FormattedMessage id="createAttachments.uploaded" defaultMessage="Uploaded" />
-                    </span>
-                  )}
-                </div>
-                {!uploads.created && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={blocked}
-                    aria-label={intl.formatMessage(
-                      { id: "createAttachments.remove", defaultMessage: "Remove {name}" },
-                      { name: row.file.name },
-                    )}
-                    onClick={() => uploads.remove(row.id)}
-                  >
-                    <X size={16} aria-hidden="true" />
-                  </Button>
-                )}
-              </li>
+      {uploads.rows.length > 0 && !uploads.created && showKind && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${id}-kind`}>
+            <FormattedMessage id="createAttachments.kind" defaultMessage="Document kind" />
+          </Label>
+          <select
+            id={`${id}-kind`}
+            className={CONTROL_CLASS}
+            value={uploads.kind}
+            disabled={blocked}
+            onChange={(event) => {
+              const kind = DOCUMENT_VERSION_KINDS.find((kind) => kind === event.target.value);
+              if (kind) uploads.setKind(kind);
+            }}
+          >
+            {DOCUMENT_VERSION_KINDS.map((kind) => (
+              <option key={kind} value={kind}>
+                {documentKindLabel(intl, kind)}
+              </option>
             ))}
-          </ul>
-        </>
+          </select>
+        </div>
+      )}
+      {uploads.rows.length > 0 && uploads.created && (
+        <ul className="divide-y divide-border rounded-lg border border-border">
+          {uploads.rows.map((row) => (
+            <li key={row.id} className="flex items-center gap-3 p-3">
+              {row.state === "uploading" ? (
+                <Loader size={16} className="shrink-0 animate-spin" aria-hidden="true" />
+              ) : row.state === "done" ? (
+                <Check size={16} className="shrink-0 text-status-success-fg" aria-hidden="true" />
+              ) : (
+                <FileText size={16} className="shrink-0 text-muted" aria-hidden="true" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm">{row.file.name}</p>
+                <p className="text-xs text-muted">
+                  {formatFileSize(row.file.size, { locale: intl.locale })}
+                </p>
+                {row.error && <p className="text-xs text-status-danger-fg">{row.error}</p>}
+                {row.state === "done" && (
+                  <span className="text-xs text-muted">
+                    <FormattedMessage id="createAttachments.uploaded" defaultMessage="Uploaded" />
+                  </span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
       {uploads.created && (
         <>

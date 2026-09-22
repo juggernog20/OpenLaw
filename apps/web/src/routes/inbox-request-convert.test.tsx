@@ -247,16 +247,21 @@ const detail = (
   row: Record<string, unknown>,
   customFieldRefs: unknown = { users: [], entities: [] },
   extraFields: unknown[] = [],
+  attachments: unknown[] = [],
 ) => ({
-  ...(staffDetail(row, [
-    OPPOSING_PARTY,
-    DEAL_DESK,
-    REQUESTING_MANAGER,
-    CONTRACTING_ENTITY,
-    COUNTERPARTY_NAME,
-    NEEDED_BY,
-    ...extraFields,
-  ]) as Record<string, unknown>),
+  ...(staffDetail(
+    row,
+    [
+      OPPOSING_PARTY,
+      DEAL_DESK,
+      REQUESTING_MANAGER,
+      CONTRACTING_ENTITY,
+      COUNTERPARTY_NAME,
+      NEEDED_BY,
+      ...extraFields,
+    ],
+    attachments,
+  ) as Record<string, unknown>),
   customFieldRefs,
 });
 
@@ -271,12 +276,13 @@ function requestApi(
   answer: (call: StubCall) => Response | undefined = () => undefined,
   customFieldRefs: unknown = { users: [], entities: [] },
   extraFields: unknown[] = [],
+  attachments: unknown[] = [],
 ) {
   const api = dispositionApi({
     segment: "convert",
     initial,
     answer,
-    detail: (row) => detail(row, customFieldRefs, extraFields),
+    detail: (row) => detail(row, customFieldRefs, extraFields, attachments),
     applied: (row, body) => {
       const sent = body as Record<string, unknown>;
       const requestType = row.requestType as { targetModule?: unknown };
@@ -390,6 +396,28 @@ describe("the Triage menu (INT-007)", () => {
 });
 
 describe("the prefill (INT-002, MTR-012)", () => {
+  it("lists the files the Request brought, beside the place to add more", async () => {
+    const user = userEvent.setup();
+    open(
+      requestApi(
+        request(),
+        () => undefined,
+        { users: [], entities: [] },
+        [],
+        [
+          { id: "a1", filename: "redlines.docx", createdAt: "2026-09-01T09:00:00.000Z" },
+          { id: "a2", filename: "counterparty-nda.pdf", createdAt: "2026-09-01T09:05:00.000Z" },
+        ],
+      ),
+    );
+    const dialog = await openConvert(user);
+    expect(within(dialog).getByText("redlines.docx")).toBeInTheDocument();
+    const download = within(dialog).getByRole("link", { name: "Download counterparty-nda.pdf" });
+    expect(download).toHaveAttribute("href", "/api/v1/requests/45/attachments/a2");
+    // Staging more files is still offered beside them.
+    expect(within(dialog).getByRole("button", { name: "Attach documents" })).toBeInTheDocument();
+  });
+
   it("seeds the title from the title and says where it came from", async () => {
     const user = userEvent.setup();
     open(requestApi());

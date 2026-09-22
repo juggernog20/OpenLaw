@@ -151,6 +151,7 @@ import {
   Star,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Avatar } from "../avatar";
@@ -170,7 +171,8 @@ import { Switch } from "../ui/switch";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { cn } from "../../lib/utils";
-import { formatShortDate } from "../../lib/format";
+import { formatFileSize, formatShortDate } from "../../lib/format";
+import { FileTile, FileTileGrid, TILE_ACTION_CLASS } from "./file-tiles";
 import {
   dragCarriesFiles,
   filesFromDirectoryPicker,
@@ -3901,15 +3903,41 @@ function UploadDialog({
                   />
                 </Button>
               )}
-              <span className="min-w-0 truncate text-sm text-muted">
-                {file?.name ?? (
+              {!file && (
+                <span className="min-w-0 truncate text-sm text-muted">
                   <FormattedMessage
                     id="documents.composer.noFile"
                     defaultMessage="No file chosen"
                   />
-                )}
-              </span>
+                </span>
+              )}
             </span>
+            {file && (
+              <FileTileGrid className="pt-1">
+                <FileTile
+                  filename={file.name}
+                  caption={formatFileSize(file.size, { locale: intl.locale })}
+                  action={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className={TILE_ACTION_CLASS}
+                      aria-label={intl.formatMessage(
+                        { id: "documents.composer.clearFile", defaultMessage: "Remove {name}" },
+                        { name: file.name },
+                      )}
+                      onClick={() => {
+                        setFile(null);
+                        if (picker.current) picker.current.value = "";
+                      }}
+                    >
+                      <X aria-hidden="true" className="size-3.5" />
+                    </Button>
+                  }
+                />
+              </FileTileGrid>
+            )}
           </div>
           {record.entityType !== "matter" && record.entityType !== "entity" && (
             <div className="flex flex-col gap-1.5">

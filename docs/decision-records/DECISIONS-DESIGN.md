@@ -5328,3 +5328,27 @@ DES-087's acknowledgement Frequency control is superseded by the organisation po
 ### DES-048 amendment — Today action, 2026-09-15
 
 Calendar pickers include a Today action. The shared date picker selects today's local calendar date and closes, following the same commit and focus behavior as choosing a day. Existing Today actions, including the Home dates calendar, are retained without duplication.
+
+## DES-091: One file tile wherever a file is picked, staged or carried in (extends DES-008, DES-005; amends DES-081 and DOC-011's upload dialogs)
+
+- **Status:** Accepted
+- **Date:** 2026-09-22
+- **Source:** Live review of the Convert dialog, after [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).
+
+### Context
+
+Five screens let a person put a file on a record: the Request form on the Portal, the Convert dialog, the record upload dialog, the Portal upload dialog, and the create dialogs for Contracts, Matters, Entities and Knowledge Items. The Request form drew a chosen file as a square card with a format badge. Every other screen drew a text row with a small grey glyph. A Requester therefore saw one thing, and the triager who read the same files saw another.
+
+### Decision
+
+A file that is not yet on a record is drawn one way: a square tile on the raised surface, with the DES-005 format badge filling it, the file name under the badge on at most two lines, one optional caption line (the size, or what happened to the file), and at most one action in the top corner. The tiles sit in a grid that fills the available width, so a drop zone holds its files instead of pushing a list below itself.
+
+The corner action is Remove where the person may still take the file back, and Download where the file is read-only. A file the record already carries, such as a Request's own attachments inside the Convert dialog, gets no Remove: the conversion copies it onto the new record, and nothing in the dialog can stop that.
+
+Upload progress keeps its list. A tile says which file this is; a row says what is happening to it, and the retry that follows a failure belongs beside the reason.
+
+The Convert dialog names no source under the tiles. The files sit inside the same box as "Attach documents", and the box is the sentence.
+
+### Consequences
+
+`FileTile` and `FileTileGrid` are the one implementation. The comment composer keeps its chips, because a comment attachment is written inline with text and a grid of cards would outweigh the comment.
