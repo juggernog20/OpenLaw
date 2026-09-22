@@ -66,14 +66,14 @@ Visible on Portal belongs to the Row, so a Field can be visible on one type's Fo
 For an NDA that collects an expiry date only for a fixed term:
 
 1. Open the NDA type's **Form** tab. Turn on **On intake form** for **Term type** and **Expiry date**. Turn on **Required for creation** for Expiry date.
-2. Select **Add condition** below the intended preceding Rows. Choose **Term type** as **Row**, **is** as **Operator**, and **Fixed** as **Value**. Choose **All** to require every condition or **Any** to accept any condition. The completed condition saves immediately.
+2. Select **Add condition** below the intended preceding Rows. Choose **Term type** as **Row**, **is** as **Operator**, and **Fixed** as **Value**. The completed condition saves immediately. A half-written condition saves nothing and says nothing until it is complete.
 3. Select the grip **Move Expiry date**, choose **Put under a condition…**, and choose **Show when all of: Term type is Fixed**. The Row moves under that Branch. Other Rows, including catalog Fields, can join it.
 4. Select **Preview intake form**. Choose Fixed and check that Expiry date appears as required. Choose Evergreen and check that it disappears. **Submit request** tests validation here without sending a Request or uploading files.
 5. Close the preview. Check the **Intake form** card on each affected Request type before sharing the change.
 
 A condition can reference only Rows above its Branch. Keep its source on intake if the Requester must answer it. An unanswered source makes **is not** true; other operators are false. A source hidden by another Branch counts as unanswered. Ordered comparisons are available for number, money and date Rows. Money condition values use minor units, for example 5,000 for USD 50 or JPY 5,000.
 
-Use **Edit conditions** to change the Branch. An incomplete new condition stays local; Escape discards it. A failed save offers **Retry condition change**. The Row's actions also offer **Move out**. **Remove branch** keeps its children. A move or detach that would leave a condition without a preceding source is refused beside the control.
+To ask more than one question, select **Add another condition**. The first time, it asks whether to join the next condition with **AND** or **OR**. That answer covers every condition in the Branch, and the **Join conditions** control between the first two conditions changes it later. Use **Edit conditions** to change the Branch. An incomplete new condition stays local; Escape discards it. A failed save offers **Retry condition change**. The Row's grip also offers **Move out of the condition**. **Remove branch** keeps its children. A move or detach that would leave a condition without a preceding source is refused beside the control.
 
 Rows under a false Branch are not collected or required. Changing an answer can hide later Rows without erasing held answers. On a saved record, a Row with a value remains visible even when its Branch no longer holds, subject to Portal visibility and access rules.
 

@@ -11471,17 +11471,14 @@
   "typeForm.add-field-into-condition": {
     "defaultMessage": "Add field into condition"
   },
-  "typeForm.all": {
-    "defaultMessage": "All"
-  },
   "typeForm.all-fields-are-attached": {
     "defaultMessage": "All Fields are attached"
   },
   "typeForm.already-at-the-root": {
     "defaultMessage": "Already at the root"
   },
-  "typeForm.any": {
-    "defaultMessage": "Any"
+  "typeForm.and": {
+    "defaultMessage": "AND"
   },
   "typeForm.approval-defaults": {
     "defaultMessage": "Approval defaults"
@@ -11606,6 +11603,12 @@
   "typeForm.is-set": {
     "defaultMessage": "is set"
   },
+  "typeForm.join-conditions": {
+    "defaultMessage": "Join conditions"
+  },
+  "typeForm.join-the-next-condition-with": {
+    "defaultMessage": "Join the next condition with"
+  },
   "typeForm.keepRowAbove": {
     "defaultMessage": "Keep {row} above the Branch that uses it"
   },
@@ -11614,9 +11617,6 @@
   },
   "typeForm.low": {
     "defaultMessage": "Low"
-  },
-  "typeForm.match": {
-    "defaultMessage": "Match"
   },
   "typeForm.medium": {
     "defaultMessage": "Medium"
@@ -11677,6 +11677,9 @@
   },
   "typeForm.options-could-not-be-loaded-close-and-reopen-conditions-to-retry": {
     "defaultMessage": "Options could not be loaded. Close and reopen conditions to retry."
+  },
+  "typeForm.or": {
+    "defaultMessage": "OR"
   },
   "typeForm.people": {
     "defaultMessage": "People"
@@ -11743,9 +11746,6 @@
   },
   "typeForm.rowActions": {
     "defaultMessage": "Actions for {row}"
-  },
-  "typeForm.rows-above-only": {
-    "defaultMessage": "Rows above only"
   },
   "typeForm.search-fields": {
     "defaultMessage": "Search fields"

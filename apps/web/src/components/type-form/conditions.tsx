@@ -2,7 +2,7 @@
 
 /** DD-028 condition editor for one Branch and its preceding Rows. */
 import { useFormText } from "./messages";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import type { FormBranch, FormCondition, FormOperator, FormRow, FormScalar } from "@openlaw/shared";
 import type { ApiField } from "../../lib/field-catalog";
 import { CONTROL_CLASS } from "../../lib/form-controls";
@@ -29,9 +29,22 @@ export function Conditions({
 }>) {
   const t = useFormText();
   const [draft, setDraft] = useState(branch);
+  // The AND / OR question, asked at the moment the second condition is
+  // added, which is where the join first means anything (2026-09-22,
+  // from live review). One join covers the whole Branch, so it is asked
+  // once and changed afterwards on the join itself.
+  const [asking, setAsking] = useState(false);
   function change(next: FormBranch) {
     setDraft(next);
     onChange(next);
+  }
+  function addCondition(match?: FormBranch["match"]) {
+    setAsking(false);
+    change({
+      ...draft,
+      ...(match ? { match } : {}),
+      conditions: [...draft.conditions, { rowRef: "", operator: "equals", value: null }],
+    });
   }
   function condition(index: number, next: FormCondition) {
     change({ ...draft, conditions: draft.conditions.map((c, i) => (i === index ? next : c)) });
@@ -52,117 +65,155 @@ export function Conditions({
         className="flex flex-col gap-3"
       >
         <legend className="sr-only">{t("Branch conditions")}</legend>
-        <div role="radiogroup" aria-label={t("Match")} className="flex gap-3">
-          {(["all", "any"] as const).map((match) => (
-            <label key={match} className="flex items-center gap-2">
-              <input
-                type="radio"
-                checked={draft.match === match}
-                name={`match-${branch.id}`}
-                onChange={() => change({ ...draft, match })}
-              />
-              {match === "all" ? t("All") : t("Any")}
-            </label>
-          ))}
-        </div>
         {draft.conditions.map((c, index) => {
           const row = rows.find((r) => r.rowRef === c.rowRef);
           return (
-            <div key={index} className="flex flex-wrap items-start gap-2">
-              <label className="flex min-w-40 flex-1 flex-col gap-1">
-                {t("Row")}
+            <Fragment key={index}>
+              {index === 1 ? (
                 <select
-                  autoFocus={index === 0 && !c.rowRef}
-                  aria-describedby={`above-${branch.id}`}
-                  className={CONTROL_CLASS}
-                  value={c.rowRef}
+                  aria-label={t("Join conditions")}
+                  // Sized to its two words, not the row: w-auto cannot
+                  // beat the shared class's w-full on its own, and the
+                  // editor's flex column would stretch it regardless.
+                  className={`${CONTROL_CLASS.replace("w-full", "w-auto")} self-start`}
+                  value={draft.match}
                   onChange={(e) =>
-                    condition(index, { rowRef: e.target.value, operator: "equals", value: null })
+                    change({ ...draft, match: e.target.value as FormBranch["match"] })
                   }
                 >
-                  <option value="">{t("Select Row")}</option>
-                  {rows.map((r) => (
-                    <option key={r.id} value={r.rowRef}>
-                      {rowName(r, catalog, t)}
-                    </option>
-                  ))}
+                  <option value="all">{t("AND")}</option>
+                  <option value="any">{t("OR")}</option>
                 </select>
-              </label>
-              <label className="flex min-w-40 flex-1 flex-col gap-1">
-                {t("Operator")}
-                <select
-                  className={CONTROL_CLASS}
-                  value={c.operator}
-                  onChange={(e) => {
-                    const operator = e.target.value as FormOperator;
-                    condition(index, {
-                      ...c,
-                      operator,
-                      value:
-                        operator === "is_set"
-                          ? null
-                          : operator === "is_one_of"
-                            ? c.value === null
-                              ? []
-                              : Array.isArray(c.value)
-                                ? c.value
-                                : [c.value as FormScalar]
-                            : Array.isArray(c.value)
-                              ? (c.value[0] ?? null)
-                              : c.value,
-                    });
-                  }}
-                >
-                  {Object.entries(OPERATORS)
-                    .filter(
-                      ([op]) =>
-                        !["greater_than", "less_than"].includes(op) ||
-                        (row && ["number", "money", "date"].includes(row.fieldType)),
-                    )
-                    .map(([op, label]) => (
-                      <option key={op} value={op}>
-                        {t(label)}
+              ) : (
+                index > 1 && (
+                  // One join covers every condition, so the later ones
+                  // only repeat what the first select already says.
+                  <span aria-hidden="true" className="text-sm text-muted">
+                    {draft.match === "all" ? t("AND") : t("OR")}
+                  </span>
+                )
+              )}
+              <div className="flex flex-wrap items-start gap-2">
+                <label className="flex min-w-40 flex-1 flex-col gap-1">
+                  {t("Row")}
+                  <select
+                    autoFocus={!c.rowRef && index === draft.conditions.length - 1}
+                    aria-describedby={rows.length ? undefined : `above-${branch.id}`}
+                    className={CONTROL_CLASS}
+                    value={c.rowRef}
+                    onChange={(e) =>
+                      condition(index, { rowRef: e.target.value, operator: "equals", value: null })
+                    }
+                  >
+                    <option value="">{t("Select Row")}</option>
+                    {rows.map((r) => (
+                      <option key={r.id} value={r.rowRef}>
+                        {rowName(r, catalog, t)}
                       </option>
                     ))}
-                </select>
-              </label>
-              {c.operator !== "is_set" && (
-                <Operand
-                  key={`${c.rowRef}-${c.operator}-${index}`}
-                  condition={c}
-                  row={row}
-                  catalog={catalog}
-                  onChange={(value) => condition(index, { ...c, value })}
-                />
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-label={t("Remove condition {number}", { number: index + 1 })}
-                onClick={() =>
-                  change({ ...draft, conditions: draft.conditions.filter((_, i) => i !== index) })
-                }
-              >
-                ×
-              </Button>
-            </div>
+                  </select>
+                </label>
+                <label className="flex min-w-40 flex-1 flex-col gap-1">
+                  {t("Operator")}
+                  <select
+                    className={CONTROL_CLASS}
+                    value={c.operator}
+                    onChange={(e) => {
+                      const operator = e.target.value as FormOperator;
+                      condition(index, {
+                        ...c,
+                        operator,
+                        value:
+                          operator === "is_set"
+                            ? null
+                            : operator === "is_one_of"
+                              ? c.value === null
+                                ? []
+                                : Array.isArray(c.value)
+                                  ? c.value
+                                  : [c.value as FormScalar]
+                              : Array.isArray(c.value)
+                                ? (c.value[0] ?? null)
+                                : c.value,
+                      });
+                    }}
+                  >
+                    {Object.entries(OPERATORS)
+                      .filter(
+                        ([op]) =>
+                          !["greater_than", "less_than"].includes(op) ||
+                          (row && ["number", "money", "date"].includes(row.fieldType)),
+                      )
+                      .map(([op, label]) => (
+                        <option key={op} value={op}>
+                          {t(label)}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                {c.operator !== "is_set" && (
+                  <Operand
+                    key={`${c.rowRef}-${c.operator}-${index}`}
+                    condition={c}
+                    row={row}
+                    catalog={catalog}
+                    onChange={(value) => condition(index, { ...c, value })}
+                  />
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={t("Remove condition {number}", { number: index + 1 })}
+                  onClick={() =>
+                    change({ ...draft, conditions: draft.conditions.filter((_, i) => i !== index) })
+                  }
+                >
+                  ×
+                </Button>
+              </div>
+            </Fragment>
           );
         })}
-        <p id={`above-${branch.id}`} className="text-sm text-muted">
-          {rows.length ? t("Rows above only") : t("Add a Row above this Branch first")}
-        </p>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() =>
-            change({
-              ...draft,
-              conditions: [...draft.conditions, { rowRef: "", operator: "equals", value: null }],
-            })
-          }
-        >
-          {t("Add another condition")}
-        </Button>
+        {/* Only the empty case earns a caption: with Rows to choose
+            from, the select's own contents already say which ones are
+            eligible (2026-09-22, from live review). */}
+        {!rows.length && (
+          <p id={`above-${branch.id}`} className="text-sm text-muted">
+            {t("Add a Row above this Branch first")}
+          </p>
+        )}
+        {asking ? (
+          <div
+            role="group"
+            aria-label={t("Join the next condition with")}
+            className="flex flex-wrap items-center gap-2"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.stopPropagation();
+                setAsking(false);
+              }
+            }}
+          >
+            <span className="text-sm text-muted">{t("Join the next condition with")}</span>
+            <Button autoFocus variant="secondary" size="sm" onClick={() => addCondition("all")}>
+              {t("AND")}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => addCondition("any")}>
+              {t("OR")}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setAsking(false)}>
+              {t("Cancel")}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => (draft.conditions.length === 1 ? setAsking(true) : addCondition())}
+          >
+            {t("Add another condition")}
+          </Button>
+        )}
       </fieldset>
     </div>
   );

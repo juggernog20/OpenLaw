@@ -161,6 +161,36 @@ describe("the type Form tab", () => {
     await waitFor(() => expect(writes).toHaveLength(2));
   });
 
+  it("asks AND or OR when the second condition is added and keeps one join for the Branch", async () => {
+    const { user, read } = setupForm();
+    await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
+    await user.click(screen.getByRole("switch", { name: "Expiry date: On intake form" }));
+    await user.click(screen.getByRole("button", { name: "Add condition" }));
+    // No All / Any control before there is anything to join.
+    expect(screen.queryByRole("combobox", { name: "Join conditions" })).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "term_type");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "fixed");
+    await waitFor(() => expect(read().at(-1)?.kind).toBe("branch"));
+    // The question comes at the moment the join first means something.
+    await user.click(screen.getByRole("button", { name: "Add another condition" }));
+    const ask = screen.getByRole("group", { name: "Join the next condition with" });
+    expect(within(ask).getByRole("button", { name: "AND" })).toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: "Row" })).toHaveLength(1);
+    await user.click(within(ask).getByRole("button", { name: "OR" }));
+    expect(screen.getAllByRole("combobox", { name: "Row" })).toHaveLength(2);
+    const join = screen.getByRole("combobox", { name: "Join conditions" });
+    expect(join).toHaveValue("any");
+    // The join stays changeable afterwards, and one value covers them all.
+    await user.selectOptions(join, "all");
+    expect(join).toHaveValue("all");
+    await user.click(screen.getByRole("button", { name: "Add another condition" }));
+    expect(
+      screen.queryByRole("group", { name: "Join the next condition with" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: "Row" })).toHaveLength(3);
+    expect(screen.getAllByRole("combobox", { name: "Join conditions" })).toHaveLength(1);
+  });
+
   it("adds a Fixed-term Branch, moves Expiry date into it and evaluates preview", async () => {
     const { user, read, router, route } = setupForm();
     await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
