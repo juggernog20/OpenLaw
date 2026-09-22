@@ -4,7 +4,30 @@
 
 import { describe, expect, it } from "vitest";
 import { json, problem, stubFetch } from "../testing/helpers";
-import { mergeCommentWindow, readCommentWindow, type Comment } from "./comments";
+import { createIntl } from "react-intl";
+import {
+  composerTiers,
+  mergeCommentWindow,
+  readCommentWindow,
+  tierAudience,
+  type Comment,
+} from "./comments";
+
+describe.each(["matter_task", "contract_task"] as const)("%s audience", (entityType) => {
+  it("offers one inherited audience to eligible staff", () => {
+    expect(composerTiers("administrator", entityType)).toEqual(["working_team"]);
+    expect(composerTiers("legal_team_member", entityType)).toEqual(["working_team"]);
+    expect(composerTiers("business_user", entityType)).toEqual([]);
+  });
+
+  it("describes task access consistently for both stored internal tiers", () => {
+    const intl = createIntl({ locale: "en" });
+    for (const tier of ["working_team", "legal_only"] as const)
+      expect(tierAudience(intl, tier, entityType)).toBe(
+        "Visible to everyone who can access this task.",
+      );
+  });
+});
 
 function comment(id: string, createdAt: string, body = id): Comment {
   return {

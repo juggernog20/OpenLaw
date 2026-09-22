@@ -41,6 +41,7 @@ import { Checkbox } from "../components/ui/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { FieldHelp } from "../components/ui/field-help";
 
 export async function settingsApproverGroupsLoader() {
   const user = await requireUser();
@@ -298,7 +299,17 @@ function GroupEditorDialog({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="group-description">
+            <Label
+              htmlFor="group-description"
+              help={
+                <>
+                  <FormattedMessage
+                    id="settings.approverGroups.descriptionHelp"
+                    defaultMessage="Shown beside the group wherever it is applied."
+                  />
+                </>
+              }
+            >
               <FormattedMessage
                 id="settings.approverGroups.descriptionLabel"
                 defaultMessage="Description"
@@ -309,19 +320,23 @@ function GroupEditorDialog({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.approverGroups.descriptionHelp"
-                defaultMessage="Shown beside the group wherever it is applied."
-              />
-            </p>
           </div>
-          <fieldset className="flex flex-col gap-1.5">
+          <fieldset className="flex flex-col gap-1.5" aria-labelledby="group-members-label">
             <legend className="pb-1.5 text-sm font-medium text-primary">
-              <FormattedMessage
-                id="settings.approverGroups.membersLabel"
-                defaultMessage="Members"
-              />
+              <span className="inline-flex items-center gap-1">
+                <span id="group-members-label">
+                  <FormattedMessage
+                    id="settings.approverGroups.membersLabel"
+                    defaultMessage="Members"
+                  />
+                </span>
+                <FieldHelp labelId="group-members-label">
+                  <FormattedMessage
+                    id="settings.approverGroups.membersHelp"
+                    defaultMessage="Any active user can approve. Business users review requests in the Legal portal."
+                  />
+                </FieldHelp>
+              </span>
             </legend>
             {candidates.length === 0 ? (
               <p className="text-sm text-muted">
@@ -361,12 +376,6 @@ function GroupEditorDialog({
                 ))}
               </ul>
             )}
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.approverGroups.membersHelp"
-                defaultMessage="Any active user can approve. Business users review requests in the Legal portal."
-              />
-            </p>
           </fieldset>
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">

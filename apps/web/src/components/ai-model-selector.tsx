@@ -129,7 +129,27 @@ export function AiModelSelector({
 
   return (
     <div className="flex max-w-full flex-col gap-2">
-      <Label htmlFor="ai-model">
+      <Label
+        htmlFor="ai-model"
+        help={
+          azure ? (
+            <FormattedMessage
+              id="settings.aiAnalysis.models.azure"
+              defaultMessage="Enter the deployment name from Azure. The deployment endpoint does not provide a list of deployments."
+            />
+          ) : config.preset === "groq" ? (
+            <FormattedMessage
+              id="settings.aiAnalysis.models.groq"
+              defaultMessage="Groq models are filtered by model family. Use Test connection to check the selected model."
+            />
+          ) : config.preset === "ollama" ? (
+            <FormattedMessage
+              id="settings.aiAnalysis.models.ollama"
+              defaultMessage="Load models installed in Ollama. This does not download models."
+            />
+          ) : undefined
+        }
+      >
         <FormattedMessage id="settings.aiAnalysis.model" defaultMessage="Model" />
       </Label>
       {manual ? (
@@ -331,30 +351,6 @@ export function AiModelSelector({
           </p>
         )}
       </div>
-      {azure && (
-        <p className="text-xs text-muted">
-          <FormattedMessage
-            id="settings.aiAnalysis.models.azure"
-            defaultMessage="Enter the deployment name from Azure. The deployment endpoint does not provide a list of deployments."
-          />
-        </p>
-      )}
-      {config.preset === "groq" && (
-        <p className="text-xs text-muted">
-          <FormattedMessage
-            id="settings.aiAnalysis.models.groq"
-            defaultMessage="Groq models are filtered by model family. Use Test connection to check the selected model."
-          />
-        </p>
-      )}
-      {config.preset === "ollama" && (
-        <p className="text-xs text-muted">
-          <FormattedMessage
-            id="settings.aiAnalysis.models.ollama"
-            defaultMessage="Load models installed in Ollama. This does not download models."
-          />
-        </p>
-      )}
     </div>
   );
 }

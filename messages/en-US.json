@@ -2222,6 +2222,9 @@
   "comments.request.sharedWithRequester": {
     "defaultMessage": "Shared with requester"
   },
+  "comments.task.audience": {
+    "defaultMessage": "Visible to everyone who can access this task."
+  },
   "comments.tier.fullThread": {
     "defaultMessage": "Full thread"
   },
@@ -2257,6 +2260,9 @@
   },
   "common.edit": {
     "defaultMessage": "Edit"
+  },
+  "common.fieldHelp": {
+    "defaultMessage": "More information"
   },
   "common.no": {
     "defaultMessage": "No"
@@ -3226,9 +3232,6 @@
   },
   "convert.priority": {
     "defaultMessage": "Priority"
-  },
-  "convert.staysBehind": {
-    "defaultMessage": "Does not carry into the {module, select, matter {matter} other {contract}}"
   },
   "convert.submit": {
     "defaultMessage": "Convert to {module, select, matter {matter} other {contract}}"
@@ -6088,6 +6091,9 @@
   },
   "keyDates.reminders.recipientHelp": {
     "defaultMessage": "With no selection, reminders go to the Legal Owner or Matter Manager, the Business Owner, and everyone on the record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
+  },
+  "keyDates.reminders.recipients": {
+    "defaultMessage": "Recipients"
   },
   "keyDates.reminders.remove": {
     "defaultMessage": "Remove {offset}"

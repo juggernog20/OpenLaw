@@ -7,6 +7,7 @@
  * and no dirty state.
  */
 import { AutoResizeTextarea } from "../auto-resize-textarea";
+import { Label } from "../ui/label";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -509,13 +510,12 @@ function Control({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={htmlFor} className="text-sm font-medium">
+        <Label htmlFor={htmlFor} help={caption}>
           {label}
-        </label>
+        </Label>
         <StatusNote status={status} detail={error} />
       </div>
       {children}
-      {caption && <span className="text-xs text-muted">{caption}</span>}
     </div>
   );
 }

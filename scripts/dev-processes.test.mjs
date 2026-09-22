@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -279,3 +279,224 @@ if [ "$count" -gt 2 ]; then echo LISTEN; fi
     assert.ok(pids.every((pid) => !alive(pid)));
   },
 );
+
+test(
+  "worktrees share data with separate ports and independent shutdown",
+  { timeout: 20000 },
+  async (t) => {
+    const fixture = mkdtempSync(path.join(tmpdir(), "openlaw-shared-"));
+    t.after(() => rmSync(fixture, { recursive: true, force: true }));
+    const main = path.join(fixture, "main");
+    const branches = [path.join(fixture, "a"), path.join(fixture, "b")];
+    mkdirSync(path.join(fixture, "bin"));
+    for (const root of [main, ...branches]) {
+      mkdirSync(path.join(root, "scripts"), { recursive: true });
+      mkdirSync(path.join(root, "node_modules"));
+      copyFileSync(helper, path.join(root, "scripts/dev-processes.mjs"));
+      copyFileSync(new URL("./dev-hot.sh", import.meta.url), path.join(root, "scripts/dev-hot.sh"));
+      writeFileSync(path.join(root, "scripts/dev-smtp.mjs"), 'console.log("mailpit");');
+      writeFileSync(path.join(root, ".env"), "SETUP_TOKEN=fixture\n");
+    }
+    writeFileSync(
+      path.join(fixture, "bin/git"),
+      '#!/bin/sh\nprintf "worktree %s\\n" "$MAIN_CHECKOUT"\n',
+      { mode: 0o755 },
+    );
+    writeFileSync(
+      path.join(fixture, "bin/docker"),
+      `#!/usr/bin/env node
+const { appendFileSync } = require("node:fs");
+appendFileSync(process.env.DOCKER_LOG, JSON.stringify({
+  project: process.env.COMPOSE_PROJECT_NAME,
+  args: process.argv.slice(2),
+  ports: [process.env.POSTGRES_PORT, process.env.DOC_ENGINE_PORT, process.env.MAILPIT_PORT, process.env.MAILPIT_SMTP_PORT],
+}) + "\\n");
+`,
+      { mode: 0o755 },
+    );
+    writeFileSync(
+      path.join(fixture, "bin/ss"),
+      `#!/bin/sh
+file="$FIXTURE_ROOT/ss-$OPENLAW_DEV_RUN"
+count=0
+if [ -f "$file" ]; then read -r count < "$file"; fi
+count=$((count + 1))
+echo "$count" > "$file"
+if [ "$count" -gt 2 ]; then echo LISTEN; fi
+`,
+      { mode: 0o755 },
+    );
+    writeFileSync(
+      path.join(fixture, "bin/pnpm"),
+      `#!/usr/bin/env node
+const keys = ["OPENLAW_DEV_INSTANCE", "COMPOSE_PROJECT_NAME", "PORT", "WEB_PORT", "DEV_API_ORIGIN", "BASE_URL", "DATABASE_URL", "DOC_ENGINE_URL", "SMTP_URL", "STORAGE_PATH"];
+console.log("SNAPSHOT " + JSON.stringify({ args: process.argv.slice(2), env: Object.fromEntries(keys.map(key => [key, process.env[key]])) }));
+console.log("READY " + process.pid);
+setInterval(() => {}, 1000);
+`,
+      { mode: 0o755 },
+    );
+    const env = {
+      ...process.env,
+      PATH: `${fixture}/bin:${process.env.PATH}`,
+      MAIN_CHECKOUT: main,
+      FIXTURE_ROOT: fixture,
+      DOCKER_LOG: `${fixture}/docker.log`,
+      COMPOSE_PROJECT_NAME: `test-${randomUUID()}`,
+    };
+    for (const key of [
+      "OPENLAW_DEV_RUN",
+      "STORAGE_PATH",
+      "PORT",
+      "WEB_PORT",
+      "POSTGRES_PORT",
+      "DOC_ENGINE_PORT",
+      "MAILPIT_PORT",
+      "MAILPIT_SMTP_PORT",
+      "DATABASE_URL",
+      "DOC_ENGINE_URL",
+      "DEV_API_ORIGIN",
+      "BASE_URL",
+      "SMTP_URL",
+    ])
+      delete env[key];
+    const commands = [
+      [main, []],
+      [branches[0], ["--worktree", "--offset", "12"]],
+      [branches[1], ["--worktree", "--offset", "13"]],
+    ];
+    const running = [];
+    for (const [root, args] of commands) {
+      const child = launch(t, "bash", [`${root}/scripts/dev-hot.sh`, ...args], { env });
+      running.push(child);
+      const expected = root === main ? 2 : 1;
+      await until(() => [...child.output().matchAll(/READY (\d+)/g)].length === expected);
+    }
+    const snapshots = running.map((child) => JSON.parse(child.output().match(/SNAPSHOT (.+)/)[1]));
+    assert.equal(new Set(snapshots.map((s) => s.env.OPENLAW_DEV_INSTANCE)).size, 3);
+    for (const [index, snapshot] of snapshots.entries()) {
+      const offset = [0, 12, 13][index];
+      assert.equal(snapshot.env.COMPOSE_PROJECT_NAME, env.COMPOSE_PROJECT_NAME);
+      assert.equal(snapshot.env.PORT, String(3000 + offset));
+      assert.equal(snapshot.env.WEB_PORT, String(5173 + offset));
+      assert.equal(snapshot.env.DEV_API_ORIGIN, `http://localhost:${3000 + offset}`);
+      assert.equal(snapshot.env.BASE_URL, snapshot.env.DEV_API_ORIGIN);
+      assert.equal(snapshot.env.DATABASE_URL, "postgres://openlaw:openlaw@127.0.0.1:55432/openlaw");
+      assert.equal(snapshot.env.DOC_ENGINE_URL, "http://127.0.0.1:8080");
+      assert.equal(snapshot.env.SMTP_URL, "smtp://127.0.0.1:1025");
+      assert.equal(snapshot.env.STORAGE_PATH, `${main}/.storage`);
+    }
+    for (const child of running.slice(1)) {
+      assert.doesNotMatch(child.output(), /SNAPSHOT .*@openlaw\/worker/);
+      assert.doesNotMatch(child.output(), /seeding once/);
+    }
+    const dockerCalls = readFileSync(env.DOCKER_LOG, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    assert.ok(dockerCalls.every((call) => call.project === env.COMPOSE_PROJECT_NAME));
+    const starts = dockerCalls.filter((call) => call.args.includes("up"));
+    assert.equal(starts.length, 3);
+    assert.ok(starts.slice(1).every((call) => call.args.includes("--no-recreate")));
+    assert.ok(
+      starts.every(
+        (call) => JSON.stringify(call.ports) === JSON.stringify(["55432", "8080", "8025", "1025"]),
+      ),
+    );
+
+    const dockerBeforeStop = readFileSync(env.DOCKER_LOG, "utf8");
+    const down = launch(t, "bash", [`${branches[0]}/scripts/dev-hot.sh`, "--down", "--worktree"], {
+      env,
+    });
+    assert.equal((await down.exited)[0], 0, down.output());
+    await running[1].exited;
+    assert.equal(readFileSync(env.DOCKER_LOG, "utf8"), dockerBeforeStop);
+    for (const child of [running[0], running[2]]) {
+      assert.ok(
+        [...child.output().matchAll(/READY (\d+)/g)].every((match) => alive(Number(match[1]))),
+      );
+      child.child.kill("SIGTERM");
+      await child.exited;
+    }
+  },
+);
+
+test("worktree discovery ignores inherited Git repository paths", async (t) => {
+  const fixture = mkdtempSync(path.join(tmpdir(), "openlaw-git-context-"));
+  t.after(() => rmSync(fixture, { recursive: true, force: true }));
+  const main = path.join(fixture, "main");
+  const branch = path.join(fixture, "branch");
+  const unrelated = path.join(fixture, "unrelated");
+  const gitEnv = { ...process.env };
+  for (const key of ["GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"])
+    delete gitEnv[key];
+  const git = (...args) => execFileSync("git", args, { env: gitEnv, stdio: "pipe" });
+  for (const root of [main, unrelated]) {
+    git("init", root);
+    git(
+      "-C",
+      root,
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.com",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--allow-empty",
+      "-m",
+      "Fixture",
+    );
+  }
+  git("-C", main, "worktree", "add", "--detach", branch);
+  writeFileSync(path.join(main, ".env"), "SETUP_TOKEN=main-fixture\n");
+  writeFileSync(path.join(unrelated, ".env"), "SETUP_TOKEN=unrelated-fixture\n");
+  for (const directory of ["scripts", "bin", "node_modules"])
+    mkdirSync(path.join(branch, directory));
+  copyFileSync(helper, path.join(branch, "scripts/dev-processes.mjs"));
+  copyFileSync(new URL("./dev-hot.sh", import.meta.url), path.join(branch, "scripts/dev-hot.sh"));
+  writeFileSync(path.join(branch, "bin/ss"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
+  writeFileSync(
+    path.join(branch, "bin/docker"),
+    `#!/usr/bin/env node
+require("node:fs").writeFileSync(process.env.DOCKER_LOG, JSON.stringify({
+  cwd: process.cwd(), storage: process.env.STORAGE_PATH,
+}));
+process.exit(37);
+`,
+    { mode: 0o755 },
+  );
+  const env = {
+    ...gitEnv,
+    PATH: `${branch}/bin:${process.env.PATH}`,
+    COMPOSE_PROJECT_NAME: `test-${randomUUID()}`,
+    DOCKER_LOG: `${fixture}/docker.log`,
+    GIT_DIR: path.join(unrelated, ".git"),
+    GIT_COMMON_DIR: path.join(unrelated, ".git"),
+    GIT_WORK_TREE: unrelated,
+  };
+  delete env.OPENLAW_DEV_RUN;
+  delete env.STORAGE_PATH;
+  const command = launch(t, "bash", [`${branch}/scripts/dev-hot.sh`, "--worktree"], {
+    cwd: unrelated,
+    env,
+  });
+  assert.equal((await command.exited)[0], 37, command.output());
+  assert.equal(readFileSync(path.join(branch, ".env"), "utf8"), "SETUP_TOKEN=main-fixture\n");
+  assert.deepEqual(JSON.parse(readFileSync(env.DOCKER_LOG, "utf8")), {
+    cwd: branch,
+    storage: `${main}/.storage`,
+  });
+});
+
+test("shared worktree mode rejects seeding and resets before setup", async (t) => {
+  const root = mkdtempSync(path.join(tmpdir(), "openlaw-shared-invalid-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  mkdirSync(path.join(root, "scripts"));
+  copyFileSync(new URL("./dev-hot.sh", import.meta.url), path.join(root, "scripts/dev-hot.sh"));
+  for (const flag of ["--isolated", "--fresh", "--seed"]) {
+    const command = launch(t, "bash", [`${root}/scripts/dev-hot.sh`, "--worktree", flag]);
+    assert.equal((await command.exited)[0], 1, command.output());
+    assert.match(command.output(), /--worktree shares existing data/);
+  }
+});

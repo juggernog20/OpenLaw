@@ -32,6 +32,7 @@ import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import { type FieldStatus } from "./status-note";
 import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 /**
  * One group's answer, taken from the generated contract rather than
@@ -372,12 +373,14 @@ export function BriefingSwitchList({ state }: Readonly<{ state: BriefingPreferen
             className="flex flex-col gap-3 border-b border-border-muted px-4 py-3 last:border-b-0 @lg/prefs:flex-row @lg/prefs:items-center @lg/prefs:gap-0 @lg/prefs:pe-0 @lg/prefs:py-2.5"
           >
             <div className="flex flex-1 flex-col gap-0.5 @lg/prefs:pe-4">
-              <span id={labelId} className="text-base font-medium text-primary">
+              <Label
+                id={labelId}
+                className="text-base"
+                help={<FormattedMessage {...BRIEFING_COPY[group].detail} />}
+                helpId={detailId}
+              >
                 <FormattedMessage {...BRIEFING_COPY[group].label} />
-              </span>
-              <span id={detailId} className="text-sm text-muted">
-                <FormattedMessage {...BRIEFING_COPY[group].detail} />
-              </span>
+              </Label>
             </div>
             <span className="flex items-center gap-2 @lg/prefs:w-27 @lg/prefs:px-2">
               <span id={`${labelId}-email`} className="text-xs text-muted @lg/prefs:sr-only">
@@ -479,12 +482,14 @@ export function NotificationSwitchGrid({
             className="flex flex-col gap-3 border-b border-border-muted px-4 py-3 last:border-b-0 @lg/prefs:flex-row @lg/prefs:items-center @lg/prefs:gap-0 @lg/prefs:pe-0 @lg/prefs:py-2.5"
           >
             <div className="flex flex-1 flex-col gap-0.5 @lg/prefs:pe-4">
-              <span id={labelId} className="text-base font-medium text-primary">
+              <Label
+                id={labelId}
+                className="text-base"
+                help={<FormattedMessage {...copy[group].detail} />}
+                helpId={detailId}
+              >
                 <FormattedMessage {...copy[group].label} />
-              </span>
-              <span id={detailId} className="text-sm text-muted">
-                <FormattedMessage {...copy[group].detail} />
-              </span>
+              </Label>
             </div>
             <div className="flex flex-wrap gap-4 @lg/prefs:flex-nowrap @lg/prefs:gap-0">
               {channels.map((channel) =>

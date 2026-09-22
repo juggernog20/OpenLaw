@@ -559,10 +559,7 @@ describe("the prefill (INT-002, MTR-012)", () => {
     expect(api.conversions).toEqual([]);
   });
 
-  it("says nothing about carrying until a target type is picked", async () => {
-    // With no target there is nothing to compare a collected value
-    // against, so a list claiming every value stays behind would be
-    // answering a question nobody has asked yet.
+  it("shows destination fields after a target type is picked", async () => {
     const user = userEvent.setup();
     open(
       requestApi(
@@ -583,19 +580,15 @@ describe("the prefill (INT-002, MTR-012)", () => {
 
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-nda");
     expect(within(dialog).getByLabelText(/^Opposing party/)).toHaveValue("Northwind Labs");
-    expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Does not carry into the contract")).toBeNull();
   });
 
-  it("names fields that do not carry without explanatory copy", async () => {
-    // The INT-002 M19/7 addendum, paid where somebody can see it before
-    // they press: the NDA contract type has no field for the deal desk
-    // region, so it has nowhere to land.
+  it("omits carry-over indicators and request-only field lists", async () => {
     const user = userEvent.setup();
     open(requestApi());
     const dialog = await openConvert(user);
-    expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
-    expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
-    expect(within(dialog).queryByText(/Nothing is deleted/)).toBeNull();
+    expect(within(dialog).queryByText("Does not carry into the contract")).toBeNull();
+    expect(within(dialog).queryByText("Deal desk region")).toBeNull();
   });
 });
 
@@ -617,9 +610,7 @@ describe("conversion built-in Rows", () => {
     expect(within(dialog).getByText("Helix Labs GmbH")).toBeInTheDocument();
     expect(within(dialog).getByLabelText(/^Needed by/)).toHaveTextContent("Oct 1, 2026");
     expect(dialog.querySelector("#convert-counterparty")).toBeNull();
-    expect(
-      within(dialog).getByText("Does not carry into the contract").parentElement,
-    ).toHaveTextContent("Deal desk region");
+    expect(within(dialog).queryByText("Does not carry into the contract")).toBeNull();
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toMatchObject({
@@ -630,7 +621,7 @@ describe("conversion built-in Rows", () => {
     expect(api.conversions[0]).not.toHaveProperty("neededBy");
   });
 
-  it("re-targets NDA to MSA with shared answers carried and missing Rows listed behind", async () => {
+  it("re-targets NDA to MSA with shared answers carried and no carry-over summary", async () => {
     const user = userEvent.setup();
     open(
       requestApi(
@@ -642,12 +633,10 @@ describe("conversion built-in Rows", () => {
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
     expect(within(dialog).getByLabelText(/^Opposing party/)).toHaveValue("Shared party");
     expect(within(dialog).queryByLabelText(/^Requesting manager/)).toBeNull();
-    expect(
-      within(dialog).getByText("Does not carry into the contract").parentElement,
-    ).toHaveTextContent("Requesting manager");
+    expect(within(dialog).queryByText("Does not carry into the contract")).toBeNull();
   });
 
-  it("lists a built-in answer as staying behind when the target has no Row for it", async () => {
+  it("omits built-in answers with no target Row without a carry-over summary", async () => {
     const user = userEvent.setup();
     const api = requestApi(
       request({
@@ -668,9 +657,7 @@ describe("conversion built-in Rows", () => {
     open(api);
     const dialog = await openConvert(user);
     expect(within(dialog).queryByLabelText(/^Effective date/)).toBeNull();
-    expect(
-      within(dialog).getByText("Does not carry into the contract").parentElement,
-    ).toHaveTextContent("Effective date");
+    expect(within(dialog).queryByText("Does not carry into the contract")).toBeNull();
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).not.toHaveProperty(["customFields", "effective_date"]);
@@ -686,9 +673,7 @@ describe("conversion built-in Rows", () => {
     const dialog = await openDisposition(user, "Convert to matter");
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type/), "mt-dispute");
     expect(within(dialog).queryByLabelText(/^Counterparties/)).toBeNull();
-    expect(
-      within(dialog).getByText("Does not carry into the matter").parentElement,
-    ).toHaveTextContent("Counterparties");
+    expect(within(dialog).queryByText("Does not carry into the matter")).toBeNull();
     expect(within(dialog).getByLabelText(/^Needed by/)).toHaveTextContent("Oct 1, 2026");
   });
 });

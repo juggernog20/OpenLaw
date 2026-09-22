@@ -1332,13 +1332,13 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await user.selectOptions(screen.getByLabelText("Provider"), "groq");
     expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
     expect(screen.getByLabelText("API key")).toBeRequired();
-    expect(screen.getByText(/Required for this provider/)).toBeVisible();
+    expect(screen.getByText(/Required for this provider/)).not.toBeVisible();
     await user.selectOptions(screen.getByLabelText("Provider"), "openai");
     expect(screen.getByText("Key saved")).toBeVisible();
     expect(screen.getByRole("button", { name: "Forget key" })).toBeVisible();
     expect(screen.getByLabelText("API key")).not.toBeRequired();
     expect(screen.getByLabelText("API key")).toHaveValue("");
-    expect(screen.getByText(/Leave blank to use the saved key/)).toBeVisible();
+    expect(screen.getByText(/Leave blank to use the saved key/)).not.toBeVisible();
     await finishFromAiAnalysis(user);
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     expect(calls.saves).toEqual([{ preset: "openai", model: "gpt-5.6-luna" }]);

@@ -291,6 +291,12 @@ separate. Task notifications carry `taskId` and open the Tasks tab with that mod
 originating Requesters receive no Task comment events. Corrections and attachment
 downloads re-check Task and parent access.
 
+**2026-09-22:** Task comments use one audience: everyone who can access the Task.
+The composer has no audience selector, and rows have no audience badge. New comments
+keep the `working_team` storage tier; existing `legal_only` comments remain readable
+under the same Task-access gate. This does not grant Business Users access to Tasks
+or change the parent record's confidentiality rules.
+
 A Task carrying any comment cannot be removed. A Task row is deleted outright, and its
 comments hang off its id with no foreign key to follow them, so removal would erase words
 their authors never took back. CMT-005 and CMT-006 keep both tombstones readable, and

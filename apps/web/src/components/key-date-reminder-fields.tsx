@@ -170,12 +170,16 @@ export function KeyDateReminderFields({
           </Button>
         </div>
       ))}
-      <p className="text-sm text-muted">
-        <FormattedMessage
-          id="keyDates.reminders.recipientHelp"
-          defaultMessage="With no selection, reminders go to the Legal Owner or Matter Manager, the Business Owner, and everyone on the record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
-        />
-      </p>
+      <Label
+        help={
+          <FormattedMessage
+            id="keyDates.reminders.recipientHelp"
+            defaultMessage="With no selection, reminders go to the Legal Owner or Matter Manager, the Business Owner, and everyone on the record team. Select people to send this Key date's reminders only to them. Current access and personal preferences still apply."
+          />
+        }
+      >
+        <FormattedMessage id="keyDates.reminders.recipients" defaultMessage="Recipients" />
+      </Label>
       {options?.recipients.map((person) => (
         <label key={person.id} className="flex items-center gap-2 text-sm">
           <Checkbox

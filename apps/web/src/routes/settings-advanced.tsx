@@ -244,7 +244,28 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                     : null;
               return (
                 <div key={field.key} className="flex flex-col gap-1.5">
-                  <Label htmlFor={id}>{name}</Label>
+                  <Label
+                    htmlFor={id}
+                    help={
+                      field.secret && (
+                        <>
+                          {field.configured ? (
+                            <FormattedMessage
+                              id="settings.advanced.secretKept"
+                              defaultMessage="Credential configured. Leave blank to keep it."
+                            />
+                          ) : (
+                            <FormattedMessage
+                              id="settings.advanced.identity"
+                              defaultMessage="Leave credentials blank to use the deployment's workload identity or credential chain."
+                            />
+                          )}
+                        </>
+                      )
+                    }
+                  >
+                    {name}
+                  </Label>
                   {options ? (
                     <select
                       id={id}
@@ -313,21 +334,7 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                       </>
                     )}
                   </p>
-                  {field.secret && (
-                    <p className="text-xs text-muted">
-                      {field.configured ? (
-                        <FormattedMessage
-                          id="settings.advanced.secretKept"
-                          defaultMessage="Credential configured. Leave blank to keep it."
-                        />
-                      ) : (
-                        <FormattedMessage
-                          id="settings.advanced.identity"
-                          defaultMessage="Leave credentials blank to use the deployment's workload identity or credential chain."
-                        />
-                      )}
-                    </p>
-                  )}
+
                   {!field.secret && field.value !== field.activeValue && (
                     <p className="break-all text-xs text-muted">
                       <FormattedMessage
