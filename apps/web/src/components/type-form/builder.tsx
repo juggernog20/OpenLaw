@@ -412,9 +412,9 @@ export function TypeFormBuilder({
           : key === "onIntakeForm" && row.fieldType === "user" && row.isRequired
             ? t("Turn off Required for creation first")
             : undefined;
-    return (
-      <div className="flex min-w-0 flex-col items-start gap-1 @min-[960px]/form:items-center">
-        <span className="text-xs @min-[960px]/form:hidden">{label}</span>
+    return cell(
+      label,
+      <>
         <Switch
           checked={!!row[key]}
           disabled={busy}
@@ -437,13 +437,24 @@ export function TypeFormBuilder({
           </span>
         )}
         {status(control)}
+      </>,
+      "@min-[848px]/form:items-center",
+    );
+  }
+  /** One Row cell. Below the wide threshold the label shows above the
+   * value, so a stacked Row still says what each switch is. */
+  function cell(label: string, children: React.ReactNode, wide = "") {
+    return (
+      <div className={`flex min-w-0 flex-col items-start gap-1 ${wide}`}>
+        <span className="text-xs @min-[848px]/form:hidden">{label}</span>
+        {children}
       </div>
     );
   }
   const columns =
     module === "entity"
-      ? "@min-[960px]/form:grid-cols-[36px_minmax(240px,1fr)_160px_80px_64px]"
-      : "@min-[960px]/form:grid-cols-[36px_minmax(240px,1fr)_160px_160px_144px_80px_64px]";
+      ? "@min-[848px]/form:grid-cols-[36px_minmax(200px,1fr)_128px_80px_64px]"
+      : "@min-[848px]/form:grid-cols-[36px_minmax(200px,1fr)_128px_128px_128px_80px_64px]";
   function tree(items: Form, depth = 0) {
     return items.map((node) => (
       <div
@@ -466,7 +477,7 @@ export function TypeFormBuilder({
           <div
             role="group"
             aria-label={name(node)}
-            className={`grid min-h-13 grid-cols-[36px_1fr] items-start gap-2 border-b border-border-muted px-4 py-2 ${columns}`}
+            className={`grid min-h-13 grid-cols-[36px_1fr_auto] items-start gap-2 border-b border-border-muted px-4 py-2 ${columns}`}
           >
             {isPinned(node) ? (
               <Lock size={16} aria-label={t("Position and switches are fixed")} />
@@ -480,25 +491,34 @@ export function TypeFormBuilder({
               </div>
               {status(`${node.id}-move`)}
             </div>
-            {module !== "entity" && switches(node, "onIntakeForm", t("On intake form"))}
-            {switches(node, "isRequired", t("Required for creation"))}
-            {module !== "entity" &&
-              (isBuiltin(node, module) ? (
-                <span className="flex items-center gap-1 text-sm text-muted">
-                  <Lock size={16} />
-                  {t("Fixed")}
-                </span>
-              ) : (
-                switches(node, "visibleOnPortal", t("Visible on Portal"))
-              ))}
-            <span className="text-sm text-muted">
-              {
-                { intake: t("Intake"), creation: t("Creation"), record: t("Record") }[
-                  formRowTouchpoint(node)
-                ]
-              }
-            </span>
-            <div className="flex flex-wrap">
+            {/* Below the threshold this is one wrapping line under the
+                name (DES-090 point 7); above it, `contents` hands the
+                cells to the Row grid as its own columns. */}
+            <div className="flex min-w-0 flex-wrap gap-x-6 gap-y-2 [grid-column:2/-1] @min-[848px]/form:contents">
+              {module !== "entity" && switches(node, "onIntakeForm", t("On intake form"))}
+              {switches(node, "isRequired", t("Required for creation"))}
+              {module !== "entity" &&
+                (isBuiltin(node, module)
+                  ? cell(
+                      t("Visible on Portal"),
+                      <span className="flex items-center gap-1 text-sm text-muted">
+                        <Lock size={16} />
+                        {t("Fixed")}
+                      </span>,
+                    )
+                  : switches(node, "visibleOnPortal", t("Visible on Portal")))}
+              {cell(
+                t("Touchpoint"),
+                <span className="text-sm text-muted">
+                  {
+                    { intake: t("Intake"), creation: t("Creation"), record: t("Record") }[
+                      formRowTouchpoint(node)
+                    ]
+                  }
+                </span>,
+              )}
+            </div>
+            <div className="col-start-3 row-start-1 flex flex-wrap @min-[848px]/form:col-start-auto @min-[848px]/form:row-start-auto">
               {!isPinned(node) && actions(node)}
               {!isBuiltin(node, module) && (
                 <Button
@@ -660,7 +680,7 @@ export function TypeFormBuilder({
         <span className="ms-auto text-sm text-muted">{t("Changes apply immediately")}</span>
       </header>
       <div
-        className={`hidden min-h-10 items-center gap-2 border-b border-border-muted bg-section-header px-4 text-xs font-semibold @min-[960px]/form:grid ${columns}`}
+        className={`hidden min-h-10 items-center gap-2 border-b border-border-muted bg-section-header px-4 text-xs font-semibold @min-[848px]/form:grid ${columns}`}
       >
         <span />
         <span>{t("Row")}</span>
