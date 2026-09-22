@@ -146,8 +146,18 @@ const messages = defineMessages({
   Intake: { id: "typeForm.intake", defaultMessage: "Intake" },
   "Long text": { id: "typeForm.long-text", defaultMessage: "Long text" },
   Match: { id: "typeForm.match", defaultMessage: "Match" },
-  "Move into": { id: "typeForm.move-into", defaultMessage: "Move into" },
-  "Move out": { id: "typeForm.move-out", defaultMessage: "Move out" },
+  "Move out of the condition": {
+    id: "typeForm.move-out-of-the-condition",
+    defaultMessage: "Move out of the condition",
+  },
+  "Put under a condition": {
+    id: "typeForm.put-under-a-condition",
+    defaultMessage: "Put under a condition",
+  },
+  "Put under a condition…": {
+    id: "typeForm.put-under-a-condition-menu",
+    defaultMessage: "Put under a condition…",
+  },
   "Multi select": { id: "typeForm.multi-select", defaultMessage: "Multi select" },
   "No Fields attached": { id: "typeForm.no-fields-attached", defaultMessage: "No Fields attached" },
   "No Fields match": { id: "typeForm.no-fields-match", defaultMessage: "No Fields match" },

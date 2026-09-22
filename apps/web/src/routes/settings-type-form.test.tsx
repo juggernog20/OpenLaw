@@ -145,8 +145,8 @@ describe("the type Form tab", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "term_type");
     await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "fixed");
     await waitFor(() => expect(read().at(-1)?.kind).toBe("branch"));
-    await user.click(screen.getByRole("button", { name: "Actions for Expiry date" }));
-    await user.click(screen.getByRole("menuitem", { name: "Move into" }));
+    await user.click(screen.getByRole("button", { name: "Move Expiry date" }));
+    await user.click(screen.getByRole("menuitem", { name: "Put under a condition…" }));
     await user.click(screen.getByRole("button", { name: /Show when all of: Term type is Fixed/ }));
     await waitFor(() =>
       expect(read().at(-1)).toMatchObject({
@@ -237,8 +237,8 @@ it("refuses detaching a condition source beside Detach", async () => {
 
 it("moves out and removes a Branch while keeping its children", async () => {
   const { user, read } = setupForm("contract", false, conditional);
-  await user.click(await screen.findByRole("button", { name: "Actions for Expiry date" }));
-  await user.click(screen.getByRole("menuitem", { name: "Move out" }));
+  await user.click(await screen.findByRole("button", { name: "Move Expiry date" }));
+  await user.click(screen.getByRole("menuitem", { name: "Move out of the condition" }));
   await waitFor(() => expect(read().at(-1)?.id).toBe("expiry_date"));
   expect(read().at(-2)).toMatchObject({ kind: "branch", children: [] });
   await user.click(screen.getByRole("button", { name: /Actions for Show when all of/ }));

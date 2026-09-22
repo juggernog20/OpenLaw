@@ -67,7 +67,7 @@ For an NDA that collects an expiry date only for a fixed term:
 
 1. Open the NDA type's **Form** tab. Turn on **On intake form** for **Term type** and **Expiry date**. Turn on **Required for creation** for Expiry date.
 2. Select **Add condition** below the intended preceding Rows. Choose **Term type** as **Row**, **is** as **Operator**, and **Fixed** as **Value**. Choose **All** to require every condition or **Any** to accept any condition. The completed condition saves immediately.
-3. Open **Actions for Expiry date**, select **Move into**, and choose **Show when all of: Term type is Fixed**. The Row moves under that Branch. Other Rows, including catalog Fields, can join it.
+3. Select the grip **Move Expiry date**, choose **Put under a condition…**, and choose **Show when all of: Term type is Fixed**. The Row moves under that Branch. Other Rows, including catalog Fields, can join it.
 4. Select **Preview intake form**. Choose Fixed and check that Expiry date appears as required. Choose Evergreen and check that it disappears. **Submit request** tests validation here without sending a Request or uploading files.
 5. Close the preview. Check the **Intake form** card on each affected Request type before sharing the change.
 

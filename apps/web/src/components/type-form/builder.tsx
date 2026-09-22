@@ -69,6 +69,7 @@ export function TypeFormBuilder({
   const [notes, setNotes] = useState<Record<string, { status: FieldStatus; detail?: string }>>({});
   const [editing, setEditing] = useState<string | null>(null);
   const [moving, setMoving] = useState<string | null>(null);
+  const [gripMenu, setGripMenu] = useState<string | null>(null);
   const [fieldEditor, setFieldEditor] = useState<{
     parent: string | null;
     target: FieldRow | null;
@@ -311,6 +312,9 @@ export function TypeFormBuilder({
       node.kind === "row"
         ? catalog.find((f): f is FieldRow => f.id === node.id && isFieldRow(f, module))
         : undefined;
+    // Depth moves live on the grip's menu; a built-in Row has nothing
+    // else to offer, so it draws no overflow.
+    if (!field && node.kind !== "branch") return null;
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -324,21 +328,6 @@ export function TypeFormBuilder({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem
-            onSelect={() => {
-              restoreFocus.current = document.getElementById(`move-${node.id}`);
-              setMoving(node.id);
-            }}
-          >
-            {t("Move into")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!location(form, node.id)?.parent}
-            onSelect={() => moveOut(node)}
-          >
-            {t("Move out")}
-            {!location(form, node.id)?.parent && ` · ${t("Already at the root")}`}
-          </DropdownMenuItem>
           {field && (
             <DropdownMenuItem
               onSelect={() => openField(null, field, document.getElementById(`move-${node.id}`))}
@@ -364,36 +353,74 @@ export function TypeFormBuilder({
       </DropdownMenu>
     );
   }
+  /** The grip drags with the pointer and, on click, Enter or Space,
+   * opens the depth menu (DES-090 point 6). The menu anchors on an
+   * invisible sibling rather than the grip itself: a Radix trigger
+   * prevents default on pointer down, and Chromium then never starts a
+   * native drag. */
   function grip(node: FormNode) {
+    const open = gripMenu === node.id;
+    const atRoot = !location(form, node.id)?.parent;
+    const focusGrip = () => document.getElementById(`move-${node.id}`)?.focus();
     return (
-      <Button
-        id={`move-${node.id}`}
-        variant="ghost"
-        size="icon"
-        aria-label={t("Move {row}", { row: name(node) })}
-        aria-describedby={`note-${node.id}-move`}
-        draggable={!busy}
-        onDragStart={(e) => {
-          dragged.current = node.id;
-          e.dataTransfer.setData("text/plain", node.id);
-        }}
-        onDragEnd={() => {
-          dragged.current = null;
-          setDrop(null);
-        }}
-        onKeyDown={(e) => {
-          if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+      <DropdownMenu open={open} onOpenChange={(next) => setGripMenu(next ? node.id : null)}>
+        <span className="relative inline-flex">
+          <Button
+            id={`move-${node.id}`}
+            variant="ghost"
+            size="icon"
+            aria-label={t("Move {row}", { row: name(node) })}
+            aria-describedby={`note-${node.id}-move`}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            draggable={!busy}
+            onDragStart={(e) => {
+              dragged.current = node.id;
+              e.dataTransfer.setData("text/plain", node.id);
+            }}
+            onDragEnd={() => {
+              dragged.current = null;
+              setDrop(null);
+            }}
+            onKeyDown={(e) => {
+              if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+                e.preventDefault();
+                reorder(node.id, e.key === "ArrowUp" ? -1 : 1);
+              }
+            }}
+            onClick={() => setGripMenu(node.id)}
+          >
+            <GripVertical size={16} />
+          </Button>
+          <DropdownMenuTrigger asChild>
+            <span
+              aria-hidden="true"
+              tabIndex={-1}
+              className="pointer-events-none absolute inset-0"
+            />
+          </DropdownMenuTrigger>
+        </span>
+        <DropdownMenuContent
+          align="start"
+          onCloseAutoFocus={(e) => {
             e.preventDefault();
-            reorder(node.id, e.key === "ArrowUp" ? -1 : 1);
-          }
-        }}
-        onClick={() => {
-          restoreFocus.current = document.activeElement as HTMLElement;
-          setMoving(node.id);
-        }}
-      >
-        <GripVertical size={16} />
-      </Button>
+            focusGrip();
+          }}
+        >
+          <DropdownMenuItem
+            onSelect={() => {
+              restoreFocus.current = document.getElementById(`move-${node.id}`);
+              setMoving(node.id);
+            }}
+          >
+            {t("Put under a condition…")}
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={atRoot} onSelect={() => moveOut(node)}>
+            {t("Move out of the condition")}
+            {atRoot && ` · ${t("Already at the root")}`}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
   function switches(
@@ -720,7 +747,7 @@ export function TypeFormBuilder({
               restoreFocus.current?.focus();
             }}
           >
-            <DialogTitle>{t("Move into")}</DialogTitle>
+            <DialogTitle>{t("Put under a condition")}</DialogTitle>
             <div className="mt-4 flex flex-col gap-2">
               {nodes
                 .filter(
@@ -774,7 +801,7 @@ export function TypeFormBuilder({
                 }}
                 disabled={!location(form, moving)?.parent}
               >
-                {t("Move out")}
+                {t("Move out of the condition")}
               </Button>
               <Button variant="ghost" onClick={() => setMoving(null)}>
                 {t("Cancel")}
