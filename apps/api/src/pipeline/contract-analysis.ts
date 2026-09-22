@@ -566,7 +566,11 @@ async function applyAnswers(
           .select()
           .from(regions)
           .where(eq(regions.id, String(item.value)));
-        if (!region) continue;
+        if (!region) {
+          outcome.invalid.push(slug);
+          noteResult(slug, item, "invalid", item.value);
+          continue;
+        }
         patch.region = region.displayName;
       }
       if (slug === "owning_department") patch.owningDepartmentId = String(item.value);

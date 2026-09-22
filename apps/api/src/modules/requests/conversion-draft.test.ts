@@ -3,6 +3,8 @@ import { startAiResponseServer } from "../../testing/ai-response-server.js";
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
   aiConnector,
+  departments,
+  regions,
   contractTypes,
   contractTypeFields,
   contractTypeBranches,
@@ -1733,4 +1735,35 @@ it("prepares NDA Intake and Creation Rows, including a false Branch, and restric
   expect(context.all.find((s) => s.id.endsWith(":split_intake"))?.restricted).toBe(false);
   expect(context.all.find((s) => s.id.endsWith(":split_creation"))?.restricted).toBe(true);
   expect(context.all.find((s) => s.id.endsWith(":split_reference"))?.restricted).toBe(true);
+});
+
+it("keeps the draft snapshot stable after unchanged department and region updates", async () => {
+  const [type] = await harness.db
+    .insert(matterTypes)
+    .values({ slug: "stable_choices", displayName: "Stable choices", displayOrder: 1000 })
+    .returning();
+  await harness.db.insert(matterTypeBuiltinRows).values(
+    ["department", "region"].map((builtinKey, displayOrder) => ({
+      typeId: type!.id,
+      builtinKey,
+      displayOrder,
+      onIntakeForm: true,
+    })),
+  );
+  const row = await ask();
+  for (const table of [departments, regions])
+    await harness.db.insert(table).values([
+      { slug: "stable_first", displayName: "Stable first", displayOrder: 1000 },
+      { slug: "stable_second", displayName: "Stable second", displayOrder: 1001 },
+    ]);
+  const before = await conversionContext(harness.db, row.id, type!.id, false, "matter");
+  for (const table of [departments, regions]) {
+    const [choice] = await harness.db.select().from(table).orderBy(table.id).limit(1);
+    await harness.db
+      .update(table)
+      .set({ displayName: choice!.displayName })
+      .where(eq(table.id, choice!.id));
+  }
+  const after = await conversionContext(harness.db, row.id, type!.id, false, "matter");
+  expect(after.snapshot).toBe(before.snapshot);
 });

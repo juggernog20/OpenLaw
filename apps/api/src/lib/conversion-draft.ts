@@ -387,7 +387,8 @@ export async function conversionContext(
       const choices = await db
         .select({ id: table.id, name: table.displayName })
         .from(table)
-        .where(isNull(table.archivedAt));
+        .where(isNull(table.archivedAt))
+        .orderBy(asc(table.id));
       builtinTargets.push({
         slug: row.rowRef,
         type: "single_select",

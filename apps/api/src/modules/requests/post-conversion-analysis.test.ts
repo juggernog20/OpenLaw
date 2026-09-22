@@ -823,6 +823,10 @@ it("queues Matter Record Rows with bounded dispatch, recovers lost asks, and ser
   const queues = await harness.db.execute(
     sql`select name, retry_limit, expire_seconds from pgboss.queue where name = 'matter.record-preparation'`,
   );
+  const constraint = await harness.db.execute(
+    sql`select convalidated from pg_constraint where conname = 'conversion_drafts_matter_id_matters_id_fk'`,
+  );
+  expect(constraint.rows).toEqual([{ convalidated: true }]);
   expect(queues.rows).toMatchObject([
     { name: "matter.record-preparation", retry_limit: 0, expire_seconds: 3600 },
   ]);
