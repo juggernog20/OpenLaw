@@ -34,7 +34,7 @@ Three Contract Fields in the **Custom Fields** list came with the installation: 
 
 1. Open **Contracts**, **Matters**, or **Entities**, then **Fields**.
 2. Select **Add field**. Enter **Name** and, if useful, **Description** as help for the person completing it.
-3. Choose **Type**: Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, or Entity. The type cannot change after creation.
+3. Choose **Type**: Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, or Entity. The type cannot change after creation. A Boolean Field is answered with **Yes** or **No**, and reads **No** until someone answers it.
 4. For a select Field, enter **Options**, one per line in the intended order. Portal visibility is set on each type Form Row after attachment.
 5. Select **Add field**, then check the new row.
 

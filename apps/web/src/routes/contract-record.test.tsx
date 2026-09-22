@@ -2764,7 +2764,7 @@ describe("the /contracts/:number record page", () => {
     ).toBeInTheDocument();
 
     // A pick is a decision, so it commits the moment it changes.
-    await user.click(card.getByRole("switch", { name: "Auto renews" }));
+    await user.selectOptions(card.getByLabelText("Auto renews"), "Yes");
     await waitFor(() => expect(api.patches).toEqual([{ customFields: { field_4: true } }]));
     await user.selectOptions(card.getByLabelText("Paper"), "Theirs");
     await user.click(card.getByRole("checkbox", { name: "APAC" }));

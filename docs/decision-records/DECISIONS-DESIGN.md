@@ -4689,6 +4689,10 @@ Blair, reading the Contract record on the running build: "the AI analysis pops u
 
 `AiAnalysisCard` is deleted with `legacyResults` and the outcome labels; `ai-analysis-card.tsx` becomes `analysis.tsx` and exports `UnverifiedMarker`, `ConfirmUnverified`, `AnalysisRunActions` and `AnalysisRunNote`. The Contract record's Fields card takes `actions` and `note` slots. `contracts.analysis.completed`, `contracts.analysis.notRun`, `contracts.analysis.conversionValues`, `contracts.analysis.requestReady`, `contracts.analysis.requestPending`, `contracts.analysis.failed`, `contracts.analysis.requestOmissions`, `contracts.analysis.results`, `contracts.analysis.noEvidence`, `contracts.analysis.booleanValue` and the five outcome messages leave the catalog; `contracts.analysis.failedShort` joins it. `contract-analysis.md` follows.
 
+### Amendment (2026-09-22, from live review): a boolean Field answers Yes or No
+
+A Field of type boolean is a question, so its control is a Yes / No select rather than a switch. This applies wherever a custom Field is drawn: the record sections, the Request form, the Convert dialog and the Form preview. The switch stays what it always was, a setting that is on or off, such as On intake form or Confidential. The draft model holds no third state, so an untouched boolean Field reads No, exactly as the switch read off; an unanswered state for a boolean Field would be a change to the Field model (DD-028), not to this control.
+
 ## DES-076: Portal Contracts and Matters carry the business work
 
 - **Status:** Accepted under Blair's 2026-09-11 instruction to implement DD-023

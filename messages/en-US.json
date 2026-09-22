@@ -2552,6 +2552,9 @@
   "contracts.entityUnknown": {
     "defaultMessage": "Not known yet"
   },
+  "contracts.field.no": {
+    "defaultMessage": "No"
+  },
   "contracts.field.noOptions": {
     "defaultMessage": "This field has no options yet."
   },
@@ -2566,6 +2569,9 @@
   },
   "contracts.field.selectPlaceholder": {
     "defaultMessage": "Not set"
+  },
+  "contracts.field.yes": {
+    "defaultMessage": "Yes"
   },
   "contracts.fields.empty": {
     "defaultMessage": "This contract type attaches no fields. Add them in contract settings."
