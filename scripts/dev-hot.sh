@@ -17,8 +17,11 @@
 #   --fresh   drop the database volume and the blob directory first,
 #             then seed. This is the reseed: what was there is gone.
 #
-# One flag for where the data lives:
+# Choose how another checkout runs:
 #
+#   --worktree  run this checkout's web and API on their own ports, using
+#               the shared database, uploads, and backing services. Jobs
+#               are handled by the worker in the usual dev loop.
 #   --isolated  run a second instance beside the usual one. It gets its
 #               own containers, its own database volume, its own blob
 #               directory and its own block of ports, all named after
@@ -31,8 +34,7 @@
 #                  Mailpit in the environment. Normal restarts detect a saved
 #                  relay automatically; this flag also enables first-time setup.
 #
-# Without --isolated every checkout reaches the same instance, which is
-# the point: a worktree is a branch of the code, not a second database.
+# Without either flag, use the shared instance and the usual web/API ports.
 #
 # Anything else on the command line goes to the seed as it is, so
 # `pnpm dev:hot --fresh --scale medium` is a smaller reseed.
@@ -56,6 +58,7 @@ action=start
 seed=false
 fresh=false
 isolated=false
+worktree=false
 smtp_in_app=false
 offset=""
 seed_args=()
@@ -66,6 +69,7 @@ while [[ $# -gt 0 ]]; do
     --seed) seed=true ;;
     --fresh) fresh=true; seed=true ;;
     --smtp-in-app) smtp_in_app=true ;;
+    --worktree) worktree=true ;;
     # An instance of its own starts with an empty database. Seeding it
     # is the only way it has anything on its screens, and the seed only
     # touches an empty instance, so asking for one asks for the other.
@@ -84,6 +88,11 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+if $worktree && { $isolated || $fresh || $seed; }; then
+  echo "error: --worktree shares existing data and cannot be combined with --isolated, --fresh, or --seed." >&2
+  exit 1
+fi
+
 if $seed && $smtp_in_app; then
   echo "error: --smtp-in-app cannot be combined with --seed, --fresh, or --isolated." >&2
   exit 1
@@ -95,7 +104,7 @@ fi
 # second, empty instance and the data you were working with looks lost.
 # Name the instance here instead. Every checkout reaches the same one,
 # because a worktree is a branch of the code and not a second database.
-if $isolated; then
+if $isolated || $worktree; then
   slug="$(printf '%s' "$(basename "$root")" \
     | tr '[:upper:]' '[:lower:]' \
     | tr -c 'a-z0-9' '-' \
@@ -103,22 +112,32 @@ if $isolated; then
   instance="openlaw-${slug:-worktree}"
 else
   if [[ -n "$offset" ]]; then
-    echo "error: --offset moves an instance of its own. Add --isolated." >&2
+    echo "error: --offset needs --worktree or --isolated." >&2
     exit 1
   fi
   instance="openlaw"
 fi
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-$instance}"
+if $worktree; then
+  export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-openlaw}"
+  checkout_id="$(printf '%s' "$root" | cksum | cut -d' ' -f1)"
+  loop_instance="${COMPOSE_PROJECT_NAME}-worktree-${checkout_id}"
+else
+  export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-$instance}"
+  loop_instance="$COMPOSE_PROJECT_NAME"
+fi
 
 # Where this instance's ports sit. The shared one keeps the numbers
 # everything else in the repo documents. An instance of its own takes a
-# block above them, derived from its name rather than from whatever is
-# free: the same checkout has to land on the same ports every run, or
-# the next run starts a third instance and leaves this one's data
-# behind.
-if $isolated; then
+# block derived from its name, so URLs stay stable across restarts.
+# Compose's project name keeps the containers and data attached to the
+# same instance even when --offset changes its ports.
+if $isolated || $worktree; then
   if [[ -z "$offset" ]]; then
-    offset=$(( ($(printf '%s' "$instance" | cksum | cut -d' ' -f1) % 80) + 1 ))
+    port_instance="$instance"
+    if $worktree; then
+      port_instance="$loop_instance"
+    fi
+    offset=$(( ($(printf '%s' "$port_instance" | cksum | cut -d' ' -f1) % 80) + 1 ))
   fi
   if ! [[ "$offset" =~ ^[0-9]+$ ]] || (( offset < 1 || offset > 80 )); then
     echo "error: --offset takes a whole number from 1 to 80." >&2
@@ -143,9 +162,13 @@ if [[ "$action" != stop ]]; then
 fi
 
 if [[ "$action" != start ]]; then
-  node scripts/dev-processes.mjs stop "$COMPOSE_PROJECT_NAME"
+  node scripts/dev-processes.mjs stop "$loop_instance"
   if [[ "$action" == down ]]; then
-    "${compose[@]}" stop postgres doc-engine mailpit
+    if $worktree; then
+      echo "==> shared backing services left running"
+    else
+      "${compose[@]}" stop postgres doc-engine mailpit
+    fi
   fi
   exit 0
 fi
@@ -154,7 +177,7 @@ fi
 # during install or startup. Children retain the marker across Turbo's
 # separate process groups and after their parents exit.
 if [[ -z "${OPENLAW_DEV_RUN:-}" ]]; then
-  exec node scripts/dev-processes.mjs run "$COMPOSE_PROJECT_NAME" \
+  exec node scripts/dev-processes.mjs run "$loop_instance" \
     bash "$root/scripts/dev-hot.sh" "${original_args[@]}"
 fi
 
@@ -163,9 +186,13 @@ fi
 # branch out into a worktree gives you neither, and the first thing you
 # see is compose refusing to interpolate AUTH_SECRET. Set them up here
 # rather than send you to a README.
+# `git worktree list` prints the main checkout first.
+main_checkout="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')" || main_checkout=""
+if $worktree && [[ -z "$main_checkout" && -z "${STORAGE_PATH:-}" ]]; then
+  echo "error: cannot find the main checkout's uploads. Set STORAGE_PATH to the shared blob directory." >&2
+  exit 1
+fi
 if [[ ! -f .env ]]; then
-  # `git worktree list` prints the main checkout first.
-  main_checkout="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
   if [[ -n "$main_checkout" && "$main_checkout" != "$root" && -f "$main_checkout/.env" ]]; then
     # Copy it, never generate a new one, when the main checkout has one.
     # Every loop on this machine shares one database, and
@@ -210,10 +237,19 @@ fi
 
 export PORT="${PORT:-$((3000 + offset))}"
 export WEB_PORT="${WEB_PORT:-$((5173 + offset))}"
-export POSTGRES_PORT="${POSTGRES_PORT:-$((55432 + offset))}"
-export DOC_ENGINE_PORT="${DOC_ENGINE_PORT:-$((8080 + offset))}"
-export MAILPIT_PORT="${MAILPIT_PORT:-$((8025 + offset))}"
-export MAILPIT_SMTP_PORT="${MAILPIT_SMTP_PORT:-$((1025 + offset))}"
+# Isolated databases stay below Linux's usual ephemeral client-port
+# range (32768–60999). A connection using 55432 + offset as its source
+# port can prevent Docker from binding even when no listener is there.
+postgres_base=55432
+infra_offset=0
+if $isolated; then
+  postgres_base=15432
+  infra_offset="$offset"
+fi
+export POSTGRES_PORT="${POSTGRES_PORT:-$((postgres_base + infra_offset))}"
+export DOC_ENGINE_PORT="${DOC_ENGINE_PORT:-$((8080 + infra_offset))}"
+export MAILPIT_PORT="${MAILPIT_PORT:-$((8025 + infra_offset))}"
+export MAILPIT_SMTP_PORT="${MAILPIT_SMTP_PORT:-$((1025 + infra_offset))}"
 
 # Where Vite sends /api, and the Origin it signs the request with, which
 # better-auth compares against its own base URL (TECH-008). Both follow
@@ -230,11 +266,13 @@ export BASE_URL="${BASE_URL:-$DEV_API_ORIGIN}"
 for port in "$PORT" "$WEB_PORT"; do
   if ss -ltn "sport = :$port" 2>/dev/null | grep -q LISTEN; then
     echo "error: port $port is already in use. A dev loop is probably already running." >&2
-    if $isolated; then
+    if $worktree; then
+      echo "       Stop it with pnpm dev:stop --worktree, or move it with --offset N." >&2
+    elif $isolated; then
       echo "       Stop it with pnpm dev:stop --isolated, or move it with --offset N." >&2
     else
       echo "       Stop it with pnpm dev:stop, then run pnpm dev:hot again." >&2
-      echo "       To run this checkout beside that one instead, add --isolated." >&2
+      echo "       Add --worktree to share its data on separate ports, or --isolated for separate data." >&2
     fi
     exit 1
   fi
@@ -244,7 +282,12 @@ done
 # container's user, not yours. A host process gets its own directory, so
 # files uploaded to the built stack are not readable from this loop and
 # the other way round.
-export STORAGE_PATH="${STORAGE_PATH:-$root/.storage}"
+if $worktree; then
+  export STORAGE_PATH="${STORAGE_PATH:-$main_checkout/.storage}"
+  echo "==> worktree $root: sharing $COMPOSE_PROJECT_NAME and uploads at $STORAGE_PATH"
+else
+  export STORAGE_PATH="${STORAGE_PATH:-$root/.storage}"
+fi
 
 if $fresh; then
   echo "==> dropping the database volume and $STORAGE_PATH"
@@ -258,7 +301,12 @@ echo "==> instance $COMPOSE_PROJECT_NAME: starting postgres, doc-engine, mailpit
 # The service list is not optional: a bare `up` would also start the
 # built app and worker containers, which would take the API's port and
 # the worker's jobs out from under the watch processes.
-"${compose[@]}" up -d postgres doc-engine mailpit
+if $worktree; then
+  # Another checkout owns these containers; its running configuration wins.
+  "${compose[@]}" up -d --no-recreate postgres doc-engine mailpit
+else
+  "${compose[@]}" up -d postgres doc-engine mailpit
+fi
 
 echo "==> waiting for postgres"
 for _ in $(seq 1 60); do
@@ -336,6 +384,12 @@ echo "==> web http://localhost:$WEB_PORT   api http://localhost:$PORT   mail htt
 # of its own.
 pnpm dev --filter=@openlaw/api --filter=@openlaw/web &
 dev_pid=$!
+
+if $worktree; then
+  echo "==> background jobs use the worker in the shared dev loop (pnpm dev:hot)"
+  wait "$dev_pid"
+  exit 0
+fi
 
 # The worker waits for the API, because the API is the one process that
 # migrates the database (TECH-005) and it listens only once that is

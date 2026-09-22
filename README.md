@@ -59,6 +59,20 @@ Ctrl-C also stops the host processes. These commands use the same instance name 
 from any worktree. The host process cleanup requires Linux `/proc`. Processes started
 manually with `pnpm dev` are outside this loop's tracking.
 
+### Multiple worktrees sharing data
+
+Keep the usual loop running in the main checkout, then run this from another worktree:
+
+```sh
+pnpm dev:hot:w --worktree      # this worktree's web/API, sharing Wentworth's data
+pnpm dev:stop --worktree       # stop only this worktree's host processes
+pnpm dev:down:w --worktree     # same; shared containers stay running
+```
+
+`--worktree` gives each checkout its own web/API ports and prints its URL. Add `--offset N` (1–80) if another process occupies the derived ports. It shares the main loop's Compose project, Postgres, doc engine, and Mailpit, and uses the main Git checkout's `.storage/` for uploads. If the main loop uses a custom `STORAGE_PATH` or backing-service ports, export the same values here. Use `pnpm dev:hot --worktree` for the default container engine; `:w` selects root Docker, where the personal Wentworth instance lives.
+
+Saved data is shared immediately; refresh another worktree's page to load it. The main loop's worker handles jobs from all worktrees, so keep that loop running. Both checkouts need compatible database migrations and the same authentication/encryption secrets (the launcher copies `.env` from the main checkout when it is missing). Each API still runs its branch's migrations against the shared database. For work on incompatible schemas or worker code, use `--isolated`, which creates separate data and seeds Helix. `--worktree` never seeds and rejects `--seed`, `--fresh`, and `--isolated`.
+
 ### Seeding a demo instance
 
 `pnpm seed:demo` fills a running dev loop with a whole fictional company, Helix Software Group: a legal team of twelve, thirty group entities, a contract pipeline across every stage, matters, an intake queue with triage history, and a knowledge library. It exists for design and UX review, where an empty instance tells you nothing and a hand-made record or two tells you almost as little.
