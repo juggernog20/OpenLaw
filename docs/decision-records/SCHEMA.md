@@ -300,7 +300,7 @@ Support tables per **ENT-001/002/003/006**:
 - `entity_share_certificates` — `entity_id`, `number` (unique per Entity), `holder_id`, `share_class_id`, `quantity` > 0, `distinctive_numbers`, `issued_by_entry_id`, `cancelled_by_entry_id` nullable (ENT-011).
 - `entity_share_entry_counters` — `entity_id` PK, `last_entry_no`. Entry numbers come from this counter, never from `max(entry_no)`, so a deleted entry leaves a gap and its number is never reused (ENT-011).
 - `entity_obligations` — `entity_id`, `label` text (no kind taxonomy), `registration_id` nullable FK with `ON DELETE SET NULL`, `recurrence_months` integer (null = one-off), `next_due_on` date, `assignee_id` nullable FK, `note`, `matter_id` nullable FK, `completed_on`, timestamps. Blank-start; "Mark filed" logs the cycle and rolls recurring `next_due_on` forward until it is after the filing day, while a one-off records `completed_on`; nothing advances without that explicit write (ENT-006 and its M27/6 addendum). Feeds NOT-002 group 3 as `date.obligation_approaching`.
-- `entity_type_fields` — compound PK (`entity_type_id`, `field_id`) plus `display_order`, `is_required`, and `created_at`; attaches Entity catalog Fields through the shared type-field machinery.
+- `entity_type_fields` — compound PK (`entity_type_id`, `field_id`) plus `display_order`, `is_required`, `visible_on_portal`, nullable `branch_id`, and `created_at`. See the type Form tables below. Entity Rows have no `on_intake_form` column.
 - `entity_grants` — compound PK (`entity_id`, `user_id`) plus `created_at`; the explicit-reader set for confidential Entities (ENT-004).
 
 ---
@@ -382,16 +382,17 @@ Source: **MTR-001**
 
 Configurable taxonomy of matter types. Seeded at install with 9 default rows; Admin-managed thereafter via Matters Settings.
 
-| Column                     | Type        | Notes                                                 |
-| -------------------------- | ----------- | ----------------------------------------------------- |
-| `id`                       | UUID        | PK                                                    |
-| `slug`                     | text        | unique, not null, immutable after creation            |
-| `display_name`             | text        | not null, user-editable                               |
-| `description`              | text        | nullable                                              |
-| `display_order`            | integer     | not null; controls picker order                       |
-| `is_system_default`        | boolean     | not null, default `false`; `true` for the 9 seed rows |
-| `archived_at`              | timestamptz | nullable; soft-delete affordance                      |
-| `created_at`, `updated_at` | timestamptz |                                                       |
+| Column                     | Type        | Notes                                                                      |
+| -------------------------- | ----------- | -------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                         |
+| `slug`                     | text        | unique, not null, immutable after creation                                 |
+| `display_name`             | text        | not null, user-editable                                                    |
+| `description`              | text        | nullable                                                                   |
+| `display_order`            | integer     | not null; controls picker order                                            |
+| `is_system_default`        | boolean     | not null, default `false`; `true` for the 9 seed rows                      |
+| `is_default`               | boolean     | Not null, default false; one Default type per module, see type Forms below |
+| `archived_at`              | timestamptz | nullable; soft-delete affordance                                           |
+| `created_at`, `updated_at` | timestamptz |                                                                            |
 
 **Seed rows** (install-time migration):
 
@@ -430,7 +431,7 @@ Landed in M23/3, migration `0073_shocking_raider`. Closing and archiving retain 
 
 Source: **MTR-011**, revised by **CTR-016**
 
-Custom-field catalog (Jira model), shared across modules with a scope. A field is defined once here; which records render it is controlled by per-type attachment (`matter_type_fields` / `contract_type_fields`). `field_type` is immutable after creation (archive and recreate instead — no silent value coercion).
+Field catalog, shared across modules with a scope. A Field is defined once here and placed as a Row on a type Form through `matter_type_fields`, `contract_type_fields`, or `entity_type_fields`. Portal visibility belongs to each Row, not the Field definition. `field_type` is immutable after creation (archive and recreate instead — no silent value coercion).
 
 | Column                     | Type        | Notes                                                                                                                                                                                                                                                                                           |
 | -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -439,7 +440,7 @@ Custom-field catalog (Jira model), shared across modules with a scope. A field i
 | `display_name`             | text        | not null, user-editable                                                                                                                                                                                                                                                                         |
 | `description`              | text        | nullable; shown as help text on forms                                                                                                                                                                                                                                                           |
 | `module_scope`             | text (enum) | `matter` \| `contract` \| `entity`; fixed at creation per **CTR-016**, revised 2026-09-17                                                                                                                                                                                                       |
-| `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable**                                                                                                                                 |
+| `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `currency` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable**                                                                                                                   |
 | `options`                  | jsonb       | nullable; option list for select types                                                                                                                                                                                                                                                          |
 | `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt for this catalog Field when it is attached to a Contract Type. Core target prompts do not live here                                                                                                                                         |
 | `ai_answer_style`          | text (enum) | `few_words` \| `sentence` \| `full_clause`, nullable; NULL follows the Organisation default on `ai_connector.answer_style` (**CTR-008** addendum 2026-09-20). A check constraint allows a value only on a `contract` Field of type `text` or `long_text`, and `full_clause` only on `long_text` |
@@ -467,19 +468,22 @@ Landed in M31/5, migration `0086_free_invisible_woman`. No `id`, `created_at`, o
 
 ### `matter_type_fields`
 
-Source: **MTR-011**
+Source: **DD-028**, **MTR-011**, **CTR-016**. Built in M39, migrations 0157 and 0159.
 
-Attachment join: which Matter fields appear on which matter types, and in what order. Managed from each type's settings.
+A catalog Field placed as a Row on a Matter type's Form. Its Field must have the matching module scope.
 
-| Column           | Type        | Notes                                                                                                                   |
-| ---------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `matter_type_id` | UUID        | FK → `matter_types.id`, not null                                                                                        |
-| `field_id`       | UUID        | FK → `fields.id`, not null (renamed with the **CTR-016** catalog unification); scope must be `matter`                   |
-| `display_order`  | integer     | not null; per-type form order                                                                                           |
-| `is_required`    | boolean     | **MTR-014**; not null, default `false`; hard-enforced at creation/re-type/edit (not retro-enforced on existing matters) |
-| `created_at`     | timestamptz |                                                                                                                         |
+| Column              | Type        | Notes                                                                               |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------- |
+| `matter_type_id`    | text        | FK to `matter_types.id`, not null, `ON DELETE CASCADE`                              |
+| `field_id`          | text        | FK to `fields.id`, not null, no cascade                                             |
+| `display_order`     | integer     | Not null; order shared with built-in Rows and Branches under the same parent        |
+| `is_required`       | boolean     | Not null, default false; Required for creation, enforced only when the Branch holds |
+| `on_intake_form`    | boolean     | Not null, default false; On intake form                                             |
+| `visible_on_portal` | boolean     | Not null, default true; Visible on Portal                                           |
+| `branch_id`         | text        | Nullable; NULL means the Form root                                                  |
+| `created_at`        | timestamptz | Not null, default now                                                               |
 
-Compound primary key on (`matter_type_id`, `field_id`). Attachment changes audit-logged per **DD-017**.
+The compound primary key is `(matter_type_id, field_id)`. An index on `field_id` supports catalog usage reads. A composite FK on `(matter_type_id, branch_id)` references `matter_type_branches`, with `ON DELETE CASCADE`, so a Row cannot belong to another type's Branch. The Form write validates and replaces the whole tree in one transaction. Changes are audit-logged. Detach removes the Row and keeps the Field and stored answers.
 
 ---
 
@@ -769,19 +773,22 @@ Five invariants ride the table itself (M14/3). A **partial** unique index on (`c
 
 ### `contract_type_fields`
 
-Source: **CTR-016** (mirrors `matter_type_fields`, MTR-011/MTR-014)
+Source: **DD-028**, **MTR-011**, **CTR-016**. Built in M39, migrations 0157 and 0159.
 
-Attachment join: which catalog fields appear on which contract types. Field scope must be `contract`.
+A catalog Field placed as a Row on a Contract type's Form. Its Field must have the matching module scope.
 
-| Column             | Type        | Notes                                                                                  |
-| ------------------ | ----------- | -------------------------------------------------------------------------------------- |
-| `contract_type_id` | UUID        | FK → `contract_types.id`, not null                                                     |
-| `field_id`         | UUID        | FK → `fields.id`, not null                                                             |
-| `display_order`    | integer     | not null; per-type form order                                                          |
-| `is_required`      | boolean     | not null, default `false`; hard-enforced at creation/re-type/edit per the MTR-014 rule |
-| `created_at`       | timestamptz |                                                                                        |
+| Column              | Type        | Notes                                                                               |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------- |
+| `contract_type_id`  | text        | FK to `contract_types.id`, not null, `ON DELETE CASCADE`                            |
+| `field_id`          | text        | FK to `fields.id`, not null, no cascade                                             |
+| `display_order`     | integer     | Not null; order shared with built-in Rows and Branches under the same parent        |
+| `is_required`       | boolean     | Not null, default false; Required for creation, enforced only when the Branch holds |
+| `on_intake_form`    | boolean     | Not null, default false; On intake form                                             |
+| `visible_on_portal` | boolean     | Not null, default true; Visible on Portal                                           |
+| `branch_id`         | text        | Nullable; NULL means the Form root                                                  |
+| `created_at`        | timestamptz | Not null, default now                                                               |
 
-Compound primary key on (`contract_type_id`, `field_id`). Attachment changes audit-logged per **DD-017**.
+The compound primary key is `(contract_type_id, field_id)`. An index on `field_id` supports catalog usage reads. A composite FK on `(contract_type_id, branch_id)` references `contract_type_branches`, with `ON DELETE CASCADE`, so a Row cannot belong to another type's Branch. The Form write validates and replaces the whole tree in one transaction. Changes are audit-logged. Detach removes the Row and keeps the Field and stored answers.
 
 ---
 
@@ -928,16 +935,17 @@ Source: **CTR-002**
 
 Configurable taxonomy of contract types. Same machinery as `matter_types` (MTR-001). Admin-managed via Contracts Settings → Types. Designated policy carrier: per-type custom fields (CTR-016), templates (deferred per CTR-017), and approval scoping (CTR-012 approver groups) attach here.
 
-| Column                     | Type        | Notes                                                 |
-| -------------------------- | ----------- | ----------------------------------------------------- |
-| `id`                       | UUID        | PK                                                    |
-| `slug`                     | text        | unique, not null, immutable after creation            |
-| `display_name`             | text        | not null, user-editable                               |
-| `description`              | text        | nullable                                              |
-| `display_order`            | integer     | not null; controls picker order                       |
-| `is_system_default`        | boolean     | not null, default `false`; `true` for the 8 seed rows |
-| `archived_at`              | timestamptz | nullable; soft-delete affordance                      |
-| `created_at`, `updated_at` | timestamptz |                                                       |
+| Column                     | Type        | Notes                                                                      |
+| -------------------------- | ----------- | -------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                         |
+| `slug`                     | text        | unique, not null, immutable after creation                                 |
+| `display_name`             | text        | not null, user-editable                                                    |
+| `description`              | text        | nullable                                                                   |
+| `display_order`            | integer     | not null; controls picker order                                            |
+| `is_system_default`        | boolean     | not null, default `false`; `true` for the 8 seed rows                      |
+| `is_default`               | boolean     | Not null, default false; one Default type per module, see type Forms below |
+| `archived_at`              | timestamptz | nullable; soft-delete affordance                                           |
+| `created_at`, `updated_at` | timestamptz |                                                                            |
 
 **Seed rows** (install-time migration): `nda`, `msa`, `sow`, `sales`, `vendor`, `employment`, `license`, `other`. The `other` row is system-protected (no archive/delete).
 
@@ -1195,7 +1203,7 @@ Structured request envelope, created only via portal forms. Not a work container
 | `title`                    | text        | not null                                                                                                                                                                                                          |
 | `description`              | text        | nullable                                                                                                                                                                                                          |
 | `urgency`                  | text (enum) | `low` \| `medium` \| `high` \| `critical` (levels per **DES-018**), requester-supplied, not null; maps 1:1 to `priority` at conversion (MTR-012 — `risk` is never requester-set)                                  |
-| `custom_fields`            | jsonb       | collected form values keyed by field slug per **INT-002**; not null, default `{}`; carried into the converted record                                                                                              |
+| `custom_fields`            | jsonb       | collected values keyed by Field slug or canonical built-in key per **DD-028**; not null, default `{}`; carried into the converted record                                                                          |
 | `converted_matter_id`      | UUID        | → `matters.id`, nullable; FK added with the M22 matter table                                                                                                                                                      |
 | `converted_contract_id`    | UUID        | FK → `contracts.id`, nullable                                                                                                                                                                                     |
 | `declined_reason`          | text        | nullable                                                                                                                                                                                                          |
@@ -1211,7 +1219,73 @@ The table landed with M20/4 (#378), migration 0061, and was reconciled against t
 
 ---
 
-> **DD-028, built in M39:** Contract, Matter and Entity types own Forms. Record-type Field joins carry Row switches and Branch membership. Contract and Matter types also have built-in Rows and one Default type each. Migration 0159 re-keys stored Request answers and removes the ten shadow Fields, `fields.built_in_key`, `fields.field_tag`, `request_type_fields`, and `request_types.form_field_order`.
+### Type Forms, built in M39
+
+Source: **DD-028**, **DES-090**, migrations `0157_type-forms`, `0158_matter-record-preparation`, and `0159_retire-legacy-fields`. The TypeScript schema is in `packages/db/src/schema/type-forms.ts` and the three `*-type-fields.ts` files.
+
+#### Default types
+
+`contract_types.is_default` and `matter_types.is_default` are non-null booleans, default false. Each table has a partial unique index on `is_default WHERE is_default`, allowing at most one Default type. Migration 0157 seeds the `default` slug with `is_system_default`, or reuses an existing row with that slug and restores it if archived. A reused row keeps its original seed marker. The API refuses archive or deletion of that row. A rename is allowed. This is separate from the older protected `other` row and from the seed marker `is_system_default`.
+
+A Request type with a module and no target type reads that module's Default type Form. Create dialogs preselect the Default type. No type inherits its Form. Entity types have no `is_default` column.
+
+#### Built-in Row tables
+
+`contract_type_builtin_rows` and `matter_type_builtin_rows` hold the configurable built-in Rows. They share this shape, with `contract_type_id` or `matter_type_id` as the owning column:
+
+| Column           | Type    | Notes                                                            |
+| ---------------- | ------- | ---------------------------------------------------------------- |
+| Owning type ID   | text    | Not null, FK to the module's type table, `ON DELETE CASCADE`     |
+| `builtin_key`    | text    | Not null, canonical built-in identity                            |
+| `display_order`  | integer | Not null; shares sibling order with Branches and attached Fields |
+| `is_required`    | boolean | Not null, default false; Required for creation                   |
+| `on_intake_form` | boolean | Not null, default false; On intake form                          |
+| `branch_id`      | text    | Nullable; NULL means root                                        |
+
+The primary key is the owning type ID plus `builtin_key`. A composite FK from owning type ID plus `branch_id` to that module's Branch table uses `ON DELETE CASCADE`. A CHECK excludes `title`, `contract_type`, and `matter_type`. The API supplies pinned Title and Type Rows in memory; the tables never store them. The API validates the remaining keys and requires each built-in exactly once. Built-ins have no `visible_on_portal` column; their Portal policy is fixed.
+
+Contract keys: `description`, `entity`, `counterparties`, `owning_department`, `region`, `priority`, `risk`, `term_type`, `effective_date`, `expiry_date`, `renewal_period_months`, `notice_period_days`, `value`, `needed_by`.
+
+Matter keys: `description`, `department`, `region`, `priority`, `risk`, `needed_by`.
+
+Description starts On intake form. Value is one compound Row for amount, currency and cadence. Needed by becomes a Key date at creation. There is no Entity built-in Row table. Entity built-ins stay on the existing create form and record.
+
+#### Branch tables
+
+`contract_type_branches`, `matter_type_branches`, and `entity_type_branches` share this shape:
+
+| Column                                                    | Type    | Notes                                                             |
+| --------------------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| `contract_type_id`, `matter_type_id`, or `entity_type_id` | text    | Not null, FK to the corresponding type table, `ON DELETE CASCADE` |
+| `id`                                                      | text    | Not null; Branch identity within that type                        |
+| `parent_branch_id`                                        | text    | Nullable; NULL means root                                         |
+| `display_order`                                           | integer | Not null; order among all sibling nodes                           |
+| `match`                                                   | text    | Not null, CHECK restricts it to `all` or `any`                    |
+| `conditions`                                              | jsonb   | Not null, CHECK requires an array                                 |
+
+The primary key is the owning type ID plus `id`. A self-referencing composite FK on owning type ID plus `parent_branch_id` uses `ON DELETE CASCADE`. It prevents cross-type parents. The API validates the tree, conditions, unique Row identities and preceding references; the JSON array CHECK alone does not enforce them.
+
+Each condition is `{ rowRef, operator, value }`. `rowRef` is a built-in key or Field slug above the Branch in document order. Operators are `equals`, `is_not`, `is_one_of`, `is_set`, `greater_than`, and `less_than`. `is_set` takes null; `is_one_of` takes a list; the others take one scalar. Ordered comparisons require a number, money or date Row. Money compares integer minor units; dates use `YYYY-MM-DD`. Nested Branches provide structural conditions. There are no nested condition groups inside one Branch.
+
+#### Entity Field Rows and the three switches
+
+`entity_type_fields` has the same Field Row columns and keys as the Contract and Matter joins, with `entity_type_id` and a composite FK to `entity_type_branches`. It stores `is_required`, `visible_on_portal`, and `branch_id`; it has no `on_intake_form`. The builder retains `visible_on_portal` on writes but shows only Required for creation. No Entity Portal Form read uses that column today.
+
+For Contract and Matter Rows, **On intake form** maps to `on_intake_form`, **Required for creation** to `is_required`, and **Visible on Portal** to `visible_on_portal`. The API requires an intake Field to be visible on Portal and refuses a required intake User Row. A Touchpoint is derived, never stored: Intake when On intake form is on; Creation when Required for creation is on and On intake form is off; Record when both are off. Creation collects Intake and Creation Rows.
+
+The shared evaluator excludes Rows under a false Branch from collection and required enforcement. A hidden source counts as unanswered in later conditions. An unanswered value satisfies only `is_not`. A record still displays a hidden Row with a stored value, subject to Portal visibility and access rules. No condition deletes an answer.
+
+#### Retired tables, columns and identities
+
+Migration 0159 drops `request_type_fields`, `request_types.form_field_order`, `fields.field_tag`, and `fields.built_in_key`, plus `fields_field_tag_check` and `fields_built_in_key_unique`. The ten `__intake_contract_*` catalog rows and their remaining type attachments are removed after Request answers are re-keyed. Business and Legal tags were copied into each Row's `visible_on_portal` in 0157.
+
+Request answers keep Field slugs and use canonical built-in keys. Value uses `value_amount`, `value_currency`, and `value_cadence` in stored Request answers, assembled into one `value` for evaluation. Upgrade converts legacy money amounts to minor units by currency, normalizes Term type and cadence, and splits legacy Counterparty names into an array. An existing canonical key wins over its old spelling.
+
+The demo seed no longer creates `counterparty_name` or `needed_by` Fields. Existing ordinary catalog Fields with those slugs are retained, including their answers. They are not among the ten protected shadow rows deleted by 0159. Auto-Doc destination maps replace `primary_counterparty_name`, `entity_id`, and `owning_department_id` with `counterparties`, `entity`, and `owning_department`. AI metadata and prompt overrides rename `counterparty` to `counterparties` without changing citations.
+
+Migration 0158 adds nullable `conversion_drafts.matter_id`, a text FK to `matters.id` without cascade. It binds the post-conversion Matter Record Row preparation to its record; it is not a second Request or a new public workflow.
+
+---
 
 ### `request_types` / `request_attachments`
 

@@ -48,7 +48,7 @@ The **Intake form** card is read-only. It lists **Title**, **Department**, and *
 ## Choose the Intake Rows
 
 1. Select **Edit on MSA**, or the destination type's current name, at the bottom of the card. This opens its **Form** tab. A module-only destination links to its Default type.
-2. Configure the Rows and Branches there. Turn on **On intake form** for Rows that a Requester should answer. Use **Required for creation** for a required answer. An intake Field must also be **Visible on Portal**.
+2. Configure the Rows and Branches there. See [the switches, Touchpoint and Branch example](types-statuses-fields.md#attach-fields-and-set-requiredness). Turn on **On intake form** for Rows that a Requester should answer. Use **Required for creation** for a required answer. Turning this on also enables **Visible on Portal** for the Field. It stays locked on until On intake form is off.
 3. Return to the Request type editor and check its **Intake form** card and preview.
 
 The Request type has no separate attach menu, Required checkbox, or Row order. Edits to the destination Form affect every Request type that reads it. A User Row on intake cannot be required because the Portal has no staff directory picker. Entity Rows use the Portal-listed Entities.
