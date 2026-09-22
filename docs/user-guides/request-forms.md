@@ -47,7 +47,7 @@ The **Intake form** card is read-only. It lists **Title**, **Department**, and *
 
 ## Choose the Intake Rows
 
-1. Select **Edit on MSA**, or the destination type's current name, at the bottom of the card. This opens its **Form** tab. A module-only destination links to its Default type.
+1. Select **Edit form** in the card header, to the right of the preview eye. This opens the destination type's **Form** tab. A module-only destination opens its Default type.
 2. Configure the Rows and Branches there. See [the switches, Touchpoint and Branch example](types-statuses-fields.md#attach-fields-and-set-requiredness). Turn on **On intake form** for Rows that a Requester should answer. For a Field, this also turns on **Visible on Portal**, which stays locked on until On intake form is off. Use **Required for creation** for a required answer.
 3. Return to the Request type editor and check its **Intake form** card and preview.
 

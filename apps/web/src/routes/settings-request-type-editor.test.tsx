@@ -201,7 +201,7 @@ describe("the Intake form card", () => {
     expect(screen.queryByText("Form fields")).not.toBeInTheDocument();
     expect(calls.reads.some((p) => p.includes("request-types/r2/fields"))).toBe(false);
     expect(within(card).getByText("Default")).toBeVisible();
-    expect(within(card).getByRole("link", { name: "Edit on Default" })).toHaveAttribute(
+    expect(within(card).getByRole("link", { name: "Edit form" })).toHaveAttribute(
       "href",
       "/settings/contracts/types/ct-default/form",
     );
@@ -218,7 +218,9 @@ describe("the Intake form card", () => {
           })
         : base(call),
     );
-    expect(await screen.findByRole("link", { name: "Edit on General contracts" })).toHaveAttribute(
+    const card = await screen.findByRole("region", { name: "Intake form" });
+    expect(within(card).getByText("General contracts")).toBeVisible();
+    expect(within(card).getByRole("link", { name: "Edit form" })).toHaveAttribute(
       "href",
       "/settings/contracts/types/ct-default/form",
     );
@@ -232,12 +234,12 @@ describe("the Intake form card", () => {
     await user.selectOptions(screen.getByLabelText("Default contract type"), "ct-nda");
     expect(await screen.findByText("Effective date")).toBeVisible();
     expect(screen.queryByText("Business justification")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Edit on NDA" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Edit form" })).toHaveAttribute(
       "href",
       "/settings/contracts/types/ct-nda/form",
     );
     await user.selectOptions(screen.getByLabelText("Default destination"), "matter");
-    expect(await screen.findByRole("link", { name: "Edit on Default" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Edit form" })).toHaveAttribute(
       "href",
       "/settings/matters/types/mt-default/form",
     );
@@ -280,7 +282,7 @@ it("keeps an archived destination visible and reads that type's Form", async () 
   );
   expect(await screen.findByRole("option", { name: "Retired kind (unavailable)" })).toBeDisabled();
   expect(await screen.findByText("Business justification")).toBeVisible();
-  expect(screen.getByRole("link", { name: "Edit on Retired kind" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "Edit form" })).toHaveAttribute(
     "href",
     "/settings/contracts/types/ct-old/form",
   );
@@ -307,7 +309,7 @@ it("ignores an old Form read that finishes after a destination change", async ()
   expect(await screen.findByText("Effective date")).toBeVisible();
   release!();
   await waitFor(() => expect(screen.queryByText("Business justification")).not.toBeInTheDocument());
-  expect(screen.getByRole("link", { name: "Edit on NDA" })).toBeVisible();
+  expect(screen.getByRole("link", { name: "Edit form" })).toBeVisible();
 });
 
 it("requires a destination module and offers only live types", async () => {
@@ -332,7 +334,7 @@ it("reads a saved Default type id as the one Default choice and does not re-save
   const type = await screen.findByLabelText("Default contract type");
   expect(type).toHaveValue("");
   expect(within(type).getAllByRole("option", { name: "Default" })).toHaveLength(1);
-  expect(await screen.findByRole("link", { name: "Edit on Default" })).toHaveAttribute(
+  expect(await screen.findByRole("link", { name: "Edit form" })).toHaveAttribute(
     "href",
     "/settings/contracts/types/ct-default/form",
   );

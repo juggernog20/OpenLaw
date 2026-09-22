@@ -270,14 +270,14 @@ test.describe.serial("M19 demo path", () => {
       await expect(page.getByLabel("Default contract type")).toBeVisible();
       await page.getByLabel("Default contract type").selectOption(destination.id);
       const card = page.getByRole("region", { name: "Intake form" });
-      await expect(card.getByRole("link", { name: `Edit on ${destinationName}` })).toBeVisible();
+      await expect(card.getByRole("link", { name: "Edit form" })).toBeVisible();
       await expect(page.getByRole("checkbox")).toHaveCount(0);
       await expect(page.getByRole("button", { name: /^Attach field$/i })).toHaveCount(0);
       for (const name of ["Title", "Department", "Urgency", "Attachments"]) {
         await expect(card.getByText(name, { exact: true })).toBeVisible();
       }
 
-      await card.getByRole("link", { name: `Edit on ${destinationName}` }).click();
+      await card.getByRole("link", { name: "Edit form" }).click();
       await expect(page).toHaveURL(new RegExp(`/settings/contracts/types/${destination.id}/form$`));
       for (const fieldName of [FIRST_FIELD, SECOND_FIELD]) {
         await page.getByRole("button", { name: "Attach Field", exact: true }).click();
@@ -309,7 +309,7 @@ test.describe.serial("M19 demo path", () => {
       await expect(preview).toBeHidden();
 
       await page.getByLabel("Default destination", { exact: true }).selectOption("matter");
-      await expect(card.getByRole("link", { name: "Edit on Default" })).toHaveAttribute(
+      await expect(card.getByRole("link", { name: "Edit form" })).toHaveAttribute(
         "href",
         `/settings/matters/types/${matterDefault.id}/form`,
       );

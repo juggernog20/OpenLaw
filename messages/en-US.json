@@ -10829,8 +10829,8 @@
   "settings.requestTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.requestTypeEditor.editOnType": {
-    "defaultMessage": "Edit on {type}"
+  "settings.requestTypeEditor.editForm": {
+    "defaultMessage": "Edit form"
   },
   "settings.requestTypeEditor.formLoading": {
     "defaultMessage": "Loading Intake form…"
