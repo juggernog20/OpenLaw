@@ -749,7 +749,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
 
 - [x] **M39 — Type Forms**
       _Demo:_ Build a Branch on the NDA type, submit a Request that takes it, convert it, and read the answers on the Contract and Portal record.
-      _Shipped:_ [#1007](https://github.com/juggernog20/OpenLaw/issues/1007), tasks #1009–#1020. The browser journey is
+      _Built:_ [#1007](https://github.com/juggernog20/OpenLaw/issues/1007), tasks #1009–#1020. The browser journey is
       [`61-m39-type-form.spec.ts`](../e2e/tests/61-m39-type-form.spec.ts), run by CI against the built Compose stack.
   - [x] Shared evaluator, built-in Row and Branch tables, Default types, and whole-Form API
   - [x] Form tab, conditional Request and creation forms, and read-only Intake form card with preview
