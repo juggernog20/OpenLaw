@@ -89,14 +89,20 @@ const messages = defineMessages({
   Counterparties: { id: "typeForm.counterparties", defaultMessage: "Counterparties" },
   Close: { id: "typeForm.close", defaultMessage: "Close" },
   Cancel: { id: "typeForm.cancel", defaultMessage: "Cancel" },
+  "Add another condition": {
+    id: "typeForm.add-another-condition",
+    defaultMessage: "Add another condition",
+  },
   "Add condition": { id: "typeForm.add-condition", defaultMessage: "Add condition" },
-  "Add branch": { id: "typeForm.add-branch", defaultMessage: "Add branch" },
   "Add a Row above this Branch first": {
     id: "typeForm.add-a-row-above-this-branch-first",
     defaultMessage: "Add a Row above this Branch first",
   },
   "Add a condition": { id: "typeForm.add-a-condition", defaultMessage: "Add a condition" },
-  "Add branch inside": { id: "typeForm.add-branch-inside", defaultMessage: "Add branch inside" },
+  "Add condition inside": {
+    id: "typeForm.add-condition-inside",
+    defaultMessage: "Add condition inside",
+  },
   "Add row into branch": {
     id: "typeForm.add-row-into-branch",
     defaultMessage: "Add row into branch",
@@ -116,10 +122,6 @@ const messages = defineMessages({
   Boolean: { id: "typeForm.boolean", defaultMessage: "Boolean" },
   "Branch conditions": { id: "typeForm.branch-conditions", defaultMessage: "Branch conditions" },
   "Built-in": { id: "typeForm.built-in", defaultMessage: "Built-in" },
-  "Changes apply immediately": {
-    id: "typeForm.changes-apply-immediately",
-    defaultMessage: "Changes apply immediately",
-  },
   "Choose a valid value for this condition": {
     id: "typeForm.choose-a-valid-value-for-this-condition",
     defaultMessage: "Choose a valid value for this condition",
