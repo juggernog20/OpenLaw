@@ -41,11 +41,7 @@ describe("the type Form tab", () => {
       expect(control).toHaveAccessibleDescription(description);
       expect(within(dialog).getByText(description)).toHaveClass("sr-only");
       expect(within(dialog).getByLabelText(/^Title/)).not.toHaveAttribute("aria-describedby");
-      act(() =>
-        within(dialog)
-          .getByRole("button", { name: "Show description for Business justification" })
-          .focus(),
-      );
+      act(() => control.focus());
       expect(await screen.findByRole("tooltip")).toHaveTextContent(description);
     },
   );
