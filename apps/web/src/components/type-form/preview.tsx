@@ -272,12 +272,15 @@ export function IntakePreview({
           </p>
           {visible.map((row) => {
             const id = `preview-${row.id}`;
+            const definition = field(row);
+            const describedBy = definition.description ? `${id}-help` : undefined;
             const options = optionsFor(row, catalog, t);
             return (
               <Field
                 key={row.id}
                 htmlFor={id}
                 label={rowName(row, catalog, t)}
+                description={definition.description}
                 required={row.isRequired}
                 unanswered={submitted && row.isRequired && !answered(row.rowRef)}
               >
@@ -344,6 +347,7 @@ export function IntakePreview({
                   <select
                     id={id}
                     aria-required={row.isRequired}
+                    aria-describedby={describedBy}
                     className={CONTROL_CLASS}
                     value={String(answers[row.rowRef] ?? "")}
                     onChange={(e) => answer(row.rowRef, e.target.value)}
@@ -359,7 +363,8 @@ export function IntakePreview({
                   <CustomFieldControl
                     allowCreateCurrency={false}
                     id={id}
-                    field={field(row)}
+                    field={definition}
+                    describedBy={describedBy}
                     draft={
                       drafts[row.id] ??
                       (row.fieldType === "boolean"

@@ -9,28 +9,29 @@ import { formatFileSize } from "../../lib/format";
 import { FileTypeIcon } from "../documents/file-type-icon";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
+import { DescribedField } from "../described-field";
 
 export function Field({
   htmlFor,
   label,
   required = false,
-  hint,
-  hintId,
+  description,
   unanswered = false,
   children,
 }: Readonly<{
   htmlFor: string;
   label: string;
   required?: boolean;
-  hint?: string;
-  /** The help text's own id, so the control can name it. Only the rows
-   * whose control carries `aria-describedby` pass one. */
-  hintId?: string;
+  description?: string | null;
   unanswered?: boolean;
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <DescribedField
+      description={description}
+      descriptionId={`${htmlFor}-help`}
+      className="flex flex-col gap-1.5"
+    >
       <Label htmlFor={htmlFor}>
         {label}
         {required && (
@@ -45,11 +46,6 @@ export function Field({
         )}
       </Label>
       {children}
-      {hint !== undefined && (
-        <p id={hintId} className="text-xs text-muted">
-          {hint}
-        </p>
-      )}
       {unanswered && (
         <p className="text-xs text-status-danger-fg">
           <FormattedMessage
@@ -59,7 +55,7 @@ export function Field({
           />
         </p>
       )}
-    </div>
+    </DescribedField>
   );
 }
 

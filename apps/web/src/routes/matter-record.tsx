@@ -70,6 +70,7 @@ import { ConfidentialToggle } from "../components/confidential-toggle";
 import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
+import { DescribedField } from "../components/described-field";
 import { useMatterTeamApplet } from "../components/matters/team-applet";
 import type { Applet } from "../components/shell/applets";
 import { MatterKeyDatesCard } from "../components/matters/key-dates-card";
@@ -1700,7 +1701,10 @@ function MatterCustomField({
     void onCommit(converted.value);
   }
   return (
-    <div
+    <DescribedField
+      description={field.description}
+      descriptionId={`${id}-description`}
+      tabIndex={frozen && field.description?.trim() ? 0 : undefined}
       className={`flex flex-col gap-1.5 ${field.fieldType === "text" || field.fieldType === "long_text" ? "@2xl/page:col-span-2" : ""}`}
     >
       <Label id={`${id}-label`} htmlFor={id}>
@@ -1741,6 +1745,7 @@ function MatterCustomField({
             id={id}
             field={field}
             draft={draft}
+            describedBy={field.description ? `${id}-description` : undefined}
             people={people}
             entities={entities}
             required={field.isRequired}
@@ -1758,7 +1763,7 @@ function MatterCustomField({
         </AiField>
       )}
       {!frozen && <StatusNote status={status} detail={error} />}
-    </div>
+    </DescribedField>
   );
 }
 
@@ -1833,7 +1838,12 @@ function MatterRetypeDialog({
           {gaps.map((field) => {
             const id = `retype-${field.slug}`;
             return (
-              <div key={field.fieldId} className="flex flex-col gap-1.5">
+              <DescribedField
+                key={field.fieldId}
+                description={field.description}
+                descriptionId={`${id}-description`}
+                className="flex flex-col gap-1.5"
+              >
                 <Label id={`${id}-label`} htmlFor={id}>
                   {field.displayName}
                   <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
@@ -1847,12 +1857,13 @@ function MatterRetypeDialog({
                   id={id}
                   field={field}
                   draft={drafts[field.slug] ?? toDraft(field, undefined)}
+                  describedBy={field.description ? `${id}-description` : undefined}
                   people={people}
                   entities={entities}
                   required
                   onDraft={(draft) => setDrafts((current) => ({ ...current, [field.slug]: draft }))}
                 />
-              </div>
+              </DescribedField>
             );
           })}
           {error && (

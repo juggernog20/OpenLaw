@@ -52,6 +52,7 @@ import type {
   StaffRequestFieldRefs,
 } from "../../lib/requests";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
+import { DescribedField } from "../described-field";
 import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -1088,7 +1089,12 @@ export function ConvertDialog({
                   );
                 }
                 return (
-                  <div key={field.slug} className="flex flex-col gap-1.5">
+                  <DescribedField
+                    key={field.slug}
+                    description={field.description}
+                    descriptionId={`convert-${field.slug}-description`}
+                    className="flex flex-col gap-1.5"
+                  >
                     <Label
                       id={`convert-${field.slug}-label`}
                       htmlFor={`convert-${field.slug}`}
@@ -1108,9 +1114,14 @@ export function ConvertDialog({
                         entities={fieldEntities}
                         required={field.isRequired}
                         describedBy={
-                          archivedCarrySlugs.has(field.slug)
-                            ? `convert-${field.slug}-help`
-                            : undefined
+                          [
+                            field.description ? `convert-${field.slug}-description` : undefined,
+                            archivedCarrySlugs.has(field.slug)
+                              ? `convert-${field.slug}-help`
+                              : undefined,
+                          ]
+                            .filter(Boolean)
+                            .join(" ") || undefined
                         }
                         onDraft={(next) => {
                           humanValue(`field:${field.slug}`);
@@ -1139,7 +1150,7 @@ export function ConvertDialog({
                       </p>
                     )}
                     {marker(`field:${field.slug}`)}
-                  </div>
+                  </DescribedField>
                 );
               })}
             <CreateAttachments

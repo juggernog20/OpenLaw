@@ -29,6 +29,7 @@ import { formatFullDate } from "../../lib/format";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
 import { StatusNote } from "../status-note";
 import { Label } from "../ui/label";
+import { DescribedField } from "../described-field";
 
 export function EntityFieldsCard({
   entity,
@@ -143,7 +144,12 @@ function EntityFieldControl({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <DescribedField
+      description={field.description}
+      descriptionId={`${id}-description`}
+      tabIndex={frozen && field.description?.trim() ? 0 : undefined}
+      className="flex flex-col gap-1.5"
+    >
       <Label id={`${id}-label`} htmlFor={id}>
         {field.displayName}
         {field.isRequired && !frozen ? (
@@ -175,15 +181,10 @@ function EntityFieldControl({
           }}
         />
       )}
-      {field.description ? (
-        <p id={`${id}-description`} className="text-sm text-muted">
-          {field.description}
-        </p>
-      ) : null}
       {!frozen ? (
         <StatusNote status={refusal === undefined ? status : "error"} detail={refusal ?? error} />
       ) : null}
-    </div>
+    </DescribedField>
   );
 }
 

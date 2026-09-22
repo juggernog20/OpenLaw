@@ -24,6 +24,7 @@ import { type ContractValue } from "../../lib/contracts";
 import { api } from "../../lib/api";
 import { readRegistry } from "../../lib/entities";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
+import { DescribedField } from "../described-field";
 import { ValueField } from "../contracts/value-field";
 import { DepartmentPicker } from "../department-picker";
 import { AutoResizeTextarea } from "../auto-resize-textarea";
@@ -385,17 +386,17 @@ export function CreationRows({
             />
           );
         return (
-          <div key={row.id} className="flex flex-col gap-1.5">
+          <DescribedField
+            key={row.id}
+            description={field?.description}
+            descriptionId={`${id}-help`}
+            className="flex flex-col gap-1.5"
+          >
             <Label id={`${id}-label`} htmlFor={id} required={row.isRequired}>
               {label}
             </Label>
             {control}
-            {field?.description && (
-              <p id={`${id}-help`} className="text-xs text-muted">
-                {field.description}
-              </p>
-            )}
-          </div>
+          </DescribedField>
         );
       })}
     </>

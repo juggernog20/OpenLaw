@@ -522,8 +522,7 @@ function AttachedField({
       htmlFor={controlId}
       label={field.displayName}
       required={field.isRequired}
-      hint={field.description ?? undefined}
-      hintId={`${controlId}-help`}
+      description={field.description}
       unanswered={unanswered}
     >
       {field.builtInKey === "counterparties" ? (

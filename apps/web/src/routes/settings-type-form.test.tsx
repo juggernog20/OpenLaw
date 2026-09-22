@@ -7,6 +7,45 @@ import { json, problem } from "../testing/helpers";
 import { setupForm } from "../testing/type-form";
 
 describe("the type Form tab", () => {
+  it.each(["text", "single_select"] as const)(
+    "previews a %s Field's saved description as a tooltip",
+    async (fieldType) => {
+      const description = "Explain why this work is needed.";
+      const { user } = setupForm(
+        "contract",
+        false,
+        (form) =>
+          form.map((row) => (row.id === "f1" ? { ...row, fieldType, onIntakeForm: true } : row)),
+        "administrator",
+        (call) =>
+          call.url.pathname === "/api/v1/fields"
+            ? json(200, {
+                fields: [
+                  {
+                    id: "f1",
+                    slug: "justification",
+                    displayName: "Business justification",
+                    fieldType,
+                    moduleScope: "contract",
+                    description,
+                    options: fieldType === "single_select" ? ["Expansion", "Renewal"] : null,
+                    archivedAt: null,
+                  },
+                ],
+              })
+            : undefined,
+      );
+      await user.click(await screen.findByRole("button", { name: "Preview intake form" }));
+      const dialog = screen.getByRole("dialog", { name: "Preview intake form" });
+      const control = within(dialog).getByLabelText("Business justification");
+      expect(control).toHaveAccessibleDescription(description);
+      expect(within(dialog).getByText(description)).toHaveClass("sr-only");
+      expect(within(dialog).getByLabelText(/^Title/)).not.toHaveAttribute("aria-describedby");
+      act(() => control.focus());
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(description);
+    },
+  );
+
   it.each(["contract", "matter", "entity"] as const)(
     "renders the %s Form without attachment cards",
     async (module) => {

@@ -497,6 +497,9 @@ describe("the prefill (INT-002, MTR-012)", () => {
     const entity = within(dialog).getByLabelText(/^Contracting entity/);
     expect(within(dialog).getByText(/Tom Iwu is archived/)).toBeInTheDocument();
     expect(within(dialog).getByText(/Wound Down GmbH is archived/)).toBeInTheDocument();
+    expect(manager).toHaveAccessibleDescription(
+      /Who in the business owns this deal\..*Tom Iwu is archived/,
+    );
 
     await user.selectOptions(manager, "u2");
     await user.selectOptions(entity, "e2");
@@ -2044,7 +2047,10 @@ describe("Contract and Matter preparation together", () => {
     expect(screen.getAllByRole("button", { name: "View source evidence" }).length).toBeGreaterThan(
       0,
     );
-    expect(screen.queryByText("Who in the business owns this deal.")).toBeNull();
+    expect(screen.getByText("Who in the business owns this deal.")).toHaveClass("sr-only");
+    expect(screen.getByLabelText(/^Requesting manager/)).toHaveAccessibleDescription(
+      "Who in the business owns this deal.",
+    );
     await user.click(screen.getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toMatchObject({
