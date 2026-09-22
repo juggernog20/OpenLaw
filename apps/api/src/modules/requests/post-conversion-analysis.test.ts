@@ -2,6 +2,10 @@
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
   aiConnector,
+  matters,
+  matterTypes,
+  matterTypeFields,
+  conversionDrafts,
   aiFieldPrompts,
   comments,
   contractTypeFields,
@@ -22,6 +26,10 @@ import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harnes
 import { dispositionScaffold, type DispositionScaffold } from "../../testing/disposition.js";
 import { handleContractAnalysis } from "../../pipeline/contract-analysis.js";
 import { KEY_DATES_TARGET, keyDateSuggestionSlug } from "../../lib/analysis-key-dates.js";
+import {
+  handleMatterRecordPreparation,
+  sweepMatterRecordPreparations,
+} from "../../pipeline/matter-record-preparation.js";
 let harness: TestHarness;
 let cast: DispositionScaffold;
 let typeId: string;
@@ -663,4 +671,226 @@ it("keeps the core Value marker when a legacy custom Field named value is edited
   const repeated = await patch();
   expect(repeated.statusCode, repeated.body).toBe(200);
   expect(repeated.json().contract.updatedAt).toBe(edited.json().contract.updatedAt);
+});
+
+it("prepares an unprompted Record Row through Analysis with saved provenance", async () => {
+  const [field] = await harness.db
+    .insert(fields)
+    .values({
+      slug: "record_wording",
+      displayName: "Record wording",
+      moduleScope: "contract",
+      fieldType: "text",
+      fieldTag: "business",
+    })
+    .returning();
+  await harness.db
+    .insert(contractTypeFields)
+    .values({ typeId, fieldId: field!.id, displayOrder: 1001 });
+  const { contract, runs } = await convert({}, async (id) => {
+    answers.risk = {
+      value: "high",
+      sourceId: `request:${id}:description`,
+      evidence: "Notice is 30 days",
+    };
+    answers.needed_by = {
+      value: "2026-10-01",
+      sourceId: `request:${id}:description`,
+      evidence: "October 1, 2026",
+    };
+    answers.record_wording = {
+      value: "October commencement",
+      sourceId: `request:${id}:description`,
+      evidence: "Effective October 1, 2026",
+    };
+  });
+  await execute(runs[0]!.id);
+  const [row] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+  expect(row!.customFields.record_wording).toBe("October commencement");
+  expect(row!.risk).toBe("high");
+  expect(row!.aiUnverified?.risk?.runId).toBe(runs[0]!.id);
+  expect(row!.aiUnverified?.needed_by?.keyDateId).toEqual(expect.any(String));
+  expect(row!.aiUnverified?.record_wording).toMatchObject({
+    runId: runs[0]!.id,
+    sourceContext: true,
+  });
+  const [run] = await harness.db
+    .select()
+    .from(contractAnalysisRuns)
+    .where(eq(contractAnalysisRuns.id, runs[0]!.id));
+  expect(run!.sourceContext?.suggestions.record_wording?.citations).toHaveLength(1);
+});
+
+async function convertMatter(options: { refuseQueue?: boolean } = {}) {
+  const [type] = await harness.db
+    .insert(matterTypes)
+    .values({
+      slug: `record_${crypto.randomUUID()}`,
+      displayName: "Record preparation",
+      displayOrder: 1000,
+    })
+    .returning();
+  for (const [index, slug] of ["matter_record", "matter_creation"].entries()) {
+    const [field] = await harness.db
+      .insert(fields)
+      .values({
+        slug,
+        displayName: slug,
+        moduleScope: "matter",
+        fieldType: "text",
+        fieldTag: "business",
+      })
+      .onConflictDoUpdate({ target: fields.slug, set: { displayName: slug } })
+      .returning();
+    await harness.db.insert(matterTypeFields).values({
+      typeId: type!.id,
+      fieldId: field!.id,
+      displayOrder: index,
+      onIntakeForm: index === 1,
+    });
+  }
+  const [rt] = await harness.db
+    .insert(requestTypes)
+    .values({
+      slug: `record_${crypto.randomUUID()}`,
+      displayName: "Record preparation",
+      displayOrder: 1000,
+      targetModule: "matter",
+      targetMatterTypeId: type!.id,
+    })
+    .returning();
+  const [request] = await harness.db
+    .insert(requests)
+    .values({
+      requestTypeId: rt!.id,
+      requesterId: cast.requesterId,
+      title: "Advice",
+      description: "The supplier needs a response.",
+      urgency: "medium",
+    })
+    .returning();
+  answers["field:matter_record"] = {
+    value: "Supplier response",
+    sourceId: `request:${request!.id}:description`,
+    evidence: "supplier needs a response",
+  };
+  const send = options.refuseQueue
+    ? vi
+        .spyOn(harness.app.jobs, "requestMatterRecordPreparation")
+        .mockImplementation(() => new Promise(() => {}))
+    : null;
+  const started = Date.now();
+  const response = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/requests/${request!.number}/convert`,
+    cookies: cast.memberCookies,
+    payload: { title: "Advice", matterTypeId: type!.id },
+  });
+  send?.mockRestore();
+  expect(response.statusCode, response.body).toBe(200);
+  if (options.refuseQueue) expect(Date.now() - started).toBeLessThan(5000);
+  const [converted] = await harness.db.select().from(requests).where(eq(requests.id, request!.id));
+  const [matter] = await harness.db
+    .select()
+    .from(matters)
+    .where(eq(matters.id, converted!.convertedMatterId!));
+  const [run] = await harness.db
+    .select()
+    .from(conversionDrafts)
+    .where(eq(conversionDrafts.matterId, matter!.id));
+  return { matter: matter!, run, request: request! };
+}
+async function executeMatter(id: string) {
+  await handleMatterRecordPreparation(
+    {
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      resolveAiProvider: harness.resolveAiProvider,
+      log: harness.app.log,
+    },
+    id,
+  );
+}
+it("queues Matter Record Rows with bounded dispatch, recovers lost asks, and serves their Unverified evidence", async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: true });
+  const { matter, run } = await convertMatter({ refuseQueue: true });
+  expect(run!.state).toBe("pending");
+  const send = vi.spyOn(harness.app.jobs, "requestMatterRecordPreparation");
+  await sweepMatterRecordPreparations(harness.db, harness.app.jobs);
+  expect(send).toHaveBeenCalledWith(run!.id);
+  send.mockRestore();
+  const queues = await harness.db.execute(
+    sql`select name, retry_limit, expire_seconds from pgboss.queue where name = 'matter.record-preparation'`,
+  );
+  const constraint = await harness.db.execute(
+    sql`select convalidated from pg_constraint where conname = 'conversion_drafts_matter_id_matters_id_fk'`,
+  );
+  expect(constraint.rows).toEqual([{ convalidated: true }]);
+  expect(queues.rows).toMatchObject([
+    { name: "matter.record-preparation", retry_limit: 0, expire_seconds: 3600 },
+  ]);
+  await executeMatter(run!.id);
+  const [saved] = await harness.db.select().from(matters).where(eq(matters.id, matter.id));
+  expect(saved!.customFields).toEqual({ matter_record: "Supplier response" });
+  expect(saved!.aiUnverified?.["field:matter_record"]).toMatchObject({
+    draftId: run!.id,
+    targetTypeId: matter.matterTypeId,
+  });
+  const evidence = await harness.app.inject({
+    url: `/api/v1/matters/${matter.number}/conversion-evidence/field:matter_record`,
+    cookies: cast.memberCookies,
+  });
+  expect(evidence.statusCode, evidence.body).toBe(200);
+  expect(evidence.json()).toMatchObject({
+    available: true,
+    citations: [{ quote: "supplier needs a response" }],
+  });
+  const calls = provider.extractions.length;
+  await executeMatter(run!.id);
+  expect(provider.extractions).toHaveLength(calls);
+  expect(provider.extractions.at(-1)!.targets.map((t) => t.slug)).not.toContain(
+    "field:matter_creation",
+  );
+});
+it("keeps a Matter's human value when it changes during preparation", async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: true });
+  const { matter, run } = await convertMatter();
+  const original = provider.extract.bind(provider);
+  const extract = vi.spyOn(provider, "extract").mockImplementation(async (...args) => {
+    await harness.db
+      .update(matters)
+      .set({ customFields: { matter_record: "Human answer" } })
+      .where(eq(matters.id, matter.id));
+    return original(...args);
+  });
+  try {
+    await executeMatter(run!.id);
+  } finally {
+    extract.mockRestore();
+  }
+  const [saved] = await harness.db.select().from(matters).where(eq(matters.id, matter.id));
+  expect(saved!.customFields.matter_record).toBe("Human answer");
+  expect(saved!.aiUnverified?.["field:matter_record"]).toBeUndefined();
+});
+it("stores Matter preparation failure reasons without provider or source text, and respects the workflow switch", async () => {
+  await harness.db.update(aiConnector).set({ matterPreparation: false });
+  expect((await convertMatter()).run).toBeUndefined();
+  await harness.db.update(aiConnector).set({ matterPreparation: true });
+  const { run } = await convertMatter();
+  const extract = vi
+    .spyOn(provider, "extract")
+    .mockRejectedValue(new Error("Private provider body and Request text"));
+  try {
+    await executeMatter(run!.id);
+  } finally {
+    extract.mockRestore();
+  }
+  const [saved] = await harness.db
+    .select()
+    .from(conversionDrafts)
+    .where(eq(conversionDrafts.id, run!.id));
+  expect(saved!.state).toBe("failed");
+  expect(saved!.failure).toBe("Preparation could not finish. Retry or continue manually.");
+  expect(saved!.suggestions).toEqual({});
 });

@@ -37,6 +37,10 @@ import type { AiResolver } from "../lib/ai/resolver.js";
 import { requestAutomaticContractAnalysis } from "./automatic-contract-analysis.js";
 import { runBackfillSweep } from "./backfill.js";
 import { sweepConversionAnalysis } from "./conversion-analysis.js";
+import {
+  handleMatterRecordPreparation,
+  sweepMatterRecordPreparations,
+} from "./matter-record-preparation.js";
 import { handleConversionDraft, sweepConversionDrafts } from "./conversion-draft.js";
 import { handleContractAnalysis } from "./contract-analysis.js";
 import { plainFailure, type DerivationDeps } from "./derivations.js";
@@ -458,6 +462,9 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
    * one this call returns.
    */
   const queue: JobQueue = {
+    async requestMatterRecordPreparation(draftId) {
+      await boss.send(JOB_QUEUES.matterRecordPreparation, { draftId }, { singletonKey: draftId });
+    },
     async requestGenerationDelivery(generationId, attempt) {
       const job: GenerationDeliveryJob = { generationId, attempt };
       await boss.send(JOB_QUEUES.generationDelivery, job, {
@@ -600,6 +607,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.updateQueue(JOB_QUEUES.notificationEmail, {
       notify: true,
       ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
+    });
+    await boss.createQueue(JOB_QUEUES.matterRecordPreparation, {
+      policy: "short",
+      notify: true,
+      ...CONVERSION_DRAFT_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.matterRecordPreparation, {
+      notify: true,
+      ...CONVERSION_DRAFT_QUEUE_OPTIONS,
     });
     await boss.createQueue(JOB_QUEUES.conversionDraft, {
       policy: "short",
@@ -892,6 +908,23 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         },
       );
       await work(
+        JOB_QUEUES.matterRecordPreparation,
+        oneAtATime,
+        async (jobs: JobWithMetadata<ConversionDraftJob>[]) => {
+          for (const job of jobs)
+            await handleMatterRecordPreparation(
+              {
+                db: handlers.db,
+                resolveAiProvider: handlers.resolveAiProvider,
+                storage: handlers.storage,
+                docEngine: handlers.docEngine,
+                log,
+              },
+              job.data.draftId,
+            );
+        },
+      );
+      await work(
         JOB_QUEUES.conversionDraft,
         oneAtATime,
         async (jobs: JobWithMetadata<ConversionDraftJob>[]) => {
@@ -909,6 +942,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             );
         },
       );
+      await sweepMatterRecordPreparations(handlers.db, queue);
       await sweepConversionDrafts(handlers.db, queue);
       await sweepConversionAnalysis(handlers.db, queue);
       await work(
@@ -938,6 +972,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // of the OCR somebody is waiting on. It takes no metadata and no
       // burst: there is only ever one of it.
       await work(JOB_QUEUES.conversionSweep, { batchSize: 1 }, async () => {
+        await sweepMatterRecordPreparations(handlers.db, queue);
         await sweepConversionDrafts(handlers.db, queue);
         await sweepConversionAnalysis(handlers.db, queue);
         await sweepGenerationDeliveries(handlers, queue, sweeping.signal);
@@ -1016,6 +1051,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.morningRound,
             JOB_QUEUES.contractAnalysis,
             JOB_QUEUES.conversionDraft,
+            JOB_QUEUES.matterRecordPreparation,
             JOB_QUEUES.conversionSweep,
           ],
           conversionSweepCron: CONVERSION_SWEEP_CRON,

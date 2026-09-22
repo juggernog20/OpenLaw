@@ -127,6 +127,7 @@ export const JOB_QUEUES = {
   contractAnalysis: "contract.analysis",
   /** INT-008 preparation has its own queue so it cannot block Document derivations. */
   conversionDraft: "request.conversion-draft",
+  matterRecordPreparation: "matter.record-preparation",
   /** Re-ask abandoned conversion work promptly, once per install. */
   conversionSweep: "request.conversion-sweep",
 } as const;
@@ -199,6 +200,9 @@ export interface JobQueue {
   requestGenerationDelivery(generationId: string, attempt: number): Promise<void>;
   /** Acknowledges enqueueing, not completion. A refused ask is recovered from the pending row by the conversion sweep. */
   requestConversionDraft(draftId: string): Promise<void>;
+  /** Acknowledges enqueueing. The conversion sweep recovers refused asks from the
+   * pending preparation row; refusal must not fail the committed conversion. */
+  requestMatterRecordPreparation(preparationId: string): Promise<void>;
   /**
    * Asks for one version's text to be extracted (DOC-005).
    *
@@ -322,6 +326,7 @@ export function createUnconfiguredJobQueue(): JobQueue {
     requestNotificationPush: refuse,
     requestContractAnalysis: refuse,
     requestConversionDraft: refuse,
+    requestMatterRecordPreparation: refuse,
   };
 }
 
