@@ -54,7 +54,7 @@ import type {
   StaffRequestFieldRefs,
 } from "../../lib/requests";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
-import { DescribedField } from "../described-field";
+import { DescribedField, DescribedFieldLabel } from "../described-field";
 import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -1071,13 +1071,14 @@ export function ConvertDialog({
                     descriptionId={`convert-${field.slug}-description`}
                     className="flex flex-col gap-1.5"
                   >
-                    <Label
+                    <DescribedFieldLabel
+                      fieldName={field.displayName}
                       id={`convert-${field.slug}-label`}
                       htmlFor={`convert-${field.slug}`}
                       required={field.isRequired}
                     >
                       {field.displayName}
-                    </Label>
+                    </DescribedFieldLabel>
                     <AiField
                       active={marked(`field:${field.slug}`)}
                       className={field.fieldType === "boolean" ? "flex self-start" : "flex"}

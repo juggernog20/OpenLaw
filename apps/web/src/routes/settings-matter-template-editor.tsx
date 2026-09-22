@@ -25,7 +25,7 @@ import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { MattersSettingsTabs } from "../components/matters-settings-tabs";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
-import { DescribedField } from "../components/described-field";
+import { DescribedField, DescribedFieldLabel } from "../components/described-field";
 import {
   newDraftKey,
   TemplateKeyDatesEditor,
@@ -515,14 +515,15 @@ export function SettingsMatterTemplateEditorPage() {
                     key={field.fieldId}
                     description={field.description}
                     descriptionId={`${controlId}-description`}
-                    tabIndex={
-                      template.archivedAt !== null && field.description?.trim() ? 0 : undefined
-                    }
                     className="flex flex-col gap-1.5"
                   >
-                    <Label id={`${controlId}-label`} htmlFor={controlId}>
+                    <DescribedFieldLabel
+                      fieldName={field.displayName}
+                      id={`${controlId}-label`}
+                      htmlFor={controlId}
+                    >
                       {field.displayName}
-                    </Label>
+                    </DescribedFieldLabel>
                     <CustomFieldControl
                       id={controlId}
                       field={field}

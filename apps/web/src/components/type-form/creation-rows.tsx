@@ -24,13 +24,12 @@ import { type ContractValue } from "../../lib/contracts";
 import { api } from "../../lib/api";
 import { readRegistry } from "../../lib/entities";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
-import { DescribedField } from "../described-field";
+import { DescribedField, DescribedFieldLabel } from "../described-field";
 import { ValueField } from "../contracts/value-field";
 import { DepartmentPicker } from "../department-picker";
 import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { IntakeCounterpartiesInput } from "../intake/counterparties-input";
 import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { optionsFor, rowName } from "./model";
 import { useFormText } from "./messages";
@@ -392,9 +391,14 @@ export function CreationRows({
             descriptionId={`${id}-help`}
             className="flex flex-col gap-1.5"
           >
-            <Label id={`${id}-label`} htmlFor={id} required={row.isRequired}>
+            <DescribedFieldLabel
+              fieldName={label}
+              id={`${id}-label`}
+              htmlFor={id}
+              required={row.isRequired}
+            >
               {label}
-            </Label>
+            </DescribedFieldLabel>
             {control}
           </DescribedField>
         );

@@ -259,7 +259,7 @@ import { AiFieldEvidence } from "../components/contracts/ai-field-evidence";
 import { coreAnalysisLabel } from "../lib/core-analysis-labels";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
-import { DescribedField } from "../components/described-field";
+import { DescribedField, DescribedFieldLabel } from "../components/described-field";
 import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
@@ -3684,14 +3684,17 @@ function CustomFieldRow({
     <DescribedField
       description={field.description}
       descriptionId={`${controlId}-help`}
-      tabIndex={frozen && field.description?.trim() ? 0 : undefined}
       className="flex flex-col gap-2 border-b border-border-muted px-4 py-2.5 last:border-b-0 @2xl/page:flex-row @2xl/page:items-center @2xl/page:gap-4"
     >
       <div className="flex shrink-0 flex-col gap-0.5 @2xl/page:w-55">
         {/* The id is what a checkbox group points at: `for` names one
             control, and a multi-select is several. */}
         <div className="flex flex-wrap items-center gap-2">
-          <Label id={`${controlId}-label`} htmlFor={controlId}>
+          <DescribedFieldLabel
+            fieldName={field.displayName}
+            id={`${controlId}-label`}
+            htmlFor={controlId}
+          >
             {field.displayName}
             {field.isRequired && (
               <>
@@ -3706,7 +3709,7 @@ function CustomFieldRow({
                 </span>
               </>
             )}
-          </Label>
+          </DescribedFieldLabel>
           {marker && <UnverifiedMarker />}
         </div>
       </div>
@@ -3971,12 +3974,13 @@ function RetypeDialog({
               descriptionId={`contract-retype-${field.slug}-help`}
               className="flex flex-col gap-1.5"
             >
-              <Label
+              <DescribedFieldLabel
+                fieldName={field.displayName}
                 id={`contract-retype-${field.slug}-label`}
                 htmlFor={`contract-retype-${field.slug}`}
               >
                 {field.displayName}
-              </Label>
+              </DescribedFieldLabel>
               <CustomFieldControl
                 id={`contract-retype-${field.slug}`}
                 field={field}

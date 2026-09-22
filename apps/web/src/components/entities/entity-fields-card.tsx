@@ -28,8 +28,7 @@ import type { FieldStatus } from "../../lib/field-commit";
 import { formatFullDate } from "../../lib/format";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
 import { StatusNote } from "../status-note";
-import { Label } from "../ui/label";
-import { DescribedField } from "../described-field";
+import { DescribedField, DescribedFieldLabel } from "../described-field";
 
 export function EntityFieldsCard({
   entity,
@@ -147,17 +146,16 @@ function EntityFieldControl({
     <DescribedField
       description={field.description}
       descriptionId={`${id}-description`}
-      tabIndex={frozen && field.description?.trim() ? 0 : undefined}
       className="flex flex-col gap-1.5"
     >
-      <Label id={`${id}-label`} htmlFor={id}>
+      <DescribedFieldLabel fieldName={field.displayName} id={`${id}-label`} htmlFor={id}>
         {field.displayName}
         {field.isRequired && !frozen ? (
           <span className="ms-0.5 text-status-danger-fg" aria-hidden="true">
             *
           </span>
         ) : null}
-      </Label>
+      </DescribedFieldLabel>
       {frozen ? (
         <span>{savedLabel(intl, field, saved, people, entities)}</span>
       ) : (

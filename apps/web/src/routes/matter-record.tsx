@@ -70,7 +70,7 @@ import { ConfidentialToggle } from "../components/confidential-toggle";
 import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
-import { DescribedField } from "../components/described-field";
+import { DescribedField, DescribedFieldLabel } from "../components/described-field";
 import { useMatterTeamApplet } from "../components/matters/team-applet";
 import type { Applet } from "../components/shell/applets";
 import { MatterKeyDatesCard } from "../components/matters/key-dates-card";
@@ -1704,10 +1704,9 @@ function MatterCustomField({
     <DescribedField
       description={field.description}
       descriptionId={`${id}-description`}
-      tabIndex={frozen && field.description?.trim() ? 0 : undefined}
       className="flex min-w-0 flex-col gap-1.5 [&>span:empty]:hidden"
     >
-      <Label id={`${id}-label`} htmlFor={id}>
+      <DescribedFieldLabel fieldName={field.displayName} id={`${id}-label`} htmlFor={id}>
         {field.displayName}
         {!frozen && field.isRequired && (
           <>
@@ -1719,7 +1718,7 @@ function MatterCustomField({
             </span>
           </>
         )}
-      </Label>
+      </DescribedFieldLabel>
       {frozen ? (
         <AiField active={aiGenerated} className="-mx-2 w-fit px-2">
           <span>
@@ -1844,7 +1843,7 @@ function MatterRetypeDialog({
                 descriptionId={`${id}-description`}
                 className="flex flex-col gap-1.5"
               >
-                <Label id={`${id}-label`} htmlFor={id}>
+                <DescribedFieldLabel fieldName={field.displayName} id={`${id}-label`} htmlFor={id}>
                   {field.displayName}
                   <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
                     *
@@ -1852,7 +1851,7 @@ function MatterRetypeDialog({
                   <span className="sr-only">
                     <FormattedMessage id="matters.field.requiredMark" defaultMessage="(required)" />
                   </span>
-                </Label>
+                </DescribedFieldLabel>
                 <CustomFieldControl
                   id={id}
                   field={field}

@@ -371,7 +371,7 @@ describe("the Matters destination", () => {
     }
     expect(within(dialog).queryByLabelText("Template")).not.toBeInTheDocument();
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
-    expect(within(dialog).getByLabelText(/Business unit/)).toBeInTheDocument();
+    expect(within(dialog).getByRole("textbox", { name: /Business unit/ })).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
     const refusal = await within(dialog).findByRole("alert");
     expect(refusal).toHaveTextContent("Title");
@@ -406,7 +406,7 @@ describe("the Matters destination", () => {
     expect(within(dialog).getByLabelText("Matter Manager")).toHaveValue(MEMBER.id);
     await user.selectOptions(within(dialog).getByLabelText(/^Priority\*?$/), "high");
     await user.selectOptions(within(dialog).getByLabelText("Risk"), "low");
-    await user.type(within(dialog).getByLabelText(/Business unit/), "Operations");
+    await user.type(within(dialog).getByRole("textbox", { name: /Business unit/ }), "Operations");
     await user.type(within(dialog).getByLabelText("Description"), "Review the transfer.");
     await user.click(within(dialog).getByLabelText("Confidential — restrict to the matter team"));
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
@@ -447,7 +447,7 @@ describe("the Matters destination", () => {
     await user.type(within(dialog).getByLabelText(/^Title\*?$/), "Nobody's yet");
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
     await user.selectOptions(within(dialog).getByLabelText("Matter Manager"), "");
-    await user.type(within(dialog).getByLabelText(/Business unit/), "Operations");
+    await user.type(within(dialog).getByRole("textbox", { name: /Business unit/ }), "Operations");
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
     expect((await screen.findAllByText("M-8")).length).toBeGreaterThan(0);
     // Unassigned stays a real state: null on the wire, not a missing key.
@@ -515,7 +515,7 @@ describe("the Matters destination", () => {
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText(/^Title\*?$/), "New advice");
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
-    await user.type(within(dialog).getByLabelText(/Business unit/), "People");
+    await user.type(within(dialog).getByRole("textbox", { name: /Business unit/ }), "People");
     await user.upload(within(dialog).getByLabelText("Attach documents"), [
       new File(["advice"], "advice.txt", { type: "text/plain" }),
       new File(["notes"], "notes.txt", { type: "text/plain" }),
@@ -587,7 +587,7 @@ describe("the Matters destination", () => {
     expect(picker).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("medium");
-    expect(within(dialog).getByLabelText(/Business unit/)).toHaveValue("");
+    expect(within(dialog).getByRole("textbox", { name: /Business unit/ })).toHaveValue("");
     await user.selectOptions(picker, TEMPLATE.id);
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), otherType.id);
     expect(picker).toHaveValue("");
@@ -604,14 +604,14 @@ describe("the Matters destination", () => {
     expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("EMP —");
     expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("high");
     expect(within(dialog).getByLabelText("Risk")).toHaveValue("low");
-    expect(within(dialog).getByLabelText(/Business unit/)).toHaveValue("Finance");
+    expect(within(dialog).getByRole("textbox", { name: /Business unit/ })).toHaveValue("Finance");
     expect(within(dialog).getByText("Template adds 4 tasks and 2 key dates.")).toBeInTheDocument();
 
     await user.selectOptions(picker, "");
     expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("medium");
     expect(within(dialog).getByLabelText("Risk")).toHaveValue("");
-    expect(within(dialog).getByLabelText(/Business unit/)).toHaveValue("");
+    expect(within(dialog).getByRole("textbox", { name: /Business unit/ })).toHaveValue("");
 
     await user.selectOptions(picker, TEMPLATE.id);
     await user.type(within(dialog).getByLabelText(/^Title\*?$/), " Transfer");
@@ -622,7 +622,7 @@ describe("the Matters destination", () => {
     expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("high");
     await user.selectOptions(within(dialog).getByLabelText(/^Priority\*?$/), "critical");
     await user.selectOptions(within(dialog).getByLabelText("Risk"), "critical");
-    const unit = within(dialog).getByLabelText(/Business unit/);
+    const unit = within(dialog).getByRole("textbox", { name: /Business unit/ });
     await user.clear(unit);
     await user.type(unit, "People");
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
@@ -679,7 +679,7 @@ describe("the Matters destination", () => {
       const dialog = await screen.findByRole("dialog");
       await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
       await user.selectOptions(within(dialog).getByLabelText("Matter template"), TEMPLATE.id);
-      const control = within(dialog).getByLabelText(/Business unit/);
+      const control = within(dialog).getByRole("textbox", { name: /Business unit/ });
       expect(control).toHaveValue("Finance");
       if (action !== "leave untouched") await user.clear(control);
       if (action === "override") await user.type(control, "People");
@@ -718,7 +718,7 @@ describe("the Matters destination", () => {
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText(/^Title\*?$/), "New advice");
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), TYPE.id);
-    await user.type(within(dialog).getByLabelText(/Business unit/), "Operations");
+    await user.type(within(dialog).getByRole("textbox", { name: /Business unit/ }), "Operations");
     const create = within(dialog).getByRole("button", { name: "Create" });
     await user.click(create);
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(

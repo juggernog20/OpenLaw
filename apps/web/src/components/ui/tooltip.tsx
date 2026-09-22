@@ -23,16 +23,20 @@ export function Tooltip({
   children,
   className,
   side = "top",
+  open,
+  onOpenChange,
 }: Readonly<{
   content: React.ReactNode;
   /** One element that accepts a ref and pointer/focus handlers. */
   children: React.ReactElement;
   className?: string;
   side?: React.ComponentProps<typeof TooltipPrimitive.Content>["side"];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }>) {
   return (
     <TooltipPrimitive.Provider delayDuration={500} disableHoverableContent>
-      <TooltipPrimitive.Root>
+      <TooltipPrimitive.Root open={open} onOpenChange={onOpenChange}>
         <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal>
           <TooltipPrimitive.Content
