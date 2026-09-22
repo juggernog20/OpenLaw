@@ -133,16 +133,19 @@ export function TypeFormBuilder({
       <StatusNote status={notes[key]?.status ?? "idle"} detail={notes[key]?.detail} />
     </span>
   );
-  function refusal(next: Form): string | undefined {
-    const incomplete = flatten(next).find(
-      (n) =>
+  /** The first Branch whose condition is still half-written, if any. */
+  function incompleteBranch(next: Form): FormBranch | undefined {
+    return flatten(next).find(
+      (n): n is FormBranch =>
         n.kind === "branch" &&
         (!n.conditions.length ||
           n.conditions.some(
             (c) => !c.rowRef || (c.operator !== "is_set" && (c.value === null || c.value === "")),
           )),
     );
-    if (incomplete) return t("Complete the Branch condition first");
+  }
+  function refusal(next: Form): string | undefined {
+    if (incompleteBranch(next)) return t("Complete the Branch condition first");
     const issue = validateForm(next)[0];
     if (issue) {
       const row = nodes.find((n): n is FormRow => n.kind === "row" && n.rowRef === issue.rowRef);
@@ -157,6 +160,15 @@ export function TypeFormBuilder({
   }
   async function commit(next: Form, key: string, message?: string) {
     if (busyRef.current) return false;
+    // A half-written condition is unfinished, not wrong. Its own editor
+    // keeps it local and says nothing while the person is still writing
+    // it; every other control still explains why its change cannot save
+    // (2026-09-22, from live review).
+    const unfinished = incompleteBranch(next);
+    if (unfinished && key === `${unfinished.id}-condition`) {
+      note(key, "idle");
+      return false;
+    }
     const reason = refusal(next);
     if (reason) {
       note(key, "error", reason);
@@ -626,9 +638,7 @@ export function TypeFormBuilder({
             <div
               role="group"
               aria-label={t("Children of {branch}", { branch: name(node) })}
-              // The left rule marks the children only, so an open
-              // condition editor above them stays clear of it.
-              className="relative min-h-8 before:pointer-events-none before:absolute before:inset-y-0 before:start-(--branch-indent) before:w-0.5 before:bg-border-default"
+              className="min-h-8"
               onDragOver={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -641,7 +651,14 @@ export function TypeFormBuilder({
                 if (dragged.current) void move(dragged.current, node.id);
               }}
             >
-              <div className={drop === `${node.id}-inside` ? "outline-2 outline-accent" : ""}>
+              {/* The left rule runs beside the child Rows only: not the
+                  header, not an open condition editor, not the footer,
+                  and not at all while the Branch is empty. */}
+              <div
+                className={`relative before:pointer-events-none before:absolute before:inset-y-0 before:start-(--branch-indent) before:w-0.5 before:bg-border-default ${
+                  drop === `${node.id}-inside` ? "outline-2 outline-accent" : ""
+                }`}
+              >
                 {tree(node.children, depth + 1)}
               </div>
               {/* Starts where the Branch header starts, so the buttons
@@ -669,16 +686,24 @@ export function TypeFormBuilder({
           <AttachMenu
             fields={available}
             disabled={busy}
-            label={parent ? t("Add row into branch") : t("Attach Field")}
+            label={parent ? t("Add field into condition") : t("Attach Field")}
             onAttach={(f) => void attach(f, parent, `${key}-attach`)}
             onCreate={(trigger) => openField(parent, null, trigger)}
           />
           {status(`${key}-attach`)}
         </div>
+        {/* Only the root offers a standalone Create Field button: a
+            Branch's own Add field into condition menu carries the same
+            create action already scoped to it, so a second button here
+            would just repeat the root one (2026-09-22, from live
+            review). A failed create-and-attach can still happen from
+            that menu at any level, so the retry stays unconditional. */}
         <div>
-          <Button variant="secondary" size="sm" disabled={busy} onClick={() => openField(parent)}>
-            {t("Create Field")}
-          </Button>
+          {parent === null && (
+            <Button variant="secondary" size="sm" disabled={busy} onClick={() => openField(parent)}>
+              {t("Create Field")}
+            </Button>
+          )}
           {status(`${key}-create`)}
           {created?.parent === parent && (
             <Button

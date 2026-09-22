@@ -104,9 +104,9 @@ const messages = defineMessages({
     id: "typeForm.add-condition-inside",
     defaultMessage: "Add condition inside",
   },
-  "Add row into branch": {
-    id: "typeForm.add-row-into-branch",
-    defaultMessage: "Add row into branch",
+  "Add field into condition": {
+    id: "typeForm.add-field-into-condition",
+    defaultMessage: "Add field into condition",
   },
   All: { id: "typeForm.all", defaultMessage: "All" },
   "All Fields are attached": {

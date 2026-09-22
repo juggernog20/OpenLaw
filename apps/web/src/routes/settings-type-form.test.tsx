@@ -41,7 +41,11 @@ describe("the type Form tab", () => {
       expect(control).toHaveAccessibleDescription(description);
       expect(within(dialog).getByText(description)).toHaveClass("sr-only");
       expect(within(dialog).getByLabelText(/^Title/)).not.toHaveAttribute("aria-describedby");
-      act(() => control.focus());
+      act(() =>
+        within(dialog)
+          .getByRole("button", { name: "Show description for Business justification" })
+          .focus(),
+      );
       expect(await screen.findByRole("tooltip")).toHaveTextContent(description);
     },
   );
@@ -135,6 +139,26 @@ describe("the type Form tab", () => {
     await user.click(required);
     expect(required).not.toBeChecked();
     expect(required).toHaveAccessibleDescription(/unavailable for Finance reviewer/);
+  });
+
+  it("stays quiet while a condition is half-written and still blocks other edits", async () => {
+    const { user, writes } = setupForm();
+    await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
+    await waitFor(() => expect(writes).toHaveLength(1));
+    await user.click(screen.getByRole("button", { name: "Add condition" }));
+    // Nothing picked yet, and a Row picked with no value yet: both are
+    // unfinished, not wrong, so the editor says nothing.
+    expect(screen.queryByText("Complete the Branch condition first")).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "term_type");
+    expect(screen.queryByText("Complete the Branch condition first")).not.toBeInTheDocument();
+    expect(writes).toHaveLength(1);
+    // Another control cannot save while that Branch is unfinished, and
+    // says why.
+    await user.click(screen.getByRole("switch", { name: "Expiry date: On intake form" }));
+    expect(await screen.findByText("Complete the Branch condition first")).toBeInTheDocument();
+    expect(writes).toHaveLength(1);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "fixed");
+    await waitFor(() => expect(writes).toHaveLength(2));
   });
 
   it("adds a Fixed-term Branch, moves Expiry date into it and evaluates preview", async () => {

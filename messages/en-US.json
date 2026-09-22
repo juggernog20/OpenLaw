@@ -11468,8 +11468,8 @@
   "typeForm.add-condition-inside": {
     "defaultMessage": "Add condition inside"
   },
-  "typeForm.add-row-into-branch": {
-    "defaultMessage": "Add row into branch"
+  "typeForm.add-field-into-condition": {
+    "defaultMessage": "Add field into condition"
   },
   "typeForm.all": {
     "defaultMessage": "All"
